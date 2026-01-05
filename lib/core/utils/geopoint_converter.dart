@@ -34,8 +34,5 @@ GeoPoint? geoPointFromJson(dynamic json) {
 Map<String, dynamic>? geoPointToJson(GeoPoint? geoPoint) {
   if (geoPoint == null) return null;
 
-  return {
-    'latitude': geoPoint.latitude,
-    'longitude': geoPoint.longitude,
-  };
+  return {'latitude': geoPoint.latitude, 'longitude': geoPoint.longitude};
 }

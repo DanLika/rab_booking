@@ -16,11 +16,17 @@ abstract class DailyPriceRepository {
   });
 
   /// Calculate total booking price for date range
+  /// Uses price hierarchy: custom daily_price > weekendBasePrice (from unit) > basePrice
+  /// [fallbackPrice] - Unit's base price per night (required for fallback when no daily_price)
+  /// [weekendBasePrice] - Unit's weekend base price (optional, for Sat-Sun by default)
+  /// [weekendDays] - optional custom weekend days (1=Mon...7=Sun). Default: [6,7]
   Future<double> calculateBookingPrice({
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
     double? fallbackPrice,
+    double? weekendBasePrice,
+    List<int>? weekendDays,
   });
 
   /// Set price for specific date
@@ -48,6 +54,26 @@ abstract class DailyPriceRepository {
     required DailyPriceModel modelTemplate,
   });
 
+  /// Bulk PARTIAL update - merges fields without overwriting existing data
+  /// Only updates fields that are explicitly set in partialData
+  /// Example: To only update 'available' field, pass {'available': true}
+  Future<List<DailyPriceModel>> bulkPartialUpdate({
+    required String unitId,
+    required List<DateTime> dates,
+    required Map<String, dynamic> partialData,
+  });
+
+  /// Optimized bulk PARTIAL update with direct propertyId.
+  /// Use this when propertyId is already known (e.g., from UnitModel) to avoid
+  /// expensive collectionGroup query.
+  /// This is optional - implementations may delegate to bulkPartialUpdate.
+  Future<List<DailyPriceModel>> bulkPartialUpdateWithPropertyId({
+    required String propertyId,
+    required String unitId,
+    required List<DateTime> dates,
+    required Map<String, dynamic> partialData,
+  });
+
   /// Delete price for specific date (revert to base price)
   Future<void> deletePriceForDate({
     required String unitId,
@@ -65,8 +91,5 @@ abstract class DailyPriceRepository {
   Future<List<DailyPriceModel>> fetchAllPricesForUnit(String unitId);
 
   /// Check if date has custom price
-  Future<bool> hasCustomPrice({
-    required String unitId,
-    required DateTime date,
-  });
+  Future<bool> hasCustomPrice({required String unitId, required DateTime date});
 }

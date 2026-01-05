@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/theme/app_colors.dart';
 
 /// Room row header widget
 /// Shows room/unit information in the left column of calendar grid
@@ -36,14 +37,18 @@ class RoomRowHeader extends StatelessWidget {
           color: theme.cardColor,
           border: Border(
             right: BorderSide(color: theme.dividerColor),
-            bottom: BorderSide(color: theme.dividerColor.withAlpha((0.3 * 255).toInt())),
+            bottom: BorderSide(
+              color: theme.dividerColor.withAlpha((0.3 * 255).toInt()),
+            ),
           ),
         ),
         padding: EdgeInsets.symmetric(
           horizontal: isCompact ? 8 : 12,
           vertical: 8,
         ),
-        child: isCompact ? _buildCompactContent(theme) : _buildFullContent(theme),
+        child: isCompact
+            ? _buildCompactContent(theme)
+            : _buildFullContent(theme),
       ),
     );
   }
@@ -79,20 +84,22 @@ class RoomRowHeader extends StatelessWidget {
             Icon(
               Icons.bed,
               size: 16,
-              color: theme.textTheme.bodySmall?.color?.withAlpha((0.7 * 255).toInt()),
+              color: theme.textTheme.bodySmall?.color?.withAlpha(
+                (0.7 * 255).toInt(),
+              ),
             ),
             const SizedBox(width: 2),
             Icon(
               Icons.person,
               size: 16,
-              color: theme.textTheme.bodySmall?.color?.withAlpha((0.7 * 255).toInt()),
+              color: theme.textTheme.bodySmall?.color?.withAlpha(
+                (0.7 * 255).toInt(),
+              ),
             ),
             const SizedBox(width: 2),
             Text(
               '${unit.maxGuests}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 11,
-              ),
+              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
             ),
           ],
         ),
@@ -110,11 +117,7 @@ class RoomRowHeader extends StatelessWidget {
             color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.bed,
-            size: 20,
-            color: theme.colorScheme.primary,
-          ),
+          child: Icon(Icons.bed, size: 20, color: theme.colorScheme.primary),
         ),
         const SizedBox(width: 12),
 
@@ -153,7 +156,7 @@ class RoomRowHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '${unit.maxGuests} guests',
+                    '${unit.maxGuests} gostiju',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -180,18 +183,18 @@ class RoomRowHeader extends StatelessWidget {
     // Determine which dots to show (max 3)
     final List<Color> dotColors = [];
 
-    // Priority: pending > confirmed > in_progress > blocked > completed > cancelled
-    if (statusCounts[BookingStatus.pending] != null && statusCounts[BookingStatus.pending]! > 0) {
-      dotColors.add(const Color(0xFFF59E0B)); // Orange - waiting approval
+    // Priority: pending > confirmed > completed > cancelled
+    if (statusCounts[BookingStatus.pending] != null &&
+        statusCounts[BookingStatus.pending]! > 0) {
+      dotColors.add(AppColors.warning); // Orange - waiting approval
     }
-    if (statusCounts[BookingStatus.confirmed] != null && statusCounts[BookingStatus.confirmed]! > 0) {
-      dotColors.add(const Color(0xFFEF4444)); // Red - booked
+    if (statusCounts[BookingStatus.confirmed] != null &&
+        statusCounts[BookingStatus.confirmed]! > 0) {
+      dotColors.add(AppColors.error); // Red - booked
     }
-    if (statusCounts[BookingStatus.inProgress] != null && statusCounts[BookingStatus.inProgress]! > 0) {
-      dotColors.add(const Color(0xFF3B82F6)); // Blue - in progress
-    }
-    if (statusCounts[BookingStatus.blocked] != null && statusCounts[BookingStatus.blocked]! > 0) {
-      dotColors.add(const Color(0xFF6B7280)); // Gray - disabled/blocked
+    if (statusCounts[BookingStatus.completed] != null &&
+        statusCounts[BookingStatus.completed]! > 0) {
+      dotColors.add(AppColors.success); // Green - completed
     }
 
     // Limit to 3 dots
@@ -199,16 +202,18 @@ class RoomRowHeader extends StatelessWidget {
 
     if (displayDots.isEmpty) {
       // No active bookings, show green dot (available)
-      return const _StatusDot(color: Color(0xFF10B981)); // Green - free
+      return const _StatusDot(color: AppColors.success); // Green - free
     }
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: displayDots
-          .map((color) => Padding(
-                padding: const EdgeInsets.only(left: 3),
-                child: _StatusDot(color: color),
-              ))
+          .map(
+            (color) => Padding(
+              padding: const EdgeInsets.only(left: 3),
+              child: _StatusDot(color: color),
+            ),
+          )
           .toList(),
     );
   }
@@ -218,9 +223,7 @@ class RoomRowHeader extends StatelessWidget {
 class _StatusDot extends StatelessWidget {
   final Color color;
 
-  const _StatusDot({
-    required this.color,
-  });
+  const _StatusDot({required this.color});
 
   @override
   Widget build(BuildContext context) {

@@ -67,28 +67,20 @@ class _LineArtPainter extends CustomPainter {
     switch (type) {
       case LineArtIconType.house:
         _drawHouse(canvas, size, paint);
-        break;
       case LineArtIconType.villa:
         _drawVilla(canvas, size, paint);
-        break;
       case LineArtIconType.hotel:
         _drawHotel(canvas, size, paint);
-        break;
       case LineArtIconType.apartment:
         _drawApartment(canvas, size, paint);
-        break;
       case LineArtIconType.building:
         _drawBuilding(canvas, size, paint);
-        break;
       case LineArtIconType.key:
         _drawKey(canvas, size, paint);
-        break;
       case LineArtIconType.keyCard:
         _drawKeyCard(canvas, size, paint);
-        break;
       case LineArtIconType.doorKey:
         _drawDoorKey(canvas, size, paint);
-        break;
     }
   }
 
@@ -161,7 +153,9 @@ class _LineArtPainter extends CustomPainter {
       for (int window = 0; window < 2; window++) {
         final x = size.width * (0.3 + window * 0.25);
         final y = size.height * (0.25 + floor * 0.2);
-        path.addRect(Rect.fromLTWH(x, y, size.width * 0.15, size.height * 0.12));
+        path.addRect(
+          Rect.fromLTWH(x, y, size.width * 0.15, size.height * 0.12),
+        );
       }
     }
 
@@ -185,7 +179,14 @@ class _LineArtPainter extends CustomPainter {
     path.lineTo(size.width * 0.7, size.height * 0.5);
 
     // Windows
-    path.addRect(Rect.fromLTWH(size.width * 0.35, size.height * 0.3, size.width * 0.3, size.height * 0.15));
+    path.addRect(
+      Rect.fromLTWH(
+        size.width * 0.35,
+        size.height * 0.3,
+        size.width * 0.3,
+        size.height * 0.15,
+      ),
+    );
 
     canvas.drawPath(path, paint);
   }
@@ -205,7 +206,9 @@ class _LineArtPainter extends CustomPainter {
       for (int col = 0; col < 2; col++) {
         final x = size.width * (0.32 + col * 0.2);
         final y = size.height * (0.25 + row * 0.15);
-        path.addRect(Rect.fromLTWH(x, y, size.width * 0.12, size.height * 0.08));
+        path.addRect(
+          Rect.fromLTWH(x, y, size.width * 0.12, size.height * 0.08),
+        );
       }
     }
 
@@ -216,10 +219,12 @@ class _LineArtPainter extends CustomPainter {
     final path = Path();
 
     // Key head (circle)
-    path.addOval(Rect.fromCircle(
-      center: Offset(size.width * 0.25, size.height * 0.5),
-      radius: size.width * 0.15,
-    ));
+    path.addOval(
+      Rect.fromCircle(
+        center: Offset(size.width * 0.25, size.height * 0.5),
+        radius: size.width * 0.15,
+      ),
+    );
 
     // Key shaft
     path.moveTo(size.width * 0.4, size.height * 0.5);
@@ -239,16 +244,35 @@ class _LineArtPainter extends CustomPainter {
 
     // Card outline
     final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.15, size.height * 0.25, size.width * 0.7, size.height * 0.5),
+      Rect.fromLTWH(
+        size.width * 0.15,
+        size.height * 0.25,
+        size.width * 0.7,
+        size.height * 0.5,
+      ),
       Radius.circular(size.width * 0.05),
     );
     path.addRRect(rrect);
 
     // Magnetic stripe
-    path.addRect(Rect.fromLTWH(size.width * 0.15, size.height * 0.35, size.width * 0.7, size.height * 0.1));
+    path.addRect(
+      Rect.fromLTWH(
+        size.width * 0.15,
+        size.height * 0.35,
+        size.width * 0.7,
+        size.height * 0.1,
+      ),
+    );
 
     // Chip
-    path.addRect(Rect.fromLTWH(size.width * 0.25, size.height * 0.55, size.width * 0.15, size.height * 0.12));
+    path.addRect(
+      Rect.fromLTWH(
+        size.width * 0.25,
+        size.height * 0.55,
+        size.width * 0.15,
+        size.height * 0.12,
+      ),
+    );
 
     canvas.drawPath(path, paint);
   }
@@ -257,16 +281,25 @@ class _LineArtPainter extends CustomPainter {
     final path = Path();
 
     // Key head (rounded rectangle)
-    path.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width * 0.1, size.height * 0.3, size.width * 0.25, size.height * 0.4),
-      Radius.circular(size.width * 0.05),
-    ));
+    path.addRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          size.width * 0.1,
+          size.height * 0.3,
+          size.width * 0.25,
+          size.height * 0.4,
+        ),
+        Radius.circular(size.width * 0.05),
+      ),
+    );
 
     // Hole in head
-    path.addOval(Rect.fromCircle(
-      center: Offset(size.width * 0.225, size.height * 0.5),
-      radius: size.width * 0.05,
-    ));
+    path.addOval(
+      Rect.fromCircle(
+        center: Offset(size.width * 0.225, size.height * 0.5),
+        radius: size.width * 0.05,
+      ),
+    );
 
     // Key shaft
     path.moveTo(size.width * 0.35, size.height * 0.5);

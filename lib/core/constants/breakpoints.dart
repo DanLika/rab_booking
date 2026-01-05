@@ -43,6 +43,11 @@ class Breakpoints {
   static bool isMobileOrTablet(BuildContext context) =>
       MediaQuery.of(context).size.width < desktop;
 
+  /// Check if screen is compact mobile (< 400px)
+  /// Used for auth screens and forms that need tighter spacing
+  static bool isCompactMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < 400;
+
   /// Check if screen is small mobile (< 375px)
   /// Covers: Small Android phones (360x640)
   static bool isSmallMobile(BuildContext context) =>
@@ -126,12 +131,7 @@ class Breakpoints {
   /// Get responsive padding
   /// Returns: 16 (mobile), 24 (tablet), 32 (desktop)
   static double getHorizontalPadding(BuildContext context) {
-    return getValue(
-      context,
-      mobile: 16.0,
-      tablet: 24.0,
-      desktop: 32.0,
-    );
+    return getValue(context, mobile: 16.0, tablet: 24.0, desktop: 32.0);
   }
 
   /// Get responsive grid columns
@@ -146,4 +146,30 @@ class Breakpoints {
   }
 
   Breakpoints._();
+
+  // ============================================================================
+  // CALENDAR-SPECIFIC BREAKPOINTS
+  // Calendar uses tighter breakpoints for optimal day cell sizing
+  // ============================================================================
+
+  /// Calendar mobile breakpoint (same as general mobile)
+  static const double calendarMobile = 600;
+
+  /// Calendar tablet breakpoint (900px - tighter than general tablet)
+  /// This ensures optimal day cell width on tablet devices
+  static const double calendarTablet = 900;
+
+  /// Check if current screen is calendar-mobile
+  static bool isCalendarMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < calendarMobile;
+
+  /// Check if current screen is calendar-tablet
+  static bool isCalendarTablet(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    return width >= calendarMobile && width < calendarTablet;
+  }
+
+  /// Check if current screen is calendar-desktop
+  static bool isCalendarDesktop(BuildContext context) =>
+      MediaQuery.of(context).size.width >= calendarTablet;
 }

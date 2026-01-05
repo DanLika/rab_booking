@@ -2,36 +2,72 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/additional_service_model.dart';
 import '../providers/additional_services_provider.dart';
+import '../providers/theme_provider.dart';
+import '../theme/minimalist_colors.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../shared/utils/ui/snackbar_helper.dart';
+import '../l10n/widget_translations.dart';
 
 class AdditionalServicesWidget extends ConsumerWidget {
   final String unitId;
   final int nights;
   final int guests;
 
+  /// Callback when service selection changes (for iframe height updates)
+  final VoidCallback? onSelectionChanged;
+
   const AdditionalServicesWidget({
     super.key,
     required this.unitId,
     this.nights = 1,
     this.guests = 1,
+    this.onSelectionChanged,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(unitAdditionalServicesProvider(unitId));
+    final isDarkMode = ref.watch(themeProvider);
+    final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
+    return servicesAsync.when(
+      data: (services) {
+        // Don't show widget at all if no services are available
+        if (services.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return _buildServicesWidget(
+          context,
+          ref,
+          services,
+          isDarkMode,
+          colors,
+          onSelectionChanged,
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (error, stackTrace) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildServicesWidget(
+    BuildContext context,
+    WidgetRef ref,
+    List<AdditionalServiceModel> services,
+    bool isDarkMode,
+    MinimalistColorSchemeAdapter colors,
+    VoidCallback? onSelectionChanged,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.2),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        color: colors.backgroundTertiary,
+        borderRadius: BorderTokens.circularMedium,
+        border: Border.all(color: colors.borderDefault),
+        boxShadow: isDarkMode
+            ? MinimalistShadows.medium
+            : MinimalistShadows.light,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,77 +75,67 @@ class AdditionalServicesWidget extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.add_circle, color: Colors.blue[700]),
-              const SizedBox(width: 8),
-              const Text(
-                'Additional Services',
+              Icon(Icons.add_circle, color: colors.buttonPrimary),
+              const SizedBox(width: SpacingTokens.xs),
+              Text(
+                WidgetTranslations.of(context, ref).additionalServices,
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: TypographyTokens.fontSizeL,
                   fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                  fontFamily: 'Manrope',
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          servicesAsync.when(
-            data: (services) {
-              if (services.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.0),
-                  child: Center(
-                    child: Text(
-                      'No additional services available',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                );
-              }
-              return Column(
-                children: [
-                  ...services.map((service) => _buildServiceItem(context, ref, service)),
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  _buildServicesTotal(ref, services),
-                ],
-              );
-            },
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
+          const SizedBox(height: SpacingTokens.m),
+          Column(
+            children: [
+              ...services.map(
+                (service) => _buildServiceItem(
+                  context,
+                  ref,
+                  service,
+                  colors,
+                  onSelectionChanged,
+                ),
               ),
-            ),
-            error: (error, stack) => Center(
-              child: Text(
-                'Error loading services: $error',
-                style: const TextStyle(color: Colors.red),
-              ),
-            ),
+              const SizedBox(height: SpacingTokens.m),
+              Divider(color: colors.borderDefault),
+              const SizedBox(height: SpacingTokens.xs),
+              _buildServicesTotal(context, ref, services, colors),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildServiceItem(BuildContext context, WidgetRef ref, AdditionalServiceModel service) {
+  Widget _buildServiceItem(
+    BuildContext context,
+    WidgetRef ref,
+    AdditionalServiceModel service,
+    MinimalistColorSchemeAdapter colors,
+    VoidCallback? onSelectionChanged,
+  ) {
     final selectedServices = ref.watch(selectedAdditionalServicesProvider);
     final quantity = selectedServices[service.id] ?? 0;
     final isSelected = quantity > 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: SpacingTokens.s),
+      padding: const EdgeInsets.all(SpacingTokens.s),
       decoration: BoxDecoration(
         border: Border.all(
-          color: isSelected ? Colors.blue : Colors.grey[300]!,
-          width: isSelected ? 2 : 1,
+          color: isSelected
+              ? colors.statusAvailableBorder
+              : colors.borderDefault,
+          width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
         ),
-        borderRadius: BorderRadius.circular(8),
-        color: isSelected ? Colors.blue[50] : Colors.white,
+        borderRadius: BorderTokens.circularSmall,
+        color: isSelected
+            ? colors.statusAvailableBackground
+            : colors.backgroundPrimary,
       ),
       child: Row(
         children: [
@@ -118,19 +144,25 @@ class AdditionalServicesWidget extends ConsumerWidget {
             value: isSelected,
             onChanged: (value) {
               if (value == true) {
-                ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
+                ref.read(selectedAdditionalServicesProvider.notifier).update((
+                  state,
+                ) {
                   return {...state, service.id: 1};
                 });
               } else {
-                ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
+                ref.read(selectedAdditionalServicesProvider.notifier).update((
+                  state,
+                ) {
                   final newState = Map<String, int>.from(state);
                   newState.remove(service.id);
                   return newState;
                 });
               }
+              // Notify parent for iframe height update
+              onSelectionChanged?.call();
             },
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpacingTokens.xs),
 
           // Service details
           Expanded(
@@ -139,29 +171,34 @@ class AdditionalServicesWidget extends ConsumerWidget {
               children: [
                 Text(
                   service.name,
-                  style: const TextStyle(
-                    fontSize: 15,
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeM,
                     fontWeight: FontWeight.bold,
+                    color: colors.textPrimary,
+                    fontFamily: 'Manrope',
                   ),
                 ),
-                if (service.description != null && service.description!.isNotEmpty)
+                if (service.description != null &&
+                    service.description!.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
+                    padding: const EdgeInsets.only(top: SpacingTokens.xxs),
                     child: Text(
                       service.description!,
                       style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                        fontSize: TypographyTokens.fontSizeXS,
+                        color: colors.textSecondary,
+                        fontFamily: 'Manrope',
                       ),
                     ),
                   ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingTokens.xxs),
                 Text(
                   service.formattedPrice,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: TypographyTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
-                    color: Colors.green[700],
+                    color: colors.statusAvailableBorder,
+                    fontFamily: 'Manrope',
                   ),
                 ),
               ],
@@ -172,56 +209,75 @@ class AdditionalServicesWidget extends ConsumerWidget {
           if (isSelected)
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: colors.borderDefault),
+                borderRadius: BorderTokens.circularSmall,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.remove, size: 16),
+                    icon: Icon(
+                      Icons.remove,
+                      size: 16,
+                      color: colors.textPrimary,
+                    ),
                     onPressed: quantity > 1
                         ? () {
-                            ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
-                              return {...state, service.id: quantity - 1};
-                            });
+                            ref
+                                .read(
+                                  selectedAdditionalServicesProvider.notifier,
+                                )
+                                .update((state) {
+                                  return {...state, service.id: quantity - 1};
+                                });
+                            onSelectionChanged?.call();
                           }
                         : null,
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(SpacingTokens.xxs),
                     constraints: const BoxConstraints(
                       minWidth: 32,
                       minHeight: 32,
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SpacingTokens.xs,
+                    ),
                     child: Text(
                       quantity.toString(),
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: TypographyTokens.fontSizeS,
                         fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                        fontFamily: 'Manrope',
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.add, size: 16),
+                    icon: Icon(Icons.add, size: 16, color: colors.textPrimary),
                     onPressed: () {
-                      // Check max quantity
-                      if (service.maxQuantity != null && quantity >= service.maxQuantity!) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Maximum quantity: ${service.maxQuantity}'),
-                            duration: const Duration(seconds: 2),
-                          ),
+                      // Check max quantity - use local variable to avoid null assertion
+                      final maxQuantity = service.maxQuantity;
+                      if (maxQuantity != null && quantity >= maxQuantity) {
+                        SnackBarHelper.showWarning(
+                          context: context,
+                          message: WidgetTranslations.of(
+                            context,
+                            ref,
+                          ).maxQuantityReached(maxQuantity),
+                          duration: const Duration(seconds: 2),
                         );
                         return;
                       }
 
-                      ref.read(selectedAdditionalServicesProvider.notifier).update((state) {
-                        return {...state, service.id: quantity + 1};
-                      });
+                      ref
+                          .read(selectedAdditionalServicesProvider.notifier)
+                          .update((state) {
+                            return {...state, service.id: quantity + 1};
+                          });
+                      onSelectionChanged?.call();
                     },
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(SpacingTokens.xxs),
                     constraints: const BoxConstraints(
                       minWidth: 32,
                       minHeight: 32,
@@ -235,9 +291,21 @@ class AdditionalServicesWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildServicesTotal(WidgetRef ref, List<AdditionalServiceModel> services) {
+  Widget _buildServicesTotal(
+    BuildContext context,
+    WidgetRef ref,
+    List<AdditionalServiceModel> services,
+    MinimalistColorSchemeAdapter colors,
+  ) {
     final selectedServices = ref.watch(selectedAdditionalServicesProvider);
-    final total = ref.watch(additionalServicesTotalProvider((services, selectedServices, nights, guests)));
+    final total = ref.watch(
+      additionalServicesTotalProvider((
+        services,
+        selectedServices,
+        nights,
+        guests,
+      )),
+    );
 
     if (selectedServices.isEmpty) {
       return const SizedBox.shrink();
@@ -246,19 +314,23 @@ class AdditionalServicesWidget extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          'Services Total',
+        Text(
+          WidgetTranslations.of(context, ref).servicesTotal,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: TypographyTokens.fontSizeM,
             fontWeight: FontWeight.bold,
+            color: colors.textPrimary,
+            fontFamily: 'Manrope',
           ),
         ),
         Text(
-          '€${total.toStringAsFixed(2)}',
+          // Bug Fix: Use localized currency symbol instead of hardcoded '€'
+          '${WidgetTranslations.of(context, ref).currencySymbol}${total.toStringAsFixed(2)}',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: TypographyTokens.fontSizeL,
             fontWeight: FontWeight.bold,
-            color: Colors.green[700],
+            color: colors.statusAvailableBorder,
+            fontFamily: 'Manrope',
           ),
         ),
       ],

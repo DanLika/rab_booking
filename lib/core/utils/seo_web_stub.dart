@@ -2,7 +2,11 @@
 /// This is used when compiling for mobile/desktop
 class SeoWebImpl {
   static void updateTitle(String title) {}
-  static void updateMetaTag(String name, String content, {bool isProperty = false}) {}
+  static void updateMetaTag(
+    String name,
+    String content, {
+    bool isProperty = false,
+  }) {}
   static void updateCanonical(String url) {}
   static void updateStructuredData(Map<String, dynamic> data, {String? id}) {}
   static void updateOpenGraphTags({

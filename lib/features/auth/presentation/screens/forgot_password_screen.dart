@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../widgets/auth_background.dart';
-import '../widgets/glass_card.dart';
 import '../widgets/auth_logo_icon.dart';
-import '../widgets/premium_input_field.dart';
+import '../widgets/glass_card.dart';
 import '../widgets/gradient_auth_button.dart';
+import '../widgets/premium_input_field.dart';
 
 /// Forgot password screen
+///
+/// Uses [AndroidKeyboardDismissFixApproach1] mixin to handle the Android Chrome
+/// keyboard dismiss bug (Flutter issue #175074).
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -18,9 +27,11 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
       _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
+    with AndroidKeyboardDismissFixApproach1<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+
   bool _isLoading = false;
   bool _emailSent = false;
 
@@ -31,7 +42,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Future<void> _handleResetPassword() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        'Please enter a valid email address',
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -47,230 +64,248 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, e);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: AuthBackground(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height,
-            ),
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.all(
-                  MediaQuery.of(context).size.width < 400 ? 16 : 24
-                ),
-                child: GlassCard(
-                  maxWidth: 460,
-                  child: _emailSent ? _buildSuccessView() : _buildFormView(),
+    final isCompact = Breakpoints.isCompactMobile(context);
+
+    // Isti pristup kao Login: resizeToAvoidBottomInset: true
+    return KeyedSubtree(
+      key: ValueKey('forgot_password_screen_$keyboardFixRebuildKey'),
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          alignment:
+              Alignment.topLeft, // Explicit to avoid TextDirection null check
+          children: [
+            AuthBackground(
+              child: SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Get keyboard height to adjust padding dynamically (with null safety)
+                    final mediaQuery = MediaQuery.maybeOf(context);
+                    final keyboardHeight =
+                        (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
+                          0.0,
+                          double.infinity,
+                        );
+                    final isKeyboardOpen = keyboardHeight > 0;
+
+                    // Calculate minHeight safely - ensure it's always finite and valid
+                    double minHeight;
+                    if (isKeyboardOpen &&
+                        constraints.maxHeight.isFinite &&
+                        constraints.maxHeight > 0) {
+                      final calculated = constraints.maxHeight - keyboardHeight;
+                      minHeight = calculated.clamp(0.0, constraints.maxHeight);
+                    } else {
+                      minHeight = constraints.maxHeight.isFinite
+                          ? constraints.maxHeight
+                          : 0.0;
+                    }
+                    // Ensure minHeight is always finite (never infinity)
+                    minHeight = minHeight.isFinite ? minHeight : 0.0;
+
+                    return SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.only(
+                        left: isCompact ? 16 : 24,
+                        right: isCompact ? 16 : 24,
+                        top: 24,
+                        bottom: 24,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: minHeight),
+                        child: Center(
+                          child: GlassCard(
+                            child: _emailSent
+                                ? _buildSuccessView()
+                                : _buildFormView(),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildFormView() {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isCompact = Breakpoints.isCompactMobile(context);
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Animated Logo - adapts to dark mode
           Center(
             child: AuthLogoIcon(
-              size: 90,
-              isWhite: Theme.of(context).brightness == Brightness.dark,
+              size: isCompact ? 70 : 80,
+              isWhite: theme.brightness == Brightness.dark,
             ),
           ),
-          const SizedBox(height: 24),
-
-          // Title
+          SizedBox(height: isCompact ? 16 : 20),
           Text(
-            'Reset Your Password',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 28,
-                  color: const Color(0xFF2D3748),
-                ),
+            l10n.authResetPassword,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: isCompact ? 22 : 26,
+              color: theme.colorScheme.onSurface,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
-
-          // Subtitle
+          const SizedBox(height: 6),
           Text(
-            'Enter your email address and we\'ll send you instructions to reset your password.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF718096),
-                  fontSize: 15,
-                ),
+            l10n.authResetPasswordDesc,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: isCompact ? 13 : 14,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 40),
-
-          // Email field
+          SizedBox(height: isCompact ? 24 : 32),
           PremiumInputField(
             controller: _emailController,
-            labelText: 'Email Address',
+            labelText: l10n.email,
             prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             validator: ProfileValidators.validateEmail,
           ),
-          const SizedBox(height: 32),
-
-          // Send Reset Link Button
+          SizedBox(height: isCompact ? 20 : 24),
           GradientAuthButton(
-            text: 'Send Reset Link',
+            text: l10n.authSendResetLink,
             onPressed: _handleResetPassword,
             isLoading: _isLoading,
             icon: Icons.email_outlined,
           ),
-          const SizedBox(height: 24),
-
-          // Back to Login
-          Center(
-            child: TextButton(
-              onPressed: () => context.go('/login'),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(
-                    Icons.arrow_back,
-                    size: 16,
-                    color: Color(0xFF6B4CE6),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Back to Login',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6B4CE6),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          SizedBox(height: isCompact ? 16 : 20),
+          _buildBackToLogin(theme, l10n),
         ],
       ),
     );
   }
 
   Widget _buildSuccessView() {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final isCompact = Breakpoints.isCompactMobile(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Success Icon with gradient background
         Center(
           child: Container(
-            width: 100,
-            height: 100,
+            width: isCompact ? 72 : 88,
+            height: isCompact ? 72 : 88,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF10B981), // Green
-                  Color(0xFF059669),
-                ],
-              ),
+              color: AppColors.success,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF10B981).withAlpha((0.3 * 255).toInt()),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  color: AppColors.success.withAlpha(64),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.check_circle_outline,
-              size: 50,
+              size: isCompact ? 36 : 44,
               color: Colors.white,
             ),
           ),
         ),
-        const SizedBox(height: 32),
-
-        // Title
+        SizedBox(height: isCompact ? 20 : 24),
         Text(
-          'Email Sent!',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 28,
-                color: const Color(0xFF2D3748),
-              ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 12),
-
-        // Subtitle
-        Text(
-          'We\'ve sent password reset instructions to:',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF718096),
-                fontSize: 15,
-              ),
+          l10n.authEmailSent,
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: isCompact ? 22 : 26,
+            color: theme.colorScheme.onSurface,
+          ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
-
-        // Email address
         Text(
-          _emailController.text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF6B4CE6),
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+          l10n.authResetEmailSentTo,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: isCompact ? 13 : 14,
+          ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 40),
-
-        // Return to Login Button
+        const SizedBox(height: 6),
+        Text(
+          _emailController.text,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.primary,
+            fontSize: isCompact ? 14 : 15,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: isCompact ? 24 : 32),
         GradientAuthButton(
-          text: 'Return to Login',
+          text: l10n.authReturnToLogin,
           onPressed: () => context.go('/login'),
-          isLoading: false,
           icon: Icons.arrow_forward,
         ),
-        const SizedBox(height: 16),
-
-        // Resend email option
+        SizedBox(height: isCompact ? 12 : 14),
         Center(
           child: TextButton(
             onPressed: () => setState(() => _emailSent = false),
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
             ),
-            child: const Text(
-              'Didn\'t receive the email? Resend',
+            child: Text(
+              l10n.authResendEmail,
               style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF6B4CE6),
+                fontSize: 13,
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBackToLogin(ThemeData theme, AppLocalizations l10n) {
+    return Center(
+      child: TextButton(
+        onPressed: () => context.go('/login'),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.arrow_back, size: 16, color: theme.colorScheme.primary),
+            const SizedBox(width: 6),
+            Text(
+              l10n.authBackToLogin,
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

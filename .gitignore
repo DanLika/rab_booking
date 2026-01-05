@@ -72,7 +72,21 @@ firebase-service-account-key.json
 # Documentation and debug files
 *.md
 !README.md
+!CLAUDE.md
+# Whitelist .claude directory and its .md files (Claude Code configuration)
+!.claude/
+!.claude/*.md
+!.claude/**/*.md
+# Whitelist docs directory .md files (project documentation)
+!docs/**/*.md
 *.sql
 *.stackdump
 build_output.txt
 supabase/supabase/
+coverage/
+.firebase/hosting.*.cache
+*.backup
+android/build/
+
+# Cloud Functions compiled output
+functions/lib/

@@ -1,42 +1,61 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../core/config/router_owner.dart';
+import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/constants/app_dimensions.dart';
+import '../../../../shared/models/user_profile_model.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/domain/models/widget_mode.dart';
+import '../../../widget/presentation/providers/widget_settings_provider.dart'
+    as widget_provider;
 import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
+import '../providers/user_profile_provider.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
   const WidgetSettingsScreen({
     required this.propertyId,
     required this.unitId,
+    this.showAppBar = true,
     super.key,
   });
 
   final String propertyId;
   final String unitId;
+  final bool showAppBar;
 
   @override
-  ConsumerState<WidgetSettingsScreen> createState() => _WidgetSettingsScreenState();
+  ConsumerState<WidgetSettingsScreen> createState() =>
+      _WidgetSettingsScreenState();
 }
 
-class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
+class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
+    with AndroidKeyboardDismissFixApproach1<WidgetSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Widget Mode
   WidgetMode _selectedMode = WidgetMode.calendarOnly;
 
   // Payment Methods
+  int _globalDepositPercentage = 20; // Global deposit % for all payment methods
+
   bool _stripeEnabled = false;
-  int _stripeDepositPercentage = 20;
 
   bool _bankTransferEnabled = false;
-  int _bankDepositPercentage = 20;
-  final _bankNameController = TextEditingController();
-  final _ibanController = TextEditingController();
-  final _swiftController = TextEditingController();
-  final _accountHolderController = TextEditingController();
+  // Bank details now read from CompanyDetails (profile), not stored per-unit
+  int _bankPaymentDeadlineDays = 3;
+  bool _bankEnableQrCode = true;
+  final _bankCustomNotesController = TextEditingController();
+  bool _bankUseCustomNotes = false;
 
   bool _payOnArrivalEnabled = false;
 
@@ -50,17 +69,21 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
   final _phoneController = TextEditingController();
   bool _showEmail = true;
   final _emailController = TextEditingController();
-  bool _showWhatsApp = false;
-  final _whatsAppController = TextEditingController();
-  final _customMessageController = TextEditingController();
 
-  // Theme Options
-  bool _showBranding = true;
-  Color _primaryColor = const Color(0xFF1976D2);
+  // External Calendar Sync Options
+  bool _externalCalendarEnabled = false;
+  bool _syncBookingCom = false;
+  final _bookingComAccountIdController = TextEditingController();
+  final _bookingComAccessTokenController = TextEditingController();
+  bool _syncAirbnb = false;
+  final _airbnbAccountIdController = TextEditingController();
+  final _airbnbAccessTokenController = TextEditingController();
+  int _syncIntervalMinutes = 60;
 
   bool _isLoading = true;
   bool _isSaving = false;
   WidgetSettings? _existingSettings;
+  CompanyDetails? _companyDetails;
 
   @override
   void initState() {
@@ -82,16 +105,22 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
         _existingSettings = settings;
         _applySettingsToForm(settings);
       }
+
+      // OPTIMIZED: Company details loaded via companyDetailsProvider stream in build()
+      // No manual fetch needed here - reduces 1 Firestore query
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: 'Greška prilikom učitavanja postavki',
+          userMessage: l10n.widgetSettingsLoadError,
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -100,17 +129,21 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       // Widget Mode
       _selectedMode = settings.widgetMode;
 
+      // Global deposit percentage
+      _globalDepositPercentage = settings.globalDepositPercentage;
+
       // Payment Methods - Stripe
       _stripeEnabled = settings.stripeConfig?.enabled ?? false;
-      _stripeDepositPercentage = settings.stripeConfig?.depositPercentage ?? 20;
 
-      // Payment Methods - Bank Transfer
+      // Payment Methods - Bank Transfer (bank details now from profile)
       _bankTransferEnabled = settings.bankTransferConfig?.enabled ?? false;
-      _bankDepositPercentage = settings.bankTransferConfig?.depositPercentage ?? 20;
-      _bankNameController.text = settings.bankTransferConfig?.bankName ?? '';
-      _ibanController.text = settings.bankTransferConfig?.iban ?? '';
-      _swiftController.text = settings.bankTransferConfig?.swift ?? '';
-      _accountHolderController.text = settings.bankTransferConfig?.accountHolder ?? '';
+      _bankPaymentDeadlineDays =
+          settings.bankTransferConfig?.paymentDeadlineDays ?? 3;
+      _bankEnableQrCode = settings.bankTransferConfig?.enableQrCode ?? true;
+      _bankCustomNotesController.text =
+          settings.bankTransferConfig?.customNotes ?? '';
+      _bankUseCustomNotes =
+          settings.bankTransferConfig?.useCustomNotes ?? false;
 
       // Pay on Arrival
       _payOnArrivalEnabled = settings.allowPayOnArrival;
@@ -125,640 +158,2010 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen> {
       _phoneController.text = settings.contactOptions.phoneNumber ?? '';
       _showEmail = settings.contactOptions.showEmail;
       _emailController.text = settings.contactOptions.emailAddress ?? '';
-      _showWhatsApp = settings.contactOptions.showWhatsApp;
-      _whatsAppController.text = settings.contactOptions.whatsAppNumber ?? '';
-      _customMessageController.text = settings.contactOptions.customMessage ?? '';
 
-      // Theme Options
-      _showBranding = settings.themeOptions?.showBranding ?? true;
-      if (settings.themeOptions?.primaryColor != null) {
-        _primaryColor = _parseColor(settings.themeOptions!.primaryColor!);
-      }
+      // External Calendar Sync Options
+      _externalCalendarEnabled =
+          settings.externalCalendarConfig?.enabled ?? false;
+      _syncBookingCom =
+          settings.externalCalendarConfig?.syncBookingCom ?? false;
+      _bookingComAccountIdController.text =
+          settings.externalCalendarConfig?.bookingComAccountId ?? '';
+      _bookingComAccessTokenController.text =
+          settings.externalCalendarConfig?.bookingComAccessToken ?? '';
+      _syncAirbnb = settings.externalCalendarConfig?.syncAirbnb ?? false;
+      _airbnbAccountIdController.text =
+          settings.externalCalendarConfig?.airbnbAccountId ?? '';
+      _airbnbAccessTokenController.text =
+          settings.externalCalendarConfig?.airbnbAccessToken ?? '';
+      _syncIntervalMinutes =
+          settings.externalCalendarConfig?.syncIntervalMinutes ?? 60;
     });
   }
 
-  Color _parseColor(String hexColor) {
-    try {
-      return Color(int.parse(hexColor.replaceFirst('#', '0xFF')));
-    } catch (e) {
-      return const Color(0xFF1976D2);
+  /// Handle bank transfer toggle with lazy validation
+  Future<void> _handleBankTransferToggle(bool val) async {
+    final l10n = AppLocalizations.of(context);
+    if (val) {
+      // Check if bank details exist in profile
+      if (_companyDetails == null || !_companyDetails!.hasBankDetails) {
+        // Show dialog to go to profile
+        final goToProfile = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(l10n.widgetSettingsBankNotEntered),
+            content: Text(l10n.widgetSettingsBankNotEnteredDesc),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l10n.widgetSettingsAddBankDetails),
+              ),
+            ],
+          ),
+        );
+
+        if (goToProfile == true && mounted) {
+          // Navigate to edit profile
+          await context.push(OwnerRoutes.bankAccount);
+          // OPTIMIZED: Invalidate provider to trigger stream refresh
+          // The build() watch will auto-update _companyDetails
+          ref.invalidate(companyDetailsProvider);
+          // Wait a frame for provider to update state
+          await Future.delayed(const Duration(milliseconds: 100));
+          // If now has bank details, enable bank transfer
+          if (_companyDetails?.hasBankDetails == true) {
+            setState(() => _bankTransferEnabled = true);
+          }
+        }
+        return; // Don't enable if no bank details
+      }
     }
+
+    setState(() => _bankTransferEnabled = val);
   }
 
-  String _colorToHex(Color color) {
-    // Extract ARGB components without using deprecated .value
-    final r = color.r.toInt();
-    final g = color.g.toInt();
-    final b = color.b.toInt();
-    return '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}'.toUpperCase();
+  /// Build read-only display of bank details from profile
+  Widget _buildBankDetailsFromProfile() {
+    final theme = Theme.of(context);
+    final company = _companyDetails;
+
+    if (company == null || !company.hasBankDetails) {
+      // Show warning card
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.error.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: theme.colorScheme.error,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.widgetSettingsBankNotEntered,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.widgetSettingsBankEnterDetails,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return TextButton(
+                  onPressed: () async {
+                    await context.push(OwnerRoutes.bankAccount);
+                    // OPTIMIZED: Invalidate provider to trigger stream refresh
+                    // The build() watch will auto-update _companyDetails
+                    ref.invalidate(companyDetailsProvider);
+                  },
+                  child: Text(l10n.edit),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show bank details from profile
+    final isDark = theme.brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.sectionDividerDark.withValues(alpha: 0.5)
+            : AppColors.sectionDividerLight.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark
+              ? AppColors.sectionDividerDark
+              : AppColors.sectionDividerLight,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title row
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    return Text(
+                      l10n.widgetSettingsBankFromProfile,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Bank details
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return Column(
+                children: [
+                  _buildBankDetailRow(
+                    l10n.widgetSettingsBank,
+                    company.bankName,
+                  ),
+                  _buildBankDetailRow('IBAN', company.bankAccountIban),
+                  _buildBankDetailRow('SWIFT/BIC', company.swift),
+                  _buildBankDetailRow(
+                    l10n.widgetSettingsAccountHolder,
+                    company.accountHolder,
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          // Edit button - full width below details
+          SizedBox(
+            width: double.infinity,
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return OutlinedButton.icon(
+                  onPressed: () async {
+                    await context.push(OwnerRoutes.bankAccount);
+                    // OPTIMIZED: Invalidate provider to trigger stream refresh
+                    // The build() watch will auto-update _companyDetails
+                    ref.invalidate(companyDetailsProvider);
+                  },
+                  icon: const Icon(Icons.edit, size: 16),
+                  label: Text(l10n.edit),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    side: BorderSide(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBankDetailRow(String label, String value) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value.isNotEmpty ? value : '-',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveSettings() async {
-    if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context);
+    if (!_formKey.currentState!.validate()) {
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        l10n.widgetPleaseCheckFormErrors,
+      );
+      return;
+    }
+
+    // Validation: At least one payment method must be enabled in bookingInstant mode
+    // (No validation needed for bookingPending - payment methods are hidden)
+    if (_selectedMode == WidgetMode.bookingInstant) {
+      final hasPaymentMethod =
+          _stripeEnabled || _bankTransferEnabled || _payOnArrivalEnabled;
+      if (!hasPaymentMethod) {
+        if (mounted) {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            Exception('Validation failed'),
+            userMessage: l10n.widgetSettingsPaymentValidation,
+          );
+        }
+        return;
+      }
+    }
 
     setState(() => _isSaving = true);
 
     try {
       final repository = ref.read(widgetSettingsRepositoryProvider);
 
+      // Get current user ID for owner_id (required for Firestore security rules)
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
       final settings = WidgetSettings(
         id: widget.unitId,
         propertyId: widget.propertyId,
+        // Ensure owner_id is set for legacy document migration
+        ownerId: _existingSettings?.ownerId ?? currentUserId,
         widgetMode: _selectedMode,
-        stripeConfig: _stripeEnabled ? StripePaymentConfig(
-          enabled: true,
-          depositPercentage: _stripeDepositPercentage,
-        ) : null,
-        bankTransferConfig: _bankTransferEnabled ? BankTransferConfig(
-          enabled: true,
-          depositPercentage: _bankDepositPercentage,
-          bankName: _bankNameController.text.isEmpty ? null : _bankNameController.text,
-          iban: _ibanController.text.isEmpty ? null : _ibanController.text,
-          swift: _swiftController.text.isEmpty ? null : _swiftController.text,
-          accountHolder: _accountHolderController.text.isEmpty ? null : _accountHolderController.text,
-        ) : null,
+        globalDepositPercentage: _globalDepositPercentage,
+        stripeConfig: _stripeEnabled
+            ? StripePaymentConfig(
+                enabled: true,
+                depositPercentage:
+                    _globalDepositPercentage, // Use global deposit
+              )
+            : null,
+        bankTransferConfig: _bankTransferEnabled
+            ? BankTransferConfig(
+                enabled: true,
+                depositPercentage:
+                    _globalDepositPercentage, // Use global deposit
+                // Owner ID for fetching bank details from CompanyDetails
+                ownerId: FirebaseAuth.instance.currentUser?.uid,
+                // Bank details copied from CompanyDetails for backward compatibility
+                // New widgets use ownerId to fetch fresh data from owner's profile
+                bankName: _companyDetails?.bankName,
+                iban: _companyDetails?.bankAccountIban,
+                swift: _companyDetails?.swift,
+                accountHolder: _companyDetails?.accountHolder,
+                paymentDeadlineDays: _bankPaymentDeadlineDays,
+                enableQrCode: _bankEnableQrCode,
+                customNotes: _bankCustomNotesController.text.isEmpty
+                    ? null
+                    : _bankCustomNotesController.text,
+                useCustomNotes: _bankUseCustomNotes,
+              )
+            : null,
         allowPayOnArrival: _payOnArrivalEnabled,
-        requireOwnerApproval: _requireApproval,
+        // For bookingPending mode, approval is ALWAYS required (hardcoded true)
+        // For bookingInstant mode, use the user's selection
+        requireOwnerApproval: _selectedMode == WidgetMode.bookingPending
+            ? true
+            : _requireApproval,
         allowGuestCancellation: _allowCancellation,
         cancellationDeadlineHours: _cancellationHours,
+        // Use minNights from unit settings (not widget settings)
+        // This is configured in "Edit Unit" form, not here
+        minNights: _existingSettings?.minNights ?? 1,
         contactOptions: ContactOptions(
           showPhone: _showPhone,
-          phoneNumber: _phoneController.text.isEmpty ? null : _phoneController.text,
+          phoneNumber: _phoneController.text.isEmpty
+              ? null
+              : _phoneController.text,
           showEmail: _showEmail,
-          emailAddress: _emailController.text.isEmpty ? null : _emailController.text,
-          showWhatsApp: _showWhatsApp,
-          whatsAppNumber: _whatsAppController.text.isEmpty ? null : _whatsAppController.text,
-          customMessage: _customMessageController.text.isEmpty ? null : _customMessageController.text,
+          emailAddress: _emailController.text.isEmpty
+              ? null
+              : _emailController.text,
         ),
-        themeOptions: ThemeOptions(
-          primaryColor: _colorToHex(_primaryColor),
-          showBranding: _showBranding,
-        ),
+        emailConfig:
+            _existingSettings?.emailConfig ?? const EmailNotificationConfig(),
+        externalCalendarConfig: _externalCalendarEnabled
+            ? ExternalCalendarConfig(
+                enabled: true,
+                syncBookingCom: _syncBookingCom,
+                bookingComAccountId: _bookingComAccountIdController.text.isEmpty
+                    ? null
+                    : _bookingComAccountIdController.text,
+                bookingComAccessToken:
+                    _bookingComAccessTokenController.text.isEmpty
+                    ? null
+                    : _bookingComAccessTokenController.text,
+                syncAirbnb: _syncAirbnb,
+                airbnbAccountId: _airbnbAccountIdController.text.isEmpty
+                    ? null
+                    : _airbnbAccountIdController.text,
+                airbnbAccessToken: _airbnbAccessTokenController.text.isEmpty
+                    ? null
+                    : _airbnbAccessTokenController.text,
+                syncIntervalMinutes: _syncIntervalMinutes,
+              )
+            : null,
+        taxLegalConfig:
+            _existingSettings?.taxLegalConfig ??
+            const TaxLegalConfig(enabled: false),
+        themeOptions: _existingSettings?.themeOptions,
         createdAt: _existingSettings?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
       await repository.updateWidgetSettings(settings);
 
+      // Invalidate provider cache to force refresh
+      ref.invalidate(widget_provider.widgetSettingsStreamProvider);
+
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          'Postavke uspješno sačuvane!',
+          l10n.widgetSettingsSaveSuccess,
         );
-        Navigator.pop(context);
+        // Only navigate back when used as standalone screen (with AppBar)
+        // When embedded in tabs (showAppBar: false), stay on current tab
+        if (widget.showAppBar) {
+          // Navigate after frame completes to avoid Navigator lock assertion
+          // caused by provider invalidation triggering rebuilds
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.pop(context);
+            }
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: 'Greška prilikom čuvanja postavki',
+          userMessage: l10n.widgetSettingsSaveError,
         );
       }
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
   @override
   void dispose() {
-    _bankNameController.dispose();
-    _ibanController.dispose();
-    _swiftController.dispose();
-    _accountHolderController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
-    _whatsAppController.dispose();
-    _customMessageController.dispose();
+    _bookingComAccountIdController.dispose();
+    _bookingComAccessTokenController.dispose();
+    _airbnbAccountIdController.dispose();
+    _airbnbAccessTokenController.dispose();
+    _bankCustomNotesController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Postavke Widgeta'),
-        actions: [
-          if (!_isLoading)
-            IconButton(
-              icon: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : const Icon(Icons.save),
-              onPressed: _isSaving ? null : _saveSettings,
-              tooltip: 'Sačuvaj',
-            ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildSectionTitle('Mod Widgeta', Icons.widgets),
-                  _buildWidgetModeSection(),
+    // OPTIMIZED: Sync company details from stream provider (reduces manual Firestore queries)
+    // This replaces manual getCompanyDetails() calls and auto-updates on profile changes
+    final companyDetailsAsync = ref.watch(companyDetailsProvider);
+    companyDetailsAsync.whenData((data) {
+      if (data != _companyDetails) {
+        // Schedule state update for next frame to avoid setState during build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() => _companyDetails = data);
+          }
+        });
+      }
+    });
 
+    final contentPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
+
+    final bodyContent = _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : Form(
+            key: _formKey,
+            child: ListView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.all(contentPadding),
+              children: [
+                _buildWidgetModeSection(),
+
+                const SizedBox(height: 24),
+
+                // Payment Methods - ONLY for bookingInstant mode
+                if (_selectedMode == WidgetMode.bookingInstant) ...[
+                  _buildPaymentMethodsSection(),
                   const SizedBox(height: 24),
 
-                  if (_selectedMode != WidgetMode.calendarOnly) ...[
-                    _buildSectionTitle('Metode Plaćanja', Icons.payment),
-                    _buildPaymentMethodsSection(),
-                    const SizedBox(height: 24),
-
-                    _buildSectionTitle('Ponašanje Rezervacije', Icons.settings),
-                    _buildBookingBehaviorSection(),
-                    const SizedBox(height: 24),
-                  ],
-
-                  _buildSectionTitle('Kontakt Informacije', Icons.contact_phone),
-                  _buildContactOptionsSection(),
-
+                  _buildBookingBehaviorSection(),
                   const SizedBox(height: 24),
-
-                  _buildSectionTitle('Tema', Icons.palette),
-                  _buildThemeSection(),
-
-                  const SizedBox(height: 32),
-
-                  ElevatedButton(
-                    onPressed: _isSaving ? null : _saveSettings,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.all(16),
-                      backgroundColor: AppColors.primary,
-                    ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('Sačuvaj Postavke', style: TextStyle(fontSize: 16)),
-                  ),
                 ],
-              ),
-            ),
-    );
-  }
 
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 24, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+                // Info card - ONLY for bookingPending mode
+                if (_selectedMode == WidgetMode.bookingPending) ...[
+                  _buildInfoCard(
+                    icon: Icons.info_outline,
+                    title: l10n.widgetSettingsBookingWithoutPayment,
+                    message: l10n.widgetSettingsBookingWithoutPaymentDesc,
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildBookingBehaviorSection(),
+                  const SizedBox(height: 24),
+                ],
+
+                // Contact Options - ONLY for calendarOnly mode
+                // In booking modes, guests use the booking form, so contact info is not needed
+                if (_selectedMode == WidgetMode.calendarOnly) ...[
+                  _buildContactOptionsSection(),
+                ],
+
+                const SizedBox(height: 32),
+
+                // Gradient save button (uses brand gradient)
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: GradientTokens.brandPrimary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _isSaving ? null : _saveSettings,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 15,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.check,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isSaving
+                                  ? l10n.widgetSettingsSaving
+                                  : l10n.widgetSettingsSave,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+    // When showAppBar is false, return only content (for embedding in tabs)
+    if (!widget.showAppBar) {
+      return bodyContent;
+    }
+
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          // Handle browser back button on Chrome Android
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/owner/properties');
+          }
+        }
+      },
+      child: KeyedSubtree(
+        key: ValueKey('widget_settings_screen_$keyboardFixRebuildKey'),
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          appBar: CommonAppBar(
+            title: l10n.widgetSettingsTitle,
+            leadingIcon: Icons.arrow_back,
+            onLeadingIconTap: (context) {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/owner/properties');
+              }
+            },
+          ),
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Note: ListView handles keyboard spacing automatically when resizeToAvoidBottomInset is true
+                return bodyContent;
+              },
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildWidgetModeSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Odaberite kako će widget funkcionirati:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+    final theme = Theme.of(context);
+    final sectionPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            // TIP 1: Simple diagonal gradient (2 colors, 2 stops)
+            color: context.gradients.cardBackground,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
             ),
-            const SizedBox(height: 12),
-            ...WidgetMode.values.map((mode) => InkWell(
-              onTap: () {
-                setState(() => _selectedMode = mode);
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    // Custom radio indicator to avoid deprecated API
-                    Container(
-                      width: 20,
-                      height: 20,
-                      margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: _selectedMode == mode
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey,
-                          width: 2,
-                        ),
-                      ),
-                      child: _selectedMode == mode
-                          ? Center(
-                              child: Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            )
-                          : null,
+          ),
+          padding: EdgeInsets.all(sectionPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with icon - Minimalist style (matching euro icon from Cjenovnik)
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(mode.displayName),
-                          Text(
-                            mode.description,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    child: Icon(
+                      Icons.widgets_outlined,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.widgetSettingsWidgetMode,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 2,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            gradient: GradientTokens.brandPrimary,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.widgetSettingsWidgetModeDesc,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
-            )),
-          ],
+              const SizedBox(height: 12),
+              ...WidgetMode.values.map(
+                (mode) => InkWell(
+                  onTap: () {
+                    setState(() => _selectedMode = mode);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        // Custom radio indicator to avoid deprecated API
+                        Container(
+                          width: 20,
+                          height: 20,
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _selectedMode == mode
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onSurface
+                                        .withValues(alpha: 0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: _selectedMode == mode
+                              ? Center(
+                                  child: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(mode.displayName),
+                              Text(
+                                mode.description,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildPaymentMethodsSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Stripe Payment
-            SwitchListTile(
-              value: _stripeEnabled,
-              onChanged: (value) => setState(() => _stripeEnabled = value),
-              title: const Text('Stripe Plaćanje'),
-              subtitle: const Text('Plaćanje karticom preko Stripe-a'),
-              contentPadding: EdgeInsets.zero,
+    final theme = Theme.of(context);
+    final sectionPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.gradients.cardBackground,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
             ),
-            if (_stripeEnabled) ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Depozit: $_stripeDepositPercentage%'),
-                    Slider(
-                      value: _stripeDepositPercentage.toDouble(),
-                      min: 0,
-                      max: 100,
-                      divisions: 20,
-                      label: '$_stripeDepositPercentage%',
-                      onChanged: (value) {
-                        setState(() => _stripeDepositPercentage = value.round());
-                      },
+          ),
+          padding: EdgeInsets.all(sectionPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with icon and title
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
+                    child: Icon(
+                      Icons.payment,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.widgetSettingsPaymentMethods,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 2,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            gradient: GradientTokens.brandPrimary,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-
-            const Divider(),
-
-            // Bank Transfer
-            SwitchListTile(
-              value: _bankTransferEnabled,
-              onChanged: (value) => setState(() => _bankTransferEnabled = value),
-              title: const Text('Bankovna Uplata'),
-              subtitle: const Text('Uplata na bankovni račun'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_bankTransferEnabled) ...[
               const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
+              // Info text
+              Text(
+                l10n.widgetSettingsPaymentMethodsDesc,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Global Deposit Percentage Slider (applies to all payment methods)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Depozit: $_bankDepositPercentage%'),
-                    Slider(
-                      value: _bankDepositPercentage.toDouble(),
-                      min: 0,
-                      max: 100,
-                      divisions: 20,
-                      label: '$_bankDepositPercentage%',
-                      onChanged: (value) {
-                        setState(() => _bankDepositPercentage = value.round());
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.percent,
+                          size: 22,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.widgetSettingsDepositAmount(
+                            _globalDepositPercentage,
+                          ),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.widgetSettingsDepositDesc,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: Theme.of(context).colorScheme.primary,
+                        inactiveTrackColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2),
+                        thumbColor: Theme.of(context).colorScheme.primary,
+                        overlayColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.12),
+                        valueIndicatorColor: Theme.of(
+                          context,
+                        ).colorScheme.primary,
+                        valueIndicatorTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: Slider(
+                        value: _globalDepositPercentage.toDouble(),
+                        max: 100,
+                        divisions: 20,
+                        label: '$_globalDepositPercentage%',
+                        onChanged: (value) {
+                          setState(
+                            () => _globalDepositPercentage = value.round(),
+                          );
+                        },
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '0% (${l10n.widgetSettingsFullPayment})',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        Text(
+                          '100% (${l10n.widgetSettingsFullPayment})',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Stripe Payment - Collapsible with approval option
+              _buildPaymentMethodExpansionTile(
+                icon: Icons.credit_card,
+                title: l10n.widgetSettingsStripePayment,
+                subtitle: l10n.widgetSettingsCardPayment,
+                enabled: _stripeEnabled,
+                onToggle: (val) => setState(() => _stripeEnabled = val),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    // Require Approval switch - Only applies to Stripe
+                    // Bank transfer and Pay on Arrival always require approval
+                    Builder(
+                      builder: (context) {
+                        final l10nInner = AppLocalizations.of(context);
+                        return _buildCompactSwitchCard(
+                          icon: Icons.approval,
+                          label: l10nInner.widgetSettingsRequireApproval,
+                          subtitle: l10nInner.widgetSettingsStripeApprovalNote,
+                          value: _requireApproval,
+                          onChanged: (val) =>
+                              setState(() => _requireApproval = val),
+                        );
                       },
                     ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Bank Transfer - Collapsible with lazy validation
+              _buildPaymentMethodExpansionTile(
+                icon: Icons.account_balance,
+                title: l10n.widgetSettingsBankTransfer,
+                subtitle: l10n.widgetSettingsBankPayment,
+                enabled: _bankTransferEnabled,
+                onToggle: _handleBankTransferToggle,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _bankNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Naziv banke',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+
+                    // Bank details from profile (read-only display)
+                    _buildBankDetailsFromProfile(),
+
+                    const SizedBox(height: 12),
+
+                    // Payment deadline dropdown
+                    Builder(
+                      builder: (ctx) => DropdownButtonFormField<int>(
+                        initialValue: _bankPaymentDeadlineDays,
+                        dropdownColor: InputDecorationHelper.getDropdownColor(
+                          ctx,
+                        ),
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: l10n.widgetSettingsPaymentDeadline,
+                          context: ctx,
+                        ),
+                        menuMaxHeight: 300,
+                        isExpanded: true,
+                        items: [
+                          DropdownMenuItem(
+                            value: 1,
+                            child: Text(
+                              '1 ${l10n.widgetSettingsDay}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 3,
+                            child: Text(
+                              '3 ${l10n.widgetSettingsDays}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 5,
+                            child: Text(
+                              '5 ${l10n.widgetSettingsDays}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 7,
+                            child: Text(
+                              '7 ${l10n.widgetSettingsDays}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 14,
+                            child: Text(
+                              '14 ${l10n.widgetSettingsDays}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _bankPaymentDeadlineDays = value);
+                          }
+                        },
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _ibanController,
-                      decoration: const InputDecoration(
-                        labelText: 'IBAN',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+
+                    const SizedBox(height: 16),
+
+                    // Custom notes switch
+                    Builder(
+                      builder: (context) {
+                        final l10nInner = AppLocalizations.of(context);
+                        return _buildCompactSwitchCard(
+                          icon: Icons.edit_note,
+                          label: l10nInner.widgetSettingsCustomNote,
+                          subtitle: l10nInner.widgetSettingsAddMessage,
+                          value: _bankUseCustomNotes,
+                          onChanged: (val) =>
+                              setState(() => _bankUseCustomNotes = val),
+                        );
+                      },
+                    ),
+
+                    // Custom notes text field (conditional)
+                    if (_bankUseCustomNotes) ...[
+                      const SizedBox(height: 12),
+                      Builder(
+                        builder: (ctx) => TextFormField(
+                          controller: _bankCustomNotesController,
+                          decoration: InputDecorationHelper.buildDecoration(
+                            labelText: l10n.widgetSettingsNoteMaxChars,
+                            helperText: l10n.widgetSettingsNoteHelper,
+                            context: ctx,
+                          ),
+                          maxLines: 3,
+                          maxLength: 500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Pay on Arrival - Simple switch card (not collapsible since no options)
+              Builder(
+                builder: (context) {
+                  // Force Pay on Arrival if both Stripe and Bank Transfer are disabled
+                  final isForced = !_stripeEnabled && !_bankTransferEnabled;
+
+                  // Auto-enable if forced
+                  if (isForced && !_payOnArrivalEnabled) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      setState(() => _payOnArrivalEnabled = true);
+                    });
+                  }
+
+                  final l10nInner = AppLocalizations.of(context);
+                  return _buildCompactSwitchCard(
+                    icon: Icons.payments,
+                    label: l10nInner.widgetSettingsPayOnArrival,
+                    subtitle: isForced
+                        ? l10nInner.widgetSettingsPayOnArrivalRequired
+                        : l10nInner.widgetSettingsPayOnArrivalDesc,
+                    value: _payOnArrivalEnabled,
+                    onChanged: isForced
+                        ? null
+                        : (val) => setState(() => _payOnArrivalEnabled = val),
+                    isWarning: isForced,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper: Payment method expansion tile
+  Widget _buildPaymentMethodExpansionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool enabled,
+    required ValueChanged<bool> onToggle,
+    required Widget child,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: enabled
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.2)
+            : Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: enabled
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+          width: enabled ? 2 : 1,
+        ),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          iconColor: Theme.of(context).colorScheme.primary,
+          collapsedIconColor: Theme.of(context).colorScheme.primary,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          childrenPadding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: 16,
+          ),
+          leading: Icon(
+            icon,
+            color: enabled
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+
+          controlAffinity: ListTileControlAffinity.trailing,
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          collapsedShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          // Add switch as part of title row instead
+          title: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: enabled
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _swiftController,
-                      decoration: const InputDecoration(
-                        labelText: 'SWIFT/BIC',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _accountHolderController,
-                      decoration: const InputDecoration(
-                        labelText: 'Vlasnik računa',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
                 ),
               ),
+              Switch(
+                value: enabled,
+                onChanged: onToggle,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                activeThumbColor: Theme.of(context).colorScheme.primary,
+                activeTrackColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.5),
+                inactiveThumbColor: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.4),
+                inactiveTrackColor: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.12),
+              ),
             ],
+          ),
 
-            const Divider(),
-
-            // Pay on Arrival
-            SwitchListTile(
-              value: _payOnArrivalEnabled,
-              onChanged: (value) => setState(() => _payOnArrivalEnabled = value),
-              title: const Text('Plaćanje po Dolasku'),
-              subtitle: const Text('Gost plaća prilikom prijave'),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ],
+          children: enabled ? [child] : [],
         ),
+      ),
+    );
+  }
+
+  // Helper: Compact switch card (for small options)
+  Widget _buildCompactSwitchCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool>? onChanged,
+    bool isWarning = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: value && !isWarning
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.3)
+            : isWarning
+            ? const Color(0xFFF3E8F5) // Cool lavender warning background
+            : Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: value && !isWarning
+              ? Theme.of(context).colorScheme.primary
+              : isWarning
+              ? const Color(0xFF9C7BA8) // Cool purple warning border
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+          width: value || isWarning ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: value && !isWarning
+                ? Theme.of(context).colorScheme.primary
+                : isWarning
+                ? const Color(0xFF7B5A8C) // Cool purple warning icon
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: value ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: 14,
+                    color: value && !isWarning
+                        ? Theme.of(context).colorScheme.onSurface
+                        : isWarning
+                        ? const Color(0xFF7B5A8C) // Cool purple warning text
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isWarning
+                        ? const Color(
+                            0xFF9C7BA8,
+                          ) // Cool purple warning subtitle
+                        : Theme.of(
+                            context,
+                          ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
+            activeTrackColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.4),
+            inactiveTrackColor: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.12),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBookingBehaviorSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SwitchListTile(
-              value: _requireApproval,
-              onChanged: (value) => setState(() => _requireApproval = value),
-              title: const Text('Zahtijeva Odobrenje'),
-              subtitle: const Text('Morate ručno odobriti svaku rezervaciju'),
-              contentPadding: EdgeInsets.zero,
+    final theme = Theme.of(context);
+    final sectionPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.gradients.cardBackground,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
             ),
-            const Divider(),
-            SwitchListTile(
-              value: _allowCancellation,
-              onChanged: (value) => setState(() => _allowCancellation = value),
-              title: const Text('Dozvolite Otkazivanje'),
-              subtitle: const Text('Gosti mogu otkazati rezervaciju'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_allowCancellation) ...[
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Otkazivanje do: $_cancellationHours sati prije prijave'),
-                    Slider(
-                      value: _cancellationHours.toDouble(),
-                      min: 0,
-                      max: 168, // 7 days
-                      divisions: 28,
-                      label: '$_cancellationHours h',
-                      onChanged: (value) {
-                        setState(() => _cancellationHours = value.round());
-                      },
+          ),
+          padding: EdgeInsets.all(sectionPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with icon and title
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
+                    child: Icon(
+                      Icons.settings,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.widgetSettingsBookingBehavior,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 2,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            gradient: GradientTokens.brandPrimary,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Booking Behavior: Cancellation switch + deadline slider
+              // Note: Require Approval is now in Stripe section (only applies to Stripe)
+              // Bank transfer and Pay on Arrival always require approval
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isDesktop = constraints.maxWidth >= 600;
+                  final l10nInner = AppLocalizations.of(context);
+
+                  // Build cancellation switch card
+                  final cancellationCard = _buildBehaviorSwitchCard(
+                    icon: Icons.event_busy,
+                    label: l10nInner.widgetSettingsAllowCancellation,
+                    subtitle: l10nInner.widgetSettingsGuestsCanCancel,
+                    value: _allowCancellation,
+                    onChanged: (val) =>
+                        setState(() => _allowCancellation = val),
+                  );
+
+                  // Build cancellation deadline card (only shown when cancellation is enabled)
+                  final deadlineCard = Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _allowCancellation
+                          ? Theme.of(context).colorScheme.primaryContainer
+                                .withValues(alpha: 0.3)
+                          : Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _allowCancellation
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(
+                                context,
+                              ).colorScheme.outline.withValues(alpha: 0.3),
+                        width: _allowCancellation ? 2 : 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 20,
+                              color: _allowCancellation
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                l10nInner.widgetSettingsCancellationDeadline(
+                                  _cancellationHours,
+                                ),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: _allowCancellation
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: _allowCancellation
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.3),
+                            inactiveTrackColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2),
+                            thumbColor: _allowCancellation
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                            overlayColor: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.12),
+                            valueIndicatorColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            valueIndicatorTextStyle: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: Slider(
+                            value: _cancellationHours.toDouble(),
+                            max: 360, // 15 days
+                            divisions: 60,
+                            label: '$_cancellationHours h',
+                            onChanged: _allowCancellation
+                                ? (value) {
+                                    setState(
+                                      () => _cancellationHours = value.round(),
+                                    );
+                                  }
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  // Desktop: cancellation switch left, deadline slider right
+                  if (isDesktop) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: cancellationCard),
+                        const SizedBox(width: 12),
+                        Expanded(child: deadlineCard),
+                      ],
+                    );
+                  } else {
+                    // Mobile: Vertical layout
+                    return Column(
+                      children: [
+                        cancellationCard,
+                        const SizedBox(height: 12),
+                        deadlineCard,
+                      ],
+                    );
+                  }
+                },
               ),
             ],
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  // Helper widget for behavior switch cards
+  Widget _buildBehaviorSwitchCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: value
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.3)
+            : Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: value
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+          width: value ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Leading icon
+          Icon(
+            icon,
+            color: value
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          // Expanded title and subtitle
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: value
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Trailing switch
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
+            activeTrackColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.5),
+            inactiveThumbColor: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.4),
+            inactiveTrackColor: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.12),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildContactOptionsSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Kontakt opcije koje će biti prikazane u widgetu:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
+    final theme = Theme.of(context);
+    final sectionPadding = context.horizontalPadding;
+    final l10n = AppLocalizations.of(context);
 
-            // Phone
-            SwitchListTile(
-              value: _showPhone,
-              onChanged: (value) => setState(() => _showPhone = value),
-              title: const Text('Prikaži Telefon'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_showPhone) ...[
-              Padding(
-                padding: const EdgeInsets.only(left: 16, top: 8),
-                child: TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Broj telefona',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-
-            // Email
-            SwitchListTile(
-              value: _showEmail,
-              onChanged: (value) => setState(() => _showEmail = value),
-              title: const Text('Prikaži Email'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_showEmail) ...[
-              Padding(
-                padding: const EdgeInsets.only(left: 16, top: 8),
-                child: TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email adresa',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-
-            // WhatsApp
-            SwitchListTile(
-              value: _showWhatsApp,
-              onChanged: (value) => setState(() => _showWhatsApp = value),
-              title: const Text('Prikaži WhatsApp'),
-              contentPadding: EdgeInsets.zero,
-            ),
-            if (_showWhatsApp) ...[
-              Padding(
-                padding: const EdgeInsets.only(left: 16, top: 8),
-                child: TextFormField(
-                  controller: _whatsAppController,
-                  decoration: const InputDecoration(
-                    labelText: 'WhatsApp broj',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: Icon(Icons.message),
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
-
-            // Custom Message
-            TextFormField(
-              controller: _customMessageController,
-              decoration: const InputDecoration(
-                labelText: 'Prilagođena Poruka',
-                hintText: 'Kontaktirajte nas za rezervaciju!',
-                border: OutlineInputBorder(),
-                helperText: 'Poruka koja će biti prikazana gostima',
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildThemeSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Prilagodite izgled widgeta:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Primarna Boja'),
-              trailing: GestureDetector(
-                onTap: _showColorPicker,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: _primaryColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.grey),
-                  ),
-                ),
-              ),
-            ),
-
-            const Divider(),
-
-            SwitchListTile(
-              value: _showBranding,
-              onChanged: (value) => setState(() => _showBranding = value),
-              title: const Text('Prikaži Branding'),
-              subtitle: const Text('"Powered by BedBooking" badge'),
-              contentPadding: EdgeInsets.zero,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showColorPicker() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Odaberite Boju'),
-        content: SingleChildScrollView(
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              Colors.blue,
-              Colors.red,
-              Colors.green,
-              Colors.orange,
-              Colors.purple,
-              Colors.teal,
-              Colors.indigo,
-              Colors.pink,
-              Colors.amber,
-              Colors.cyan,
-            ].map((color) => GestureDetector(
-              onTap: () {
-                setState(() => _primaryColor = color);
-                Navigator.pop(context);
-              },
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: _primaryColor == color ? Colors.black : Colors.grey,
-                    width: _primaryColor == color ? 3 : 1,
-                  ),
-                ),
-              ),
-            )).toList(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Zatvori'),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.gradients.cardBackground,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: context.gradients.sectionBorder,
+              width: 1.5,
+            ),
+          ),
+          padding: EdgeInsets.all(sectionPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with icon and title
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.contact_phone,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.widgetSettingsContactInfo,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 2,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            gradient: GradientTokens.brandPrimary,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.widgetSettingsContactDesc,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Copy from Profile button
+              _buildCopyFromProfileButton(),
+              const SizedBox(height: 16),
+
+              // Compact inline layout
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isDesktop = constraints.maxWidth >= 600;
+
+                  if (isDesktop) {
+                    // Desktop: 2 columns inline
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _buildCompactContactField(
+                            icon: Icons.phone,
+                            label: l10n.widgetSettingsPhone,
+                            controller: _phoneController,
+                            enabled: _showPhone,
+                            onToggle: (val) => setState(() => _showPhone = val),
+                            keyboardType: TextInputType.phone,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildCompactContactField(
+                            icon: Icons.email,
+                            label: l10n.widgetSettingsEmail,
+                            controller: _emailController,
+                            enabled: _showEmail,
+                            onToggle: (val) => setState(() => _showEmail = val),
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    // Mobile: Stacked
+                    return Column(
+                      children: [
+                        _buildCompactContactField(
+                          icon: Icons.phone,
+                          label: l10n.widgetSettingsPhone,
+                          controller: _phoneController,
+                          enabled: _showPhone,
+                          onToggle: (val) => setState(() => _showPhone = val),
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildCompactContactField(
+                          icon: Icons.email,
+                          label: l10n.widgetSettingsEmail,
+                          controller: _emailController,
+                          enabled: _showEmail,
+                          onToggle: (val) => setState(() => _showEmail = val),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                      ],
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Copy from Profile button - automatically fills contact fields from user profile
+  Widget _buildCopyFromProfileButton() {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final userProfileAsync = ref.watch(watchUserProfileProvider);
+
+    return userProfileAsync.when(
+      data: (profile) {
+        if (profile == null) return const SizedBox.shrink();
+
+        final hasPhone = profile.phoneE164.isNotEmpty;
+        final hasEmail = profile.emailContact.isNotEmpty;
+
+        // Don't show button if profile has no contact info
+        if (!hasPhone && !hasEmail) return const SizedBox.shrink();
+
+        return OutlinedButton.icon(
+          onPressed: () {
+            setState(() {
+              if (hasPhone) {
+                _phoneController.text = profile.phoneE164;
+                _showPhone = true;
+              }
+              if (hasEmail) {
+                _emailController.text = profile.emailContact;
+                _showEmail = true;
+              }
+            });
+            ErrorDisplayUtils.showSuccessSnackBar(
+              context,
+              l10n.widgetSettingsCopiedFromProfile,
+            );
+          },
+          icon: const Icon(Icons.person_outline, size: 18),
+          label: Text(l10n.widgetSettingsCopyFromProfile),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: theme.colorScheme.primary,
+            side: BorderSide(
+              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+    );
+  }
+
+  // Compact contact field with inline toggle
+  Widget _buildCompactContactField({
+    required IconData icon,
+    required String label,
+    required TextEditingController controller,
+    required bool enabled,
+    required ValueChanged<bool> onToggle,
+    TextInputType? keyboardType,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: enabled
+            ? theme.colorScheme.primary.withValues(alpha: 0.05)
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: enabled
+              ? theme.colorScheme.primary.withValues(alpha: 0.2)
+              : theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Toggle row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: enabled
+                      ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  size: 16,
+                  color: enabled
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: enabled
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Switch(
+                value: enabled,
+                onChanged: onToggle,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                activeThumbColor: theme.colorScheme.primary,
+                activeTrackColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.5,
+                ),
+                inactiveThumbColor: theme.colorScheme.onSurface.withValues(
+                  alpha: 0.4,
+                ),
+                inactiveTrackColor: theme.colorScheme.onSurface.withValues(
+                  alpha: 0.12,
+                ),
+              ),
+            ],
+          ),
+          if (enabled) ...[
+            const SizedBox(height: 10),
+            Builder(
+              builder: (ctx) => TextFormField(
+                controller: controller,
+                decoration:
+                    InputDecorationHelper.buildDecoration(
+                      labelText: label,
+                      prefixIcon: Icon(icon, size: 18),
+                      context: ctx,
+                    ).copyWith(
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                keyboardType: keyboardType,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Build info card (used for bookingPending mode warning)
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String message,
+    required Color color,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: theme.brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: 0.1),
+                color.withValues(alpha: 0.05),
+              ],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      message,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

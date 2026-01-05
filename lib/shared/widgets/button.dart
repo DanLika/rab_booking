@@ -52,7 +52,10 @@ class PremiumButton extends StatefulWidget {
     this.isFullWidth = false,
     this.backgroundColor,
     this.textColor,
-  }) : assert(label != null || icon != null, 'Either label or icon must be provided');
+  }) : assert(
+         label != null || icon != null,
+         'Either label or icon must be provided',
+       );
 
   /// Primary button (gradient background)
   factory PremiumButton.primary({
@@ -71,7 +74,6 @@ class PremiumButton extends StatefulWidget {
       icon: icon,
       iconPosition: iconPosition,
       onPressed: onPressed,
-      variant: ButtonVariant.primary,
       size: size,
       isLoading: isLoading,
       isFullWidth: isFullWidth,
@@ -160,7 +162,6 @@ class PremiumButton extends StatefulWidget {
       variant: variant,
       size: size,
       isLoading: isLoading,
-      isFullWidth: false,
     );
   }
 
@@ -197,8 +198,8 @@ class _PremiumButtonState extends State<PremiumButton> {
             width: widget.isFullWidth
                 ? double.infinity
                 : isIconOnly
-                    ? buttonConfig.height
-                    : null,
+                ? buttonConfig.height
+                : null,
             decoration: _buildDecoration(buttonConfig),
             child: Material(
               color: Colors.transparent,
@@ -211,9 +212,19 @@ class _PremiumButtonState extends State<PremiumButton> {
                         // Execute callback
                         widget.onPressed?.call();
                       },
-                borderRadius: BorderRadius.circular(
-                  isIconOnly ? buttonConfig.height / 2 : AppDimensions.radiusL,
-                ),
+                borderRadius: BorderRadius.circular(() {
+                  if (isIconOnly) {
+                    // For icon-only buttons, use half of height (pill shape)
+                    // Ensure height is valid and finite
+                    final height = buttonConfig.height;
+                    if (height.isFinite && height > 0) {
+                      return height / 2;
+                    }
+                    // Fallback to default radius if height is invalid
+                    return AppDimensions.radiusL;
+                  }
+                  return AppDimensions.radiusL;
+                }()),
                 child: Container(
                   padding: _getPadding(isIconOnly, buttonConfig),
                   child: _buildContent(buttonConfig),
@@ -227,12 +238,31 @@ class _PremiumButtonState extends State<PremiumButton> {
   }
 
   BoxDecoration _buildDecoration(_ButtonConfig config) {
+    // Defensive check: ensure height is valid before calculating borderRadius
+    double borderRadius;
+    if (widget.label == null) {
+      // For icon-only buttons, use half of height (pill shape)
+      // Ensure height is valid and finite
+      final height = config.height;
+      if (height.isFinite && height > 0) {
+        borderRadius = height / 2;
+      } else {
+        // Fallback to default radius if height is invalid
+        borderRadius = AppDimensions.radiusL;
+      }
+    } else {
+      borderRadius = AppDimensions.radiusL;
+    }
+
+    // Ensure borderRadius is valid (finite and non-negative)
+    if (!borderRadius.isFinite || borderRadius < 0) {
+      borderRadius = AppDimensions.radiusL;
+    }
+
     if (_isDisabled) {
       return BoxDecoration(
         color: AppColors.disabled,
-        borderRadius: BorderRadius.circular(
-          widget.label == null ? config.height / 2 : AppDimensions.radiusL,
-        ),
+        borderRadius: BorderRadius.circular(borderRadius),
         border: widget.variant == ButtonVariant.outline
             ? Border.all(color: AppColors.borderLight, width: 1.5)
             : null,
@@ -242,18 +272,16 @@ class _PremiumButtonState extends State<PremiumButton> {
     return BoxDecoration(
       gradient: config.gradient,
       color: config.backgroundColor,
-      borderRadius: BorderRadius.circular(
-        widget.label == null ? config.height / 2 : AppDimensions.radiusL,
-      ),
+      borderRadius: BorderRadius.circular(borderRadius),
       border: config.borderColor != null
           ? Border.all(color: config.borderColor!, width: 1.5)
           : null,
       boxShadow: _isHovered && config.shadow != null
           ? config.shadow
           : widget.variant == ButtonVariant.primary ||
-                  widget.variant == ButtonVariant.secondary
-              ? AppShadows.elevation1
-              : null,
+                widget.variant == ButtonVariant.secondary
+          ? AppShadows.elevation1
+          : null,
     );
   }
 
@@ -274,9 +302,7 @@ class _PremiumButtonState extends State<PremiumButton> {
           height: config.iconSize,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              config.textColor,
-            ),
+            valueColor: AlwaysStoppedAnimation<Color>(config.textColor),
           ),
         ),
       );
@@ -380,14 +406,18 @@ class _PremiumButtonState extends State<PremiumButton> {
 
     switch (widget.variant) {
       case ButtonVariant.primary:
-        gradient = widget.backgroundColor == null ? AppColors.primaryGradient : null;
+        gradient = widget.backgroundColor == null
+            ? AppColors.authPrimaryGradient
+            : null;
         backgroundColor = widget.backgroundColor;
         borderColor = null;
         textColor = widget.textColor ?? Colors.white;
         shadow = _isHovered ? AppShadows.glowPrimary : AppShadows.elevation2;
         break;
       case ButtonVariant.secondary:
-        gradient = widget.backgroundColor == null ? AppColors.ctaGradient : null;
+        gradient = widget.backgroundColor == null
+            ? AppColors.ctaGradient
+            : null;
         backgroundColor = widget.backgroundColor;
         borderColor = null;
         textColor = widget.textColor ?? AppColors.textPrimaryDark;
@@ -396,15 +426,15 @@ class _PremiumButtonState extends State<PremiumButton> {
       case ButtonVariant.outline:
         gradient = null;
         backgroundColor = Colors.transparent;
-        borderColor = widget.backgroundColor ?? AppColors.primary;
-        textColor = widget.textColor ?? AppColors.primary;
+        borderColor = widget.backgroundColor ?? AppColors.authPrimary;
+        textColor = widget.textColor ?? AppColors.authPrimary;
         shadow = _isHovered ? AppShadows.elevation1 : null;
         break;
       case ButtonVariant.text:
         gradient = null;
         backgroundColor = Colors.transparent;
         borderColor = null;
-        textColor = widget.textColor ?? AppColors.primary;
+        textColor = widget.textColor ?? AppColors.authPrimary;
         shadow = null;
         break;
     }
@@ -425,25 +455,13 @@ class _PremiumButtonState extends State<PremiumButton> {
 }
 
 /// Button variant enum
-enum ButtonVariant {
-  primary,
-  secondary,
-  outline,
-  text,
-}
+enum ButtonVariant { primary, secondary, outline, text }
 
 /// Button size enum
-enum ButtonSize {
-  small,
-  medium,
-  large,
-}
+enum ButtonSize { small, medium, large }
 
 /// Icon position enum
-enum IconPosition {
-  left,
-  right,
-}
+enum IconPosition { left, right }
 
 /// Internal button configuration class
 class _ButtonConfig {

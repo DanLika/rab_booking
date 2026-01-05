@@ -1,7 +1,11 @@
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+
+// Conditional import - use stub on web, io on native platforms
+import 'platform_utils_stub.dart'
+    if (dart.library.io) 'platform_utils_io.dart'
+    as platform;
 
 /// Platform-specific utilities for adaptive UI
 /// Provides helpers for platform detection and platform-specific widgets
@@ -16,19 +20,19 @@ class PlatformUtils {
   static bool get isWeb => kIsWeb;
 
   /// Check if running on iOS
-  static bool get isIOS => !kIsWeb && Platform.isIOS;
+  static bool get isIOS => !kIsWeb && platform.isIOS;
 
   /// Check if running on Android
-  static bool get isAndroid => !kIsWeb && Platform.isAndroid;
+  static bool get isAndroid => !kIsWeb && platform.isAndroid;
 
   /// Check if running on macOS
-  static bool get isMacOS => !kIsWeb && Platform.isMacOS;
+  static bool get isMacOS => !kIsWeb && platform.isMacOS;
 
   /// Check if running on Windows
-  static bool get isWindows => !kIsWeb && Platform.isWindows;
+  static bool get isWindows => !kIsWeb && platform.isWindows;
 
   /// Check if running on Linux
-  static bool get isLinux => !kIsWeb && Platform.isLinux;
+  static bool get isLinux => !kIsWeb && platform.isLinux;
 
   /// Check if running on mobile platform (iOS or Android)
   static bool get isMobilePlatform => isIOS || isAndroid;
@@ -40,7 +44,8 @@ class PlatformUtils {
   static bool get usesCupertinoDesign => isIOS || isMacOS;
 
   /// Check if platform uses Material design (Android, Web, Windows, Linux)
-  static bool get usesMaterialDesign => isAndroid || isWeb || isWindows || isLinux;
+  static bool get usesMaterialDesign =>
+      isAndroid || isWeb || isWindows || isLinux;
 
   // ============================================================================
   // PLATFORM CAPABILITIES
@@ -114,14 +119,9 @@ class PlatformUtils {
   }
 
   /// Platform-specific activity indicator
-  static Widget adaptiveProgressIndicator({
-    Color? color,
-    double? value,
-  }) {
+  static Widget adaptiveProgressIndicator({Color? color, double? value}) {
     if (usesCupertinoDesign) {
-      return CupertinoActivityIndicator(
-        color: color,
-      );
+      return CupertinoActivityIndicator(color: color);
     }
     return CircularProgressIndicator(
       valueColor: color != null ? AlwaysStoppedAnimation<Color>(color) : null,
@@ -228,7 +228,10 @@ class PlatformUtils {
               padding: const EdgeInsets.all(16),
               child: Text(
                 title,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             ...actions.map(
@@ -323,32 +326,20 @@ class PlatformUtils {
     RouteSettings? settings,
   }) {
     if (usesCupertinoDesign) {
-      return CupertinoPageRoute<T>(
-        builder: builder,
-        settings: settings,
-      );
+      return CupertinoPageRoute<T>(builder: builder, settings: settings);
     }
-    return MaterialPageRoute<T>(
-      builder: builder,
-      settings: settings,
-    );
+    return MaterialPageRoute<T>(builder: builder, settings: settings);
   }
 
   /// Platform-specific back button
-  static Widget adaptiveBackButton({
-    VoidCallback? onPressed,
-    Color? color,
-  }) {
+  static Widget adaptiveBackButton({VoidCallback? onPressed, Color? color}) {
     if (usesCupertinoDesign) {
       return CupertinoNavigationBarBackButton(
         onPressed: onPressed,
         color: color,
       );
     }
-    return BackButton(
-      onPressed: onPressed,
-      color: color,
-    );
+    return BackButton(onPressed: onPressed, color: color);
   }
 
   // ============================================================================

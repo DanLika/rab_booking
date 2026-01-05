@@ -27,7 +27,7 @@ class CalendarFilterOptions with _$CalendarFilterOptions {
     @Default([]) List<String> statuses,
 
     /// Selected booking sources (empty = all sources)
-    /// Values: 'widget', 'manual', 'ical', 'booking_com', 'airbnb'
+    /// Values: 'widget', 'admin', 'booking_com', 'airbnb', 'other'
     @Default([]) List<String> sources,
 
     /// Start date for filtering (check-in date range start)
@@ -71,10 +71,5 @@ extension CalendarFilterOptionsX on CalendarFilterOptions {
     if (guestSearchQuery?.isNotEmpty ?? false) count++;
     if (bookingIdSearch?.isNotEmpty ?? false) count++;
     return count;
-  }
-
-  /// Clear all filters
-  CalendarFilterOptions clear() {
-    return const CalendarFilterOptions();
   }
 }

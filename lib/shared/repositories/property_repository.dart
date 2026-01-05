@@ -69,5 +69,12 @@ abstract class PropertyRepository {
   Future<PropertyModel> togglePropertyStatus(String id, bool isActive);
 
   /// Update property rating
-  Future<PropertyModel> updatePropertyRating(String id, double rating, int reviewCount);
+  Future<PropertyModel> updatePropertyRating(
+    String id,
+    double rating,
+    int reviewCount,
+  );
+
+  /// Get property by subdomain (for widget URL slug resolution)
+  Future<PropertyModel?> fetchPropertyBySubdomain(String subdomain);
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/theme/gradient_extensions.dart';
+
 /// Premium glass morphism card for auth screens
 class GlassCard extends StatelessWidget {
   final Widget child;
@@ -15,45 +18,38 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Responsive padding based on screen width
-    final screenWidth = MediaQuery.of(context).size.width;
-    final responsivePadding = padding ?? EdgeInsets.all(
-      screenWidth < 400 ? 16 : (screenWidth < 600 ? 24 : 32)
-    );
+    final theme = Theme.of(context);
+    final responsivePadding = padding ?? _getResponsivePadding(context);
 
     return Container(
       constraints: BoxConstraints(maxWidth: maxWidth),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha((0.08 * 255).toInt()),
-            blurRadius: 40,
-            offset: const Offset(0, 20),
+            color: theme.colorScheme.shadow.withAlpha((0.06 * 255).toInt()),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
           BoxShadow(
-            color: Colors.black.withAlpha((0.04 * 255).toInt()),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: theme.colorScheme.shadow.withAlpha((0.03 * 255).toInt()),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withAlpha((0.95 * 255).toInt()),
-                Colors.white.withAlpha((0.90 * 255).toInt()),
-              ],
+            color: context.gradients.cardBackground.withAlpha(
+              (0.97 * 255).toInt(),
             ),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withAlpha((0.4 * 255).toInt()),
-              width: 1.5,
+              color: context.gradients.sectionBorder.withAlpha(
+                (0.5 * 255).toInt(),
+              ),
             ),
           ),
           padding: responsivePadding,
@@ -61,5 +57,11 @@ class GlassCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  EdgeInsets _getResponsivePadding(BuildContext context) {
+    if (Breakpoints.isCompactMobile(context)) return const EdgeInsets.all(16);
+    if (Breakpoints.isMobile(context)) return const EdgeInsets.all(24);
+    return const EdgeInsets.all(32);
   }
 }

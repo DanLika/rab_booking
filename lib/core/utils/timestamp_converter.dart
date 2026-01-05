@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'date_time_parser.dart';
 
 /// Converter for Firestore Timestamp to DateTime
 class TimestampConverter implements JsonConverter<DateTime, Object?> {
@@ -16,7 +17,10 @@ class TimestampConverter implements JsonConverter<DateTime, Object?> {
     }
 
     if (json is String) {
-      return DateTime.parse(json);
+      return DateTimeParser.parseOrThrow(
+        json,
+        context: 'TimestampConverter.fromJson',
+      );
     }
 
     if (json is int) {
@@ -45,7 +49,7 @@ class NullableTimestampConverter implements JsonConverter<DateTime?, Object?> {
     }
 
     if (json is String) {
-      return DateTime.parse(json);
+      return DateTimeParser.tryParse(json);
     }
 
     if (json is int) {

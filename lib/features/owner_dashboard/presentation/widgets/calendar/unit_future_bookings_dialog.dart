@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/constants/app_dimensions.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../../core/utils/responsive_spacing_helper.dart';
 
 /// Dialog showing all future bookings for a specific unit
 class UnitFutureBookingsDialog extends StatelessWidget {
@@ -20,45 +27,71 @@ class UnitFutureBookingsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < AppDimensions.mobile;
 
+    // Responsive values
+    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
+
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
-        width: isMobile ? screenWidth * 0.95 : 600,
+        width: isMobile ? screenWidth * 0.90 : 600,
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.8,
+          maxHeight:
+              MediaQuery.of(context).size.height *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+        ),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
+            // Header with gradient - matches CommonAppBar height (52px)
             Container(
-              padding: EdgeInsets.all(isMobile ? AppDimensions.spaceS : AppDimensions.spaceM),
+              height: ResponsiveDialogUtils.kHeaderHeight,
+              padding: EdgeInsets.symmetric(horizontal: headerPadding),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today, color: Colors.white, size: isMobile ? 20 : 24),
-                  SizedBox(width: AppDimensions.spaceS),
+                  const Icon(
+                    Icons.calendar_today,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: AutoSizeText(
-                      'Nadolazeće rezervacije - ${unit.name}',
-                      style: TextStyle(
+                      l10n.futureBookingsTitle(unit.name),
+                      style: const TextStyle(
                         color: Colors.white,
-                        fontSize: isMobile ? 16 : 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
-                      maxLines: 2,
-                      minFontSize: 14,
+                      maxLines: 1,
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.pop(context),
-                    tooltip: 'Zatvori',
+                    tooltip: l10n.futureBookingsClose,
                   ),
                 ],
               ),
@@ -67,33 +100,106 @@ class UnitFutureBookingsDialog extends StatelessWidget {
             // Bookings list
             Flexible(
               child: bookings.isEmpty
-                  ? _buildEmptyState(context)
+                  ? _buildEmptyState(context, l10n)
                   : ListView.separated(
-                      padding: EdgeInsets.all(isMobile ? AppDimensions.spaceS : AppDimensions.spaceM),
+                      padding: EdgeInsets.all(isMobile ? 12 : 16),
                       itemCount: bookings.length,
-                      separatorBuilder: (_, __) => const Divider(),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final booking = bookings[index];
-                        return _buildBookingTile(context, booking, isMobile);
+                        return _buildBookingTile(
+                          context,
+                          booking,
+                          isMobile,
+                          l10n,
+                        );
                       },
                     ),
             ),
 
-            // Footer
-            Padding(
-              padding: EdgeInsets.all(AppDimensions.spaceM),
+            // Footer with styled background - responsive height
+            Container(
+              padding: ResponsiveSpacingHelper.getFooterPadding(context),
+              constraints: BoxConstraints(
+                minHeight:
+                    ResponsiveSpacingHelper.getDialogFooterConstraints(
+                      context,
+                    ).minHeight ??
+                    0,
+                maxHeight:
+                    ResponsiveSpacingHelper.getDialogFooterConstraints(
+                      context,
+                    ).maxHeight ??
+                    double.infinity,
+              ),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.dialogFooterDark
+                    : AppColors.dialogFooterLight,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark
+                        ? AppColors.sectionDividerDark
+                        : AppColors.sectionDividerLight,
+                  ),
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(11),
+                ),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    '${bookings.length} rezervacija',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                  // Booking count badge
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.1 * 255).toInt(),
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.event_note,
+                            size: 14,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              l10n.futureBookingsCount(bookings.length),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.primary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  // Close button - compact
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Zatvori'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: Text(l10n.futureBookingsClose),
                   ),
                 ],
               ),
@@ -104,23 +210,34 @@ class UnitFutureBookingsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(AppDimensions.spaceXL),
+        padding: const EdgeInsets.all(AppDimensions.spaceXL),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.event_available, size: 64, color: Colors.grey[400]),
-            SizedBox(height: AppDimensions.spaceM),
-            Text(
-              'Nema nadolazećih rezervacija',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            Icon(
+              Icons.event_available,
+              size: 64,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-            SizedBox(height: AppDimensions.spaceXS),
+            const SizedBox(height: AppDimensions.spaceM),
             Text(
-              'Sve buduce rezervacije za ${unit.name} ce se prikazati ovdje',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              l10n.futureBookingsEmpty,
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spaceXS),
+            Text(
+              l10n.futureBookingsEmptySubtitle(unit.name),
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -129,114 +246,231 @@ class UnitFutureBookingsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildBookingTile(BuildContext context, BookingModel booking, bool isMobile) {
+  Widget _buildBookingTile(
+    BuildContext context,
+    BookingModel booking,
+    bool isMobile,
+    AppLocalizations l10n,
+  ) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final now = DateTime.now();
-    final isInProgress = booking.checkIn.isBefore(now) && booking.checkOut.isAfter(now);
+    final isInProgress =
+        booking.checkIn.isBefore(now) && booking.checkOut.isAfter(now);
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        onBookingTap(booking);
-      },
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: AppDimensions.spaceXS),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Avatar
-            CircleAvatar(
-              radius: isMobile ? 20 : 24,
-              backgroundColor: booking.status.color.withValues(alpha: 0.2),
-              child: Icon(
-                isInProgress ? Icons.person : Icons.person_outline,
-                color: booking.status.color,
-                size: isMobile ? 20 : 24,
-              ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.pop(context);
+          onBookingTap(booking);
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF252330) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isDark
+                  ? AppColors.sectionDividerDark
+                  : AppColors.sectionDividerLight,
             ),
-            SizedBox(width: AppDimensions.spaceS),
-
-            // Booking info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Guest name
-                  AutoSizeText(
-                    booking.guestName ?? 'Unknown Guest',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    minFontSize: 12,
-                  ),
-                  SizedBox(height: AppDimensions.spaceXXS / 2),
-
-                  // Check-in
-                  Row(
-                    children: [
-                      Icon(Icons.login, size: 14, color: Colors.green),
-                      SizedBox(width: AppDimensions.spaceXXS),
-                      Expanded(
-                        child: AutoSizeText(
-                          'Check-in: ${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
-                          style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
-                          maxLines: 1,
-                          minFontSize: 10,
-                        ),
-                      ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Avatar with gradient background
+              Container(
+                width: isMobile ? 44 : 48,
+                height: isMobile ? 44 : 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      booking.status.color.withAlpha((0.2 * 255).toInt()),
+                      booking.status.color.withAlpha((0.1 * 255).toInt()),
                     ],
                   ),
-                  SizedBox(height: AppDimensions.spaceXXS / 4),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: booking.status.color.withAlpha((0.3 * 255).toInt()),
+                  ),
+                ),
+                child: Icon(
+                  isInProgress ? Icons.person : Icons.person_outline,
+                  color: booking.status.color,
+                  size: isMobile ? 22 : 24,
+                ),
+              ),
+              const SizedBox(width: 12),
 
-                  // Check-out
-                  Row(
-                    children: [
-                      Icon(Icons.logout, size: 14, color: Colors.red),
-                      SizedBox(width: AppDimensions.spaceXXS),
-                      Expanded(
-                        child: AutoSizeText(
-                          'Check-out: ${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
-                          style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
-                          maxLines: 1,
-                          minFontSize: 10,
-                        ),
+              // Booking info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Guest name
+                    AutoSizeText(
+                      booking.guestName ?? l10n.futureBookingsUnknownGuest,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
-                  ),
-                  SizedBox(height: AppDimensions.spaceXXS / 2),
-
-                  // Guest count and nights
-                  AutoSizeText(
-                    '${booking.guestCount} gost${booking.guestCount > 1 ? 'a' : ''} • $nights noć${nights > 1 ? 'i' : ''}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                      maxLines: 1,
                     ),
-                    maxLines: 1,
-                    minFontSize: 9,
+                    const SizedBox(height: 6),
+
+                    // Check-in with icon badge
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withAlpha(
+                              (0.15 * 255).toInt(),
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.login,
+                            size: 12,
+                            color: AppColors.success,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: AutoSizeText(
+                            l10n.futureBookingsCheckIn(
+                              '${booking.checkIn.day}.${booking.checkIn.month}.${booking.checkIn.year}.',
+                            ),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.textTheme.bodySmall?.color,
+                            ),
+                            maxLines: 1,
+                            minFontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Check-out with icon badge
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withAlpha(
+                              (0.15 * 255).toInt(),
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
+                            Icons.logout,
+                            size: 12,
+                            color: AppColors.error,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: AutoSizeText(
+                            l10n.futureBookingsCheckOut(
+                              '${booking.checkOut.day}.${booking.checkOut.month}.${booking.checkOut.year}.',
+                            ),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.textTheme.bodySmall?.color,
+                            ),
+                            maxLines: 1,
+                            minFontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Guest count and nights in badges
+                    Row(
+                      children: [
+                        _buildInfoBadge(
+                          Icons.people_outline,
+                          '${booking.guestCount}',
+                          theme,
+                          isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildInfoBadge(
+                          Icons.nights_stay_outlined,
+                          '$nights',
+                          theme,
+                          isDark,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              // Status chip - compact
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: booking.status.color.withAlpha((0.15 * 255).toInt()),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: booking.status.color.withAlpha((0.3 * 255).toInt()),
                   ),
-                ],
+                ),
+                child: Text(
+                  booking.status.displayNameLocalized(context),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: booking.status.color,
+                  ),
+                ),
               ),
-            ),
-
-            SizedBox(width: AppDimensions.spaceS),
-
-            // Status chip
-            Chip(
-              label: AutoSizeText(
-                booking.status.displayName,
-                maxLines: 1,
-                minFontSize: 9,
-                style: const TextStyle(fontSize: 11),
-              ),
-              backgroundColor: booking.status.color.withValues(alpha: 0.2),
-              padding: EdgeInsets.symmetric(horizontal: AppDimensions.spaceXS),
-              visualDensity: VisualDensity.compact,
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoBadge(
+    IconData icon,
+    String value,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2D2D3A) : const Color(0xFFF5F5FA),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 /// Responsive breakpoints helper
+/// UNIFIED with /lib/core/constants/breakpoints.dart
 class ResponsiveHelper {
-  /// Mobile breakpoint (phones)
-  static const double mobile = 640;
+  /// Mobile breakpoint (phones) - < 600px
+  static const double mobile = 600;
 
-  /// Tablet breakpoint
+  /// Tablet breakpoint - >= 1024px
   static const double tablet = 1024;
 
   /// Check if screen is mobile
@@ -46,13 +47,23 @@ class ResponsiveHelper {
     );
   }
 
-  /// Get year cell size
+  /// Get year cell size based on available width
+  /// [availableWidth] is the actual container width (after padding)
+  static double getYearCellSizeForWidth(double availableWidth) {
+    // monthLabelWidth = 60px (from ConstraintTokens)
+    const monthLabelWidth = 60.0;
+    final widthForCells = availableWidth - monthLabelWidth;
+    // 31 days in a month - calculate cell size to fit
+    // Minimum 14px to keep text readable, max 40px for aesthetics
+    return (widthForCells / 31).clamp(14.0, 40.0);
+  }
+
+  /// Legacy method - uses screen width estimate (less accurate)
   static double getYearCellSize(BuildContext context) {
-    return getResponsiveValue(
-      context: context,
-      mobile: 32.0,  // Povećano sa 24 na 32
-      tablet: 42.0,  // Povećano sa 28 na 42
-      desktop: 48.0, // Povećano sa 32 na 48 - mnogo veći!
-    );
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Estimate padding: 32px mobile, 48px desktop
+    final isDesktop = screenWidth >= tablet;
+    final estimatedPadding = isDesktop ? 48.0 : 32.0;
+    return getYearCellSizeForWidth(screenWidth - estimatedPadding);
   }
 }

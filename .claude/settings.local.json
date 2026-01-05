@@ -7,17 +7,19 @@
       "Edit",
       "Glob",
       "Grep",
-      "Task",
-      "TodoWrite",
-      "WebFetch",
+      "mcp__dart-flutter",
+      "mcp__firebase",
+      "mcp__github",
+      "mcp__stripe",
+      "mcp__context7",
+      "mcp__flutter-inspector",
+      "mcp__sentry",
+      "SlashCommand(/misc:code-explain)",
       "WebSearch",
-      "NotebookEdit",
-      "AskUserQuestion",
-      "Skill",
-      "SlashCommand",
-      "mcp__ide__getDiagnostics"
+      "SlashCommand(/misc:feature-plan)",
+      "Skill(misc:code-explain)",
+      "Skill(misc:feature-plan)"
     ],
-    "deny": [],
-    "ask": []
+    "deny": []
   }
 }

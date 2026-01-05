@@ -1,21 +1,36 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../../shared/models/user_model.dart';
 import 'logging_service.dart';
 
-/// Service for logging and managing security events
+/// Service for logging and managing security events.
 ///
 /// Implements BedBooking security audit requirements:
 /// - Log all authentication events
 /// - Track device information
 /// - Detect suspicious activity
 /// - Send notifications for important events
+///
+/// Usage:
+/// ```dart
+/// final service = SecurityEventsService();
+///
+/// // Log successful login
+/// await service.logLogin(user, deviceId: deviceId, location: 'Zagreb, HR');
+///
+/// // Track device for session management
+/// await service.trackDevice(userId, deviceId: deviceId, platform: 'web');
+///
+/// // Get recent security events
+/// final events = await service.getSecurityEvents(userId, limit: 10);
+/// ```
 class SecurityEventsService {
   final FirebaseFirestore _firestore;
 
   SecurityEventsService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Log a security event
   Future<void> logEvent({
@@ -42,13 +57,13 @@ class SecurityEventsService {
           .doc(userId)
           .collection('securityEvents')
           .add({
-        'type': event.type.name,
-        'timestamp': Timestamp.fromDate(event.timestamp),
-        'deviceId': event.deviceId,
-        'ipAddress': event.ipAddress,
-        'location': event.location,
-        'metadata': event.metadata,
-      });
+            'type': event.type.name,
+            'timestamp': Timestamp.fromDate(event.timestamp),
+            'deviceId': event.deviceId,
+            'ipAddress': event.ipAddress,
+            'location': event.location,
+            'metadata': event.metadata,
+          });
 
       // Update recent events in main user document (keep last 10)
       await _updateRecentEvents(userId, event);
@@ -59,7 +74,7 @@ class SecurityEventsService {
       }
     } catch (e) {
       // Don't throw - security logging should not break the app
-      LoggingService.logError('Failed to log security event', e);
+      unawaited(LoggingService.logError('Failed to log security event', e));
     }
   }
 
@@ -89,7 +104,7 @@ class SecurityEventsService {
         'recentSecurityEvents': limitedEvents,
       });
     } catch (e) {
-      LoggingService.logError('Failed to update recent events', e);
+      unawaited(LoggingService.logError('Failed to update recent events', e));
     }
   }
 
@@ -122,7 +137,8 @@ class SecurityEventsService {
           .where((id) => id != null)
           .toSet();
 
-      final isNewDevice = deviceId != null && !previousDevices.contains(deviceId);
+      final isNewDevice =
+          deviceId != null && !previousDevices.contains(deviceId);
 
       // Check for new location
       final previousLocations = recentLogins.docs
@@ -130,7 +146,8 @@ class SecurityEventsService {
           .where((loc) => loc != null)
           .toSet();
 
-      final isNewLocation = location != null && !previousLocations.contains(location);
+      final isNewLocation =
+          location != null && !previousLocations.contains(location);
 
       // Log suspicious activity if detected
       if (isNewDevice || isNewLocation) {
@@ -155,7 +172,9 @@ class SecurityEventsService {
         );
       }
     } catch (e) {
-      LoggingService.logError('Failed to check suspicious activity', e);
+      unawaited(
+        LoggingService.logError('Failed to check suspicious activity', e),
+      );
     }
   }
 
@@ -193,10 +212,7 @@ class SecurityEventsService {
 
   /// Log email verification
   Future<void> logEmailVerification(String userId) async {
-    await logEvent(
-      userId: userId,
-      type: SecurityEventType.emailVerification,
-    );
+    await logEvent(userId: userId, type: SecurityEventType.emailVerification);
   }
 
   /// Get security events for user
@@ -217,7 +233,7 @@ class SecurityEventsService {
           .map((doc) => SecurityEvent.fromFirestore(doc.data()))
           .toList();
     } catch (e) {
-      LoggingService.logError('Failed to get security events', e);
+      unawaited(LoggingService.logError('Failed to get security events', e));
       return [];
     }
   }
@@ -243,13 +259,13 @@ class SecurityEventsService {
           .collection('devices')
           .doc(deviceId)
           .set({
-        'deviceId': deviceInfo.deviceId,
-        'platform': deviceInfo.platform,
-        'fcmToken': deviceInfo.fcmToken,
-        'lastSeenAt': Timestamp.fromDate(deviceInfo.lastSeenAt),
-      }, SetOptions(merge: true));
+            'deviceId': deviceInfo.deviceId,
+            'platform': deviceInfo.platform,
+            'fcmToken': deviceInfo.fcmToken,
+            'lastSeenAt': Timestamp.fromDate(deviceInfo.lastSeenAt),
+          }, SetOptions(merge: true));
     } catch (e) {
-      LoggingService.logError('Failed to track device', e);
+      unawaited(LoggingService.logError('Failed to track device', e));
     }
   }
 
@@ -263,7 +279,7 @@ class SecurityEventsService {
           .doc(deviceId)
           .delete();
     } catch (e) {
-      LoggingService.logError('Failed to remove device', e);
+      unawaited(LoggingService.logError('Failed to remove device', e));
     }
   }
 
@@ -280,7 +296,7 @@ class SecurityEventsService {
           .map((doc) => DeviceInfo.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      LoggingService.logError('Failed to get devices', e);
+      unawaited(LoggingService.logError('Failed to get devices', e));
       return [];
     }
   }
@@ -297,7 +313,9 @@ class SecurityEventsService {
       final userDoc = await _firestore.collection('users').doc(userId).get();
 
       if (!userDoc.exists) {
-        LoggingService.logWarning('User not found for suspicious activity email: $userId');
+        LoggingService.logWarning(
+          'User not found for suspicious activity email: $userId',
+        );
         return;
       }
 
@@ -322,10 +340,15 @@ class SecurityEventsService {
         'reason': reason,
       });
 
-      LoggingService.log('Suspicious activity email sent to $userEmail', tag: 'SECURITY');
+      LoggingService.log(
+        'Suspicious activity email sent to $userEmail',
+        tag: 'SECURITY',
+      );
     } catch (e) {
       // Don't throw - email failure should not break security logging
-      LoggingService.logError('Failed to send suspicious activity email', e);
+      unawaited(
+        LoggingService.logError('Failed to send suspicious activity email', e),
+      );
     }
   }
 }

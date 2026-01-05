@@ -8,3 +8,8 @@ typings/
 # Node.js dependency directory
 node_modules/
 *.local
+
+# CRITICAL SECURITY SF-011: Ignore Firebase service account key.
+# This file grants full admin access to the project.
+# NEVER commit this file to the repository.
+service-account-key.json

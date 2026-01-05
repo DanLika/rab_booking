@@ -25,7 +25,7 @@ Map<String, dynamic> _$$DeviceInfoImplToJson(_$DeviceInfoImpl instance) =>
 _$SecurityEventImpl _$$SecurityEventImplFromJson(Map<String, dynamic> json) =>
     _$SecurityEventImpl(
       type: $enumDecode(_$SecurityEventTypeEnumMap, json['type']),
-      timestamp: DateTime.parse(json['timestamp'] as String),
+      timestamp: const TimestampConverter().fromJson(json['timestamp']),
       deviceId: json['deviceId'] as String?,
       ipAddress: json['ipAddress'] as String?,
       location: json['location'] as String?,
@@ -35,7 +35,7 @@ _$SecurityEventImpl _$$SecurityEventImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$SecurityEventImplToJson(_$SecurityEventImpl instance) =>
     <String, dynamic>{
       'type': _$SecurityEventTypeEnumMap[instance.type]!,
-      'timestamp': instance.timestamp.toIso8601String(),
+      'timestamp': const TimestampConverter().toJson(instance.timestamp),
       'deviceId': instance.deviceId,
       'ipAddress': instance.ipAddress,
       'location': instance.location,

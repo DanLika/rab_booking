@@ -57,10 +57,8 @@ class UnitFormData with _$UnitFormData {
 /// Pricing form data (Step 3 - Optional)
 @freezed
 class PricingFormData with _$PricingFormData {
-  const factory PricingFormData({
-    double? basePrice,
-    String? currency,
-  }) = _PricingFormData;
+  const factory PricingFormData({double? basePrice, String? currency}) =
+      _PricingFormData;
 
   factory PricingFormData.fromJson(Map<String, dynamic> json) =>
       _$PricingFormDataFromJson(json);

@@ -29,7 +29,9 @@ class LoginAttempt {
     return {
       'email': email,
       'attemptCount': attemptCount,
-      'lockedUntil': lockedUntil != null ? Timestamp.fromDate(lockedUntil!) : null,
+      'lockedUntil': lockedUntil != null
+          ? Timestamp.fromDate(lockedUntil!)
+          : null,
       'lastAttemptAt': Timestamp.fromDate(lastAttemptAt),
     };
   }
@@ -45,12 +47,30 @@ class LoginAttempt {
   }
 }
 
-/// Service for rate limiting login attempts
+/// Service for rate limiting login attempts.
 ///
 /// Implements BedBooking security policy:
 /// - Max 5 failed attempts
 /// - 15 minute lockout period
 /// - Attempts reset after 1 hour of inactivity
+///
+/// Usage:
+/// ```dart
+/// final service = RateLimitService();
+///
+/// // Check if user is locked out
+/// final attempt = await service.checkRateLimit('user@example.com');
+/// if (attempt?.isLocked ?? false) {
+///   showError(service.getRateLimitMessage(attempt!));
+///   return;
+/// }
+///
+/// // Record failed attempt
+/// await service.recordFailedAttempt('user@example.com');
+///
+/// // Reset after successful login
+/// await service.resetAttempts('user@example.com');
+/// ```
 class RateLimitService {
   final FirebaseFirestore _firestore;
 
@@ -59,7 +79,7 @@ class RateLimitService {
   static const Duration attemptResetDuration = Duration(hours: 1);
 
   RateLimitService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Collection reference for login attempts
   CollectionReference get _attemptsCollection =>
@@ -74,10 +94,13 @@ class RateLimitService {
         return null; // No attempts recorded
       }
 
-      final attempt = LoginAttempt.fromFirestore(doc.data() as Map<String, dynamic>);
+      final attempt = LoginAttempt.fromFirestore(
+        doc.data() as Map<String, dynamic>,
+      );
 
       // Reset attempts if last attempt was > 1 hour ago
-      if (DateTime.now().difference(attempt.lastAttemptAt) > attemptResetDuration) {
+      if (DateTime.now().difference(attempt.lastAttemptAt) >
+          attemptResetDuration) {
         await _resetAttempts(email);
         return null;
       }
@@ -107,10 +130,13 @@ class RateLimitService {
           lastAttemptAt: DateTime.now(),
         );
       } else {
-        final existing = LoginAttempt.fromFirestore(doc.data() as Map<String, dynamic>);
+        final existing = LoginAttempt.fromFirestore(
+          doc.data() as Map<String, dynamic>,
+        );
 
         // Reset if last attempt was > 1 hour ago
-        if (DateTime.now().difference(existing.lastAttemptAt) > attemptResetDuration) {
+        if (DateTime.now().difference(existing.lastAttemptAt) >
+            attemptResetDuration) {
           attempt = LoginAttempt(
             email: email,
             attemptCount: 1,

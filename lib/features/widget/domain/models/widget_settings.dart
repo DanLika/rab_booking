@@ -1,16 +1,40 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'widget_mode.dart';
+import 'settings/settings.dart';
+import '../../../../core/utils/date_time_parser.dart';
+import '../../../../core/utils/safe_cast.dart';
+
+// Re-export configs for backward compatibility
+// (Files importing widget_settings.dart can still access these classes)
+export 'settings/settings.dart'
+    show
+        StripePaymentConfig,
+        BankTransferConfig,
+        PaymentConfigBase,
+        ContactOptions,
+        EmailNotificationConfig,
+        TaxLegalConfig;
 
 /// Widget settings stored in Firestore for each property/unit
 /// Path: properties/{propertyId}/widget_settings/{unitId}
+///
+/// ## Config Accessors (Phase 4 Refactoring)
+/// Helper getters provide grouped access to related settings:
+/// - [bookingBehavior] - Approval, cancellation, min/max nights, weekend days
+/// - [icalExport] - iCal feed export settings
+///
+/// The flat fields remain for backward compatibility.
 class WidgetSettings {
   final String id; // unitId
   final String propertyId;
+  final String? ownerId; // Required for Firestore security rules
 
   // Display Mode
   final WidgetMode widgetMode;
 
   // Payment Methods Configuration
+  final int
+  globalDepositPercentage; // Global deposit % (applies to all payment methods)
   final StripePaymentConfig? stripeConfig;
   final BankTransferConfig? bankTransferConfig;
   final bool allowPayOnArrival;
@@ -19,9 +43,21 @@ class WidgetSettings {
   final bool requireOwnerApproval; // If true, all bookings start as 'pending'
   final bool allowGuestCancellation;
   final int? cancellationDeadlineHours; // Hours before check-in
+  final int minNights; // Minimum nights required for booking (default: 1)
+  final List<int>
+  weekendDays; // Days considered as weekend (1=Mon...7=Sun). Default: [5,6] (Fri, Sat nights)
 
   // Contact Information (for calendar_only mode)
   final ContactOptions contactOptions;
+
+  // Email Notifications
+  final EmailNotificationConfig emailConfig;
+
+  // External Calendar Integration
+  final ExternalCalendarConfig? externalCalendarConfig;
+
+  // Tax/Legal Disclaimer
+  final TaxLegalConfig taxLegalConfig;
 
   // Theming
   final ThemeOptions? themeOptions;
@@ -33,43 +69,100 @@ class WidgetSettings {
   const WidgetSettings({
     required this.id,
     required this.propertyId,
+    this.ownerId,
     this.widgetMode = WidgetMode.bookingInstant,
+    this.globalDepositPercentage = 20, // Default 20% deposit
     this.stripeConfig,
     this.bankTransferConfig,
     this.allowPayOnArrival = false,
     this.requireOwnerApproval = false,
     this.allowGuestCancellation = true,
     this.cancellationDeadlineHours = 48,
+    this.minNights = 1,
+    this.weekendDays = const [
+      5,
+      6,
+    ], // Default: Friday (5) and Saturday (6) nights
     required this.contactOptions,
+    required this.emailConfig,
+    this.externalCalendarConfig,
+    required this.taxLegalConfig,
     this.themeOptions,
     required this.createdAt,
     required this.updatedAt,
   });
 
   /// Convert from Firestore document
+  ///
+  /// Uses safe casting to prevent runtime errors from invalid data formats.
+  /// Returns defaults if data is missing or has incorrect types.
   factory WidgetSettings.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    // Safely cast document data - could be null if document doesn't exist
+    final data = safeCastMap(doc.data());
+    if (data == null) {
+      throw ArgumentError(
+        'Document data is null or invalid format for ${doc.id}',
+      );
+    }
+
+    // Safely cast nested maps for config objects
+    final stripeConfigData = safeCastMap(data['stripe_config']);
+    final bankTransferConfigData = safeCastMap(data['bank_transfer_config']);
+    final contactOptionsData = safeCastMap(data['contact_options']) ?? {};
+    final emailConfigData = safeCastMap(data['email_config']) ?? {};
+    final externalCalendarConfigData = safeCastMap(
+      data['external_calendar_config'],
+    );
+    final taxLegalConfigData = safeCastMap(data['tax_legal_config']) ?? {};
+    final themeOptionsData = safeCastMap(data['theme_options']);
+
+    // Safely cast weekendDays list (default: Fri/Sat nights for hotel pricing)
+    final weekendDaysList =
+        safeCastList<int>(data['weekend_days']) ?? const [5, 6];
 
     return WidgetSettings(
       id: doc.id,
-      propertyId: data['property_id'] ?? '',
-      widgetMode: WidgetMode.fromString(data['widget_mode'] ?? 'booking_instant'),
-      stripeConfig: data['stripe_config'] != null
-          ? StripePaymentConfig.fromMap(data['stripe_config'])
+      propertyId: safeCastString(data['property_id']) ?? '',
+      ownerId: safeCastString(data['owner_id']),
+      widgetMode: WidgetMode.fromString(
+        safeCastString(data['widget_mode']) ?? 'booking_instant',
+      ),
+      // Migration: If global_deposit_percentage doesn't exist, use stripe deposit or 20
+      globalDepositPercentage:
+          safeCastInt(data['global_deposit_percentage']) ??
+          (stripeConfigData != null
+              ? (safeCastInt(stripeConfigData['deposit_percentage']) ?? 20)
+              : 20),
+      stripeConfig: stripeConfigData != null
+          ? StripePaymentConfig.fromMap(stripeConfigData)
           : null,
-      bankTransferConfig: data['bank_transfer_config'] != null
-          ? BankTransferConfig.fromMap(data['bank_transfer_config'])
+      bankTransferConfig: bankTransferConfigData != null
+          ? BankTransferConfig.fromMap(bankTransferConfigData)
           : null,
-      allowPayOnArrival: data['allow_pay_on_arrival'] ?? false,
-      requireOwnerApproval: data['require_owner_approval'] ?? false,
-      allowGuestCancellation: data['allow_guest_cancellation'] ?? true,
-      cancellationDeadlineHours: data['cancellation_deadline_hours'] ?? 48,
-      contactOptions: ContactOptions.fromMap(data['contact_options'] ?? {}),
-      themeOptions: data['theme_options'] != null
-          ? ThemeOptions.fromMap(data['theme_options'])
+      allowPayOnArrival: safeCastBool(data['allow_pay_on_arrival']) ?? false,
+      requireOwnerApproval:
+          safeCastBool(data['require_owner_approval']) ?? false,
+      allowGuestCancellation:
+          safeCastBool(data['allow_guest_cancellation']) ?? true,
+      cancellationDeadlineHours:
+          safeCastInt(data['cancellation_deadline_hours']) ?? 48,
+      minNights: safeCastInt(data['min_nights']) ?? 1,
+      weekendDays: weekendDaysList,
+      contactOptions: ContactOptions.fromMap(contactOptionsData),
+      emailConfig: EmailNotificationConfig.fromMap(emailConfigData),
+      externalCalendarConfig: externalCalendarConfigData != null
+          ? ExternalCalendarConfig.fromMap(externalCalendarConfigData)
           : null,
-      createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      taxLegalConfig: TaxLegalConfig.fromMap(taxLegalConfigData),
+      themeOptions: themeOptionsData != null
+          ? ThemeOptions.fromMap(themeOptionsData)
+          : null,
+      createdAt: data['created_at'] is Timestamp
+          ? (data['created_at'] as Timestamp).toDate()
+          : DateTime.now().toUtc(),
+      updatedAt: data['updated_at'] is Timestamp
+          ? (data['updated_at'] as Timestamp).toDate()
+          : DateTime.now().toUtc(),
     );
   }
 
@@ -77,14 +170,21 @@ class WidgetSettings {
   Map<String, dynamic> toFirestore() {
     return {
       'property_id': propertyId,
+      'owner_id': ownerId,
       'widget_mode': widgetMode.toStringValue(),
+      'global_deposit_percentage': globalDepositPercentage,
       'stripe_config': stripeConfig?.toMap(),
       'bank_transfer_config': bankTransferConfig?.toMap(),
       'allow_pay_on_arrival': allowPayOnArrival,
       'require_owner_approval': requireOwnerApproval,
       'allow_guest_cancellation': allowGuestCancellation,
       'cancellation_deadline_hours': cancellationDeadlineHours,
+      'min_nights': minNights,
+      'weekend_days': weekendDays,
       'contact_options': contactOptions.toMap(),
+      'email_config': emailConfig.toMap(),
+      'external_calendar_config': externalCalendarConfig?.toMap(),
+      'tax_legal_config': taxLegalConfig.toMap(),
       'theme_options': themeOptions?.toMap(),
       'created_at': Timestamp.fromDate(createdAt),
       'updated_at': Timestamp.fromDate(updatedAt),
@@ -94,8 +194,8 @@ class WidgetSettings {
   /// Check if any payment method is enabled
   bool get hasPaymentMethods {
     return (stripeConfig?.enabled ?? false) ||
-           (bankTransferConfig?.enabled ?? false) ||
-           allowPayOnArrival;
+        (bankTransferConfig?.enabled ?? false) ||
+        allowPayOnArrival;
   }
 
   /// Get enabled payment method count
@@ -107,17 +207,54 @@ class WidgetSettings {
     return count;
   }
 
+  // ============================================================
+  // CONFIG ACCESSORS (Phase 4 Refactoring)
+  // ============================================================
+
+  /// Grouped access to booking behavior settings.
+  ///
+  /// Returns a [BookingBehaviorConfig] constructed from flat fields.
+  /// Fields not present in WidgetSettings use defaults from [WidgetConstants].
+  ///
+  /// ## Example
+  /// ```dart
+  /// final settings = await widgetSettingsRepo.getSettings(unitId);
+  /// if (settings.bookingBehavior.isValidDuration(5)) {
+  ///   // 5 nights is valid
+  /// }
+  /// if (settings.bookingBehavior.canCancelForCheckIn(checkInDate)) {
+  ///   // Guest can still cancel
+  /// }
+  /// ```
+  BookingBehaviorConfig get bookingBehavior => BookingBehaviorConfig(
+    requireOwnerApproval: requireOwnerApproval,
+    allowGuestCancellation: allowGuestCancellation,
+    cancellationDeadlineHours: cancellationDeadlineHours,
+    minNights: minNights,
+    // maxNights not stored in WidgetSettings yet - use default
+    weekendDays: weekendDays,
+    // minDaysAdvance, maxDaysAdvance not stored - use defaults
+  );
+
+  /// Create a copy with some fields replaced.
   WidgetSettings copyWith({
     String? id,
     String? propertyId,
+    String? ownerId,
     WidgetMode? widgetMode,
+    int? globalDepositPercentage,
     StripePaymentConfig? stripeConfig,
     BankTransferConfig? bankTransferConfig,
     bool? allowPayOnArrival,
     bool? requireOwnerApproval,
     bool? allowGuestCancellation,
     int? cancellationDeadlineHours,
+    int? minNights,
+    List<int>? weekendDays,
     ContactOptions? contactOptions,
+    EmailNotificationConfig? emailConfig,
+    ExternalCalendarConfig? externalCalendarConfig,
+    TaxLegalConfig? taxLegalConfig,
     ThemeOptions? themeOptions,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -125,14 +262,25 @@ class WidgetSettings {
     return WidgetSettings(
       id: id ?? this.id,
       propertyId: propertyId ?? this.propertyId,
+      ownerId: ownerId ?? this.ownerId,
       widgetMode: widgetMode ?? this.widgetMode,
+      globalDepositPercentage:
+          globalDepositPercentage ?? this.globalDepositPercentage,
       stripeConfig: stripeConfig ?? this.stripeConfig,
       bankTransferConfig: bankTransferConfig ?? this.bankTransferConfig,
       allowPayOnArrival: allowPayOnArrival ?? this.allowPayOnArrival,
       requireOwnerApproval: requireOwnerApproval ?? this.requireOwnerApproval,
-      allowGuestCancellation: allowGuestCancellation ?? this.allowGuestCancellation,
-      cancellationDeadlineHours: cancellationDeadlineHours ?? this.cancellationDeadlineHours,
+      allowGuestCancellation:
+          allowGuestCancellation ?? this.allowGuestCancellation,
+      cancellationDeadlineHours:
+          cancellationDeadlineHours ?? this.cancellationDeadlineHours,
+      minNights: minNights ?? this.minNights,
+      weekendDays: weekendDays ?? this.weekendDays,
       contactOptions: contactOptions ?? this.contactOptions,
+      emailConfig: emailConfig ?? this.emailConfig,
+      externalCalendarConfig:
+          externalCalendarConfig ?? this.externalCalendarConfig,
+      taxLegalConfig: taxLegalConfig ?? this.taxLegalConfig,
       themeOptions: themeOptions ?? this.themeOptions,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -140,235 +288,41 @@ class WidgetSettings {
   }
 }
 
-/// Stripe payment configuration
-class StripePaymentConfig {
-  final bool enabled;
-  final int depositPercentage; // 0-100 (0 = full payment, 100 = full payment as deposit)
-  final String? stripeAccountId; // Stripe Connect account ID
-
-  const StripePaymentConfig({
-    this.enabled = false,
-    this.depositPercentage = 20, // Default 20% deposit
-    this.stripeAccountId,
-  });
-
-  factory StripePaymentConfig.fromMap(Map<String, dynamic> map) {
-    return StripePaymentConfig(
-      enabled: map['enabled'] ?? false,
-      depositPercentage: (map['deposit_percentage'] ?? 20).clamp(0, 100),
-      stripeAccountId: map['stripe_account_id'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'enabled': enabled,
-      'deposit_percentage': depositPercentage,
-      'stripe_account_id': stripeAccountId,
-    };
-  }
-
-  /// Calculate deposit amount
-  double calculateDeposit(double totalAmount) {
-    if (depositPercentage == 0 || depositPercentage == 100) {
-      return totalAmount; // Full payment
-    }
-    return totalAmount * (depositPercentage / 100);
-  }
-
-  /// Calculate remaining amount
-  double calculateRemaining(double totalAmount) {
-    if (depositPercentage == 0 || depositPercentage == 100) {
-      return 0.0; // No remaining
-    }
-    return totalAmount * ((100 - depositPercentage) / 100);
-  }
-
-  StripePaymentConfig copyWith({
-    bool? enabled,
-    int? depositPercentage,
-    String? stripeAccountId,
-  }) {
-    return StripePaymentConfig(
-      enabled: enabled ?? this.enabled,
-      depositPercentage: depositPercentage ?? this.depositPercentage,
-      stripeAccountId: stripeAccountId ?? this.stripeAccountId,
-    );
-  }
-}
-
-/// Bank transfer payment configuration
-class BankTransferConfig {
-  final bool enabled;
-  final int depositPercentage; // 0-100
-  final String? bankName;
-  final String? accountNumber;
-  final String? iban;
-  final String? swift;
-  final String? accountHolder;
-
-  const BankTransferConfig({
-    this.enabled = false,
-    this.depositPercentage = 20,
-    this.bankName,
-    this.accountNumber,
-    this.iban,
-    this.swift,
-    this.accountHolder,
-  });
-
-  factory BankTransferConfig.fromMap(Map<String, dynamic> map) {
-    return BankTransferConfig(
-      enabled: map['enabled'] ?? false,
-      depositPercentage: (map['deposit_percentage'] ?? 20).clamp(0, 100),
-      bankName: map['bank_name'],
-      accountNumber: map['account_number'],
-      iban: map['iban'],
-      swift: map['swift'],
-      accountHolder: map['account_holder'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'enabled': enabled,
-      'deposit_percentage': depositPercentage,
-      'bank_name': bankName,
-      'account_number': accountNumber,
-      'iban': iban,
-      'swift': swift,
-      'account_holder': accountHolder,
-    };
-  }
-
-  /// Check if bank details are complete
-  bool get hasCompleteDetails {
-    return bankName != null &&
-           accountHolder != null &&
-           (iban != null || accountNumber != null);
-  }
-
-  /// Calculate deposit amount
-  double calculateDeposit(double totalAmount) {
-    if (depositPercentage == 0 || depositPercentage == 100) {
-      return totalAmount;
-    }
-    return totalAmount * (depositPercentage / 100);
-  }
-
-  /// Calculate remaining amount
-  double calculateRemaining(double totalAmount) {
-    if (depositPercentage == 0 || depositPercentage == 100) {
-      return 0.0;
-    }
-    return totalAmount * ((100 - depositPercentage) / 100);
-  }
-
-  BankTransferConfig copyWith({
-    bool? enabled,
-    int? depositPercentage,
-    String? bankName,
-    String? accountNumber,
-    String? iban,
-    String? swift,
-    String? accountHolder,
-  }) {
-    return BankTransferConfig(
-      enabled: enabled ?? this.enabled,
-      depositPercentage: depositPercentage ?? this.depositPercentage,
-      bankName: bankName ?? this.bankName,
-      accountNumber: accountNumber ?? this.accountNumber,
-      iban: iban ?? this.iban,
-      swift: swift ?? this.swift,
-      accountHolder: accountHolder ?? this.accountHolder,
-    );
-  }
-}
-
-/// Contact options for calendar_only mode
-class ContactOptions {
-  final bool showPhone;
-  final String? phoneNumber;
-  final bool showEmail;
-  final String? emailAddress;
-  final bool showWhatsApp;
-  final String? whatsAppNumber;
-  final String? customMessage; // Custom message to show to guests
-
-  const ContactOptions({
-    this.showPhone = true,
-    this.phoneNumber,
-    this.showEmail = true,
-    this.emailAddress,
-    this.showWhatsApp = false,
-    this.whatsAppNumber,
-    this.customMessage,
-  });
-
-  factory ContactOptions.fromMap(Map<String, dynamic> map) {
-    return ContactOptions(
-      showPhone: map['show_phone'] ?? true,
-      phoneNumber: map['phone_number'],
-      showEmail: map['show_email'] ?? true,
-      emailAddress: map['email_address'],
-      showWhatsApp: map['show_whatsapp'] ?? false,
-      whatsAppNumber: map['whatsapp_number'],
-      customMessage: map['custom_message'],
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'show_phone': showPhone,
-      'phone_number': phoneNumber,
-      'show_email': showEmail,
-      'email_address': emailAddress,
-      'show_whatsapp': showWhatsApp,
-      'whatsapp_number': whatsAppNumber,
-      'custom_message': customMessage,
-    };
-  }
-
-  /// Check if at least one contact method is available
-  bool get hasContactMethod {
-    return (showPhone && phoneNumber != null && phoneNumber!.isNotEmpty) ||
-           (showEmail && emailAddress != null && emailAddress!.isNotEmpty) ||
-           (showWhatsApp && whatsAppNumber != null && whatsAppNumber!.isNotEmpty);
-  }
-
-  ContactOptions copyWith({
-    bool? showPhone,
-    String? phoneNumber,
-    bool? showEmail,
-    String? emailAddress,
-    bool? showWhatsApp,
-    String? whatsAppNumber,
-    String? customMessage,
-  }) {
-    return ContactOptions(
-      showPhone: showPhone ?? this.showPhone,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      showEmail: showEmail ?? this.showEmail,
-      emailAddress: emailAddress ?? this.emailAddress,
-      showWhatsApp: showWhatsApp ?? this.showWhatsApp,
-      whatsAppNumber: whatsAppNumber ?? this.whatsAppNumber,
-      customMessage: customMessage ?? this.customMessage,
-    );
-  }
-}
+// ============================================================
+// EXTRACTED CONFIGS - See settings/ folder
+// ============================================================
+// The following configs have been extracted to dedicated files:
+//
+// Payment:
+// - StripePaymentConfig → settings/payment/stripe_payment_config.dart
+// - BankTransferConfig → settings/payment/bank_transfer_config.dart
+//
+// Contact & Communication:
+// - ContactOptions → settings/contact_options.dart
+// - EmailNotificationConfig → settings/email_notification_config.dart
+//
+// Legal & Compliance:
+// - TaxLegalConfig → settings/tax_legal_config.dart
+//
+// All are re-exported via settings/settings.dart for backward compatibility.
+// ============================================================
 
 /// Theme customization options
 class ThemeOptions {
   final String? primaryColor; // Hex color
   final String? accentColor;
-  final bool showBranding; // Show "Powered by Rab Booking" badge
+  final bool showBranding; // Show "Powered by BookBed" badge
+  final String? customTitle; // Custom title text to display above calendar
   final String? customLogoUrl;
+  final String? themeMode; // 'light', 'dark', 'system' (default: 'system')
 
   const ThemeOptions({
     this.primaryColor,
     this.accentColor,
     this.showBranding = true,
+    this.customTitle,
     this.customLogoUrl,
+    this.themeMode = 'system',
   });
 
   factory ThemeOptions.fromMap(Map<String, dynamic> map) {
@@ -376,7 +330,9 @@ class ThemeOptions {
       primaryColor: map['primary_color'],
       accentColor: map['accent_color'],
       showBranding: map['show_branding'] ?? true,
+      customTitle: map['custom_title'],
       customLogoUrl: map['custom_logo_url'],
+      themeMode: map['theme_mode'] ?? 'system',
     );
   }
 
@@ -385,7 +341,9 @@ class ThemeOptions {
       'primary_color': primaryColor,
       'accent_color': accentColor,
       'show_branding': showBranding,
+      'custom_title': customTitle,
       'custom_logo_url': customLogoUrl,
+      'theme_mode': themeMode,
     };
   }
 
@@ -393,13 +351,109 @@ class ThemeOptions {
     String? primaryColor,
     String? accentColor,
     bool? showBranding,
+    String? customTitle,
     String? customLogoUrl,
+    String? themeMode,
   }) {
     return ThemeOptions(
       primaryColor: primaryColor ?? this.primaryColor,
       accentColor: accentColor ?? this.accentColor,
       showBranding: showBranding ?? this.showBranding,
+      customTitle: customTitle ?? this.customTitle,
       customLogoUrl: customLogoUrl ?? this.customLogoUrl,
+      themeMode: themeMode ?? this.themeMode,
+    );
+  }
+}
+
+/// External calendar integration configuration (e.g., Booking.com, Airbnb)
+class ExternalCalendarConfig {
+  final bool enabled; // Master toggle for external calendar sync
+  final bool syncBookingCom; // Sync with Booking.com
+  final String? bookingComAccountId; // Booking.com account/property ID
+  final String? bookingComAccessToken; // OAuth access token
+  final bool syncAirbnb; // Sync with Airbnb
+  final String? airbnbAccountId; // Airbnb account/listing ID
+  final String? airbnbAccessToken; // OAuth access token
+  final int syncIntervalMinutes; // How often to sync (default: 60 minutes)
+  final DateTime? lastSyncedAt; // Last successful sync timestamp
+
+  const ExternalCalendarConfig({
+    this.enabled = false,
+    this.syncBookingCom = false,
+    this.bookingComAccountId,
+    this.bookingComAccessToken,
+    this.syncAirbnb = false,
+    this.airbnbAccountId,
+    this.airbnbAccessToken,
+    this.syncIntervalMinutes = 60,
+    this.lastSyncedAt,
+  });
+
+  factory ExternalCalendarConfig.fromMap(Map<String, dynamic> map) {
+    return ExternalCalendarConfig(
+      enabled: map['enabled'] ?? false,
+      syncBookingCom: map['sync_booking_com'] ?? false,
+      bookingComAccountId: map['booking_com_account_id'],
+      bookingComAccessToken: map['booking_com_access_token'],
+      syncAirbnb: map['sync_airbnb'] ?? false,
+      airbnbAccountId: map['airbnb_account_id'],
+      airbnbAccessToken: map['airbnb_access_token'],
+      syncIntervalMinutes: map['sync_interval_minutes'] ?? 60,
+      lastSyncedAt: DateTimeParser.parseFlexible(map['last_synced_at']),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'enabled': enabled,
+      'sync_booking_com': syncBookingCom,
+      'booking_com_account_id': bookingComAccountId,
+      'booking_com_access_token': bookingComAccessToken,
+      'sync_airbnb': syncAirbnb,
+      'airbnb_account_id': airbnbAccountId,
+      'airbnb_access_token': airbnbAccessToken,
+      'sync_interval_minutes': syncIntervalMinutes,
+      'last_synced_at': lastSyncedAt?.toIso8601String(),
+    };
+  }
+
+  /// Check if any external calendar is connected
+  bool get hasConnectedCalendar {
+    return enabled &&
+        ((syncBookingCom && bookingComAccessToken != null) ||
+            (syncAirbnb && airbnbAccessToken != null));
+  }
+
+  /// Check if sync is due (based on interval)
+  bool get isSyncDue {
+    if (lastSyncedAt == null) return true;
+    final timeSinceSync = DateTime.now().toUtc().difference(lastSyncedAt!);
+    return timeSinceSync.inMinutes >= syncIntervalMinutes;
+  }
+
+  ExternalCalendarConfig copyWith({
+    bool? enabled,
+    bool? syncBookingCom,
+    String? bookingComAccountId,
+    String? bookingComAccessToken,
+    bool? syncAirbnb,
+    String? airbnbAccountId,
+    String? airbnbAccessToken,
+    int? syncIntervalMinutes,
+    DateTime? lastSyncedAt,
+  }) {
+    return ExternalCalendarConfig(
+      enabled: enabled ?? this.enabled,
+      syncBookingCom: syncBookingCom ?? this.syncBookingCom,
+      bookingComAccountId: bookingComAccountId ?? this.bookingComAccountId,
+      bookingComAccessToken:
+          bookingComAccessToken ?? this.bookingComAccessToken,
+      syncAirbnb: syncAirbnb ?? this.syncAirbnb,
+      airbnbAccountId: airbnbAccountId ?? this.airbnbAccountId,
+      airbnbAccessToken: airbnbAccessToken ?? this.airbnbAccessToken,
+      syncIntervalMinutes: syncIntervalMinutes ?? this.syncIntervalMinutes,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
     );
   }
 }

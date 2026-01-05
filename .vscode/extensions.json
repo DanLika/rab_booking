@@ -1,0 +1,57 @@
+{
+  // ============================================
+  // MINIMAL SETUP FOR CLAUDE CODE DEVELOPMENT
+  // ============================================
+  // This config is optimized for development with Claude Code AI.
+  // Only essential extensions that help Claude Code work better.
+
+  "recommendations": [
+    // ========== MUST HAVE (Core) ==========
+    "dart-code.dart-code",           // Dart language support (REQUIRED)
+    "dart-code.flutter",             // Flutter framework support (REQUIRED)
+    "anthropic.claude-code",         // Claude Code AI Assistant (REQUIRED)
+
+    // ========== HIGHLY RECOMMENDED (Claude Integration) ==========
+    "usernamehw.errorlens",          // Shows errors inline (Claude sees them immediately)
+    "eamodio.gitlens",               // Git history & blame (Claude uses for context)
+    "gruntfuggly.todo-tree",         // TODO/FIXME tracking (Claude finds action items)
+
+    // ========== OPTIONAL (Database/Firebase) ==========
+    "toba.vsfire",                   // Firestore explorer (if needed for manual inspection)
+    "ckolkman.vscode-postgres"       // PostgreSQL client (if needed for manual inspection)
+  ],
+
+  "unwantedRecommendations": [
+    // ========== AI Conflicts ==========
+    "github.copilot",                // Conflicts with Claude Code
+    "github.copilot-chat",           // Conflicts with Claude Code
+    "tabnine.tabnine-vscode",        // Another AI assistant (conflicts)
+    "visualstudioexptteam.vscodeintellicode", // Another AI (conflicts)
+
+    // ========== Snippet Extensions (Not Needed for Claude Code) ==========
+    "nash.awesome-flutter-snippets",         // Claude writes full code, not snippets
+    "robert-brunhage.flutter-riverpod-snippets", // Claude writes full code
+    "alexisvt.flutter-snippets",             // Claude writes full code
+    "gornivv.vscode-flutter-files",          // File generator (Claude uses Write tool)
+
+    // ========== Manual Development Tools (Not Needed) ==========
+    "jeroen-meijer.pubspec-assist",          // Claude edits pubspec.yaml directly
+    "circlecodesolution.ccs-flutter-color",  // Color picker (Claude uses design tokens)
+    "marcelovelasquez.flutter-tree",         // Widget tree viewer (use DevTools instead)
+    "ritwickdey.liveserver",                 // Not needed for Flutter
+
+    // ========== Other ==========
+    "fwcd.dart",                     // Use dart-code.dart-code instead
+
+    // ========== Autocomplete/Productivity Tools (Not Needed) ==========
+    "christian-kohler.npm-intellisense", // Claude writes full imports, doesn't need autocomplete
+    "christian-kohler.path-intellisense", // Claude writes full paths
+
+    // ========== Container/Infrastructure Tools (Not Used) ==========
+    "ms-azuretools.vscode-docker",   // Project doesn't use Docker
+    "ms-vscode-remote.remote-containers", // No container development
+
+    // ========== Editor Enhancements (Not Needed) ==========
+    "vscodevim.vim"                  // Vim keybindings (Claude doesn't use keyboard shortcuts)
+  ]
+}

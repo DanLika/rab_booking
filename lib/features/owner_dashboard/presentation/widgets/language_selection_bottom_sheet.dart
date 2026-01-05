@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/providers/language_provider.dart';
+import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../core/utils/responsive_spacing_helper.dart';
 
 /// Show language selection bottom sheet
 void showLanguageSelectionBottomSheet(BuildContext context, WidgetRef ref) {
+  final screenHeight = MediaQuery.of(context).size.height;
+  final maxHeightPercent =
+      ResponsiveSpacingHelper.getBottomSheetMaxHeightPercent(context);
+  final maxSheetHeight = screenHeight * maxHeightPercent;
+
   showModalBottomSheet(
     context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    constraints: BoxConstraints(maxHeight: maxSheetHeight),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
@@ -20,52 +32,81 @@ class LanguageSelectionBottomSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentLocale = ref.watch(currentLocaleProvider);
+    final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24),
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+          // Header (fixed) - matches CommonAppBar height (52px)
+          Container(
+            height: ResponsiveDialogUtils.kHeaderHeight,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                const Icon(Icons.language),
-                const SizedBox(width: 12),
-                Text(
-                  'Select Language',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                Icon(
+                  Icons.language,
+                  color: theme.colorScheme.onSurface,
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context).languageSelectTitle,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
           const Divider(height: 1),
 
-          // Language options
-          _LanguageOption(
-            locale: const Locale('hr'),
-            title: 'Hrvatski',
-            subtitle: 'Croatian',
-            isSelected: currentLocale.languageCode == 'hr',
-            onTap: () {
-              ref.read(languageNotifierProvider.notifier).setLanguage('hr');
-              Navigator.of(context).pop();
-            },
-          ),
-          const Divider(height: 1, indent: 24, endIndent: 24),
-          _LanguageOption(
-            locale: const Locale('en'),
-            title: 'English',
-            subtitle: 'English',
-            isSelected: currentLocale.languageCode == 'en',
-            onTap: () {
-              ref.read(languageNotifierProvider.notifier).setLanguage('en');
-              Navigator.of(context).pop();
-            },
+          // Language options (scrollable)
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _LanguageOption(
+                    locale: const Locale('hr'),
+                    title: 'Hrvatski',
+                    subtitle: 'Croatian',
+                    isSelected: currentLocale.languageCode == 'hr',
+                    onTap: () {
+                      ref
+                          .read(languageNotifierProvider.notifier)
+                          .setLanguage('hr');
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  const Divider(height: 1, indent: 24, endIndent: 24),
+                  _LanguageOption(
+                    locale: const Locale('en'),
+                    title: 'English',
+                    subtitle: 'English',
+                    isSelected: currentLocale.languageCode == 'en',
+                    onTap: () {
+                      ref
+                          .read(languageNotifierProvider.notifier)
+                          .setLanguage('en');
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -91,6 +132,12 @@ class _LanguageOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Use colorScheme.primary which is more vibrant than primaryColor
+    final selectedColor = theme.colorScheme.primary;
+
     return ListTile(
       leading: Container(
         width: 40,
@@ -98,7 +145,9 @@ class _LanguageOption extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isSelected
-              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+              ? selectedColor.withValues(alpha: isDark ? 0.35 : 0.15)
+              : isDark
+              ? Colors.white.withValues(alpha: 0.15)
               : Colors.grey[200],
         ),
         child: Center(
@@ -107,7 +156,9 @@ class _LanguageOption extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: isSelected
-                  ? Theme.of(context).primaryColor
+                  ? (isDark ? Colors.white : selectedColor)
+                  : isDark
+                  ? Colors.white
                   : Colors.grey[600],
             ),
           ),
@@ -123,7 +174,7 @@ class _LanguageOption extends StatelessWidget {
       trailing: isSelected
           ? Icon(
               Icons.check_circle,
-              color: Theme.of(context).primaryColor,
+              color: isDark ? Colors.white : selectedColor,
             )
           : null,
       onTap: onTap,

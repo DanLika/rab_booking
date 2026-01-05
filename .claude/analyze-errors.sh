@@ -1,0 +1,87 @@
+#!/bin/bash
+# Quick error analysis for Claude Code
+# Helps Claude identify and categorize errors quickly
+
+echo "========================================="
+echo "🐛 ERROR ANALYSIS REPORT"
+echo "========================================="
+echo ""
+
+# Dynamically resolve project root (portable across environments)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
+
+# Run flutter analyze and capture output
+ANALYZE_OUTPUT=$(flutter analyze 2>&1)
+
+# Count errors by type
+ERROR_COUNT=$(echo "$ANALYZE_OUTPUT" | grep "error •" | wc -l | tr -d ' ')
+WARNING_COUNT=$(echo "$ANALYZE_OUTPUT" | grep "warning •" | wc -l | tr -d ' ')
+INFO_COUNT=$(echo "$ANALYZE_OUTPUT" | grep "info •" | wc -l | tr -d ' ')
+
+echo "📊 Summary:"
+echo "  Errors:   $ERROR_COUNT"
+echo "  Warnings: $WARNING_COUNT"
+echo "  Info:     $INFO_COUNT"
+echo ""
+
+if [ "$ERROR_COUNT" -gt 0 ]; then
+    echo "========================================="
+    echo "🔴 ERRORS (Must Fix)"
+    echo "========================================="
+    echo "$ANALYZE_OUTPUT" | grep "error •" | head -20
+    echo ""
+fi
+
+if [ "$WARNING_COUNT" -gt 0 ]; then
+    echo "========================================="
+    echo "⚠️  WARNINGS (Should Fix)"
+    echo "========================================="
+    echo "$ANALYZE_OUTPUT" | grep "warning •" | head -20
+    echo ""
+fi
+
+# Common error patterns
+echo "========================================="
+echo "🔍 Common Error Patterns"
+echo "========================================="
+echo ""
+
+echo "1. Missing imports:"
+echo "$ANALYZE_OUTPUT" | grep -n "Undefined" | head -5
+echo ""
+
+echo "2. Type errors:"
+echo "$ANALYZE_OUTPUT" | grep -n "type.*isn't.*type" | head -5
+echo ""
+
+echo "3. Null safety issues:"
+echo "$ANALYZE_OUTPUT" | grep -n "null" | head -5
+echo ""
+
+echo "4. Missing members:"
+echo "$ANALYZE_OUTPUT" | grep -n "isn't defined" | head -5
+echo ""
+
+echo "5. Switch statement issues:"
+echo "$ANALYZE_OUTPUT" | grep -n "exhaustively matched" | head -5
+echo ""
+
+echo "========================================="
+echo "💡 Quick Fix Suggestions"
+echo "========================================="
+echo ""
+echo "Run: dart fix --dry-run    # See what can be auto-fixed"
+echo "Run: dart fix --apply      # Auto-fix issues"
+echo "Run: dart format lib/      # Format code"
+echo ""
+
+# Check for deprecated API usage
+echo "========================================="
+echo "⚠️  Deprecated API Usage"
+echo "========================================="
+echo "$ANALYZE_OUTPUT" | grep -n "deprecated" | head -10
+echo ""
+
+exit 0

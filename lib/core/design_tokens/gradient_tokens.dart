@@ -1,7 +1,19 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
-/// Gradient design tokens for consistent gradients across the widget
+/// Gradient design tokens for consistent gradients across the app
+///
+/// Usage:
+/// ```dart
+/// Container(
+///   decoration: BoxDecoration(
+///     gradient: GradientTokens.brandPrimary,
+///   ),
+/// )
+/// ```
 class GradientTokens {
+  // Prevent instantiation
+  GradientTokens._();
+
   // ============================================================================
   // Linear Gradients
   // ============================================================================
@@ -11,8 +23,8 @@ class GradientTokens {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFFFAFAFA), // Very light gray
-      Color(0xFFF5F5F5), // Slightly darker gray
+      Color(0xFFFAF8F3), // Cream/beige
+      Color(0xFFFFFFFF), // White
     ],
   );
 
@@ -25,6 +37,24 @@ class GradientTokens {
       Color(0xFF121212), // Darker gray
     ],
   );
+
+  /// Brand gradient - Purple solid colors (no alpha transparency)
+  /// Used for: App Bar, Drawer Header, Primary Buttons
+  /// Consistent across Light and Dark themes
+  static const LinearGradient brandPrimary = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFF6B4CE6), // Purple (start)
+      Color(0xFF7E5FEE), // Lighter purple (end) - solid, no alpha
+    ],
+  );
+
+  /// Brand gradient colors (for custom usage with gradientColors parameter)
+  static const Color brandPrimaryStart = Color(0xFF6B4CE6);
+  static const Color brandPrimaryEnd = Color(
+    0xFF7E5FEE,
+  ); // Solid lighter purple
 
   /// Primary accent gradient
   static const LinearGradient primaryAccent = LinearGradient(
@@ -68,25 +98,13 @@ class GradientTokens {
 
   /// Shimmer gradient for loading states
   static const LinearGradient shimmer = LinearGradient(
-    begin: Alignment(-1.0, 0.0),
-    end: Alignment(1.0, 0.0),
-    colors: [
-      Color(0xFFEBEBF4),
-      Color(0xFFF4F4F4),
-      Color(0xFFEBEBF4),
-    ],
+    colors: [Color(0xFFEBEBF4), Color(0xFFF4F4F4), Color(0xFFEBEBF4)],
     stops: [0.0, 0.5, 1.0],
   );
 
   /// Shimmer gradient for loading states (dark mode)
   static const LinearGradient shimmerDark = LinearGradient(
-    begin: Alignment(-1.0, 0.0),
-    end: Alignment(1.0, 0.0),
-    colors: [
-      Color(0xFF2A2A2A),
-      Color(0xFF3A3A3A),
-      Color(0xFF2A2A2A),
-    ],
+    colors: [Color(0xFF2A2A2A), Color(0xFF3A3A3A), Color(0xFF2A2A2A)],
     stops: [0.0, 0.5, 1.0],
   );
 
@@ -96,7 +114,6 @@ class GradientTokens {
 
   /// Spotlight effect (for highlighting elements)
   static const RadialGradient spotlight = RadialGradient(
-    center: Alignment.center,
     radius: 1.0,
     colors: [
       Color(0x33FFFFFF), // Semi-transparent white center
@@ -106,7 +123,6 @@ class GradientTokens {
 
   /// Overlay gradient (for modal backgrounds)
   static const RadialGradient overlay = RadialGradient(
-    center: Alignment.center,
     radius: 1.5,
     colors: [
       Color(0x99000000), // Semi-transparent black
@@ -120,7 +136,6 @@ class GradientTokens {
 
   /// Loading spinner gradient
   static const SweepGradient loadingSpinner = SweepGradient(
-    startAngle: 0.0,
     endAngle: 6.28, // 2π radians
     colors: [
       Color(0xFF2196F3), // Blue

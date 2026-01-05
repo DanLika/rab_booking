@@ -46,7 +46,9 @@ class PriceText extends ConsumerWidget {
       error: (error, stackTrace) {
         // Fallback to EUR
         return Text(
-          showPerNight ? '€${priceInEur.toStringAsFixed(2)} / night' : '€${priceInEur.toStringAsFixed(2)}',
+          showPerNight
+              ? '€${priceInEur.toStringAsFixed(2)} / night'
+              : '€${priceInEur.toStringAsFixed(2)}',
           style: style,
         );
       },
@@ -86,7 +88,9 @@ class PriceRichText extends ConsumerWidget {
                 ? [
                     TextSpan(
                       text: suffix,
-                      style: suffixStyle ?? priceStyle?.copyWith(fontWeight: FontWeight.normal),
+                      style:
+                          suffixStyle ??
+                          priceStyle?.copyWith(fontWeight: FontWeight.normal),
                     ),
                   ]
                 : [],
@@ -108,7 +112,9 @@ class PriceRichText extends ConsumerWidget {
                 ? [
                     TextSpan(
                       text: suffix,
-                      style: suffixStyle ?? priceStyle?.copyWith(fontWeight: FontWeight.normal),
+                      style:
+                          suffixStyle ??
+                          priceStyle?.copyWith(fontWeight: FontWeight.normal),
                     ),
                   ]
                 : [],

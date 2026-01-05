@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/models/widget_config.dart';
-import '../theme/villa_jasko_theme_data.dart';
+import '../../domain/models/embed_url_params.dart';
+import '../theme/minimalist_theme.dart';
 
 /// Provider for widget configuration
 ///
 /// Initialize this with URL parameters at app startup:
 /// ```dart
 /// final uri = Uri.parse(window.location.href);
-/// final config = WidgetConfig.fromUrlParameters(uri);
+/// final config = EmbedUrlParams.fromUrlParameters(uri);
 /// ref.read(widgetConfigProvider.notifier).state = config;
 /// ```
-final widgetConfigProvider = StateProvider<WidgetConfig>((ref) {
+final widgetConfigProvider = StateProvider<EmbedUrlParams>((ref) {
   // Default configuration
-  return const WidgetConfig(
-    locale: 'en',
-  );
+  return const EmbedUrlParams();
 });
 
 /// Provider for theme mode based on widget configuration
@@ -37,31 +35,25 @@ final widgetThemeModeProvider = Provider<ThemeMode>((ref) {
 final widgetLightThemeProvider = Provider<ThemeData>((ref) {
   final config = ref.watch(widgetConfigProvider);
 
-  // Start with Villa Jasko light theme (Azure Blue design system)
-  ThemeData theme = VillaJaskoTheme.lightTheme;
+  // Start with Minimalist light theme
+  ThemeData theme = MinimalistTheme.light;
 
   // Apply custom colors if provided
   if (config.primaryColor != null) {
     theme = theme.copyWith(
       primaryColor: config.primaryColor,
-      colorScheme: theme.colorScheme.copyWith(
-        primary: config.primaryColor,
-      ),
+      colorScheme: theme.colorScheme.copyWith(primary: config.primaryColor),
     );
   }
 
   if (config.accentColor != null) {
     theme = theme.copyWith(
-      colorScheme: theme.colorScheme.copyWith(
-        secondary: config.accentColor,
-      ),
+      colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor),
     );
   }
 
   if (config.backgroundColor != null) {
-    theme = theme.copyWith(
-      scaffoldBackgroundColor: config.backgroundColor,
-    );
+    theme = theme.copyWith(scaffoldBackgroundColor: config.backgroundColor);
   }
 
   if (config.textColor != null) {
@@ -80,31 +72,25 @@ final widgetLightThemeProvider = Provider<ThemeData>((ref) {
 final widgetDarkThemeProvider = Provider<ThemeData>((ref) {
   final config = ref.watch(widgetConfigProvider);
 
-  // Start with Villa Jasko dark theme
-  ThemeData theme = VillaJaskoTheme.darkTheme;
+  // Start with Minimalist dark theme
+  ThemeData theme = MinimalistTheme.dark;
 
   // Apply custom colors if provided
   if (config.primaryColor != null) {
     theme = theme.copyWith(
       primaryColor: config.primaryColor,
-      colorScheme: theme.colorScheme.copyWith(
-        primary: config.primaryColor,
-      ),
+      colorScheme: theme.colorScheme.copyWith(primary: config.primaryColor),
     );
   }
 
   if (config.accentColor != null) {
     theme = theme.copyWith(
-      colorScheme: theme.colorScheme.copyWith(
-        secondary: config.accentColor,
-      ),
+      colorScheme: theme.colorScheme.copyWith(secondary: config.accentColor),
     );
   }
 
   if (config.backgroundColor != null) {
-    theme = theme.copyWith(
-      scaffoldBackgroundColor: config.backgroundColor,
-    );
+    theme = theme.copyWith(scaffoldBackgroundColor: config.backgroundColor);
   }
 
   if (config.textColor != null) {

@@ -11,6 +11,9 @@ import 'package:flutter/material.dart';
 /// - Dark mode: ColorTokens.dark.primary
 /// - Get color set: ColorTokens.forBrightness(Brightness.light)
 class ColorTokens {
+  // Prevent instantiation
+  ColorTokens._();
+
   // ============================================================================
   // THEME COLORS - Access point for all colors
   // ============================================================================
@@ -46,16 +49,16 @@ class ColorTokens {
   static const Color grey800 = Color(0xFF1F2937);
   static const Color grey900 = Color(0xFF111827);
 
-  // Brand colors - Azure Blue
-  static const Color azure50 = Color(0xFFEBF5FF);
-  static const Color azure100 = Color(0xFFBFDBFE);
-  static const Color azure200 = Color(0xFF99C2FF);
-  static const Color azure400 = Color(0xFF60A5FA);
-  static const Color azure500 = Color(0xFF3B82F6);
-  static const Color azure600 = Color(0xFF0066FF);
-  static const Color azure700 = Color(0xFF0052CC);
-  static const Color azure800 = Color(0xFF003D99);
-  static const Color azure900 = Color(0xFF1E3A8A);
+  // Brand colors - Purple (Modern 2025 Theme)
+  static const Color azure50 = Color(0xFFF3F0FF);
+  static const Color azure100 = Color(0xFFE0D7FF);
+  static const Color azure200 = Color(0xFF9B86F3);
+  static const Color azure400 = Color(0xFF8164F0);
+  static const Color azure500 = Color(0xFF7B5DED);
+  static const Color azure600 = Color(0xFF6B4CE6);
+  static const Color azure700 = Color(0xFF5B3DD6);
+  static const Color azure800 = Color(0xFF4B2DC6);
+  static const Color azure900 = Color(0xFF3B1FB6);
 
   // Accent colors - Coral
   static const Color coral400 = Color(0xFFFF8A80);
@@ -66,10 +69,16 @@ class ColorTokens {
   static const Color teal50 = Color(0xFFF0FDFA);
   static const Color teal100 = Color(0xFFCCF5E8);
   static const Color teal200 = Color(0xFFD1FAE5);
+  static const Color teal300 = Color(
+    0xFF83E7BF,
+  ); // Goldilocks - medium mint (between 200 and 400)
   static const Color teal400 = Color(0xFF34D399);
   static const Color teal500 = Color(0xFF14B8A6);
   static const Color teal600 = Color(0xFF0D9488);
   static const Color teal700 = Color(0xFF0F766E);
+  static const Color teal800 = Color(
+    0xFF065F46,
+  ); // Dark forest green for dark theme
   static const Color teal900 = Color(0xFF134E4A);
 
   // Status colors - Pink/Red (Booked)
@@ -79,6 +88,9 @@ class ColorTokens {
   static const Color pink500 = Color(0xFFEC4899);
   static const Color pink600 = Color(0xFFDB2777);
   static const Color pink700 = Color(0xFFEF4444);
+  static const Color pink800 = Color(
+    0xFF7C2D12,
+  ); // Dark burgundy/maroon for dark theme
   static const Color pink900 = Color(0xFF7F1D1D);
 
   // Status colors - Amber (Pending/Warning)
@@ -93,6 +105,30 @@ class ColorTokens {
   static const Color emerald500 = Color(0xFF10B981);
   static const Color emerald600 = Color(0xFF059669);
   static const Color emerald900 = Color(0xFF064E3B);
+
+  // Status colors - Cancel (Red variants for cancelled booking status)
+  static const Color cancelLight = Color(
+    0xFFFBA9AA,
+  ); // Light pink/red for light theme
+  static const Color cancelDark = Color(
+    0xFFEF4444,
+  ); // Bright red for dark theme
+
+  // Status colors - Blocked (distinct grey with pattern indicator)
+  static const Color blockedLight = Color(
+    0xFFD1D5DB,
+  ); // Medium grey for light theme
+  static const Color blockedDark = Color(
+    0xFF4B5563,
+  ); // Darker grey for dark theme
+
+  // Status colors - Past Reservation (red with reduced visibility)
+  static const Color pastReservationLight = Color(
+    0xFFFECACA,
+  ); // Light coral/red for light theme
+  static const Color pastReservationDark = Color(
+    0xFF991B1B,
+  ); // Deep red for dark theme
 
   // Slate (for dark mode)
   static const Color slate100 = Color(0xFFF1F5F9);
@@ -188,6 +224,8 @@ abstract class WidgetColorScheme {
   Color get statusPendingBackground;
   Color get statusPendingBorder;
   Color get statusPendingText;
+  Color get statusBlockedBackground;
+  Color get statusBlockedBorder;
   Color get statusSelectedBackground;
   Color get statusSelectedBorder;
   Color get statusHoverBackground;
@@ -195,6 +233,10 @@ abstract class WidgetColorScheme {
   Color get statusTodayBorder;
   Color get statusDisabledBackground;
   Color get statusDisabledText;
+  Color get statusPastReservationBackground;
+  Color get statusPastReservationBorder;
+  Color get statusCancelledBackground;
+  Color get statusCancelledBorder;
 
   // Buttons
   Color get buttonPrimary;
@@ -304,25 +346,31 @@ class LightColorScheme implements WidgetColorScheme {
   @override
   Color get info => ColorTokens.azure600;
 
-  // Calendar status - Modern mint/pink
+  // Calendar status - Light theme: Goldilocks srednje nijanse (balans između estetike i pristupačnosti)
   @override
-  Color get statusAvailableBackground => ColorTokens.teal100; // Light mint
+  Color get statusAvailableBackground => ColorTokens.teal300; // Medium mint - Goldilocks approach
   @override
-  Color get statusAvailableBorder => ColorTokens.teal500;
+  Color get statusAvailableBorder => ColorTokens.teal600; // Medium border
   @override
-  Color get statusAvailableText => ColorTokens.teal600;
+  Color get statusAvailableText => ColorTokens.teal900; // Dark text for contrast
   @override
-  Color get statusBookedBackground => ColorTokens.pink100; // Light pink
+  Color get statusBookedBackground => ColorTokens.pink200; // Light pink for booked dates
   @override
-  Color get statusBookedBorder => ColorTokens.pink500;
+  Color get statusBookedBorder => ColorTokens.pink600; // Medium border
   @override
-  Color get statusBookedText => ColorTokens.pink600;
+  Color get statusBookedText => ColorTokens.pink700; // Dark text for contrast
+  // Pending uses YELLOW background to distinguish from confirmed (red) bookings
+  // Diagonal pattern adds visual distinction while showing dates are blocked
   @override
-  Color get statusPendingBackground => ColorTokens.amber200;
+  Color get statusPendingBackground => ColorTokens.amber200; // Light yellow for pending
   @override
-  Color get statusPendingBorder => ColorTokens.amber500;
+  Color get statusPendingBorder => ColorTokens.amber500; // Medium yellow border
   @override
-  Color get statusPendingText => ColorTokens.amber600;
+  Color get statusPendingText => ColorTokens.amber600; // Dark amber text for contrast
+  @override
+  Color get statusBlockedBackground => ColorTokens.blockedLight;
+  @override
+  Color get statusBlockedBorder => ColorTokens.grey400;
   @override
   Color get statusSelectedBackground => ColorTokens.azure100;
   @override
@@ -337,6 +385,14 @@ class LightColorScheme implements WidgetColorScheme {
   Color get statusDisabledBackground => ColorTokens.grey100;
   @override
   Color get statusDisabledText => ColorTokens.grey300;
+  @override
+  Color get statusPastReservationBackground => ColorTokens.pastReservationLight;
+  @override
+  Color get statusPastReservationBorder => ColorTokens.pink400;
+  @override
+  Color get statusCancelledBackground => ColorTokens.cancelLight;
+  @override
+  Color get statusCancelledBorder => ColorTokens.pink400;
 
   // Buttons - Black primary
   @override
@@ -377,65 +433,50 @@ class LightColorScheme implements WidgetColorScheme {
   // Shadow presets
   @override
   List<BoxShadow> get shadowMinimal => [
-        BoxShadow(
-          color: shadow01,
-          offset: const Offset(0, 1),
-          blurRadius: 2,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow01, offset: const Offset(0, 1), blurRadius: 2),
+  ];
 
   @override
   List<BoxShadow> get shadowLight => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 2),
-          blurRadius: 4,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow02, offset: const Offset(0, 2), blurRadius: 4),
+  ];
 
   @override
   List<BoxShadow> get shadowMedium => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 2),
-          blurRadius: 4,
-          spreadRadius: -1,
-        ),
-        BoxShadow(
-          color: shadow03,
-          offset: const Offset(0, 4),
-          blurRadius: 8,
-          spreadRadius: -2,
-        ),
-      ];
+    BoxShadow(
+      color: shadow02,
+      offset: const Offset(0, 2),
+      blurRadius: 4,
+      spreadRadius: -1,
+    ),
+    BoxShadow(
+      color: shadow03,
+      offset: const Offset(0, 4),
+      blurRadius: 8,
+      spreadRadius: -2,
+    ),
+  ];
 
   @override
   List<BoxShadow> get shadowStrong => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 4),
-          blurRadius: 6,
-          spreadRadius: -2,
-        ),
-        BoxShadow(
-          color: shadow04,
-          offset: const Offset(0, 8),
-          blurRadius: 16,
-          spreadRadius: -4,
-        ),
-      ];
+    BoxShadow(
+      color: shadow02,
+      offset: const Offset(0, 4),
+      blurRadius: 6,
+      spreadRadius: -2,
+    ),
+    BoxShadow(
+      color: shadow04,
+      offset: const Offset(0, 8),
+      blurRadius: 16,
+      spreadRadius: -4,
+    ),
+  ];
 
   @override
   List<BoxShadow> get shadowHover => [
-        BoxShadow(
-          color: shadow03,
-          offset: const Offset(0, 4),
-          blurRadius: 12,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow03, offset: const Offset(0, 4), blurRadius: 12),
+  ];
 }
 
 // ============================================================================
@@ -517,25 +558,31 @@ class DarkColorScheme implements WidgetColorScheme {
   @override
   Color get info => ColorTokens.azure500;
 
-  // Calendar status - Dark mode adjusted
+  // Calendar status - Dark theme: saturisane živopisne boje (zelena + crvena)
   @override
-  Color get statusAvailableBackground => ColorTokens.teal900;
+  Color get statusAvailableBackground => ColorTokens.teal500; // Vibrant teal
   @override
-  Color get statusAvailableBorder => ColorTokens.teal500;
+  Color get statusAvailableBorder => ColorTokens.teal300; // Lighter border for contrast
   @override
-  Color get statusAvailableText => ColorTokens.teal400;
+  Color get statusAvailableText => ColorTokens.pureWhite; // White text for good contrast
   @override
-  Color get statusBookedBackground => ColorTokens.pink900;
+  Color get statusBookedBackground => ColorTokens.pink700; // TRUE RED (ne pink/magenta)
   @override
-  Color get statusBookedBorder => ColorTokens.pink400;
+  Color get statusBookedBorder => ColorTokens.pink400; // Coral border for contrast
   @override
-  Color get statusBookedText => ColorTokens.pink400;
+  Color get statusBookedText => ColorTokens.pureWhite; // White text for good contrast
+  // Pending uses GOLDEN YELLOW background to distinguish from confirmed (red) bookings
+  // Diagonal pattern adds visual distinction while showing dates are blocked
   @override
-  Color get statusPendingBackground => ColorTokens.amber900;
+  Color get statusPendingBackground => const Color(0xFFF5B800); // Elegant golden yellow for dark theme
   @override
-  Color get statusPendingBorder => ColorTokens.amber500;
+  Color get statusPendingBorder => ColorTokens.amber500; // Medium yellow border
   @override
-  Color get statusPendingText => ColorTokens.amber400;
+  Color get statusPendingText => ColorTokens.grey900; // Dark text for contrast on light yellow
+  @override
+  Color get statusBlockedBackground => ColorTokens.blockedDark;
+  @override
+  Color get statusBlockedBorder => ColorTokens.slate500;
   @override
   Color get statusSelectedBackground => ColorTokens.azure900;
   @override
@@ -550,6 +597,14 @@ class DarkColorScheme implements WidgetColorScheme {
   Color get statusDisabledBackground => ColorTokens.grey800;
   @override
   Color get statusDisabledText => ColorTokens.grey600;
+  @override
+  Color get statusPastReservationBackground => ColorTokens.pastReservationDark;
+  @override
+  Color get statusPastReservationBorder => ColorTokens.pink700;
+  @override
+  Color get statusCancelledBackground => ColorTokens.cancelDark;
+  @override
+  Color get statusCancelledBorder => ColorTokens.pink700;
 
   // Buttons
   @override
@@ -590,63 +645,48 @@ class DarkColorScheme implements WidgetColorScheme {
   // Shadow presets
   @override
   List<BoxShadow> get shadowMinimal => [
-        BoxShadow(
-          color: shadow01,
-          offset: const Offset(0, 1),
-          blurRadius: 3,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow01, offset: const Offset(0, 1), blurRadius: 3),
+  ];
 
   @override
   List<BoxShadow> get shadowLight => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 2),
-          blurRadius: 6,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow02, offset: const Offset(0, 2), blurRadius: 6),
+  ];
 
   @override
   List<BoxShadow> get shadowMedium => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 3),
-          blurRadius: 6,
-          spreadRadius: -1,
-        ),
-        BoxShadow(
-          color: shadow03,
-          offset: const Offset(0, 6),
-          blurRadius: 12,
-          spreadRadius: -2,
-        ),
-      ];
+    BoxShadow(
+      color: shadow02,
+      offset: const Offset(0, 3),
+      blurRadius: 6,
+      spreadRadius: -1,
+    ),
+    BoxShadow(
+      color: shadow03,
+      offset: const Offset(0, 6),
+      blurRadius: 12,
+      spreadRadius: -2,
+    ),
+  ];
 
   @override
   List<BoxShadow> get shadowStrong => [
-        BoxShadow(
-          color: shadow02,
-          offset: const Offset(0, 6),
-          blurRadius: 10,
-          spreadRadius: -2,
-        ),
-        BoxShadow(
-          color: shadow04,
-          offset: const Offset(0, 12),
-          blurRadius: 24,
-          spreadRadius: -4,
-        ),
-      ];
+    BoxShadow(
+      color: shadow02,
+      offset: const Offset(0, 6),
+      blurRadius: 10,
+      spreadRadius: -2,
+    ),
+    BoxShadow(
+      color: shadow04,
+      offset: const Offset(0, 12),
+      blurRadius: 24,
+      spreadRadius: -4,
+    ),
+  ];
 
   @override
   List<BoxShadow> get shadowHover => [
-        BoxShadow(
-          color: shadow03,
-          offset: const Offset(0, 6),
-          blurRadius: 16,
-          spreadRadius: 0,
-        ),
-      ];
+    BoxShadow(color: shadow03, offset: const Offset(0, 6), blurRadius: 16),
+  ];
 }

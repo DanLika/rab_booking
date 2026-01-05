@@ -28,6 +28,11 @@ mixin _$UnitModel {
   @JsonKey(name: 'property_id')
   String get propertyId => throw _privateConstructorUsedError;
 
+  /// Owner user ID (for Firestore security rules)
+  /// Made nullable for backwards compatibility with legacy units
+  @JsonKey(name: 'owner_id')
+  String? get ownerId => throw _privateConstructorUsedError;
+
   /// Unit name/title (e.g., "Apartment A1", "Studio 2")
   String get name => throw _privateConstructorUsedError;
 
@@ -37,9 +42,17 @@ mixin _$UnitModel {
   /// Unit description
   String? get description => throw _privateConstructorUsedError;
 
-  /// Price per night in EUR
+  /// Price per night in EUR (base price for weekdays)
   @JsonKey(name: 'base_price')
   double get pricePerNight => throw _privateConstructorUsedError;
+
+  /// Weekend base price in EUR (optional, for Fri-Sat nights by default)
+  @JsonKey(name: 'weekend_base_price')
+  double? get weekendBasePrice => throw _privateConstructorUsedError;
+
+  /// Days considered as weekend (1=Mon...7=Sun, default: [5,6] = Fri-Sat nights)
+  @JsonKey(name: 'weekend_days')
+  List<int>? get weekendDays => throw _privateConstructorUsedError;
 
   /// Currency code (default: EUR)
   String? get currency => throw _privateConstructorUsedError;
@@ -73,6 +86,10 @@ mixin _$UnitModel {
   @JsonKey(name: 'max_stay_nights')
   int? get maxStayNights => throw _privateConstructorUsedError;
 
+  /// Sort order for display (lower = first, null = end of list)
+  @JsonKey(name: 'sort_order')
+  int get sortOrder => throw _privateConstructorUsedError;
+
   /// Unit creation timestamp
   @JsonKey(name: 'created_at')
   @TimestampConverter()
@@ -105,10 +122,13 @@ abstract class $UnitModelCopyWith<$Res> {
   $Res call({
     String id,
     @JsonKey(name: 'property_id') String propertyId,
+    @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
     String? description,
     @JsonKey(name: 'base_price') double pricePerNight,
+    @JsonKey(name: 'weekend_base_price') double? weekendBasePrice,
+    @JsonKey(name: 'weekend_days') List<int>? weekendDays,
     String? currency,
     @JsonKey(name: 'max_guests') int maxGuests,
     int bedrooms,
@@ -118,6 +138,7 @@ abstract class $UnitModelCopyWith<$Res> {
     @JsonKey(name: 'is_available') bool isAvailable,
     @JsonKey(name: 'min_stay_nights') int minStayNights,
     @JsonKey(name: 'max_stay_nights') int? maxStayNights,
+    @JsonKey(name: 'sort_order') int sortOrder,
     @JsonKey(name: 'created_at') @TimestampConverter() DateTime createdAt,
     @JsonKey(name: 'updated_at')
     @NullableTimestampConverter()
@@ -143,10 +164,13 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
   $Res call({
     Object? id = null,
     Object? propertyId = null,
+    Object? ownerId = freezed,
     Object? name = null,
     Object? slug = freezed,
     Object? description = freezed,
     Object? pricePerNight = null,
+    Object? weekendBasePrice = freezed,
+    Object? weekendDays = freezed,
     Object? currency = freezed,
     Object? maxGuests = null,
     Object? bedrooms = null,
@@ -156,6 +180,7 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
     Object? isAvailable = null,
     Object? minStayNights = null,
     Object? maxStayNights = freezed,
+    Object? sortOrder = null,
     Object? createdAt = null,
     Object? updatedAt = freezed,
     Object? deletedAt = freezed,
@@ -170,6 +195,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.propertyId
                 : propertyId // ignore: cast_nullable_to_non_nullable
                       as String,
+            ownerId: freezed == ownerId
+                ? _value.ownerId
+                : ownerId // ignore: cast_nullable_to_non_nullable
+                      as String?,
             name: null == name
                 ? _value.name
                 : name // ignore: cast_nullable_to_non_nullable
@@ -186,6 +215,14 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.pricePerNight
                 : pricePerNight // ignore: cast_nullable_to_non_nullable
                       as double,
+            weekendBasePrice: freezed == weekendBasePrice
+                ? _value.weekendBasePrice
+                : weekendBasePrice // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            weekendDays: freezed == weekendDays
+                ? _value.weekendDays
+                : weekendDays // ignore: cast_nullable_to_non_nullable
+                      as List<int>?,
             currency: freezed == currency
                 ? _value.currency
                 : currency // ignore: cast_nullable_to_non_nullable
@@ -222,6 +259,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.maxStayNights
                 : maxStayNights // ignore: cast_nullable_to_non_nullable
                       as int?,
+            sortOrder: null == sortOrder
+                ? _value.sortOrder
+                : sortOrder // ignore: cast_nullable_to_non_nullable
+                      as int,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -252,10 +293,13 @@ abstract class _$$UnitModelImplCopyWith<$Res>
   $Res call({
     String id,
     @JsonKey(name: 'property_id') String propertyId,
+    @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
     String? description,
     @JsonKey(name: 'base_price') double pricePerNight,
+    @JsonKey(name: 'weekend_base_price') double? weekendBasePrice,
+    @JsonKey(name: 'weekend_days') List<int>? weekendDays,
     String? currency,
     @JsonKey(name: 'max_guests') int maxGuests,
     int bedrooms,
@@ -265,6 +309,7 @@ abstract class _$$UnitModelImplCopyWith<$Res>
     @JsonKey(name: 'is_available') bool isAvailable,
     @JsonKey(name: 'min_stay_nights') int minStayNights,
     @JsonKey(name: 'max_stay_nights') int? maxStayNights,
+    @JsonKey(name: 'sort_order') int sortOrder,
     @JsonKey(name: 'created_at') @TimestampConverter() DateTime createdAt,
     @JsonKey(name: 'updated_at')
     @NullableTimestampConverter()
@@ -289,10 +334,13 @@ class __$$UnitModelImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? propertyId = null,
+    Object? ownerId = freezed,
     Object? name = null,
     Object? slug = freezed,
     Object? description = freezed,
     Object? pricePerNight = null,
+    Object? weekendBasePrice = freezed,
+    Object? weekendDays = freezed,
     Object? currency = freezed,
     Object? maxGuests = null,
     Object? bedrooms = null,
@@ -302,6 +350,7 @@ class __$$UnitModelImplCopyWithImpl<$Res>
     Object? isAvailable = null,
     Object? minStayNights = null,
     Object? maxStayNights = freezed,
+    Object? sortOrder = null,
     Object? createdAt = null,
     Object? updatedAt = freezed,
     Object? deletedAt = freezed,
@@ -316,6 +365,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.propertyId
             : propertyId // ignore: cast_nullable_to_non_nullable
                   as String,
+        ownerId: freezed == ownerId
+            ? _value.ownerId
+            : ownerId // ignore: cast_nullable_to_non_nullable
+                  as String?,
         name: null == name
             ? _value.name
             : name // ignore: cast_nullable_to_non_nullable
@@ -332,6 +385,14 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.pricePerNight
             : pricePerNight // ignore: cast_nullable_to_non_nullable
                   as double,
+        weekendBasePrice: freezed == weekendBasePrice
+            ? _value.weekendBasePrice
+            : weekendBasePrice // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        weekendDays: freezed == weekendDays
+            ? _value._weekendDays
+            : weekendDays // ignore: cast_nullable_to_non_nullable
+                  as List<int>?,
         currency: freezed == currency
             ? _value.currency
             : currency // ignore: cast_nullable_to_non_nullable
@@ -368,6 +429,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.maxStayNights
             : maxStayNights // ignore: cast_nullable_to_non_nullable
                   as int?,
+        sortOrder: null == sortOrder
+            ? _value.sortOrder
+            : sortOrder // ignore: cast_nullable_to_non_nullable
+                  as int,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -391,10 +456,13 @@ class _$UnitModelImpl extends _UnitModel {
   const _$UnitModelImpl({
     required this.id,
     @JsonKey(name: 'property_id') required this.propertyId,
+    @JsonKey(name: 'owner_id') this.ownerId,
     required this.name,
     this.slug,
     this.description,
     @JsonKey(name: 'base_price') required this.pricePerNight,
+    @JsonKey(name: 'weekend_base_price') this.weekendBasePrice,
+    @JsonKey(name: 'weekend_days') final List<int>? weekendDays,
     this.currency = 'EUR',
     @JsonKey(name: 'max_guests') required this.maxGuests,
     this.bedrooms = 1,
@@ -404,10 +472,12 @@ class _$UnitModelImpl extends _UnitModel {
     @JsonKey(name: 'is_available') this.isAvailable = true,
     @JsonKey(name: 'min_stay_nights') this.minStayNights = 1,
     @JsonKey(name: 'max_stay_nights') this.maxStayNights,
+    @JsonKey(name: 'sort_order') this.sortOrder = 0,
     @JsonKey(name: 'created_at') @TimestampConverter() required this.createdAt,
     @JsonKey(name: 'updated_at') @NullableTimestampConverter() this.updatedAt,
     @JsonKey(name: 'deleted_at') this.deletedAt,
-  }) : _images = images,
+  }) : _weekendDays = weekendDays,
+       _images = images,
        super._();
 
   factory _$UnitModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -422,6 +492,12 @@ class _$UnitModelImpl extends _UnitModel {
   @JsonKey(name: 'property_id')
   final String propertyId;
 
+  /// Owner user ID (for Firestore security rules)
+  /// Made nullable for backwards compatibility with legacy units
+  @override
+  @JsonKey(name: 'owner_id')
+  final String? ownerId;
+
   /// Unit name/title (e.g., "Apartment A1", "Studio 2")
   @override
   final String name;
@@ -434,10 +510,29 @@ class _$UnitModelImpl extends _UnitModel {
   @override
   final String? description;
 
-  /// Price per night in EUR
+  /// Price per night in EUR (base price for weekdays)
   @override
   @JsonKey(name: 'base_price')
   final double pricePerNight;
+
+  /// Weekend base price in EUR (optional, for Fri-Sat nights by default)
+  @override
+  @JsonKey(name: 'weekend_base_price')
+  final double? weekendBasePrice;
+
+  /// Days considered as weekend (1=Mon...7=Sun, default: [5,6] = Fri-Sat nights)
+  final List<int>? _weekendDays;
+
+  /// Days considered as weekend (1=Mon...7=Sun, default: [5,6] = Fri-Sat nights)
+  @override
+  @JsonKey(name: 'weekend_days')
+  List<int>? get weekendDays {
+    final value = _weekendDays;
+    if (value == null) return null;
+    if (_weekendDays is EqualUnmodifiableListView) return _weekendDays;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
 
   /// Currency code (default: EUR)
   @override
@@ -491,6 +586,11 @@ class _$UnitModelImpl extends _UnitModel {
   @JsonKey(name: 'max_stay_nights')
   final int? maxStayNights;
 
+  /// Sort order for display (lower = first, null = end of list)
+  @override
+  @JsonKey(name: 'sort_order')
+  final int sortOrder;
+
   /// Unit creation timestamp
   @override
   @JsonKey(name: 'created_at')
@@ -510,7 +610,7 @@ class _$UnitModelImpl extends _UnitModel {
 
   @override
   String toString() {
-    return 'UnitModel(id: $id, propertyId: $propertyId, name: $name, slug: $slug, description: $description, pricePerNight: $pricePerNight, currency: $currency, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, maxStayNights: $maxStayNights, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
+    return 'UnitModel(id: $id, propertyId: $propertyId, ownerId: $ownerId, name: $name, slug: $slug, description: $description, pricePerNight: $pricePerNight, weekendBasePrice: $weekendBasePrice, weekendDays: $weekendDays, currency: $currency, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, maxStayNights: $maxStayNights, sortOrder: $sortOrder, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
   }
 
   @override
@@ -521,12 +621,19 @@ class _$UnitModelImpl extends _UnitModel {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.propertyId, propertyId) ||
                 other.propertyId == propertyId) &&
+            (identical(other.ownerId, ownerId) || other.ownerId == ownerId) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.slug, slug) || other.slug == slug) &&
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.pricePerNight, pricePerNight) ||
                 other.pricePerNight == pricePerNight) &&
+            (identical(other.weekendBasePrice, weekendBasePrice) ||
+                other.weekendBasePrice == weekendBasePrice) &&
+            const DeepCollectionEquality().equals(
+              other._weekendDays,
+              _weekendDays,
+            ) &&
             (identical(other.currency, currency) ||
                 other.currency == currency) &&
             (identical(other.maxGuests, maxGuests) ||
@@ -543,6 +650,8 @@ class _$UnitModelImpl extends _UnitModel {
                 other.minStayNights == minStayNights) &&
             (identical(other.maxStayNights, maxStayNights) ||
                 other.maxStayNights == maxStayNights) &&
+            (identical(other.sortOrder, sortOrder) ||
+                other.sortOrder == sortOrder) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -553,14 +662,17 @@ class _$UnitModelImpl extends _UnitModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     propertyId,
+    ownerId,
     name,
     slug,
     description,
     pricePerNight,
+    weekendBasePrice,
+    const DeepCollectionEquality().hash(_weekendDays),
     currency,
     maxGuests,
     bedrooms,
@@ -570,10 +682,11 @@ class _$UnitModelImpl extends _UnitModel {
     isAvailable,
     minStayNights,
     maxStayNights,
+    sortOrder,
     createdAt,
     updatedAt,
     deletedAt,
-  );
+  ]);
 
   /// Create a copy of UnitModel
   /// with the given fields replaced by the non-null parameter values.
@@ -593,10 +706,13 @@ abstract class _UnitModel extends UnitModel {
   const factory _UnitModel({
     required final String id,
     @JsonKey(name: 'property_id') required final String propertyId,
+    @JsonKey(name: 'owner_id') final String? ownerId,
     required final String name,
     final String? slug,
     final String? description,
     @JsonKey(name: 'base_price') required final double pricePerNight,
+    @JsonKey(name: 'weekend_base_price') final double? weekendBasePrice,
+    @JsonKey(name: 'weekend_days') final List<int>? weekendDays,
     final String? currency,
     @JsonKey(name: 'max_guests') required final int maxGuests,
     final int bedrooms,
@@ -606,6 +722,7 @@ abstract class _UnitModel extends UnitModel {
     @JsonKey(name: 'is_available') final bool isAvailable,
     @JsonKey(name: 'min_stay_nights') final int minStayNights,
     @JsonKey(name: 'max_stay_nights') final int? maxStayNights,
+    @JsonKey(name: 'sort_order') final int sortOrder,
     @JsonKey(name: 'created_at')
     @TimestampConverter()
     required final DateTime createdAt,
@@ -628,6 +745,12 @@ abstract class _UnitModel extends UnitModel {
   @JsonKey(name: 'property_id')
   String get propertyId;
 
+  /// Owner user ID (for Firestore security rules)
+  /// Made nullable for backwards compatibility with legacy units
+  @override
+  @JsonKey(name: 'owner_id')
+  String? get ownerId;
+
   /// Unit name/title (e.g., "Apartment A1", "Studio 2")
   @override
   String get name;
@@ -640,10 +763,20 @@ abstract class _UnitModel extends UnitModel {
   @override
   String? get description;
 
-  /// Price per night in EUR
+  /// Price per night in EUR (base price for weekdays)
   @override
   @JsonKey(name: 'base_price')
   double get pricePerNight;
+
+  /// Weekend base price in EUR (optional, for Fri-Sat nights by default)
+  @override
+  @JsonKey(name: 'weekend_base_price')
+  double? get weekendBasePrice;
+
+  /// Days considered as weekend (1=Mon...7=Sun, default: [5,6] = Fri-Sat nights)
+  @override
+  @JsonKey(name: 'weekend_days')
+  List<int>? get weekendDays;
 
   /// Currency code (default: EUR)
   @override
@@ -685,6 +818,11 @@ abstract class _UnitModel extends UnitModel {
   @override
   @JsonKey(name: 'max_stay_nights')
   int? get maxStayNights;
+
+  /// Sort order for display (lower = first, null = end of list)
+  @override
+  @JsonKey(name: 'sort_order')
+  int get sortOrder;
 
   /// Unit creation timestamp
   @override

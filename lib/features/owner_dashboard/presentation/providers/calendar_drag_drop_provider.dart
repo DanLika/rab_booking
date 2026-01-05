@@ -34,11 +34,51 @@ class DragDropState {
 }
 
 /// Provider for drag-and-drop state and operations
-final dragDropProvider =
-    StateNotifierProvider<DragDropNotifier, DragDropState>((ref) {
-  final bookingRepository = ref.watch(bookingRepositoryProvider);
-  return DragDropNotifier(bookingRepository, ref);
+final dragDropProvider = StateNotifierProvider<DragDropNotifier, DragDropState>(
+  (ref) {
+    final bookingRepository = ref.watch(bookingRepositoryProvider);
+    return DragDropNotifier(bookingRepository, ref);
+  },
+);
+
+/// Helper record for normalized booking dates
+typedef _NormalizedDates = ({
+  DateTime checkIn,
+  DateTime checkOut,
+  DateTime dropDate,
+  Duration duration,
+  DateTime newCheckIn,
+  DateTime newCheckOut,
 });
+
+/// Normalize dates to midnight and calculate new booking dates
+_NormalizedDates _normalizeBookingDates({
+  required DateTime checkIn,
+  required DateTime checkOut,
+  required DateTime dropDate,
+}) {
+  final normalizedCheckIn = DateTime(checkIn.year, checkIn.month, checkIn.day);
+  final normalizedCheckOut = DateTime(
+    checkOut.year,
+    checkOut.month,
+    checkOut.day,
+  );
+  final normalizedDropDate = DateTime(
+    dropDate.year,
+    dropDate.month,
+    dropDate.day,
+  );
+  final duration = normalizedCheckOut.difference(normalizedCheckIn);
+
+  return (
+    checkIn: normalizedCheckIn,
+    checkOut: normalizedCheckOut,
+    dropDate: normalizedDropDate,
+    duration: duration,
+    newCheckIn: normalizedDropDate,
+    newCheckOut: normalizedDropDate.add(duration),
+  );
+}
 
 /// Notifier for drag-and-drop operations
 class DragDropNotifier extends StateNotifier<DragDropState> {
@@ -46,7 +86,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
   final Ref _ref;
 
   DragDropNotifier(this._bookingRepository, this._ref)
-      : super(const DragDropState());
+    : super(const DragDropState());
 
   /// Start dragging a booking
   void startDragging(BookingModel booking) {
@@ -67,23 +107,19 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
     final booking = state.draggingBooking;
     if (booking == null) return false;
 
-    // Normalize dates to midnight to avoid time-of-day issues
-    final normalizedCheckIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-    final normalizedCheckOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
-    final normalizedDropDate = DateTime(dropDate.year, dropDate.month, dropDate.day);
-
-    // Calculate new dates
-    final duration = normalizedCheckOut.difference(normalizedCheckIn);
-    final newCheckIn = normalizedDropDate;
-    final newCheckOut = newCheckIn.add(duration);
+    final dates = _normalizeBookingDates(
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      dropDate: dropDate,
+    );
 
     // Validate using overlap detector
     final validation = BookingOverlapDetector.validateBookingMove(
       bookingId: booking.id,
       currentUnitId: booking.unitId,
       targetUnitId: targetUnitId,
-      newCheckIn: newCheckIn,
-      newCheckOut: newCheckOut,
+      newCheckIn: dates.newCheckIn,
+      newCheckOut: dates.newCheckOut,
       allBookings: allBookings,
     );
 
@@ -106,15 +142,11 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
     final booking = state.draggingBooking;
     if (booking == null) return false;
 
-    // Normalize dates to midnight to avoid time-of-day issues
-    final normalizedCheckIn = DateTime(booking.checkIn.year, booking.checkIn.month, booking.checkIn.day);
-    final normalizedCheckOut = DateTime(booking.checkOut.year, booking.checkOut.month, booking.checkOut.day);
-    final normalizedDropDate = DateTime(dropDate.year, dropDate.month, dropDate.day);
-
-    // Calculate new dates
-    final duration = normalizedCheckOut.difference(normalizedCheckIn);
-    final newCheckIn = normalizedDropDate;
-    final newCheckOut = newCheckIn.add(duration);
+    final dates = _normalizeBookingDates(
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      dropDate: dropDate,
+    );
 
     // Final validation
     if (!validateDrop(
@@ -124,11 +156,9 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
     )) {
       // Show error snackbar
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(state.errorMessage ?? 'Cannot move booking here'),
-            backgroundColor: Colors.red,
-          ),
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          state.errorMessage ?? 'Cannot move booking here',
         );
       }
       return false;
@@ -137,32 +167,14 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
     try {
       // Show loading indicator
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(width: 12),
-                Text('Moving booking...'),
-              ],
-            ),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        ErrorDisplayUtils.showLoadingSnackBar(context, 'Moving booking...');
       }
 
       // Update booking in Firestore
       final updatedBooking = booking.copyWith(
         unitId: targetUnit.id,
-        checkIn: newCheckIn,
-        checkOut: newCheckOut,
+        checkIn: dates.newCheckIn,
+        checkOut: dates.newCheckOut,
         updatedAt: DateTime.now(),
       );
 
@@ -171,23 +183,13 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       // Invalidate calendar to refresh
       _ref.invalidate(calendarBookingsProvider);
 
-      // Show success message
+      // Show success message with undo action
       if (context.mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Booking moved to ${targetUnit.name} (${newCheckIn.day}/${newCheckIn.month} - ${newCheckOut.day}/${newCheckOut.month})',
-            ),
-            backgroundColor: Colors.green,
-            action: SnackBarAction(
-              label: 'Undo',
-              textColor: Colors.white,
-              onPressed: () {
-                _undoBookingMove(booking, context);
-              },
-            ),
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          'Booking moved to ${targetUnit.name} (${dates.newCheckIn.day}/${dates.newCheckIn.month} - ${dates.newCheckOut.day}/${dates.newCheckOut.month})',
+          actionLabel: 'Undo',
+          onAction: () => _undoBookingMove(booking, context),
         );
       }
 
@@ -228,20 +230,17 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       _ref.invalidate(calendarBookingsProvider);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking restored to original position'),
-            backgroundColor: Colors.blue,
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          'Booking restored to original position',
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to undo: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: 'Failed to undo booking move',
         );
       }
     }

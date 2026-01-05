@@ -18,22 +18,18 @@ enum UserRole {
   final String value;
 
   /// Get display name for the role
-  String get displayName {
-    switch (this) {
-      case UserRole.guest:
-        return 'Guest';
-      case UserRole.owner:
-        return 'Property Owner';
-      case UserRole.admin:
-        return 'Administrator';
-    }
-  }
+  String get displayName => switch (this) {
+    UserRole.guest => 'Guest',
+    UserRole.owner => 'Property Owner',
+    UserRole.admin => 'Administrator',
+  };
 
   /// Check if user has admin privileges
   bool get isAdmin => this == UserRole.admin;
 
   /// Check if user can manage properties
-  bool get canManageProperties => this == UserRole.owner || this == UserRole.admin;
+  bool get canManageProperties =>
+      this == UserRole.owner || this == UserRole.admin;
 
   /// Parse from string value
   static UserRole fromString(String value) {
@@ -228,7 +224,7 @@ enum PropertyAmenity {
 
   /// Parse list from string list
   static List<PropertyAmenity> fromStringList(List<String> values) {
-    return values.map((v) => fromString(v)).toList();
+    return values.map(fromString).toList();
   }
 
   /// Convert list to string list
@@ -260,36 +256,22 @@ enum PropertyType {
   final String value;
 
   /// Get display name for the property type
-  String get displayName {
-    switch (this) {
-      case PropertyType.villa:
-        return 'Villa';
-      case PropertyType.apartment:
-        return 'Apartment';
-      case PropertyType.studio:
-        return 'Studio';
-      case PropertyType.house:
-        return 'House';
-      case PropertyType.room:
-        return 'Room';
-    }
-  }
+  String get displayName => switch (this) {
+    PropertyType.villa => 'Villa',
+    PropertyType.apartment => 'Apartment',
+    PropertyType.studio => 'Studio',
+    PropertyType.house => 'House',
+    PropertyType.room => 'Room',
+  };
 
   /// Get Croatian display name
-  String get displayNameHR {
-    switch (this) {
-      case PropertyType.villa:
-        return 'Vila';
-      case PropertyType.apartment:
-        return 'Apartman';
-      case PropertyType.studio:
-        return 'Studio';
-      case PropertyType.house:
-        return 'Kuća';
-      case PropertyType.room:
-        return 'Soba';
-    }
-  }
+  String get displayNameHR => switch (this) {
+    PropertyType.villa => 'Vila',
+    PropertyType.apartment => 'Apartman',
+    PropertyType.studio => 'Studio',
+    PropertyType.house => 'Kuća',
+    PropertyType.room => 'Soba',
+  };
 
   /// Parse from string value
   static PropertyType fromString(String value) {
@@ -303,65 +285,85 @@ enum PropertyType {
 /// Booking status
 @JsonEnum(valueField: 'value')
 enum BookingStatus {
+  /// Awaiting owner approval (for bookingPending mode or requireOwnerApproval=true)
+  /// These dates ARE blocked on calendar until owner approves or rejects
   pending('pending'),
+
+  /// Booking confirmed and paid (or approved for non-payment modes)
   confirmed('confirmed'),
+
+  /// Booking was cancelled (by guest, owner, or system)
   cancelled('cancelled'),
-  completed('completed'),
-  inProgress('in_progress'),
-  blocked('blocked');
+
+  /// Booking completed (guest checked out)
+  completed('completed');
 
   const BookingStatus(this.value);
   final String value;
 
-  String get displayName {
-    switch (this) {
-      case BookingStatus.pending:
-        return 'Pending';
-      case BookingStatus.confirmed:
-        return 'Confirmed';
-      case BookingStatus.cancelled:
-        return 'Cancelled';
-      case BookingStatus.completed:
-        return 'Completed';
-      case BookingStatus.inProgress:
-        return 'In Progress';
-      case BookingStatus.blocked:
-        return 'Blocked';
-    }
-  }
+  String get displayName => switch (this) {
+    BookingStatus.pending => 'Pending Approval',
+    BookingStatus.confirmed => 'Confirmed',
+    BookingStatus.cancelled => 'Cancelled',
+    BookingStatus.completed => 'Completed',
+  };
 
   /// Get color for booking status
-  Color get color {
-    switch (this) {
-      case BookingStatus.pending:
-        return const Color(0xFFFFA726); // Orange
-      case BookingStatus.confirmed:
-        return const Color(0xFF66BB6A); // Green
-      case BookingStatus.cancelled:
-        return const Color(0xFFEF5350); // Red
-      case BookingStatus.completed:
-        return const Color(0xFF42A5F5); // Blue
-      case BookingStatus.inProgress:
-        return const Color(0xFF9C27B0); // Purple
-      case BookingStatus.blocked:
-        return const Color(0xFF757575); // Grey
-    }
-  }
+  /// Note: On calendar, pending uses RED with diagonal pattern (same as booked)
+  /// This color is used in owner dashboard badges
+  Color get color => switch (this) {
+    BookingStatus.pending => const Color(
+      0xFFFFA726,
+    ), // Orange - dashboard badge
+    BookingStatus.confirmed => const Color(0xFF4CAF50), // Green
+    BookingStatus.cancelled => const Color(0xFFEF5350), // Red
+    BookingStatus.completed => const Color(0xFF42A5F5), // Blue
+  };
 
   /// Check if booking can be cancelled
+  /// Note: Pending bookings should be rejected, not cancelled
   bool get canBeCancelled {
-    return this == BookingStatus.pending || this == BookingStatus.confirmed;
+    return this == BookingStatus.confirmed;
   }
 
   /// Check if booking is active (currently in use or confirmed)
   bool get isActive {
-    return this == BookingStatus.confirmed || this == BookingStatus.inProgress;
+    return this == BookingStatus.confirmed;
+  }
+
+  /// Check if booking blocks calendar dates
+  /// pending BLOCKS dates (waiting for owner approval)
+  /// confirmed BLOCKS dates
+  /// completed BLOCKS dates (historical)
+  /// cancelled does NOT block dates
+  bool get blocksCalendarDates {
+    return this != BookingStatus.cancelled;
   }
 
   /// Check if booking is in final state (cannot be modified)
   bool get isFinal {
     return this == BookingStatus.completed || this == BookingStatus.cancelled;
   }
+
+  /// Check if booking needs owner action (approval)
+  /// Used in owner dashboard to show bookings that need attention
+  bool get needsOwnerAction {
+    return this == BookingStatus.pending;
+  }
+
+  /// Check if booking is pending approval
+  bool get isPending {
+    return this == BookingStatus.pending;
+  }
+
+  /// Sort priority for displaying bookings (higher = more urgent/important)
+  /// Used in owner bookings list to show pending first, then confirmed, etc.
+  int get sortPriority => switch (this) {
+    BookingStatus.pending => 4, // Highest - needs action
+    BookingStatus.confirmed => 3, // Active bookings
+    BookingStatus.completed => 2, // Historical
+    BookingStatus.cancelled => 1, // Lowest - cancelled
+  };
 
   static BookingStatus fromString(String value) {
     return BookingStatus.values.firstWhere(

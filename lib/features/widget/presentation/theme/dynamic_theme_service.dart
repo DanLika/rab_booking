@@ -22,29 +22,32 @@ class DynamicThemeService {
         : MinimalistTheme.dark;
 
     // If there are custom colors from URL or Firestore, create custom theme
-    final hasUrlColors = config.primaryColor != null ||
-                         config.accentColor != null ||
-                         config.backgroundColor != null ||
-                         config.textColor != null;
+    final hasUrlColors =
+        config.primaryColor != null ||
+        config.accentColor != null ||
+        config.backgroundColor != null ||
+        config.textColor != null;
 
-    final hasFirestoreColors = settings?.themeOptions?.primaryColor != null ||
-                                settings?.themeOptions?.accentColor != null;
+    final hasFirestoreColors =
+        settings?.themeOptions?.primaryColor != null ||
+        settings?.themeOptions?.accentColor != null;
 
     if (hasUrlColors || hasFirestoreColors) {
       // Get colors with priority: URL > Firestore > Default
-      final primaryColor = config.primaryColor ??
-                           _parseHexColor(settings?.themeOptions?.primaryColor) ??
-                           baseTheme.colorScheme.primary;
+      final primaryColor =
+          config.primaryColor ??
+          _parseHexColor(settings?.themeOptions?.primaryColor) ??
+          baseTheme.colorScheme.primary;
 
-      final accentColor = config.accentColor ??
-                          _parseHexColor(settings?.themeOptions?.accentColor) ??
-                          baseTheme.colorScheme.tertiary;
+      final accentColor =
+          config.accentColor ??
+          _parseHexColor(settings?.themeOptions?.accentColor) ??
+          baseTheme.colorScheme.tertiary;
 
-      final backgroundColor = config.backgroundColor ??
-                              baseTheme.colorScheme.surface;
+      final backgroundColor =
+          config.backgroundColor ?? baseTheme.colorScheme.surface;
 
-      final textColor = config.textColor ??
-                        baseTheme.colorScheme.onSurface;
+      final textColor = config.textColor ?? baseTheme.colorScheme.onSurface;
 
       // Create custom color scheme
       final customColorScheme = ColorScheme(
@@ -80,9 +83,15 @@ class DynamicThemeService {
 
         shadow: Colors.black.withValues(alpha: 0.12),
         scrim: Colors.black.withValues(alpha: 0.5),
-        inverseSurface: brightness == Brightness.light ? Colors.black : Colors.white,
-        onInverseSurface: brightness == Brightness.light ? Colors.white : Colors.black,
-        inversePrimary: brightness == Brightness.light ? Colors.white : Colors.black,
+        inverseSurface: brightness == Brightness.light
+            ? Colors.black
+            : Colors.white,
+        onInverseSurface: brightness == Brightness.light
+            ? Colors.white
+            : Colors.black,
+        inversePrimary: brightness == Brightness.light
+            ? Colors.white
+            : Colors.black,
       );
 
       // Return theme with custom color scheme

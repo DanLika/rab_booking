@@ -1,30 +1,36 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../core/utils/responsive_spacing_helper.dart';
+import '../../../../core/services/logging_service.dart';
 import '../providers/owner_properties_provider.dart';
-import '../providers/price_list_provider.dart';
 import '../providers/owner_calendar_provider.dart';
+import '../../utils/booking_overlap_detector.dart';
 
 /// Dialog za kreiranje nove rezervacije
 class BookingCreateDialog extends ConsumerStatefulWidget {
   final String? unitId;
   final DateTime? initialCheckIn;
 
-  const BookingCreateDialog({
-    super.key,
-    this.unitId,
-    this.initialCheckIn,
-  });
+  const BookingCreateDialog({super.key, this.unitId, this.initialCheckIn});
 
   @override
-  ConsumerState<BookingCreateDialog> createState() => _BookingCreateDialogState();
+  ConsumerState<BookingCreateDialog> createState() =>
+      _BookingCreateDialogState();
 }
 
 class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
@@ -40,12 +46,9 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   String? _selectedUnitId;
   late DateTime _checkInDate;
   late DateTime _checkOutDate;
-  BookingStatus _status = BookingStatus.confirmed;
-  String _paymentMethod = 'cash';
-
-  bool _isCalculatingPrice = false;
+  final BookingStatus _status = BookingStatus.confirmed;
+  String _paymentMethod = 'cash'; // Mutable - owner can select payment method
   bool _isSaving = false;
-  double? _calculatedPrice;
 
   @override
   void initState() {
@@ -60,13 +63,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     _selectedUnitId = widget.unitId;
     _checkInDate = widget.initialCheckIn ?? DateTime.now();
     _checkOutDate = _checkInDate.add(const Duration(days: 1));
-
-    // Auto-calculate price if unit is pre-selected
-    if (_selectedUnitId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _calculatePrice();
-      });
-    }
   }
 
   @override
@@ -83,416 +79,584 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   @override
   Widget build(BuildContext context) {
     final unitsAsync = ref.watch(ownerUnitsProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(
+      context,
+      maxWidth: 500,
+    );
+    final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
+    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
-    return AlertDialog(
-      title: const Row(
-        children: [
-          Icon(Icons.add_circle, color: AppColors.primary),
-          SizedBox(width: 8),
-          Text('Nova rezervacija'),
-        ],
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Unit Selection
-                Text(
-                  'Jedinica',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
+      child: Container(
+        width: dialogWidth,
+        constraints: BoxConstraints(
+          maxHeight:
+              screenHeight *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+        ),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withValues(alpha: 0.5),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with gradient - matches CommonAppBar height (52px)
+            Container(
+              height: ResponsiveDialogUtils.kHeaderHeight,
+              padding: EdgeInsets.symmetric(horizontal: headerPadding),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
                 ),
-                const SizedBox(height: 8),
-
-                unitsAsync.when(
-                  data: (units) {
-                    if (units.isEmpty) {
-                      return const Text('Nema dostupnih jedinica');
-                    }
-
-                    return DropdownButtonFormField<String>(
-                      initialValue: _selectedUnitId,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.bed_outlined),
-                        hintText: 'Odaberite jedinicu',
-                      ),
-                      items: units.map((unit) {
-                        return DropdownMenuItem(
-                          value: unit.id,
-                          child: Text(unit.name),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedUnitId = value;
-                        });
-                        if (value != null) {
-                          _calculatePrice();
-                        }
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Odaberite jedinicu';
-                        }
-                        return null;
-                      },
-                    );
-                  },
-                  loading: () => const CircularProgressIndicator(),
-                  error: (error, _) => Text('Greška: $error'),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Dates
-                Text(
-                  'Datumi',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDateField(
-                        label: 'Check-in',
-                        date: _checkInDate,
-                        onTap: () => _selectCheckInDate(),
-                      ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildDateField(
-                        label: 'Check-out',
-                        date: _checkOutDate,
-                        onTap: () => _selectCheckOutDate(),
-                      ),
+                    child: const Icon(
+                      Icons.add_circle_outline,
+                      color: Colors.white,
+                      size: 20,
                     ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // Nights display
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue[200]!),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context).bookingCreateTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: _isSaving
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    tooltip: AppLocalizations.of(context).bookingCreateClose,
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(contentPadding),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Icon(Icons.nights_stay, size: 18, color: Colors.blue[700]),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${_checkOutDate.difference(_checkInDate).inDays} noć${_checkOutDate.difference(_checkInDate).inDays > 1 ? 'i' : ''}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue[700],
+                      // Unit Selection
+                      _SectionHeader(
+                        icon: Icons.bed_outlined,
+                        title: AppLocalizations.of(context).bookingCreateUnit,
+                      ),
+                      const SizedBox(height: 12),
+
+                      unitsAsync.when(
+                        data: (units) {
+                          if (units.isEmpty) {
+                            return Text(
+                              AppLocalizations.of(context).bookingCreateNoUnits,
+                            );
+                          }
+
+                          return DropdownButtonFormField<String>(
+                            initialValue: _selectedUnitId,
+                            dropdownColor:
+                                InputDecorationHelper.getDropdownColor(context),
+                            borderRadius:
+                                InputDecorationHelper.dropdownBorderRadius,
+                            isExpanded: true,
+                            decoration: InputDecorationHelper.buildDecoration(
+                              labelText: AppLocalizations.of(
+                                context,
+                              ).bookingCreateSelectUnit,
+                              prefixIcon: const Icon(Icons.bed_outlined),
+                              context: context,
+                            ),
+                            items: units.map((unit) {
+                              return DropdownMenuItem(
+                                value: unit.id,
+                                child: Text(
+                                  unit.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedUnitId = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return AppLocalizations.of(
+                                  context,
+                                ).bookingCreateSelectUnitError;
+                              }
+                              return null;
+                            },
+                          );
+                        },
+                        loading: () => const CircularProgressIndicator(),
+                        error: (error, _) => Text(
+                          AppLocalizations.of(
+                            context,
+                          ).bookingCreateErrorGeneric(
+                            LoggingService.safeErrorToString(error),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
 
-                const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                // Guest Information
-                Text(
-                  'Informacije o gostu',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      // Dates
+                      _SectionHeader(
+                        icon: Icons.calendar_today_outlined,
+                        title: AppLocalizations.of(context).bookingCreateDates,
                       ),
-                ),
-                const SizedBox(height: 8),
+                      const SizedBox(height: 12),
 
-                TextFormField(
-                  controller: _guestNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Ime gosta *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                  textCapitalization: TextCapitalization.words,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Unesite ime gosta';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: _guestEmailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Unesite email';
-                    }
-                    if (!_isValidEmail(value.trim())) {
-                      return 'Unesite validan email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: _guestPhoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Telefon',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                  keyboardType: TextInputType.phone,
-                ),
-
-                const SizedBox(height: 24),
-
-                // Booking Details
-                Text(
-                  'Detalji rezervacije',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-
-                TextFormField(
-                  controller: _guestCountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Broj gostiju *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.people),
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Unesite broj gostiju';
-                    }
-                    final count = int.tryParse(value.trim());
-                    if (count == null || count <= 0) {
-                      return 'Broj gostiju mora biti veći od 0';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: TextFormField(
-                        controller: _totalPriceController,
-                        decoration: InputDecoration(
-                          labelText: 'Ukupna cijena (€) *',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.euro),
-                          suffixIcon: _isCalculatingPrice
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
-                                )
-                              : null,
+                      // Responsive date fields: Column on mobile, Row on desktop
+                      if (ResponsiveDialogUtils.isMobile(context))
+                        Column(
+                          children: [
+                            _buildDateField(
+                              label: AppLocalizations.of(
+                                context,
+                              ).bookingCreateCheckIn,
+                              date: _checkInDate,
+                              onTap: _selectCheckInDate,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildDateField(
+                              label: AppLocalizations.of(
+                                context,
+                              ).bookingCreateCheckOut,
+                              date: _checkOutDate,
+                              onTap: _selectCheckOutDate,
+                            ),
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildDateField(
+                                label: AppLocalizations.of(
+                                  context,
+                                ).bookingCreateCheckIn,
+                                date: _checkInDate,
+                                onTap: _selectCheckInDate,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildDateField(
+                                label: AppLocalizations.of(
+                                  context,
+                                ).bookingCreateCheckOut,
+                                date: _checkOutDate,
+                                onTap: _selectCheckOutDate,
+                              ),
+                            ),
+                          ],
                         ),
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+
+                      const SizedBox(height: 12),
+
+                      // Nights display
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.nights_stay,
+                              size: 18,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              ).bookingCreateNightsCount(
+                                _checkOutDate.difference(_checkInDate).inDays,
+                              ),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Guest Information
+                      _SectionHeader(
+                        icon: Icons.person_outline,
+                        title: AppLocalizations.of(
+                          context,
+                        ).bookingCreateGuestInfo,
+                      ),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _guestNameController,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(
+                            context,
+                          ).bookingCreateGuestName,
+                          prefixIcon: const Icon(Icons.person),
+                          context: context,
+                        ),
+                        textCapitalization: TextCapitalization.words,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Unesite cijenu';
-                          }
-                          final price = double.tryParse(value.trim());
-                          if (price == null || price < 0) {
-                            return 'Unesite validnu cijenu';
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreateGuestNameError;
                           }
                           return null;
                         },
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _selectedUnitId != null ? _calculatePrice : null,
-                        icon: const Icon(Icons.calculate, size: 18),
-                        label: const Text('Auto'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _guestEmailController,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(
+                            context,
+                          ).bookingCreateEmail,
+                          prefixIcon: const Icon(Icons.email),
+                          context: context,
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreateEmailError;
+                          }
+                          if (!_isValidEmail(value.trim())) {
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreateEmailInvalid;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _guestPhoneController,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(
+                            context,
+                          ).bookingCreatePhone,
+                          prefixIcon: const Icon(Icons.phone),
+                          context: context,
+                        ),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreatePhoneError;
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Booking Details
+                      _SectionHeader(
+                        icon: Icons.receipt_long_outlined,
+                        title: AppLocalizations.of(
+                          context,
+                        ).bookingCreateBookingDetails,
+                      ),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _guestCountController,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(
+                            context,
+                          ).bookingCreateGuestCount,
+                          prefixIcon: const Icon(Icons.people),
+                          context: context,
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreateGuestCountError;
+                          }
+                          final count = int.tryParse(value.trim());
+                          if (count == null || count <= 0) {
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreateGuestCountInvalid;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Total Price Input (manual entry only)
+                      TextFormField(
+                        controller: _totalPriceController,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(
+                            context,
+                          ).bookingCreateTotalPrice,
+                          prefixIcon: const Icon(Icons.euro),
+                          context: context,
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreatePriceError;
+                          }
+                          final price = double.tryParse(value.trim());
+                          if (price == null) {
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreatePriceInvalid;
+                          }
+                          if (price < 0) {
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreatePriceNegative;
+                          }
+                          if (price == 0) {
+                            return AppLocalizations.of(
+                              context,
+                            ).bookingCreatePriceZero;
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Payment Method Selector
+                      Builder(
+                        builder: (ctx) => DropdownButtonFormField<String>(
+                          initialValue: _paymentMethod,
+                          decoration: InputDecorationHelper.buildDecoration(
+                            labelText: AppLocalizations.of(
+                              context,
+                            ).ownerDetailsPaymentMethod,
+                            prefixIcon: const Icon(Icons.payment),
+                            context: ctx,
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'cash',
+                              child: Text(
+                                AppLocalizations.of(context).paymentMethodCash,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'card',
+                              child: Text(
+                                AppLocalizations.of(context).paymentMethodCard,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'bank_transfer',
+                              child: Text(
+                                AppLocalizations.of(
+                                  context,
+                                ).paymentMethodBankTransfer,
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'other',
+                              child: Text(
+                                AppLocalizations.of(context).paymentMethodOther,
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _paymentMethod = value;
+                              });
+                            }
+                          },
                         ),
                       ),
-                    ),
-                  ],
-                ),
 
-                if (_calculatedPrice != null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.green[200]!),
+                      const SizedBox(height: 16),
+
+                      // Notes
+                      _SectionHeader(
+                        icon: Icons.note_outlined,
+                        title: AppLocalizations.of(context).bookingCreateNotes,
+                      ),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _notesController,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: AppLocalizations.of(
+                            context,
+                          ).bookingCreateInternalNotes,
+                          prefixIcon: const Icon(Icons.notes),
+                          hintText: AppLocalizations.of(
+                            context,
+                          ).bookingCreateNotesHint,
+                          context: context,
+                        ),
+                        maxLines: 3,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Footer buttons
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: contentPadding,
+                vertical: 12,
+              ),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.dialogFooterDark
+                    : AppColors.dialogFooterLight,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark
+                        ? AppColors.sectionDividerDark
+                        : AppColors.sectionDividerLight,
+                  ),
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(11),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Flexible(
+                    child: TextButton(
+                      onPressed: _isSaving
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        minimumSize: Size.zero,
+                      ),
+                      child: Text(
+                        AppLocalizations.of(context).bookingCreateCancel,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.info_outline, size: 14, color: Colors.green[700]),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Kalkulirana cijena: €${_calculatedPrice!.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.green[700],
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: context.gradients.brandPrimary,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _isSaving ? null : _createBooking,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    ).bookingCreateSubmit,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
-
-                const SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<BookingStatus>(
-                        initialValue: _status,
-                        decoration: const InputDecoration(
-                          labelText: 'Status',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.info_outline),
-                        ),
-                        items: [
-                          BookingStatus.confirmed,
-                          BookingStatus.pending,
-                          BookingStatus.blocked,
-                        ].map((status) {
-                          return DropdownMenuItem(
-                            value: status,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: status.color,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(status.displayName),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _status = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _paymentMethod,
-                        decoration: const InputDecoration(
-                          labelText: 'Plaćanje',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.payment),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 'cash', child: Text('Gotovina')),
-                          DropdownMenuItem(value: 'bank_transfer', child: Text('Bankovni transfer')),
-                          DropdownMenuItem(value: 'card', child: Text('Kartica')),
-                          DropdownMenuItem(value: 'other', child: Text('Ostalo')),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _paymentMethod = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Notes
-                Text(
-                  'Napomene',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-
-                TextFormField(
-                  controller: _notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Interne napomene',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.notes),
-                    hintText: 'Npr. posebni zahtjevi...',
-                  ),
-                  maxLines: 3,
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Otkaži'),
-        ),
-        ElevatedButton(
-          onPressed: _isSaving ? null : _createBooking,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-          ),
-          child: _isSaving
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('Kreiraj'),
-        ),
-      ],
     );
   }
 
@@ -501,17 +665,19 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     required DateTime date,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          prefixIcon: const Icon(Icons.calendar_today),
-        ),
-        child: Text(
-          DateFormat('d.M.yyyy').format(date),
-          style: const TextStyle(fontSize: 16),
+    return Builder(
+      builder: (ctx) => InkWell(
+        onTap: onTap,
+        child: InputDecorator(
+          decoration: InputDecorationHelper.buildDecoration(
+            labelText: label,
+            prefixIcon: const Icon(Icons.calendar_today),
+            context: ctx,
+          ),
+          child: Text(
+            DateFormat('d.M.yyyy').format(date),
+            style: const TextStyle(fontSize: 16),
+          ),
         ),
       ),
     );
@@ -523,24 +689,20 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       initialDate: _checkInDate,
       firstDate: DateTime(2024),
       lastDate: DateTime(2030),
-      helpText: 'Izaberite datum check-in',
-      cancelText: 'Otkaži',
-      confirmText: 'Potvrdi',
+      helpText: AppLocalizations.of(context).bookingCreateSelectCheckInDate,
+      cancelText: AppLocalizations.of(context).bookingCreateCancel,
+      confirmText: AppLocalizations.of(context).confirm,
     );
 
     if (selectedDate != null) {
       setState(() {
         _checkInDate = selectedDate;
         // Ensure check-out is after check-in
-        if (_checkOutDate.isBefore(_checkInDate) || _checkOutDate.isAtSameMomentAs(_checkInDate)) {
+        if (_checkOutDate.isBefore(_checkInDate) ||
+            _checkOutDate.isAtSameMomentAs(_checkInDate)) {
           _checkOutDate = _checkInDate.add(const Duration(days: 1));
         }
       });
-
-      // Recalculate price if unit is selected
-      if (_selectedUnitId != null) {
-        _calculatePrice();
-      }
     }
   }
 
@@ -550,70 +712,14 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       initialDate: _checkOutDate,
       firstDate: _checkInDate.add(const Duration(days: 1)),
       lastDate: DateTime(2030),
-      helpText: 'Izaberite datum check-out',
-      cancelText: 'Otkaži',
-      confirmText: 'Potvrdi',
+      helpText: AppLocalizations.of(context).bookingCreateSelectCheckOutDate,
+      cancelText: AppLocalizations.of(context).bookingCreateCancel,
+      confirmText: AppLocalizations.of(context).confirm,
     );
 
     if (selectedDate != null) {
       setState(() {
         _checkOutDate = selectedDate;
-      });
-
-      // Recalculate price if unit is selected
-      if (_selectedUnitId != null) {
-        _calculatePrice();
-      }
-    }
-  }
-
-  Future<void> _calculatePrice() async {
-    if (_selectedUnitId == null) return;
-
-    setState(() {
-      _isCalculatingPrice = true;
-      _calculatedPrice = null;
-    });
-
-    try {
-      double totalPrice = 0.0;
-      DateTime currentDate = _checkInDate;
-
-      // Fetch prices for each night
-      while (currentDate.isBefore(_checkOutDate)) {
-        final monthStart = DateTime(currentDate.year, currentDate.month, 1);
-
-        // Fetch prices for the month
-        final monthlyPrices = await ref.read(monthlyPricesProvider(MonthlyPricesParams(
-          unitId: _selectedUnitId!,
-          month: monthStart,
-        )).future);
-
-        final dateKey = DateTime(currentDate.year, currentDate.month, currentDate.day);
-        final priceData = monthlyPrices[dateKey];
-
-        // Get unit base price
-        final unitsAsync = await ref.read(ownerUnitsProvider.future);
-        final unit = unitsAsync.firstWhere((u) => u.id == _selectedUnitId);
-
-        // Use daily price or base price
-        final nightPrice = priceData?.price ?? unit.pricePerNight;
-        totalPrice += nightPrice;
-
-        currentDate = currentDate.add(const Duration(days: 1));
-      }
-
-      setState(() {
-        _calculatedPrice = totalPrice;
-        _totalPriceController.text = totalPrice.toStringAsFixed(2);
-      });
-    } catch (e) {
-      if (mounted) {
-        _showError('Greška pri kalkulaciji cijene: $e');
-      }
-    } finally {
-      setState(() {
-        _isCalculatingPrice = false;
       });
     }
   }
@@ -624,7 +730,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     }
 
     if (_selectedUnitId == null) {
-      _showError('Odaberite jedinicu');
+      _showError(AppLocalizations.of(context).bookingCreateSelectUnitError);
       return;
     }
 
@@ -634,25 +740,30 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       final repository = ref.read(bookingRepositoryProvider);
       final authState = ref.read(enhancedAuthProvider);
 
-      // FIXED: Validate booking overlap before creating
+      // FIXED: Validate booking overlap before creating using BookingOverlapDetector
       final bookingsMap = await ref.read(calendarBookingsProvider.future);
-      final unitBookings = bookingsMap[_selectedUnitId!] ?? [];
 
-      // Check for overlapping bookings
-      bool hasOverlap = false;
-      for (final existingBooking in unitBookings) {
-        // Check if dates overlap
-        if (_checkInDate.isBefore(existingBooking.checkOut) &&
-            _checkOutDate.isAfter(existingBooking.checkIn)) {
-          hasOverlap = true;
-          break;
-        }
-      }
+      // Check if new dates would overlap with existing bookings
+      final conflicts = BookingOverlapDetector.getConflictingBookings(
+        unitId: _selectedUnitId!,
+        newCheckIn: _checkInDate,
+        newCheckOut: _checkOutDate,
+        bookingIdToExclude: null, // No booking to exclude for new bookings
+        allBookings: bookingsMap,
+      );
 
-      if (hasOverlap) {
+      if (conflicts.isNotEmpty) {
         setState(() => _isSaving = false);
-        _showError('Izabrani datumi se preklapaju s postojećom rezervacijom');
-        return;
+
+        // Show warning dialog with option to force-save
+        final shouldContinue = await _showConflictWarningDialog(conflicts);
+
+        if (!shouldContinue) {
+          return; // User cancelled
+        }
+
+        // User confirmed to proceed despite conflict
+        setState(() => _isSaving = true);
       }
 
       final totalPrice = double.parse(_totalPriceController.text.trim());
@@ -672,7 +783,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         checkOut: _checkOutDate,
         guestCount: guestCount,
         totalPrice: totalPrice,
-        paidAmount: 0.0,
         paymentMethod: _paymentMethod,
         paymentStatus: 'pending',
         status: _status,
@@ -689,7 +799,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         Navigator.of(context).pop(true); // Return true to indicate success
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          'Rezervacija uspješno kreirana',
+          AppLocalizations.of(context).bookingCreateSuccess,
         );
       }
     } catch (e) {
@@ -698,7 +808,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: 'Greška pri kreiranju rezervacije',
+          userMessage: AppLocalizations.of(context).bookingCreateError,
         );
       }
     } finally {
@@ -709,17 +819,182 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
   }
 
   bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+    // RFC 5322 compliant email regex - supports:
+    // - Plus signs (user+tag@example.com)
+    // - Long TLDs (.photography, .technology)
+    // - Subdomains (user@mail.example.co.uk)
+    return RegExp(
+      r'^[a-zA-Z0-9.!#$%&*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$',
+    ).hasMatch(email);
   }
 
   void _showError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      ErrorDisplayUtils.showWarningSnackBar(context, message);
     }
+  }
+
+  /// Show conflict warning dialog with option to force-save
+  Future<bool> _showConflictWarningDialog(List<BookingModel> conflicts) async {
+    final l10n = AppLocalizations.of(context);
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.warning, color: Colors.red, size: 48),
+            title: Text(
+              l10n.bookingCreateOverlapWarning,
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    conflicts.length == 1
+                        ? l10n.bookingCreateOverlapSingle
+                        : l10n.bookingCreateOverlapMultiple(conflicts.length),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  // Show conflict details
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: conflicts.map((conflict) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red[50],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red[200]!),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.person,
+                                      size: 16,
+                                      color: Colors.red,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        conflict.guestName ??
+                                            l10n.bookingCreateUnknownGuest,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.calendar_today,
+                                      size: 14,
+                                      color: Colors.black54,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}. - ${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}.',
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(
+                                        color: conflict.status.color,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      conflict.status.displayNameLocalized(
+                                        context,
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: conflict.status.color,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(l10n.bookingCreateCancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(l10n.bookingCreateContinueAnyway),
+              ),
+            ],
+          ),
+        ) ??
+        false; // Return false if dialog dismissed
+  }
+}
+
+/// Section header widget with icon and gradient accent
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: context.gradients.brandPrimary,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
   }
 }

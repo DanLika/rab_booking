@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../../core/utils/responsive_spacing_helper.dart';
+import '../../../../../shared/widgets/custom_date_range_picker.dart';
+import '../../../../../shared/widgets/app_filter_chip.dart';
 import '../../../domain/models/calendar_filter_options.dart';
 import '../../providers/calendar_filters_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
@@ -13,7 +23,8 @@ class CalendarFiltersPanel extends ConsumerStatefulWidget {
   const CalendarFiltersPanel({super.key});
 
   @override
-  ConsumerState<CalendarFiltersPanel> createState() => _CalendarFiltersPanelState();
+  ConsumerState<CalendarFiltersPanel> createState() =>
+      _CalendarFiltersPanelState();
 }
 
 class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
@@ -39,47 +50,72 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint;
+    final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < CalendarGridCalculator.mobileBreakpoint;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
-        width: isMobile ? double.infinity : 700,
+        width: isMobile ? screenWidth * 0.9 : 700,
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxHeight:
+              MediaQuery.of(context).size.height *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+        ),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
+            // Header with gradient
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.primaryColor,
+                gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(4),
+                  top: Radius.circular(11),
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.filter_list,
-                    color: theme.colorScheme.onPrimary,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.filter_list,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      'Filteri kalendara',
+                    child: AutoSizeText(
+                      l10n.calendarFiltersTitle,
                       style: theme.textTheme.titleLarge?.copyWith(
-                        color: theme.colorScheme.onPrimary,
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
+                      maxLines: 1,
+                      minFontSize: 14,
                     ),
                   ),
                   IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: theme.colorScheme.onPrimary,
-                    ),
+                    icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -89,7 +125,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -126,24 +162,52 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
             // Footer buttons (responsive)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth < 400 ? 8 : 16,
+                vertical: 12,
+              ),
               decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.dialogFooterDark
+                    : AppColors.dialogFooterLight,
                 border: Border(
-                  top: BorderSide(color: theme.dividerColor),
+                  top: BorderSide(
+                    color: isDark
+                        ? AppColors.sectionDividerDark
+                        : AppColors.sectionDividerLight,
+                  ),
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(11),
                 ),
               ),
               child: isMobile
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Apply button (full width on mobile)
-                        ElevatedButton.icon(
-                          onPressed: _applyFilters,
-                          icon: const Icon(Icons.check),
-                          label: const AutoSizeText(
-                            'Primijeni',
-                            maxLines: 1,
-                            minFontSize: 12,
+                        // Apply button (full width on mobile) with brand gradient
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: context.gradients.brandPrimary,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(8),
+                            ),
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: _applyFilters,
+                            icon: const Icon(Icons.check),
+                            label: AutoSizeText(
+                              l10n.calendarFiltersApply,
+                              maxLines: 1,
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -153,8 +217,8 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                             Expanded(
                               child: OutlinedButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: const AutoSizeText(
-                                  'Otkaži',
+                                child: AutoSizeText(
+                                  l10n.calendarFiltersCancel,
                                   maxLines: 1,
                                   minFontSize: 11,
                                 ),
@@ -166,15 +230,16 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 onPressed: _filters.hasActiveFilters
                                     ? () {
                                         setState(() {
-                                          _filters = const CalendarFilterOptions();
+                                          _filters =
+                                              const CalendarFilterOptions();
                                           _guestSearchController.clear();
                                           _bookingIdSearchController.clear();
                                         });
                                       }
                                     : null,
                                 icon: const Icon(Icons.clear_all, size: 16),
-                                label: const AutoSizeText(
-                                  'Očisti',
+                                label: AutoSizeText(
+                                  l10n.calendarFiltersClear,
                                   maxLines: 1,
                                   minFontSize: 11,
                                 ),
@@ -199,10 +264,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 }
                               : null,
                           icon: const Icon(Icons.clear_all),
-                          label: const AutoSizeText(
-                            'Očisti sve',
+                          label: AutoSizeText(
+                            l10n.calendarFiltersClearAll,
                             maxLines: 1,
-                            minFontSize: 12,
                           ),
                         ),
 
@@ -213,20 +277,35 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                             children: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
-                                child: const AutoSizeText(
-                                  'Otkaži',
+                                child: AutoSizeText(
+                                  l10n.calendarFiltersCancel,
                                   maxLines: 1,
-                                  minFontSize: 12,
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              ElevatedButton.icon(
-                                onPressed: _applyFilters,
-                                icon: const Icon(Icons.check),
-                                label: const AutoSizeText(
-                                  'Primijeni',
-                                  maxLines: 1,
-                                  minFontSize: 12,
+                              // Apply button with brand gradient
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: context.gradients.brandPrimary,
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(8),
+                                  ),
+                                ),
+                                child: ElevatedButton.icon(
+                                  onPressed: _applyFilters,
+                                  icon: const Icon(Icons.check),
+                                  label: AutoSizeText(
+                                    l10n.calendarFiltersApply,
+                                    maxLines: 1,
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    foregroundColor: Colors.white,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -253,35 +332,28 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Objekti',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
+            const _SectionHeader(icon: Icons.home_outlined, title: 'Objekti'),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: properties.map((property) {
                 final isSelected = _filters.propertyIds.contains(property.id);
-                return FilterChip(
+                return AppFilterChip(
+                  label: property.name,
                   selected: isSelected,
-                  label: Text(property.name),
-                  avatar: Icon(
-                    Icons.home_outlined,
-                    size: 18,
-                    color: isSelected ? Theme.of(context).colorScheme.onPrimary : null,
-                  ),
-                  onSelected: (selected) {
+                  icon: Icons.home_outlined,
+                  onSelected: () {
                     setState(() {
-                      if (selected) {
+                      if (isSelected) {
                         _filters = _filters.copyWith(
-                          propertyIds: [..._filters.propertyIds, property.id],
+                          propertyIds: _filters.propertyIds
+                              .where((id) => id != property.id)
+                              .toList(),
                         );
                       } else {
                         _filters = _filters.copyWith(
-                          propertyIds: _filters.propertyIds.where((id) => id != property.id).toList(),
+                          propertyIds: [..._filters.propertyIds, property.id],
                         );
                       }
                     });
@@ -309,7 +381,11 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         // Filter units by selected properties
         final filteredUnits = _filters.propertyIds.isEmpty
             ? units
-            : units.where((unit) => _filters.propertyIds.contains(unit.propertyId)).toList();
+            : units
+                  .where(
+                    (unit) => _filters.propertyIds.contains(unit.propertyId),
+                  )
+                  .toList();
 
         if (filteredUnits.isEmpty) {
           return const SizedBox.shrink();
@@ -318,35 +394,31 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Jedinice',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            const _SectionHeader(
+              icon: Icons.meeting_room_outlined,
+              title: 'Jedinice',
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: filteredUnits.map((unit) {
                 final isSelected = _filters.unitIds.contains(unit.id);
-                return FilterChip(
+                return AppFilterChip(
+                  label: unit.name,
                   selected: isSelected,
-                  label: Text(unit.name),
-                  avatar: Icon(
-                    Icons.meeting_room,
-                    size: 18,
-                    color: isSelected ? Theme.of(context).colorScheme.onPrimary : null,
-                  ),
-                  onSelected: (selected) {
+                  icon: Icons.meeting_room,
+                  onSelected: () {
                     setState(() {
-                      if (selected) {
+                      if (isSelected) {
                         _filters = _filters.copyWith(
-                          unitIds: [..._filters.unitIds, unit.id],
+                          unitIds: _filters.unitIds
+                              .where((id) => id != unit.id)
+                              .toList(),
                         );
                       } else {
                         _filters = _filters.copyWith(
-                          unitIds: _filters.unitIds.where((id) => id != unit.id).toList(),
+                          unitIds: [..._filters.unitIds, unit.id],
                         );
                       }
                     });
@@ -363,50 +435,92 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildStatusFilter() {
+    // Only show active booking statuses (pending, confirmed, cancelled, completed)
+    final activeStatuses = [
+      BookingStatus.pending,
+      BookingStatus.confirmed,
+      BookingStatus.cancelled,
+      BookingStatus.completed,
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Statusi',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        const SizedBox(height: 8),
+        const _SectionHeader(icon: Icons.info_outline, title: 'Statusi'),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: BookingStatus.values.map((status) {
+          children: activeStatuses.map((status) {
             final statusString = status.name;
             final isSelected = _filters.statuses.contains(statusString);
-            return FilterChip(
-              selected: isSelected,
-              label: Text(status.displayName),
-              avatar: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: status.color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? Theme.of(context).colorScheme.onPrimary : Colors.transparent,
-                    width: 2,
-                  ),
+            final theme = Theme.of(context);
+
+            return Theme(
+              data: theme.copyWith(
+                splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                highlightColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
                 ),
               ),
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    _filters = _filters.copyWith(
-                      statuses: [..._filters.statuses, statusString],
-                    );
-                  } else {
-                    _filters = _filters.copyWith(
-                      statuses: _filters.statuses.where((s) => s != statusString).toList(),
-                    );
-                  }
-                });
-              },
+              child: FilterChip(
+                selected: isSelected,
+                label: Text(status.displayNameLocalized(context)),
+                selectedColor: theme.colorScheme.primary,
+                backgroundColor: isSelected
+                    ? theme.colorScheme.primary
+                    : context.gradients.cardBackground,
+                side: BorderSide(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : context.gradients.sectionBorder,
+                  width: 1.5,
+                ),
+                labelStyle: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : theme.colorScheme.onSurface,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 14,
+                ),
+                checkmarkColor: Colors.white,
+                avatar: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: status.color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected ? Colors.white : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: isSelected ? 2 : 0,
+                shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _filters = _filters.copyWith(
+                        statuses: [..._filters.statuses, statusString],
+                      );
+                    } else {
+                      _filters = _filters.copyWith(
+                        statuses: _filters.statuses
+                            .where((s) => s != statusString)
+                            .toList(),
+                      );
+                    }
+                  });
+                },
+              ),
             );
           }).toList(),
         ),
@@ -415,51 +529,97 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildSourceFilter() {
-    const sources = [
+    final theme = Theme.of(context);
+
+    // Sources must match actual booking.source values in Firestore:
+    // - 'direct' = null source (legacy bookings or direct bookings without source)
+    // - 'widget' = website widget bookings
+    // - 'admin' = manually created bookings
+    // - 'booking_com' = Booking.com iCal imports
+    // - 'airbnb' = Airbnb iCal imports
+    // - 'other' = generic iCal imports (non-recognized platforms)
+    final sources = [
+      ('direct', 'Direktno', Icons.bookmark, Colors.blue),
       ('widget', 'Widget', Icons.web, Colors.green),
       ('admin', 'Manualno', Icons.person, Colors.grey),
-      ('ical', 'iCal', Icons.sync, Colors.blue),
       ('booking_com', 'Booking.com', Icons.public, Colors.orange),
       ('airbnb', 'Airbnb', Icons.home, Colors.red),
+      ('other', 'Druga platforma', Icons.sync, theme.colorScheme.secondary),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Izvori rezervacija',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+        const _SectionHeader(
+          icon: Icons.source_outlined,
+          title: 'Izvori rezervacija',
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: sources.map((source) {
             final (value, label, icon, color) = source;
             final isSelected = _filters.sources.contains(value);
-            return FilterChip(
-              selected: isSelected,
-              label: Text(label),
-              avatar: Icon(
-                icon,
-                size: 18,
-                color: isSelected ? Theme.of(context).colorScheme.onPrimary : color,
+
+            return Theme(
+              data: theme.copyWith(
+                splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                highlightColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
               ),
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    _filters = _filters.copyWith(
-                      sources: [..._filters.sources, value],
-                    );
-                  } else {
-                    _filters = _filters.copyWith(
-                      sources: _filters.sources.where((s) => s != value).toList(),
-                    );
-                  }
-                });
-              },
+              child: FilterChip(
+                selected: isSelected,
+                label: Text(label),
+                selectedColor: theme.colorScheme.primary,
+                backgroundColor: isSelected
+                    ? theme.colorScheme.primary
+                    : context.gradients.cardBackground,
+                side: BorderSide(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : context.gradients.sectionBorder,
+                  width: 1.5,
+                ),
+                labelStyle: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : theme.colorScheme.onSurface,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 14,
+                ),
+                checkmarkColor: Colors.white,
+                avatar: Icon(
+                  icon,
+                  size: 18,
+                  color: isSelected ? Colors.white : color,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: isSelected ? 2 : 0,
+                shadowColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _filters = _filters.copyWith(
+                        sources: [..._filters.sources, value],
+                      );
+                    } else {
+                      _filters = _filters.copyWith(
+                        sources: _filters.sources
+                            .where((s) => s != value)
+                            .toList(),
+                      );
+                    }
+                  });
+                },
+              ),
             );
           }).toList(),
         ),
@@ -471,13 +631,11 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Raspon datuma',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+        const _SectionHeader(
+          icon: Icons.date_range_outlined,
+          title: 'Raspon datuma',
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: _showDateRangePicker,
           icon: const Icon(Icons.date_range),
@@ -496,14 +654,13 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
             child: TextButton.icon(
               onPressed: () {
                 setState(() {
-                  _filters = _filters.copyWith(
-                    startDate: null,
-                    endDate: null,
-                  );
+                  _filters = _filters.copyWith(startDate: null, endDate: null);
                 });
               },
               icon: const Icon(Icons.clear, size: 16),
-              label: const Text('Očisti datum'),
+              label: Text(
+                AppLocalizations.of(context).calendarFiltersClearDate,
+              ),
             ),
           ),
       ],
@@ -511,69 +668,73 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildGuestSearchField() {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Pretraži gosta',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+        _SectionHeader(
+          icon: Icons.person_search_outlined,
+          title: l10n.calendarFiltersSearchGuest,
         ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _guestSearchController,
-          decoration: const InputDecoration(
-            labelText: 'Ime ili email gosta',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.search),
-            hintText: 'Unesite ime ili email...',
+        const SizedBox(height: 12),
+        Builder(
+          builder: (ctx) => TextField(
+            controller: _guestSearchController,
+            decoration: InputDecorationHelper.buildDecoration(
+              labelText: l10n.calendarFiltersGuestLabel,
+              prefixIcon: const Icon(Icons.search),
+              hintText: l10n.calendarFiltersGuestHint,
+              context: ctx,
+            ),
+            onChanged: (value) {
+              setState(() {
+                _filters = _filters.copyWith(
+                  guestSearchQuery: value.isEmpty ? null : value,
+                );
+              });
+            },
           ),
-          onChanged: (value) {
-            setState(() {
-              _filters = _filters.copyWith(
-                guestSearchQuery: value.isEmpty ? null : value,
-              );
-            });
-          },
         ),
       ],
     );
   }
 
   Widget _buildBookingIdSearchField() {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Pretraži po ID-u rezervacije',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+        _SectionHeader(
+          icon: Icons.tag_outlined,
+          title: l10n.calendarFiltersSearchBookingId,
         ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _bookingIdSearchController,
-          decoration: const InputDecoration(
-            labelText: 'ID rezervacije',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.tag),
-            hintText: 'Unesite ID rezervacije...',
+        const SizedBox(height: 12),
+        Builder(
+          builder: (ctx) => TextField(
+            controller: _bookingIdSearchController,
+            decoration: InputDecorationHelper.buildDecoration(
+              labelText: l10n.calendarFiltersBookingIdLabel,
+              prefixIcon: const Icon(Icons.tag),
+              hintText: l10n.calendarFiltersBookingIdHint,
+              context: ctx,
+            ),
+            onChanged: (value) {
+              setState(() {
+                _filters = _filters.copyWith(
+                  bookingIdSearch: value.isEmpty ? null : value,
+                );
+              });
+            },
           ),
-          onChanged: (value) {
-            setState(() {
-              _filters = _filters.copyWith(
-                bookingIdSearch: value.isEmpty ? null : value,
-              );
-            });
-          },
         ),
       ],
     );
   }
 
   Future<void> _showDateRangePicker() async {
-    final picked = await showDateRangePicker(
+    final picked = await showCustomDateRangePicker(
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
@@ -594,18 +755,57 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
   void _applyFilters() {
     // Apply filters to provider
-    ref.read(calendarFiltersProvider.notifier).setPropertyIds(_filters.propertyIds);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setPropertyIds(_filters.propertyIds);
     ref.read(calendarFiltersProvider.notifier).setUnitIds(_filters.unitIds);
     ref.read(calendarFiltersProvider.notifier).setStatuses(_filters.statuses);
     ref.read(calendarFiltersProvider.notifier).setSources(_filters.sources);
-    ref.read(calendarFiltersProvider.notifier).setDateRange(
-      startDate: _filters.startDate,
-      endDate: _filters.endDate,
-    );
-    ref.read(calendarFiltersProvider.notifier).setGuestSearchQuery(_filters.guestSearchQuery);
-    ref.read(calendarFiltersProvider.notifier).setBookingIdSearch(_filters.bookingIdSearch);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setDateRange(startDate: _filters.startDate, endDate: _filters.endDate);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setGuestSearchQuery(_filters.guestSearchQuery);
+    ref
+        .read(calendarFiltersProvider.notifier)
+        .setBookingIdSearch(_filters.bookingIdSearch);
 
     // Close dialog
     Navigator.of(context).pop(true);
+  }
+}
+
+/// Section header widget with icon and gradient accent
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: context.gradients.brandPrimary,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: AutoSizeText(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            maxLines: 1,
+          ),
+        ),
+      ],
+    );
   }
 }

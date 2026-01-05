@@ -1,543 +1,270 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_dimensions.dart';
-import '../../../core/services/haptic_service.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
-/// Animated button with scale and ripple effects
-/// Press animation: scales down slightly
-/// Release animation: bounces back with ripple
-class AnimatedButton extends StatefulWidget {
-  final Widget child;
+import '../../../core/design_tokens/animation_tokens.dart';
+
+/// Animated button with scale effect on press
+///
+/// Usage:
+/// ```dart
+/// AnimatedPressButton(
+///   onPressed: () => handleSave(),
+///   child: Text('Save'),
+/// )
+/// ```
+class AnimatedPressButton extends StatefulWidget {
+  /// Button press callback
   final VoidCallback? onPressed;
-  final Color? backgroundColor;
-  final Color? foregroundColor;
-  final double borderRadius;
-  final EdgeInsets padding;
-  final double? width;
-  final double? height;
-  final bool enabled;
-  final bool isLoading;
-  final double scaleOnPress;
-  final Duration scaleDuration;
 
-  const AnimatedButton({
+  /// Button child content
+  final Widget child;
+
+  /// Scale factor when pressed (default: 0.95)
+  final double pressedScale;
+
+  /// Animation duration (default: instant - 100ms)
+  final Duration duration;
+
+  /// Button style
+  final ButtonStyle? style;
+
+  /// Whether this is a filled/elevated button (true) or text/outlined button (false)
+  final bool isFilled;
+
+  const AnimatedPressButton({
     super.key,
+    required this.onPressed,
     required this.child,
-    this.onPressed,
-    this.backgroundColor,
-    this.foregroundColor,
-    this.borderRadius = AppDimensions.radiusM,
-    this.padding = const EdgeInsets.symmetric(
-      horizontal: AppDimensions.spaceL,
-      vertical: AppDimensions.spaceM,
-    ),
-    this.width,
-    this.height,
-    this.enabled = true,
-    this.isLoading = false,
-    this.scaleOnPress = 0.95,
-    this.scaleDuration = const Duration(milliseconds: 100),
+    this.pressedScale = 0.95,
+    this.duration = AnimationTokens.instant,
+    this.style,
+    this.isFilled = true,
   });
 
   @override
-  State<AnimatedButton> createState() => _AnimatedButtonState();
+  State<AnimatedPressButton> createState() => _AnimatedPressButtonState();
 }
 
-class _AnimatedButtonState extends State<AnimatedButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+class _AnimatedPressButtonState extends State<AnimatedPressButton> {
   bool _isPressed = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.scaleDuration,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: widget.scaleOnPress,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   void _handleTapDown(TapDownDetails details) {
-    if (widget.enabled && !widget.isLoading && widget.onPressed != null) {
+    if (widget.onPressed != null) {
       setState(() => _isPressed = true);
-      _controller.forward();
     }
   }
 
   void _handleTapUp(TapUpDetails details) {
-    if (_isPressed) {
-      setState(() => _isPressed = false);
-      _controller.reverse();
-    }
+    setState(() => _isPressed = false);
   }
 
   void _handleTapCancel() {
-    if (_isPressed) {
-      setState(() => _isPressed = false);
-      _controller.reverse();
-    }
+    setState(() => _isPressed = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = widget.backgroundColor ??
-        (isDark ? AppColors.primaryDark : AppColors.primary);
-    final fgColor = widget.foregroundColor ?? Colors.white;
+    final button = widget.isFilled
+        ? ElevatedButton(
+            onPressed: widget.onPressed,
+            style: widget.style,
+            child: widget.child,
+          )
+        : OutlinedButton(
+            onPressed: widget.onPressed,
+            style: widget.style,
+            child: widget.child,
+          );
 
     return GestureDetector(
       onTapDown: _handleTapDown,
       onTapUp: _handleTapUp,
       onTapCancel: _handleTapCancel,
-      onTap: widget.enabled && !widget.isLoading && widget.onPressed != null
-          ? () async {
-              await HapticService.buttonPress();
-              widget.onPressed!();
-            }
-          : null,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          );
-        },
-        child: Container(
-          width: widget.width,
-          height: widget.height,
-          padding: widget.padding,
-          decoration: BoxDecoration(
-            color: widget.enabled ? bgColor : bgColor.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-          ),
-          child: widget.isLoading
-              ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(fgColor),
-                  ),
-                )
-              : DefaultTextStyle(
-                  style: TextStyle(color: fgColor),
-                  child: IconTheme(
-                    data: IconThemeData(color: fgColor),
-                    child: widget.child,
-                  ),
-                ),
-        ),
+      child: AnimatedScale(
+        scale: _isPressed ? widget.pressedScale : 1.0,
+        duration: widget.duration,
+        curve: AnimationTokens.easeOut,
+        child: button,
       ),
     );
   }
 }
 
-/// Ripple button with custom ripple effect
-class RippleButton extends StatelessWidget {
-  final Widget child;
+/// Animated icon button with scale effect on press
+///
+/// Usage:
+/// ```dart
+/// AnimatedIconButton(
+///   onPressed: () => handleAction(),
+///   icon: Icons.add,
+/// )
+/// ```
+class AnimatedIconButton extends StatefulWidget {
+  /// Button press callback
   final VoidCallback? onPressed;
-  final Color? rippleColor;
-  final Color? backgroundColor;
-  final double borderRadius;
-  final EdgeInsets padding;
-  final double? width;
-  final double? height;
 
-  const RippleButton({
-    super.key,
-    required this.child,
-    this.onPressed,
-    this.rippleColor,
-    this.backgroundColor,
-    this.borderRadius = AppDimensions.radiusM,
-    this.padding = const EdgeInsets.symmetric(
-      horizontal: AppDimensions.spaceL,
-      vertical: AppDimensions.spaceM,
-    ),
-    this.width,
-    this.height,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: backgroundColor ?? AppColors.primary,
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: InkWell(
-        onTap: onPressed == null
-            ? null
-            : () async {
-                await HapticService.buttonPress();
-                onPressed!();
-              },
-        borderRadius: BorderRadius.circular(borderRadius),
-        splashColor: rippleColor ?? Colors.white.withValues(alpha: 0.3),
-        highlightColor: rippleColor ?? Colors.white.withValues(alpha: 0.1),
-        child: Container(
-          width: width,
-          height: height,
-          padding: padding,
-          child: Center(child: child),
-        ),
-      ),
-    );
-  }
-}
-
-/// Loading button that shows spinner when isLoading is true
-class LoadingButton extends StatelessWidget {
-  final String label;
-  final VoidCallback? onPressed;
-  final bool isLoading;
-  final IconData? icon;
-  final Color? backgroundColor;
-  final Color? foregroundColor;
-  final double borderRadius;
-  final bool isFullWidth;
-
-  const LoadingButton({
-    super.key,
-    required this.label,
-    this.onPressed,
-    this.isLoading = false,
-    this.icon,
-    this.backgroundColor,
-    this.foregroundColor,
-    this.borderRadius = AppDimensions.radiusM,
-    this.isFullWidth = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedButton(
-      onPressed: onPressed,
-      backgroundColor: backgroundColor,
-      foregroundColor: foregroundColor,
-      borderRadius: borderRadius,
-      isLoading: isLoading,
-      enabled: !isLoading,
-      width: isFullWidth ? double.infinity : null,
-      child: Row(
-        mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (icon != null && !isLoading) ...[
-            Icon(icon, size: 20),
-            const SizedBox(width: AppDimensions.spaceS),
-          ],
-          Text(label),
-        ],
-      ),
-    );
-  }
-}
-
-/// Pulse button - pulses to draw attention
-class PulseButton extends StatefulWidget {
-  final Widget child;
-  final VoidCallback? onPressed;
-  final Color? backgroundColor;
-  final Color? pulseColor;
-  final double borderRadius;
-  final EdgeInsets padding;
-  final bool enablePulse;
-  final Duration pulseDuration;
-
-  const PulseButton({
-    super.key,
-    required this.child,
-    this.onPressed,
-    this.backgroundColor,
-    this.pulseColor,
-    this.borderRadius = AppDimensions.radiusM,
-    this.padding = const EdgeInsets.symmetric(
-      horizontal: AppDimensions.spaceL,
-      vertical: AppDimensions.spaceM,
-    ),
-    this.enablePulse = true,
-    this.pulseDuration = const Duration(milliseconds: 1500),
-  });
-
-  @override
-  State<PulseButton> createState() => _PulseButtonState();
-}
-
-class _PulseButtonState extends State<PulseButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _opacityAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.pulseDuration,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _opacityAnimation = Tween<double>(begin: 0.7, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-
-    if (widget.enablePulse) {
-      _controller.repeat();
-    }
-  }
-
-  @override
-  void didUpdateWidget(PulseButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.enablePulse != oldWidget.enablePulse) {
-      if (widget.enablePulse) {
-        _controller.repeat();
-      } else {
-        _controller.stop();
-        _controller.reset();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bgColor = widget.backgroundColor ?? AppColors.primary;
-    final pulseColor = widget.pulseColor ?? bgColor;
-
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // Pulse rings
-            if (widget.enablePulse) ...[
-              Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Container(
-                  padding: widget.padding,
-                  decoration: BoxDecoration(
-                    color: pulseColor.withValues(alpha: _opacityAnimation.value),
-                    borderRadius: BorderRadius.circular(widget.borderRadius),
-                  ),
-                  child: Opacity(opacity: 0, child: widget.child),
-                ),
-              ),
-            ],
-
-            // Actual button
-            Material(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(widget.borderRadius),
-              child: InkWell(
-                onTap: widget.onPressed == null
-                    ? null
-                    : () async {
-                        await HapticService.buttonPress();
-                        widget.onPressed!();
-                      },
-                borderRadius: BorderRadius.circular(widget.borderRadius),
-                child: Container(
-                  padding: widget.padding,
-                  child: widget.child,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-/// Icon button with rotation animation
-class RotatingIconButton extends StatefulWidget {
+  /// Icon to display
   final IconData icon;
-  final VoidCallback? onPressed;
+
+  /// Icon size (default: 24)
+  final double iconSize;
+
+  /// Icon color
   final Color? iconColor;
-  final Color? backgroundColor;
-  final double size;
-  final bool rotateOnPress;
-  final Duration rotationDuration;
 
-  const RotatingIconButton({
+  /// Scale factor when pressed (default: 0.85)
+  final double pressedScale;
+
+  /// Animation duration (default: instant - 100ms)
+  final Duration duration;
+
+  /// Tooltip text
+  final String? tooltip;
+
+  const AnimatedIconButton({
     super.key,
+    required this.onPressed,
     required this.icon,
-    this.onPressed,
+    this.iconSize = 24,
     this.iconColor,
-    this.backgroundColor,
-    this.size = 48,
-    this.rotateOnPress = true,
-    this.rotationDuration = const Duration(milliseconds: 200),
+    this.pressedScale = 0.85,
+    this.duration = AnimationTokens.instant,
+    this.tooltip,
   });
 
   @override
-  State<RotatingIconButton> createState() => _RotatingIconButtonState();
+  State<AnimatedIconButton> createState() => _AnimatedIconButtonState();
 }
 
-class _RotatingIconButtonState extends State<RotatingIconButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _rotationAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.rotationDuration,
-    );
-
-    _rotationAnimation = Tween<double>(begin: 0, end: 0.5).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handlePressed() async {
-    await HapticService.buttonPress();
-    if (widget.rotateOnPress) {
-      _controller.forward().then((_) => _controller.reverse());
-    }
-    widget.onPressed?.call();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return RotationTransition(
-      turns: _rotationAnimation,
-      child: Material(
-        color: widget.backgroundColor ?? Colors.transparent,
-        shape: const CircleBorder(),
-        child: InkWell(
-          onTap: _handlePressed,
-          customBorder: const CircleBorder(),
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            alignment: Alignment.center,
-            child: Icon(
-              widget.icon,
-              color: widget.iconColor ?? AppColors.primary,
-              size: widget.size * 0.5,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Bouncy button with spring animation
-class BouncyButton extends StatefulWidget {
-  final Widget child;
-  final VoidCallback? onPressed;
-  final Color? backgroundColor;
-  final double borderRadius;
-  final EdgeInsets padding;
-
-  const BouncyButton({
-    super.key,
-    required this.child,
-    this.onPressed,
-    this.backgroundColor,
-    this.borderRadius = AppDimensions.radiusM,
-    this.padding = const EdgeInsets.symmetric(
-      horizontal: AppDimensions.spaceL,
-      vertical: AppDimensions.spaceM,
-    ),
-  });
-
-  @override
-  State<BouncyButton> createState() => _BouncyButtonState();
-}
-
-class _BouncyButtonState extends State<BouncyButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.9), weight: 20),
-      TweenSequenceItem(tween: Tween(begin: 0.9, end: 1.05), weight: 30),
-      TweenSequenceItem(tween: Tween(begin: 1.05, end: 0.98), weight: 25),
-      TweenSequenceItem(tween: Tween(begin: 0.98, end: 1.0), weight: 25),
-    ]).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handlePressed() async {
-    await HapticService.buttonPress();
-    _controller.forward(from: 0);
-    widget.onPressed?.call();
-  }
+class _AnimatedIconButtonState extends State<AnimatedIconButton> {
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _handlePressed,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          );
-        },
-        child: Container(
-          padding: widget.padding,
-          decoration: BoxDecoration(
-            color: widget.backgroundColor ?? AppColors.primary,
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-          ),
-          child: widget.child,
+      onTapDown: (_) {
+        if (widget.onPressed != null) {
+          setState(() => _isPressed = true);
+        }
+      },
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? widget.pressedScale : 1.0,
+        duration: widget.duration,
+        curve: AnimationTokens.easeOut,
+        child: IconButton(
+          onPressed: widget.onPressed,
+          icon: Icon(widget.icon),
+          iconSize: widget.iconSize,
+          color: widget.iconColor,
+          tooltip: widget.tooltip,
         ),
+      ),
+    );
+  }
+}
+
+/// Animated FAB with scale effect and optional pulse animation
+///
+/// Uses flutter_animate for pulse animation with BookBed's
+/// animation design tokens. Press scale uses AnimatedScale for
+/// responsive feedback.
+///
+/// Usage:
+/// ```dart
+/// AnimatedFAB(
+///   onPressed: () => handleAdd(),
+///   icon: Icons.add,
+///   showPulse: true, // Optional attention-grabbing pulse
+/// )
+/// ```
+class AnimatedFAB extends StatefulWidget {
+  /// Button press callback
+  final VoidCallback? onPressed;
+
+  /// Icon to display
+  final IconData icon;
+
+  /// FAB label (for extended FAB)
+  final String? label;
+
+  /// Scale factor when pressed (default: 0.9)
+  final double pressedScale;
+
+  /// Whether to show pulse animation when idle
+  final bool showPulse;
+
+  /// FAB background color
+  final Color? backgroundColor;
+
+  /// FAB foreground color
+  final Color? foregroundColor;
+
+  const AnimatedFAB({
+    super.key,
+    required this.onPressed,
+    required this.icon,
+    this.label,
+    this.pressedScale = 0.9,
+    this.showPulse = false,
+    this.backgroundColor,
+    this.foregroundColor,
+  });
+
+  @override
+  State<AnimatedFAB> createState() => _AnimatedFABState();
+}
+
+class _AnimatedFABState extends State<AnimatedFAB> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget fab;
+
+    if (widget.label != null) {
+      fab = FloatingActionButton.extended(
+        onPressed: widget.onPressed,
+        icon: Icon(widget.icon),
+        label: Text(widget.label!),
+        backgroundColor: widget.backgroundColor,
+        foregroundColor: widget.foregroundColor,
+      );
+    } else {
+      fab = FloatingActionButton(
+        onPressed: widget.onPressed,
+        backgroundColor: widget.backgroundColor,
+        foregroundColor: widget.foregroundColor,
+        child: Icon(widget.icon),
+      );
+    }
+
+    // Apply pulse animation if enabled
+    if (widget.showPulse) {
+      fab = fab
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .scale(
+            duration: AnimationTokens.long,
+            curve: AnimationTokens.easeInOut,
+            begin: const Offset(1.0, 1.0),
+            end: const Offset(1.08, 1.08),
+          );
+    }
+
+    return GestureDetector(
+      onTapDown: (_) {
+        if (widget.onPressed != null) {
+          setState(() => _isPressed = true);
+        }
+      },
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? widget.pressedScale : 1.0,
+        duration: AnimationTokens.instant,
+        curve: AnimationTokens.easeOut,
+        child: fab,
       ),
     );
   }

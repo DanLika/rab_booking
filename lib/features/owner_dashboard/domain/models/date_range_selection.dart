@@ -30,13 +30,24 @@ class DateRangeSelection with _$DateRangeSelection {
 
   /// Create a month range from a given date
   factory DateRangeSelection.month(DateTime date) {
-    final firstDay = DateTime(date.year, date.month, 1);
+    final firstDay = DateTime(date.year, date.month);
     // Using day 0 of next month to get last day of current month (Dart idiom)
     // DateTime normalizes: month+1 with day 0 = last day of current month
     final lastDay = DateTime(date.year, date.month + 1, 0);
     return DateRangeSelection(
       startDate: firstDay,
       endDate: DateTime(lastDay.year, lastDay.month, lastDay.day, 23, 59, 59),
+    );
+  }
+
+  /// Create a custom range with specific number of days from a starting date
+  /// Used for responsive timeline view (6-7 days mobile, 12-15 tablet, 20-30+ desktop)
+  factory DateRangeSelection.days(DateTime startDate, int numberOfDays) {
+    final start = DateTime(startDate.year, startDate.month, startDate.day);
+    final end = start.add(Duration(days: numberOfDays - 1));
+    return DateRangeSelection(
+      startDate: start,
+      endDate: DateTime(end.year, end.month, end.day, 23, 59, 59),
     );
   }
 
@@ -68,39 +79,66 @@ class DateRangeSelection with _$DateRangeSelection {
     final dateOnly = DateTime(date.year, date.month, date.day);
     final startOnly = DateTime(startDate.year, startDate.month, startDate.day);
     final endOnly = DateTime(endDate.year, endDate.month, endDate.day);
-    return (dateOnly.isAfter(startOnly) || dateOnly.isAtSameMomentAs(startOnly)) &&
+    return (dateOnly.isAfter(startOnly) ||
+            dateOnly.isAtSameMomentAs(startOnly)) &&
         (dateOnly.isBefore(endOnly) || dateOnly.isAtSameMomentAs(endOnly));
   }
 
-  /// Move to next week/month
+  /// Move to next period (week/month/custom range)
+  /// For custom ranges, moves forward by the same number of days
   DateRangeSelection next({required bool isWeek}) {
     if (isWeek) {
       return DateRangeSelection.week(startDate.add(const Duration(days: 7)));
     } else {
-      // Handle month overflow explicitly
-      int nextMonth = startDate.month + 1;
-      int nextYear = startDate.year;
-      if (nextMonth > 12) {
-        nextMonth = 1;
-        nextYear++;
+      final currentDayCount = dayCount;
+      // Check if this is a true month view (starts on 1st day of month)
+      final isMonthView =
+          startDate.day == 1 && currentDayCount >= 28 && currentDayCount <= 31;
+
+      if (isMonthView) {
+        // Handle month overflow explicitly
+        int nextMonth = startDate.month + 1;
+        int nextYear = startDate.year;
+        if (nextMonth > 12) {
+          nextMonth = 1;
+          nextYear++;
+        }
+        return DateRangeSelection.month(DateTime(nextYear, nextMonth));
+      } else {
+        // Custom range - move forward by same number of days
+        final nextStart = startDate.add(Duration(days: currentDayCount));
+        return DateRangeSelection.days(nextStart, currentDayCount);
       }
-      return DateRangeSelection.month(DateTime(nextYear, nextMonth, 1));
     }
   }
 
-  /// Move to previous week/month
+  /// Move to previous period (week/month/custom range)
+  /// For custom ranges, moves backward by the same number of days
   DateRangeSelection previous({required bool isWeek}) {
     if (isWeek) {
-      return DateRangeSelection.week(startDate.subtract(const Duration(days: 7)));
+      return DateRangeSelection.week(
+        startDate.subtract(const Duration(days: 7)),
+      );
     } else {
-      // Handle month underflow explicitly
-      int prevMonth = startDate.month - 1;
-      int prevYear = startDate.year;
-      if (prevMonth < 1) {
-        prevMonth = 12;
-        prevYear--;
+      final currentDayCount = dayCount;
+      // Check if this is a true month view (starts on 1st day of month)
+      final isMonthView =
+          startDate.day == 1 && currentDayCount >= 28 && currentDayCount <= 31;
+
+      if (isMonthView) {
+        // Handle month underflow explicitly
+        int prevMonth = startDate.month - 1;
+        int prevYear = startDate.year;
+        if (prevMonth < 1) {
+          prevMonth = 12;
+          prevYear--;
+        }
+        return DateRangeSelection.month(DateTime(prevYear, prevMonth));
+      } else {
+        // Custom range - move backward by same number of days
+        final prevStart = startDate.subtract(Duration(days: currentDayCount));
+        return DateRangeSelection.days(prevStart, currentDayCount);
       }
-      return DateRangeSelection.month(DateTime(prevYear, prevMonth, 1));
     }
   }
 
@@ -126,9 +164,20 @@ class DateRangeSelection with _$DateRangeSelection {
 
   static String _getMonthName(int month) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
+    if (month < 1 || month > 12) return 'Invalid';
     return months[month - 1];
   }
 }

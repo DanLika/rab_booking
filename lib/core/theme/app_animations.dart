@@ -370,16 +370,10 @@ class AnimationConfig {
   final Duration duration;
   final Curve curve;
 
-  const AnimationConfig({
-    required this.duration,
-    required this.curve,
-  });
+  const AnimationConfig({required this.duration, required this.curve});
 
   /// Create a copy with modified values
-  AnimationConfig copyWith({
-    Duration? duration,
-    Curve? curve,
-  }) {
+  AnimationConfig copyWith({Duration? duration, Curve? curve}) {
     return AnimationConfig(
       duration: duration ?? this.duration,
       curve: curve ?? this.curve,

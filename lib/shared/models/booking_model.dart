@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../core/constants/enums.dart';
 import '../../core/utils/timestamp_converter.dart';
+import '../../features/widget/utils/date_normalizer.dart';
 
 part 'booking_model.freezed.dart';
 part 'booking_model.g.dart';
@@ -14,6 +15,9 @@ class BookingModel with _$BookingModel {
 
     /// Unit being booked
     @JsonKey(name: 'unit_id') required String unitId,
+
+    /// Property ID (denormalized for queries)
+    @JsonKey(name: 'property_id') String? propertyId,
 
     /// Guest user ID (nullable for anonymous widget bookings)
     @JsonKey(name: 'user_id') String? userId,
@@ -34,8 +38,7 @@ class BookingModel with _$BookingModel {
     @JsonKey(name: 'guest_phone') String? guestPhone,
 
     /// Check-in date
-    @TimestampConverter()
-    @JsonKey(name: 'check_in') required DateTime checkIn,
+    @TimestampConverter() @JsonKey(name: 'check_in') required DateTime checkIn,
 
     /// Check-in time
     @JsonKey(name: 'check_in_time') String? checkInTime,
@@ -45,7 +48,8 @@ class BookingModel with _$BookingModel {
 
     /// Check-out date
     @TimestampConverter()
-    @JsonKey(name: 'check_out') required DateTime checkOut,
+    @JsonKey(name: 'check_out')
+    required DateTime checkOut,
 
     /// Booking status
     required BookingStatus status,
@@ -59,11 +63,23 @@ class BookingModel with _$BookingModel {
     /// Advance payment amount (20% of total)
     @JsonKey(name: 'advance_amount') double? advanceAmount,
 
+    /// Deposit amount (same as advance, used by webhook)
+    @JsonKey(name: 'deposit_amount') double? depositAmount,
+
+    /// Remaining amount to be paid (totalPrice - depositAmount)
+    @JsonKey(name: 'remaining_amount') double? remainingAmount,
+
     /// Payment method (bank_transfer, stripe, cash, other)
     @JsonKey(name: 'payment_method') String? paymentMethod,
 
     /// Payment status (pending, paid, refunded)
     @JsonKey(name: 'payment_status') String? paymentStatus,
+
+    /// Payment option (deposit, full_payment)
+    @JsonKey(name: 'payment_option') String? paymentOption,
+
+    /// Whether booking requires owner approval
+    @JsonKey(name: 'require_owner_approval') bool? requireOwnerApproval,
 
     /// Booking source (widget, admin, direct, api)
     String? source,
@@ -74,23 +90,35 @@ class BookingModel with _$BookingModel {
     /// Special requests or notes
     String? notes,
 
+    /// Tax/Legal disclaimer acceptance (for compliance audit trail)
+    @JsonKey(name: 'tax_legal_accepted') bool? taxLegalAccepted,
+
     /// Stripe payment intent ID
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
 
+    /// Stripe checkout session ID (for webhook-created bookings)
+    @JsonKey(name: 'stripe_session_id') String? stripeSessionId,
+
+    /// Human-readable booking reference (e.g., BK-1234567890-1234)
+    @JsonKey(name: 'booking_reference') String? bookingReference,
+
     /// Booking creation timestamp
     @TimestampConverter()
-    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'created_at')
+    required DateTime createdAt,
 
     /// Last update timestamp
     @NullableTimestampConverter()
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @JsonKey(name: 'updated_at')
+    DateTime? updatedAt,
 
     /// Cancellation reason (if cancelled)
     @JsonKey(name: 'cancellation_reason') String? cancellationReason,
 
     /// Cancelled at timestamp
     @NullableTimestampConverter()
-    @JsonKey(name: 'cancelled_at') DateTime? cancelledAt,
+    @JsonKey(name: 'cancelled_at')
+    DateTime? cancelledAt,
 
     /// User ID who cancelled the booking
     @JsonKey(name: 'cancelled_by') String? cancelledBy,
@@ -125,18 +153,29 @@ class BookingModel with _$BookingModel {
 
   /// Check if booking is in the past
   bool get isPast {
-    return checkOut.isBefore(DateTime.now());
+    // Normalize dates for consistent comparison (ignores time components)
+    final today = DateNormalizer.normalize(DateTime.now());
+    final normalizedCheckOut = DateNormalizer.normalize(checkOut);
+    return normalizedCheckOut.isBefore(today);
   }
 
   /// Check if booking is current (guest is currently staying)
   bool get isCurrent {
-    final now = DateTime.now();
-    return checkIn.isBefore(now) && checkOut.isAfter(now);
+    // Normalize dates for consistent comparison (ignores time components)
+    // Booking is current if today is >= checkIn and < checkOut
+    final today = DateNormalizer.normalize(DateTime.now());
+    final normalizedCheckIn = DateNormalizer.normalize(checkIn);
+    final normalizedCheckOut = DateNormalizer.normalize(checkOut);
+    return !normalizedCheckIn.isAfter(today) &&
+        normalizedCheckOut.isAfter(today);
   }
 
   /// Check if booking is upcoming
   bool get isUpcoming {
-    return checkIn.isAfter(DateTime.now());
+    // Normalize dates for consistent comparison (ignores time components)
+    final today = DateNormalizer.normalize(DateTime.now());
+    final normalizedCheckIn = DateNormalizer.normalize(checkIn);
+    return normalizedCheckIn.isAfter(today);
   }
 
   /// Check if booking can be cancelled
@@ -144,23 +183,85 @@ class BookingModel with _$BookingModel {
     return status.canBeCancelled && isUpcoming;
   }
 
+  /// Check if this is an external/imported booking (Booking.com, Airbnb, iCal)
+  /// External bookings are READ-ONLY and cannot be edited or deleted
+  bool get isExternalBooking {
+    // Check by ID prefix (most reliable)
+    if (id.startsWith('ical_')) return true;
+
+    // Check by source field
+    if (source != null) {
+      final src = source!.toLowerCase();
+      return src == 'booking_com' ||
+          src == 'airbnb' ||
+          src == 'ical' ||
+          src == 'external';
+    }
+
+    // Check by payment method
+    if (paymentMethod == 'external') return true;
+
+    return false;
+  }
+
+  /// Get formatted source name for display
+  String get sourceDisplayName {
+    if (source == null) return 'Direct';
+    switch (source!.toLowerCase()) {
+      case 'booking_com':
+        return 'Booking.com';
+      case 'airbnb':
+        return 'Airbnb';
+      case 'ical':
+        return 'iCal Import';
+      case 'widget':
+        return 'Website Widget';
+      case 'manual':
+      case 'direct':
+        return 'Direct';
+      case 'admin':
+        return 'Admin';
+      default:
+        return source!;
+    }
+  }
+
   /// Get days until check-in
   int get daysUntilCheckIn {
     if (!isUpcoming) return 0;
-    return checkIn.difference(DateTime.now()).inDays;
+    // Normalize to UTC for consistent comparison
+    // checkIn comes from Firestore Timestamp which is UTC-based
+    final checkInUtc = checkIn.isUtc ? checkIn : checkIn.toUtc();
+    final nowUtc = DateTime.now().toUtc();
+    return checkInUtc.difference(nowUtc).inDays;
   }
 
   /// Get days until check-out
   int get daysUntilCheckOut {
     if (isPast) return 0;
-    return checkOut.difference(DateTime.now()).inDays;
+    // Normalize to UTC for consistent comparison
+    // checkOut comes from Firestore Timestamp which is UTC-based
+    final checkOutUtc = checkOut.isUtc ? checkOut : checkOut.toUtc();
+    final nowUtc = DateTime.now().toUtc();
+    return checkOutUtc.difference(nowUtc).inDays;
   }
 
   /// Get formatted date range (e.g., "Jan 15 - Jan 20, 2024")
   String get dateRangeFormatted {
     final months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
 
     final checkInMonth = months[checkIn.month];
@@ -183,7 +284,8 @@ class BookingModel with _$BookingModel {
   String get formattedPaidAmount => '€${paidAmount.toStringAsFixed(2)}';
 
   /// Get formatted remaining balance
-  String get formattedRemainingBalance => '€${remainingBalance.toStringAsFixed(2)}';
+  String get formattedRemainingBalance =>
+      '€${remainingBalance.toStringAsFixed(2)}';
 
   /// Get night count label
   String get nightsLabel {

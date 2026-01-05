@@ -1,7 +1,18 @@
 import 'package:flutter/widgets.dart';
 
-/// Layout constraint design tokens for consistent sizing across the widget
+/// Layout constraint design tokens for consistent sizing across the app
+///
+/// Usage:
+/// ```dart
+/// ConstrainedBox(
+///   constraints: ConstraintTokens.widgetContainer,
+///   child: YourWidget(),
+/// )
+/// ```
 class ConstraintTokens {
+  // Prevent instantiation
+  ConstraintTokens._();
+
   // ============================================================================
   // Maximum Width Constraints
   // ============================================================================
@@ -168,59 +179,48 @@ class ConstraintTokens {
   // ============================================================================
 
   /// Widget container constraints
-  static BoxConstraints get widgetContainer => const BoxConstraints(
-        minWidth: minWidgetWidth,
-        maxWidth: maxWidgetWidth,
-      );
+  static BoxConstraints get widgetContainer =>
+      const BoxConstraints(minWidth: minWidgetWidth, maxWidth: maxWidgetWidth);
 
   /// Form container constraints
-  static BoxConstraints get formContainer => const BoxConstraints(
-        maxWidth: maxFormWidth,
-      );
+  static BoxConstraints get formContainer =>
+      const BoxConstraints(maxWidth: maxFormWidth);
 
   /// Modal constraints
   static BoxConstraints get modal => const BoxConstraints(
-        maxWidth: maxModalWidth,
-        maxHeight: maxScrollableHeight,
-      );
+    maxWidth: maxModalWidth,
+    maxHeight: maxScrollableHeight,
+  );
 
   /// Card constraints
-  static BoxConstraints get card => const BoxConstraints(
-        minWidth: minCardWidth,
-        maxWidth: maxCardWidth,
-      );
+  static BoxConstraints get card =>
+      const BoxConstraints(minWidth: minCardWidth, maxWidth: maxCardWidth);
 
   /// Button constraints
-  static BoxConstraints get button => const BoxConstraints(
-        minWidth: minButtonWidth,
-        minHeight: buttonHeight,
-      );
+  static BoxConstraints get button =>
+      const BoxConstraints(minWidth: minButtonWidth, minHeight: buttonHeight);
 
   /// Input field constraints
-  static BoxConstraints get input => const BoxConstraints(
-        minWidth: minInputWidth,
-        minHeight: inputHeight,
-      );
+  static BoxConstraints get input =>
+      const BoxConstraints(minWidth: minInputWidth, minHeight: inputHeight);
 
   /// Touch target constraints (accessibility)
-  static BoxConstraints get touchTarget => const BoxConstraints(
-        minWidth: minTouchTarget,
-        minHeight: minTouchTarget,
-      );
+  static BoxConstraints get touchTarget =>
+      const BoxConstraints(minWidth: minTouchTarget, minHeight: minTouchTarget);
 
   /// Calendar month constraints
   static BoxConstraints get calendarMonth => const BoxConstraints(
-        minWidth: calendarMonthMinWidth,
-        maxWidth: calendarMonthMaxWidth,
-      );
+    minWidth: calendarMonthMinWidth,
+    maxWidth: calendarMonthMaxWidth,
+  );
 
   /// Calendar cell constraints
   static BoxConstraints get calendarCell => const BoxConstraints(
-        minWidth: calendarDayCellMinSize,
-        maxWidth: calendarDayCellMaxSize,
-        minHeight: calendarCellMinHeight,
-        maxHeight: calendarCellMaxHeight,
-      );
+    minWidth: calendarDayCellMinSize,
+    maxWidth: calendarDayCellMaxSize,
+    minHeight: calendarCellMinHeight,
+    maxHeight: calendarCellMaxHeight,
+  );
 
   // ============================================================================
   // Helper Methods
@@ -243,10 +243,7 @@ class ConstraintTokens {
 
   /// Create square BoxConstraints
   static BoxConstraints square(double size) {
-    return BoxConstraints.tightFor(
-      width: size,
-      height: size,
-    );
+    return BoxConstraints.tightFor(width: size, height: size);
   }
 
   /// Create BoxConstraints with specific aspect ratio
@@ -254,9 +251,6 @@ class ConstraintTokens {
     required double width,
     required double aspectRatio,
   }) {
-    return BoxConstraints.tightFor(
-      width: width,
-      height: width / aspectRatio,
-    );
+    return BoxConstraints.tightFor(width: width, height: width / aspectRatio);
   }
 }

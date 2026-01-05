@@ -7,11 +7,17 @@ import '../../../../core/providers/language_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
-import '../providers/user_profile_provider.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../widgets/language_selection_bottom_sheet.dart';
 import '../widgets/theme_selection_bottom_sheet.dart';
+import '../widgets/notification_settings_bottom_sheet.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../../../../shared/models/user_model.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/premium_list_tile.dart';
+import '../../../../shared/widgets/logout_tile.dart';
 
 /// Profile screen for owner dashboard
 class ProfileScreen extends ConsumerWidget {
@@ -19,545 +25,492 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final user = FirebaseAuth.instance.currentUser;
-    final userProfileAsync = ref.watch(userProfileProvider);
+    // OPTIMIZED: Removed watchUserProfileProvider - displayName already available in authState.userModel
+    // This eliminates 1 Firestore read (profiles/{userId}) per page load
     final authState = ref.watch(enhancedAuthProvider);
     final currentLocale = ref.watch(currentLocaleProvider);
     final currentThemeMode = ref.watch(currentThemeModeProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    // Get language display name
-    final languageName = currentLocale.languageCode == 'hr' ? 'Hrvatski' : 'English';
+    // Get language display name from localization
+    final languageName = currentLocale.languageCode == 'hr'
+        ? l10n.ownerProfileLanguageCroatian
+        : l10n.ownerProfileLanguageEnglish;
 
     // Get theme display name
     final themeName = currentThemeMode == ThemeMode.light
-        ? 'Light'
+        ? l10n.ownerProfileThemeLight
         : currentThemeMode == ThemeMode.dark
-            ? 'Dark'
-            : 'System default';
+        ? l10n.ownerProfileThemeDark
+        : l10n.ownerProfileThemeSystem;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'Menu',
-          ),
-        ),
-      ),
       drawer: const OwnerAppDrawer(currentRoute: 'profile'),
-      body: user == null
-          ? const Center(child: Text('Not authenticated'))
-          : userProfileAsync.when(
-              data: (profile) {
-                final displayName = profile?.displayName ?? user.displayName ?? 'Owner';
-                final email = user.email ?? '';
+      appBar: CommonAppBar(
+        title: l10n.ownerProfileTitle,
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+      ),
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: user == null
+            ? Center(child: Text(l10n.ownerProfileNotAuthenticated))
+            : Builder(
+                builder: (context) {
+                  // OPTIMIZED: Use authState.userModel directly instead of separate Firestore query
+                  final isAnonymous = authState.isAnonymous;
+                  final displayName =
+                      authState.userModel?.displayName ??
+                      authState.userModel?.fullName ??
+                      user.displayName ??
+                      (isAnonymous
+                          ? l10n.ownerProfileGuestUser
+                          : l10n.ownerProfileOwner);
+                  final email =
+                      user.email ??
+                      (isAnonymous
+                          ? l10n.ownerProfileAnonymousAccount
+                          : l10n.ownerProfileNoEmail);
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isMobile = screenWidth < 600;
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isMobile = constraints.maxWidth < 600;
-                    final headerPadding = isMobile ? 16.0 : 32.0;
-
-                    return ListView(
-                      padding: const EdgeInsets.all(16.0),
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
+                    child: Column(
                       children: [
-                        // Premium Profile header
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFF6B4CE6), // Purple
-                                Color(0xFF4A90E2), // Blue
-                              ],
+                        // Compact Profile header
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: isMobile ? double.infinity : 400,
                             ),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(headerPadding),
-                            child: Column(
-                              children: [
-                            Container(
+                            child: Container(
+                              width: double.infinity,
                               decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withAlpha((0.3 * 255).toInt()),
-                                  width: 4,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withAlpha((0.2 * 255).toInt()),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
+                                gradient: context.gradients.brandPrimary,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: isDark
+                                    ? AppShadows.elevation2Dark
+                                    : AppShadows.elevation2,
                               ),
-                              child: authState.userModel?.avatarUrl != null &&
-                                      authState.userModel!.avatarUrl!.isNotEmpty
-                                  ? ClipOval(
-                                      child: Image.network(
-                                        authState.userModel!.avatarUrl!,
-                                        width: 120,
-                                        height: 120,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return CircleAvatar(
-                                            radius: 60,
-                                            backgroundColor: Colors.white,
-                                            child: Text(
-                                              displayName.substring(0, 1).toUpperCase(),
-                                              style: const TextStyle(
-                                                fontSize: 48,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF6B4CE6),
+                              child: Padding(
+                                padding: EdgeInsets.all(isMobile ? 16 : 20),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: isDark ? 0.2 : 0.3,
+                                          ),
+                                          width: 3,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: isDark ? 0.3 : 0.15,
+                                            ),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child:
+                                          authState.userModel?.avatarUrl !=
+                                                  null &&
+                                              authState
+                                                  .userModel!
+                                                  .avatarUrl!
+                                                  .isNotEmpty
+                                          ? ClipOval(
+                                              child: Image.network(
+                                                authState.userModel!.avatarUrl!,
+                                                width: isMobile ? 72 : 88,
+                                                height: isMobile ? 72 : 88,
+                                                fit: BoxFit.cover,
+                                                loadingBuilder: (context, child, loadingProgress) {
+                                                  if (loadingProgress == null) {
+                                                    return child;
+                                                  }
+                                                  return CircleAvatar(
+                                                    radius: isMobile ? 36 : 44,
+                                                    backgroundColor: isDark
+                                                        ? AppColors.primary
+                                                        : Colors.white,
+                                                    child: CircularProgressIndicator(
+                                                      value:
+                                                          loadingProgress
+                                                                  .expectedTotalBytes !=
+                                                              null
+                                                          ? loadingProgress
+                                                                    .cumulativeBytesLoaded /
+                                                                loadingProgress
+                                                                    .expectedTotalBytes!
+                                                          : null,
+                                                      strokeWidth: 2,
+                                                      color: isDark
+                                                          ? Colors.white
+                                                          : AppColors.primary,
+                                                    ),
+                                                  );
+                                                },
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) {
+                                                      return CircleAvatar(
+                                                        radius: isMobile
+                                                            ? 36
+                                                            : 44,
+                                                        backgroundColor: isDark
+                                                            ? AppColors.primary
+                                                            : Colors.white,
+                                                        child: Text(
+                                                          displayName.isNotEmpty
+                                                              ? displayName
+                                                                    .substring(
+                                                                      0,
+                                                                      1,
+                                                                    )
+                                                                    .toUpperCase()
+                                                              : '?',
+                                                          style: TextStyle(
+                                                            fontSize: isMobile
+                                                                ? 28
+                                                                : 34,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: isDark
+                                                                ? Colors.white
+                                                                : AppColors
+                                                                      .primary,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                              ),
+                                            )
+                                          : CircleAvatar(
+                                              radius: isMobile ? 36 : 44,
+                                              backgroundColor: isDark
+                                                  ? AppColors.primary
+                                                  : Colors.white,
+                                              child: Text(
+                                                displayName.isNotEmpty
+                                                    ? displayName
+                                                          .substring(0, 1)
+                                                          .toUpperCase()
+                                                    : '?',
+                                                style: TextStyle(
+                                                  fontSize: isMobile ? 28 : 34,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : AppColors.primary,
+                                                ),
                                               ),
                                             ),
-                                          );
-                                        },
+                                    ),
+                                    SizedBox(height: isMobile ? 12 : 14),
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: isMobile
+                                            ? double.infinity
+                                            : 400,
                                       ),
-                                    )
-                                  : CircleAvatar(
-                                      radius: 60,
-                                      backgroundColor: Colors.white,
                                       child: Text(
-                                        displayName.substring(0, 1).toUpperCase(),
-                                        style: const TextStyle(
-                                          fontSize: 48,
+                                        displayName,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: isMobile ? 20 : 22,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFF6B4CE6),
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ),
-                            ),
-                            const SizedBox(height: 20),
-                            ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: isMobile ? double.infinity : 400,
-                              ),
-                              child: Text(
-                                displayName,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: isDark ? 0.15 : 0.2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Text(
+                                        email,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: isMobile ? 12 : 13,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.9,
+                                          ),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                email,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.white.withAlpha((0.95 * 255).toInt()),
-                                  fontWeight: FontWeight.w500,
-                                ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Account settings
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
                               ),
                             ),
-                          ],
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
+                          ),
+                          child: Column(
+                            children: [
+                              PremiumListTile(
+                                icon: Icons.person_outline,
+                                title: l10n.ownerProfileEditProfile,
+                                subtitle: isAnonymous
+                                    ? l10n.ownerProfileEditProfileSubtitleAnonymous
+                                    : l10n.ownerProfileEditProfileSubtitle,
+                                onTap: isAnonymous
+                                    ? null
+                                    : () =>
+                                          context.push(OwnerRoutes.profileEdit),
+                              ),
+                              if (!isAnonymous) ...[
+                                Divider(
+                                  height: 1,
+                                  indent: 72,
+                                  color: theme.dividerColor,
+                                ),
+                                PremiumListTile(
+                                  icon: Icons.lock_outline,
+                                  title: l10n.ownerProfileChangePassword,
+                                  subtitle:
+                                      l10n.ownerProfileChangePasswordSubtitle,
+                                  onTap: () => context.push(
+                                    OwnerRoutes.profileChangePassword,
+                                  ),
+                                ),
+                              ],
+                              Divider(
+                                height: 1,
+                                indent: 72,
+                                color: theme.dividerColor,
+                              ),
+                              PremiumListTile(
+                                icon: Icons.notifications_outlined,
+                                title: l10n.ownerProfileNotificationSettings,
+                                subtitle: l10n
+                                    .ownerProfileNotificationSettingsSubtitle,
+                                onTap: () =>
+                                    showNotificationSettingsBottomSheet(
+                                      context,
+                                      ref,
+                                    ),
+                                isLast: true,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                const SizedBox(height: 24),
+                        const SizedBox(height: 12),
 
-                    // Account settings - Premium
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.15 * 255).toInt()),
-                          width: 1,
+                        // App settings
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
+                          ),
+                          child: Column(
+                            children: [
+                              PremiumListTile(
+                                icon: Icons.language,
+                                title: l10n.ownerProfileLanguage,
+                                subtitle: languageName,
+                                onTap: () => showLanguageSelectionBottomSheet(
+                                  context,
+                                  ref,
+                                ),
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 56,
+                                color: theme.dividerColor,
+                              ),
+                              PremiumListTile(
+                                icon: Icons.brightness_6_outlined,
+                                title: l10n.ownerProfileTheme,
+                                subtitle: themeName,
+                                onTap: () =>
+                                    showThemeSelectionBottomSheet(context, ref),
+                                isLast: true,
+                              ),
+                            ],
+                          ),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha((0.04 * 255).toInt()),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _PremiumListTile(
-                            icon: Icons.person_outline,
-                            title: 'Edit Profile',
-                            subtitle: 'Update your personal information',
-                            onTap: () => context.push(OwnerRoutes.profileEdit),
-                          ),
-                          const Divider(height: 1, indent: 72),
-                          _PremiumListTile(
-                            icon: Icons.lock_outline,
-                            title: 'Change Password',
-                            subtitle: 'Update your password',
-                            onTap: () => context.push(OwnerRoutes.profileChangePassword),
-                          ),
-                          const Divider(height: 1, indent: 72),
-                          _PremiumListTile(
-                            icon: Icons.notifications_outlined,
-                            title: 'Notification Settings',
-                            subtitle: 'Manage your notifications',
-                            onTap: () => context.push(OwnerRoutes.profileNotifications),
-                            isLast: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                const SizedBox(height: 20),
+                        const SizedBox(height: 12),
 
-                    // App settings - Premium
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.15 * 255).toInt()),
-                          width: 1,
+                        // Account actions
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
+                          ),
+                          child: Column(
+                            children: [
+                              PremiumListTile(
+                                icon: Icons.help_outline,
+                                title: l10n.ownerProfileHelpSupport,
+                                subtitle: l10n.ownerProfileHelpSupportSubtitle,
+                                onTap: () {
+                                  ErrorDisplayUtils.showInfoSnackBar(
+                                    context,
+                                    l10n.ownerProfileHelpSupportComingSoon,
+                                  );
+                                },
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 56,
+                                color: theme.dividerColor,
+                              ),
+                              PremiumListTile(
+                                icon: Icons.info_outline,
+                                title: l10n.ownerProfileAbout,
+                                subtitle: l10n.ownerProfileAboutSubtitle,
+                                onTap: () => context.push(OwnerRoutes.about),
+                                isLast: true,
+                              ),
+                            ],
+                          ),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha((0.04 * 255).toInt()),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _PremiumListTile(
-                            icon: Icons.language,
-                            title: 'Language',
-                            subtitle: languageName,
-                            onTap: () => showLanguageSelectionBottomSheet(context, ref),
-                          ),
-                          const Divider(height: 1, indent: 72),
-                          _PremiumListTile(
-                            icon: Icons.brightness_6_outlined,
-                            title: 'Theme',
-                            subtitle: themeName,
-                            onTap: () => showThemeSelectionBottomSheet(context, ref),
-                            isLast: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                const SizedBox(height: 20),
+                        const SizedBox(height: 12),
 
-                    // Account actions - Premium
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.15 * 255).toInt()),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha((0.04 * 255).toInt()),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                        // Logout section - separate for emphasis
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          _PremiumListTile(
-                            icon: Icons.help_outline,
-                            title: 'Help & Support',
-                            subtitle: 'Get help with the app',
-                            onTap: () {
-                              ErrorDisplayUtils.showInfoSnackBar(
-                                context,
-                                'Help & Support coming soon',
-                              );
-                            },
-                          ),
-                          const Divider(height: 1, indent: 72),
-                          _PremiumListTile(
-                            icon: Icons.info_outline,
-                            title: 'About',
-                            subtitle: 'App information',
-                            onTap: () {
-                              ErrorDisplayUtils.showInfoSnackBar(
-                                context,
-                                'About coming soon',
-                              );
-                            },
-                          ),
-                          const Divider(height: 1, indent: 72),
-                          _LogoutTile(
+                          child: LogoutTile(
+                            title: l10n.ownerProfileLogout,
+                            subtitle: l10n.ownerProfileLogoutSubtitle,
                             onLogout: () async {
-                              await ref.read(enhancedAuthProvider.notifier).signOut();
+                              await ref
+                                  .read(enhancedAuthProvider.notifier)
+                                  .signOut();
                               if (context.mounted) {
                                 context.go(OwnerRoutes.login);
                               }
                             },
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                      ],
-                    );
-                  },
-                );
-              },
-              loading: () {
-                final theme = Theme.of(context);
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Učitavanje profila...',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              error: (error, stack) {
-                final theme = Theme.of(context);
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: theme.colorScheme.error,
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Greška pri učitavanju profila',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.error,
-                          ),
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          '$error',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
+
+                        // Legal Documents
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.gradients.sectionBorder.withAlpha(
+                                (0.5 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            children: [
+                              PremiumListTile(
+                                icon: Icons.description_outlined,
+                                title: l10n.ownerProfileTermsConditions,
+                                subtitle:
+                                    l10n.ownerProfileTermsConditionsSubtitle,
+                                onTap: () =>
+                                    context.push(OwnerRoutes.termsConditions),
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 56,
+                                color: theme.dividerColor,
+                              ),
+                              PremiumListTile(
+                                icon: Icons.privacy_tip_outlined,
+                                title: l10n.ownerProfilePrivacyPolicy,
+                                subtitle:
+                                    l10n.ownerProfilePrivacyPolicySubtitle,
+                                onTap: () =>
+                                    context.push(OwnerRoutes.privacyPolicy),
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 56,
+                                color: theme.dividerColor,
+                              ),
+                              PremiumListTile(
+                                icon: Icons.cookie_outlined,
+                                title: l10n.ownerProfileCookiesPolicy,
+                                subtitle:
+                                    l10n.ownerProfileCookiesPolicySubtitle,
+                                onTap: () =>
+                                    context.push(OwnerRoutes.cookiesPolicy),
+                                isLast: true,
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 32),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            OutlinedButton.icon(
-                              onPressed: () => Navigator.pop(context),
-                              icon: const Icon(Icons.arrow_back),
-                              label: const Text('Nazad'),
-                            ),
-                            const SizedBox(width: 12),
-                            FilledButton.icon(
-                              onPressed: () => ref.invalidate(userProfileProvider),
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Pokušaj ponovo'),
-                            ),
-                          ],
-                        ),
+                        const SizedBox(height: 24),
                       ],
                     ),
-                  ),
-                );
-              },
-            ),
-    );
-  }
-}
-
-/// Premium List Tile widget
-class _PremiumListTile extends StatefulWidget {
-  final IconData icon;
-  final String title;
-  final dynamic subtitle;
-  final Widget? trailing;
-  final VoidCallback onTap;
-  final bool isLast;
-
-  const _PremiumListTile({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.subtitle,
-    this.trailing,
-    this.isLast = false,
-  });
-
-  @override
-  State<_PremiumListTile> createState() => _PremiumListTileState();
-}
-
-class _PremiumListTileState extends State<_PremiumListTile> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: _isHovered
-              ? const Color(0xFF6B4CE6).withAlpha((0.04 * 255).toInt())
-              : Colors.transparent,
-          borderRadius: widget.isLast
-              ? const BorderRadius.only(
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                )
-              : BorderRadius.zero,
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 12,
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              widget.icon,
-              color: const Color(0xFF6B4CE6),
-              size: 22,
-            ),
-          ),
-          title: Text(
-            widget.title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          subtitle: widget.subtitle is String
-              ? Text(
-                  widget.subtitle as String,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-                  ),
-                )
-              : widget.subtitle as Widget?,
-          trailing: widget.trailing ??
-              Icon(
-                Icons.chevron_right_rounded,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).toInt()),
+                  );
+                },
               ),
-          onTap: widget.onTap,
-        ),
-      ),
-    );
-  }
-}
-
-/// Premium Logout Tile
-class _LogoutTile extends StatefulWidget {
-  final VoidCallback onLogout;
-
-  const _LogoutTile({required this.onLogout});
-
-  @override
-  State<_LogoutTile> createState() => _LogoutTileState();
-}
-
-class _LogoutTileState extends State<_LogoutTile> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: _isHovered
-              ? const Color(0xFFEF4444).withAlpha((0.06 * 255).toInt())
-              : Colors.transparent,
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(16),
-            bottomRight: Radius.circular(16),
-          ),
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 12,
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEF4444).withAlpha((0.1 * 255).toInt()),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.logout_rounded,
-              color: Color(0xFFEF4444),
-              size: 22,
-            ),
-          ),
-          title: const Text(
-            'Logout',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFFEF4444),
-            ),
-          ),
-          subtitle: Text(
-            'Sign out of your account',
-            style: TextStyle(
-              fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).toInt()),
-            ),
-          ),
-          trailing: const Icon(
-            Icons.chevron_right_rounded,
-            color: Color(0xFFEF4444),
-          ),
-          onTap: widget.onLogout,
-        ),
       ),
     );
   }

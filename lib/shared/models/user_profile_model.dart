@@ -33,12 +33,16 @@ class SocialLinks with _$SocialLinks {
 /// Company details for property owners
 @freezed
 class CompanyDetails with _$CompanyDetails {
+  const CompanyDetails._();
+
   const factory CompanyDetails({
     @Default('') String companyName,
     @Default('') String taxId,
     @Default('') String vatId,
     @Default('') String bankAccountIban,
     @Default('') String swift,
+    @Default('') String bankName,
+    @Default('') String accountHolder,
     @Default(Address()) Address address,
     DateTime? updatedAt,
   }) = _CompanyDetails;
@@ -53,6 +57,8 @@ class CompanyDetails with _$CompanyDetails {
       vatId: data['vatId'] as String? ?? '',
       bankAccountIban: data['bankAccountIban'] as String? ?? '',
       swift: data['swift'] as String? ?? '',
+      bankName: data['bankName'] as String? ?? '',
+      accountHolder: data['accountHolder'] as String? ?? '',
       address: data['address'] != null
           ? Address.fromJson(data['address'] as Map<String, dynamic>)
           : const Address(),
@@ -60,6 +66,13 @@ class CompanyDetails with _$CompanyDetails {
           ? (data['updatedAt'] as Timestamp).toDate()
           : null,
     );
+  }
+
+  /// Check if bank details are complete for bank transfer payments
+  bool get hasBankDetails {
+    return bankAccountIban.isNotEmpty &&
+        bankName.isNotEmpty &&
+        accountHolder.isNotEmpty;
   }
 }
 
@@ -83,10 +96,7 @@ class UserProfile with _$UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) =>
       _$UserProfileFromJson(json);
 
-  factory UserProfile.fromFirestore(
-    String userId,
-    Map<String, dynamic> data,
-  ) {
+  factory UserProfile.fromFirestore(String userId, Map<String, dynamic> data) {
     return UserProfile(
       userId: userId,
       displayName: data['displayName'] as String? ?? '',

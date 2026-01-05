@@ -1,0 +1,19 @@
+[
+  {
+    "origin": [
+      "https://bookbed.io",
+      "https://www.bookbed.io",
+      "https://app.bookbed.io",
+      "https://view.bookbed.io",
+      "http://localhost:5000",
+      "http://localhost:3000",
+      "http://localhost:8081",
+      "http://127.0.0.1:5000",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:8081"
+    ],
+    "method": ["GET", "HEAD"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"]
+  }
+]

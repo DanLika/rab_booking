@@ -1,3 +1,322 @@
 {
-  "firestore-explorer.serviceAccountKeyPath": " c:\\Users\\W10\\dusko1\\rab_booking\\.vscode\\settings.json"
+  // ============================================
+  // CLAUDE CODE CONFIGURATION
+  // ============================================
+
+  // Claude Code Auto-Approval Settings
+  "claudeCode.autoApprove": {
+    // Git commands (safe read-only operations)
+    "bash": [
+      "git status",
+      "git log*",
+      "git diff*",
+      "git show*",
+      "git branch*",
+      "git blame*",
+
+      // Flutter commands
+      "flutter analyze",
+      "flutter test",
+      "flutter pub get",
+      "flutter pub deps",
+      "flutter clean",
+      "flutter doctor",
+      "dart format*",
+      "dart fix*",
+      "dart analyze*",
+
+      // Process management
+      "ps aux*",
+      "lsof*",
+      "pkill*",
+
+      // File operations (read-only)
+      "ls*",
+      "find*",
+      "cat*",
+      "grep*",
+      "rg*"
+    ],
+
+    // Allow Read tool without asking
+    "read": true,
+
+    // Allow Glob (file pattern search) without asking
+    "glob": true,
+
+    // Allow Grep (code search) without asking
+    "grep": true
+  },
+
+  // Claude Code Thinking Mode (always use for better reasoning)
+  "claudeCode.thinkingMode": "interleaved",
+
+  // Default to Sonnet model (best balance of speed/quality)
+  "claudeCode.model": "sonnet",
+
+  // Enable Task tool for complex operations
+  "claudeCode.useTaskTool": true,
+
+  // ============================================
+  // FLUTTER & DART CONFIGURATION
+  // ============================================
+
+  // Auto format Dart files on save
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.rulers": [80, 120],
+    "editor.selectionHighlight": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.suggestSelection": "first",
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.acceptSuggestionOnCommitCharacter": true,
+    "editor.acceptSuggestionOnEnter": "on",
+    "editor.snippetSuggestions": "top"
+  },
+
+  // ============================================
+  // FLUTTER HOT RELOAD & PERFORMANCE
+  // ============================================
+
+  // Hot reload on save (instant feedback)
+  "dart.flutterHotReloadOnSave": "always",
+
+  // Hot restart when hot reload fails
+  "dart.flutterHotRestartOnSave": "never",
+
+  // Run DevTools automatically when debugging
+  "dart.openDevTools": "flutter",
+
+  // DevTools theme (match VS Code theme)
+  "dart.devToolsTheme": "dark",
+
+  // Browser for DevTools (use Chrome for best performance)
+  "dart.devToolsBrowser": "chrome",
+
+  // Open DevTools in browser (faster than embedded)
+  "dart.embedDevTools": false,
+
+  // ============================================
+  // FLUTTER WEB OPTIMIZATION
+  // ============================================
+
+  // Use CanvasKit for better web rendering (Flutter Web)
+  "dart.flutterWebRenderer": "canvaskit",
+
+  // Additional Flutter run args for web
+  "dart.flutterAdditionalArgs": [
+    "--dart-define=FLUTTER_WEB_USE_SKIA=true"
+  ],
+
+  // ============================================
+  // DART ANALYZER & LINTER
+  // ============================================
+
+  // Line length (matches Flutter style)
+  "dart.lineLength": 120,
+
+  // Show TODOs in problems panel
+  "dart.showTodos": true,
+
+  // Show ignored files in outline
+  "dart.showIgnoredFiles": false,
+
+  // Enable completion for SDK APIs
+  "dart.completeFunctionCalls": true,
+
+  // Insert argument placeholders in completions
+  "dart.insertArgumentPlaceholders": true,
+
+  // Enable snippets
+  "dart.enableSnippets": true,
+
+  // Enable SDK formatters
+  "dart.enableSdkFormatter": true,
+
+  // ============================================
+  // FLUTTER WIDGET INSPECTOR
+  // ============================================
+
+  // Show Flutter UI guides in editor
+  "dart.previewFlutterUiGuides": true,
+
+  // Track widget creation locations
+  "dart.previewFlutterUiGuidesCustomTracking": true,
+
+  // Show Flutter outline
+  "dart.flutterOutline": true,
+
+  // Show color decorators (for Color() widgets)
+  "dart.showDartDeveloperLogs": true,
+
+  // ============================================
+  // DEBUGGING & DEVTOOLS
+  // ============================================
+
+  // Debug external packages (node_modules, pub packages)
+  "dart.debugExternalPackageLibraries": true,
+
+  // Don't debug SDK libraries (faster debugging)
+  "dart.debugSdkLibraries": false,
+
+  // Evaluate getters in debug views
+  "dart.evaluateGettersInDebugViews": true,
+
+  // Evaluate toString in debug views
+  "dart.evaluateToStringInDebugViews": true,
+
+  // VM service log file (for debugging DevTools issues)
+  "dart.vmAdditionalArgs": [
+    "--observe",
+    "--pause-isolates-on-start"
+  ],
+
+  // ============================================
+  // CODE COMPLETION & INTELLISENSE
+  // ============================================
+
+  // Show method signatures
+  "dart.showMethodSignature": true,
+
+  // Trigger signature help automatically
+  "dart.triggerSignatureHelpAutomatically": true,
+
+  // Use LSP (Language Server Protocol) - faster
+  "dart.useLsp": true,
+
+  // Analyze all open files (better error detection)
+  "dart.analyzeAngularTemplates": true,
+
+  // Maximum number of concurrent analysis operations
+  "dart.analysisMaxCpu": 4,
+
+  // ============================================
+  // FLUTTER TESTING
+  // ============================================
+
+  // Run tests in additional args
+  "dart.flutterTestAdditionalArgs": [
+    "--coverage",
+    "--reporter=expanded"
+  ],
+
+  // ============================================
+  // GITLENS CONFIGURATION
+  // ============================================
+
+  // GitLens - Shows git blame, history inline
+  "gitlens.currentLine.enabled": true,
+  "gitlens.codeLens.enabled": true,
+  "gitlens.codeLens.authors.enabled": true,
+  "gitlens.codeLens.recentChange.enabled": true,
+  "gitlens.hovers.currentLine.over": "line",
+  "gitlens.blame.format": "${author}, ${date}",
+  "gitlens.blame.highlight.enabled": true,
+
+  // ============================================
+  // ERROR LENS CONFIGURATION
+  // ============================================
+
+  // Error Lens - Shows errors inline (helps Claude see errors immediately)
+  "errorLens.enabled": true,
+  "errorLens.enabledDiagnosticLevels": ["error", "warning", "info"],
+  "errorLens.followCursor": "allLines",
+  "errorLens.gutterIconsEnabled": true,
+
+  // ============================================
+  // TODO TREE CONFIGURATION
+  // ============================================
+
+  // TODO Tree - Helps Claude find TODO, FIXME, BUG comments
+  "todo-tree.general.tags": [
+    "TODO",
+    "FIXME",
+    "BUG",
+    "HACK",
+    "NOTE",
+    "XXX",
+    "OPTIMIZE",
+    "REVIEW"
+  ],
+  "todo-tree.highlights.defaultHighlight": {
+    "icon": "alert",
+    "type": "text",
+    "foreground": "#000000",
+    "background": "#ffff00",
+    "opacity": 50
+  },
+  "todo-tree.highlights.customHighlight": {
+    "TODO": {
+      "icon": "check",
+      "foreground": "#000000",
+      "background": "#ffff00"
+    },
+    "FIXME": {
+      "icon": "alert",
+      "foreground": "#ffffff",
+      "background": "#ff0000"
+    },
+    "BUG": {
+      "icon": "bug",
+      "foreground": "#ffffff",
+      "background": "#ff0000"
+    },
+    "OPTIMIZE": {
+      "icon": "zap",
+      "foreground": "#000000",
+      "background": "#00ff00"
+    }
+  },
+
+  // ============================================
+  // FIRESTORE EXPLORER CONFIGURATION
+  // ============================================
+
+  // Firestore explorer settings (already configured)
+  "vsfire.showFirestoreData": true,
+
+  // ============================================
+  // GENERAL IDE CONFIGURATION
+  // ============================================
+
+  // Show file path in breadcrumbs (helps Claude navigate)
+  "breadcrumbs.enabled": true,
+  "breadcrumbs.filePath": "on",
+
+  // File nesting (cleaner file explorer)
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "pubspec.yaml": "pubspec.lock, .flutter-plugins, .flutter-plugins-dependencies, .packages",
+    "*.dart": "${capture}.g.dart, ${capture}.freezed.dart"
+  },
+
+  // Auto save (helps with hot reload)
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+
+  // Exclude from search (faster searches for Claude)
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+    "**/.dart_tool": true,
+    "**/build": true,
+    "**/.flutter-plugins": true,
+    "**/.flutter-plugins-dependencies": true,
+    "**/ios/Pods": true,
+    "**/android/.gradle": true
+  },
+
+  // Terminal integration
+  "terminal.integrated.env.osx": {
+    "FIG_NEW_SESSION": "1"
+  }
 }

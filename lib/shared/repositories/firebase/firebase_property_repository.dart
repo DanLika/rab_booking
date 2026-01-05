@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../property_repository.dart';
 import '../../models/property_model.dart';
+import '../../../core/exceptions/app_exceptions.dart';
 
 /// Firebase implementation of PropertyRepository
 class FirebasePropertyRepository implements PropertyRepository {
@@ -10,8 +11,12 @@ class FirebasePropertyRepository implements PropertyRepository {
   FirebasePropertyRepository(this._firestore);
 
   @override
-  Future<List<PropertyModel>> fetchProperties([PropertyFilters? filters]) async {
-    var query = _firestore.collection('properties').where('id', isNotEqualTo: '');
+  Future<List<PropertyModel>> fetchProperties([
+    PropertyFilters? filters,
+  ]) async {
+    var query = _firestore
+        .collection('properties')
+        .where('id', isNotEqualTo: '');
 
     if (filters?.ownerId != null) {
       query = query.where('owner_id', isEqualTo: filters!.ownerId);
@@ -22,7 +27,10 @@ class FirebasePropertyRepository implements PropertyRepository {
     }
 
     if (filters?.minGuests != null) {
-      query = query.where('max_guests', isGreaterThanOrEqualTo: filters!.minGuests);
+      query = query.where(
+        'max_guests',
+        isGreaterThanOrEqualTo: filters!.minGuests,
+      );
     }
 
     final snapshot = await query.get();
@@ -33,17 +41,27 @@ class FirebasePropertyRepository implements PropertyRepository {
     // Client-side filtering for complex conditions
     if (filters != null) {
       if (filters.minPrice != null) {
-        properties = properties.where((p) => (p.pricePerNight ?? 0) >= filters.minPrice!).toList();
+        properties = properties
+            .where((p) => (p.pricePerNight ?? 0) >= filters.minPrice!)
+            .toList();
       }
       if (filters.maxPrice != null) {
-        properties = properties.where((p) => (p.pricePerNight ?? double.infinity) <= filters.maxPrice!).toList();
+        properties = properties
+            .where(
+              (p) => (p.pricePerNight ?? double.infinity) <= filters.maxPrice!,
+            )
+            .toList();
       }
       if (filters.minRating != null) {
-        properties = properties.where((p) => p.rating >= filters.minRating!).toList();
+        properties = properties
+            .where((p) => p.rating >= filters.minRating!)
+            .toList();
       }
       if (filters.amenities != null && filters.amenities!.isNotEmpty) {
         properties = properties.where((p) {
-          return filters.amenities!.every((amenity) => p.amenities.contains(amenity));
+          return filters.amenities!.every(
+            (amenity) => p.amenities.contains(amenity),
+          );
         }).toList();
       }
     }
@@ -71,13 +89,18 @@ class FirebasePropertyRepository implements PropertyRepository {
 
   @override
   Future<PropertyModel> createProperty(PropertyModel property) async {
-    final docRef = await _firestore.collection('properties').add(property.toJson());
+    final docRef = await _firestore
+        .collection('properties')
+        .add(property.toJson());
     return property.copyWith(id: docRef.id);
   }
 
   @override
   Future<PropertyModel> updateProperty(PropertyModel property) async {
-    await _firestore.collection('properties').doc(property.id).update(property.toJson());
+    await _firestore
+        .collection('properties')
+        .doc(property.id)
+        .update(property.toJson());
     return property;
   }
 
@@ -145,7 +168,9 @@ class FirebasePropertyRepository implements PropertyRepository {
   @override
   Future<PropertyModel> togglePropertyStatus(String id, bool isActive) async {
     final doc = await _firestore.collection('properties').doc(id).get();
-    if (!doc.exists) throw Exception('Property not found');
+    if (!doc.exists) {
+      throw PropertyException('Property not found', code: 'property/not-found');
+    }
 
     final property = PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
     final updated = property.copyWith(isActive: isActive);
@@ -155,27 +180,36 @@ class FirebasePropertyRepository implements PropertyRepository {
   }
 
   @override
-  Future<PropertyModel> updatePropertyRating(String id, double rating, int reviewCount) async {
+  Future<PropertyModel> updatePropertyRating(
+    String id,
+    double rating,
+    int reviewCount,
+  ) async {
     final doc = await _firestore.collection('properties').doc(id).get();
-    if (!doc.exists) throw Exception('Property not found');
+    if (!doc.exists) {
+      throw PropertyException('Property not found', code: 'property/not-found');
+    }
 
     final property = PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
-    final updated = property.copyWith(
-      rating: rating,
-      reviewCount: reviewCount,
-    );
+    final updated = property.copyWith(rating: rating, reviewCount: reviewCount);
 
     await _firestore.collection('properties').doc(id).update(updated.toJson());
     return updated;
   }
 
   /// Calculate distance between two coordinates (Haversine formula)
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const double earthRadius = 6371; // km
     final dLat = _degreesToRadians(lat2 - lat1);
     final dLon = _degreesToRadians(lon2 - lon1);
 
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_degreesToRadians(lat1)) *
             math.cos(_degreesToRadians(lat2)) *
             math.sin(dLon / 2) *
@@ -187,5 +221,19 @@ class FirebasePropertyRepository implements PropertyRepository {
 
   double _degreesToRadians(double degrees) {
     return degrees * math.pi / 180;
+  }
+
+  @override
+  Future<PropertyModel?> fetchPropertyBySubdomain(String subdomain) async {
+    final snapshot = await _firestore
+        .collection('properties')
+        .where('subdomain', isEqualTo: subdomain)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+
+    final doc = snapshot.docs.first;
+    return PropertyModel.fromJson({...doc.data(), 'id': doc.id});
   }
 }

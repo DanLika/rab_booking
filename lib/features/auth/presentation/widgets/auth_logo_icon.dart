@@ -1,143 +1,160 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
+import '../../../../core/theme/app_colors.dart';
 
 /// Custom animated logo icon for auth screens
 /// Combines house + key with gradient and pulse animation
-class AuthLogoIcon extends StatefulWidget {
+///
+/// Uses flutter_animate for scale pulse and glow opacity animation.
+class AuthLogoIcon extends StatelessWidget {
   final double size;
   final bool isWhite;
+
+  /// If true, uses minimalistic black/white colors (for preloader)
+  /// If false, uses brand purple colors (for login/register pages)
+  final bool useMinimalistic;
 
   const AuthLogoIcon({
     super.key,
     this.size = 100,
     this.isWhite = false,
+    this.useMinimalistic = false,
   });
 
   @override
-  State<AuthLogoIcon> createState() => _AuthLogoIconState();
-}
-
-class _AuthLogoIconState extends State<AuthLogoIcon>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _glowAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
-
-    _glowAnimation = Tween<double>(
-      begin: 0.3,
-      end: 0.6,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _pulseAnimation.value,
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: widget.isWhite
-                      ? Colors.white.withAlpha(((_glowAnimation.value * 255 * 0.3).toInt()))
-                      : const Color(0xFFB8A1F5).withAlpha(((_glowAnimation.value * 255 * 0.25).toInt())),
-                  blurRadius: 20,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: CustomPaint(
-              painter: _LogoPainter(isWhite: widget.isWhite),
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    // Determine logo color based on mode
+    final Color logoColor;
+    if (useMinimalistic) {
+      // Minimalistic: Use black in light mode, white in dark mode (for preloader)
+      logoColor = isWhite
+          ? Colors.white
+          : (isDarkMode ? Colors.white : Colors.black);
+    } else {
+      // Colorized: Use brand purple colors (for login/register pages)
+      logoColor = isWhite
+          ? Colors.white
+          : (isDarkMode ? AppColors.primaryLight : AppColors.primary);
+    }
+
+    return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: logoColor.withAlpha((0.3 * 255 * 0.25).toInt()),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: CustomPaint(
+            painter: _LogoPainter(
+              isWhite: isWhite,
+              isDarkMode: isDarkMode,
+              useMinimalistic: useMinimalistic,
             ),
           ),
+        )
+        .animate(onPlay: (controller) => controller.repeat(reverse: true))
+        .scale(
+          duration: const Duration(seconds: 3),
+          begin: const Offset(1.0, 1.0),
+          end: const Offset(1.05, 1.05),
+          curve: Curves.easeInOut,
+        )
+        .custom(
+          delay: Duration.zero, // Run simultaneously with scale
+          duration: const Duration(seconds: 3),
+          curve: Curves.easeInOut,
+          builder: (context, value, child) {
+            // Animate glow opacity from 0.3 to 0.6
+            final glowOpacity = 0.3 + (value * 0.3);
+            return Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: logoColor.withAlpha(
+                      (glowOpacity * 255 * 0.25).toInt(),
+                    ),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: child,
+            );
+          },
         );
-      },
-    );
   }
 }
 
 class _LogoPainter extends CustomPainter {
   final bool isWhite;
+  final bool isDarkMode;
+  final bool useMinimalistic;
 
-  _LogoPainter({this.isWhite = false});
+  _LogoPainter({
+    this.isWhite = false,
+    required this.isDarkMode,
+    this.useMinimalistic = false,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Defensive check: ensure size is valid before painting
+    if (!size.width.isFinite ||
+        !size.height.isFinite ||
+        size.width <= 0 ||
+        size.height <= 0) {
+      return; // Skip painting if size is invalid
+    }
+
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width * 0.4;
 
-    // Gradient or white shader
-    final shader = isWhite
-        ? null
-        : const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF6B4CE6), // Purple
-              Color(0xFF4A90E2), // Blue
-            ],
-          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    // Determine logo color based on mode
+    final Color logoColor;
+    if (useMinimalistic) {
+      // Minimalistic: Use black in light mode, white in dark mode (for preloader)
+      logoColor = isWhite
+          ? Colors.white
+          : (isDarkMode ? Colors.white : Colors.black);
+    } else {
+      // Colorized: Use brand purple colors (for login/register pages)
+      logoColor = isWhite
+          ? Colors.white
+          : (isDarkMode ? AppColors.primaryLight : AppColors.primary);
+    }
 
     // Outer circle badge
     final circlePaint = Paint()
-      ..color = isWhite ? Colors.white : const Color(0xFF6B4CE6)
+      ..color = logoColor
       ..strokeWidth = 3.5
       ..style = PaintingStyle.stroke;
-
-    // If not white, add gradient shader
-    if (!isWhite && shader != null) {
-      circlePaint.shader = shader;
-    }
 
     canvas.drawCircle(center, radius, circlePaint);
 
     // Wave elements (representing sea/destination)
-    _drawWaves(canvas, size, shader);
+    _drawWaves(canvas, size, logoColor);
 
     // Villa roof silhouette (representing accommodation)
-    _drawVillaRoof(canvas, size, shader);
+    _drawVillaRoof(canvas, size, logoColor);
   }
 
-  void _drawWaves(Canvas canvas, Size size, Shader? shader) {
+  void _drawWaves(Canvas canvas, Size size, Color logoColor) {
     final wavePaint = Paint()
-      ..color = isWhite ? Colors.white : const Color(0xFF6B4CE6)
+      ..color = logoColor
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-
-    // Apply gradient shader if not white
-    if (!isWhite && shader != null) {
-      wavePaint.shader = shader;
-    }
 
     // Three flowing wave lines (bottom third of badge)
     final baseY = size.height * 0.65;
@@ -146,12 +163,16 @@ class _LogoPainter extends CustomPainter {
     final wave1 = Path();
     wave1.moveTo(size.width * 0.25, baseY + 10);
     wave1.quadraticBezierTo(
-      size.width * 0.37, baseY + 5,
-      size.width * 0.5, baseY + 10,
+      size.width * 0.37,
+      baseY + 5,
+      size.width * 0.5,
+      baseY + 10,
     );
     wave1.quadraticBezierTo(
-      size.width * 0.63, baseY + 15,
-      size.width * 0.75, baseY + 10,
+      size.width * 0.63,
+      baseY + 15,
+      size.width * 0.75,
+      baseY + 10,
     );
     canvas.drawPath(wave1, wavePaint);
 
@@ -159,12 +180,16 @@ class _LogoPainter extends CustomPainter {
     final wave2 = Path();
     wave2.moveTo(size.width * 0.25, baseY - 5);
     wave2.quadraticBezierTo(
-      size.width * 0.37, baseY - 10,
-      size.width * 0.5, baseY - 5,
+      size.width * 0.37,
+      baseY - 10,
+      size.width * 0.5,
+      baseY - 5,
     );
     wave2.quadraticBezierTo(
-      size.width * 0.63, baseY,
-      size.width * 0.75, baseY - 5,
+      size.width * 0.63,
+      baseY,
+      size.width * 0.75,
+      baseY - 5,
     );
     canvas.drawPath(wave2, wavePaint);
 
@@ -172,39 +197,31 @@ class _LogoPainter extends CustomPainter {
     final wave3 = Path();
     wave3.moveTo(size.width * 0.25, baseY - 20);
     wave3.quadraticBezierTo(
-      size.width * 0.37, baseY - 25,
-      size.width * 0.5, baseY - 20,
+      size.width * 0.37,
+      baseY - 25,
+      size.width * 0.5,
+      baseY - 20,
     );
     wave3.quadraticBezierTo(
-      size.width * 0.63, baseY - 15,
-      size.width * 0.75, baseY - 20,
+      size.width * 0.63,
+      baseY - 15,
+      size.width * 0.75,
+      baseY - 20,
     );
     canvas.drawPath(wave3, wavePaint);
   }
 
-  void _drawVillaRoof(Canvas canvas, Size size, Shader? shader) {
+  void _drawVillaRoof(Canvas canvas, Size size, Color logoColor) {
     final roofPaint = Paint()
-      ..color = isWhite ? Colors.white : const Color(0xFF6B4CE6)
+      ..color = logoColor
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    // Apply gradient shader if not white
-    if (!isWhite && shader != null) {
-      roofPaint.shader = shader;
-    }
-
     final fillPaint = Paint()
-      ..color = isWhite
-          ? Colors.white.withOpacity(0.2)
-          : const Color(0xFF6B4CE6).withOpacity(0.2)
+      ..color = logoColor.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill;
-
-    // Apply gradient shader for fill if not white
-    if (!isWhite && shader != null) {
-      fillPaint.shader = shader;
-    }
 
     // Modern geometric villa roof (top third of badge)
     final roofPath = Path();
@@ -221,15 +238,10 @@ class _LogoPainter extends CustomPainter {
 
     // Simple villa structure lines
     final structurePaint = Paint()
-      ..color = isWhite ? Colors.white : const Color(0xFF6B4CE6)
+      ..color = logoColor
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-
-    // Apply gradient shader if not white
-    if (!isWhite && shader != null) {
-      structurePaint.shader = shader;
-    }
 
     // Two vertical lines suggesting building
     canvas.drawLine(

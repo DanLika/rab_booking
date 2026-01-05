@@ -43,17 +43,23 @@ class ProfileValidators {
 
   // ========== PHONE VALIDATION ==========
 
-  /// Validate phone number (E.164 format: +385911234567)
+  /// Validate phone number (flexible format)
+  /// Accepts: +385911234567, 0911234567, 091-123-4567, (091) 123 4567
   static String? validatePhone(String? value) {
     if (value == null || value.trim().isEmpty) {
       return null; // Phone is optional
     }
 
-    // E.164 format: + followed by 1-15 digits
-    final e164Regex = RegExp(r'^\+[1-9]\d{1,14}$');
+    // Remove common formatting characters for validation
+    final cleaned = value.trim().replaceAll(RegExp(r'[\s\-\(\)\.]+'), '');
 
-    if (!e164Regex.hasMatch(value.trim())) {
-      return 'Phone must be in E.164 format (e.g., +385911234567)';
+    // Must have at least 6 digits (shortest valid phone numbers)
+    // and at most 15 digits (E.164 max)
+    // Can optionally start with +
+    final phoneRegex = RegExp(r'^\+?[0-9]{6,15}$');
+
+    if (!phoneRegex.hasMatch(cleaned)) {
+      return 'Please enter a valid phone number';
     }
 
     return null;

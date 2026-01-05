@@ -1,41 +1,148 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CRITICAL: interactive-widget=resizes-content for Android Chrome keyboard -->
+  <!-- This tells Chrome to resize Layout Viewport when keyboard opens/closes -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+
+  <style>
+    /* Prevent any scroll on html/body level */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    /* ========== NATIVE HTML SPLASH SCREEN ========== */
+    /* Shows IMMEDIATELY while Flutter engine loads */
+    #native-splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #FAFAFA; /* Light mode default */
+      z-index: 999999;
+      transition: opacity 0.3s ease-out;
+    }
+
+    /* Dark mode support - minimalist black/white like BookBed Loader */
+    @media (prefers-color-scheme: dark) {
+      #native-splash {
+        background-color: #000000;
+      }
+      #native-splash .splash-logo-text {
+        color: #FFFFFF;
+      }
+      #native-splash .splash-logo-icon {
+        color: #FFFFFF;
+      }
+      #native-splash .splash-logo-icon circle,
+      #native-splash .splash-logo-icon path,
+      #native-splash .splash-logo-icon line {
+        stroke: #FFFFFF;
+        fill: rgba(255, 255, 255, 0.2);
+      }
+      #native-splash .splash-progress-bg {
+        background-color: rgba(255, 255, 255, 0.2); /* white @ 20% opacity */
+      }
+      #native-splash .splash-progress-bar {
+        background-color: #FFFFFF; /* pure white */
+      }
+      #native-splash .splash-percentage {
+        color: #FFFFFF; /* pure white */
+      }
+    }
+
+    /* Logo container */
+    .splash-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    /* BookBed icon (SVG bed) */
+    .splash-logo-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 8px;
+    }
+
+    /* BookBed text */
+    .splash-logo-text {
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #1A1A1A;
+      letter-spacing: -0.5px;
+    }
+
+    /* Progress bar container */
+    .splash-progress-container {
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .splash-progress-bg {
+      width: 100%;
+      height: 4px;
+      background-color: rgba(0, 0, 0, 0.2); /* black @ 20% opacity - minimalist */
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .splash-progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #000000; /* pure black - minimalist */
+      border-radius: 2px;
+      transition: width 0.1s ease-out;
+    }
+
+    .splash-percentage {
+      margin-top: 12px;
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: #000000; /* pure black - minimalist */
+    }
+
+    /* Hidden state for fade-out */
+    #native-splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
 
   <!-- SEO Meta Tags -->
   <meta name="description" content="Discover your perfect vacation rental on the beautiful island of Rab, Croatia. Browse luxury properties, villas, and apartments with stunning Adriatic Sea views.">
   <meta name="keywords" content="Rab, Croatia, vacation rentals, holiday homes, apartments, villas, Adriatic Sea, booking">
-  <meta name="author" content="RAB Booking">
+  <meta name="author" content="BookBed">
   <meta name="robots" content="index, follow">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="RAB Booking - Luxury Vacation Rentals on Island Rab, Croatia">
+  <meta property="og:title" content="BookBed - Vacation Rental Management">
   <meta property="og:description" content="Discover your perfect vacation rental on the beautiful island of Rab. Premium properties with stunning Adriatic Sea views.">
   <meta property="og:image" content="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1200">
-  <meta property="og:url" content="https://rab-booking.sevalla.app">
+  <meta property="og:url" content="https://bookbed.io">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="RAB Booking - Luxury Vacation Rentals">
+  <meta name="twitter:title" content="BookBed - Vacation Rental Management">
   <meta name="twitter:description" content="Discover your perfect vacation rental on island Rab, Croatia">
   <meta name="twitter:image" content="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1200">
 
@@ -43,7 +150,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="RAB Booking">
+  <meta name="apple-mobile-web-app-title" content="BookBed">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -56,10 +163,462 @@
   <!-- Custom Styles -->
   <link rel="stylesheet" href="style.css">
 
-  <title>RAB Booking - Luxury Vacation Rentals on Island Rab, Croatia</title>
+  <!-- Payment Bridge for Stripe Checkout in iframes -->
+  <script src="payment_bridge.js"></script>
+
+  <title>BookBed - Vacation Rental Management</title>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!-- ========== NATIVE HTML SPLASH SCREEN ========== -->
+  <!-- Shows IMMEDIATELY while Flutter engine loads (before any JS executes) -->
+  <div id="native-splash">
+    <div class="splash-logo">
+      <!-- BookBed Logo SVG - Villa Roof + Waves (matches AuthLogoIcon) -->
+      <svg class="splash-logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer circle badge -->
+        <circle cx="50" cy="50" r="40" stroke="#000000" stroke-width="3.5" fill="none"/>
+        
+        <!-- Villa roof triangle (top third) -->
+        <path d="M 50 28 L 70 42 L 30 42 Z" fill="rgba(0, 0, 0, 0.2)" stroke="#000000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <!-- Villa structure lines -->
+        <line x1="40" y1="42" x2="40" y2="52" stroke="#000000" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="60" y1="42" x2="60" y2="52" stroke="#000000" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="30" y1="52" x2="70" y2="52" stroke="#000000" stroke-width="2.5" stroke-linecap="round"/>
+        
+        <!-- Wave 1 (bottom) -->
+        <path d="M 25 75 Q 37 70 50 75 T 75 75" stroke="#000000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        
+        <!-- Wave 2 (middle) -->
+        <path d="M 25 60 Q 37 55 50 60 T 75 60" stroke="#000000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        
+        <!-- Wave 3 (top) -->
+        <path d="M 25 45 Q 37 40 50 45 T 75 45" stroke="#000000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <span class="splash-logo-text">BookBed</span>
+    </div>
+    <div class="splash-progress-container">
+      <div class="splash-progress-bg">
+        <div class="splash-progress-bar" id="splash-progress"></div>
+      </div>
+      <span class="splash-percentage" id="splash-percentage">0%</span>
+    </div>
+  </div>
+
+  <!-- Native Splash Progress Animation -->
+  <script>
+    (function() {
+      var progress = 0;
+      var progressBar = document.getElementById('splash-progress');
+      var percentageText = document.getElementById('splash-percentage');
+      var targetProgress = 85; // Go to 85% quickly, then slow down
+      
+      // Animate progress bar
+      var interval = setInterval(function() {
+        if (progress < targetProgress) {
+          // Fast progress to 85%
+          var remaining = targetProgress - progress;
+          progress += remaining * 0.08;
+        } else if (progress < 95) {
+          // Slow crawl from 85% to 95%
+          progress += 0.1;
+        }
+        // Stop at 95%, Flutter will complete to 100%
+        
+        if (progressBar) {
+          progressBar.style.width = progress + '%';
+        }
+        if (percentageText) {
+          percentageText.textContent = Math.round(progress) + '%';
+        }
+      }, 50);
+      
+      // Store interval ID so Flutter can stop it
+      window._nativeSplashInterval = interval;
+      
+      // Function for Flutter to call when ready
+      window.hideNativeSplash = function(callback) {
+        clearInterval(window._nativeSplashInterval);
+        
+        // Animate progress from current value (85-95%) to 100%
+        var currentProgress = progress;
+        var targetProgress = 100;
+        var startTime = Date.now();
+        var animationDuration = 300; // 300ms smooth animation
+        
+        function animateTo100() {
+          var elapsed = Date.now() - startTime;
+          var t = Math.min(elapsed / animationDuration, 1);
+          
+          // Ease-out animation
+          var eased = 1 - Math.pow(1 - t, 3);
+          var newProgress = currentProgress + (targetProgress - currentProgress) * eased;
+          
+          if (progressBar) {
+            progressBar.style.width = newProgress + '%';
+          }
+          if (percentageText) {
+            percentageText.textContent = Math.round(newProgress) + '%';
+          }
+          
+          if (t < 1) {
+            requestAnimationFrame(animateTo100);
+          } else {
+            // Ensure we're exactly at 100%
+            if (progressBar) progressBar.style.width = '100%';
+            if (percentageText) percentageText.textContent = '100%';
+            
+            // Small delay to show 100% before fade-out
+            setTimeout(function() {
+              var splash = document.getElementById('native-splash');
+              if (splash) {
+                splash.classList.add('hidden');
+                // Remove from DOM after transition
+                setTimeout(function() {
+                  if (splash.parentNode) {
+                    splash.parentNode.removeChild(splash);
+                  }
+                  if (callback) callback();
+                }, 300);
+              } else if (callback) {
+                callback();
+              }
+            }, 150);
+          }
+        }
+        
+        // Start animation
+        animateTo100();
+      };
+      
+      // Safety: auto-hide after 15 seconds if Flutter fails to load
+      setTimeout(function() {
+        var splash = document.getElementById('native-splash');
+        if (splash && !splash.classList.contains('hidden')) {
+          console.warn('[SPLASH] Safety timeout - hiding after 15s');
+          window.hideNativeSplash();
+        }
+      }, 15000);
+    })();
+  </script>
+
+  <!-- PWA Install Prompt Handler -->
+  <script>
+    // Handle PWA install prompt
+    let deferredPrompt = null;
+
+    // Expose PWA state to Flutter via window properties
+    window.pwaCanInstall = false;
+    window.pwaIsInstalled = false;
+
+    // Check if already installed (standalone mode)
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      window.pwaIsInstalled = true;
+      console.log('[PWA] Already installed (standalone mode)');
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredPrompt = e;
+      window.pwaCanInstall = true;
+      console.log('[PWA] Install prompt available');
+
+      // Dispatch custom event so Flutter can listen
+      window.dispatchEvent(new CustomEvent('pwa-installable', { detail: { canInstall: true } }));
+    });
+
+    // Track when app is installed
+    window.addEventListener('appinstalled', (evt) => {
+      console.log('[PWA] App installed successfully');
+      deferredPrompt = null;
+      window.pwaCanInstall = false;
+      window.pwaIsInstalled = true;
+
+      // Dispatch event for Flutter
+      window.dispatchEvent(new CustomEvent('pwa-installed'));
+    });
+
+    // Function to trigger install prompt from Flutter
+    window.pwaPromptInstall = async function() {
+      if (!deferredPrompt) {
+        console.log('[PWA] No install prompt available');
+        return false;
+      }
+
+      try {
+        // Show the install prompt
+        deferredPrompt.prompt();
+
+        // Wait for user response
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('[PWA] User choice:', outcome);
+
+        // Clear the deferred prompt (can only be used once)
+        deferredPrompt = null;
+        window.pwaCanInstall = false;
+
+        return outcome === 'accepted';
+      } catch (e) {
+        console.error('[PWA] Error showing install prompt:', e);
+        return false;
+      }
+    };
+
+    // Flutter automatically registers its service worker via flutter_bootstrap.js
+    // No need for manual registration
+  </script>
+
+  <!-- AGGRESSIVE FIX for Flutter Issue #175074 - Android Chrome keyboard dismiss bug -->
+  <!-- Landscape-aware implementation with adaptive thresholds -->
+  <script>
+    (function() {
+      // Configuration
+      var CONFIG = {
+        portraitMinThreshold: 100,
+        landscapeMinThreshold: 50,   // Lower for landscape (50-80px typical change)
+        portraitPercentageThreshold: 0.12,   // Portrait: 12% of viewport height
+        landscapePercentageThreshold: 0.15,  // Landscape: 15% (smaller viewport needs larger %)
+        debounceMs: 100,
+        jiggleDelayLandscape: 100,
+        jiggleDelayPortrait: 50,
+        postJiggleMuteMs: 180 // Ignore rapid-fire resizes right after jiggle to avoid layout races
+      };
+
+      // Only run on Android
+      var isAndroid = /Android/i.test(navigator.userAgent);
+      if (!isAndroid) return;
+
+      var viewport = window.visualViewport;
+      if (!viewport) return;
+
+      // State tracking
+      var lastVisualHeight = 0;
+      var lastWidth = 0;
+      var debounceTimer = null;
+      var fullHeight = viewport.height;
+      var lastJiggleAt = 0;
+
+      function isLandscape() {
+        return window.innerWidth > window.innerHeight;
+      }
+
+      function getThreshold() {
+        var landscape = isLandscape();
+        var viewportHeight = viewport.height || window.innerHeight;
+        // Use orientation-specific percentage thresholds
+        var percentageThreshold = landscape
+          ? viewportHeight * CONFIG.landscapePercentageThreshold   // 15%
+          : viewportHeight * CONFIG.portraitPercentageThreshold;   // 12%
+        var minThreshold = landscape ? CONFIG.landscapeMinThreshold : CONFIG.portraitMinThreshold;
+        return Math.max(percentageThreshold, minThreshold);
+      }
+
+      // Improved jiggle using transform (no visual flicker)
+      function jiggleFlutterView() {
+        var glassPane = document.querySelector('flt-glass-pane');
+        if (!glassPane) return;
+
+        var delay = isLandscape() ? CONFIG.jiggleDelayLandscape : CONFIG.jiggleDelayPortrait;
+
+        // Apply transform jiggle (most reliable, no flicker)
+        glassPane.style.transform = 'translateX(1px)';
+
+        setTimeout(function() {
+          glassPane.style.transform = '';
+          requestAnimationFrame(function() {
+            window.dispatchEvent(new Event('resize'));
+            // Also trigger visualViewport resize if available
+            if (viewport) {
+              try {
+                viewport.dispatchEvent(new Event('resize'));
+              } catch (e) {
+                // Some browsers don't allow dispatching to visualViewport
+              }
+            }
+            lastJiggleAt = Date.now();
+          });
+        }, delay);
+      }
+
+      function handleViewportResize() {
+        // Debounce to avoid excessive calls
+        if (debounceTimer) return;
+
+        debounceTimer = setTimeout(function() {
+          debounceTimer = null;
+
+          var currentHeight = viewport.height || window.innerHeight;
+          var currentWidth = window.innerWidth;
+
+          // Throttle immediately after jiggle to avoid re-entrancy during layout
+          if (Date.now() - lastJiggleAt < CONFIG.postJiggleMuteMs) {
+            return;
+          }
+
+          // Skip if this is an orientation change (width changed significantly)
+          if (Math.abs(currentWidth - lastWidth) > 50) {
+            lastVisualHeight = currentHeight;
+            lastWidth = currentWidth;
+            fullHeight = currentHeight; // Reset full height on orientation change
+            return;
+          }
+
+          // Update full height if we see a larger value
+          if (currentHeight > fullHeight) {
+            fullHeight = currentHeight;
+          }
+
+          var heightDiff = currentHeight - lastVisualHeight;
+          var threshold = getThreshold();
+          var landscape = isLandscape();
+
+          // Debug log to trace when the jiggle triggers; remove if noisy
+          try {
+            console.debug('[KB-FIX] resize', {
+              heightDiff: Math.round(heightDiff),
+              threshold: Math.round(threshold),
+              landscape: landscape,
+              currentHeight: Math.round(currentHeight),
+              fullHeight: Math.round(fullHeight),
+              lastWidth: lastWidth
+            });
+          } catch (_) {}
+
+          // Keyboard dismissed: viewport height INCREASED significantly
+          // Safety check: ensure we're near full viewport height to avoid false positives
+          var nearFullHeightThreshold = threshold * 0.5;
+          var isNearFullHeight = currentHeight >= (fullHeight - nearFullHeightThreshold);
+
+          if (heightDiff > threshold && isNearFullHeight) {
+            console.log('[KB-FIX] ✅ Keyboard dismissed: +' + heightDiff.toFixed(0) + 'px (threshold: ' + threshold.toFixed(0) + 'px, landscape: ' + landscape + ', nearFull: ' + isNearFullHeight + ')');
+
+            // Blur active element first
+            if (document.activeElement) {
+              document.activeElement.blur();
+            }
+
+            // Jiggle Flutter view
+            jiggleFlutterView();
+
+            // Additional attempts with delays (more for landscape)
+            var delays = landscape ? [100, 200, 400] : [50, 100, 250];
+            delays.forEach(function(delay) {
+              setTimeout(jiggleFlutterView, delay);
+            });
+          }
+
+          lastVisualHeight = currentHeight;
+          lastWidth = currentWidth;
+        }, CONFIG.debounceMs);
+      }
+
+      // Initialize after Flutter loads
+      function initialize() {
+        lastVisualHeight = viewport.height || window.innerHeight;
+        lastWidth = window.innerWidth;
+        fullHeight = lastVisualHeight;
+
+        // Primary: visualViewport API (resize + scroll events)
+        if (viewport) {
+          viewport.addEventListener('resize', handleViewportResize);
+          viewport.addEventListener('scroll', handleViewportResize);
+        }
+
+        // Fallback: window resize
+        window.addEventListener('resize', handleViewportResize);
+
+        // Additional: focusout for keyboard dismiss detection
+        document.addEventListener('focusout', function(e) {
+          if (e.target && (e.target.matches('input') || e.target.matches('textarea') || e.target.matches('[contenteditable]'))) {
+            setTimeout(function() {
+              var activeElement = document.activeElement;
+              if (!activeElement || (!activeElement.matches('input') && !activeElement.matches('textarea') && !activeElement.matches('[contenteditable]'))) {
+                // No input is focused - keyboard likely dismissed
+                console.log('[KB-FIX] Focusout detected, forcing Flutter recalc');
+                jiggleFlutterView();
+              }
+            }, 150);
+          }
+        });
+
+        console.log('[KB-FIX] Android keyboard fix initialized (landscape-aware)');
+      }
+
+      // Wait for Flutter to load
+      if (document.readyState === 'loading') {
+        window.addEventListener('load', initialize);
+      } else {
+        // Already loaded, initialize immediately
+        setTimeout(initialize, 100);
+      }
+    })();
+  </script>
+
+  <!-- WebGL Error Handling - Catch CanvasKit initialization errors -->
+  <script>
+    (function() {
+      // Check WebGL support before Flutter loads
+      function checkWebGLSupport() {
+        try {
+          var canvas = document.createElement('canvas');
+          var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+          if (!gl) {
+            console.warn('[WEBGL] WebGL not supported - Flutter may fall back to HTML renderer');
+            return false;
+          }
+          // Test getParameter to ensure it's available
+          try {
+            gl.getParameter(gl.VERSION);
+            console.log('[WEBGL] WebGL support confirmed');
+            return true;
+          } catch (e) {
+            console.warn('[WEBGL] WebGL context exists but getParameter failed:', e);
+            return false;
+          }
+        } catch (e) {
+          console.warn('[WEBGL] WebGL check failed:', e);
+          return false;
+        }
+      }
+
+      // Check WebGL support early
+      var hasWebGL = checkWebGLSupport();
+
+      // Global error handler for WebGL/CanvasKit errors
+      window.addEventListener('error', function(event) {
+        var error = event.error || event.message || '';
+        var errorString = String(error);
+        
+        // Catch WebGL/CanvasKit errors and prevent them from crashing the app
+        if (errorString.includes('getParameter') ||
+            errorString.includes('WebGL') ||
+            errorString.includes('CanvasKit') ||
+            errorString.includes('MakeGrContext')) {
+          console.warn('[WEBGL] Caught WebGL/CanvasKit error (non-fatal):', error);
+          event.preventDefault(); // Prevent default error handling
+          return false; // Don't propagate
+        }
+      }, true); // Use capture phase to catch early
+
+      // Also catch unhandled promise rejections
+      window.addEventListener('unhandledrejection', function(event) {
+        var error = event.reason || '';
+        var errorString = String(error);
+        
+        if (errorString.includes('getParameter') ||
+            errorString.includes('WebGL') ||
+            errorString.includes('CanvasKit') ||
+            errorString.includes('MakeGrContext')) {
+          console.warn('[WEBGL] Caught WebGL/CanvasKit promise rejection (non-fatal):', error);
+          event.preventDefault(); // Prevent default error handling
+        }
+      });
+    })();
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

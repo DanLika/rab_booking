@@ -1,7 +1,34 @@
-import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
+import '../exceptions/app_exceptions.dart';
 
-/// Service for handling Firebase Storage operations
+/// Service for handling Firebase Storage operations.
+///
+/// Provides upload and delete operations for user content:
+/// - Profile images
+/// - Property images
+/// - Unit images
+///
+/// Usage:
+/// ```dart
+/// final service = StorageService();
+///
+/// // Upload profile image
+/// final url = await service.uploadProfileImage(
+///   userId: userId,
+///   imageBytes: bytes,
+///   fileName: 'profile.jpg',
+/// );
+///
+/// // Upload unit image
+/// final unitUrl = await service.uploadUnitImage(
+///   userId: userId,
+///   propertyId: propertyId,
+///   unitId: unitId,
+///   imageBytes: bytes,
+///   fileName: 'room.jpg',
+/// );
+/// ```
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
@@ -37,7 +64,7 @@ class StorageService {
 
       return downloadUrl;
     } catch (e) {
-      throw Exception('Failed to upload profile image: $e');
+      throw StorageException.uploadFailed('profile image', e);
     }
   }
 
@@ -49,7 +76,6 @@ class StorageService {
       await ref.delete();
     } catch (e) {
       // If delete fails, it's not critical - log and continue
-      print('Failed to delete profile image: $e');
     }
   }
 
@@ -79,7 +105,7 @@ class StorageService {
 
       return downloadUrl;
     } catch (e) {
-      throw Exception('Failed to upload property image: $e');
+      throw StorageException.uploadFailed('property image', e);
     }
   }
 
@@ -92,7 +118,8 @@ class StorageService {
     required String fileName,
   }) async {
     try {
-      final String path = 'users/$userId/properties/$propertyId/units/$unitId/$fileName';
+      final String path =
+          'users/$userId/properties/$propertyId/units/$unitId/$fileName';
       final Reference ref = _storage.ref().child(path);
 
       final SettableMetadata metadata = SettableMetadata(
@@ -111,7 +138,7 @@ class StorageService {
 
       return downloadUrl;
     } catch (e) {
-      throw Exception('Failed to upload unit image: $e');
+      throw StorageException.uploadFailed('unit image', e);
     }
   }
 }

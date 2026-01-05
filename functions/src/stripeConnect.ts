@@ -1,6 +1,8 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
 import {getStripeClient, stripeSecretKey} from "./stripe";
+import {logInfo, logError} from "./logger";
+import {setUser} from "./sentry";
 
 /**
  * Cloud Function: Create or Get Stripe Connect Account
@@ -16,6 +18,9 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
   const ownerId = request.auth.uid;
   const {returnUrl, refreshUrl} = request.data;
 
+  // Set user context for Sentry error tracking
+  setUser(ownerId);
+
   try {
     // Get owner data
     const ownerDoc = await db.collection("users").doc(ownerId).get();
@@ -28,7 +33,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
 
     // If account doesn't exist, create new Express account
     if (!stripeAccountId) {
-      console.log(`Creating new Stripe Express account for owner ${ownerId}`);
+      logInfo(`Creating new Stripe Express account for owner ${ownerId}`);
 
       const account = await getStripeClient().accounts.create({
         type: "express",
@@ -41,7 +46,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
         business_type: "individual",
         metadata: {
           owner_id: ownerId,
-          platform: "rab-booking",
+          platform: "bookbed",
         },
       });
 
@@ -53,7 +58,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
         stripe_connected_at: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      console.log(`Stripe account ${stripeAccountId} created for owner ${ownerId}`);
+      logInfo(`Stripe account ${stripeAccountId} created for owner ${ownerId}`);
     }
 
     // Create account link for onboarding or re-onboarding
@@ -70,7 +75,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
       onboardingUrl: accountLink.url,
     };
   } catch (error: any) {
-    console.error("Error creating Stripe Connect account:", error);
+    logError("Error creating Stripe Connect account", error);
     throw new HttpsError(
       "internal",
       error.message || "Failed to create Stripe account"
@@ -90,6 +95,9 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
   }
 
   const ownerId = request.auth.uid;
+
+  // Set user context for Sentry error tracking
+  setUser(ownerId);
 
   try {
     // Get owner data
@@ -131,7 +139,7 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
           })),
         };
       } catch (error) {
-        console.error("Error fetching balance:", error);
+        logError("Error fetching balance", error);
       }
     }
 
@@ -151,57 +159,10 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
       },
     };
   } catch (error: any) {
-    console.error("Error getting Stripe account status:", error);
+    logError("Error getting Stripe account status", error);
     throw new HttpsError(
       "internal",
       error.message || "Failed to get account status"
-    );
-  }
-});
-
-/**
- * Cloud Function: Create Stripe Dashboard Link
- *
- * Creates a login link to Stripe Express Dashboard
- */
-export const createStripeDashboardLink = onCall({secrets: [stripeSecretKey]}, async (request) => {
-  // Check authentication
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
-  }
-
-  const ownerId = request.auth.uid;
-
-  try {
-    // Get owner data
-    const ownerDoc = await db.collection("users").doc(ownerId).get();
-    if (!ownerDoc.exists) {
-      throw new HttpsError("not-found", "Owner not found");
-    }
-
-    const stripeAccountId = ownerDoc.data()!.stripe_account_id;
-
-    if (!stripeAccountId) {
-      throw new HttpsError(
-        "failed-precondition",
-        "No Stripe account connected"
-      );
-    }
-
-    // Create login link to Stripe Express Dashboard
-    const loginLink = await getStripeClient().accounts.createLoginLink(
-      stripeAccountId
-    );
-
-    return {
-      success: true,
-      dashboardUrl: loginLink.url,
-    };
-  } catch (error: any) {
-    console.error("Error creating Stripe dashboard link:", error);
-    throw new HttpsError(
-      "internal",
-      error.message || "Failed to create dashboard link"
     );
   }
 });
@@ -219,6 +180,9 @@ export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey]}, asyn
 
   const ownerId = request.auth.uid;
 
+  // Set user context for Sentry error tracking
+  setUser(ownerId);
+
   try {
     // Get owner data
     const ownerDoc = await db.collection("users").doc(ownerId).get();
@@ -235,91 +199,26 @@ export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey]}, asyn
       );
     }
 
-    // Delete the account from Stripe
-    await getStripeClient().accounts.del(stripeAccountId);
-
-    // Remove from Firestore
+    // Remove integration from Firestore only
+    // NOTE: We do NOT delete the Stripe account itself - it remains active
+    // and the owner can continue using it independently or reconnect later
     await db.collection("users").doc(ownerId).update({
       stripe_account_id: admin.firestore.FieldValue.delete(),
       stripe_connected_at: admin.firestore.FieldValue.delete(),
       stripe_disconnected_at: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    console.log(`Stripe account ${stripeAccountId} disconnected for owner ${ownerId}`);
+    logInfo(`Stripe integration removed for owner ${ownerId}. Account ${stripeAccountId} remains active.`);
 
     return {
       success: true,
-      message: "Stripe account disconnected successfully",
+      message: "Stripe integracija uklonjena. Vaš Stripe račun ostaje aktivan.",
     };
   } catch (error: any) {
-    console.error("Error disconnecting Stripe account:", error);
+    logError("Error disconnecting Stripe account", error);
     throw new HttpsError(
       "internal",
       error.message || "Failed to disconnect account"
-    );
-  }
-});
-
-/**
- * Cloud Function: Get Stripe Transactions
- *
- * Returns recent transactions for owner's Stripe account
- */
-export const getStripeTransactions = onCall({secrets: [stripeSecretKey]}, async (request) => {
-  // Check authentication
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
-  }
-
-  const ownerId = request.auth.uid;
-  const {limit = 10} = request.data;
-
-  try {
-    // Get owner data
-    const ownerDoc = await db.collection("users").doc(ownerId).get();
-    if (!ownerDoc.exists) {
-      throw new HttpsError("not-found", "Owner not found");
-    }
-
-    const stripeAccountId = ownerDoc.data()!.stripe_account_id;
-
-    if (!stripeAccountId) {
-      throw new HttpsError(
-        "failed-precondition",
-        "No Stripe account connected"
-      );
-    }
-
-    // Get charges (payments) from connected account
-    const charges = await getStripeClient().charges.list(
-      {
-        limit: limit,
-      },
-      {
-        stripeAccount: stripeAccountId,
-      }
-    );
-
-    const transactions = charges.data.map((charge) => ({
-      id: charge.id,
-      amount: charge.amount / 100,
-      currency: charge.currency.toUpperCase(),
-      status: charge.status,
-      description: charge.description || "",
-      created: new Date(charge.created * 1000).toISOString(),
-      receiptUrl: charge.receipt_url,
-    }));
-
-    return {
-      success: true,
-      transactions,
-      hasMore: charges.has_more,
-    };
-  } catch (error: any) {
-    console.error("Error getting Stripe transactions:", error);
-    throw new HttpsError(
-      "internal",
-      error.message || "Failed to get transactions"
     );
   }
 });

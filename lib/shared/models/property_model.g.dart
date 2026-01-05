@@ -10,9 +10,14 @@ _$PropertyModelImpl _$$PropertyModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$PropertyModelImpl(
   id: json['id'] as String,
-  ownerId: json['owner_id'] as String,
+  ownerId: json['owner_id'] as String?,
   name: json['name'] as String,
   slug: json['slug'] as String?,
+  subdomain: json['subdomain'] as String?,
+  branding: json['branding'] == null
+      ? null
+      : PropertyBranding.fromJson(json['branding'] as Map<String, dynamic>),
+  customDomain: json['custom_domain'] as String?,
   description: json['description'] as String,
   propertyType:
       $enumDecodeNullable(_$PropertyTypeEnumMap, json['property_type']) ??
@@ -54,6 +59,9 @@ Map<String, dynamic> _$$PropertyModelImplToJson(
   'owner_id': instance.ownerId,
   'name': instance.name,
   'slug': instance.slug,
+  'subdomain': instance.subdomain,
+  'branding': instance.branding,
+  'custom_domain': instance.customDomain,
   'description': instance.description,
   'property_type': _$PropertyTypeEnumMap[instance.propertyType]!,
   'location': instance.location,
@@ -109,4 +117,5 @@ const _$PropertyAmenityEnumMap = {
   PropertyAmenity.sauna: 'sauna',
   PropertyAmenity.bicycleRental: 'bicycle_rental',
   PropertyAmenity.boatMooring: 'boat_mooring',
+  PropertyAmenity.restaurant: 'restaurant',
 };

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'logging_service.dart';
@@ -40,17 +41,29 @@ class GeoLocationResult {
   }
 }
 
-/// Free IP Geolocation Service
+/// Free IP Geolocation Service.
 ///
 /// Uses multiple free APIs as fallbacks:
 /// 1. ipapi.co (150 requests/day, no key required)
 /// 2. ip-api.com (45 requests/minute, no key required)
 /// 3. ipwhois.app (10000 requests/month, no key required)
+///
+/// Usage:
+/// ```dart
+/// final service = IpGeolocationService();
+///
+/// // Get current location (auto-detect IP)
+/// final location = await service.getCurrentLocation();
+/// print(location?.locationString); // "Zagreb, Croatia"
+///
+/// // Get location for specific IP
+/// final result = await service.getGeolocation('8.8.8.8');
+/// ```
 class IpGeolocationService {
   final http.Client _client;
 
   IpGeolocationService({http.Client? client})
-      : _client = client ?? http.Client();
+    : _client = client ?? http.Client();
 
   /// Get geolocation for current IP (automatic detection)
   Future<GeoLocationResult?> getCurrentLocation() async {
@@ -72,7 +85,7 @@ class IpGeolocationService {
         if (result != null) return result;
       } catch (e) {
         // Continue to next provider
-        LoggingService.logError('Geolocation provider failed', e);
+        unawaited(LoggingService.logError('Geolocation provider failed', e));
       }
     }
 
@@ -85,9 +98,10 @@ class IpGeolocationService {
         ? 'https://ipapi.co/$ipAddress/json/'
         : 'https://ipapi.co/json/';
 
-    final response = await _client.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 5),
-        );
+    // PERFORMANCE: 1s timeout per provider (total 3s for all providers)
+    final response = await _client
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 1));
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -116,9 +130,10 @@ class IpGeolocationService {
         ? 'http://ip-api.com/json/$ipAddress'
         : 'http://ip-api.com/json/';
 
-    final response = await _client.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 5),
-        );
+    // PERFORMANCE: 1s timeout per provider (total 3s for all providers)
+    final response = await _client
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 1));
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -147,9 +162,10 @@ class IpGeolocationService {
         ? 'https://ipwhois.app/json/$ipAddress'
         : 'https://ipwhois.app/json/';
 
-    final response = await _client.get(Uri.parse(url)).timeout(
-          const Duration(seconds: 5),
-        );
+    // PERFORMANCE: 1s timeout per provider (total 3s for all providers)
+    final response = await _client
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 1));
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;

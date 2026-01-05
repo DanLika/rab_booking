@@ -1,14 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
-import '../../data/firebase/firebase_ical_repository.dart';
 import '../../domain/models/ical_feed.dart';
-
-/// Repository provider
-final icalRepositoryProvider = Provider<FirebaseIcalRepository>((ref) {
-  final firestore = ref.watch(firestoreProvider);
-  return FirebaseIcalRepository(firestore);
-});
 
 /// Provider for all iCal feeds (real-time stream)
 final icalFeedsStreamProvider = StreamProvider<List<IcalFeed>>((ref) {
@@ -22,18 +15,39 @@ final icalFeedsStreamProvider = StreamProvider<List<IcalFeed>>((ref) {
 });
 
 /// Provider for iCal statistics
-final icalStatisticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final userId = ref.watch(enhancedAuthProvider).firebaseUser?.uid;
-  if (userId == null) {
-    return {};
+/// OPTIMIZED: Computes stats from already-loaded feeds instead of separate query
+/// This eliminates a duplicate Firestore read (feeds are already in icalFeedsStreamProvider)
+final icalStatisticsProvider = FutureProvider<Map<String, dynamic>>((
+  ref,
+) async {
+  final feeds = await ref.watch(icalFeedsStreamProvider.future);
+
+  if (feeds.isEmpty) {
+    return {
+      'total_feeds': 0,
+      'active_feeds': 0,
+      'error_feeds': 0,
+      'paused_feeds': 0,
+      'total_events': 0,
+      'total_syncs': 0,
+    };
   }
 
-  final repository = ref.watch(icalRepositoryProvider);
-  return repository.getIcalStatistics(userId);
+  return {
+    'total_feeds': feeds.length,
+    'active_feeds': feeds.where((f) => f.isActive).length,
+    'error_feeds': feeds.where((f) => f.hasError).length,
+    'paused_feeds': feeds.where((f) => f.status == IcalStatus.paused).length,
+    'total_events': feeds.fold(0, (acc, f) => acc + f.eventCount),
+    'total_syncs': feeds.fold(0, (acc, f) => acc + f.syncCount),
+  };
 });
 
 /// Provider for iCal events for a specific unit (real-time)
-final unitIcalEventsProvider = StreamProvider.family<List<IcalEvent>, String>((ref, unitId) {
+final unitIcalEventsProvider = StreamProvider.family<List<IcalEvent>, String>((
+  ref,
+  unitId,
+) {
   final repository = ref.watch(icalRepositoryProvider);
   return repository.watchUnitIcalEvents(unitId);
 });
@@ -79,9 +93,17 @@ class IcalFeedsNotifier extends AsyncNotifier<List<IcalFeed>> {
   }
 
   /// Update feed status
-  Future<void> updateFeedStatus(String feedId, String status, {String? errorMessage}) async {
+  Future<void> updateFeedStatus(
+    String feedId,
+    IcalStatus status, {
+    String? errorMessage,
+  }) async {
     final repository = ref.read(icalRepositoryProvider);
-    await repository.updateFeedStatus(feedId, status, errorMessage: errorMessage);
+    await repository.updateFeedStatus(
+      feedId,
+      status,
+      errorMessage: errorMessage,
+    );
 
     // Refresh the list
     ref.invalidateSelf();
@@ -89,6 +111,7 @@ class IcalFeedsNotifier extends AsyncNotifier<List<IcalFeed>> {
 }
 
 /// Provider for iCal feeds notifier
-final icalFeedsProvider = AsyncNotifierProvider<IcalFeedsNotifier, List<IcalFeed>>(
-  IcalFeedsNotifier.new,
-);
+final icalFeedsProvider =
+    AsyncNotifierProvider<IcalFeedsNotifier, List<IcalFeed>>(
+      IcalFeedsNotifier.new,
+    );

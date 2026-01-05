@@ -6,14 +6,25 @@ part of 'owner_properties_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$ownerPropertiesHash() => r'a946d08b2d7fdc841b7d30fc8d8508738ac4e608';
+String _$ownerPropertiesHash() => r'a1def606c82c9fd153d738dd2e2b30ba787f3921';
 
-/// Owner properties provider
+/// Owner properties provider (REAL-TIME STREAM)
+/// Automatically syncs across browser tabs
+///
+/// ## AutoDispose Decision: TRUE (default @riverpod behavior)
+/// AutoDispose is appropriate here because:
+/// - Stream re-subscribes quickly on navigation back
+/// - Firestore handles caching efficiently
+/// - Prevents stale data when user logs out
+/// - Memory freed when leaving owner dashboard
+///
+/// Note: If performance issues arise from frequent re-subscriptions,
+/// consider switching to @Riverpod(keepAlive: true)
 ///
 /// Copied from [ownerProperties].
 @ProviderFor(ownerProperties)
 final ownerPropertiesProvider =
-    AutoDisposeFutureProvider<List<PropertyModel>>.internal(
+    AutoDisposeStreamProvider<List<PropertyModel>>.internal(
       ownerProperties,
       name: r'ownerPropertiesProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -25,7 +36,7 @@ final ownerPropertiesProvider =
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef OwnerPropertiesRef = AutoDisposeFutureProviderRef<List<PropertyModel>>;
+typedef OwnerPropertiesRef = AutoDisposeStreamProviderRef<List<PropertyModel>>;
 String _$ownerPropertiesCountHash() =>
     r'58c713cc7460e83f5c76d6a5518aa67d64c23e5b';
 
@@ -483,14 +494,15 @@ class _UnitByIdAcrossPropertiesProviderElement
   String get unitId => (origin as UnitByIdAcrossPropertiesProvider).unitId;
 }
 
-String _$ownerUnitsHash() => r'9d393a629fff9c1fbdcdaffc19afec73ea6d269e';
+String _$ownerUnitsHash() => r'dff66ec55177aed69293b705500f46fd4401fa37';
 
-/// Get all units for owner (across all properties)
+/// Get all units for owner (across all properties) - REAL-TIME STREAM
 /// Used for calendar views that display all units
+/// Automatically syncs across browser tabs
 ///
 /// Copied from [ownerUnits].
 @ProviderFor(ownerUnits)
-final ownerUnitsProvider = AutoDisposeFutureProvider<List<UnitModel>>.internal(
+final ownerUnitsProvider = AutoDisposeStreamProvider<List<UnitModel>>.internal(
   ownerUnits,
   name: r'ownerUnitsProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -502,6 +514,6 @@ final ownerUnitsProvider = AutoDisposeFutureProvider<List<UnitModel>>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef OwnerUnitsRef = AutoDisposeFutureProviderRef<List<UnitModel>>;
+typedef OwnerUnitsRef = AutoDisposeStreamProviderRef<List<UnitModel>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

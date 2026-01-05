@@ -1,46 +1,49 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart'; // for kDebugMode
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../error_handling/error_boundary.dart';
+import '../utils/page_transitions.dart';
 import '../../features/auth/presentation/screens/enhanced_login_screen.dart';
 import '../services/logging_service.dart';
+import '../services/sentry_navigator_observer.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/enhanced_register_screen.dart';
 import '../../features/auth/presentation/screens/email_verification_screen.dart';
 import '../../features/auth/presentation/screens/privacy_policy_screen.dart';
 import '../../features/auth/presentation/screens/terms_conditions_screen.dart';
 import '../../features/owner_dashboard/presentation/providers/owner_properties_provider.dart';
-import '../../features/owner_dashboard/presentation/screens/analytics_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/overview_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/properties_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/owner_calendar_main_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/dashboard_overview_tab.dart';
+import '../../features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/owner_bookings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unit_form_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/unit_pricing_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/units_management_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/widget_settings_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notifications_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/profile_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/edit_profile_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/bank_account_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/change_password_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/notification_settings_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/price_list_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/onboarding_welcome_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/onboarding_wizard_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/onboarding_success_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/ical_sync_settings_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/about_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/guides/stripe_guide_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/guides/ical_guide_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/platform_connections_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
-import '../../features/widget/presentation/screens/embed_calendar_screen.dart';
-import '../../features/widget/presentation/screens/enhanced_booking_flow_screen.dart';
+import '../../features/widget/presentation/screens/booking_widget_screen.dart';
+import '../../features/widget/presentation/screens/booking_view_screen.dart';
+import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
+import '../../shared/widgets/loading_overlay.dart';
 import '../providers/enhanced_auth_provider.dart';
 
 /// Helper class to convert Stream to Listenable for GoRouter
@@ -63,15 +66,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
 
 /// Routes for Owner App + Public Widget Embed
 class OwnerRoutes {
-  // Public routes (no auth required)
-  static const String embedUnit = '/embed/units/:id';
-  static const String booking = '/booking';
-
-  // Onboarding routes
-  static const String onboardingWelcome = '/onboarding/welcome';
-  static const String onboardingWizard = '/onboarding/wizard';
-  static const String onboardingSuccess = '/onboarding/success';
-
   // Auth routes
   static const String login = '/login';
   static const String register = '/register';
@@ -84,12 +78,8 @@ class OwnerRoutes {
   // Owner dashboard routes
   static const String overview = '/owner/overview';
   static const String properties = '/owner/properties';
-  static const String calendar = '/owner/calendar'; // Main calendar (redirects to last view)
-  static const String calendarWeek = '/owner/calendar/week';
-  static const String calendarMonth = '/owner/calendar/month';
   static const String calendarTimeline = '/owner/calendar/timeline';
   static const String bookings = '/owner/bookings';
-  static const String analytics = '/owner/analytics';
   static const String propertyNew = '/owner/properties/new';
   static const String propertyEdit = '/owner/properties/:id/edit';
   static const String units = '/owner/units';
@@ -97,18 +87,36 @@ class OwnerRoutes {
   static const String unitEdit = '/owner/units/:id/edit';
   static const String unitPricing = '/owner/units/:id/pricing';
   static const String unitWidgetSettings = '/owner/units/:id/widget-settings';
+  static const String unitHub = '/owner/unit-hub';
+  static const String unitWizard = '/owner/units/wizard';
+  static const String unitWizardEdit = '/owner/units/wizard/:id';
   static const String notifications = '/owner/notifications';
   static const String profile = '/owner/profile';
   static const String profileEdit = '/owner/profile/edit';
   static const String profileChangePassword = '/owner/profile/change-password';
   static const String profileNotifications = '/owner/profile/notifications';
-  static const String priceList = '/owner/price-list';
+  static const String about = '/owner/about';
+  static const String widgetSettings = '/owner/widget-settings';
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
+  static const String stripeReturn = '/owner/stripe-return';
+  static const String stripeRefresh = '/owner/stripe-refresh';
+  static const String bankAccount = '/owner/integrations/payments/bank-account';
+  // iCal routes (NEW structure - organized under /ical/)
+  static const String icalImport =
+      '/owner/integrations/ical/import'; // iCal Sync Settings (Import)
+  static const String icalExportList =
+      '/owner/integrations/ical/export-list'; // iCal Export List (for owners to export all bookings)
+  static const String icalGuide = '/owner/guides/ical'; // iCal Guide
+  // Platform connections (API integrations)
+  static const String platformConnections =
+      '/owner/integrations/platform-connections';
+  // DEPRECATED routes - will be removed in future versions
+  @Deprecated('Use icalImport instead')
   static const String icalIntegration = '/owner/integrations/ical';
+  @Deprecated('Use icalGuide instead')
+  static const String guideIcal = '/owner/guides/ical'; // Same path as icalGuide
   // Guides
-  static const String guideStripe = '/owner/guides/stripe';
-  static const String guideIcal = '/owner/guides/ical';
   static const String guideEmbedWidget = '/owner/guides/embed-widget';
   static const String guideFaq = '/owner/guides/faq';
   static const String notFound = '/404';
@@ -120,292 +128,582 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(enhancedAuthProvider);
 
   return GoRouter(
-    initialLocation: OwnerRoutes.login,
+    // No initialLocation - let GoRouter read from URL (important for /calendar widget)
     debugLogDiagnostics: true,
-    refreshListenable: GoRouterRefreshStream(ref.watch(firebaseAuthProvider).authStateChanges()),
+    refreshListenable: GoRouterRefreshStream(
+      ref.watch(firebaseAuthProvider).authStateChanges(),
+    ),
     redirect: (context, state) {
       // Use the watched authState from above
       final isAuthenticated = authState.isAuthenticated;
-      final requiresOnboarding = authState.requiresOnboarding;
-      final isLoggingIn = state.matchedLocation == OwnerRoutes.login ||
+      final isLoading = authState.isLoading;
+      final isLoggingIn =
+          state.matchedLocation == OwnerRoutes.login ||
           state.matchedLocation == OwnerRoutes.register ||
           state.matchedLocation == OwnerRoutes.forgotPassword;
 
-      LoggingService.log('redirect called:', tag: 'ROUTER');
-      LoggingService.log('  - matchedLocation: ${state.matchedLocation}', tag: 'ROUTER');
-      LoggingService.log('  - isAuthenticated: $isAuthenticated', tag: 'ROUTER');
-      LoggingService.log('  - requiresOnboarding: $requiresOnboarding', tag: 'ROUTER');
-      LoggingService.log('  - firebaseUser: ${authState.firebaseUser?.uid}', tag: 'ROUTER');
-      LoggingService.log('  - userModel: ${authState.userModel?.id}', tag: 'ROUTER');
-      LoggingService.log('  - isLoading: ${authState.isLoading}', tag: 'ROUTER');
+      // Debug logging (only in debug mode)
+      if (kDebugMode) {
+        LoggingService.log('redirect called:', tag: 'ROUTER');
+        LoggingService.log(
+          '  - matchedLocation: ${state.matchedLocation}',
+          tag: 'ROUTER',
+        );
+        LoggingService.log(
+          '  - isAuthenticated: $isAuthenticated',
+          tag: 'ROUTER',
+        );
+        LoggingService.log('  - isLoading: $isLoading', tag: 'ROUTER');
+        LoggingService.log(
+          '  - firebaseUser: ${authState.firebaseUser?.uid}',
+          tag: 'ROUTER',
+        );
+        LoggingService.log(
+          '  - userModel: ${authState.userModel?.id}',
+          tag: 'ROUTER',
+        );
+      }
 
-      // Allow public access to embed and booking routes (no auth required)
-      final isPublicRoute = state.matchedLocation.startsWith('/embed/') ||
-          state.matchedLocation.startsWith('/booking');
+      // Allow public access to embed, booking, calendar, and view routes (no auth required)
+      // Also allow root path OR /login with widget query params (property, unit, confirmation)
+      // This handles Stripe return URLs which may have #/login hash but widget params in query string
+      //
+      // IMPORTANT: With hash-based routing, query params BEFORE the # are NOT in state.uri.queryParameters
+      // URL: http://localhost:8181/?property=xxx#/login
+      //      ^^^^^^^^^^^^^^^^^^^^^^^^ Uri.base  ^^^^^^ state.uri (GoRouter)
+      // So we must check Uri.base for widget params from Stripe return URLs
+      final browserUri = Uri.base;
+      final hasWidgetParams =
+          browserUri.queryParameters.containsKey('property') ||
+          browserUri.queryParameters.containsKey('unit') ||
+          browserUri.queryParameters.containsKey('confirmation') ||
+          state.uri.queryParameters.containsKey('property') ||
+          state.uri.queryParameters.containsKey('unit') ||
+          state.uri.queryParameters.containsKey('confirmation');
+      final isPublicRoute =
+          state.matchedLocation.startsWith('/embed/') ||
+          state.matchedLocation.startsWith('/booking') ||
+          state.matchedLocation == '/calendar' ||
+          state.matchedLocation.startsWith('/view') ||
+          (state.matchedLocation == '/' && hasWidgetParams) ||
+          (state.matchedLocation == '/login' && hasWidgetParams);
       if (isPublicRoute) {
-        LoggingService.log('  → Allowing public route', tag: 'ROUTER');
-        return null; // Allow access
-      }
-
-      // Allow access to onboarding welcome screen (public - shown before auth)
-      final isOnboardingWelcome = state.matchedLocation == OwnerRoutes.onboardingWelcome;
-      if (isOnboardingWelcome) {
-        LoggingService.log('  → Allowing onboarding welcome (public)', tag: 'ROUTER');
-        return null; // Allow access
-      }
-
-      // Redirect root to appropriate page
-      if (state.matchedLocation == '/') {
-        if (isAuthenticated) {
-          if (requiresOnboarding) {
-            LoggingService.log('  → Redirecting / to onboarding wizard (authenticated, needs onboarding)', tag: 'ROUTER');
-            return OwnerRoutes.onboardingWizard;
-          }
-          LoggingService.log('  → Redirecting / to calendar (authenticated)', tag: 'ROUTER');
-          return OwnerRoutes.calendarWeek;
-        } else {
-          LoggingService.log('  → Redirecting / to login (not authenticated)', tag: 'ROUTER');
-          return OwnerRoutes.login;
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Allowing public route (hasWidgetParams: $hasWidgetParams, matchedLocation: ${state.matchedLocation})',
+            tag: 'ROUTER',
+          );
         }
+        return null; // Allow access
       }
 
-      // If authenticated and requires onboarding, redirect to wizard (except if already on wizard/success)
-      final isOnboardingRoute = state.matchedLocation == OwnerRoutes.onboardingWizard ||
-          state.matchedLocation == OwnerRoutes.onboardingSuccess;
-      if (isAuthenticated && requiresOnboarding && !isOnboardingRoute) {
-        LoggingService.log('  → Redirecting to onboarding wizard (needs onboarding)', tag: 'ROUTER');
-        return OwnerRoutes.onboardingWizard;
-      }
+      // Redirect root to appropriate page (ALWAYS, even during loading)
+      // This ensures app.bookbed.io always redirects correctly
+      if (state.matchedLocation == '/') {
+        // Authenticated → overview (even if still loading, we know user is authenticated)
+        if (isAuthenticated) {
+          if (kDebugMode) {
+            LoggingService.log(
+              '  → Redirecting / to overview (authenticated)',
+              tag: 'ROUTER',
+            );
+          }
+          return OwnerRoutes.overview;
+        }
 
-      // Redirect to login if not authenticated and trying to access protected routes
-      if (!isAuthenticated && !isLoggingIn && !isOnboardingWelcome) {
-        LoggingService.log('  → Redirecting to login (not authenticated)', tag: 'ROUTER');
+        // Not authenticated → login (ALWAYS redirect, even during initial loading)
+        // This fixes the issue where app.bookbed.io shows "page unavailable"
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Redirecting / to login (not authenticated, isLoading=$isLoading)',
+            tag: 'ROUTER',
+          );
+        }
         return OwnerRoutes.login;
       }
 
-      // Redirect to calendar (timeline view) if authenticated, doesn't need onboarding, and trying to access login
-      if (isAuthenticated && !requiresOnboarding && isLoggingIn) {
-        LoggingService.log('  → Redirecting to calendar (authenticated, was on login)', tag: 'ROUTER');
-        return OwnerRoutes.calendarWeek; // Changed from overview to calendar
+      // FIX Q4: Don't redirect while auth operation is in progress
+      // (prevents Register → Login flash during async registration)
+      // BUT: Only apply this to non-root routes (root is handled above)
+      if (isLoading) {
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Waiting for auth operation to complete (isLoading=true, route=${state.matchedLocation})',
+            tag: 'ROUTER',
+          );
+        }
+        return null; // Stay on current route
       }
 
-      LoggingService.log('  → No redirect needed', tag: 'ROUTER');
+      // Redirect to login if not authenticated and trying to access protected routes
+      if (!isAuthenticated && !isLoggingIn) {
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Redirecting to login (not authenticated)',
+            tag: 'ROUTER',
+          );
+        }
+        return OwnerRoutes.login;
+      }
+
+      // Redirect to overview if authenticated and trying to access login
+      if (isAuthenticated && isLoggingIn) {
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Redirecting to overview (authenticated, was on login)',
+            tag: 'ROUTER',
+          );
+        }
+        return OwnerRoutes.overview;
+      }
+
+      // SECURITY: Email verification enforcement for authenticated users
+      // Block access to protected routes if email is not verified
+      final requiresEmailVerification = authState.requiresEmailVerification;
+      final isEmailVerificationRoute =
+          state.matchedLocation == OwnerRoutes.emailVerification;
+      final isPublicAuthRoute =
+          state.matchedLocation == OwnerRoutes.privacyPolicy ||
+          state.matchedLocation == OwnerRoutes.termsConditions ||
+          state.matchedLocation == OwnerRoutes.cookiesPolicy;
+
+      if (isAuthenticated &&
+          requiresEmailVerification &&
+          !isEmailVerificationRoute &&
+          !isPublicAuthRoute) {
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Redirecting to email verification (email not verified)',
+            tag: 'ROUTER',
+          );
+        }
+        return OwnerRoutes.emailVerification;
+      }
+
+      if (kDebugMode) {
+        LoggingService.log('  → No redirect needed', tag: 'ROUTER');
+      }
       return null;
     },
     routes: [
+      // ROOT ROUTE - Shows widget if has params, otherwise loader for redirect
+      GoRoute(
+        path: '/',
+        builder: (context, state) {
+          // Check if this is a widget URL (has property/unit/confirmation params)
+          // IMPORTANT: With hash routing, query params are BEFORE the #, so use Uri.base
+          final browserUri = Uri.base;
+          final hasWidgetParams =
+              browserUri.queryParameters.containsKey('property') ||
+              browserUri.queryParameters.containsKey('unit') ||
+              browserUri.queryParameters.containsKey('confirmation') ||
+              state.uri.queryParameters.containsKey('property') ||
+              state.uri.queryParameters.containsKey('unit') ||
+              state.uri.queryParameters.containsKey('confirmation');
+
+          if (hasWidgetParams) {
+            // Show booking widget for embed URLs and Stripe return URLs
+            return const BookingWidgetScreen();
+          }
+
+          // Show loading overlay while redirect determines where to go
+          // (prevents 404 flash during Login → Dashboard transition)
+          return const Scaffold(body: LoadingOverlay(message: 'Loading...'));
+        },
+      ),
+
       // PUBLIC ROUTES (No authentication required)
+      // Public booking widget (for iframe embedding)
+      // URL: /?property=PROPERTY_ID&unit=UNIT_ID#/calendar
       GoRoute(
-        path: '/embed/units/:id',
+        path: '/calendar',
+        builder: (context, state) => const BookingWidgetScreen(),
+      ),
+
+      // Public booking lookup (from email link)
+      // URL: /view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
+      GoRoute(
+        path: '/view',
         builder: (context, state) {
-          final unitId = state.pathParameters['id'] ?? '';
-          return EmbedCalendarScreen(unitId: unitId);
+          final ref = state.uri.queryParameters['ref'];
+          final email = state.uri.queryParameters['email'];
+          final token = state.uri.queryParameters['token'];
+          return BookingViewScreen(bookingRef: ref, email: email, token: token);
         },
+        routes: [
+          // Booking details sub-route
+          GoRoute(
+            path: 'details',
+            builder: (context, state) {
+              final extra = state.extra;
+              if (extra == null) {
+                return const NotFoundScreen();
+              }
+
+              // Support both old and new format for backwards compatibility
+              if (extra is Map<String, dynamic>) {
+                // New format: {booking: BookingDetailsModel, widgetSettings: WidgetSettings?}
+                final booking = extra['booking'];
+                final widgetSettings = extra['widgetSettings'];
+                if (booking == null) {
+                  return const NotFoundScreen();
+                }
+                return BookingDetailsScreen(
+                  booking: booking as dynamic,
+                  widgetSettings: widgetSettings as dynamic,
+                );
+              } else {
+                // Old format: BookingDetailsModel directly
+                return BookingDetailsScreen(booking: extra as dynamic);
+              }
+            },
+          ),
+        ],
       ),
 
-      // Enhanced Booking Flow (public)
-      GoRoute(
-        path: OwnerRoutes.booking,
-        builder: (context, state) {
-          final propertyId = state.uri.queryParameters['propertyId'];
-          return EnhancedBookingFlowScreen(propertyId: propertyId);
-        },
-      ),
-
-      // Onboarding routes (public - shown BEFORE auth)
-      GoRoute(
-        path: OwnerRoutes.onboardingWelcome,
-        builder: (context, state) => const OnboardingWelcomeScreen(),
-      ),
-      GoRoute(
-        path: OwnerRoutes.onboardingWizard,
-        builder: (context, state) => const OnboardingWizardScreen(),
-      ),
-      GoRoute(
-        path: OwnerRoutes.onboardingSuccess,
-        builder: (context, state) => const OnboardingSuccessScreen(),
-      ),
-
-      // Auth routes
+      // Auth routes - Fade transition for smooth auth flow
       GoRoute(
         path: OwnerRoutes.login,
-        builder: (context, state) => const EnhancedLoginScreen(),
+        pageBuilder: (context, state) {
+          // Check if this is a Stripe return URL with widget params
+          // URL: /?property=...&confirmation=...#/login
+          // In this case, show the booking widget instead of login
+          //
+          // IMPORTANT: With hash routing, query params are BEFORE the #, so use Uri.base
+          final browserUri = Uri.base;
+          final hasWidgetParams =
+              browserUri.queryParameters.containsKey('property') ||
+              browserUri.queryParameters.containsKey('unit') ||
+              browserUri.queryParameters.containsKey('confirmation') ||
+              state.uri.queryParameters.containsKey('property') ||
+              state.uri.queryParameters.containsKey('unit') ||
+              state.uri.queryParameters.containsKey('confirmation');
+
+          if (hasWidgetParams) {
+            // Show booking widget for Stripe return URLs
+            return PageTransitions.none(
+              key: state.pageKey,
+              child: const BookingWidgetScreen(),
+            );
+          }
+
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: const EnhancedLoginScreen(),
+          );
+        },
       ),
       GoRoute(
         path: OwnerRoutes.register,
-        builder: (context, state) => const EnhancedRegisterScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const EnhancedRegisterScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.forgotPassword,
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const ForgotPasswordScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.emailVerification,
-        builder: (context, state) => const EmailVerificationScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const EmailVerificationScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.privacyPolicy,
-        builder: (context, state) => const PrivacyPolicyScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const PrivacyPolicyScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.termsConditions,
-        builder: (context, state) => const TermsConditionsScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const TermsConditionsScreen(),
+        ),
       ),
 
-      // Owner main screens
+      // Owner main screens - Fade transition for drawer navigation
       GoRoute(
         path: OwnerRoutes.overview,
-        builder: (context, state) => const OverviewScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const DashboardOverviewTab(),
+        ),
       ),
+      // Properties route redirects to unit-hub (property management is now in unit-hub)
       GoRoute(
         path: OwnerRoutes.properties,
-        builder: (context, state) => const PropertiesScreen(),
+        redirect: (context, state) => OwnerRoutes.unitHub,
       ),
-      // Calendar routes with main container
-      GoRoute(
-        path: OwnerRoutes.calendar,
-        builder: (context, state) => const OwnerCalendarMainScreen(),
-      ),
-      GoRoute(
-        path: OwnerRoutes.calendarWeek,
-        builder: (context, state) => const OwnerCalendarMainScreen(),
-      ),
-      GoRoute(
-        path: OwnerRoutes.calendarMonth,
-        builder: (context, state) => const OwnerCalendarMainScreen(),
-      ),
+      // Calendar route
       GoRoute(
         path: OwnerRoutes.calendarTimeline,
-        builder: (context, state) => const OwnerCalendarMainScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const OwnerTimelineCalendarScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.bookings,
-        builder: (context, state) => const OwnerBookingsScreen(),
-      ),
-      GoRoute(
-        path: OwnerRoutes.analytics,
-        builder: (context, state) => const AnalyticsScreen(),
+        pageBuilder: (context, state) {
+          final bookingId = state.uri.queryParameters['bookingId'];
+          // FIXED BUG #7: Use unique key based on bookingId to prevent widget state reuse
+          return PageTransitions.fade(
+            key: ValueKey('bookings_${bookingId ?? "none"}'),
+            child: OwnerBookingsScreen(initialBookingId: bookingId),
+          );
+        },
       ),
 
-      // Property management routes
+      // Property management routes - SlideUp for new, SlideRight for edit
       GoRoute(
         path: OwnerRoutes.propertyNew,
-        builder: (context, state) => const PropertyFormScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideUp(
+          key: state.pageKey,
+          child: const PropertyFormScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.propertyEdit,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final propertyId = state.pathParameters['id'] ?? '';
-          return PropertyEditLoader(propertyId: propertyId);
+          return PageTransitions.slideRight(
+            key: state.pageKey,
+            child: PropertyEditLoader(propertyId: propertyId),
+          );
         },
       ),
 
       // Unit management routes
       GoRoute(
         path: OwnerRoutes.units,
-        builder: (context, state) {
-          final propertyId = state.uri.queryParameters['propertyId'] ?? '';
-          return UnitsManagementScreen(propertyId: propertyId);
+        pageBuilder: (context, state) {
+          final propertyId = state.uri.queryParameters['propertyId'];
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: UnifiedUnitHubScreen(initialPropertyFilter: propertyId),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.unitNew,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final propertyId = state.uri.queryParameters['propertyId'] ?? '';
-          return UnitFormScreen(propertyId: propertyId);
+          return PageTransitions.slideUp(
+            key: state.pageKey,
+            child: UnitFormScreen(propertyId: propertyId),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.unitEdit,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final unitId = state.pathParameters['id'] ?? '';
-          return UnitEditLoader(unitId: unitId);
+          return PageTransitions.slideRight(
+            key: state.pageKey,
+            child: UnitEditLoader(unitId: unitId),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.unitPricing,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final unitId = state.pathParameters['id'] ?? '';
-          return UnitPricingLoader(unitId: unitId);
+          return PageTransitions.slideRight(
+            key: state.pageKey,
+            child: UnitPricingLoader(unitId: unitId),
+          );
         },
       ),
       GoRoute(
         path: OwnerRoutes.unitWidgetSettings,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final unitId = state.pathParameters['id'] ?? '';
-          return WidgetSettingsLoader(unitId: unitId);
+          return PageTransitions.slideRight(
+            key: state.pageKey,
+            child: WidgetSettingsLoader(unitId: unitId),
+          );
         },
       ),
 
-      // Notifications route
+      // Unified Unit Hub route - Fade for drawer navigation
       GoRoute(
-        path: OwnerRoutes.notifications,
-        builder: (context, state) => const NotificationsScreen(),
+        path: OwnerRoutes.unitHub,
+        pageBuilder: (context, state) {
+          final propertyId = state.uri.queryParameters['propertyId'];
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: UnifiedUnitHubScreen(initialPropertyFilter: propertyId),
+          );
+        },
       ),
 
-      // Profile routes
+      // Unit Wizard routes - SlideUp for modal-like wizard experience
+      GoRoute(
+        path: OwnerRoutes.unitWizard,
+        pageBuilder: (context, state) {
+          final propertyId = state.uri.queryParameters['propertyId'];
+          final duplicateFromId = state.uri.queryParameters['duplicateFromId'];
+          return PageTransitions.slideUp(
+            key: state.pageKey,
+            child: UnitWizardScreen(
+              propertyId: propertyId,
+              duplicateFromId: duplicateFromId,
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: OwnerRoutes.unitWizardEdit,
+        pageBuilder: (context, state) {
+          final unitId = state.pathParameters['id'];
+          return PageTransitions.slideUp(
+            key: state.pageKey,
+            child: UnitWizardScreen(unitId: unitId),
+          );
+        },
+      ),
+
+      // Notifications route - ScaleFade for emphasis
+      GoRoute(
+        path: OwnerRoutes.notifications,
+        pageBuilder: (context, state) => PageTransitions.scaleFade(
+          key: state.pageKey,
+          child: const NotificationsScreen(),
+        ),
+      ),
+
+      // Profile routes - Fade for main, SlideRight for sub-pages
       GoRoute(
         path: OwnerRoutes.profile,
-        builder: (context, state) => const ProfileScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const ProfileScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.profileEdit,
-        builder: (context, state) => const EditProfileScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const EditProfileScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.profileChangePassword,
-        builder: (context, state) => const ChangePasswordScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const ChangePasswordScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.profileNotifications,
-        builder: (context, state) => const NotificationSettingsScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const NotificationSettingsScreen(),
+        ),
       ),
-
-      // Price List route
       GoRoute(
-        path: OwnerRoutes.priceList,
-        builder: (context, state) => const PriceListScreen(),
+        path: OwnerRoutes.about,
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const AboutScreen(),
+        ),
       ),
 
-      // Integrations routes
+      // Integrations routes - Fade for drawer navigation
       GoRoute(
         path: OwnerRoutes.stripeIntegration,
-        builder: (context, state) => const StripeConnectSetupScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const StripeConnectSetupScreen(),
+        ),
+      ),
+      // Stripe Connect return/refresh URLs - redirect to Stripe Integration page
+      // These URLs are used by Stripe after onboarding completes or needs refresh
+      GoRoute(
+        path: OwnerRoutes.stripeReturn,
+        redirect: (context, state) => OwnerRoutes.stripeIntegration,
       ),
       GoRoute(
-        path: OwnerRoutes.icalIntegration,
-        builder: (context, state) => const IcalSyncSettingsScreen(),
+        path: OwnerRoutes.stripeRefresh,
+        redirect: (context, state) => OwnerRoutes.stripeIntegration,
+      ),
+      // Bank Account (for bank transfer payments)
+      GoRoute(
+        path: OwnerRoutes.bankAccount,
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const BankAccountScreen(),
+        ),
+      ),
+      // iCal Sync Settings (Import)
+      GoRoute(
+        path: OwnerRoutes.icalImport,
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const IcalSyncSettingsScreen(),
+        ),
+      ),
+      // iCal Export List (for owners to export all bookings)
+      GoRoute(
+        path: OwnerRoutes.icalExportList,
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const IcalExportListScreen(),
+        ),
+      ),
+      // Platform Connections (API integrations)
+      GoRoute(
+        path: OwnerRoutes.platformConnections,
+        pageBuilder: (context, state) {
+          final unitId = state.uri.queryParameters['unit'];
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: PlatformConnectionsScreen(initialUnitId: unitId),
+          );
+        },
       ),
 
-      // Guide routes
-      GoRoute(
-        path: OwnerRoutes.guideStripe,
-        builder: (context, state) => const StripeGuideScreen(),
-      ),
-      GoRoute(
-        path: OwnerRoutes.guideIcal,
-        builder: (context, state) => const IcalGuideScreen(),
-      ),
+      // Guide routes - Fade for drawer navigation
       GoRoute(
         path: OwnerRoutes.guideEmbedWidget,
-        builder: (context, state) => const EmbedWidgetGuideScreen(),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const EmbedWidgetGuideScreen(),
+        ),
       ),
       GoRoute(
         path: OwnerRoutes.guideFaq,
-        builder: (context, state) => const FAQScreen(),
+        pageBuilder: (context, state) =>
+            PageTransitions.fade(key: state.pageKey, child: const FAQScreen()),
       ),
 
-      // Cookies Policy route
+      // Cookies Policy route - SlideRight (linked from auth screens)
       GoRoute(
         path: OwnerRoutes.cookiesPolicy,
-        builder: (context, state) => const CookiesPolicyScreen(),
+        pageBuilder: (context, state) => PageTransitions.slideRight(
+          key: state.pageKey,
+          child: const CookiesPolicyScreen(),
+        ),
       ),
 
-      // 404
+      // 404 - No transition
       GoRoute(
         path: OwnerRoutes.notFound,
-        builder: (context, state) => const NotFoundScreen(),
+        pageBuilder: (context, state) => PageTransitions.none(
+          key: state.pageKey,
+          child: const NotFoundScreen(),
+        ),
       ),
     ],
+    observers: [SentryNavigatorObserver()],
     errorBuilder: (context, state) => const NotFoundScreen(),
   );
 });
@@ -420,19 +718,19 @@ class PropertyEditLoader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final propertyAsync = ref.watch(propertyByIdProvider(propertyId));
 
-    return propertyAsync.when(
-      data: (property) {
-        if (property == null) {
-          return const NotFoundScreen();
-        }
-        return PropertyFormScreen(property: property);
-      },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Error loading property: $error'),
+    return ErrorBoundary(
+      child: propertyAsync.when(
+        data: (property) {
+          if (property == null) {
+            return const NotFoundScreen();
+          }
+          return PropertyFormScreen(property: property);
+        },
+        loading: () => const Scaffold(
+          body: LoadingOverlay(message: 'Loading property...'),
+        ),
+        error: (error, stack) => Scaffold(
+          body: Center(child: Text('Error loading property: $error')),
         ),
       ),
     );
@@ -449,20 +747,18 @@ class UnitEditLoader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unitAsync = ref.watch(unitByIdAcrossPropertiesProvider(unitId));
 
-    return unitAsync.when(
-      data: (unit) {
-        if (unit == null) {
-          return const NotFoundScreen();
-        }
-        return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
-      },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Error loading unit: $error'),
-        ),
+    return ErrorBoundary(
+      child: unitAsync.when(
+        data: (unit) {
+          if (unit == null) {
+            return const NotFoundScreen();
+          }
+          return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
+        },
+        loading: () =>
+            const Scaffold(body: LoadingOverlay(message: 'Loading unit...')),
+        error: (error, stack) =>
+            Scaffold(body: Center(child: Text('Error loading unit: $error'))),
       ),
     );
   }
@@ -478,20 +774,18 @@ class UnitPricingLoader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unitAsync = ref.watch(unitByIdAcrossPropertiesProvider(unitId));
 
-    return unitAsync.when(
-      data: (unit) {
-        if (unit == null) {
-          return const NotFoundScreen();
-        }
-        return UnitPricingScreen(unit: unit);
-      },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Error loading unit: $error'),
-        ),
+    return ErrorBoundary(
+      child: unitAsync.when(
+        data: (unit) {
+          if (unit == null) {
+            return const NotFoundScreen();
+          }
+          return UnitPricingScreen(unit: unit);
+        },
+        loading: () =>
+            const Scaffold(body: LoadingOverlay(message: 'Loading pricing...')),
+        error: (error, stack) =>
+            Scaffold(body: Center(child: Text('Error loading unit: $error'))),
       ),
     );
   }
@@ -507,23 +801,22 @@ class WidgetSettingsLoader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unitAsync = ref.watch(unitByIdAcrossPropertiesProvider(unitId));
 
-    return unitAsync.when(
-      data: (unit) {
-        if (unit == null) {
-          return const NotFoundScreen();
-        }
-        return WidgetSettingsScreen(
-          propertyId: unit.propertyId,
-          unitId: unitId,
-        );
-      },
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Error loading unit: $error'),
+    return ErrorBoundary(
+      child: unitAsync.when(
+        data: (unit) {
+          if (unit == null) {
+            return const NotFoundScreen();
+          }
+          return WidgetSettingsScreen(
+            propertyId: unit.propertyId,
+            unitId: unitId,
+          );
+        },
+        loading: () => const Scaffold(
+          body: LoadingOverlay(message: 'Loading settings...'),
         ),
+        error: (error, stack) =>
+            Scaffold(body: Center(child: Text('Error loading unit: $error'))),
       ),
     );
   }

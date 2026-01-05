@@ -46,10 +46,12 @@ class AdaptiveLayout extends StatelessWidget {
         for (int i = 0; i < children.length; i++) {
           spacedChildren.add(children[i]);
           if (i < children.length - 1) {
-            spacedChildren.add(SizedBox(
-              width: isRow ? effectiveSpacing : 0,
-              height: isRow ? 0 : effectiveSpacing,
-            ));
+            spacedChildren.add(
+              SizedBox(
+                width: isRow ? effectiveSpacing : 0,
+                height: isRow ? 0 : effectiveSpacing,
+              ),
+            );
           }
         }
 
@@ -129,16 +131,10 @@ class AdaptiveSidebarLayout extends StatelessWidget {
             body: Row(
               children: [
                 if (sidebarPosition == SidebarPosition.left)
-                  SizedBox(
-                    width: sidebarWidth,
-                    child: sidebar,
-                  ),
+                  SizedBox(width: sidebarWidth, child: sidebar),
                 Expanded(child: content),
                 if (sidebarPosition == SidebarPosition.right)
-                  SizedBox(
-                    width: sidebarWidth,
-                    child: sidebar,
-                  ),
+                  SizedBox(width: sidebarWidth, child: sidebar),
               ],
             ),
           );
@@ -158,10 +154,7 @@ class AdaptiveSidebarLayout extends StatelessWidget {
 }
 
 /// Sidebar position enum
-enum SidebarPosition {
-  left,
-  right,
-}
+enum SidebarPosition { left, right }
 
 /// Adaptive grid/list layout
 /// Shows grid on desktop, list on mobile
@@ -213,7 +206,8 @@ class AdaptiveGridList extends StatelessWidget {
       physics: physics,
       shrinkWrap: shrinkWrap,
       itemCount: children.length,
-      separatorBuilder: (context, index) => SizedBox(height: spacing ?? AppDimensions.spaceM),
+      separatorBuilder: (context, index) =>
+          SizedBox(height: spacing ?? AppDimensions.spaceM),
       itemBuilder: (context, index) => children[index],
     );
   }
@@ -272,10 +266,7 @@ class AdaptiveSplitView extends StatelessWidget {
           // Split view (desktop)
           return Row(
             children: [
-              Expanded(
-                flex: (splitRatio * 100).toInt(),
-                child: primary,
-              ),
+              Expanded(flex: (splitRatio * 100).toInt(), child: primary),
               if (spacing != null) SizedBox(width: spacing),
               Expanded(
                 flex: ((1 - splitRatio) * 100).toInt(),
@@ -392,18 +383,12 @@ class AdaptiveAppBarActions extends StatelessWidget {
 
         if (isDesktop) {
           // Show all actions on desktop
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: actions,
-          );
+          return Row(mainAxisSize: MainAxisSize.min, children: actions);
         }
 
         // On mobile, show limited actions + menu
         if (actions.length <= maxMobileActions) {
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: actions,
-          );
+          return Row(mainAxisSize: MainAxisSize.min, children: actions);
         }
 
         return Row(

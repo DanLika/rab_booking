@@ -7,18 +7,29 @@ import '../../../../shared/providers/repository_providers.dart';
 
 part 'owner_properties_provider.g.dart';
 
-/// Owner properties provider
+/// Owner properties provider (REAL-TIME STREAM)
+/// Automatically syncs across browser tabs
+///
+/// ## AutoDispose Decision: TRUE (default @riverpod behavior)
+/// AutoDispose is appropriate here because:
+/// - Stream re-subscribes quickly on navigation back
+/// - Firestore handles caching efficiently
+/// - Prevents stale data when user logs out
+/// - Memory freed when leaving owner dashboard
+///
+/// Note: If performance issues arise from frequent re-subscriptions,
+/// consider switching to @Riverpod(keepAlive: true)
 @riverpod
-Future<List<PropertyModel>> ownerProperties(Ref ref) async {
+Stream<List<PropertyModel>> ownerProperties(Ref ref) {
   final auth = FirebaseAuth.instance;
   final ownerId = auth.currentUser?.uid;
 
   if (ownerId == null) {
-    return [];
+    return Stream.value([]);
   }
 
   final repository = ref.watch(ownerPropertiesRepositoryProvider);
-  return await repository.getOwnerProperties(ownerId);
+  return repository.watchOwnerProperties(ownerId);
 }
 
 /// Owner properties count
@@ -50,17 +61,18 @@ Future<UnitModel?> unitByIdAcrossProperties(Ref ref, String unitId) async {
   return await repository.getUnitByIdAcrossProperties(unitId);
 }
 
-/// Get all units for owner (across all properties)
+/// Get all units for owner (across all properties) - REAL-TIME STREAM
 /// Used for calendar views that display all units
+/// Automatically syncs across browser tabs
 @riverpod
-Future<List<UnitModel>> ownerUnits(Ref ref) async {
+Stream<List<UnitModel>> ownerUnits(Ref ref) {
   final auth = FirebaseAuth.instance;
   final ownerId = auth.currentUser?.uid;
 
   if (ownerId == null) {
-    return [];
+    return Stream.value([]);
   }
 
   final repository = ref.watch(ownerPropertiesRepositoryProvider);
-  return await repository.getAllOwnerUnits(ownerId);
+  return repository.watchAllOwnerUnits(ownerId);
 }

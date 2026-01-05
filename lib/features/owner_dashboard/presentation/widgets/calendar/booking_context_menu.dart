@@ -1,7 +1,11 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/design_tokens/border_tokens.dart';
 
 /// Context menu for booking blocks (right-click menu)
 class BookingContextMenu extends StatelessWidget {
@@ -30,9 +34,7 @@ class BookingContextMenu extends StatelessWidget {
         Positioned.fill(
           child: GestureDetector(
             onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              color: Colors.transparent,
-            ),
+            child: Container(color: Colors.transparent),
           ),
         ),
 
@@ -53,125 +55,220 @@ class BookingContextMenu extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header with guest name
+                  // Header with guest name and external indicator
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(8),
-                        topRight: Radius.circular(8),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: booking.status.color,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            booking.guestName ?? 'N/A',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                      color: booking.isExternalBooking
+                          ? Colors.orange.withAlpha((0.15 * 255).toInt())
+                          : AppColors.authPrimary.withAlpha(
+                              (0.1 * 255).toInt(),
                             ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      borderRadius: BorderTokens.onlyTop(8.0),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: booking.status.color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                booking.guestName ?? 'N/A',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
+                        // External booking badge
+                        if (booking.isExternalBooking) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withAlpha(
+                                (0.2 * 255).toInt(),
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.orange.withAlpha(
+                                  (0.5 * 255).toInt(),
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.link,
+                                  size: 12,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  booking.sourceDisplayName,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
 
-                  // Edit
-                  _buildMenuItem(
-                    icon: Icons.edit,
-                    label: 'Uredi rezervaciju',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onEdit();
-                    },
-                  ),
+                  // External booking info (read-only notice)
+                  if (booking.isExternalBooking) ...[
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Imported booking - manage on ${booking.sourceDisplayName}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                  ],
 
-                  const Divider(height: 1),
-
-                  // Change status submenu
-                  _buildSubmenuHeader('Promijeni status'),
-
-                  if (booking.status != BookingStatus.confirmed)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.confirmed,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.confirmed);
+                  // Edit - disabled for external bookings
+                  if (!booking.isExternalBooking)
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return _buildMenuItem(
+                          icon: Icons.edit,
+                          label: l10n.editBookingTitle,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onEdit();
+                          },
+                        );
                       },
                     ),
 
-                  if (booking.status != BookingStatus.pending)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.pending,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.pending);
+                  // Divider only if edit is shown
+                  if (!booking.isExternalBooking) const Divider(height: 1),
+
+                  // Change status submenu - disabled for external bookings
+                  if (!booking.isExternalBooking) ...[
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return _buildSubmenuHeader(
+                          l10n.ownerCalendarChangeStatus,
+                        );
                       },
                     ),
 
-                  if (booking.status != BookingStatus.inProgress)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.inProgress,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.inProgress);
+                    if (booking.status != BookingStatus.confirmed)
+                      _buildStatusMenuItem(
+                        context: context,
+                        status: BookingStatus.confirmed,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onChangeStatus(BookingStatus.confirmed);
+                        },
+                      ),
+
+                    if (booking.status != BookingStatus.pending)
+                      _buildStatusMenuItem(
+                        context: context,
+                        status: BookingStatus.pending,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onChangeStatus(BookingStatus.pending);
+                        },
+                      ),
+
+                    if (booking.status != BookingStatus.completed)
+                      _buildStatusMenuItem(
+                        context: context,
+                        status: BookingStatus.completed,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onChangeStatus(BookingStatus.completed);
+                        },
+                      ),
+
+                    if (booking.status != BookingStatus.cancelled)
+                      _buildStatusMenuItem(
+                        context: context,
+                        status: BookingStatus.cancelled,
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onChangeStatus(BookingStatus.cancelled);
+                        },
+                      ),
+
+                    const Divider(height: 1),
+
+                    // Send email - only for non-external bookings (they don't have email)
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return _buildMenuItem(
+                          icon: Icons.email_outlined,
+                          label: l10n.ownerTableActionSendEmail,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onSendEmail();
+                          },
+                        );
                       },
                     ),
 
-                  if (booking.status != BookingStatus.completed)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.completed,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.completed);
+                    const Divider(height: 1),
+
+                    // Delete - only for non-external bookings
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return _buildMenuItem(
+                          icon: Icons.delete_outline,
+                          label: l10n.ownerTableDeleteBooking,
+                          color: AppColors.error,
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            onDelete();
+                          },
+                        );
                       },
                     ),
-
-                  if (booking.status != BookingStatus.cancelled)
-                    _buildStatusMenuItem(
-                      status: BookingStatus.cancelled,
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onChangeStatus(BookingStatus.cancelled);
-                      },
-                    ),
-
-                  const Divider(height: 1),
-
-                  // Send email
-                  _buildMenuItem(
-                    icon: Icons.email_outlined,
-                    label: 'Pošalji email',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onSendEmail();
-                    },
-                  ),
-
-                  const Divider(height: 1),
-
-                  // Delete
-                  _buildMenuItem(
-                    icon: Icons.delete_outline,
-                    label: 'Obriši rezervaciju',
-                    color: AppColors.error,
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      onDelete();
-                    },
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -196,13 +293,7 @@ class BookingContextMenu extends StatelessWidget {
             Icon(icon, size: 18, color: color),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: color,
-                ),
-              ),
+              child: Text(label, style: TextStyle(fontSize: 13, color: color)),
             ),
           ],
         ),
@@ -225,6 +316,7 @@ class BookingContextMenu extends StatelessWidget {
   }
 
   Widget _buildStatusMenuItem({
+    required BuildContext context,
     required BookingStatus status,
     required VoidCallback onTap,
   }) {
@@ -246,7 +338,7 @@ class BookingContextMenu extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                status.displayName,
+                status.displayNameLocalized(context),
                 style: const TextStyle(fontSize: 13),
               ),
             ),
@@ -286,13 +378,13 @@ Future<void> showBookingContextMenu({
   }
 
   // Ensure minimum padding from edges
-  left = left.clamp(16.0, screenSize.width - menuWidth - 16);
-  top = top.clamp(16.0, screenSize.height - menuHeight - 16);
+  // Use math.max to prevent ArgumentError when screen is smaller than menu
+  left = left.clamp(16.0, math.max(16.0, screenSize.width - menuWidth - 16));
+  top = top.clamp(16.0, math.max(16.0, screenSize.height - menuHeight - 16));
 
   return showDialog(
     context: context,
     barrierColor: Colors.transparent,
-    barrierDismissible: true,
     builder: (context) => BookingContextMenu(
       booking: booking,
       position: Offset(left, top),

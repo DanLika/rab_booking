@@ -1,31 +1,375 @@
-import {Resend} from "resend";
-import {logError, logSuccess} from "./logger";
-
-// Lazy initialize Resend (to avoid deployment errors)
-let resend: Resend | null = null;
-
 /**
- * Get or initialize Resend instance
+ * Email Service - Refactored with Modern Templates
+ *
+ * This service provides email sending functionality using modular templates.
+ * All email designs are located in ./email/templates/
+ *
+ * MIGRATION STATUS:
+ * ✅ sendBookingConfirmationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendBookingApprovedEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendOwnerNotificationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendGuestCancellationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendOwnerCancellationNotificationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendRefundNotificationEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendCustomGuestEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendPaymentReminderEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendCheckInReminderEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendCheckOutReminderEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendPendingBookingRequestEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendEmailVerificationCode - Migrated to V2 template (Refined Premium)
+ * ✅ sendPendingBookingOwnerNotification - Migrated to V2 template (Refined Premium)
+ * ✅ sendBookingRejectedEmail - Migrated to V2 template (Refined Premium)
+ *
+ * ALL EMAIL FUNCTIONS FULLY MIGRATED! 🎉
+ *
+ * TODO: Suspicious Activity Email (deferred for future implementation)
  */
-function getResendClient(): Resend {
+
+import { Resend } from "resend";
+import { db } from "./firebase";
+import { logError, logSuccess } from "./logger";
+
+// Import new email templates (V2 - OPCIJA A: Refined Premium)
+import {
+  sendBookingConfirmationEmailV2,
+  sendPendingBookingRequestEmailV2,
+  sendBookingApprovedEmailV2,
+  sendGuestCancellationEmailV2,
+  sendRefundNotificationEmailV2,
+  sendPaymentReminderEmailV2,
+  sendCheckInReminderEmailV2,
+  sendCheckOutReminderEmailV2,
+  sendOwnerCancellationEmailV2,
+  sendOwnerNotificationEmailV2,
+  sendCustomGuestEmailV2,
+  type BookingConfirmationParams,
+  type PendingBookingRequestParams,
+  type BookingApprovedParams,
+  type GuestCancellationParams,
+  type OwnerCancellationParamsV2,
+  type RefundNotificationParams,
+  type OwnerNotificationParamsV2,
+  type PaymentReminderParams,
+  type CheckInReminderParams,
+  type CheckOutReminderParams,
+  type CustomGuestEmailParamsV2,
+  sendEmailVerificationEmailV2,
+  type EmailVerificationParams,
+  sendPendingOwnerNotificationEmailV2,
+  type PendingOwnerNotificationParams,
+  sendBookingRejectedEmailV2,
+  type BookingRejectedParams,
+} from "./email";
+
+// ==========================================
+// CONFIGURATION & HELPER FUNCTIONS
+// ==========================================
+
+// Lazy initialization of Resend client (avoids issues with Firebase CLI analysis)
+let resend: Resend | null = null;
+export function getResendClient(): Resend {
   if (!resend) {
-    const apiKey = process.env.RESEND_API_KEY || "";
+    const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
-      throw new Error("RESEND_API_KEY not configured");
+      throw new Error(
+        "RESEND_API_KEY environment variable not configured. " +
+        "Get your API key from: https://resend.com/api-keys"
+      );
     }
     resend = new Resend(apiKey);
+    logSuccess("[EmailService] Resend client initialized", {
+      keyPrefix: apiKey.substring(0, 7) + "...",
+    });
   }
   return resend;
 }
 
-// Email sender address
-// TEST MODE: Uses onboarding@resend.dev (emails only go to Resend account owner)
-// PRODUCTION: Change to your verified domain (e.g., "noreply@yourdomain.com" or duskolicanin1234@gmail.com)
-const FROM_EMAIL = "onboarding@resend.dev"; // TEST MODE - update when you have a custom domain
-const FROM_NAME = "Rab Booking";
+// Email regex for validation
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Lazy initialization for email config (avoids issues with Firebase CLI analysis)
+let _fromEmail: string | null = null;
+let _fromName: string | null = null;
+let _configLogged = false;
+
+function getFromEmail(): string {
+  if (!_fromEmail) {
+    const fromEmailRaw = process.env.FROM_EMAIL;
+    if (!fromEmailRaw) {
+      throw new Error(
+        "FROM_EMAIL environment variable not configured. " +
+        "Set this to your verified Resend sender email (e.g., bookings@yourdomain.com). " +
+        "See: https://resend.com/docs/send-with-nodejs#2-send-email"
+      );
+    }
+    if (!EMAIL_REGEX.test(fromEmailRaw)) {
+      throw new Error(
+        `FROM_EMAIL is not a valid email address: ${fromEmailRaw}. ` +
+        "Must be a valid email format (e.g., bookings@yourdomain.com)"
+      );
+    }
+    _fromEmail = fromEmailRaw;
+    logConfigOnce();
+  }
+  return _fromEmail;
+}
+
+function getFromName(): string {
+  if (!_fromName) {
+    const fromNameRaw = process.env.FROM_NAME;
+    if (!fromNameRaw) {
+      throw new Error(
+        "FROM_NAME environment variable not configured. " +
+        "Set this to your sender display name (e.g., 'BookBed', 'Villa Marija Bookings')." +
+        "This appears as the 'From' name in emails."
+      );
+    }
+    _fromName = fromNameRaw;
+    logConfigOnce();
+  }
+  return _fromName;
+}
+
+function logConfigOnce(): void {
+  if (!_configLogged && _fromEmail && _fromName) {
+    logSuccess("[EmailService] Configured sender email", {
+      fromEmail: _fromEmail,
+      fromName: _fromName,
+    });
+    _configLogged = true;
+  }
+}
+
+// For backwards compatibility - use these getters directly
+const FROM_EMAIL = (): string => getFromEmail();
+const FROM_NAME = (): string => getFromName();
+
+// Widget URL for booking lookup
+// IMPORTANT: Widget lives on view.bookbed.io, NOT bookbed.io (which is for marketing)
+const WIDGET_URL = process.env.WIDGET_URL || "https://view.bookbed.io";
+const BOOKING_DOMAIN = process.env.BOOKING_DOMAIN || null;
+// View booking URL for booking details page (automatically derived from BOOKING_DOMAIN)
+// If BOOKING_DOMAIN is set, use view.{BOOKING_DOMAIN}, otherwise null
+const VIEW_BOOKING_URL = BOOKING_DOMAIN ? `https://view.${BOOKING_DOMAIN}` : null;
+
+// ==========================================
+// PROPERTY DATA HELPER (DRY - Single Fetch)
+// ==========================================
+
+/**
+ * Property data needed for emails
+ */
+interface PropertyData {
+  contactEmail?: string;
+  subdomain?: string;
+}
+
+/**
+ * Fetch property data (contact_email + subdomain) in a single query
+ *
+ * This helper eliminates duplicate Firestore fetches across email functions.
+ * Previously, each email function would fetch the property document separately,
+ * resulting in 2+ reads per email send.
+ *
+ * @param propertyId - The property document ID
+ * @param operation - Operation name for logging context
+ * @returns PropertyData with contactEmail and subdomain, or empty object on error
+ */
+async function fetchPropertyData(
+  propertyId: string | undefined,
+  operation: string
+): Promise<PropertyData> {
+  if (!propertyId) {
+    return {};
+  }
+
+  try {
+    const propertyDoc = await db.collection("properties").doc(propertyId).get();
+
+    if (!propertyDoc.exists) {
+      logError("[EmailService] Property not found", null, {
+        propertyId,
+        operation,
+      });
+      return {};
+    }
+
+    const data = propertyDoc.data();
+    return {
+      contactEmail: data?.contact_email,
+      subdomain: data?.subdomain,
+    };
+  } catch (error) {
+    logError("[EmailService] Failed to fetch property data", error, {
+      propertyId,
+      operation,
+    });
+    return {};
+  }
+}
+
+// ==========================================
+// INPUT VALIDATION HELPERS
+// ==========================================
+
+/**
+ * Validate email format
+ *
+ * @param email - Email address to validate
+ * @param fieldName - Field name for error messages
+ * @throws Error if email is invalid
+ */
+function validateEmail(email: string, fieldName: string): void {
+  if (!email || typeof email !== "string") {
+    throw new Error(`${fieldName} is required`);
+  }
+  if (!EMAIL_REGEX.test(email.trim())) {
+    throw new Error(`${fieldName} is not a valid email address: ${email}`);
+  }
+}
+
+/**
+ * Validate required string field
+ *
+ * @param value - String value to validate
+ * @param fieldName - Field name for error messages
+ * @throws Error if value is empty or not a string
+ */
+function validateRequiredString(value: string, fieldName: string): void {
+  if (!value || typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${fieldName} is required and must be a non-empty string`);
+  }
+}
+
+/**
+ * Validate amount is non-negative
+ *
+ * @param amount - Amount to validate
+ * @param fieldName - Field name for error messages
+ * @throws Error if amount is negative
+ */
+function validateAmount(amount: number, fieldName: string): void {
+  if (typeof amount !== "number" || isNaN(amount)) {
+    throw new Error(`${fieldName} must be a valid number`);
+  }
+  if (amount < 0) {
+    throw new Error(`${fieldName} cannot be negative: ${amount}`);
+  }
+}
+
+/**
+ * Validate date is a valid Date object
+ *
+ * @param date - Date to validate
+ * @param fieldName - Field name for error messages
+ * @throws Error if date is invalid
+ */
+function validateDate(date: Date, fieldName: string): void {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    throw new Error(`${fieldName} must be a valid Date object`);
+  }
+}
+
+/**
+ * Validate subdomain format (DNS-safe)
+ *
+ * Rules (RFC 1123):
+ * - Lowercase alphanumeric + hyphens only
+ * - Cannot start or end with hyphen
+ * - Length: 1-63 characters (DNS limit)
+ *
+ * Examples:
+ * - ✅ Valid: "villa-marija", "apartman1", "a", "my-property-123"
+ * - ❌ Invalid: "-invalid", "invalid-", "UPPERCASE", "has_underscore", ""
+ */
+function isValidSubdomain(subdomain: string): boolean {
+  // RFC 1123 subdomain pattern (case-insensitive, but we enforce lowercase)
+  const SUBDOMAIN_REGEX = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/;
+  return SUBDOMAIN_REGEX.test(subdomain);
+}
+
+/**
+ * Generate view booking URL with subdomain support
+ *
+ * If BOOKING_DOMAIN is configured (production):
+ *   Returns: https://{subdomain}.{BOOKING_DOMAIN}/view?ref=XXX&email=XXX&token=XXX&lang=XXX
+ *
+ * If BOOKING_DOMAIN is not set (testing/development):
+ *   Returns: https://widget.web.app/view?subdomain=XXX&ref=XXX&email=XXX&token=XXX&lang=XXX
+ *
+ * If subdomain is not set or invalid:
+ *   Returns: https://widget.web.app/view?ref=XXX&email=XXX&token=XXX&lang=XXX (fallback)
+ *
+ * SECURITY: Subdomain is validated against RFC 1123 to prevent URL injection
+ *
+ * @param bookingReference - The booking reference code
+ * @param guestEmail - Guest email for URL params
+ * @param accessToken - Access token for URL params
+ * @param propertyData - Pre-fetched property data (avoids duplicate Firestore reads)
+ * @param language - Optional language code (hr, en, de, it) to include in URL
+ */
+function generateViewBookingUrl(
+  bookingReference: string,
+  guestEmail: string,
+  accessToken: string,
+  propertyData?: PropertyData,
+  language?: string
+): string {
+  const params = new URLSearchParams();
+  params.set("ref", bookingReference);
+  params.set("email", guestEmail);
+  params.set("token", accessToken);
+  
+  // Add language if provided and valid
+  if (language && ['hr', 'en', 'de', 'it'].includes(language.toLowerCase())) {
+    params.set("lang", language.toLowerCase());
+  }
+
+  // Use pre-fetched subdomain (validated)
+  let subdomain: string | null = null;
+  if (propertyData?.subdomain) {
+    const rawSubdomain = propertyData.subdomain;
+
+    // SECURITY: Validate subdomain format before using in URL
+    if (isValidSubdomain(rawSubdomain)) {
+      subdomain = rawSubdomain;
+    } else {
+      logError("[EmailService] Invalid subdomain format - using fallback URL", null, {
+        subdomain: rawSubdomain,
+        reason: "Failed RFC 1123 validation",
+      });
+    }
+  }
+
+  // Generate URL based on configuration
+  // Use VIEW_BOOKING_URL if set (for booking details page on view.bookbed.io)
+  // Otherwise use subdomain logic for widget
+  if (VIEW_BOOKING_URL) {
+    // Production: view.bookbed.io/view?ref=XXX
+    return `${VIEW_BOOKING_URL}/view?${params.toString()}`;
+  } else if (subdomain) {
+    if (BOOKING_DOMAIN) {
+      // Production: subdomain.domain.com/view?ref=XXX
+      return `https://${subdomain}.${BOOKING_DOMAIN}/view?${params.toString()}`;
+    } else {
+      // Testing: widget.web.app/view?subdomain=XXX&ref=XXX
+      params.set("subdomain", subdomain);
+      return `${WIDGET_URL}/view?${params.toString()}`;
+    }
+  } else {
+    // Fallback: widget.web.app/view?ref=XXX
+    return `${WIDGET_URL}/view?${params.toString()}`;
+  }
+}
+
+// ==========================================
+// EMAIL FUNCTIONS - MIGRATED TO NEW TEMPLATES
+// ==========================================
 
 /**
  * Send booking confirmation email to guest
+ *
+ * MIGRATED: Now uses modern email template with card-based layout
  */
 export async function sendBookingConfirmationEmail(
   guestEmail: string,
@@ -37,111 +381,56 @@ export async function sendBookingConfirmationEmail(
   depositAmount: number,
   unitName: string,
   propertyName: string,
-  ownerEmail?: string
+  accessToken: string,
+  ownerEmail?: string,
+  propertyId?: string
 ): Promise<void> {
-  const subject = `[BedBooking] Potvrda rezervacije - ${bookingReference}`;
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #6B8E23; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .highlight { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-    .button { display: inline-block; padding: 12px 24px; background: #6B8E23; color: white; text-decoration: none; border-radius: 6px; margin: 15px 0; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Booking Confirmed!</h1>
-      <p>Reference: ${bookingReference}</p>
-    </div>
-
-    <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>Thank you for your booking! Your reservation has been received and is awaiting payment confirmation.</p>
-
-      <div class="booking-details">
-        <h3>Booking Details</h3>
-        <div class="detail-row">
-          <span>Property:</span>
-          <strong>${propertyName}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Unit:</span>
-          <strong>${unitName}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Check-in:</span>
-          <strong>${formatDate(checkIn)}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Check-out:</span>
-          <strong>${formatDate(checkOut)}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Reference:</span>
-          <strong>${bookingReference}</strong>
-        </div>
-      </div>
-
-      <div class="booking-details">
-        <h3>Payment Details</h3>
-        <div class="detail-row">
-          <span>Total Amount:</span>
-          <strong>€${totalAmount.toFixed(2)}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Deposit (20%):</span>
-          <strong>€${depositAmount.toFixed(2)}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Remaining (pay on arrival):</span>
-          <strong>€${(totalAmount - depositAmount).toFixed(2)}</strong>
-        </div>
-      </div>
-
-      <div class="highlight">
-        <h3>⚠️ Payment Instructions</h3>
-        <p><strong>Please transfer €${depositAmount.toFixed(2)} within 3 days</strong></p>
-        <p><strong>Account Holder:</strong> Your Business Name</p>
-        <p><strong>Bank:</strong> Your Bank</p>
-        <p><strong>IBAN:</strong> HR1234567890123456789</p>
-        <p><strong>Reference:</strong> ${bookingReference}</p>
-        <p style="font-size: 12px; margin-top: 10px;">⚠️ Important: Include the booking reference in the transfer description!</p>
-      </div>
-
-      <p>Once we receive your payment, we will send you a confirmation email.</p>
-      <p>If you have any questions, please contact us.</p>
-    </div>
-
-    <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
-      <p>This email was sent regarding your booking ${bookingReference}</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  validateAmount(totalAmount, "totalAmount");
+  validateAmount(depositAmount, "depositAmount");
 
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: guestEmail,
-      replyTo: ownerEmail || FROM_EMAIL,
-      subject: subject,
-      html: html,
-      text: stripHtml(html),
-    });
-    logSuccess("Booking confirmation email sent", {email: guestEmail});
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "booking_confirmation");
+
+    // Generate view booking URL with pre-fetched data (no duplicate fetch)
+    const viewBookingUrl = generateViewBookingUrl(
+      bookingReference,
+      guestEmail,
+      accessToken,
+      propertyData
+    );
+
+    // Build params for new template
+    const params: BookingConfirmationParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      checkIn,
+      checkOut,
+      totalAmount,
+      depositAmount,
+      unitName,
+      propertyName,
+      viewBookingUrl,
+      contactEmail: propertyData.contactEmail || ownerEmail,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendBookingConfirmationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME(),
+      ownerEmail
+    );
+
+    logSuccess("Booking confirmation email sent (V2 - Refined Premium)", { email: guestEmail });
   } catch (error) {
     logError("Error sending booking confirmation email", error);
     throw error;
@@ -150,6 +439,8 @@ export async function sendBookingConfirmationEmail(
 
 /**
  * Send booking approved email to guest
+ *
+ * MIGRATED: Now uses modern email template with success gradient
  */
 export async function sendBookingApprovedEmail(
   guestEmail: string,
@@ -158,67 +449,58 @@ export async function sendBookingApprovedEmail(
   checkIn: Date,
   checkOut: Date,
   propertyName: string,
-  ownerEmail?: string
+  ownerEmail?: string,
+  accessToken?: string,
+  totalAmount?: number,
+  depositAmount?: number,
+  propertyId?: string
 ): Promise<void> {
-  const subject = `[BedBooking] Potvrda plaćanja - ${bookingReference}`;
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .success-icon { font-size: 48px; margin: 20px 0; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="success-icon">✅</div>
-      <h1>Payment Received!</h1>
-      <p>Your booking is confirmed</p>
-    </div>
-
-    <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>Great news! We have received your payment and your booking is now confirmed.</p>
-
-      <div class="booking-details">
-        <h3>Booking Confirmed</h3>
-        <p><strong>Property:</strong> ${propertyName}</p>
-        <p><strong>Check-in:</strong> ${formatDate(checkIn)}</p>
-        <p><strong>Check-out:</strong> ${formatDate(checkOut)}</p>
-        <p><strong>Reference:</strong> ${bookingReference}</p>
-      </div>
-
-      <p>We look forward to welcoming you!</p>
-      <p>If you have any questions, please don't hesitate to contact us.</p>
-    </div>
-
-    <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  if (totalAmount !== undefined) validateAmount(totalAmount, "totalAmount");
+  if (depositAmount !== undefined) validateAmount(depositAmount, "depositAmount");
 
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: guestEmail,
-      replyTo: ownerEmail || FROM_EMAIL,
-      subject: subject,
-      html: html,
-      text: stripHtml(html),
-    });
-    logSuccess("Booking approved email sent", {email: guestEmail});
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "booking_approved");
+
+    // Generate view booking URL if accessToken provided (uses pre-fetched data)
+    const viewBookingUrl = accessToken ? generateViewBookingUrl(
+      bookingReference,
+      guestEmail,
+      accessToken,
+      propertyData
+    ) : undefined;
+
+    // Build params for new template
+    const params: BookingApprovedParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      checkIn,
+      checkOut,
+      propertyName,
+      unitName: undefined, // unitName not available in this context
+      viewBookingUrl,
+      totalAmount,
+      depositAmount,
+      contactEmail: propertyData.contactEmail || ownerEmail,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendBookingApprovedEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME(),
+      ownerEmail
+    );
+
+    logSuccess("Booking approved email sent (V2 - Refined Premium)", { email: guestEmail });
   } catch (error) {
     logError("Error sending booking approved email", error);
     throw error;
@@ -226,91 +508,65 @@ export async function sendBookingApprovedEmail(
 }
 
 /**
- * Send new booking notification to owner
+ * Send owner notification email
+ *
+ * MIGRATED: Now uses V2 template (Refined Premium)
  */
 export async function sendOwnerNotificationEmail(
   ownerEmail: string,
-  ownerName: string,
+  bookingReference: string,
   guestName: string,
   guestEmail: string,
-  bookingReference: string,
+  guestPhone: string | undefined,
+  propertyName: string,
+  unitName: string,
   checkIn: Date,
   checkOut: Date,
+  guests: number,
   totalAmount: number,
   depositAmount: number,
-  unitName: string
+  paymentMethod?: string
 ): Promise<void> {
-  const subject = `Nova rezervacija - ${bookingReference}`;
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .alert { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FBC02D; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>🔔 Nova rezervacija!</h1>
-      <p>Čeka vašu potvrdu</p>
-    </div>
-
-    <div class="content">
-      <p>Poštovani ${ownerName},</p>
-      <p>Primili ste novu rezervaciju putem booking widget-a.</p>
-
-      <div class="booking-details">
-        <h3>Detalji rezervacije</h3>
-        <p><strong>Jedinica:</strong> ${unitName}</p>
-        <p><strong>Gost:</strong> ${guestName}</p>
-        <p><strong>Email:</strong> ${guestEmail}</p>
-        <p><strong>Check-in:</strong> ${formatDate(checkIn)}</p>
-        <p><strong>Check-out:</strong> ${formatDate(checkOut)}</p>
-        <p><strong>Referenca:</strong> ${bookingReference}</p>
-      </div>
-
-      <div class="booking-details">
-        <h3>Plaćanje</h3>
-        <p><strong>Ukupno:</strong> €${totalAmount.toFixed(2)}</p>
-        <p><strong>Avans (20%):</strong> €${depositAmount.toFixed(2)}</p>
-        <p><strong>Ostatak:</strong> €${(totalAmount - depositAmount).toFixed(2)}</p>
-      </div>
-
-      <div class="alert">
-        <p><strong>⚠️ Akcija potrebna:</strong></p>
-        <p>Gost će izvršiti bankovnu uplatu. Kada primite uplatu od €${depositAmount.toFixed(2)}
-        sa referencom <strong>${bookingReference}</strong>, prijavite se u dashboard i odobrite rezervaciju.</p>
-      </div>
-
-      <p>Prijavite se u Owner Dashboard da biste upravljali rezervacijom.</p>
-    </div>
-
-    <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  // Input validation
+  validateEmail(ownerEmail, "ownerEmail");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(guestName, "guestName");
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(propertyName, "propertyName");
+  validateRequiredString(unitName, "unitName");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  validateAmount(guests, "guests");
+  validateAmount(totalAmount, "totalAmount");
+  validateAmount(depositAmount, "depositAmount");
 
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: ownerEmail,
-      subject: subject,
-      html: html,
-      text: stripHtml(html),
-    });
-    logSuccess("Owner notification email sent", {email: ownerEmail});
+    // Build params for V2 template
+    const params: OwnerNotificationParamsV2 = {
+      ownerEmail,
+      bookingReference,
+      guestName,
+      guestEmail,
+      guestPhone,
+      propertyName,
+      unitName,
+      checkIn,
+      checkOut,
+      guests,
+      totalAmount,
+      depositAmount,
+      paymentMethod,
+    };
+
+    // Send email using V2 template (Refined Premium)
+    await sendOwnerNotificationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Owner notification email sent (V2 - Refined Premium)", { email: ownerEmail });
   } catch (error) {
     logError("Error sending owner notification email", error);
     throw error;
@@ -318,309 +574,467 @@ export async function sendOwnerNotificationEmail(
 }
 
 /**
- * Send booking cancellation email
+ * Send guest cancellation email
+ *
+ * MIGRATED: Previously named sendBookingCancellationEmail
  */
-export async function sendBookingCancellationEmail(
+export async function sendGuestCancellationEmail(
   guestEmail: string,
   guestName: string,
   bookingReference: string,
-  reason: string,
-  ownerEmail?: string
+  propertyName: string,
+  unitName: string | undefined,
+  checkIn: Date,
+  checkOut: Date,
+  refundAmount?: number,
+  propertyId?: string,
+  cancellationReason?: string,
+  cancelledByOwner?: boolean
 ): Promise<void> {
-  const subject = `[BedBooking] Otkazana rezervacija - ${bookingReference}`;
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #f44336; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Booking Cancelled</h1>
-      <p>Reference: ${bookingReference}</p>
-    </div>
-
-    <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>Your booking ${bookingReference} has been cancelled.</p>
-      <p><strong>Reason:</strong> ${reason}</p>
-      <p>If you have any questions, please contact us.</p>
-    </div>
-
-    <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  if (refundAmount !== undefined) validateAmount(refundAmount, "refundAmount");
 
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: guestEmail,
-      replyTo: ownerEmail || FROM_EMAIL,
-      subject: subject,
-      html: html,
-      text: stripHtml(html),
-    });
-    logSuccess("Booking cancellation email sent", {email: guestEmail});
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "guest_cancellation");
+
+    // Build params for new template
+    const params: GuestCancellationParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      propertyName,
+      unitName,
+      checkIn,
+      checkOut,
+      refundAmount,
+      cancellationReason,
+      cancelledByOwner,
+      contactEmail: propertyData.contactEmail,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendGuestCancellationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Guest cancellation email sent (V2 - Refined Premium)", { email: guestEmail });
   } catch (error) {
-    logError("Error sending cancellation email", error);
+    logError("Error sending guest cancellation email", error);
+    throw error;
+  }
+}
+
+// Backward compatibility alias
+export const sendBookingCancellationEmail = sendGuestCancellationEmail;
+
+/**
+ * Send owner cancellation notification email
+ *
+ * MIGRATED: Now uses V2 template (Refined Premium)
+ */
+export async function sendOwnerCancellationNotificationEmail(
+  ownerEmail: string,
+  bookingReference: string,
+  guestName: string,
+  guestEmail: string,
+  propertyName: string,
+  unitName: string | undefined,
+  checkIn: Date,
+  checkOut: Date,
+  totalAmount: number
+): Promise<void> {
+  // Input validation
+  validateEmail(ownerEmail, "ownerEmail");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(guestName, "guestName");
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(propertyName, "propertyName");
+  validateDate(checkIn, "checkIn");
+  validateDate(checkOut, "checkOut");
+  validateAmount(totalAmount, "totalAmount");
+
+  try {
+    // Build params for V2 template
+    const params: OwnerCancellationParamsV2 = {
+      ownerEmail,
+      bookingReference,
+      guestName,
+      guestEmail,
+      propertyName,
+      unitName,
+      checkIn,
+      checkOut,
+      totalAmount,
+    };
+
+    // Send email using V2 template (Refined Premium)
+    await sendOwnerCancellationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Owner cancellation notification sent (V2 - Refined Premium)", { email: ownerEmail });
+  } catch (error) {
+    logError("Error sending owner cancellation notification", error);
     throw error;
   }
 }
 
 /**
- * Send custom email to guest (Phase 2 feature)
- * Allows property owners to send custom messages to guests
+ * Send refund notification email
+ *
+ * MIGRATED: Now uses modern email template
  */
-export async function sendCustomEmailToGuest(
+export async function sendRefundNotificationEmail(
+  guestEmail: string,
+  guestName: string,
+  bookingReference: string,
+  refundAmount: number,
+  reason?: string,
+  propertyId?: string
+): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateAmount(refundAmount, "refundAmount");
+
+  try {
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "refund_notification");
+
+    // Build params for new template
+    const params: RefundNotificationParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      refundAmount,
+      reason,
+      contactEmail: propertyData.contactEmail,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendRefundNotificationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Refund notification email sent (V2 - Refined Premium)", { email: guestEmail });
+  } catch (error) {
+    logError("Error sending refund notification email", error);
+    throw error;
+  }
+}
+
+/**
+ * Send custom email to guest
+ *
+ * MIGRATED: Now uses V2 template (Refined Premium)
+ */
+export async function sendCustomGuestEmail(
   guestEmail: string,
   guestName: string,
   subject: string,
   message: string,
-  ownerEmail?: string
+  ownerEmail?: string,
+  propertyName?: string
 ): Promise<void> {
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #2c5282; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background-color: #f9f9f9; }
-    .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
-    .message { white-space: pre-wrap; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>${subject}</h1>
-    </div>
-
-    <div class="content">
-      <p>Dear ${guestName},</p>
-      <div class="message">${message}</div>
-      <p>If you have any questions, please feel free to reply to this email.</p>
-    </div>
-
-    <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(subject, "subject");
+  validateRequiredString(message, "message");
+  if (ownerEmail) validateEmail(ownerEmail, "ownerEmail");
 
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: guestEmail,
-      replyTo: ownerEmail || FROM_EMAIL,
-      subject: subject,
-      html: html,
-      text: stripHtml(html),
-    });
-    logSuccess("Custom email sent", {email: guestEmail});
+    // Build params for V2 template
+    const params: CustomGuestEmailParamsV2 = {
+      guestEmail,
+      guestName,
+      subject,
+      message,
+      ownerEmail,
+      propertyName,
+    };
+
+    // Send email using V2 template (Refined Premium)
+    await sendCustomGuestEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Custom guest email sent (V2 - Refined Premium)", { email: guestEmail });
   } catch (error) {
-    logError("Error sending custom email", error);
+    logError("Error sending custom guest email", error);
     throw error;
   }
 }
 
+// Backward compatibility alias
+export const sendCustomEmailToGuest = sendCustomGuestEmail;
+
 /**
- * Send suspicious activity alert email (Phase 3 security feature)
- * Alerts user when login from new device or location is detected
+ * Send payment reminder email
+ *
+ * MIGRATED: Now uses modern email template
  */
-export async function sendSuspiciousActivityEmail(
-  userEmail: string,
-  userName: string,
-  deviceId: string | undefined,
-  location: string | undefined,
-  reason: string
+export async function sendPaymentReminderEmail(
+  guestEmail: string,
+  guestName: string,
+  bookingReference: string,
+  propertyName: string,
+  unitName: string | undefined,
+  checkIn: Date,
+  depositAmount: number,
+  accessToken?: string,
+  propertyId?: string
 ): Promise<void> {
-  const subject = "[BedBooking] 🔒 Sigurnosno upozorenje - Nova prijava detektovana";
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #FF5722; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .alert-box { background: #fff3e0; border-left: 4px solid #FF9800; padding: 15px; margin: 15px 0; }
-    .info-box { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>🔒 Security Alert</h1>
-      <p>New login activity detected</p>
-    </div>
-
-    <div class="content">
-      <p>Hi ${userName},</p>
-      <p>We detected a login to your Rab Booking account from a ${reason === "new_device" ? "new device" : "new location"}.</p>
-
-      <div class="info-box">
-        <h3>Login Details</h3>
-        <p><strong>When:</strong> ${new Date().toLocaleString("en-GB")}</p>
-        ${deviceId ? `<p><strong>Device ID:</strong> ${deviceId}</p>` : ""}
-        ${location ? `<p><strong>Location:</strong> ${location}</p>` : ""}
-        <p><strong>Reason:</strong> ${reason === "new_device" ? "Login from new device" : "Login from new location"}</p>
-      </div>
-
-      <div class="alert-box">
-        <h3>⚠️ Was this you?</h3>
-        <p>If you recognize this activity, you can safely ignore this email.</p>
-        <p><strong>If this wasn't you:</strong></p>
-        <ul>
-          <li>Change your password immediately</li>
-          <li>Review your account activity</li>
-          <li>Contact support if you see any suspicious changes</li>
-        </ul>
-      </div>
-
-      <p>This is an automated security alert to keep your account safe.</p>
-    </div>
-
-    <div class="footer">
-      <p>© 2025 Rab Booking Security Team</p>
-      <p>This email cannot be replied to. For support, please log into your dashboard.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+  validateAmount(depositAmount, "depositAmount");
 
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} Security <${FROM_EMAIL}>`,
-      to: userEmail,
-      subject: subject,
-      html: html,
-      text: stripHtml(html),
-    });
-    logSuccess("Suspicious activity alert sent", {email: userEmail});
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "payment_reminder");
+
+    // Generate view booking URL if accessToken provided (uses pre-fetched data)
+    const viewBookingUrl = accessToken ? generateViewBookingUrl(
+      bookingReference,
+      guestEmail,
+      accessToken,
+      propertyData
+    ) : undefined;
+
+    // Build params for new template
+    const params: PaymentReminderParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      propertyName,
+      unitName,
+      checkIn,
+      depositAmount,
+      viewBookingUrl,
+      contactEmail: propertyData.contactEmail,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendPaymentReminderEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Payment reminder email sent (V2 - Refined Premium)", { email: guestEmail });
   } catch (error) {
-    logError("Error sending suspicious activity email", error);
+    logError("Error sending payment reminder email", error);
     throw error;
   }
 }
 
 /**
- * Send pending booking request email to guest (no payment required)
+ * Send check-in reminder email
+ *
+ * MIGRATED: Now uses modern email template
+ */
+export async function sendCheckInReminderEmail(
+  guestEmail: string,
+  guestName: string,
+  bookingReference: string,
+  propertyName: string,
+  unitName: string | undefined,
+  checkIn: Date,
+  checkInTime?: string,
+  address?: string,
+  accessToken?: string,
+  propertyId?: string
+): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkIn, "checkIn");
+
+  try {
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "checkin_reminder");
+
+    // Generate view booking URL if accessToken provided (uses pre-fetched data)
+    const viewBookingUrl = accessToken ? generateViewBookingUrl(
+      bookingReference,
+      guestEmail,
+      accessToken,
+      propertyData
+    ) : undefined;
+
+    // Build params for new template
+    const params: CheckInReminderParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      propertyName,
+      unitName,
+      checkIn,
+      checkInTime,
+      address,
+      viewBookingUrl,
+      contactEmail: propertyData.contactEmail,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendCheckInReminderEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Check-in reminder email sent (V2 - Refined Premium)", { email: guestEmail });
+  } catch (error) {
+    logError("Error sending check-in reminder email", error);
+    throw error;
+  }
+}
+
+/**
+ * Send check-out reminder email
+ *
+ * MIGRATED: Now uses modern email template
+ */
+export async function sendCheckOutReminderEmail(
+  guestEmail: string,
+  guestName: string,
+  bookingReference: string,
+  propertyName: string,
+  unitName: string | undefined,
+  checkOut: Date,
+  checkOutTime?: string,
+  propertyId?: string
+): Promise<void> {
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateDate(checkOut, "checkOut");
+
+  try {
+    // Fetch property data ONCE (contactEmail + subdomain)
+    const propertyData = await fetchPropertyData(propertyId, "checkout_reminder");
+
+    // Build params for new template
+    const params: CheckOutReminderParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      propertyName,
+      unitName,
+      checkOut,
+      checkOutTime,
+      contactEmail: propertyData.contactEmail,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendCheckOutReminderEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Check-out reminder email sent (V2 - Refined Premium)", { email: guestEmail });
+  } catch (error) {
+    logError("Error sending check-out reminder email", error);
+    throw error;
+  }
+}
+
+// ==========================================
+// ADDITIONAL EMAIL FUNCTIONS
+// ==========================================
+
+// NOTE: sendSuspiciousActivityEmail has been removed (TODO for future implementation)
+
+/**
+ * Bank details for bank transfer payments
+ */
+export interface BankDetails {
+  bankName?: string;
+  accountHolder?: string;
+  iban?: string;
+  swift?: string;
+}
+
+/**
+ * Send pending booking request email
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, warning theme)
+ *
+ * @param guestEmail - Guest's email address
+ * @param guestName - Guest's name
+ * @param bookingReference - Booking reference code
+ * @param propertyName - Property name
+ * @param paymentMethod - Optional payment method (if 'bank_transfer', includes bank details)
+ * @param depositAmount - Optional deposit amount for bank transfer
+ * @param bankDetails - Optional bank details (required if paymentMethod is 'bank_transfer')
  */
 export async function sendPendingBookingRequestEmail(
   guestEmail: string,
   guestName: string,
   bookingReference: string,
-  checkIn: Date,
-  checkOut: Date,
-  totalAmount: number,
-  unitName: string,
-  propertyName: string
+  propertyName: string,
+  paymentMethod?: string,
+  depositAmount?: number,
+  bankDetails?: BankDetails
 ): Promise<void> {
-  const subject = `[BedBooking] Zahtjev za rezervaciju primljen - ${bookingReference}`;
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .highlight { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FBC02D; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>📋 Booking Request Received</h1>
-      <p>Reference: ${bookingReference}</p>
-    </div>
-
-    <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>Thank you for your booking request! We have received your reservation and it is pending approval from the property owner.</p>
-
-      <div class="booking-details">
-        <h3>Booking Details</h3>
-        <div class="detail-row">
-          <span>Property:</span>
-          <strong>${propertyName}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Unit:</span>
-          <strong>${unitName}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Check-in:</span>
-          <strong>${formatDate(checkIn)}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Check-out:</span>
-          <strong>${formatDate(checkOut)}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Reference:</span>
-          <strong>${bookingReference}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Total Amount:</span>
-          <strong>€${totalAmount.toFixed(2)}</strong>
-        </div>
-      </div>
-
-      <div class="highlight">
-        <p><strong>⏳ Pending Approval</strong></p>
-        <p>The property owner will review your booking request and contact you shortly with payment details if approved.</p>
-        <p>You will receive a confirmation email once your booking is approved.</p>
-      </div>
-
-      <p>If you have any questions, please don't hesitate to contact the property owner.</p>
-    </div>
-
-    <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(propertyName, "propertyName");
 
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: guestEmail,
-      subject: subject,
-      html: html,
-      text: stripHtml(html),
+    // Build params for V2 template
+    const params: PendingBookingRequestParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      propertyName,
+      paymentMethod,
+      depositAmount,
+      bankDetails,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendPendingBookingRequestEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Pending booking request email sent (V2 - Refined Premium)", {
+      email: guestEmail,
+      paymentMethod,
+      hasBankDetails: !!bankDetails?.iban,
     });
-    logSuccess("Pending booking request email sent to guest", {email: guestEmail});
   } catch (error) {
     logError("Error sending pending booking request email", error);
     throw error;
@@ -628,97 +1042,41 @@ export async function sendPendingBookingRequestEmail(
 }
 
 /**
- * Send pending booking notification to owner (no payment)
+ * Send pending booking owner notification
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, warning theme)
  */
 export async function sendPendingBookingOwnerNotification(
   ownerEmail: string,
-  ownerName: string,
-  guestName: string,
-  guestEmail: string,
-  guestPhone: string,
   bookingReference: string,
-  checkIn: Date,
-  checkOut: Date,
-  totalAmount: number,
-  unitName: string,
-  guestCount: number,
-  notes?: string
+  guestName: string,
+  propertyName: string,
+  dashboardUrl?: string
 ): Promise<void> {
-  const subject = `Nova rezervacija za odobrenje - ${bookingReference}`;
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .alert { background: #fff9c4; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FBC02D; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-    .action-btn { display: inline-block; padding: 12px 24px; background: #6B8E23; color: white; text-decoration: none; border-radius: 6px; margin: 10px 5px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>🔔 Nova rezervacija za odobrenje!</h1>
-      <p>Čeka vašu potvrdu</p>
-    </div>
-
-    <div class="content">
-      <p>Poštovani ${ownerName},</p>
-      <p>Primili ste novu rezervaciju putem booking widgeta koja zahtijeva vaše odobrenje.</p>
-
-      <div class="booking-details">
-        <h3>Detalji rezervacije</h3>
-        <p><strong>Jedinica:</strong> ${unitName}</p>
-        <p><strong>Gost:</strong> ${guestName}</p>
-        <p><strong>Email:</strong> ${guestEmail}</p>
-        <p><strong>Telefon:</strong> ${guestPhone}</p>
-        <p><strong>Broj gostiju:</strong> ${guestCount}</p>
-        <p><strong>Check-in:</strong> ${formatDate(checkIn)}</p>
-        <p><strong>Check-out:</strong> ${formatDate(checkOut)}</p>
-        <p><strong>Referenca:</strong> ${bookingReference}</p>
-        ${notes ? `<p><strong>Napomena:</strong> ${notes}</p>` : ""}
-      </div>
-
-      <div class="booking-details">
-        <h3>Cijena</h3>
-        <p><strong>Ukupno:</strong> €${totalAmount.toFixed(2)}</p>
-      </div>
-
-      <div class="alert">
-        <p><strong>⚠️ Akcija potrebna:</strong></p>
-        <p>Prijavite se u Owner Dashboard da odobrite ili odbijete ovu rezervaciju.</p>
-        <p>Nakon odobrenja, kontaktirajte gosta sa detaljima plaćanja.</p>
-      </div>
-
-      <p style="text-align: center;">
-        <a href="#" class="action-btn">Prijavite se u Dashboard</a>
-      </p>
-    </div>
-
-    <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  // Input validation
+  validateEmail(ownerEmail, "ownerEmail");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(propertyName, "propertyName");
 
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: ownerEmail,
-      subject: subject,
-      html: html,
-      text: stripHtml(html),
-    });
-    logSuccess("Pending booking owner notification sent", {email: ownerEmail});
+    // Build params for V2 template
+    const params: PendingOwnerNotificationParams = {
+      ownerEmail,
+      bookingReference,
+      guestName,
+      propertyName,
+      dashboardUrl,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendPendingOwnerNotificationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Pending booking owner notification sent (V2 - Refined Premium)", { email: ownerEmail });
   } catch (error) {
     logError("Error sending pending booking owner notification", error);
     throw error;
@@ -726,129 +1084,80 @@ export async function sendPendingBookingOwnerNotification(
 }
 
 /**
- * Send booking rejection email to guest
+ * Send booking rejected email
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, error theme)
  */
 export async function sendBookingRejectedEmail(
   guestEmail: string,
   guestName: string,
   bookingReference: string,
-  checkIn: Date,
-  checkOut: Date,
-  unitName: string,
   propertyName: string,
-  reason?: string
+  reason?: string,
+  ownerEmail?: string
 ): Promise<void> {
-  const subject = `[BedBooking] Zahtjev za rezervaciju odbijen - ${bookingReference}`;
-
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #EF4444; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background: #f9f9f9; }
-    .booking-details { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; }
-    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .highlight { background: #FEE2E2; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #EF4444; }
-    .footer { text-align: center; padding: 20px; color: #777; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>❌ Booking Request Declined</h1>
-      <p>Reference: ${bookingReference}</p>
-    </div>
-
-    <div class="content">
-      <p>Dear ${guestName},</p>
-      <p>We regret to inform you that your booking request has been declined by the property owner.</p>
-
-      <div class="booking-details">
-        <h3>Booking Details</h3>
-        <div class="detail-row">
-          <span>Property:</span>
-          <strong>${propertyName}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Unit:</span>
-          <strong>${unitName}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Check-in:</span>
-          <strong>${formatDate(checkIn)}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Check-out:</span>
-          <strong>${formatDate(checkOut)}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Reference:</span>
-          <strong>${bookingReference}</strong>
-        </div>
-      </div>
-
-      ${reason ? `
-      <div class="highlight">
-        <p><strong>Reason:</strong></p>
-        <p>${reason}</p>
-      </div>
-      ` : ""}
-
-      <p>We apologize for any inconvenience. Please feel free to browse our other available properties or contact us for alternative dates.</p>
-    </div>
-
-    <div class="footer">
-      <p>© 2025 Rab Booking. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `;
+  // Input validation
+  validateEmail(guestEmail, "guestEmail");
+  validateRequiredString(guestName, "guestName");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(propertyName, "propertyName");
+  if (ownerEmail) validateEmail(ownerEmail, "ownerEmail");
 
   try {
-    await getResendClient().emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: guestEmail,
-      subject: subject,
-      html: html,
-      text: stripHtml(html),
-    });
-    logSuccess("Booking rejection email sent to guest", {email: guestEmail});
+    // Build params for V2 template
+    const params: BookingRejectedParams = {
+      guestEmail,
+      guestName,
+      bookingReference,
+      propertyName,
+      reason,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendBookingRejectedEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME(),
+      ownerEmail
+    );
+
+    logSuccess("Booking rejected email sent (V2 - Refined Premium)", { email: guestEmail });
   } catch (error) {
-    logError("Error sending booking rejection email", error);
+    logError("Error sending booking rejected email", error);
     throw error;
   }
 }
 
 /**
- * Helper: Strip HTML tags for plain text email fallback
+ * Send email verification code
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium, info/security theme)
  */
-function stripHtml(html: string): string {
-  return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "") // Remove style tags
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "") // Remove script tags
-    .replace(/<[^>]+>/g, "") // Remove all HTML tags
-    .replace(/&nbsp;/g, " ") // Replace &nbsp; with space
-    .replace(/&amp;/g, "&") // Replace &amp; with &
-    .replace(/&lt;/g, "<") // Replace &lt; with <
-    .replace(/&gt;/g, ">") // Replace &gt; with >
-    .replace(/&quot;/g, '"') // Replace &quot; with "
-    .replace(/&#39;/g, "'") // Replace &#39; with '
-    .replace(/\n\s*\n\s*\n/g, "\n\n") // Remove excessive blank lines
-    .trim();
-}
+export async function sendEmailVerificationCode(
+  email: string,
+  code: string
+): Promise<void> {
+  // Input validation
+  validateEmail(email, "email");
+  validateRequiredString(code, "code");
 
-/**
- * Helper: Format date for email display
- */
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  try {
+    // Build params for V2 template
+    const params: EmailVerificationParams = {
+      email,
+      code,
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendEmailVerificationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Email verification code sent (V2 - Refined Premium)", { email });
+  } catch (error) {
+    logError("Error sending email verification code", error);
+    throw error;
+  }
 }

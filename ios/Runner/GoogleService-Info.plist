@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyAOFQ2jykLZlTtE6whuGDb-09r8HyAHs90</string>
+	<string>AIzaSyAnnBk6C9SJn0oXFKaIYKh9P5EgyBUtYxI</string>
 	<key>GCM_SENDER_ID</key>
-	<string>592597958982</string>
+	<string>584902480248</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.novaAplikacija</string>
+	<string>io.bookbed.app</string>
 	<key>PROJECT_ID</key>
-	<string>rab-booking-248fc</string>
+	<string>bookbed-staging</string>
 	<key>STORAGE_BUCKET</key>
-	<string>rab-booking-248fc.firebasestorage.app</string>
+	<string>bookbed-staging.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:592597958982:ios:4ef349721f048d97d3e547</string>
+	<string>1:584902480248:ios:c7e20d5f21438baf94f88d</string>
 </dict>
 </plist>

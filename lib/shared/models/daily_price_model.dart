@@ -5,7 +5,17 @@ part 'daily_price_model.freezed.dart';
 part 'daily_price_model.g.dart';
 
 /// Daily Price model (specific price for each date)
-/// Based on BedBooking features
+///
+/// Fields that are saved AND used by the booking widget:
+/// - price: Base price for this date
+/// - available: Block entire day (false = closed/blocked)
+/// - blockCheckIn: Prevent check-in on this date
+/// - blockCheckOut: Prevent check-out on this date
+/// - weekendPrice: Override price for weekend days
+/// - minNightsOnArrival: Minimum nights if arriving on this date
+/// - maxNightsOnArrival: Maximum nights if arriving on this date
+/// - minDaysAdvance: Minimum days in advance to book
+/// - maxDaysAdvance: Maximum days in advance to book
 @freezed
 class DailyPriceModel with _$DailyPriceModel {
   const factory DailyPriceModel({
@@ -16,8 +26,7 @@ class DailyPriceModel with _$DailyPriceModel {
     @JsonKey(name: 'unit_id') required String unitId,
 
     /// Date
-    @TimestampConverter()
-    required DateTime date,
+    @TimestampConverter() required DateTime date,
 
     /// Base price for this date
     required double price,
@@ -41,28 +50,10 @@ class DailyPriceModel with _$DailyPriceModel {
     /// Maximum nights allowed if arriving on this date
     @JsonKey(name: 'max_nights_on_arrival') int? maxNightsOnArrival,
 
-    /// Minimum nights for ANY day in the booking (stricter rule)
-    @JsonKey(name: 'min_nights_strict') int? minNightsStrict,
-
-    /// Maximum nights for ANY day in the booking (stricter rule)
-    @JsonKey(name: 'max_nights_strict') int? maxNightsStrict,
-
     // === PRICE PERSONALIZATION ===
 
-    /// Weekend price (Friday/Saturday)
+    /// Weekend price override for this date
     @JsonKey(name: 'weekend_price') double? weekendPrice,
-
-    /// Short stay price (e.g., 1-3 nights)
-    @JsonKey(name: 'short_stay_price') double? shortStayPrice,
-
-    /// Long stay price (e.g., 7+ nights)
-    @JsonKey(name: 'long_stay_price') double? longStayPrice,
-
-    /// Price per occupancy (e.g., different price for 2 vs 4 guests)
-    @JsonKey(name: 'occupancy_prices') Map<int, double>? occupancyPrices,
-
-    /// Children price
-    @JsonKey(name: 'children_price') double? childrenPrice,
 
     // === ADVANCE BOOKING WINDOW ===
 
@@ -72,21 +63,17 @@ class DailyPriceModel with _$DailyPriceModel {
     /// Maximum days in advance allowed to book this date
     @JsonKey(name: 'max_days_advance') int? maxDaysAdvance,
 
-    // === METADATA ===
-
-    /// Mark as "Important Day" (special event, holiday, etc.)
-    @JsonKey(name: 'is_important') @Default(false) bool isImportant,
-
-    /// Notes for this date (internal, not shown to guests)
-    String? notes,
+    // === TIMESTAMPS ===
 
     /// Created at timestamp
     @TimestampConverter()
-    @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'created_at')
+    required DateTime createdAt,
 
     /// Updated at timestamp
-    @TimestampConverter()
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'updated_at')
+    DateTime? updatedAt,
   }) = _DailyPriceModel;
 
   const DailyPriceModel._();
@@ -101,8 +88,19 @@ class DailyPriceModel with _$DailyPriceModel {
   /// Get formatted date (e.g., "Jan 15, 2024")
   String get formattedDate {
     final months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
 
     final month = months[date.month];
@@ -133,46 +131,32 @@ class DailyPriceModel with _$DailyPriceModel {
     return date.isAfter(DateTime.now()) && !isToday;
   }
 
-  /// Check if date is a weekend (Saturday or Sunday)
+  /// Check if date is a weekend using default days (Saturday=6 or Sunday=7)
   bool get isWeekend {
     return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
   }
 
-  /// Get effective price based on stay type and occupancy
-  double getEffectivePrice({
-    int? nights,
-    int? occupancy,
-    bool? hasChildren,
-  }) {
-    // Start with base price
-    double effectivePrice = price;
+  /// Check if date is a weekend using custom weekend days
+  /// [weekendDays] - list of weekday numbers (1=Mon, 2=Tue, ..., 5=Fri, 6=Sat, 7=Sun)
+  /// Default: [5, 6] (Friday, Saturday nights for hotel pricing)
+  bool isWeekendDay(List<int>? weekendDays) {
+    final effectiveWeekendDays =
+        weekendDays ?? const [5, 6]; // Default: Fri, Sat nights
+    return effectiveWeekendDays.contains(date.weekday);
+  }
 
-    // Apply weekend price if set
-    if (weekendPrice != null && isWeekend) {
-      effectivePrice = weekendPrice!;
+  /// Get effective price for this date
+  ///
+  /// Returns [weekendPrice] if set and date is a weekend day,
+  /// otherwise returns [price].
+  ///
+  /// [weekendDays] - optional custom weekend days (1=Mon...7=Sun). Default: [6,7]
+  double getEffectivePrice({List<int>? weekendDays}) {
+    // Apply weekend price if set and date is a weekend
+    if (weekendPrice != null && isWeekendDay(weekendDays)) {
+      return weekendPrice!;
     }
-
-    // Apply short stay price if applicable
-    if (shortStayPrice != null && nights != null && nights <= 3) {
-      effectivePrice = shortStayPrice!;
-    }
-
-    // Apply long stay price if applicable
-    if (longStayPrice != null && nights != null && nights >= 7) {
-      effectivePrice = longStayPrice!;
-    }
-
-    // Apply occupancy price if set
-    if (occupancyPrices != null && occupancy != null) {
-      effectivePrice = occupancyPrices![occupancy] ?? effectivePrice;
-    }
-
-    // Add children price if applicable
-    if (childrenPrice != null && hasChildren == true) {
-      effectivePrice += childrenPrice!;
-    }
-
-    return effectivePrice;
+    return price;
   }
 
   /// Check if date can be used as check-in
@@ -197,17 +181,14 @@ class DailyPriceModel with _$DailyPriceModel {
     int? minNightsOnArrival,
     int? maxNightsOnArrival,
     double? weekendPrice,
-    double? shortStayPrice,
-    double? longStayPrice,
     int? minDaysAdvance,
     int? maxDaysAdvance,
-    bool? isImportant,
-    String? notes,
   }) {
     final List<DailyPriceModel> prices = [];
     DateTime currentDate = startDate;
 
-    while (currentDate.isBefore(endDate) || currentDate.isAtSameMomentAs(endDate)) {
+    while (currentDate.isBefore(endDate) ||
+        currentDate.isAtSameMomentAs(endDate)) {
       prices.add(
         DailyPriceModel(
           id: '', // Will be generated by database
@@ -220,13 +201,9 @@ class DailyPriceModel with _$DailyPriceModel {
           minNightsOnArrival: minNightsOnArrival,
           maxNightsOnArrival: maxNightsOnArrival,
           weekendPrice: weekendPrice,
-          shortStayPrice: shortStayPrice,
-          longStayPrice: longStayPrice,
           minDaysAdvance: minDaysAdvance,
           maxDaysAdvance: maxDaysAdvance,
-          isImportant: isImportant ?? false,
-          notes: notes,
-          createdAt: DateTime.now(),
+          createdAt: DateTime.now().toUtc(),
         ),
       );
       currentDate = currentDate.add(const Duration(days: 1));

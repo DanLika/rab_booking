@@ -3,7 +3,7 @@
 /// Usage:
 /// ```dart
 /// Container(
-///   color: Colors.black.withValues(alpha: OpacityTokens.mediumOverlay),
+///   color: Colors.black.withOpacity(OpacityTokens.mediumOverlay),
 /// )
 ///
 /// Opacity(

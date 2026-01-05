@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "appName": "RAB Booking",
+  "appName": "BookBed",
   "save": "Save",
   "cancel": "Cancel",
   "delete": "Delete",
@@ -48,8 +48,53 @@
   "dontHaveAccount": "Don't have an account?",
   "signInWithGoogle": "Sign in with Google",
   "continueWithGoogle": "Continue with Google",
+  "continueWithApple": "Continue with Apple",
   "welcomeBack": "Welcome Back",
   "loginToYourAccount": "Sign in to your account",
+  
+  "authOwnerLogin": "Owner Login",
+  "authManageProperties": "Manage your properties and bookings",
+  "authRememberMe": "Remember me",
+  "authRememberMeHint": "Keep me logged in on this device",
+
+  "authErrorWrongPassword": "Incorrect password. Please try again.",
+  "authErrorUserNotFound": "No account found with this email.",
+  "authErrorInvalidEmail": "Invalid email address.",
+  "authErrorUserDisabled": "This account has been disabled.",
+  "authErrorTooManyRequests": "Too many failed attempts. Please try again later.",
+  "authErrorGeneric": "Login failed. Please check your credentials and try again.",
+  "authForgotPassword": "Forgot password?",
+  "authOrContinueWith": "or continue with",
+  "authPreviewDemo": "Preview Demo (Anonymous)",
+  "authCreateAccount": "Create Account",
+  "authNoAccount": "Don't have an account?",
+  "authHaveAccount": "Already have an account?",
+  "authResetPassword": "Reset Your Password",
+  "authResetPasswordDesc": "Enter your email address and we'll send you instructions to reset your password.",
+  "authSendResetLink": "Send Reset Link",
+  "authBackToLogin": "Back to Login",
+  "authEmailSent": "Email Sent!",
+  "authResetEmailSentTo": "We've sent password reset instructions to:",
+  "authReturnToLogin": "Return to Login",
+  "authResendEmail": "Didn't receive the email? Resend",
+  "authStartManaging": "Start managing your properties today",
+  "authFullName": "Full Name",
+  "authPhone": "Phone (optional)",
+  "authConfirmPassword": "Confirm Password",
+  "authAcceptTerms": "I accept the ",
+  "authTermsConditions": "Terms & Conditions",
+  "authPrivacyPolicy": "Privacy Policy",
+  "authNewsletterOptIn": "Send me updates and promotional offers",
+  "authMustAcceptTerms": "You must accept the Terms & Conditions and Privacy Policy",
+  "authEnterFullName": "Please enter your full name",
+  "authEnterFirstLastName": "Please enter both first and last name",
+  "authIncorrectPassword": "Incorrect password. Try again or reset your password.",
+  "authWelcomeUser": "Welcome back, {name}!",
+  "@authWelcomeUser": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "loginSuccessful": "Successfully logged in!",
   "loginFailed": "Login failed",
   "googleLoginFailed": "Google sign-in failed",
@@ -163,9 +208,23 @@
 
   "editProfile": "Edit Profile",
   "changePassword": "Change Password",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
   "currentPassword": "Current Password",
   "newPassword": "New Password",
   "confirmPassword": "Confirm Password",
+  "confirmNewPassword": "Confirm New Password",
+  "passwordChangedSuccessfully": "Password changed successfully",
+  "enterCurrentAndNewPassword": "Enter your current password and choose a new one",
+  "currentPasswordIncorrect": "Current password is incorrect",
+  "weakPassword": "Weak",
+  "mediumPassword": "Medium",
+  "strongPassword": "Strong",
+  "recentLoginRequired": "Please sign out and sign in again before changing password",
+  "passwordChangeError": "Error changing password",
+  "passwordsMustBeDifferent": "New password must be different from current password",
+  "pleaseEnterCurrentPassword": "Please enter your current password",
+  "youWillStayLoggedIn": "You will stay logged in after changing your password",
   "personalInfo": "Personal Information",
   "accountSettings": "Account Settings",
   "languageSettings": "Language Settings",
@@ -191,6 +250,24 @@
   "invalidPassword": "Password must be at least 8 characters",
   "passwordsDoNotMatch": "Passwords do not match",
   "requiredField": "This field is required",
+
+  "errorUserNotFound": "No account found with this email",
+  "errorWrongPassword": "Incorrect password. Try again or reset your password",
+  "errorInvalidEmail": "Invalid email address",
+  "errorUserDisabled": "Your account has been disabled. Contact support",
+  "errorTooManyRequests": "Too many login attempts. Please try again later",
+  "errorNetworkFailed": "Network error. Please check your internet connection",
+  "errorGeneric": "An error occurred. Please try again",
+  "errorPermissionDenied": "Permission denied. Contact administrator",
+  "errorNotFound": "Requested data not found",
+  "errorTimeout": "Operation timed out. Please try again",
+  "errorAlreadyExists": "Data already exists",
+  "errorEmailInUse": "Email address is already in use",
+  "errorInvalidData": "Invalid data. Please check your input",
+  "errorOverlap": "Selected dates overlap with existing booking",
+  "errorPastDate": "Cannot create booking in the past",
+  "errorUnitNotAvailable": "Unit is not available for selected dates",
+  "pleaseFixErrors": "Please fix the errors above",
 
   "savedSuccessfully": "Saved successfully",
   "updatedSuccessfully": "Updated successfully",
@@ -238,7 +315,7 @@
   "privacyDataRetentionTitle": "5. Data Retention",
   "privacyDataRetentionBody": "We retain your personal information for as long as necessary to provide our services and comply with legal obligations. You may request deletion of your data at any time, subject to legal requirements.",
   "privacyYourRightsTitle": "6. Your Rights",
-  "privacyYourRightsBody": "Under GDPR, you have the right to:\n\n• Access your personal data\n• Correct inaccurate data\n• Request deletion of your data\n• Object to data processing\n• Data portability\n• Withdraw consent\n\nContact us at privacy@rabbooking.com to exercise your rights.",
+  "privacyYourRightsBody": "Under GDPR, you have the right to:\n\n• Access your personal data\n• Correct inaccurate data\n• Request deletion of your data\n• Object to data processing\n• Data portability\n• Withdraw consent\n\nContact us at info@bookbed.io to exercise your rights.",
   "privacyCookiesTitle": "7. Cookies and Tracking",
   "privacyCookiesBody": "We use cookies and similar tracking technologies to improve your browsing experience. You can control cookies through your browser settings. Some features may not function properly if cookies are disabled.",
   "privacyThirdPartyTitle": "8. Third-Party Services",
@@ -248,7 +325,7 @@
   "privacyChangesTitle": "10. Changes to Privacy Policy",
   "privacyChangesBody": "We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page. Changes are effective immediately upon posting.",
   "privacyContactTitle": "Contact Us",
-  "privacyContactBody": "If you have questions about this Privacy Policy, please contact us at:\n\nEmail: privacy@rabbooking.com\nPhone: +1 (555) 123-4567",
+  "privacyContactBody": "If you have questions about this Privacy Policy, please contact us at:\n\nEmail: info@bookbed.io\nWebsite: bookbed.io",
 
   "helpFaq": "Help & FAQ",
   "searchForHelp": "Search for help...",
@@ -430,5 +507,2697 @@
   "widgetTermsAndConditions": "By booking, you agree to our Terms & Conditions and Privacy Policy",
   "widgetMissingParameters": "Missing required parameters",
   "widgetPropertyNotFound": "Property or unit not found",
-  "widgetContactSupport": "Please contact support"
+  "widgetContactSupport": "Please contact support",
+
+  "ownerOverview": "Overview",
+  "ownerErrorLoadingData": "Error loading data",
+  "ownerMonthlyRevenue": "Revenue this month",
+  "ownerYearlyRevenue": "Revenue this year",
+  "ownerMonthlyBookings": "Bookings this month",
+  "ownerUpcomingCheckIns": "Upcoming check-ins",
+  "ownerActiveProperties": "Active properties",
+  "ownerOccupancyRate": "Occupancy rate",
+  "ownerDashboardRevenue": "Revenue",
+  "ownerDashboardBookings": "Bookings",
+  "ownerDashboardThisMonth": "This Month",
+
+  "ownerWelcomeTitle": "Welcome to BookBed!",
+  "ownerWelcomeSubtitle": "Get started by adding your first property to start receiving bookings.",
+  "ownerAddFirstProperty": "Add Property",
+
+  "ownerNewBookingReceived": "New booking received",
+  "ownerBookingConfirmedActivity": "Booking confirmed",
+  "ownerBookingCancelledActivity": "Booking cancelled",
+  "ownerBookingCompleted": "Booking completed",
+
+  "ownerRecentActivities": "Recent Activities",
+  "ownerViewAll": "All",
+  "ownerNoRecentActivities": "No recent activities",
+  "ownerRecentActivitiesDescription": "Your recent bookings and activities will appear here",
+  "ownerJustNow": "Just now",
+  "ownerMinutesAgo": "{count}m ago",
+  "@ownerMinutesAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "ownerHoursAgo": "{count}h ago",
+  "@ownerHoursAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "ownerDaysAgo": "{count}d ago",
+  "@ownerDaysAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "ownerDrawerOverview": "Overview",
+  "ownerDrawerCalendar": "Calendar",
+  "ownerDrawerBookings": "Bookings",
+  "ownerDrawerUnits": "Accommodation Units",
+  "ownerDrawerIntegrations": "Integrations",
+  "ownerDrawerIcal": "iCal",
+  "ownerDrawerImportBookings": "Import Bookings",
+  "ownerDrawerSyncBookingCom": "Sync with booking.com",
+  "ownerDrawerExportCalendar": "Export Calendar",
+  "ownerDrawerIcalFeedUrl": "iCal feed URL",
+  "ownerDrawerPayments": "Payments",
+  "ownerDrawerStripePayments": "Stripe Payments",
+  "ownerDrawerCardProcessing": "Card processing",
+  "ownerDrawerBankAccount": "Bank Account",
+  "ownerDrawerBankAccountData": "Payment data",
+  "ownerDrawerGuides": "Guides",
+  "ownerDrawerEmbedWidget": "Embed Widget",
+  "ownerDrawerAddToSite": "Adding to website",
+  "ownerDrawerFaq": "FAQ",
+  "ownerDrawerFaqSubtitle": "Common questions & answers",
+  "ownerDrawerNotifications": "Notifications",
+  "ownerDrawerProfile": "Profile",
+  "ownerDrawerLogout": "Log out",
+
+  "ownerCalendar": "Calendar",
+  "ownerCalendarPreviousWeek": "Previous week",
+  "ownerCalendarNextWeek": "Next week",
+  "ownerCalendarPreviousMonth": "Previous month",
+  "ownerCalendarNextMonth": "Next month",
+  "ownerCalendarToday": "Today",
+  "ownerCalendarGoToToday": "Go to today",
+  "ownerCalendarOptions": "Options",
+  "ownerCalendarNotifications": "Notifications",
+  "ownerCalendarSearch": "Search",
+  "ownerCalendarSearchBookings": "Search bookings",
+  "ownerCalendarRefresh": "Refresh",
+  "ownerCalendarFilters": "Filters",
+  "ownerCalendarHideStats": "Hide statistics",
+  "ownerCalendarShowStats": "Show statistics",
+  "ownerCalendarHideEmptyUnits": "Hide empty units",
+  "ownerCalendarShowEmptyUnits": "Show empty units",
+  "ownerCalendarNoUnits": "No units to display",
+  "ownerCalendarLoadingUnits": "Loading units...",
+  "ownerCalendarErrorLoadingUnits": "Error loading units",
+  "ownerCalendarTryAgain": "Try again",
+  "ownerCalendarLoading": "Loading...",
+  "ownerCalendarChangeStatus": "Change status",
+  "ownerCalendarDefaultGuest": "Guest",
+  "ownerCalendarSummaryGuests": "Guests",
+  "ownerCalendarSummaryArrivals": "{arrivals} arrival • {departures} departure",
+  "@ownerCalendarSummaryArrivals": {
+    "placeholders": {
+      "arrivals": {"type": "int"},
+      "departures": {"type": "int"}
+    }
+  },
+  "ownerCalendarZoom": "Zoom: {percent}%",
+  "@ownerCalendarZoom": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "ownerCalendarReset": "Reset",
+
+  "ownerFilterActiveFilter": "active filter",
+  "ownerFilterActiveFilters": "active filters",
+  "ownerFilterClearAll": "Clear all",
+  "ownerFilterApply": "Apply",
+  "ownerFilterCancel": "Cancel",
+  "ownerFilterClear": "Clear",
+  "ownerFilterProperties": "Properties",
+  "ownerFilterUnits": "Units",
+  "ownerFilterStatuses": "Statuses",
+  "ownerFilterSourceWidget": "Widget",
+  "ownerFilterSourceManual": "Manual",
+  "ownerFilterSourceIcal": "iCal",
+
+  "ownerMultiSelectSelected": "selected",
+  "ownerMultiSelectSelectedPlural": "selected",
+  "ownerMultiSelectClear": "Clear",
+  "ownerMultiSelectChangeStatus": "Change status",
+  "ownerMultiSelectDeleteSelected": "Delete selected",
+  "ownerMultiSelectConfirmation": "Confirmation",
+  "ownerMultiSelectChangeStatusConfirm": "Change status for {count} {countLabel} to \"{status}\"?",
+  "@ownerMultiSelectChangeStatusConfirm": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "countLabel": {"type": "String"},
+      "status": {"type": "String"}
+    }
+  },
+  "ownerMultiSelectReservation": "reservation",
+  "ownerMultiSelectReservations": "reservations",
+  "ownerMultiSelectCancel": "Cancel",
+  "ownerMultiSelectConfirm": "Confirm",
+  "ownerMultiSelectStatusChanged": "Status changed for {count} {countLabel}",
+  "@ownerMultiSelectStatusChanged": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "countLabel": {"type": "String"}
+    }
+  },
+  "ownerMultiSelectStatusError": "Error changing status",
+  "ownerMultiSelectDeleteConfirmTitle": "Delete confirmation",
+  "ownerMultiSelectDeleteConfirmMessage": "Are you sure you want to delete {count} {countLabel}?\n\nThis action cannot be undone.",
+  "@ownerMultiSelectDeleteConfirmMessage": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "countLabel": {"type": "String"}
+    }
+  },
+  "ownerMultiSelectDelete": "Delete",
+  "ownerMultiSelectDeleted": "Deleted {count} {countLabel}",
+  "@ownerMultiSelectDeleted": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "countLabel": {"type": "String"}
+    }
+  },
+  "ownerMultiSelectDeleteError": "Error deleting reservations",
+
+  "ownerStatusPending": "Pending",
+  "ownerStatusConfirmed": "Confirmed",
+  "ownerStatusCompleted": "Completed",
+  "ownerStatusCancelled": "Cancelled",
+
+  "ownerCalendarError": "Error",
+  "ownerCalendarClose": "Close",
+  "ownerCalendarHelp": "Help",
+
+  "ownerBookingsTitle": "Bookings",
+  "ownerBookingsErrorLoading": "Error loading bookings",
+  "ownerBookingsLoadingMore": "Loading more bookings...",
+  "ownerBookingsScrollToLoadMore": "Scroll to load more",
+  "ownerBookingsFiltersAndView": "Filters and View",
+  "ownerBookingsCardView": "Card view",
+  "ownerBookingsTableView": "Table view",
+  "ownerBookingsAdvancedFiltering": "Advanced filtering",
+  "ownerBookingsFilterByStatusPropertyDate": "Filter by status, property, date",
+  "ownerBookingsClearAllFilters": "Clear all filters",
+  "ownerBookingsNoBookings": "No bookings",
+  "ownerBookingsNoBookingsDescription": "All bookings for your properties will appear here. Create your first booking or wait for guest reservations.",
+  "ownerBookingsGuest": "guest",
+  "ownerBookingsGuests": "guests",
+  "ownerBookingsApproved": "Booking approved successfully",
+  "ownerBookingsApproveError": "Error approving booking",
+  "ownerBookingsRejected": "Booking rejected",
+  "ownerBookingsRejectError": "Error rejecting booking",
+  "ownerBookingsCompleted": "Booking marked as completed",
+  "ownerBookingsCompleteError": "Error completing booking",
+  "ownerBookingsCancelled": "Booking cancelled",
+  "ownerBookingsCancelError": "Error cancelling booking",
+  "ownerBookingsNotFound": "Booking not found",
+
+  "ownerBookingCardNight": "night",
+  "ownerBookingCardNights": "nights",
+  "ownerBookingCardTotal": "Total",
+  "ownerBookingCardPaid": "Paid",
+  "ownerBookingCardRemaining": "Remaining",
+  "ownerBookingCardFullyPaid": "Fully paid",
+  "ownerBookingCardPercentPaid": "{percent}% paid",
+  "@ownerBookingCardPercentPaid": {
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "ownerBookingCardNotes": "Notes",
+  "ownerBookingCardDetails": "Details",
+  "ownerBookingCardApprove": "Approve",
+  "ownerBookingCardReject": "Reject",
+  "ownerBookingCardComplete": "Complete",
+  "ownerBookingCardCancel": "Cancel",
+
+  "ownerTableSelected": "{count} selected",
+  "@ownerTableSelected": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "ownerTableClearSelection": "Clear selection",
+  "ownerTableBulkActions": "Bulk actions",
+  "ownerTableConfirmSelected": "Confirm selected",
+  "ownerTableRejectSelected": "Reject selected",
+  "ownerTableDeleteSelected": "Delete selected",
+  "ownerTableColumnGuest": "Guest",
+  "ownerTableColumnPropertyUnit": "Property / Unit",
+  "ownerTableColumnCheckIn": "Check-in",
+  "ownerTableColumnCheckOut": "Check-out",
+  "ownerTableColumnNights": "Nights",
+  "ownerTableColumnGuests": "Guests",
+  "ownerTableColumnStatus": "Status",
+  "ownerTableColumnPrice": "Price",
+  "ownerTableColumnSource": "Source",
+  "ownerTableColumnActions": "Actions",
+  "ownerTableSourceDirect": "Direct",
+  "ownerTableSourceIcal": "iCal",
+  "ownerTableSourceBookingCom": "Booking.com",
+  "ownerTableSourceAirbnb": "Airbnb",
+  "ownerTableSourceWidget": "Widget",
+  "ownerTableSourceManual": "Manual",
+  "ownerTableActionDetails": "Details",
+  "ownerTableActionConfirm": "Confirm",
+  "ownerTableActionComplete": "Complete",
+  "ownerTableActionEdit": "Edit",
+  "ownerTableActionCancel": "Cancel",
+  "ownerTableActionSendEmail": "Send email",
+  "ownerTableActionDelete": "Delete",
+  "ownerTableConfirmBooking": "Confirm booking",
+  "ownerTableConfirmBookingMessage": "Are you sure you want to confirm this booking?",
+  "ownerTableCompleteBooking": "Mark as completed",
+  "ownerTableCompleteBookingMessage": "Are you sure you want to mark this booking as completed?",
+  "ownerTableCancelBooking": "Cancel booking",
+  "ownerTableCancelBookingMessage": "Are you sure you want to cancel this booking?",
+  "ownerTableCancellationReason": "Cancellation reason",
+  "ownerTableCancellationReasonHint": "Enter reason...",
+  "ownerTableSendEmailToGuest": "Send email to guest",
+  "ownerTableCancelBookingButton": "Cancel booking",
+  "ownerTableDeleteBooking": "Delete booking",
+  "ownerTableDeleteBookingMessage": "Are you sure you want to PERMANENTLY delete this booking? This action cannot be undone.",
+  "ownerTableBookingConfirmed": "Booking confirmed successfully",
+  "ownerTableBookingCompleted": "Booking marked as completed",
+  "ownerTableBookingCancelled": "Booking cancelled",
+  "ownerTableBookingDeleted": "Booking deleted",
+  "ownerTableConfirmSelectedTitle": "Confirm selected bookings",
+  "ownerTableConfirmSelectedMessage": "Are you sure you want to confirm {count} {label}?",
+  "@ownerTableConfirmSelectedMessage": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableConfirmAll": "Confirm all",
+  "ownerTableBookingsConfirmed": "{count} {label} confirmed",
+  "@ownerTableBookingsConfirmed": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableRejectSelectedTitle": "Reject selected bookings",
+  "ownerTableRejectSelectedMessage": "Are you sure you want to reject {count} {label}?",
+  "@ownerTableRejectSelectedMessage": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableRejectionReasonOptional": "Rejection reason (optional)",
+  "ownerTableRejectAll": "Reject all",
+  "ownerTableBookingsRejected": "{count} {label} rejected",
+  "@ownerTableBookingsRejected": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableDeleteSelectedTitle": "Delete selected bookings",
+  "ownerTableDeleteSelectedMessage": "Are you sure you want to PERMANENTLY delete {count} {label}? This action cannot be undone.",
+  "@ownerTableDeleteSelectedMessage": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableBookingsDeleted": "{count} {label} deleted",
+  "@ownerTableBookingsDeleted": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+  "ownerTableBooking": "booking",
+  "ownerTableBookings": "bookings",
+  "ownerTableCancelledByOwner": "Cancelled by owner",
+
+  "ownerDetailsTitle": "Booking details",
+  "ownerDetailsBookingId": "Booking ID",
+  "ownerDetailsStatus": "Status",
+  "ownerDetailsGuestInfo": "Guest information",
+  "ownerDetailsName": "Name",
+  "ownerDetailsEmail": "Email",
+  "ownerDetailsPhone": "Phone",
+  "ownerDetailsSource": "Source",
+  "ownerDetailsPropertyInfo": "Property information",
+  "ownerDetailsProperty": "Property",
+  "ownerDetailsUnit": "Unit",
+  "ownerDetailsLocation": "Location",
+  "ownerDetailsStayInfo": "Stay details",
+  "ownerDetailsCheckIn": "Check-in",
+  "ownerDetailsCheckOut": "Check-out",
+  "ownerDetailsNights": "Number of nights",
+  "ownerDetailsGuests": "Number of guests",
+  "ownerDetailsPaymentInfo": "Payment information",
+  "ownerDetailsTotalPrice": "Total price",
+  "ownerDetailsPaid": "Paid",
+  "ownerDetailsRemaining": "Remaining",
+  "ownerDetailsPaymentMethod": "Payment method",
+  "ownerDetailsPaymentOption": "Payment option",
+  "paymentMethodStripe": "Credit Card (Stripe)",
+  "paymentMethodCard": "Card",
+  "paymentMethodBankTransfer": "Bank Transfer",
+  "paymentMethodCash": "Cash",
+  "paymentMethodOther": "Other",
+  "paymentMethodUnknown": "Not specified",
+  "paymentOptionDeposit": "Deposit",
+  "paymentOptionFullPayment": "Full Payment",
+  "ownerDetailsNotes": "Notes",
+  "ownerDetailsCancellationInfo": "Cancellation information",
+  "ownerDetailsCancelledOn": "Cancelled on",
+  "ownerDetailsReason": "Reason",
+  "ownerDetailsCreated": "Created",
+  "ownerDetailsUpdated": "Updated",
+  "ownerDetailsEdit": "Edit",
+  "ownerDetailsResend": "Resend",
+  "ownerDetailsCancel": "Cancel",
+  "ownerDetailsClose": "Close",
+  "ownerDetailsCancelConfirmTitle": "Cancellation confirmation",
+  "ownerDetailsCancelConfirmMessage": "Are you sure you want to cancel this booking?",
+  "ownerDetailsCancellationReason": "Cancellation reason (optional)",
+  "ownerDetailsCancellationHint": "E.g. Date error, Guest request...",
+  "ownerDetailsCancelBooking": "Cancel booking",
+  "ownerDetailsCancelling": "Cancelling booking...",
+  "ownerDetailsCancelSuccess": "Booking cancelled successfully",
+  "ownerDetailsCancelError": "Error cancelling booking",
+  "ownerDetailsResendTitle": "Resend email",
+  "ownerDetailsResendMessage": "Do you want to resend the booking confirmation email to guest {guestName}?",
+  "@ownerDetailsResendMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "ownerDetailsResendNote": "Email will contain \"View My Booking\" link for booking preview.",
+  "ownerDetailsSend": "Send",
+  "ownerDetailsSending": "Sending email...",
+  "ownerDetailsSendSuccess": "Email sent successfully to {email}",
+  "@ownerDetailsSendSuccess": {
+    "placeholders": {
+      "email": {"type": "String"}
+    }
+  },
+  "ownerDetailsSendError": "Error sending email",
+
+  "ownerFiltersTitle": "Booking filters",
+  "ownerFiltersStatusSection": "Booking status",
+  "ownerFiltersStatusLabel": "Filter by status",
+  "ownerFiltersAllStatuses": "All statuses",
+  "ownerFiltersPropertySection": "Property",
+  "ownerFiltersPropertyLabel": "Filter by property",
+  "ownerFiltersAllProperties": "All properties",
+  "ownerFiltersLoadingProperties": "Loading properties...",
+  "ownerFiltersDateSection": "Time period",
+  "ownerFiltersSelectDateRange": "Select time period",
+  "ownerFiltersApply": "Apply filters",
+  "ownerFiltersClear": "Clear filters",
+
+  "ownerAnalyticsTitle": "Analytics & Reports",
+  "ownerAnalyticsLoadError": "Failed to load analytics",
+  "ownerAnalyticsLastWeek": "Last Week",
+  "ownerAnalyticsLastMonth": "Last Month",
+  "ownerAnalyticsLastQuarter": "Last Quarter",
+  "ownerAnalyticsLastYear": "Last Year",
+  "ownerAnalyticsCustomRange": "Custom Range",
+  "ownerAnalyticsRevenueOverTime": "Revenue Over Time",
+  "ownerAnalyticsBookingsOverTime": "Bookings Over Time",
+  "ownerAnalyticsTopProperties": "Top Performing Properties",
+  "ownerAnalyticsWidgetPerformance": "Widget Performance",
+  "ownerAnalyticsTotalRevenue": "Total Revenue",
+  "ownerAnalyticsTotalBookings": "Total Bookings",
+  "ownerAnalyticsOccupancyRate": "Occupancy Rate",
+  "ownerAnalyticsAvgNightlyRate": "Avg. Nightly Rate",
+  "ownerAnalyticsLast7Days": "Last 7 days",
+  "ownerAnalyticsLastDays": "Last {days} days",
+  "@ownerAnalyticsLastDays": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "ownerAnalyticsLast30Days": "Last 30 days",
+  "ownerAnalyticsLast90Days": "Last 90 days",
+  "ownerAnalyticsLast365Days": "Last 365 days",
+  "ownerAnalyticsPropertiesActive": "{active}/{total} properties active",
+  "@ownerAnalyticsPropertiesActive": {
+    "placeholders": {
+      "active": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "ownerAnalyticsCancellation": "Cancellation: {rate}%",
+  "@ownerAnalyticsCancellation": {
+    "placeholders": {
+      "rate": {"type": "String"}
+    }
+  },
+  "ownerAnalyticsNoData": "No data for selected period",
+  "ownerAnalyticsRevenueTitle": "Revenue Over Time",
+  "ownerAnalyticsRevenueSubtitle": "Monthly revenue trend",
+  "ownerAnalyticsBookingsTitle": "Bookings Over Time",
+  "ownerAnalyticsBookingsSubtitle": "Monthly booking activity",
+  "ownerAnalyticsPropertiesSubtitle": "Properties ranked by revenue performance",
+  "ownerAnalyticsBookings": "bookings",
+  "ownerAnalyticsOccupancy": "occupancy",
+  "ownerAnalyticsWidgetSubtitle": "Track bookings and revenue from embedded widget",
+  "ownerAnalyticsWidgetBookings": "Widget Bookings",
+  "ownerAnalyticsWidgetRevenue": "Widget Revenue",
+  "ownerAnalyticsOfTotal": "({percent}% of total)",
+  "@ownerAnalyticsOfTotal": {
+    "placeholders": {
+      "percent": {"type": "String"}
+    }
+  },
+  "ownerAnalyticsBookingsBySource": "Bookings by Source",
+  "ownerAnalyticsSourceSubtitle": "Distribution of bookings across different sources",
+  "ownerAnalyticsNoSourceData": "No source data available",
+  "ownerAnalyticsOther": "Other ({count} sources)",
+  "@ownerAnalyticsOther": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "ownerProfileTitle": "Profile",
+  "ownerProfileThemeLight": "Light",
+  "ownerProfileThemeDark": "Dark",
+  "ownerProfileLanguageEnglish": "English",
+  "ownerProfileLanguageCroatian": "Croatian",
+  "ownerProfileThemeSystem": "System default",
+  "ownerProfileNotAuthenticated": "Not authenticated",
+  "ownerProfileGuestUser": "Guest User",
+  "ownerProfileOwner": "Owner",
+  "ownerProfileAnonymousAccount": "Anonymous Account",
+  "ownerProfileNoEmail": "No email",
+  "ownerProfileEditProfile": "Edit Profile",
+  "ownerProfileEditProfileSubtitleAnonymous": "Sign up to edit your profile",
+  "ownerProfileEditProfileSubtitle": "Update your personal information",
+  "ownerProfileChangePassword": "Change Password",
+  "ownerProfileChangePasswordSubtitle": "Update your password",
+  "ownerProfileNotificationSettings": "Notification Settings",
+  "ownerProfileNotificationSettingsSubtitle": "Manage your notifications",
+  "ownerProfileLanguage": "Language",
+  "ownerProfileTheme": "Theme",
+  "ownerProfileHelpSupport": "Help & Support",
+  "ownerProfileHelpSupportSubtitle": "Get help with the app",
+  "ownerProfileHelpSupportComingSoon": "Help & Support coming soon",
+  "ownerProfileAbout": "About",
+  "ownerProfileAboutSubtitle": "App information",
+  "ownerProfileTermsConditions": "Terms & Conditions",
+  "ownerProfileTermsConditionsSubtitle": "End User License Agreement",
+  "ownerProfilePrivacyPolicy": "Privacy Policy",
+  "ownerProfilePrivacyPolicySubtitle": "How we handle your data",
+  "ownerProfileCookiesPolicy": "Cookies Policy",
+  "ownerProfileCookiesPolicySubtitle": "Cookie usage and preferences",
+  "ownerProfileLoading": "Loading profile...",
+  "ownerProfileLoadError": "Error loading profile",
+  "ownerProfileBack": "Back",
+  "ownerProfileTryAgain": "Try again",
+  "ownerProfileLogout": "Logout",
+  "ownerProfileLogoutSubtitle": "Sign out of your account",
+
+  "editProfileTitle": "Edit Profile",
+  "editProfileSubtitle": "Update your personal information",
+  "editProfileDiscardTitle": "Discard changes?",
+  "editProfileDiscardMessage": "You have unsaved changes. Do you want to discard them?",
+  "editProfileDiscard": "Discard",
+  "editProfileSaving": "Saving...",
+  "editProfileSaveChanges": "Save Changes",
+  "editProfileSaveSuccess": "Profile updated successfully",
+  "editProfileSaveError": "Failed to save profile",
+  "editProfileValidationError": "Please fill in all required fields correctly",
+  "editProfileOptional": "optional",
+  "editProfilePersonalData": "Personal Data",
+  "editProfilePersonalDataSubtitle": "Basic contact information",
+  "editProfileFullName": "Full Name",
+  "editProfileEmail": "Email",
+  "editProfilePhone": "Phone",
+  "editProfileAddress": "Address",
+  "editProfileAddressSubtitle": "Your physical address",
+  "editProfileCountry": "Country",
+  "editProfileStreet": "Street and Number",
+  "editProfileCity": "City",
+  "editProfilePostalCode": "Postal Code",
+  "editProfileCompany": "Company",
+  "editProfileCompanySubtitle": "For business users and invoices",
+  "editProfileCompanyName": "Company Name",
+  "editProfileTaxId": "Tax ID / OIB",
+  "editProfileVatId": "VAT ID",
+  "editProfileCompanyAddress": "Company Address",
+  "editProfileOnlinePresence": "Online Presence",
+  "editProfileWebsite": "Website",
+  "editProfileFacebook": "Facebook Page",
+  "editProfilePropertyType": "Property Type",
+
+  "notificationSettingsTitle": "Notification Settings",
+  "notificationSettingsEnableAll": "Enable All Notifications",
+  "notificationSettingsMasterSwitch": "Turn off to stop all email notifications to you. Guest emails are not affected.",
+  "notificationSettingsEnabled": "Notifications enabled successfully",
+  "notificationSettingsDisabled": "Notifications disabled successfully",
+  "notificationSettingsUpdateError": "Error updating settings",
+  "notificationSettingsDisabledWarning": "All email notifications to you are paused. Guest confirmation emails will still be sent. Enable to receive booking alerts.",
+  "notificationSettingsCategories": "Email Notifications",
+  "notificationSettingsBookings": "Bookings",
+  "notificationSettingsBookingsDesc": "Emails when guests make instant bookings. Pending bookings requiring your approval are always sent.",
+  "notificationSettingsPayments": "Payments",
+  "notificationSettingsPaymentsDesc": "Emails when you receive Stripe payments from guests.",
+  "notificationSettingsCalendar": "Calendar",
+  "notificationSettingsCalendarDesc": "iCal sync alerts and calendar conflict warnings.",
+  "notificationSettingsMarketing": "Marketing",
+  "notificationSettingsMarketingDesc": "Platform news, tips for property owners, and feature updates.",
+  "notificationSettingsEmailChannel": "Email Notifications",
+  "notificationSettingsEmailChannelDesc": "Receive email alerts for this category",
+  "notificationSettingsPushChannel": "Push Notifications",
+  "notificationSettingsPushChannelDesc": "Receive push notifications on your device",
+  "notificationSettingsSmsChannel": "SMS",
+  "notificationSettingsSmsChannelDesc": "Receive notifications via SMS",
+  "notificationSettingsLoadError": "Error loading preferences",
+  "notificationSettingsUpdated": "{category} notification preferences updated",
+  "@notificationSettingsUpdated": {
+    "placeholders": {
+      "category": {"type": "String"}
+    }
+  },
+
+  "aboutTitle": "About",
+  "aboutAppName": "BookBed",
+  "aboutTagline": "Property Management System",
+  "aboutVersion": "Version 1.0.0",
+  "aboutWhatIs": "What is BookBed?",
+  "aboutDescription": "BookBed is a comprehensive property management system designed for vacation rental owners. Manage your properties, bookings, calendar, and integrations all in one place. Our embedded booking widget makes it easy for guests to book directly on your website.",
+  "aboutKeyFeatures": "Key Features",
+  "aboutFeatureCalendar": "Smart Calendar",
+  "aboutFeatureCalendarDesc": "Manage availability across multiple properties",
+  "aboutFeatureBookings": "Online Bookings",
+  "aboutFeatureBookingsDesc": "Embedded booking widget for your website",
+  "aboutFeatureIcal": "iCal Integration",
+  "aboutFeatureIcalDesc": "Sync with Booking.com, Airbnb, and more",
+  "aboutFeaturePayments": "Payment Processing",
+  "aboutFeaturePaymentsDesc": "Stripe integration for secure payments",
+  "aboutFeatureAnalytics": "Analytics",
+  "aboutFeatureAnalyticsDesc": "Track bookings, revenue, and occupancy",
+  "aboutBuiltWith": "Built With",
+  "aboutContactSupport": "Contact & Support",
+  "aboutEmailLabel": "Email",
+  "aboutWebsiteLabel": "Website",
+  "aboutCopyright": "© 2025 BookBed. All rights reserved.",
+
+  "unitHubTitle": "Accommodation Units",
+  "unitHubShowAllUnits": "Show all units",
+  "unitHubPropertiesAndUnits": "Properties and Units",
+  "unitHubAddProperty": "Add new property",
+  "unitHubSearch": "Search...",
+  "unitHubLoadingError": "Error loading",
+  "unitHubNoProperties": "No properties",
+  "unitHubNoPropertiesDesc": "Create your first property to add accommodation units",
+  "unitHubCreateProperty": "Create Property",
+  "unitHubNoResults": "No results",
+  "unitHubUnitsCount": "{count, plural, =1{1 unit} other{{count} units}}",
+  "@unitHubUnitsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitHubEditProperty": "Edit property",
+  "unitHubDeleteProperty": "Delete property",
+  "unitHubDeleteAllUnitsFirst": "Delete all units before deleting property",
+  "unitHubAddUnit": "Add unit",
+  "unitHubNoUnitsInProperty": "No units in this property",
+  "unitHubAdd": "Add",
+  "unitHubCannotDelete": "Cannot delete",
+  "unitHubCannotDeleteDesc": "Property \"{name}\" has {count} units.\n\nYou must delete all units before deleting the property.",
+  "@unitHubCannotDeleteDesc": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "unitHubUnderstand": "I understand",
+  "unitHubDeletePropertyTitle": "Delete property",
+  "unitHubDeletePropertyConfirm": "Are you sure you want to delete \"{name}\"?\n\nThis action cannot be undone.",
+  "@unitHubDeletePropertyConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "unitHubPropertyDeleted": "Property \"{name}\" has been successfully deleted",
+  "@unitHubPropertyDeleted": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "unitHubDeleteError": "Error deleting: {error}",
+  "@unitHubDeleteError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "unitHubDeleteUnitTitle": "Delete unit",
+  "unitHubDeleteUnitConfirm": "Are you sure you want to delete \"{name}\"?\n\nThis action cannot be undone.",
+  "@unitHubDeleteUnitConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "unitHubUnitDeleted": "Unit \"{name}\" has been successfully deleted",
+  "@unitHubUnitDeleted": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "unitHubTabBasicInfo": "Basic",
+  "unitHubTabPricing": "Pricing",
+  "unitHubTabWidget": "Widget",
+  "unitHubTabAdvanced": "Advanced",
+  "unitHubSelectUnit": "Select a unit",
+  "unitHubSelectUnitDesc": "Select a unit from the list to view and edit details",
+  "unitHubAvailable": "Available",
+  "unitHubUnavailable": "Unavailable",
+  "unitHubEditUnit": "Edit unit",
+  "unitHubDeleteUnit": "Delete unit",
+  "unitHubError": "Error: {error}",
+  "@unitHubError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "notificationsTitle": "Notifications",
+  "notificationsDeleteSelected": "Delete selected?",
+  "notificationsDeleteSelectedDesc": "Are you sure you want to delete {count} notifications?",
+  "@notificationsDeleteSelectedDesc": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "notificationsDeleted": "Notifications deleted",
+  "notificationsDeleteAll": "Delete all?",
+  "notificationsDeleteAllDesc": "Are you sure you want to delete ALL notifications? This action cannot be undone.",
+  "notificationsAllDeleted": "All notifications deleted",
+  "notificationsSelect": "Select",
+  "notificationsCancel": "Cancel",
+  "notificationsSelected": "{count} selected",
+  "@notificationsSelected": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "notificationsDeselectAll": "Deselect all",
+  "notificationsSelectAll": "Select all",
+  "notificationsDeleteSelectedBtn": "Delete selected",
+  "notificationsDeleteAllBtn": "Delete all",
+  "notificationsDeleting": "Deleting...",
+  "notificationsEmpty": "No notifications",
+  "notificationsEmptyDesc": "You will see all your notifications here",
+  "notificationsEmptyHint": "You'll receive alerts for:",
+  "notificationsHintNewBookings": "New booking requests",
+  "notificationsHintPayments": "Payment confirmations",
+  "notificationsHintCancellations": "Booking cancellations",
+  "notificationsHintReminders": "Check-in reminders",
+  "notificationsLoadError": "Error loading notifications",
+  "notificationsTryAgain": "Try again",
+  "notificationsDeleteNotification": "Delete notification",
+  "notificationsDeleteNotificationDesc": "Are you sure you want to delete this notification?",
+
+  "notificationBookingCreatedTitle": "New Booking",
+  "notificationBookingUpdatedTitle": "Booking Updated",
+  "notificationBookingCancelledTitle": "Booking Cancelled",
+  "notificationPaymentReceivedTitle": "Payment Received",
+  "notificationBookingCreatedMessage": "{guestName} created a new booking.",
+  "@notificationBookingCreatedMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "notificationBookingUpdatedMessage": "Booking for {guestName} was updated.",
+  "@notificationBookingUpdatedMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "notificationBookingCancelledMessage": "Booking for {guestName} was cancelled.",
+  "@notificationBookingCancelledMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "notificationPaymentReceivedMessage": "Received payment from {guestName} for €{amount}.",
+  "@notificationPaymentReceivedMessage": {
+    "placeholders": {
+      "guestName": {"type": "String"},
+      "amount": {"type": "double", "format": "decimalPattern"}
+    }
+  },
+  "notificationTimeJustNow": "Just now",
+  "notificationTimeMinutesAgo": "{minutes} min ago",
+  "@notificationTimeMinutesAgo": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "notificationTimeHoursAgo": "{hours}h ago",
+  "@notificationTimeHoursAgo": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "notificationTimeDaysAgo": "{days}d ago",
+  "@notificationTimeDaysAgo": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "notificationTimeWeeksAgo": "{weeks}w ago",
+  "@notificationTimeWeeksAgo": {
+    "placeholders": {
+      "weeks": {"type": "int"}
+    }
+  },
+  "notificationTimeMonthsAgo": "{months}mo ago",
+  "@notificationTimeMonthsAgo": {
+    "placeholders": {
+      "months": {"type": "int"}
+    }
+  },
+
+  "bankAccountTitle": "Bank Account",
+  "bankAccountBankDetails": "Bank Details",
+  "bankAccountBankDetailsSubtitle": "Data for receiving payments",
+  "bankAccountIban": "IBAN",
+  "bankAccountSwift": "SWIFT/BIC",
+  "bankAccountBankName": "Bank Name",
+  "bankAccountHolder": "Account Holder",
+  "bankAccountInfoTitle": "When is this data used?",
+  "bankAccountInfoDesc": "This bank data is displayed to guests when they select \"Bank Transfer\" as the payment method in the booking widget.",
+  "bankAccountSaveChanges": "Save Changes",
+  "bankAccountSaving": "Saving...",
+  "bankAccountCancel": "Cancel",
+  "bankAccountFillFieldsError": "Please fill in all fields correctly",
+  "bankAccountSaveSuccess": "Bank details saved successfully",
+  "bankAccountSaveError": "Error saving bank details",
+  "bankAccountDiscardTitle": "Discard changes?",
+  "bankAccountDiscardDesc": "You have unsaved changes. Do you want to discard them?",
+  "bankAccountDiscard": "Discard",
+
+  "stripeTitle": "Stripe Payments",
+  "stripeConnectAccount": "Connect Stripe Account",
+  "stripeFinishSetup": "Finish Stripe Setup",
+  "stripeHowItWorks": "How does Stripe Connect work?",
+  "stripeNotConnected": "Not connected",
+  "stripeNotConnectedDesc": "Stripe account is not connected. Receiving payments is not possible.",
+  "stripeSetupInProgress": "Setup in progress",
+  "stripeSetupInProgressDesc": "Complete Stripe setup to start receiving payments.",
+  "stripeActive": "Active",
+  "stripeActiveDesc": "Stripe account is connected. You can receive payments!",
+  "stripeWhyConnect": "Why Stripe Connect?",
+  "stripeReceivePayments": "Receive payments",
+  "stripeReceivePaymentsDesc": "Receive card payments directly to your account",
+  "stripeSecurity": "Security",
+  "stripeSecurityDesc": "PCI-DSS compliant system for secure transactions",
+  "stripeInstantConfirmations": "Instant confirmations",
+  "stripeInstantConfirmationsDesc": "Automatic booking confirmation after successful payment",
+  "stripeNoHiddenFees": "No hidden fees",
+  "stripeNoHiddenFeesDesc": "Stripe charges ~2.9% + €0.30 per transaction",
+  "stripeCannotOpenPage": "Cannot open Stripe page",
+  "stripeCannotOpenPageDesc": "Cannot open Stripe page. Please try again.",
+  "stripeCreateAccountError": "Error creating Stripe account",
+  "stripeConnectError": "Error connecting Stripe account",
+  "stripeDisconnect": "Disconnect Account",
+  "stripeDisconnectTitle": "Disconnect Stripe Account",
+  "stripeDisconnectMessage": "Are you sure you want to disconnect your Stripe account? You will no longer be able to receive payments until you reconnect.",
+  "stripeDisconnectConfirm": "Disconnect",
+  "stripeDisconnectSuccess": "Stripe account disconnected successfully",
+  "stripeDisconnectError": "Error disconnecting Stripe account",
+  "stripeLoadingAccount": "Loading payment settings...",
+
+  "advancedSettingsTitle": "Advanced Settings",
+  "advancedSettingsSaveSuccess": "Advanced settings saved successfully",
+  "advancedSettingsSaveError": "Failed to save advanced settings",
+  "advancedSettingsNotFound": "Widget settings not found",
+  "advancedSettingsDisclaimerPreview": "Disclaimer Preview",
+  "advancedSettingsNoDisclaimer": "No disclaimer text",
+  "advancedSettingsCustomTextRequired": "Please enter custom text or use default",
+  "advancedSettingsSaving": "Saving...",
+  "advancedSettingsSave": "Save Advanced Settings",
+
+  "onboardingWelcomeTitle": "Welcome to BedBooking!",
+  "onboardingWelcomeSubtitle": "Accommodation management system",
+  "onboardingWhatYouWillLearn": "What you will learn through the guide:",
+  "onboardingCreateProperty": "Create property",
+  "onboardingCreatePropertyDesc": "Add basic information about your accommodation",
+  "onboardingSetupUnits": "Setup units",
+  "onboardingSetupUnitsDesc": "Create rooms or apartments",
+  "onboardingSetupPricing": "Setup pricing",
+  "onboardingSetupPricingDesc": "Set basic prices for accommodation",
+  "onboardingStart": "Start",
+  "onboardingSkipForNow": "Skip for now",
+  "onboardingAlreadyHaveAccount": "Already have an account?",
+  "onboardingSignIn": "Sign in",
+  "onboardingSkipTitle": "Skip guide?",
+  "onboardingSkipDesc": "If you skip the guide, you won't learn the basics of setting up the system. You can always add properties and units later through settings.\n\nDo you want to continue?",
+  "onboardingSkip": "Skip",
+
+  "onboardingSuccessCongrats": "Congratulations!",
+  "onboardingSuccessSubtitle": "You have successfully completed the initial setup",
+  "onboardingSuccessDesc": "Your property is created and ready to use.",
+  "onboardingSuccessNextSteps": "Next steps:",
+  "onboardingSuccessAddUnits": "Add units",
+  "onboardingSuccessAddUnitsDesc": "Create rooms or apartments",
+  "onboardingSuccessSetPrices": "Set prices",
+  "onboardingSuccessSetPricesDesc": "Define prices by dates",
+  "onboardingSuccessViewCalendar": "View calendar",
+  "onboardingSuccessViewCalendarDesc": "Track bookings and availability",
+  "onboardingSuccessGoToDashboard": "Go to Dashboard",
+
+  "unitHubInfoSection": "Information",
+  "unitHubName": "Name",
+  "unitHubSlug": "Slug",
+  "unitHubDescription": "Description",
+  "unitHubStatus": "Status",
+  "unitHubStatusAvailable": "Available",
+  "unitHubStatusUnavailable": "Unavailable",
+  "unitHubCapacitySection": "Capacity",
+  "unitHubBedrooms": "Bedrooms",
+  "unitHubBathrooms": "Bathrooms",
+  "unitHubMaxGuests": "Max guests",
+  "unitHubArea": "Area",
+  "unitHubPriceSection": "Price",
+  "unitHubPricePerNight": "Price per night",
+  "unitHubMinNights": "Min nights",
+  "unitHubPhotosSection": "Photos",
+  "unitHubNoPhotos": "No photos",
+  "unitHubMorePhotos": "+{count} more",
+  "@unitHubMorePhotos": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitHubBasicData": "Basic Data",
+  "unitHubEdit": "Edit",
+  "unitHubPerNight": "/night",
+
+  "propertyFormTitleAdd": "Add Property",
+  "propertyFormTitleEdit": "Edit Property",
+  "propertyFormBasicInfo": "Basic Information",
+  "propertyFormPropertyName": "Property name *",
+  "propertyFormPropertyNameHint": "e.g. Villa Mediteran",
+  "propertyFormPropertyNameRequired": "Name is required",
+  "propertyFormUrlSlug": "URL Slug",
+  "propertyFormUrlSlugHint": "villa-mediteran",
+  "propertyFormUrlSlugHelper": "SEO-friendly URL: /booking/[slug]",
+  "propertyFormSlugRequired": "Slug is required",
+  "propertyFormSlugInvalid": "Slug can only contain lowercase letters, numbers and hyphens",
+  "propertyFormRegenerateSlug": "Regenerate from name",
+  "propertyFormSubdomain": "Subdomain",
+  "propertyFormSubdomainHint": "your-property",
+  "propertyFormSubdomainHelper": "Custom URL: [subdomain].bookbed.io",
+  "propertyFormSubdomainAvailable": "Available",
+  "propertyFormSubdomainTaken": "Taken",
+  "propertyFormSubdomainUseSuggestion": "Use suggestion",
+  "propertyFormPropertyType": "Property type *",
+  "propertyFormDescription": "Description *",
+  "propertyFormDescriptionHint": "Describe your property in detail...",
+  "propertyFormDescriptionRequired": "Description is required",
+  "propertyFormDescriptionTooShort": "Description must be at least 100 characters (currently: {count})",
+  "@propertyFormDescriptionTooShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "propertyFormLocation": "Location",
+  "propertyFormLocationLabel": "Location *",
+  "propertyFormLocationHint": "e.g. Rab (city), Rab Island",
+  "propertyFormLocationRequired": "Location is required",
+  "propertyFormAddress": "Address",
+  "propertyFormAddressHint": "Street and number",
+  "propertyFormAmenities": "Amenities",
+  "propertyFormPhotos": "Photos",
+  "propertyFormPhotosMin": "Photos (min 3)",
+  "propertyFormSettings": "Settings",
+  "propertyFormPublishNow": "Publish now",
+  "propertyFormPublishNowActive": "Property will be visible to users",
+  "propertyFormPublishNowInactive": "Property will be hidden",
+  "propertyFormSaveChanges": "Save Changes",
+  "propertyFormAddProperty": "Add Property",
+  "propertyFormSaving": "Saving...",
+  "propertyFormGeneratingError": "Error generating: {error}",
+  "@propertyFormGeneratingError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "propertyFormCheckingError": "Error checking: {error}",
+  "@propertyFormCheckingError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "propertyFormAddPhotos": "Add Photos",
+  "propertyFormAddMore": "Add More",
+  "propertyFormPhotoCount": "{count} photos",
+  "@propertyFormPhotoCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "propertyFormPhotoRecommendation": "Recommendation: Add at least 3 photos for better visibility",
+  "propertyFormUploadProgress": "Uploading photos: {current}/{total}",
+  "@propertyFormUploadProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "propertyFormUploadError": "Upload error: {error}",
+  "@propertyFormUploadError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "propertyFormUploadErrorGeneric": "Error uploading photos",
+  "propertyFormSubdomainError": "Please select an available subdomain",
+  "propertyFormSubdomainSetError": "Error setting subdomain",
+  "propertyFormSuccessUpdate": "Property successfully updated",
+  "propertyFormSuccessAdd": "Property successfully added",
+  "propertyFormErrorUpdate": "Error updating property",
+  "propertyFormErrorAdd": "Error adding property",
+  "propertyFormUserNotLoggedIn": "User not logged in",
+
+  "unitFormTitleAdd": "Add Unit",
+  "unitFormTitleEdit": "Edit Unit",
+  "unitFormBasicInfo": "Basic Information",
+  "unitFormUnitName": "Unit name *",
+  "unitFormUnitNameHint": "e.g. Ground floor apartment",
+  "unitFormUnitNameRequired": "Name is required",
+  "unitFormUrlSlug": "URL Slug",
+  "unitFormUrlSlugHint": "ground-floor-apartment",
+  "unitFormUrlSlugHelper": "SEO-friendly URL: /booking/[slug]",
+  "unitFormSlugRequired": "Slug is required",
+  "unitFormSlugInvalid": "Slug can only contain lowercase letters, numbers and hyphens",
+  "unitFormRegenerateSlug": "Regenerate from name",
+  "unitFormDescription": "Description",
+  "unitFormDescriptionHint": "Additional information about the unit...",
+  "unitFormCapacity": "Capacity",
+  "unitFormBedrooms": "Bedrooms *",
+  "unitFormBathrooms": "Bathrooms *",
+  "unitFormMaxGuests": "Max guests *",
+  "unitFormArea": "Area (m²)",
+  "unitFormRequired": "Required",
+  "unitFormInvalidNumber": "Invalid number",
+  "unitFormMin1": "Min 1",
+  "unitFormRange1to16": "1-16",
+  "unitFormPricing": "Price and conditions",
+  "unitFormPricePerNight": "Price per night (€) *",
+  "unitFormInvalidAmount": "Invalid amount",
+  "unitFormMinNights": "Min nights *",
+  "unitFormAmenities": "Amenities",
+  "unitFormPhotos": "Photos",
+  "unitFormAddPhotos": "Add photos",
+  "unitFormAddMore": "Add more",
+  "unitFormTotalPhotos": "Total: {count} photos",
+  "@unitFormTotalPhotos": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitFormAvailability": "Availability",
+  "unitFormAvailableForBooking": "Available for booking",
+  "unitFormAvailableDesc": "Unit will be available for reservations",
+  "unitFormUnavailableDesc": "Unit will not be shown",
+  "unitFormSaveChanges": "Save Changes",
+  "unitFormAddUnit": "Add Unit",
+  "unitFormSaving": "Saving...",
+  "unitFormEmbedWidget": "Embed Widget",
+  "unitFormEmbedDesc": "Integrate booking widget on your website",
+  "unitFormWidgetSettings": "Widget Settings",
+  "unitFormGenerateEmbed": "Generate Embed Code",
+  "unitFormSuccessUpdate": "Unit successfully updated",
+  "unitFormSuccessAdd": "Unit successfully added",
+  "unitFormErrorUpdate": "Error updating unit",
+  "unitFormErrorAdd": "Error adding unit",
+
+  "unitPricingTitle": "Price List",
+  "unitPricingSelectUnit": "Select unit",
+  "unitPricingSelectUnitHint": "Select a unit",
+  "unitPricingUnit": "Unit",
+  "unitPricingNoUnits": "No units added",
+  "unitPricingNoUnitsDesc": "Add a unit to manage prices for your accommodation.",
+  "unitPricingLoadError": "Error loading units",
+  "unitPricingBasePrice": "Base Price",
+  "unitPricingBasePriceDesc": "This is the default price per night used when there are no special prices.",
+  "unitPricingPricePerNight": "Price per night (€)",
+  "unitPricingSave": "Save",
+  "unitPricingSavePrice": "Save Price",
+  "unitPricingEnterPrice": "Enter price",
+  "unitPricingPriceGreaterThanZero": "Price must be greater than 0",
+  "unitPricingSuccessUpdate": "Base price successfully updated",
+  "unitPricingErrorUpdate": "Error updating price",
+
+  "onboardingWizardPropertyData": "Property Data",
+  "onboardingWizardFinish": "Finish",
+  "onboardingWizardSkipDialogTitle": "Skip guide?",
+  "onboardingWizardSkipDialogDesc": "If you skip the guide, you won't complete the initial setup. You will need to manually add properties and units later.\n\nDo you want to continue?",
+  "onboardingWizardCompleteError": "Error completing initial setup",
+
+  "widgetSettingsTitle": "Widget Settings",
+  "widgetSettingsLoadError": "Error loading settings",
+  "widgetSettingsSaveSuccess": "Settings saved successfully!",
+  "widgetSettingsSaveError": "Error saving settings",
+  "widgetSettingsSave": "Save Settings",
+  "widgetSettingsSaving": "Saving...",
+  "widgetSettingsWidgetMode": "Widget Mode",
+  "widgetSettingsWidgetModeDesc": "Choose how the widget will function:",
+  "widgetSettingsPaymentMethods": "Payment Methods",
+  "widgetSettingsPaymentMethodsDesc": "Choose payment methods available to guests:",
+  "widgetSettingsDepositAmount": "Deposit Amount: {percent}%",
+  "@widgetSettingsDepositAmount": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "widgetSettingsDepositDesc": "This percentage applies to all payment methods (Stripe, Bank Transfer)",
+  "widgetSettingsFullPayment": "Full payment",
+  "widgetSettingsStripePayment": "Stripe Payment",
+  "widgetSettingsCardPayment": "Card payment",
+  "widgetSettingsBankTransfer": "Bank Transfer",
+  "widgetSettingsBankPayment": "Bank account payment",
+  "widgetSettingsBankNotEntered": "Bank details not entered",
+  "widgetSettingsBankNotEnteredDesc": "To enable bank transfer, you must first enter bank details in your profile (bank name, IBAN, account holder).",
+  "widgetSettingsAddBankDetails": "Add Bank Details",
+  "widgetSettingsBankEnterDetails": "Enter bank details in Integrations → Payments.",
+  "widgetSettingsBankFromProfile": "Bank details from profile:",
+  "widgetSettingsBank": "Bank",
+  "widgetSettingsAccountHolder": "Account holder",
+  "widgetSettingsPaymentDeadline": "Payment deadline (days)",
+  "widgetSettingsDay": "day",
+  "widgetSettingsDays": "days",
+  "widgetSettingsShowQrCode": "Show QR code",
+  "widgetSettingsEpcQrCode": "EPC QR code",
+  "widgetSettingsCustomNote": "Custom note",
+  "widgetSettingsAddMessage": "Add message",
+  "widgetSettingsNoteMaxChars": "Note (max 500 characters)",
+  "widgetSettingsNoteHelper": "Custom message that will be shown to guests",
+  "widgetSettingsPayOnArrival": "Pay on Arrival",
+  "widgetSettingsPayOnArrivalDesc": "Guest pays at check-in",
+  "widgetSettingsPayOnArrivalRequired": "⚠️ Required (because other methods are disabled)",
+  "widgetSettingsPaymentValidation": "At least one payment method must be enabled in Instant Booking mode",
+  "widgetSettingsBookingBehavior": "Booking Behavior",
+  "widgetSettingsRequireApproval": "Require Approval",
+  "widgetSettingsManualApproval": "Manual approval",
+  "widgetSettingsStripeApprovalNote": "Only applies to Stripe payments",
+  "widgetSettingsAllowCancellation": "Allow Cancellation",
+  "widgetSettingsGuestsCanCancel": "Guests can cancel",
+  "widgetSettingsPendingModeInfo": "In \"Booking without payment\" mode, all reservations always require your approval.",
+  "widgetSettingsCancellationDeadline": "Cancellation deadline: {hours} hours before check-in",
+  "@widgetSettingsCancellationDeadline": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "widgetSettingsMinNights": "Minimum nights: {nights} {nightsLabel}",
+  "@widgetSettingsMinNights": {
+    "placeholders": {
+      "nights": {"type": "int"},
+      "nightsLabel": {"type": "String"}
+    }
+  },
+  "widgetSettingsNight": "night",
+  "widgetSettingsNights": "nights",
+  "widgetSettingsContactInfo": "Contact Information",
+  "widgetSettingsContactDesc": "Contact options that will be shown in the widget:",
+  "widgetSettingsPhoneNumber": "Phone number",
+  "widgetSettingsEmailAddress": "Email address",
+  "widgetSettingsPhone": "Phone",
+  "widgetSettingsEmail": "Email",
+  "widgetSettingsBookingWithoutPayment": "Booking without payment",
+  "widgetSettingsCopyFromProfile": "Copy from Owner Profile",
+  "widgetSettingsCopiedFromProfile": "Contact info copied from your profile",
+  "widgetSettingsBookingWithoutPaymentDesc": "In this mode, guests can create a reservation but CANNOT pay online. You arrange payment privately after confirming the reservation.",
+
+  "bookingCreateTitle": "New Booking",
+  "bookingCreateClose": "Close",
+  "bookingCreateUnit": "Unit *",
+  "bookingCreateNoUnits": "No available units",
+  "bookingCreateSelectUnit": "Select unit *",
+  "bookingCreateSelectUnitError": "Please select a unit",
+  "bookingCreateDates": "Dates *",
+  "bookingCreateCheckIn": "Check-in *",
+  "bookingCreateCheckOut": "Check-out *",
+  "bookingCreateSelectCheckInDate": "Select check-in date",
+  "bookingCreateSelectCheckOutDate": "Select check-out date",
+  "bookingCreateNightsCount": "{count} night{count, plural, =1{} other{s}}",
+  "@bookingCreateNightsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookingCreateGuestInfo": "Guest Information",
+  "bookingCreateGuestName": "Guest Name *",
+  "bookingCreateGuestNameError": "Please enter guest name",
+  "bookingCreateEmail": "Email *",
+  "bookingCreateEmailError": "Please enter email",
+  "bookingCreateEmailInvalid": "Please enter a valid email",
+  "bookingCreatePhone": "Phone *",
+  "bookingCreatePhoneError": "Please enter phone",
+  "bookingCreateBookingDetails": "Booking Details",
+  "bookingCreateGuestCount": "Number of Guests *",
+  "bookingCreateGuestCountError": "Please enter number of guests",
+  "bookingCreateGuestCountInvalid": "Number of guests must be greater than 0",
+  "bookingCreateTotalPrice": "Total Price (€) *",
+  "bookingCreatePriceError": "Please enter price",
+  "bookingCreatePriceInvalid": "Please enter a valid price",
+  "bookingCreatePriceNegative": "Price cannot be negative",
+  "bookingCreatePriceZero": "Price must be greater than 0",
+  "bookingCreateStatusInfo": "Status: Confirmed • Payment: Cash",
+  "bookingCreateNotes": "Notes",
+  "bookingCreateInternalNotes": "Internal notes",
+  "bookingCreateNotesHint": "E.g. special requests...",
+  "bookingCreateCancel": "Cancel",
+  "bookingCreateSubmit": "Create",
+  "bookingCreateSuccess": "Booking successfully created",
+  "bookingCreateError": "Error creating booking",
+  "bookingCreateOverlapWarning": "WARNING: Booking Overlap!",
+  "bookingCreateOverlapSingle": "New booking overlaps with an existing booking:",
+  "bookingCreateOverlapMultiple": "New booking overlaps with {count} existing bookings:",
+  "@bookingCreateOverlapMultiple": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "bookingCreateUnknownGuest": "Unknown guest",
+  "bookingCreateContinueAnyway": "Continue Anyway",
+  "bookingCreateErrorGeneric": "Error: {error}",
+  "@bookingCreateErrorGeneric": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "bookingApproveTitle": "Approve Booking",
+  "bookingApproveMessage": "Are you sure you want to approve this booking?\n\nAfter approval, you can contact the guest with payment details.",
+  "bookingApproveCancel": "Cancel",
+  "bookingApproveConfirm": "Approve",
+
+  "bookingRejectTitle": "Reject Booking",
+  "bookingRejectMessage": "Are you sure you want to reject this booking?",
+  "bookingRejectReason": "Rejection reason",
+  "bookingRejectReasonHint": "Enter reason (optional)...",
+  "bookingRejectCancel": "Cancel",
+  "bookingRejectConfirm": "Reject",
+
+  "bookingCancelTitle": "Cancel Booking",
+  "bookingCancelMessage": "Are you sure you want to cancel this booking?",
+  "bookingCancelReason": "Cancellation reason",
+  "bookingCancelReasonHint": "Enter reason...",
+  "bookingCancelSendEmail": "Send email to guest",
+  "bookingCancelSendEmailHint": "Guest will receive cancellation notification",
+  "bookingCancelCancel": "Cancel",
+  "bookingCancelConfirm": "Cancel Booking",
+  "bookingCancelDefaultReason": "Cancelled by owner",
+
+  "onboardingPropertyTitle": "Basic Property Information",
+  "onboardingPropertySubtitle": "Enter basic information about your accommodation",
+  "onboardingPropertyName": "Property Name *",
+  "onboardingPropertyNameHint": "e.g. Villa Jasko",
+  "onboardingPropertyType": "Accommodation Type *",
+  "onboardingPropertyAddress": "Address *",
+  "onboardingPropertyAddressHint": "Street and number",
+  "onboardingPropertyCity": "City *",
+  "onboardingPropertyCountry": "Country *",
+  "onboardingPropertyRequired": "Required field",
+  "onboardingPropertyRequiredShort": "Required",
+  "onboardingPropertyOptional": "Additional Information (optional)",
+  "onboardingPropertyPhone": "Phone",
+  "onboardingPropertyPhoneHint": "+385 xx xxx xxxx",
+  "onboardingPropertyEmail": "Email",
+  "onboardingPropertyEmailHint": "info@example.com",
+  "onboardingPropertyWebsite": "Website",
+  "onboardingPropertyWebsiteHint": "https://example.com",
+  "onboardingPropertyTypeVilla": "Villa",
+  "onboardingPropertyTypeApartment": "Apartment",
+  "onboardingPropertyTypeStudio": "Studio",
+  "onboardingPropertyTypeHouse": "House",
+  "onboardingPropertyTypeRoom": "Room",
+
+  "themeSelectionTitle": "Select Theme",
+  "themeSelectionLight": "Light",
+  "themeSelectionLightDesc": "Always use light theme",
+  "themeSelectionDark": "Dark",
+  "themeSelectionDarkDesc": "Always use dark theme",
+  "themeSelectionSystem": "System Default",
+  "themeSelectionSystemDesc": "Follow system theme",
+
+  "unitPricingTitle": "Price List",
+  "unitPricingSelectUnit": "Select Unit",
+  "unitPricingSelectUnitHint": "Select unit",
+  "unitPricingUnit": "Unit",
+  "unitPricingNoUnits": "No units added",
+  "unitPricingNoUnitsDesc": "Add a unit to manage prices for your accommodation.",
+  "unitPricingErrorLoading": "Error loading units",
+  "unitPricingBasePrice": "Base Price",
+  "unitPricingBasePriceDesc": "This is the default price per night used when there are no special prices.",
+  "unitPricingPricePerNight": "Price per night (€)",
+  "unitPricingSave": "Save",
+  "unitPricingSavePrice": "Save Price",
+  "unitPricingEnterPrice": "Enter price",
+  "unitPricingPriceGreaterThanZero": "Price must be greater than 0",
+  "unitPricingSuccess": "Base price successfully updated",
+  "unitPricingError": "Error updating price",
+
+  "ownerFaqTitle": "FAQ",
+  "ownerFaqSearchHint": "Search questions...",
+  "ownerFaqCategoryAll": "All",
+  "ownerFaqCategoryGeneral": "General",
+  "ownerFaqCategoryBookings": "Bookings",
+  "ownerFaqCategoryPayments": "Payments",
+  "ownerFaqCategoryWidget": "Widget",
+  "ownerFaqCategoryIcalSync": "iCal Sync",
+  "ownerFaqCategorySupport": "Technical Support",
+  "ownerFaqResultsFound": "Found: {count} results",
+  "@ownerFaqResultsFound": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "ownerFaqNoResults": "No results",
+  "ownerFaqNoResultsDesc": "Try a different search or category",
+
+  "icalSyncTitle": "iCal Synchronization",
+  "icalSyncNoFeeds": "No feeds",
+  "icalSyncNoFeedsDesc": "Add your first iCal feed to start synchronization",
+  "icalSyncError": "Synchronization error",
+  "icalSyncErrorCount": "{errorCount} of {totalCount} feeds have errors",
+  "@icalSyncErrorCount": {
+    "placeholders": {
+      "errorCount": {"type": "int"},
+      "totalCount": {"type": "int"}
+    }
+  },
+  "icalSyncActive": "Synchronization active",
+  "icalSyncActiveCount": "{count} feeds actively synchronized",
+  "@icalSyncActiveCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalSyncAllPaused": "All feeds paused",
+  "icalSyncNoActiveFeeds": "No active feeds",
+  "icalSyncWhyTitle": "Why iCal Synchronization?",
+  "icalSyncAutoSync": "Automatic Synchronization",
+  "icalSyncAutoSyncDesc": "Reservations are automatically imported from booking platforms every 60 minutes",
+  "icalSyncPreventDouble": "Prevent Double Booking",
+  "icalSyncPreventDoubleDesc": "Block dates on all platforms automatically",
+  "icalSyncCompatibility": "Compatibility",
+  "icalSyncCompatibilityDesc": "Supports Booking.com, Airbnb and other iCal platforms",
+  "icalSyncSecure": "Secure and Reliable",
+  "icalSyncSecureDesc": "Encrypted data and automatic backup of all reservations",
+  "icalSyncNoFeedsTitle": "No iCal Feeds",
+  "icalSyncNoFeedsMessage": "Add an iCal feed to synchronize reservations with booking platforms",
+  "icalSyncAddFeed": "Add iCal Feed",
+  "icalSyncAddFeedDesc": "Connect calendar with Booking.com, Airbnb or other platforms",
+  "icalSyncAddFeedButton": "Add Feed",
+  "icalSyncYourFeeds": "Your Feeds",
+  "icalSyncLastSync": "Last synchronized: {time}",
+  "@icalSyncLastSync": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "icalSyncErrorLabel": "Error: {error}",
+  "@icalSyncErrorLabel": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "icalSyncReservationsCount": "{reservations} reservations • {syncs} synchronizations",
+  "@icalSyncReservationsCount": {
+    "placeholders": {
+      "reservations": {"type": "int"},
+      "syncs": {"type": "int"}
+    }
+  },
+  "icalSyncNow": "Sync now",
+  "icalSyncPause": "Pause",
+  "icalSyncResume": "Resume",
+  "icalSyncEdit": "Edit",
+  "icalSyncDelete": "Delete",
+  "icalSyncDeleteTitle": "Delete Feed?",
+  "icalSyncDeleteMessage": "Are you sure you want to delete {platform} feed? This action will delete {count} synchronized reservations.",
+  "@icalSyncDeleteMessage": {
+    "placeholders": {
+      "platform": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "icalSyncDeleteSuccess": "Feed deleted",
+  "icalSyncDeleteError": "Error deleting feed",
+  "icalSyncStarted": "Synchronization started for {platform}...",
+  "@icalSyncStarted": {
+    "placeholders": {
+      "platform": {"type": "String"}
+    }
+  },
+  "icalSyncSuccess": "Synchronization successful! Reservations created: {count}",
+  "@icalSyncSuccess": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalSyncFailed": "Error during synchronization",
+  "icalSyncPaused": "Feed paused",
+  "icalSyncPauseError": "Error pausing feed",
+  "icalSyncResumed": "Feed resumed",
+  "icalSyncResumeError": "Error resuming feed",
+  "icalSyncHowItWorks": "How does iCal synchronization work?",
+  "icalSyncLoadingError": "Error loading feeds",
+  "icalSyncAddTitle": "Add iCal Feed",
+  "icalSyncEditTitle": "Edit iCal Feed",
+  "icalSyncSelectUnit": "Select unit *",
+  "icalSyncNoUnits": "You have no units created. First create an apartment.",
+  "icalSyncSelectPlatform": "Select platform *",
+  "icalSyncIcalUrl": "iCal URL *",
+  "icalSyncIcalUrlHint": "https://...",
+  "icalSyncIcalUrlError": "Enter iCal URL",
+  "icalSyncIcalUrlInvalid": "Enter valid URL (https://...)",
+  "icalSyncSaving": "Saving...",
+  "icalSyncSave": "Save",
+  "icalSyncLoadingUnits": "Loading units...",
+
+  "embedGuideTitle": "Widget Embedding Guide",
+  "embedGuideHeaderTitle": "Embed Booking Widget",
+  "embedGuideHeaderSubtitle": "Add calendar and booking system to your website",
+  "embedGuideHeaderTip": "💡 Embed widget allows your guests to see availability and create reservations directly from your website, without redirection.",
+  "embedGuideStep1Title": "Configure Widget",
+  "embedGuideStep2Title": "Generate Embed Code",
+  "embedGuideStep3Title": "Add to Your Website",
+  "embedGuideStep4Title": "Test Widget",
+  "embedGuideAdvancedOptions": "Advanced Options",
+  "embedGuideTroubleshooting": "Troubleshooting",
+  "embedGuideCodeCopied": "Code copied!",
+  "embedGuideYourEmbedCodes": "Your Embed Codes",
+  "embedGuideCopyIframe": "Copy the iframe code for each apartment",
+  "embedGuideWidgetLanguage": "Widget language:",
+  "embedGuideNoProperties": "You have no properties. Create a property to get embed codes.",
+  "embedGuideNoUnits": "You have no units. Create a unit to get embed codes.",
+
+  "embedGuideStep1Intro": "First you need to configure how the widget will work:",
+  "embedGuideStep1Nav1": "Go to: Configuration → Accommodation Units",
+  "embedGuideStep1Nav2": "Click \"Edit\" on desired unit",
+  "embedGuideStep1Nav3": "Click \"Widget Settings\"",
+  "embedGuideStep1SelectMode": "Select operating mode:",
+  "embedGuideWidgetModeCalendar": "📅 Calendar Only",
+  "embedGuideWidgetModeCalendarDesc": "Guests see only availability and contact info. For clients like jasko-rab.com.",
+  "embedGuideWidgetModeBooking": "📝 Booking without Payment",
+  "embedGuideWidgetModeBookingDesc": "Guests can create a reservation, but you must manually approve.",
+  "embedGuideWidgetModePayment": "💳 Full Booking with Payment",
+  "embedGuideWidgetModePaymentDesc": "Guests can book and pay immediately (Stripe or bank).",
+  "embedGuidePlaceholderWidgetSettings": "Image: Widget Settings screen with options",
+
+  "embedGuideStep2Intro": "After configuration, generate the embed code:",
+  "embedGuideStep2Nav1": "In Edit Unit form, click \"Generate Embed Code\"",
+  "embedGuideStep2Nav2": "A dialog with iframe code will open",
+  "embedGuideStep2Nav3": "Select language (Hrvatski, English, Deutsch, Italiano)",
+  "embedGuideStep2Nav4": "Adjust widget height (default: 900px)",
+  "embedGuideStep2Nav5": "Copy code by clicking \"Copy\"",
+  "embedGuideStep2ExampleCode": "Example code:",
+
+  "embedGuideStep3Intro": "Now paste the code on your website:",
+  "embedGuideStep3WordPress": "For WordPress:",
+  "embedGuideStep3WP1": "Open page in editor",
+  "embedGuideStep3WP2": "Switch to \"HTML\" or \"Code\" mode",
+  "embedGuideStep3WP3": "Paste iframe code",
+  "embedGuideStep3WP4": "Click \"Publish\" or \"Update\"",
+  "embedGuideStep3Static": "For static HTML pages:",
+  "embedGuideStep3HTML1": "Open HTML file in text editor",
+  "embedGuideStep3HTML2": "Find where you want the widget (e.g. inside <div>)",
+  "embedGuideStep3HTML3": "Paste iframe code",
+  "embedGuideStep3HTML4": "Save file and upload to server",
+  "embedGuidePlaceholderAddIframe": "GIF: Process of adding iframe to HTML",
+
+  "embedGuideStep4Intro": "Check if the widget works properly:",
+  "embedGuideStep4Check1": "Open your website",
+  "embedGuideStep4Check2": "Check if widget loads",
+  "embedGuideStep4Check3": "Test calendar navigation",
+  "embedGuideStep4Check4": "Test booking flow (if not calendar-only)",
+  "embedGuideStep4Success": "Done! Widget is active and guests can see availability.",
+
+  "embedGuideAdvResponsive": "Responsive Widget",
+  "embedGuideAdvResponsiveDesc": "For a widget that automatically adjusts to screen width, use responsive embed code from the dialog.",
+  "embedGuideAdvLanguage": "Language Change",
+  "embedGuideAdvLanguageDesc": "Add &language=en (or hr, de, it) to URL to change widget language.",
+  "embedGuideAdvColors": "Custom Colors",
+  "embedGuideAdvColorsDesc": "In Widget Settings you can change primary color for branding.",
+  "embedGuideAdvMultiple": "Multiple Units",
+  "embedGuideAdvMultipleDesc": "For multiple apartments, create a separate widget for each (different unit ID in URL).",
+
+  "embedGuideTroubleNotShowing": "Widget not showing",
+  "embedGuideTroubleNotShowingSolution": "• Check if you pasted complete iframe code\n• Check if unit ID is correct\n• Check browser console for JavaScript errors",
+  "embedGuideTroubleHeight": "Widget too tall/short",
+  "embedGuideTroubleHeightSolution": "• Adjust height parameter in iframe tag (e.g. height=\"1200px\")\n• Use responsive embed code for automatic adjustment",
+  "embedGuideTroublePayment": "Payment not working",
+  "embedGuideTroublePaymentSolution": "• Check if you connected Stripe account\n• Check if Stripe is enabled in Widget Settings\n• Check allow=\"payment\" attribute in iframe tag",
+  "embedGuideTroubleOldData": "Calendar shows old data",
+  "embedGuideTroubleOldDataSolution": "• Refresh page (Ctrl+F5 for hard refresh)\n• Calendar automatically updates every 5 minutes",
+
+  "embedGuideSimpleStepsTitle": "3 Simple Steps",
+  "embedGuideSimpleStep1": "Copy the embed code for your unit",
+  "embedGuideSimpleStep2": "Paste it into your website's HTML",
+  "embedGuideSimpleStep3": "Save and publish",
+  "embedGuideNeedHelp": "Need help?",
+  "embedGuideInstallationGuide": "Installation Guide",
+  "embedGuideLanguageNote": "Widget has a built-in language selector. Users can switch between HR, EN, DE, IT.",
+
+  "embedHelpTitle": "Embed Widget Help",
+  "embedHelpTabInstallation": "Guide",
+  "embedHelpTabAdvanced": "Advanced",
+  "embedHelpTabTroubleshooting": "Help",
+
+  "stripeGuideTitle": "Stripe Integration - Guide",
+  "stripeGuideHeaderTitle": "Stripe Connect",
+  "stripeGuideHeaderSubtitle": "Accept card payments directly to your Stripe account",
+  "stripeGuideHeaderTip": "💡 Stripe Connect allows you to receive payments directly to your Stripe account. Guests pay by card, and funds go directly to you (minus Stripe fee).",
+  "stripeGuideStep1Title": "Create Stripe Account",
+  "stripeGuideStep2Title": "Complete Stripe Onboarding",
+  "stripeGuideStep3Title": "Connect Stripe with Owner App",
+  "stripeGuideStep4Title": "Enable Stripe in Widget Settings",
+  "stripeGuideGoToIntegration": "Go to Stripe Integration",
+  "stripeGuideFaq": "Frequently Asked Questions",
+
+  "unitWizardCreateTitle": "Create New Unit",
+  "unitWizardEditTitle": "Edit Unit",
+  "unitWizardPublish": "Publish",
+  "unitWizardContinueToReview": "Continue to Review",
+  "unitWizardNext": "Next",
+  "unitWizardBack": "Back",
+  "unitWizardSkip": "Skip",
+  "unitWizardFailedToLoad": "Failed to load wizard",
+  "unitWizardValidationStep1": "Please fill in unit name and URL slug",
+  "unitWizardValidationStep2": "Please fill in bedrooms, bathrooms, and max guests",
+  "unitWizardValidationStep3": "Please set price per night and minimum stay",
+  "unitWizardValidationStep5": "Please complete all required steps before publishing",
+  "unitWizardValidationDefault": "Please complete this step",
+  "unitWizardCreateSuccess": "Unit created successfully!",
+  "unitWizardUpdateSuccess": "Unit updated successfully!",
+  "unitWizardPublishError": "Failed to publish unit: {error}",
+  "@unitWizardPublishError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "unitWizardStep1Title": "Basic Information",
+  "unitWizardStep1Subtitle": "Enter name and description of accommodation unit",
+  "unitWizardStep1UnitInfo": "Unit Information",
+  "unitWizardStep1UnitInfoDesc": "Name and URL slug for identification",
+  "unitWizardStep1UnitName": "Unit Name *",
+  "unitWizardStep1UnitNameHint": "e.g. Ground Floor Apartment",
+  "unitWizardStep1UnitNameRequired": "Name is required",
+  "unitWizardStep1UrlSlug": "URL Slug",
+  "unitWizardStep1UrlSlugHint": "ground-floor-apartment",
+  "unitWizardStep1SlugRequired": "Slug is required",
+  "unitWizardStep1SlugInvalid": "Slug can only contain lowercase letters, numbers and hyphens",
+  "unitWizardStep1RegenerateSlug": "Regenerate from name",
+  "unitWizardStep1Description": "Unit Description",
+  "unitWizardStep1DescriptionInfo": "Additional information visible to guests",
+  "unitWizardStep1DescriptionLabel": "Description (optional)",
+  "unitWizardStep1DescriptionHint": "Short description of the unit...",
+
+  "unitWizardStep2Title": "Capacity and Space",
+  "unitWizardStep2Subtitle": "Enter technical specifications of accommodation unit",
+  "unitWizardStep2UnitCapacity": "Unit Capacity",
+  "unitWizardStep2UnitCapacityDesc": "Technical specifications of accommodation",
+  "unitWizardStep2Bedrooms": "Bedrooms *",
+  "unitWizardStep2Bathrooms": "Bathrooms *",
+  "unitWizardStep2MaxGuests": "Maximum Guests *",
+  "unitWizardStep2Area": "Area (m²)",
+  "unitWizardStep2Required": "Required",
+  "unitWizardStep2InvalidNumber": "Invalid number",
+  "unitWizardStep2MinGuest": "Minimum 1 guest",
+  "unitWizardStep2InfoTip": "This information helps guests choose appropriate accommodation",
+
+  "unitWizardStep3Title": "Price and Availability",
+  "unitWizardStep3Subtitle": "Set price, minimum stay and availability",
+  "unitWizardStep3PriceInfo": "Price Information",
+  "unitWizardStep3PriceInfoDesc": "Base price and booking rules",
+  "unitWizardStep3PricePerNight": "Price per Night (€) *",
+  "unitWizardStep3PricePerNightHint": "50",
+  "unitWizardStep3PricePerNightHelper": "Base price for one night",
+  "unitWizardStep3PriceRequired": "Price is required",
+  "unitWizardStep3PriceInvalid": "Enter valid price",
+  "unitWizardStep3WeekendPrice": "Weekend Price (€)",
+  "unitWizardStep3WeekendPriceHint": "70",
+  "unitWizardStep3WeekendPriceHelper": "Price for Sat-Sun (optional)",
+  "unitWizardStep3MinStay": "Minimum Stay (nights) *",
+  "unitWizardStep3MinStayHint": "1",
+  "unitWizardStep3MinStayHelper": "Minimum nights for reservation",
+  "unitWizardStep3MinStayRequired": "Minimum stay is required",
+  "unitWizardStep3MinStayMin": "Minimum is 1 night",
+  "unitWizardStep3MaxStay": "Maximum Stay (nights)",
+  "unitWizardStep3MaxStayHint": "30",
+  "unitWizardStep3MaxStayHelper": "Maximum nights (optional)",
+  "unitWizardStep3MaxStayInvalid": "Enter valid number",
+  "unitWizardStep3MaxStayMinError": "Max must be >= min ({min})",
+  "@unitWizardStep3MaxStayMinError": {
+    "placeholders": {
+      "min": {"type": "int"}
+    }
+  },
+  "unitWizardStep3Availability": "Availability",
+  "unitWizardStep3AvailabilityDesc": "Set when unit is available for reservations",
+  "unitWizardStep3YearRound": "Available Year Round",
+  "unitWizardStep3YearRoundDesc": "Unit is open for reservations throughout the year",
+  "unitWizardStep3AdvancedTitle": "Advanced pricing options",
+  "unitWizardStep3AdvancedDesc": "After creating the unit, in the Pricing tab you can set advanced options such as min/max nights by date, check-in/check-out day blocking, weekend days and seasonal prices.",
+
+  "unitWizardStep4Title": "Photos",
+  "unitWizardStep4Subtitle": "Add photos of the accommodation unit (recommended min. 5)",
+  "unitWizardStep4Gallery": "Photo Gallery",
+  "unitWizardStep4GalleryDesc": "Upload photos of your unit",
+  "unitWizardStep4AddPhotos": "Add Photos",
+  "unitWizardStep4Uploading": "Uploading...",
+  "unitWizardStep4PhotoCount": "{count} photos",
+  "@unitWizardStep4PhotoCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitWizardStep4NoPhotos": "No photos",
+  "unitWizardStep4SetCover": "Set as cover",
+  "unitWizardStep4Delete": "Delete",
+  "unitWizardStep4Cover": "Cover",
+  "unitWizardStep4UploadSuccess": "Uploaded {count} image(s) successfully",
+  "@unitWizardStep4UploadSuccess": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitWizardStep4UploadError": "Failed to upload images: {error}",
+  "@unitWizardStep4UploadError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "unitWizardStep4ImageDeleted": "Image deleted",
+  "unitWizardStep4CoverUpdated": "Cover image updated",
+
+  "unitWizardStep5Title": "Review and Publish",
+  "unitWizardStep5Subtitle": "Review all information before publishing the unit",
+  "unitWizardStep5BasicInfo": "Basic Information",
+  "unitWizardStep5Capacity": "Capacity",
+  "unitWizardStep5Pricing": "Prices",
+  "unitWizardStep5AvailabilityCard": "Availability",
+  "unitWizardStep5Name": "Name",
+  "unitWizardStep5Slug": "Slug",
+  "unitWizardStep5Description": "Description",
+  "unitWizardStep5Bedrooms": "Bedrooms",
+  "unitWizardStep5Bathrooms": "Bathrooms",
+  "unitWizardStep5MaxGuests": "Max guests",
+  "unitWizardStep5Area": "Area",
+  "unitWizardStep5PricePerNight": "Price per night",
+  "unitWizardStep5MinStay": "Min. stay",
+  "unitWizardStep5MinStayNights": "{nights} nights",
+  "@unitWizardStep5MinStayNights": {
+    "placeholders": {
+      "nights": {"type": "int"}
+    }
+  },
+  "unitWizardStep5YearRound": "Year round",
+  "unitWizardStep5YearRoundYes": "Yes",
+  "unitWizardStep5YearRoundSeasonal": "Seasonal",
+  "unitWizardStep5IncompleteWarning": "Please complete all required steps before publishing",
+  "unitWizardStep5ReadyMessage": "All required information is filled in. Click \"Publish\" to publish the unit.",
+
+  "unitWizardProgressStepOf": "Step {current} of {total}",
+  "@unitWizardProgressStepOf": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "unitWizardProgressInfo": "Info",
+  "unitWizardProgressCapacity": "Capacity",
+  "unitWizardProgressPrice": "Price",
+  "unitWizardProgressPhotos": "Photos",
+  "unitWizardProgressReview": "Review",
+  "unitWizardProgressOptional": "(optional)",
+
+  "propertyFormSubdomainSuggestion": "Suggestion: ",
+  "propertyFormUseSuggestion": "Use",
+  "propertyFormSubdomainAvailable": "Subdomain is available",
+  "propertyFormNoPhotos": "No photos",
+  "propertyFormGenerateFromName": "Generate from name",
+  "propertyFormSubdomainLabel": "Subdomain (for email links)",
+  "propertyFormSubdomainEmailHelper": "URL for email links: [subdomain].bookbed.io",
+
+  "icalExportTitle": "iCal Export",
+  "icalExportUnit": "Unit",
+  "icalExportGenerating": "Generating...",
+  "icalExportGenerate": "Generate iCal Export",
+  "icalExportUrl": "Export URL",
+  "icalExportCopyUrl": "Copy URL",
+  "icalExportLastGenerated": "Last generated: {time}",
+  "@icalExportLastGenerated": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "icalExportPreview": ".ics File Preview",
+  "icalExportHowToTest": "How to Test",
+  "icalExportGoogleCalendar": "1. Google Calendar",
+  "icalExportGoogleInstructions": "Go to Settings → Add calendar → From URL → Paste the export URL",
+  "icalExportAppleCalendar": "2. Apple Calendar",
+  "icalExportAppleInstructions": "File → New Calendar Subscription → Paste the export URL",
+  "icalExportOutlook": "3. Outlook",
+  "icalExportOutlookInstructions": "Add calendar → Subscribe from web → Paste the export URL",
+  "icalExportSyncNote": "Note: Calendar apps may take 5-15 minutes to sync after subscribing",
+  "icalExportSuccess": "iCal export generated successfully",
+  "icalExportError": "Failed to generate iCal export",
+  "icalExportUrlCopied": "URL copied to clipboard",
+  "icalExportJustNow": "Just now",
+  "icalExportMinutesAgo": "{minutes}m ago",
+  "@icalExportMinutesAgo": {
+    "placeholders": {
+      "minutes": {"type": "int"}
+    }
+  },
+  "icalExportHoursAgo": "{hours}h ago",
+  "@icalExportHoursAgo": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+
+  "icalExportListTitle": "iCal Export - Select Unit",
+  "icalExportListHeader": "iCal Export",
+  "icalExportListDescription": "Select a unit to generate iCal URL for calendar synchronization.",
+  "icalExportListUnknownUnit": "Unknown unit",
+  "icalExportListUnknownProperty": "Unknown property",
+  "icalExportListNoUnits": "No accommodation units",
+  "icalExportListNoUnitsDesc": "First create a property and add accommodation units.",
+  "icalExportListAddProperty": "Add Property",
+  "icalExportReady": "Ready to Export",
+  "icalExportUnitsAvailable": "{count} units available for export",
+  "@icalExportUnitsAvailable": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalExportWhyExport": "Why Export Your Calendar?",
+  "icalExportBenefit1Title": "Personal Calendar Sync",
+  "icalExportBenefit1Desc": "See all your bookings in Google Calendar, Apple Calendar, or Outlook.",
+  "icalExportBenefit2Title": "Automatic Updates",
+  "icalExportBenefit2Desc": "Calendar apps automatically sync new bookings every few hours.",
+  "icalExportBenefit3Title": "Multi-Device Access",
+  "icalExportBenefit3Desc": "View your bookings on phone, tablet, and computer.",
+  "icalExportBenefit4Title": "Reminders & Notifications",
+  "icalExportBenefit4Desc": "Get calendar notifications for upcoming check-ins and check-outs.",
+  "icalExportSelectUnit": "Select Unit",
+  "icalExportHowItWorks": "How It Works",
+  "icalExportStep1": "Select a unit from the list below",
+  "icalExportStep2": "Click 'Generate' to create the iCal URL",
+  "icalExportStep3": "Copy the URL and add it to your calendar app",
+  "icalExportStep4": "Your calendar will automatically sync bookings",
+  "icalExportFaqTitle": "Frequently Asked Questions",
+  "icalExportFaq1Q": "How often does the calendar sync?",
+  "icalExportFaq1A": "Most calendar apps sync every 5-15 minutes. You can also manually refresh in your calendar app.",
+  "icalExportFaq2Q": "Will deleted bookings be removed?",
+  "icalExportFaq2A": "Yes, when you regenerate the export, cancelled bookings will be removed from your calendar.",
+  "icalExportFaq3Q": "Can I share this URL with others?",
+  "icalExportFaq3A": "Yes, but be careful - anyone with the URL can see your booking schedule.",
+  "icalExportUrlReady": "URL Ready",
+  "icalExportUrlPending": "URL Not Generated",
+  "icalExportUrlReadyDesc": "Your iCal URL is ready. Copy it and add to your calendar app.",
+  "icalExportUrlPendingDesc": "Click the button below to generate your iCal export URL.",
+  "icalExportRegenerate": "Regenerate URL",
+  "icalExportNoUrl": "No URL Generated",
+  "icalExportNoUrlDesc": "Generate an iCal URL to sync your bookings with external calendars.",
+
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {"type": "String"}
+    }
+  },
+
+  "languageSelectTitle": "Select Language",
+  "revenueChartTitle": "Revenue Overview",
+  "revenueChartLegend": "Revenue",
+  "revenueChartNoData": "No revenue data available",
+
+  "propertyCardPublished": "Published",
+  "propertyCardHidden": "Hidden",
+  "propertyCardUnits": "{count, plural, =1{1 unit} other{{count} units}}",
+  "@propertyCardUnits": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "propertyCardEdit": "Edit",
+  "propertyCardDelete": "Delete",
+
+  "editBookingTitle": "Edit Booking",
+  "editBookingBookingId": "Booking: {id}",
+  "@editBookingBookingId": {
+    "placeholders": {
+      "id": {"type": "String"}
+    }
+  },
+  "editBookingGuest": "Guest: {name}",
+  "@editBookingGuest": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "editBookingCheckIn": "Check-in",
+  "editBookingCheckOut": "Check-out",
+  "editBookingNights": "{count, plural, =1{1 night} other{{count} nights}}",
+  "@editBookingNights": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "editBookingGuests": "Guests",
+  "editBookingInternalNotes": "Internal Notes",
+  "editBookingNotesHint": "Add notes (not visible to guest)...",
+  "editBookingSaveChanges": "Save Changes",
+  "editBookingSuccess": "Booking successfully updated",
+  "editBookingError": "Error updating booking",
+
+  "embedCodeTitle": "Embed Code for Widget",
+  "embedCodeUnit": "Unit",
+  "embedCodeUrlSlug": "URL Slug",
+  "embedCodeUnitIdTechnical": "Unit ID (technical)",
+  "embedCodeWidgetUrl": "Widget URL",
+  "embedCodeOptions": "Options",
+  "embedCodeLanguage": "Language",
+  "embedCodeHeight": "Height (px)",
+  "embedCodeFixedHeight": "Fixed Height",
+  "embedCodeFixedHeightDesc": "Iframe with fixed height ({height}px)",
+  "@embedCodeFixedHeightDesc": {
+    "placeholders": {
+      "height": {"type": "String"}
+    }
+  },
+  "embedCodeResponsive": "Responsive",
+  "embedCodeResponsiveDesc": "Automatically adjusts to width (aspect ratio 4:3)",
+  "embedCodeCopy": "Copy",
+  "embedCodeCopied": "{label} copied to clipboard!",
+  "@embedCodeCopied": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "embedCodeInstructions": "Instructions",
+  "embedCodeInstructionsText": "1. Copy embed code (click \"Copy\" button)\n2. Open your website page in editor\n3. Paste code at desired location\n4. Save and publish page",
+
+  "sendEmailTitle": "Send Email to Guest",
+  "sendEmailTemplate": "Template",
+  "sendEmailTemplateConfirmation": "Booking confirmation",
+  "sendEmailTemplateReminder": "Reminder",
+  "sendEmailTemplateCancellation": "Cancellation",
+  "sendEmailTemplateCustom": "Custom message",
+  "sendEmailSubject": "Subject *",
+  "sendEmailSubjectHint": "Email subject",
+  "sendEmailSubjectRequired": "Please enter subject",
+  "sendEmailMessage": "Message *",
+  "sendEmailMessageHint": "Enter message for guest...",
+  "sendEmailMessageRequired": "Please enter message",
+  "sendEmailMessageTooShort": "Message must have at least 10 characters",
+  "sendEmailInfo": "Email will be sent from your registered email address",
+  "sendEmailCancel": "Cancel",
+  "sendEmailSend": "Send Email",
+  "sendEmailSending": "Sending...",
+  "sendEmailSuccess": "Email successfully sent to guest {name}",
+  "@sendEmailSuccess": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "sendEmailError": "Error sending email",
+  "sendEmailNoGuestEmail": "Guest email address not available",
+
+  "priceCalendarSetPrice": "Set price",
+  "priceCalendarAvailability": "Availability",
+  "priceCalendarSelectMonth": "Select month",
+  "priceCalendarBulkEdit": "Bulk Edit",
+  "priceCalendarDaysSelected": "{count} {count, plural, =1{day} other{days}} selected",
+  "@priceCalendarDaysSelected": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarClear": "Clear",
+  "priceCalendarSelectAll": "Select all",
+  "priceCalendarSelectAllDays": "Select all days",
+  "priceCalendarDeselectAll": "Deselect all",
+  "priceCalendarErrorLoadingPrices": "Error loading prices",
+  "priceCalendarWeekdayMon": "Mon",
+  "priceCalendarWeekdayTue": "Tue",
+  "priceCalendarWeekdayWed": "Wed",
+  "priceCalendarWeekdayThu": "Thu",
+  "priceCalendarWeekdayFri": "Fri",
+  "priceCalendarWeekdaySat": "Sat",
+  "priceCalendarWeekdaySun": "Sun",
+  "priceCalendarEditDate": "Edit date",
+  "priceCalendarPrice": "PRICE",
+  "priceCalendarBasePricePerNight": "Base price per night (€)",
+  "priceCalendarAvailabilitySection": "AVAILABILITY",
+  "priceCalendarAvailable": "Available",
+  "priceCalendarBlockCheckIn": "Block check-in",
+  "priceCalendarBlockCheckInDesc": "Guests cannot start reservation",
+  "priceCalendarBlockCheckOut": "Block check-out",
+  "priceCalendarBlockCheckOutDesc": "Guests cannot end reservation",
+  "priceCalendarAdvancedOptions": "Advanced options",
+  "priceCalendarAdvancedOptionsDesc": "Weekend price, min/max nights, advance",
+  "priceCalendarWeekendPrice": "Weekend price (€)",
+  "priceCalendarMinNights": "Min. nights",
+  "priceCalendarMaxNights": "Max. nights",
+  "priceCalendarMinDaysAdvance": "Min. days advance",
+  "priceCalendarMaxDaysAdvance": "Max. days advance",
+  "priceCalendarDeleteConfirmTitle": "Delete confirmation",
+  "priceCalendarDeleteConfirmMessage": "Are you sure you want to delete custom price? Date will be reverted to base price.",
+  "priceCalendarRevertedToBasePrice": "Reverted to base price",
+  "priceCalendarEnterPrice": "Enter price",
+  "priceCalendarPriceMustBeGreaterThanZero": "Price must be greater than 0",
+  "priceCalendarWeekendPriceMustBeGreaterThanZero": "Weekend price must be greater than 0",
+  "priceCalendarMinNightsMustBeGreaterThanZero": "Min. nights must be greater than 0",
+  "priceCalendarMaxNightsMustBeGreaterThanZero": "Max. nights must be greater than 0",
+  "priceCalendarMinDaysAdvanceMustBeZeroOrMore": "Min. days advance must be 0 or more",
+  "priceCalendarMaxDaysAdvanceMustBeGreaterThanZero": "Max. days advance must be greater than 0",
+  "priceCalendarMinNightsCannotExceedMax": "Min. nights cannot exceed max. nights",
+  "priceCalendarMinAdvanceCannotExceedMax": "Min. days advance cannot exceed max. days advance",
+  "priceCalendarPriceSaved": "Price saved",
+  "priceCalendarSetPriceForDays": "Set price for {count} days",
+  "@priceCalendarSetPriceForDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarPricePerNight": "Price per night (€)",
+  "priceCalendarWillSetPriceForAllDates": "Will set price for all selected dates",
+  "priceCalendarConfirmation": "Confirmation",
+  "priceCalendarConfirmSetPrice": "Are you sure you want to set price €{price} for {count} {count, plural, =1{day} other{days}}?",
+  "@priceCalendarConfirmSetPrice": {
+    "placeholders": {
+      "price": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarUpdatedPrices": "Updated {count} prices",
+  "@priceCalendarUpdatedPrices": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarUndo": "Undo",
+  "priceCalendarAvailabilityForDays": "Availability for {count} days",
+  "@priceCalendarAvailabilityForDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarSelectActionForDays": "Select action for {count} {count, plural, =1{day} other{days}}:",
+  "@priceCalendarSelectActionForDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarMarkAsAvailable": "Mark as available",
+  "priceCalendarDaysMarkedAvailable": "{count} {count, plural, =1{day marked} other{days marked}} as available",
+  "@priceCalendarDaysMarkedAvailable": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarConfirmBlockDays": "Are you sure you want to block {count} {count, plural, =1{day} other{days}}?\n\nThese dates will be marked as unavailable.",
+  "@priceCalendarConfirmBlockDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarBlock": "Block",
+  "priceCalendarBlockDates": "Block dates",
+  "priceCalendarDaysBlocked": "{count} {count, plural, =1{day blocked} other{days blocked}}",
+  "@priceCalendarDaysBlocked": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "priceCalendarBlockCheckInButton": "Block check-in",
+  "priceCalendarCheckInBlockedForDays": "Check-in blocked for selected days",
+  "priceCalendarBlockCheckOutButton": "Block check-out",
+  "priceCalendarCheckOutBlockedForDays": "Check-out blocked for selected days",
+
+  "icalSyncTitle": "iCal Synchronization",
+  "icalNoFeeds": "No feeds",
+  "icalNoFeedsDescription": "Add your first iCal feed to start synchronization",
+  "icalSyncError": "Synchronization error",
+  "icalSyncErrorCount": "{errorCount} of {totalCount} feeds have errors",
+  "@icalSyncErrorCount": {
+    "placeholders": {
+      "errorCount": {"type": "int"},
+      "totalCount": {"type": "int"}
+    }
+  },
+  "icalSyncActive": "Synchronization active",
+  "icalSyncActiveCount": "{count} feeds actively synchronized",
+  "@icalSyncActiveCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalAllFeedsPaused": "All feeds paused",
+  "icalNoActiveFeeds": "No active feeds",
+  "icalWhySync": "Why iCal Synchronization?",
+  "icalAutoSync": "Automatic Synchronization",
+  "icalAutoSyncDesc": "Reservations are automatically imported from booking platforms every 60 minutes",
+  "icalPreventDoubleBooking": "Prevent Double Booking",
+  "icalPreventDoubleBookingDesc": "Block dates on all platforms automatically",
+  "icalCompatibility": "Compatibility",
+  "icalCompatibilityDesc": "Supports Booking.com, Airbnb and other iCal platforms",
+  "icalSecure": "Secure and Reliable",
+  "icalSecureDesc": "Encrypted data and automatic backup of all reservations",
+  "icalErrorLoadingFeeds": "Error loading feeds",
+  "icalNoFeedsTitle": "No iCal Feeds",
+  "icalNoFeedsSubtitle": "Add an iCal feed to synchronize reservations with booking platforms",
+  "icalAddFeed": "Add iCal Feed",
+  "icalAddFeedSubtitle": "Connect calendar with Booking.com, Airbnb or other platforms",
+  "icalAddFeedButton": "Add Feed",
+  "icalYourFeeds": "Your Feeds",
+  "icalLastSynced": "Last synced: {time}",
+  "@icalLastSynced": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "icalErrorPrefix": "Error: {error}",
+  "@icalErrorPrefix": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "icalReservationsAndSyncs": "{reservations} reservations • {syncs} syncs",
+  "@icalReservationsAndSyncs": {
+    "placeholders": {
+      "reservations": {"type": "int"},
+      "syncs": {"type": "int"}
+    }
+  },
+  "icalSyncNow": "Sync now",
+  "icalPause": "Pause",
+  "icalResume": "Resume",
+  "icalHowItWorks": "How does iCal synchronization work?",
+  "icalSyncStarted": "Synchronization started for {platform}...",
+  "@icalSyncStarted": {
+    "placeholders": {
+      "platform": {"type": "String"}
+    }
+  },
+  "icalSyncSuccess": "Synchronization successful! Reservations created: {count}",
+  "@icalSyncSuccess": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalSyncErrorMessage": "Error during synchronization",
+  "icalUnknownError": "Unknown error",
+  "icalFeedPaused": "Feed paused",
+  "icalFeedPauseError": "Error pausing feed",
+  "icalFeedResumed": "Feed resumed",
+  "icalFeedResumeError": "Error resuming feed",
+  "icalDeleteFeedTitle": "Delete Feed?",
+  "icalDeleteFeedMessage": "Are you sure you want to delete {platform} feed? This action will delete {count} synchronized reservations.",
+  "@icalDeleteFeedMessage": {
+    "placeholders": {
+      "platform": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "icalFeedDeleted": "Feed deleted",
+  "icalFeedDeleteError": "Error deleting feed",
+  "icalAddFeedTitle": "Add iCal Feed",
+  "icalEditFeedTitle": "Edit iCal Feed",
+  "icalSelectUnit": "Select unit *",
+  "icalSelectUnitRequired": "Please select a unit",
+  "icalNoUnitsCreated": "You have no units created. First create an apartment.",
+  "icalErrorLoadingUnits": "Error loading units",
+  "icalPlatform": "Platform *",
+  "icalPlatformBookingCom": "Booking.com",
+  "icalPlatformAirbnb": "Airbnb",
+  "icalPlatformOther": "Other platform (iCal)",
+  "icalUrlLabel": "iCal URL *",
+  "icalUrlHint": "https://...",
+  "icalPasteFromClipboard": "Paste from clipboard",
+  "icalUrlRequired": "Please enter iCal URL",
+  "icalUrlInvalid": "URL must start with http:// or https://",
+  "icalAutoSyncInfo": "Automatic synchronization",
+  "icalAutoSyncInfoDesc": "Reservations will be automatically synchronized every 60 minutes. Initial synchronization will start immediately after adding.",
+  "icalAdd": "Add",
+  "icalInitialSyncStarting": "Feed successfully added! Starting initial synchronization...",
+  "icalInitialSyncSuccess": "Initial synchronization completed! Imported: {count} reservations",
+  "@icalInitialSyncSuccess": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "icalInitialSyncFailed": "Feed added, but initial synchronization failed. Synchronization will automatically start in 60 minutes.",
+  "icalInitialSyncError": "Feed added, but automatic synchronization failed. You can manually start synchronization later.",
+  "icalFeedUpdated": "Feed updated",
+  "icalFeedSaveError": "Error saving feed",
+
+  "icalGuideTitle": "iCal Synchronization - Guide",
+  "icalGuideHeaderTitle": "iCal Synchronization",
+  "icalGuideHeaderSubtitle": "Automatic sync of reservations from Booking.com, Airbnb and other platforms",
+  "icalGuideHeaderTip": "💡 iCal synchronization prevents overbooking by automatically importing reservations from other platforms and displaying them as occupied days in your calendar.",
+  "icalGuideBookingComSteps": "Steps to get iCal URL:",
+  "icalGuideBookingCom1": "1. Log in to Extranet (admin.booking.com)",
+  "icalGuideBookingCom2": "2. Go to: Property → Calendar → Reservations export",
+  "icalGuideBookingCom3": "3. Copy \"Calendar export link\" (iCal URL)",
+  "icalGuideBookingCom4": "4. Paste in Owner app",
+  "icalGuideAirbnb1": "1. Log in to Airbnb host dashboard",
+  "icalGuideAirbnb2": "2. Select property (listing)",
+  "icalGuideAirbnb3": "3. Go to: Calendar → Availability settings → Export calendar",
+  "icalGuideAirbnb4": "4. Copy iCal link",
+  "icalGuideAirbnb5": "5. Paste in Owner app",
+  "icalGuideAddFeedTitle": "Adding iCal Feed in Owner App",
+  "icalGuideStep1Title": "Open iCal Synchronization",
+  "icalGuideStep1Desc": "In Owner app:",
+  "icalGuideStep1Bullet1": "Open drawer (hamburger menu)",
+  "icalGuideStep1Bullet2": "Go to: Integrations → iCal Synchronization",
+  "icalGuideStep1Button": "Go to iCal Synchronization",
+  "icalGuideStep2Title": "Add new Feed",
+  "icalGuideStep2Desc": "Click on \"Add iCal Feed\" button:",
+  "icalGuideStep2Bullet1": "Select Unit (apartment) for sync",
+  "icalGuideStep2Bullet2": "Select platform (Booking.com, Airbnb, etc.)",
+  "icalGuideStep2Bullet3": "Paste iCal URL you copied",
+  "icalGuideStep2Bullet4": "Click \"Add\"",
+  "icalGuideStep3Title": "Start Sync",
+  "icalGuideStep3Desc": "After adding feed:",
+  "icalGuideStep3Bullet1": "Click \"Sync Now\" button next to feed",
+  "icalGuideStep3Bullet2": "Wait a few seconds",
+  "icalGuideStep3Bullet3": "Check status (Active ✓)",
+  "icalGuideStep3Success": "Done! Reservations from other platforms will automatically appear as occupied days.",
+  "icalGuideStep4Title": "Automatic Synchronization",
+  "icalGuideStep4Desc": "System automatically synchronizes reservations:",
+  "icalGuideStep4Bullet1": "Automatic sync runs every hour",
+  "icalGuideStep4Bullet2": "New reservations appear within 1h",
+  "icalGuideStep4Bullet3": "Cancelled reservations are removed",
+  "icalGuideStep4Bullet4": "You can manually start sync anytime",
+  "icalGuideStep4Info": "Sync time: Every hour at 00 minutes (e.g. 10:00, 11:00, 12:00...)",
+  "icalGuideFaqTitle": "Frequently Asked Questions",
+  "icalGuideFaq1Q": "How often does it sync?",
+  "icalGuideFaq1A": "Automatic sync runs every hour. You can manually start sync anytime by clicking \"Sync Now\".",
+  "icalGuideFaq2Q": "Will guests see reservations from other platforms?",
+  "icalGuideFaq2A": "Yes! Reservations imported via iCal will be shown as occupied days in embed widget, preventing overbooking.",
+  "icalGuideFaq3Q": "Can I add multiple feeds for same apartment?",
+  "icalGuideFaq3A": "Yes, you can add feeds from multiple platforms (Booking.com, Airbnb, or any other iCal platform) for same unit. All reservations will be synchronized.",
+  "icalGuideFaq4Q": "Can I see guest details from other platforms?",
+  "icalGuideFaq4A": "No. iCal protocol only transfers reservation dates (check-in and check-out), not personal guest data. For guest details, you must log in to the respective platform.",
+  "icalGuideFaq5Q": "What if URL stops working?",
+  "icalGuideFaq5A": "If URL changes, simply update feed in app. Delete old feed and add new one with updated URL.",
+  "icalGuideTroubleshootTitle": "Troubleshooting",
+  "icalGuideTrouble1Problem": "Feed has \"Error\" status",
+  "icalGuideTrouble1Solution": "• Check if URL is correct\n• Check if URL is still active on platform\n• Delete feed and add again with new URL",
+  "icalGuideTrouble2Problem": "Reservations not showing",
+  "icalGuideTrouble2Solution": "• Click \"Sync Now\" to manually start sync\n• Check if you selected correct unit\n• Wait a few minutes and refresh page",
+  "icalGuideTrouble3Problem": "Old reservations still showing",
+  "icalGuideTrouble3Solution": "• iCal sync automatically removes past reservations\n• Click \"Sync Now\" to force update",
+
+  "stripeGuideStep1Desc": "If you don't have a Stripe account yet, you need to create one:",
+  "stripeGuideStep1Bullet1": "Go to Stripe.com",
+  "stripeGuideStep1Bullet2": "Click on \"Sign up\" or \"Start now\"",
+  "stripeGuideStep1Bullet3": "Enter email, name and password",
+  "stripeGuideStep1Bullet4": "Verify email address",
+  "stripeGuideStep1Note": "Note: Stripe is free to register. It only charges a commission per transaction (about 1.4% + €0.25).",
+  "stripeGuideStep2Desc": "After registration, Stripe will ask for additional information:",
+  "stripeGuideStep2Bullet1": "Business type (Individual or Company)",
+  "stripeGuideStep2Bullet2": "Personal information (name, surname, date of birth)",
+  "stripeGuideStep2Bullet3": "Residential address",
+  "stripeGuideStep2Bullet4": "Bank account for payouts (IBAN)",
+  "stripeGuideStep2Bullet5": "Tax identification (OIB in Croatia)",
+  "stripeGuideStep2Warning": "Important: Enter accurate data. Stripe verifies identity for security and legal compliance.",
+  "stripeGuideStep3Desc": "Return to Owner app and connect your Stripe account:",
+  "stripeGuideStep3Bullet1": "Open drawer (hamburger menu)",
+  "stripeGuideStep3Bullet2": "Go to: Integrations → Stripe Payments",
+  "stripeGuideStep3Bullet3": "Click \"Connect Stripe Account\"",
+  "stripeGuideStep3Bullet4": "Log in with your Stripe email/password",
+  "stripeGuideStep3Bullet5": "Approve access",
+  "stripeGuideStep4Desc": "After connecting Stripe, enable it for each unit:",
+  "stripeGuideStep4Bullet1": "Go to Configuration → Accommodation Units",
+  "stripeGuideStep4Bullet2": "Click \"Edit\" on unit",
+  "stripeGuideStep4Bullet3": "Click \"Widget Settings\"",
+  "stripeGuideStep4Bullet4": "Enable \"Stripe Payment\" toggle",
+  "stripeGuideStep4Bullet5": "Set deposit percentage (default: 20%)",
+  "stripeGuideStep4Bullet6": "Save changes",
+  "stripeGuideStep4Success": "Done! Now guests can pay by card through widget.",
+  "stripeGuideFaq1Q": "How much does Stripe cost?",
+  "stripeGuideFaq1A": "Stripe doesn't charge a monthly subscription. Commission is 1.4% + €0.25 per successful transaction within EU. For cards outside EU, commission is 2.9% + €0.25.",
+  "stripeGuideFaq2Q": "When do payouts arrive to my account?",
+  "stripeGuideFaq2A": "Stripe by default transfers funds to your bank account every 7 days. After the first month, you can change to daily payouts.",
+  "stripeGuideFaq3Q": "Can I receive payments in different currencies?",
+  "stripeGuideFaq3A": "Yes, Stripe supports 135+ currencies. However, payouts will be in EUR (your primary currency).",
+  "stripeGuideFaq4Q": "What if a guest makes a chargeback?",
+  "stripeGuideFaq4A": "Stripe automatically handles chargebacks. You will be notified by email and can submit evidence (booking confirmation, email communication). Chargeback fee is €15.",
+  "stripeGuideFaq5Q": "Can I test before activation?",
+  "stripeGuideFaq5A": "Yes! Stripe has test mode where you can simulate payments. Use test cards that Stripe provides for testing.",
+
+  "termsScreenTitle": "Terms & Conditions",
+  "termsScreenHeaderTitle": "Terms and Conditions",
+  "termsScreenLastUpdated": "Last updated: {year}",
+  "@termsScreenLastUpdated": {
+    "placeholders": {
+      "year": {"type": "String"}
+    }
+  },
+  "termsScreenToc": "Table of Contents",
+  "termsScreenSection1Title": "1. Acceptance of Terms",
+  "termsScreenSection1Body": "By accessing and using this booking platform (\"Service\"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.",
+  "termsScreenSection2Title": "2. Use License",
+  "termsScreenSection2Body": "Permission is granted to temporarily use this Service for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:\n\n• Modify or copy the materials\n• Use the materials for any commercial purpose\n• Attempt to decompile or reverse engineer any software contained on the Service\n• Remove any copyright or other proprietary notations from the materials",
+  "termsScreenSection3Title": "3. Booking Policy",
+  "termsScreenSection3Body": "All bookings made through the BookBed platform are subject to the following terms:\n\n• Guests select payment option: Deposit (20-50% customizable by owner), Full Payment, or payment at property\n• Online payments (Stripe): Payment deadline is 7 days from booking confirmation, or until check-in date (whichever comes first)\n• Bank transfer/Cash: Payment terms set by property owner\n• Unpaid bookings after deadline are automatically cancelled\n• You must be at least 18 years old to make a booking\n• Confirmed bookings hold dates and prevent double-bookings",
+  "termsScreenSection4Title": "4. Payment Terms",
+  "termsScreenSection4Body": "BookBed supports the following payment methods:\n\n• Credit/Debit Cards (Stripe) - processed securely with 3D Secure authentication\n• Bank Transfer - IBAN details provided in booking confirmation email\n• Cash - payment at property\n\nStripe payments: Money goes directly to property owner via Stripe Connect (Standard model). BookBed currently charges 0% platform fee (subject to change). Stripe transaction fees apply (approximately 1.4% + €0.25 per transaction, deducted from owner's payout).\n\nWe do NOT store your payment card information - all payment processing is handled by Stripe (PCI DSS Level 1 certified).",
+  "termsScreenSection5Title": "5. Cancellation & Refund Policy",
+  "termsScreenSection5Body": "Cancellation policies are set by individual property owners and displayed before booking confirmation.\n\n• Guest cancellations: Processed via booking view link (email) or by contacting property owner\n• Refund eligibility: Depends on owner's cancellation policy\n• Automatic cancellation: Bookings unpaid after 7-day deadline are cancelled automatically\n• Refund processing time: 5-10 business days to original payment method\n\nFor cancellation requests, contact the property owner directly or use the \"Cancel Booking\" option in your booking confirmation email.",
+  "termsScreenSection6Title": "6. User Responsibilities",
+  "termsScreenSection6Body": "You agree to:\n\n• Provide accurate and complete information when making a booking\n• Comply with the property rules and regulations\n• Respect the property and other guests\n• Pay for any damages caused during your stay",
+  "termsScreenSection7Title": "7. Limitation of Liability",
+  "termsScreenSection7Body": "The Service and its owners shall not be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.",
+  "termsScreenSection8Title": "8. Modifications to Terms",
+  "termsScreenSection8Body": "We reserve the right to modify these terms at any time. We will notify users of any material changes by updating the \"Last updated\" date. Your continued use of the Service after such modifications constitutes your acceptance of the updated terms.",
+  "termsScreenSection9Title": "9. Governing Law",
+  "termsScreenSection9Body": "These terms shall be governed by and construed in accordance with the laws of Croatia, without regard to its conflict of law provisions.",
+  "termsScreenSection10Title": "10. Contact Information",
+  "termsScreenSection10Body": "For questions about these Terms & Conditions, please contact us at:\n\n**General Support:**\nEmail: info@bookbed.io\n\n**Platform Website:**\napp.bookbed.io (Owner Dashboard)\nview.bookbed.io (Booking Widget)\n\n**Legal Entity:**\nBookBed is currently operating as a pre-registration platform. Full company registration details will be added upon business incorporation.",
+  "termsScreenLegalNotice": "Legal Notice",
+  "termsScreenLegalNoticeBody": "This is a template document. Please consult with a legal advisor to ensure compliance with Croatian and EU laws, including GDPR regulations.",
+
+  "privacyScreenTitle": "Privacy Policy",
+  "privacyScreenHeaderTitle": "Privacy Policy",
+  "privacyScreenLastUpdated": "Last updated: {year}",
+  "@privacyScreenLastUpdated": {
+    "placeholders": {
+      "year": {"type": "String"}
+    }
+  },
+  "privacyScreenToc": "Table of Contents",
+  "privacyScreenSection1Title": "1. Introduction",
+  "privacyScreenSection1Body": "This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our booking platform. This policy complies with the EU General Data Protection Regulation (GDPR) and Croatian data protection laws.\n\nBy using our Service, you agree to the collection and use of information in accordance with this policy.",
+  "privacyScreenSection2Title": "2. Information We Collect",
+  "privacyScreenSection2Body": "We collect the following types of information:\n\n**For Property Owners (Hosts):**\n• Name, email, phone number\n• Property address and business address\n• Bank account information (IBAN) for receiving payments\n• Stripe Connect account details (managed by Stripe)\n• Property and unit details (descriptions, photos, pricing)\n\n**For Guests:**\n• Name, email, phone number\n• Booking details (check-in/out dates, number of guests)\n• Payment information (processed by Stripe, not stored by BookBed)\n\n**Technical Information (All Users):**\n• IP address, browser type, device information\n• Cookies and usage data\n• Login activity (planned: device info, login date/time for security)",
+  "privacyScreenSection3Title": "3. Legal Basis for Processing (GDPR)",
+  "privacyScreenSection3Body": "We process your personal data under the following legal bases:\n\n• **Contract Performance:** To fulfill booking agreements\n• **Legitimate Interest:** To improve our services and prevent fraud\n• **Consent:** For marketing communications (you can opt-out anytime)\n• **Legal Obligation:** To comply with tax and accounting requirements",
+  "privacyScreenSection4Title": "4. How We Use Your Information",
+  "privacyScreenSection4Body": "We use your information to:\n\n• Process and manage your bookings\n• Send booking confirmations and updates\n• Process payments securely\n• Provide customer support\n• Improve our services\n• Send promotional communications (with your consent)\n• Comply with legal obligations",
+  "privacyScreenSection5Title": "5. Information Sharing",
+  "privacyScreenSection5Body": "We share your information only in the following circumstances:\n\n• **Property Owners:** Guest details shared to facilitate bookings\n• **Stripe:** Payment processing via Stripe Connect (Standard model) - processes payments directly to owners\n• **Firebase (Google Cloud):** Authentication, database hosting, and cloud functions\n• **Sentry:** Error tracking and crash reporting (anonymized where possible)\n• **Cloudflare:** DNS management and content delivery network (CDN)\n• **Legal Requirements:** When required by law or to protect rights and safety\n\nWe do NOT sell your personal information to third parties for marketing purposes.",
+  "privacyScreenSection6Title": "6. Data Storage and Security",
+  "privacyScreenSection6Body": "Your data is stored securely using Firebase (Google Cloud Platform) with servers primarily located in EU regions (likely europe-west, Frankfurt). We implement industry-standard security measures including:\n\n• Encryption in transit (TLS/SSL) and at rest\n• Firebase Authentication with secure password hashing\n• Firestore security rules to prevent unauthorized access\n• Access controls and role-based permissions\n• Secure payment processing via Stripe (PCI DSS Level 1 certified)\n• Error monitoring via Sentry with data minimization\n\nNote: Exact Firebase region can be verified in Firebase Console project settings.",
+  "privacyScreenSection7Title": "7. Data Retention",
+  "privacyScreenSection7Body": "We retain your personal data according to the following principles:\n\n• **Active Accounts:** Data retained while account is active\n• **GDPR Right to Erasure:** Users can request account deletion at any time\n• **Booking Records:** Retained for legal/accounting compliance (minimum 1 year for financial records in Croatia)\n• **Anonymization:** After deletion request, personal identifiers are removed while preserving aggregated statistics\n\nYou have the right to request deletion of your account and associated data at any time by contacting info@bookbed.io.",
+  "privacyScreenSection8Title": "8. Your GDPR Rights",
+  "privacyScreenSection8Body": "Under GDPR, you have the following rights:\n\n• **Access:** Request a copy of your personal data (contact info@bookbed.io)\n• **Rectification:** ✅ Update your profile information directly in account settings\n• **Erasure:** Request deletion of your account (\"right to be forgotten\") - planned feature, contact info@bookbed.io\n• **Restriction:** Limit how we process your data\n• **Object:** Object to processing based on legitimate interests\n• **Withdraw Consent:** Opt-out of marketing communications\n\n**Note:** Data portability (downloading data in machine-readable format) is not currently offered due to the minimal amount of data collected. We prioritize data minimization.\n\nTo exercise these rights, contact us at: info@bookbed.io",
+  "privacyScreenSection9Title": "9. Cookies",
+  "privacyScreenSection9Body": "We use cookies and similar technologies to:\n\n• Remember your preferences\n• Analyze usage patterns\n• Improve user experience\n\nYou can control cookies through your browser settings. Note that disabling cookies may affect functionality.",
+  "privacyScreenSection10Title": "10. International Data Transfers",
+  "privacyScreenSection10Body": "Your data is primarily stored within the EU. If we transfer data outside the EU, we ensure adequate safeguards are in place (e.g., Standard Contractual Clauses).",
+  "privacyScreenSection11Title": "11. Children's Privacy",
+  "privacyScreenSection11Body": "Our Service is not intended for users under 18 years of age. We do not knowingly collect personal information from children. If you believe we have collected data from a child, please contact us immediately.",
+  "privacyScreenSection12Title": "12. Changes to This Policy",
+  "privacyScreenSection12Body": "We may update this Privacy Policy from time to time. We will notify you of any material changes by updating the \"Last updated\" date and, where appropriate, by email.",
+  "privacyScreenSection13Title": "13. Data Protection Officer",
+  "privacyScreenSection13Body": "If you have questions about this Privacy Policy or wish to exercise your GDPR rights, contact:\n\n**General Support & Privacy Inquiries:**\nEmail: info@bookbed.io\n\n**Platform:**\napp.bookbed.io (Owner Dashboard)\nview.bookbed.io (Booking Widget)\n\n**Legal Entity:**\nBookBed is currently operating as a pre-registration platform. Full company registration details (including formal Data Protection Officer, if required) will be added upon business incorporation.",
+  "privacyScreenSection14Title": "14. Supervisory Authority",
+  "privacyScreenSection14Body": "You have the right to lodge a complaint with the Croatian Data Protection Authority (AZOP) if you believe we have violated your privacy rights:\n\nAgencija za zaštitu osobnih podataka (AZOP)\nSelska cesta 136, 10000 Zagreb\nWebsite: azop.hr",
+  "privacyScreenGdprNotice": "GDPR Compliance Notice",
+  "privacyScreenGdprNoticeBody": "This privacy policy template is designed to comply with GDPR requirements. However, you should have it reviewed by a legal professional to ensure full compliance with your specific data processing activities.",
+
+  "cookiesScreenTitle": "Cookies Policy",
+  "cookiesScreenHeaderTitle": "Cookies Policy",
+  "cookiesScreenLastUpdated": "Last updated: {date}",
+  "@cookiesScreenLastUpdated": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "cookiesScreenToc": "Table of Contents",
+  "cookiesScreenSection1Title": "1. What Are Cookies?",
+  "cookiesScreenSection1Body": "Cookies are small text files that are placed on your device when you visit our website. They help us provide you with a better experience by remembering your preferences and understanding how you use our service.",
+  "cookiesScreenSection2Title": "2. How We Use Cookies",
+  "cookiesScreenSection2Body": "We use cookies for the following purposes:\n\n• **Strictly Necessary Cookies (Essential):** Required for the website to function - authentication (Firebase Auth tokens), session management, security. These cannot be disabled.\n\n• **Functional Cookies (Preferences):** Remember your settings - language preference, theme (dark/light mode), timezone, currency. These enhance your experience.\n\n• **Analytics Cookies:** Help us understand usage patterns - Firebase Analytics tracks page views, feature usage, and performance metrics. May include Google Analytics for web traffic analysis.\n\n• **Advertising/Marketing Cookies:** Third-party cookies for tracking and advertising purposes (if enabled).\n\nYou can control non-essential cookies through your browser settings or our cookie consent banner (if implemented).",
+  "cookiesScreenSection3Title": "3. Types of Cookies We Use",
+  "cookiesScreenSection3Body": "**Session Cookies:** Temporary cookies that expire when you close your browser. These are essential for authentication and navigation.\n\n**Persistent Cookies:** Remain on your device for a set period or until you delete them. These remember your preferences across visits.\n\n**Third-Party Cookies:** Set by external services we use (e.g., payment processors, analytics providers).",
+  "cookiesScreenSection4Title": "4. Your Cookie Choices",
+  "cookiesScreenSection4Body": "You have several options to manage cookies:\n\n• **Browser Settings:** Most browsers allow you to refuse or delete cookies. Check your browser's help section for instructions.\n• **Opt-Out Links:** Some third-party services provide opt-out mechanisms for their cookies.\n• **Cookie Preferences:** We may provide a cookie consent banner where you can customize your preferences.\n\n⚠️ **Note:** Disabling certain cookies may affect the functionality of our website, particularly features like login and booking management.",
+  "cookiesScreenSection5Title": "5. Third-Party Cookies",
+  "cookiesScreenSection5Body": "We use the following third-party services that may set cookies:\n\n• **Firebase (Google Cloud):** Authentication cookies, session management, Firebase Analytics\n• **Stripe:** Payment processing cookies for secure checkout sessions\n• **Sentry:** Error tracking cookies (minimal, anonymized)\n• **Cloudflare:** CDN and DNS cookies for security and performance\n• **Google Analytics:** (if enabled) Web traffic analytics and user behavior tracking\n\nThese services have their own privacy policies and cookie policies:\n- Firebase/Google: policies.google.com\n- Stripe: stripe.com/privacy\n- Sentry: sentry.io/privacy\n- Cloudflare: cloudflare.com/privacypolicy",
+  "cookiesScreenSection6Title": "6. Updates to This Policy",
+  "cookiesScreenSection6Body": "We may update this Cookies Policy from time to time to reflect changes in our practices or legal requirements. The \"Last updated\" date at the top indicates when the policy was last revised.",
+  "cookiesScreenSection7Title": "7. More Information",
+  "cookiesScreenSection7Body": "For more detailed information about how we handle your personal data, including cookies, please review our full Privacy Policy.\n\nIf you have questions about our use of cookies, please contact us at:\n\n**General Support:**\nEmail: info@bookbed.io\n\n**Platform:**\napp.bookbed.io (Owner Dashboard)\nview.bookbed.io (Booking Widget)",
+  "cookiesScreenPrivacyLinkTitle": "Full Privacy Policy",
+  "cookiesScreenPrivacyLinkBody": "For comprehensive information about data collection, processing, and your rights under GDPR, please read our full Privacy Policy.",
+  "cookiesScreenPrivacyLinkButton": "View Privacy Policy",
+  "cookiesScreenLegalNotice": "Legal Notice",
+  "cookiesScreenLegalNoticeBody": "This is a template document. Before deploying to production:\n\n• Review and customize this policy to match your actual cookie usage\n• Implement a cookie consent banner if required by your jurisdiction\n• Update third-party service information\n• Consider consulting with a legal professional to ensure compliance with GDPR, ePrivacy Directive, and other applicable laws",
+
+  "calendarActionsDeleteTitle": "Delete Booking",
+  "calendarActionsDeleteConfirm": "Are you sure you want to delete the booking for {guestName}?",
+  "@calendarActionsDeleteConfirm": {
+    "placeholders": {
+      "guestName": {"type": "String"}
+    }
+  },
+  "calendarActionsCancel": "Cancel",
+  "calendarActionsDelete": "Delete",
+  "calendarActionsDeleting": "Deleting booking...",
+  "calendarActionsDeleted": "Booking deleted",
+  "calendarActionsError": "Error: {error}",
+  "@calendarActionsError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "calendarActionsChangingStatus": "Changing status to {status}...",
+  "@calendarActionsChangingStatus": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "calendarActionsStatusChanged": "Status changed to {status}",
+  "@calendarActionsStatusChanged": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+
+  "bookingCompleteDialogTitle": "Mark as Completed",
+  "bookingCompleteDialogMessage": "Are you sure you want to mark this booking as completed?",
+  "bookingCompleteDialogCancel": "Cancel",
+  "bookingCompleteDialogConfirm": "Complete",
+
+  "ownerFaqGeneral1Q": "What is this platform?",
+  "ownerFaqGeneral1A": "This is a multi-tenant booking platform that allows apartment owners to manage reservations, receive payments, and embed a booking widget on their website. The platform supports Stripe payments, iCal synchronization with Booking.com/Airbnb, and multiple languages.",
+  "ownerFaqGeneral2Q": "Is there a mobile app?",
+  "ownerFaqGeneral2A": "Yes! The Owner app is available for Android and iOS. You can manage reservations, view the calendar, approve/cancel bookings, and receive notifications on your phone.",
+  "ownerFaqGeneral3Q": "How much does it cost?",
+  "ownerFaqGeneral3A": "The platform currently has a trial version. Three subscriptions are planned: Trial (1 property), Premium (5 properties), and Enterprise (unlimited). Stripe commission (1.4% + €0.25) is charged separately.",
+
+  "ownerFaqBookings1Q": "How does the booking flow work?",
+  "ownerFaqBookings1A": "There are three modes: (1) Calendar Only - guests only see availability and call you, (2) Booking Pending - guests create a reservation that awaits your confirmation, (3) Booking Instant - guests can book and pay immediately. You choose the mode in Widget Settings.",
+  "ownerFaqBookings2Q": "How to approve a reservation?",
+  "ownerFaqBookings2A": "Go to Bookings → Pending reservations → Click on the reservation → \"Approve\". An email will automatically be sent to the guest with confirmation.",
+  "ownerFaqBookings3Q": "Can I cancel a reservation?",
+  "ownerFaqBookings3A": "Yes. Click on the reservation → \"Cancel\" → Enter reason → Confirm. The guest will be notified by email. For Stripe payment refunds, contact support.",
+  "ownerFaqBookings4Q": "How to prevent overbooking?",
+  "ownerFaqBookings4A": "Use iCal synchronization to import reservations from Booking.com, Airbnb and other platforms. All reservations will be displayed in the calendar as occupied days.",
+  "ownerFaqBookings5Q": "How to manually block dates?",
+  "ownerFaqBookings5A": "In the calendar, click on a date or date range → \"Block\" → Enter reason (optional). Blocked days will be shown as unavailable in the widget.",
+
+  "ownerFaqPayments1Q": "What payment methods do you support?",
+  "ownerFaqPayments1A": "We support: (1) Stripe card payments (instant), (2) Bank transfer (manual confirmation), (3) Pay on arrival. You can enable/disable each method in Widget Settings.",
+  "ownerFaqPayments2Q": "What deposit can I require?",
+  "ownerFaqPayments2A": "You can set a deposit from 0% to 100% of the total price. The default is 20%. The remaining amount is paid by the guest on arrival. Set it in Widget Settings.",
+  "ownerFaqPayments3Q": "When do Stripe payouts arrive?",
+  "ownerFaqPayments3A": "Stripe automatically transfers funds to your bank account every 7 days. After the first month, you can switch to daily payouts in the Stripe dashboard.",
+  "ownerFaqPayments4Q": "What if a guest requests a refund?",
+  "ownerFaqPayments4A": "For bank transfers, you process the refund manually. For Stripe payments, contact support or create a refund directly in the Stripe dashboard.",
+
+  "ownerFaqWidget1Q": "How to add the widget to my site?",
+  "ownerFaqWidget1A": "Go to Unit Form → \"Generate Embed Code\" → Copy the iframe code → Paste into your site's HTML. Detailed instructions are in the \"Embed Widget\" section of the guides.",
+  "ownerFaqWidget2Q": "Can I customize the widget appearance?",
+  "ownerFaqWidget2A": "Yes! In Widget Settings you can: change the primary color, upload a logo, customize the custom message, and enable/disable \"Powered by\" branding.",
+  "ownerFaqWidget3Q": "Does the widget work on mobile devices?",
+  "ownerFaqWidget3A": "Yes, the widget is fully responsive and adapts to all screen sizes. Use the responsive embed code for best results.",
+  "ownerFaqWidget4Q": "Can I have multiple widgets on one page?",
+  "ownerFaqWidget4A": "Yes, you can embed multiple widgets (for different apartments) on the same page. Each widget will have its unique unit ID in the URL.",
+  "ownerFaqWidget5Q": "Does the widget support multiple languages?",
+  "ownerFaqWidget5A": "Yes! The widget supports Croatian, English, German and Italian. Add &language=en (or hr, de, it) to the URL or enable the language selector.",
+
+  "ownerFaqIcal1Q": "How to connect Booking.com calendar?",
+  "ownerFaqIcal1A": "Log in to Booking.com Extranet → Calendar → Reservations export → Copy the iCal URL → Add to our app under iCal Synchronization. More details in the \"iCal Sync\" guide.",
+  "ownerFaqIcal2Q": "How often does it sync?",
+  "ownerFaqIcal2A": "Automatic sync runs every hour. You can manually trigger a sync anytime by clicking the \"Sync Now\" button.",
+  "ownerFaqIcal3Q": "Will guests see guest names from other platforms?",
+  "ownerFaqIcal3A": "No. The iCal protocol only transfers reservation dates (check-in/check-out), not personal data. Reservations will be displayed as \"Platform Guest\" in your calendar.",
+  "ownerFaqIcal4Q": "Can I sync with multiple platforms simultaneously?",
+  "ownerFaqIcal4A": "Yes! You can add iCal feeds from Booking.com, Airbnb or any other platform that supports iCal format for the same apartment. All reservations will be displayed.",
+
+  "ownerFaqSupport1Q": "Widget is not loading on my site",
+  "ownerFaqSupport1A": "Check: (1) Did you paste the complete iframe code, (2) Is the unit ID correct, (3) Browser console for errors (F12). If the problem persists, contact support.",
+  "ownerFaqSupport2Q": "I forgot my password",
+  "ownerFaqSupport2A": "On the login screen click \"Forgot Password\" → Enter email → Check your inbox (and spam folder) for the reset link.",
+  "ownerFaqSupport3Q": "Email notifications are not arriving",
+  "ownerFaqSupport3A": "Check your spam folder. If they still don't arrive, go to Profile → Notification Settings and verify notifications are enabled. Add duskolicanin1234@gmail.com to your whitelist.",
+  "ownerFaqSupport4Q": "How to contact support?",
+  "ownerFaqSupport4A": "Send an email to: duskolicanin1234@gmail.com with a detailed description of the problem. Include screenshots if possible. We respond within 24-48h.",
+
+  "emailVerificationTitle": "Email Verification",
+  "emailVerificationSubtitle": "Configure guest email verification settings",
+  "emailVerificationToggleTitle": "Require Email Verification",
+  "emailVerificationToggleSubtitle": "Guest must verify their email address before completing booking",
+  "emailVerificationInfoEnabled": "Verification button will be shown in Step 2 of the booking flow. Guests cannot proceed without verifying their email.",
+  "emailVerificationInfoDisabled": "Email verification is disabled. Guests can complete bookings without verifying their email address.",
+
+  "icalExportTitle": "iCal Export",
+  "icalExportEnabled": "Enabled",
+  "icalExportDisabled": "Disabled",
+  "icalExportToggleTitle": "Enable iCal Export",
+  "icalExportToggleSubtitle": "Generate public iCal URL for external calendar sync",
+  "icalExportInfo": "Export Information",
+  "icalExportUrl": "Export URL",
+  "icalExportLastGenerated": "Last generated: {time}",
+  "@icalExportLastGenerated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "icalExportInfoMessage": "iCal export will be auto-generated when bookings change. Use the generated URL to sync with external calendars.",
+  "icalExportJustNow": "Just now",
+  "icalExportMinutesAgo": "{minutes}m ago",
+  "@icalExportMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "icalExportHoursAgo": "{hours}h ago",
+  "@icalExportHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "icalExportDaysAgo": "{days}d ago",
+  "@icalExportDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "icalExportTestButton": "Test iCal Export",
+  "icalExportLoading": "Loading...",
+  "icalExportFailedToLoad": "Failed to load unit data",
+
+  "taxLegalTitle": "Tax & Legal Disclaimer",
+  "taxLegalEnabled": "Enabled",
+  "taxLegalDisabled": "Disabled",
+  "taxLegalToggleTitle": "Enable Tax/Legal Disclaimer",
+  "taxLegalToggleSubtitle": "Show disclaimer to guests during booking",
+  "taxLegalTextSource": "Disclaimer Text Source",
+  "taxLegalDefaultTitle": "Use Default Croatian Text",
+  "taxLegalDefaultSubtitle": "Standard legal text for Croatian properties",
+  "taxLegalCustomTitle": "Use Custom Text",
+  "taxLegalCustomSubtitle": "Provide your own legal text",
+  "taxLegalCustomLabel": "Custom Disclaimer Text",
+  "taxLegalCustomHint": "Enter your custom legal text...",
+  "taxLegalPreviewButton": "Preview Disclaimer",
+
+  "bookingActionUnknownGuest": "Unknown guest",
+  "bookingBlockHasConflict": "has conflict with another booking",
+  "bookingActionEditTitle": "Edit booking",
+  "bookingActionEditSubtitle": "Change booking details",
+  "bookingActionStatusTitle": "Change status",
+  "bookingActionStatusSubtitle": "Confirmed, Pending, Cancelled...",
+  "bookingActionDeleteTitle": "Delete booking",
+  "bookingActionDeleteSubtitle": "Permanently remove booking",
+  "bookingActionMoveTitle": "Move booking to:",
+  "bookingActionNoOtherUnits": "No other available units",
+  "bookingActionGuestsRooms": "{guests} guests • {rooms} bedrooms",
+  "@bookingActionGuestsRooms": {
+    "placeholders": {
+      "guests": {
+        "type": "int"
+      },
+      "rooms": {
+        "type": "int"
+      }
+    }
+  },
+  "bookingActionMoving": "Moving booking...",
+  "bookingActionMovedTo": "Booking moved to {unitName}",
+  "@bookingActionMovedTo": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "bookingActionError": "Error: {error}",
+  "@bookingActionError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "futureBookingsTitle": "Upcoming bookings - {unitName}",
+  "@futureBookingsTitle": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsClose": "Close",
+  "futureBookingsCount": "{count} bookings",
+  "@futureBookingsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "futureBookingsEmpty": "No upcoming bookings",
+  "futureBookingsEmptySubtitle": "All future bookings for {unitName} will be shown here",
+  "@futureBookingsEmptySubtitle": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsUnknownGuest": "Unknown Guest",
+  "futureBookingsCheckIn": "Check-in: {date}",
+  "@futureBookingsCheckIn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsCheckOut": "Check-out: {date}",
+  "@futureBookingsCheckOut": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "futureBookingsGuestsNights": "{guests} guest(s) • {nights} night(s)",
+  "@futureBookingsGuestsNights": {
+    "placeholders": {
+      "guests": {
+        "type": "int"
+      },
+      "nights": {
+        "type": "int"
+      }
+    }
+  },
+
+  "calendarErrorTitle": "Oops! Something went wrong",
+  "calendarErrorDefault": "An error occurred while loading data",
+  "calendarErrorCompact": "Error loading",
+  "calendarErrorRetry": "Try again",
+  "calendarErrorHelp": "Help",
+  "calendarErrorBannerTitle": "Error",
+  "calendarErrorClose": "Close",
+
+  "calendarFiltersTitle": "Calendar Filters",
+  "calendarFiltersSearchGuest": "Search guest",
+  "calendarFiltersGuestLabel": "Guest name or email",
+  "calendarFiltersGuestHint": "Enter name or email...",
+  "calendarFiltersSearchBookingId": "Search by booking ID",
+  "calendarFiltersBookingIdLabel": "Booking ID",
+  "calendarFiltersBookingIdHint": "Enter booking ID...",
+  "calendarFiltersClearDate": "Clear date",
+  "calendarFiltersApply": "Apply",
+  "calendarFiltersCancel": "Cancel",
+  "calendarFiltersClear": "Clear",
+  "calendarFiltersClearAll": "Clear all",
+
+  "calendarSearchTitle": "Search Bookings",
+  "calendarSearchHint": "Search by guest name, email, ID or unit...",
+  "calendarSearchResultsCount": "Found {count} results",
+  "@calendarSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarSearchEnterTerm": "Enter search term",
+  "calendarSearchDescription": "Search by guest name, email, ID or unit",
+  "calendarSearchNoResults": "No results",
+  "calendarSearchTryAnother": "Try a different search term",
+
+  "calendarStatusCurrent": "Current",
+
+  "bookingInlineEditTitle": "Quick Edit",
+  "bookingInlineEditGuest": "Guest",
+  "bookingInlineEditCheckIn": "Check-in",
+  "bookingInlineEditCheckOut": "Check-out",
+  "bookingInlineEditNights": "Nights",
+  "bookingInlineEditGuestCount": "Number of Guests",
+  "bookingInlineEditSave": "Save Changes",
+  "bookingInlineEditSaving": "Saving...",
+  "bookingInlineEditCancel": "Cancel",
+  "bookingInlineEditDates": "Dates",
+  "bookingInlineEditNightSingular": "night",
+  "bookingInlineEditNightPlural": "nights",
+
+  "bookingEditInternalNotes": "Internal Notes",
+  "bookingEditNotesHint": "Add notes for this booking...",
+
+  "priceCalendarHintExample": "e.g. {value}",
+  "@priceCalendarHintExample": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+
+  "overbookingConflictDetected": "Overbooking detected for {unitName}",
+  "@overbookingConflictDetected": {
+    "placeholders": {
+      "unitName": {
+        "type": "String"
+      }
+    }
+  },
+  "overbookingConflictCount": "{count, plural, =0{No conflicts} =1{1 conflict} other{{count} conflicts}}",
+  "@overbookingConflictCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "overbookingConflictDetails": "Conflict: {guest1} vs {guest2}",
+  "@overbookingConflictDetails": {
+    "placeholders": {
+      "guest1": {
+        "type": "String"
+      },
+      "guest2": {
+        "type": "String"
+      }
+    }
+  },
+  "overbookingViewBooking": "View",
+  "overbookingScrollToConflict": "Scroll to conflict",
+
+  "bookingDropZoneDropHere": "Drop here",
+  "bookingDropZoneCannotDrop": "Cannot drop",
+  "bookingBlockSemanticLabel": "Booking for {guestName}, from {checkIn} to {checkOut}, {nights} nights, {guestCount} guests{conflictText}. Tap for details.",
+  "@bookingBlockSemanticLabel": {
+    "placeholders": {
+      "guestName": {
+        "type": "String"
+      },
+      "checkIn": {
+        "type": "String"
+      },
+      "checkOut": {
+        "type": "String"
+      },
+      "nights": {
+        "type": "int"
+      },
+      "guestCount": {
+        "type": "int"
+      },
+      "conflictText": {
+        "type": "String"
+      }
+    }
+  },
+
+  "tooltipNightsCount": "{count, plural, =1{1 night} other{{count} nights}}",
+  "@tooltipNightsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipGuestsCount": "{count, plural, =1{1 guest} other{{count} guests}}",
+  "@tooltipGuestsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipConflictWith": "Conflict with:",
+  "tooltipMoreConflicts": "+{count} more...",
+  "@tooltipMoreConflicts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tooltipImportedBooking": "Imported booking",
+  "tooltipManageOn": "Manage on {platform}",
+  "@tooltipManageOn": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "tooltipGuest": "Guest",
+  "tooltipCheckIn": "Check-in",
+  "tooltipCheckOut": "Check-out",
+  "tooltipNights": "Nights",
+  "tooltipGuests": "Guests",
+  "tooltipPrice": "Price",
+  "tooltipSource": "Source",
+  "tooltipNote": "Note:",
+  "statusPending": "Pending",
+  "statusConfirmed": "Confirmed",
+  "statusCompleted": "Completed",
+  "statusCancelled": "Cancelled",
+
+  "warningUnblockDatesTitle": "Warning: Unblocking Dates",
+  "warningUnblockDatesMessage": "You are about to unblock dates on {platformName} for {dateRange}. These dates may have been blocked due to a booking on another platform.",
+  "@warningUnblockDatesMessage": {
+    "placeholders": {
+      "platformName": {"type": "String"},
+      "dateRange": {"type": "String"}
+    }
+  },
+  "warningUnblockDatesRisks": "Please consider these risks:",
+  "riskCancelledByMistake": "The booking may have been cancelled by mistake",
+  "riskPlanToReactivate": "The guest may plan to reactivate the booking",
+  "riskAnotherBookingExists": "Another booking may exist for these dates on other platforms",
+  "yesUnblock": "Yes, Unblock",
+
+  "warningUpdateBookingTitle": "Update Booking Dates",
+  "warningUpdateBookingMessage": "Updating booking dates will sync changes to external platforms:",
+  "oldDatesWillBeUnblocked": "Old dates (will be unblocked)",
+  "newDatesWillBeBlocked": "New dates (will be blocked)",
+  "platformSyncInfo": "Changes will be synced to: {platforms}",
+  "@platformSyncInfo": {
+    "placeholders": {
+      "platforms": {"type": "String"}
+    }
+  },
+  "updateBooking": "Update Booking"
 }

@@ -1,14 +1,198 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as https from 'https';
 import * as http from 'http';
 import {admin} from "./firebase";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
+import {setUser} from "./sentry";
 
-// NOTE: Scheduled sync (syncAllIcalFeeds) has been removed due to deployment timeout issues
-// with node-ical package. To enable automatic syncing:
-// 1. Set up Cloud Scheduler in GCP Console
-// 2. Point it to the syncIcalFeedNow endpoint
-// 3. Schedule it to run hourly
+/**
+ * SECURITY: Validate iCal URL to prevent SSRF attacks
+ * Only allows public HTTP/HTTPS URLs to known booking platforms
+ */
+function validateIcalUrl(url: string): { valid: boolean; error?: string } {
+  try {
+    const parsedUrl = new URL(url);
+
+    // Only allow HTTP/HTTPS protocols
+    if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+      return { valid: false, error: `Invalid protocol: ${parsedUrl.protocol}. Only HTTP/HTTPS allowed.` };
+    }
+
+    // Block localhost and internal IPs
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const blockedPatterns = [
+      "localhost",
+      "127.0.0.1",
+      "0.0.0.0",
+      "::1",
+      "10.",
+      "172.16.", "172.17.", "172.18.", "172.19.",
+      "172.20.", "172.21.", "172.22.", "172.23.",
+      "172.24.", "172.25.", "172.26.", "172.27.",
+      "172.28.", "172.29.", "172.30.", "172.31.",
+      "192.168.",
+      "169.254.",
+      "metadata.google.internal",
+      "metadata.google",
+      ".internal",
+      ".local",
+    ];
+
+    for (const pattern of blockedPatterns) {
+      if (hostname === pattern || hostname.startsWith(pattern) || hostname.endsWith(pattern)) {
+        return { valid: false, error: "Internal or localhost URLs are not allowed." };
+      }
+    }
+
+    // Allow only known booking platform domains (whitelist approach)
+    const allowedDomains = [
+      "ical.booking.com",
+      "admin.booking.com",
+      "airbnb.com",
+      "www.airbnb.com",
+      "calendar.google.com",
+      "outlook.live.com",
+      "outlook.office365.com",
+      "p.calendar.yahoo.com",
+      "export.calendar.yandex.com",
+      "beds24.com",
+      "www.beds24.com",
+      "app.hospitable.com",
+      "smoobu.com",
+      "api.smoobu.com",
+      "rentalsunited.com",
+      "api.lodgify.com",
+      "ownerrez.com",
+      "api.ownerrez.com",
+      "guesty.com",
+      "open.guesty.com",
+      // Generic iCal providers
+      "webcal.io",
+      "icalendar.org",
+    ];
+
+    // Check if domain is in allowed list or is a subdomain of allowed domains
+    const isAllowed = allowedDomains.some(domain =>
+      hostname === domain || hostname.endsWith(`.${domain}`)
+    );
+
+    // SECURITY FIX SF-002: Enable whitelist validation to prevent SSRF attacks
+    // Previously this was just logging a warning but allowing any domain
+    if (!isAllowed) {
+      logWarn("[iCal Sync] SECURITY SF-002: URL domain not in whitelist - BLOCKED", { hostname });
+      return { valid: false, error: `Domain ${hostname} is not in the allowed list. Contact support to add your calendar provider.` };
+    }
+
+    return { valid: true };
+  } catch (error) {
+    return { valid: false, error: "Invalid URL format." };
+  }
+}
+
+/**
+ * Scheduled function to automatically sync all active iCal feeds
+ * Runs every 60 minutes to keep external calendar data up to date
+ *
+ * NOTE: Airbnb officially updates their iCal export every 3 hours.
+ * Booking.com has no documented frequency. Polling more frequently
+ * than 60 minutes provides no benefit as OTA feeds are stale.
+ * See: https://www.airbnb.com/help/article/99
+ *
+ * This syncs reservations from:
+ * - Booking.com (via iCal URL)
+ * - Airbnb (via iCal URL)
+ * - Other platforms that provide iCal feeds
+ */
+export const scheduledIcalSync = onSchedule(
+  {
+    schedule: "every 60 minutes",
+    timeoutSeconds: 540, // 9 minutes (max for scheduled functions)
+    memory: "512MiB",
+    region: "europe-west1",
+  },
+  async () => {
+    const db = admin.firestore();
+
+    logInfo("[Scheduled iCal Sync] Starting automatic sync of all feeds");
+
+    try {
+      // Get all active feeds
+      const feedsSnapshot = await db
+        .collection('ical_feeds')
+        .where('status', 'in', ['active', 'error']) // Include error feeds to retry
+        .get();
+
+      if (feedsSnapshot.empty) {
+        logInfo("[Scheduled iCal Sync] No active feeds to sync");
+        return;
+      }
+
+      logInfo("[Scheduled iCal Sync] Found feeds to sync", {
+        count: feedsSnapshot.size
+      });
+
+      let successCount = 0;
+      let errorCount = 0;
+      let totalEventsImported = 0;
+
+      // Process feeds sequentially to avoid overwhelming external APIs
+      for (const feedDoc of feedsSnapshot.docs) {
+        const feedId = feedDoc.id;
+        const feedData = feedDoc.data();
+
+        // Skip if sync interval hasn't elapsed (check last_synced)
+        const lastSynced = feedData.last_synced?.toDate();
+        const syncIntervalMinutes = feedData.sync_interval_minutes || 30;
+
+        if (lastSynced) {
+          const nextSyncTime = new Date(lastSynced.getTime() + syncIntervalMinutes * 60 * 1000);
+          if (new Date() < nextSyncTime) {
+            logInfo("[Scheduled iCal Sync] Skipping feed - sync interval not elapsed", {
+              feedId,
+              lastSynced: lastSynced.toISOString(),
+              nextSync: nextSyncTime.toISOString()
+            });
+            continue;
+          }
+        }
+
+        try {
+          const eventsImported = await syncSingleFeed(db, feedId, feedData);
+          successCount++;
+          totalEventsImported += eventsImported;
+
+          logInfo("[Scheduled iCal Sync] Feed synced successfully", {
+            feedId,
+            platform: feedData.platform,
+            eventsImported
+          });
+        } catch (error) {
+          errorCount++;
+          logError("[Scheduled iCal Sync] Failed to sync feed", error, {
+            feedId,
+            platform: feedData.platform
+          });
+          // Continue with next feed even if one fails
+        }
+
+        // Small delay between feeds to be nice to external APIs
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      logSuccess("[Scheduled iCal Sync] Automatic sync completed", {
+        totalFeeds: feedsSnapshot.size,
+        successCount,
+        errorCount,
+        totalEventsImported
+      });
+
+    } catch (error) {
+      logError("[Scheduled iCal Sync] Critical error in scheduled sync", error);
+      throw error; // Rethrow to mark function as failed
+    }
+  }
+);
 
 /**
  * Callable function to sync a specific iCal feed immediately
@@ -19,6 +203,9 @@ export const syncIcalFeedNow = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
+
+  // Set user context for Sentry error tracking
+  setUser(request.auth.uid);
 
   const { feedId } = request.data;
 
@@ -77,6 +264,12 @@ async function syncSingleFeed(
   logInfo("[iCal Sync] Syncing feed", {feedId, unitId: unit_id, platform});
 
   try {
+    // SECURITY: Validate URL before fetching (SSRF prevention)
+    const urlValidation = validateIcalUrl(ical_url);
+    if (!urlValidation.valid) {
+      throw new Error(`Invalid iCal URL: ${urlValidation.error}`);
+    }
+
     // Fetch iCal data
     const icalData = await fetchIcalData(ical_url);
 
@@ -85,11 +278,19 @@ async function syncSingleFeed(
 
     logInfo("[iCal Sync] Parsed events from platform", {platform, eventCount: events.length});
 
+    // Get propertyId from feed data for subcollection path
+    const propertyId = feedData.property_id;
+    if (!propertyId) {
+      throw new Error(`Feed ${feedId} is missing property_id`);
+    }
+
     // Delete old events for this feed
-    await deleteOldEvents(db, feedId);
+    // NEW STRUCTURE: Use property-level subcollection
+    await deleteOldEvents(db, feedId, propertyId);
 
     // Insert new events
-    const insertedCount = await insertNewEvents(db, feedId, unit_id, platform, events);
+    // NEW STRUCTURE: Use property-level subcollection
+    const insertedCount = await insertNewEvents(db, feedId, unit_id, propertyId, platform, events);
 
     // Update feed metadata
     await db.collection('ical_feeds').doc(feedId).update({
@@ -121,14 +322,50 @@ async function syncSingleFeed(
 }
 
 /**
- * Fetch iCal data from URL
+ * Fetch iCal data from URL with redirect support
+ * Follows up to 5 redirects (301, 302, 303, 307, 308)
  */
-function fetchIcalData(url: string): Promise<string> {
+// HTTP request timeout (30 seconds)
+const HTTP_TIMEOUT_MS = 30000;
+
+function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
   return new Promise((resolve, reject) => {
+    if (maxRedirects <= 0) {
+      reject(new Error('Too many redirects'));
+      return;
+    }
+
     const protocol = url.startsWith('https') ? https : http;
 
-    protocol
+    const request = protocol
       .get(url, (response) => {
+        // Handle redirects (301, 302, 303, 307, 308)
+        if (response.statusCode && [301, 302, 303, 307, 308].includes(response.statusCode)) {
+          let redirectUrl = response.headers.location;
+          if (!redirectUrl) {
+            reject(new Error(`Redirect ${response.statusCode} without Location header`));
+            return;
+          }
+
+          // Handle relative URLs by constructing absolute URL
+          if (redirectUrl.startsWith('/')) {
+            const urlObj = new URL(url);
+            redirectUrl = `${urlObj.protocol}//${urlObj.host}${redirectUrl}`;
+          }
+
+          logInfo("[iCal Sync] Following redirect", {
+            from: url.substring(0, 50) + '...',
+            to: redirectUrl.substring(0, 50) + '...',
+            statusCode: response.statusCode
+          });
+
+          // Follow the redirect
+          fetchIcalData(redirectUrl, maxRedirects - 1)
+            .then(resolve)
+            .catch(reject);
+          return;
+        }
+
         if (response.statusCode !== 200) {
           reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
           return;
@@ -147,6 +384,12 @@ function fetchIcalData(url: string): Promise<string> {
       .on('error', (error) => {
         reject(error);
       });
+
+    // Add timeout to prevent hanging requests
+    request.setTimeout(HTTP_TIMEOUT_MS, () => {
+      request.destroy();
+      reject(new Error(`Request timeout after ${HTTP_TIMEOUT_MS / 1000} seconds`));
+    });
   });
 }
 
@@ -202,34 +445,49 @@ async function parseIcalData(icalData: string): Promise<any[]> {
 
 /**
  * Delete old events for a feed
+ * NEW STRUCTURE: Use property-level subcollection
  */
 async function deleteOldEvents(
   db: FirebaseFirestore.Firestore,
-  feedId: string
+  feedId: string,
+  propertyId: string
 ): Promise<void> {
+  // NEW STRUCTURE: Query from property-level subcollection
   const eventsSnapshot = await db
+    .collection('properties')
+    .doc(propertyId)
     .collection('ical_events')
     .where('feed_id', '==', feedId)
     .get();
 
-  const batch = db.batch();
+  // Handle case where there are more than 500 events (batch limit)
+  const batchSize = 500;
+  let deletedCount = 0;
 
-  eventsSnapshot.docs.forEach((doc) => {
-    batch.delete(doc.ref);
-  });
+  for (let i = 0; i < eventsSnapshot.docs.length; i += batchSize) {
+    const batch = db.batch();
+    const batchDocs = eventsSnapshot.docs.slice(i, i + batchSize);
 
-  await batch.commit();
+    batchDocs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
 
-  logInfo("[iCal Sync] Deleted old events for feed", {feedId, count: eventsSnapshot.size});
+    await batch.commit();
+    deletedCount += batchDocs.length;
+  }
+
+  logInfo("[iCal Sync] Deleted old events for feed", {feedId, propertyId, count: deletedCount});
 }
 
 /**
  * Insert new events for a feed
+ * NEW STRUCTURE: Use property-level subcollection
  */
 async function insertNewEvents(
   db: FirebaseFirestore.Firestore,
   feedId: string,
   unitId: string,
+  propertyId: string,
   platform: string,
   events: any[]
 ): Promise<number> {
@@ -246,11 +504,17 @@ async function insertNewEvents(
     const batchEvents = events.slice(i, i + batchSize);
 
     batchEvents.forEach((event) => {
-      const docRef = db.collection('ical_events').doc();
+      // NEW STRUCTURE: Write to property-level subcollection
+      const docRef = db
+        .collection('properties')
+        .doc(propertyId)
+        .collection('ical_events')
+        .doc();
 
       batch.set(docRef, {
         feed_id: feedId,
         unit_id: unitId,
+        property_id: propertyId, // Add property_id for reference
         source: platform,
         external_id: event.externalId,
         start_date: admin.firestore.Timestamp.fromDate(event.startDate),
@@ -266,7 +530,7 @@ async function insertNewEvents(
     insertedCount += batchEvents.length;
   }
 
-  logInfo("[iCal Sync] Inserted new events for feed", {feedId, count: insertedCount});
+  logInfo("[iCal Sync] Inserted new events for feed", {feedId, propertyId, count: insertedCount});
 
   return insertedCount;
 }

@@ -22,27 +22,34 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.38.5'
           channel: 'stable'
           cache: true
 
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build Flutter web
+      - name: Generate code (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build Flutter web (with source maps for Sentry)
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           flutter build web \
-            --web-renderer html \
             --release \
-            --no-source-maps \
+            --web-renderer html \
+            --source-maps \
             --base-href /
+          
+          # Source maps are automatically uploaded by sentry_dart_plugin during build
+          # If upload fails, build continues (non-blocking)
 
       - name: Copy embed.js to build
         run: |
-          mkdir -p build/web/embed
-          cp web/embed/embed.js build/web/embed/
-          cp web/embed/README.md build/web/embed/
-          cp web/embed/example.html build/web/embed/
+          # Copy embed.js from public directory (the actual location)
+          cp public/embed.js build/web/
+          # widget-test.html is for local testing only, not needed in production build
 
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v2
@@ -61,7 +68,7 @@ jobs:
       - name: Notify on success
         if: success()
         run: |
-          echo "✅ Widget deployed successfully to https://widget.rab-booking.com"
+          echo "✅ Widget deployed successfully to https://view.bookbed.io"
 
       - name: Notify on failure
         if: failure()

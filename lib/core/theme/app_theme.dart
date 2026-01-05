@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
+import 'app_gradients.dart';
 import 'app_typography.dart';
 import '../constants/app_dimensions.dart';
 
@@ -8,6 +10,20 @@ import '../constants/app_dimensions.dart';
 /// Provides light and dark theme with consistent styling
 class AppTheme {
   AppTheme._(); // Private constructor
+
+  // ============================================================================
+  // SHARED CONSTANTS (reduce hardcoded color duplication)
+  // ============================================================================
+
+  /// Dark mode menu/dropdown background color (purple-gray)
+  /// Used in: popupMenuTheme, dropdownMenuTheme, menuTheme
+  static const Color darkMenuBackground = Color(0xFF252330);
+
+  /// Dark mode input fill color (lighter for better contrast)
+  static const Color darkInputFill = Color(0xFF2A2A2A);
+
+  /// Dark mode date picker background
+  static const Color darkDatePickerBackground = Color(0xFF1E1E28);
 
   // ============================================================================
   // LIGHT THEME
@@ -18,10 +34,12 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
 
+      // Gradient extensions
+      extensions: const [AppGradients.light],
+
       // Color scheme
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
-        onPrimary: Colors.white,
         primaryContainer: AppColors.primaryLight,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,
@@ -30,8 +48,6 @@ class AppTheme {
         onTertiary: Colors.white,
         tertiaryContainer: AppColors.tertiaryLight,
         error: AppColors.error,
-        onError: Colors.white,
-        surface: AppColors.surfaceLight,
         onSurface: AppColors.textPrimaryLight,
         surfaceContainerHighest: AppColors.surfaceVariantLight,
         outline: AppColors.borderLight,
@@ -46,18 +62,30 @@ class AppTheme {
         displayColor: AppColors.textPrimaryLight,
       ),
 
-      // AppBar theme - Height: 64px, transparent on home (scroll to solid)
+      // AppBar theme - Height: 64px, dark purple background with white text
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surfaceLight,
-        foregroundColor: AppColors.textPrimaryLight,
+        backgroundColor: AppColors.primary, // Dark purple background
+        foregroundColor: Colors.white, // White text and icons
         elevation: 0,
         centerTitle: false,
         scrolledUnderElevation: 1,
-        shadowColor: AppColors.borderLight,
+        shadowColor: Colors.black26,
         toolbarHeight: 64, // 64px height as specified
+        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: AppColors.primary, // Match AppBar color
+          statusBarBrightness: Brightness.dark, // For iOS (light icons)
+          statusBarIconBrightness:
+              Brightness.light, // For Android (light icons)
+        ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
-          color: AppColors.textPrimaryLight,
+          color: Colors.white, // White title text
           fontWeight: FontWeight.w600,
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // White icons (including back button)
+        ),
+        actionsIconTheme: const IconThemeData(
+          color: Colors.white, // White action icons
         ),
       ),
 
@@ -67,7 +95,9 @@ class AppTheme {
         elevation: 4, // Modern elevated shadow
         shadowColor: AppColors.primary.withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
         margin: const EdgeInsets.all(16), // 16px padding
       ),
@@ -80,7 +110,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           elevation: 0,
           textStyle: AppTypography.buttonText,
@@ -94,7 +126,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           side: const BorderSide(color: AppColors.primary, width: 1.5),
           textStyle: AppTypography.buttonText,
@@ -127,21 +161,27 @@ class AppTheme {
       ),
 
       // Input decoration theme - Border radius: 12px (modern), Height: 48px, Focus: accent color border
+      // UPDATED: Using warm beige border colors for Mediterranean theme consistency
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceLight,
         constraints: const BoxConstraints(minHeight: 48), // 48px height
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
-          borderSide: const BorderSide(color: AppColors.borderLight),
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius
+          borderSide: const BorderSide(color: AppColors.borderWarmLight),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.borderLight),
+          borderSide: const BorderSide(color: AppColors.borderWarmLight),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2), // Accent color border
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 2,
+          ), // Accent color border
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
@@ -151,7 +191,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         labelStyle: AppTypography.textTheme.bodyLarge?.copyWith(
           color: AppColors.textSecondaryLight,
         ),
@@ -160,20 +203,27 @@ class AppTheme {
         ),
       ),
 
-      // Chip theme
+      // Chip theme - selected chips have white text
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceVariantLight,
         selectedColor: AppColors.primary,
-        labelStyle: AppTypography.textTheme.labelMedium,
+        labelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: AppColors.textPrimaryLight,
+        ),
+        secondaryLabelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: Colors.white, // White text when selected
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
       ),
 
-      // Divider theme
+      // Divider theme - using sectionDivider for better visibility
       dividerTheme: const DividerThemeData(
-        color: AppColors.dividerLight,
+        color: AppColors.sectionDividerLight,
         thickness: 1,
         space: 1,
       ),
@@ -194,7 +244,9 @@ class AppTheme {
         backgroundColor: AppColors.surfaceLight,
         elevation: 8,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius (upgraded from 16)
         ),
         titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
           color: AppColors.textPrimaryLight,
@@ -211,7 +263,9 @@ class AppTheme {
           color: Colors.white,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius (upgraded from 8)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius (upgraded from 8)
         ),
         behavior: SnackBarBehavior.floating,
       ),
@@ -219,6 +273,127 @@ class AppTheme {
       // Progress indicator theme
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primary,
+      ),
+
+      // Switch theme - Primary Purple selected, warm beige unselected
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary; // Purple when selected
+          }
+          return AppColors.borderWarmLight; // Warm beige when unselected
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primary.withValues(
+              alpha: 0.3,
+            ); // Purple track when selected
+          }
+          return AppColors.borderWarmLight.withValues(
+            alpha: 0.5,
+          ); // Warm beige track
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.transparent;
+          }
+          return AppColors.borderWarmLight;
+        }),
+      ),
+
+      // Popup menu theme - Modern styling
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.surfaceLight,
+        elevation: 8,
+        shadowColor: Colors.black26,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.sectionDividerLight),
+        ),
+        textStyle: AppTypography.textTheme.bodyMedium,
+      ),
+
+      // Dropdown menu theme - Modern styling
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: AppTypography.textTheme.bodyMedium,
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(AppColors.surfaceLight),
+          elevation: WidgetStateProperty.all(8),
+          shadowColor: WidgetStateProperty.all(Colors.black26),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.sectionDividerLight),
+            ),
+          ),
+        ),
+      ),
+
+      // Menu theme - For MenuAnchor and MenuBar
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(AppColors.surfaceLight),
+          elevation: WidgetStateProperty.all(8),
+          shadowColor: WidgetStateProperty.all(Colors.black26),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.sectionDividerLight),
+            ),
+          ),
+        ),
+      ),
+
+      // Date picker theme - Modern styling with brand colors
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        headerBackgroundColor: AppColors.primary,
+        headerForegroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        dayStyle: AppTypography.textTheme.bodyMedium,
+        weekdayStyle: AppTypography.textTheme.labelSmall?.copyWith(
+          color: AppColors.textSecondaryLight,
+          fontWeight: FontWeight.w600,
+        ),
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          if (states.contains(WidgetState.disabled)) {
+            return AppColors.textTertiaryLight;
+          }
+          return AppColors.textPrimaryLight;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return Colors.transparent;
+        }),
+        todayForegroundColor: WidgetStateProperty.all(AppColors.primary),
+        todayBackgroundColor: WidgetStateProperty.all(
+          AppColors.primary.withAlpha((0.1 * 255).toInt()),
+        ),
+        todayBorder: const BorderSide(color: AppColors.primary),
+        yearStyle: AppTypography.textTheme.bodyLarge,
+        yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return AppColors.textPrimaryLight;
+        }),
+        yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return AppColors.primary;
+          return Colors.transparent;
+        }),
+        rangePickerBackgroundColor: AppColors.surfaceLight,
+        rangePickerHeaderBackgroundColor: AppColors.primary,
+        rangePickerHeaderForegroundColor: Colors.white,
+        rangeSelectionBackgroundColor: AppColors.primary.withAlpha(
+          (0.2 * 255).toInt(),
+        ),
+        dividerColor: AppColors.sectionDividerLight,
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.textSecondaryLight,
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+        ),
       ),
     );
   }
@@ -232,20 +407,20 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
 
+      // Gradient extensions
+      extensions: const [AppGradients.dark],
+
       // Color scheme
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primaryLight,
-        onPrimary: Colors.black,
+        onPrimary: Colors.white, // White text on primary color (chips, buttons)
         primaryContainer: AppColors.primary,
         secondary: AppColors.secondaryLight,
-        onSecondary: Colors.black,
         secondaryContainer: AppColors.secondary,
         tertiary: AppColors.tertiaryLight,
         onTertiary: Colors.black,
         tertiaryContainer: AppColors.tertiary,
         error: AppColors.errorLight,
-        onError: Colors.black,
-        surface: AppColors.surfaceDark,
         onSurface: AppColors.textPrimaryDark,
         surfaceContainerHighest: AppColors.surfaceVariantDark,
         outline: AppColors.borderDark,
@@ -269,6 +444,12 @@ class AppTheme {
         scrolledUnderElevation: 1,
         shadowColor: AppColors.borderDark,
         toolbarHeight: 64, // 64px height as specified
+        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: AppColors.surfaceDark, // Match AppBar color
+          statusBarBrightness: Brightness.dark, // For iOS (light icons)
+          statusBarIconBrightness:
+              Brightness.light, // For Android (light icons)
+        ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
           color: AppColors.textPrimaryDark,
           fontWeight: FontWeight.w600,
@@ -281,7 +462,9 @@ class AppTheme {
         elevation: 4, // Modern elevated shadow
         shadowColor: AppColors.primaryLight.withValues(alpha: 0.12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
         margin: const EdgeInsets.all(16), // 16px padding
       ),
@@ -294,7 +477,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           elevation: 0,
           textStyle: AppTypography.buttonText,
@@ -308,7 +493,9 @@ class AppTheme {
           minimumSize: const Size(0, 48), // 48px height
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
+            borderRadius: BorderRadius.circular(
+              AppDimensions.radiusS,
+            ), // 12px modern radius
           ),
           side: const BorderSide(color: AppColors.primaryLight, width: 1.5),
           textStyle: AppTypography.buttonText,
@@ -341,21 +528,29 @@ class AppTheme {
       ),
 
       // Input decoration theme - Border radius: 12px (modern), Height: 48px, Focus: accent color border
+      // UPDATED: Using warm gray border colors for Mediterranean theme consistency
+      // FIXED: Lighter fill color for better contrast and readability
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceVariantDark,
+        fillColor:
+            darkInputFill, // Lighter than surfaceVariantDark for better contrast
         constraints: const BoxConstraints(minHeight: 48), // 48px height
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius
-          borderSide: const BorderSide(color: AppColors.borderDark),
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius
+          borderSide: const BorderSide(color: AppColors.borderWarmDark),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.borderWarmDark),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.primaryLight, width: 2), // Accent color border
+          borderSide: const BorderSide(
+            color: AppColors.primaryLight,
+            width: 2,
+          ), // Accent color border
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
@@ -365,7 +560,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
           borderSide: const BorderSide(color: AppColors.errorLight, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         labelStyle: AppTypography.textTheme.bodyLarge?.copyWith(
           color: AppColors.textSecondaryDark,
         ),
@@ -374,20 +572,27 @@ class AppTheme {
         ),
       ),
 
-      // Chip theme
+      // Chip theme - selected chips have white text
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceVariantDark,
         selectedColor: AppColors.primaryLight,
-        labelStyle: AppTypography.textTheme.labelMedium,
+        labelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: AppColors.textPrimaryDark,
+        ),
+        secondaryLabelStyle: AppTypography.textTheme.labelMedium?.copyWith(
+          color: Colors.white, // White text when selected
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius
         ),
       ),
 
-      // Divider theme
+      // Divider theme - using sectionDivider for better visibility
       dividerTheme: const DividerThemeData(
-        color: AppColors.dividerDark,
+        color: AppColors.sectionDividerDark,
         thickness: 1,
         space: 1,
       ),
@@ -408,7 +613,9 @@ class AppTheme {
         backgroundColor: AppColors.surfaceDark,
         elevation: 8,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusM,
+          ), // 20px modern radius (upgraded from 16)
         ),
         titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
           color: AppColors.textPrimaryDark,
@@ -425,7 +632,9 @@ class AppTheme {
           color: AppColors.textPrimaryDark,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS), // 12px modern radius (upgraded from 8)
+          borderRadius: BorderRadius.circular(
+            AppDimensions.radiusS,
+          ), // 12px modern radius (upgraded from 8)
         ),
         behavior: SnackBarBehavior.floating,
       ),
@@ -433,6 +642,135 @@ class AppTheme {
       // Progress indicator theme
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primaryLight,
+      ),
+
+      // Switch theme - Primary Purple selected, warm gray unselected
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primaryLight; // Light Purple when selected
+          }
+          return AppColors.borderWarmDark; // Warm gray when unselected
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primaryLight.withValues(
+              alpha: 0.4,
+            ); // Purple track when selected
+          }
+          return AppColors.borderWarmDark.withValues(
+            alpha: 0.5,
+          ); // Warm gray track
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.transparent;
+          }
+          return AppColors.borderWarmDark;
+        }),
+      ),
+
+      // Popup menu theme - Modern styling (dark mode)
+      popupMenuTheme: PopupMenuThemeData(
+        color: darkMenuBackground,
+        elevation: 12,
+        shadowColor: Colors.black54,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.sectionDividerDark),
+        ),
+        textStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textPrimaryDark,
+        ),
+      ),
+
+      // Dropdown menu theme - Modern styling (dark mode)
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: AppTypography.textTheme.bodyMedium?.copyWith(
+          color: AppColors.textPrimaryDark,
+        ),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(darkMenuBackground),
+          elevation: WidgetStateProperty.all(12),
+          shadowColor: WidgetStateProperty.all(Colors.black54),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.sectionDividerDark),
+            ),
+          ),
+        ),
+      ),
+
+      // Menu theme - For MenuAnchor and MenuBar (dark mode)
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(darkMenuBackground),
+          elevation: WidgetStateProperty.all(12),
+          shadowColor: WidgetStateProperty.all(Colors.black54),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: AppColors.sectionDividerDark),
+            ),
+          ),
+        ),
+      ),
+
+      // Date picker theme - Modern styling with brand colors (dark mode)
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: darkDatePickerBackground,
+        headerBackgroundColor: AppColors.primary,
+        headerForegroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        dayStyle: AppTypography.textTheme.bodyMedium,
+        weekdayStyle: AppTypography.textTheme.labelSmall?.copyWith(
+          color: AppColors.textSecondaryDark,
+          fontWeight: FontWeight.w600,
+        ),
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          if (states.contains(WidgetState.disabled)) {
+            return AppColors.textTertiaryDark;
+          }
+          return AppColors.textPrimaryDark;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primaryLight;
+          }
+          return Colors.transparent;
+        }),
+        todayForegroundColor: WidgetStateProperty.all(AppColors.primaryLight),
+        todayBackgroundColor: WidgetStateProperty.all(
+          AppColors.primaryLight.withAlpha((0.15 * 255).toInt()),
+        ),
+        todayBorder: const BorderSide(color: AppColors.primaryLight),
+        yearStyle: AppTypography.textTheme.bodyLarge,
+        yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
+          return AppColors.textPrimaryDark;
+        }),
+        yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.primaryLight;
+          }
+          return Colors.transparent;
+        }),
+        rangePickerBackgroundColor: darkDatePickerBackground,
+        rangePickerHeaderBackgroundColor: AppColors.primary,
+        rangePickerHeaderForegroundColor: Colors.white,
+        rangeSelectionBackgroundColor: AppColors.primaryLight.withAlpha(
+          (0.25 * 255).toInt(),
+        ),
+        dividerColor: AppColors.sectionDividerDark,
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.textSecondaryDark,
+        ),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: AppColors.primaryLight,
+        ),
       ),
     );
   }

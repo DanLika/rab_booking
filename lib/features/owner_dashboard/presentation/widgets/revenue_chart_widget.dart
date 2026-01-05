@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_extensions.dart';
@@ -22,13 +23,13 @@ class RevenueDataPoint {
 /// Revenue chart widget
 class RevenueChartWidget extends StatelessWidget {
   final List<RevenueDataPoint> data;
-  final String title;
+  final String? title;
   final String? subtitle;
 
   const RevenueChartWidget({
     super.key,
     required this.data,
-    this.title = 'Revenue Overview',
+    this.title,
     this.subtitle,
   });
 
@@ -49,7 +50,7 @@ class RevenueChartWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      title ?? AppLocalizations.of(context).revenueChartTitle,
                       style: AppTypography.h3,
                     ),
                     if (subtitle != null) ...[
@@ -73,13 +74,13 @@ class RevenueChartWidget extends StatelessWidget {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   const SizedBox(width: AppDimensions.spaceXS),
                   Text(
-                    'Revenue',
+                    AppLocalizations.of(context).revenueChartLegend,
                     style: AppTypography.small.copyWith(
                       color: isDark
                           ? AppColors.textSecondaryDark
@@ -97,7 +98,9 @@ class RevenueChartWidget extends StatelessWidget {
           if (data.isEmpty)
             Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppDimensions.spaceXL),
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppDimensions.spaceXL,
+                ),
                 child: Column(
                   children: [
                     Icon(
@@ -109,7 +112,7 @@ class RevenueChartWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
                     Text(
-                      'No revenue data available',
+                      AppLocalizations.of(context).revenueChartNoData,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark
                             ? AppColors.textSecondaryDark
@@ -127,8 +130,8 @@ class RevenueChartWidget extends StatelessWidget {
                 final chartHeight = constraints.maxWidth > 600
                     ? 250.0
                     : constraints.maxWidth > 400
-                        ? 200.0
-                        : 150.0;
+                    ? 200.0
+                    : 150.0;
 
                 return SizedBox(
                   height: chartHeight,
@@ -160,7 +163,8 @@ class _BarChart extends StatelessWidget {
         final yAxisWidth = math.min(60.0, math.max(40.0, maxValueDigits * 8.0));
 
         // Calculate available height for bars
-        final barChartHeight = constraints.maxHeight - 40; // Reserve space for X-axis labels
+        final barChartHeight =
+            constraints.maxHeight - 40; // Reserve space for X-axis labels
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -202,7 +206,9 @@ class _BarChart extends StatelessWidget {
                       children: data.asMap().entries.map((entry) {
                         final index = entry.key;
                         final point = entry.value;
-                        final heightRatio = maxValue > 0 ? point.value / maxValue : 0;
+                        final heightRatio = maxValue > 0
+                            ? point.value / maxValue
+                            : 0;
 
                         return Expanded(
                           child: Padding(
@@ -218,10 +224,14 @@ class _BarChart extends StatelessWidget {
                                 // Dynamic height based on available space
                                 Container(
                                   height: heightRatio * barChartHeight,
-                                  decoration: const BoxDecoration(
-                                    gradient: AppColors.primaryGradient,
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(AppDimensions.radiusS),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(
+                                        AppDimensions.radiusS,
+                                      ),
                                     ),
                                   ),
                                 ),

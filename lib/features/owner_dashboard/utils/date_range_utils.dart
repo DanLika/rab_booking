@@ -4,29 +4,18 @@ class DateRangeUtils {
   static DateTime getMonday(DateTime date) {
     // weekday: 1 = Monday, 7 = Sunday
     final daysToSubtract = date.weekday - 1;
-    return DateTime(
-      date.year,
-      date.month,
-      date.day - daysToSubtract,
-    );
+    return DateTime(date.year, date.month, date.day - daysToSubtract);
   }
 
   /// Get Sunday of the week for a given date
   static DateTime getSunday(DateTime date) {
     final monday = getMonday(date);
-    return DateTime(
-      monday.year,
-      monday.month,
-      monday.day + 6,
-      23,
-      59,
-      59,
-    );
+    return DateTime(monday.year, monday.month, monday.day + 6, 23, 59, 59);
   }
 
   /// Get first day of month
   static DateTime getFirstDayOfMonth(DateTime date) {
-    return DateTime(date.year, date.month, 1);
+    return DateTime(date.year, date.month);
   }
 
   /// Get last day of month
@@ -87,8 +76,7 @@ class DateRangeUtils {
 
   /// Check if date is weekend (Saturday or Sunday)
   static bool isWeekend(DateTime date) {
-    return date.weekday == DateTime.saturday ||
-        date.weekday == DateTime.sunday;
+    return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
   }
 
   /// Format date range for display
@@ -140,8 +128,9 @@ class DateRangeUtils {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
+    if (month < 1 || month > 12) return 'Invalid';
     return months[month - 1];
   }
 
@@ -159,14 +148,16 @@ class DateRangeUtils {
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
+    if (month < 1 || month > 12) return 'Invalid';
     return months[month - 1];
   }
 
   /// Get short weekday name (3 letters)
   static String _getWeekdayShortName(int weekday) {
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    if (weekday < 1 || weekday > 7) return 'Invalid';
     return weekdays[weekday - 1];
   }
 
@@ -184,12 +175,12 @@ class DateRangeUtils {
 
   /// Get next month's first day
   static DateTime getNextMonth(DateTime date) {
-    return DateTime(date.year, date.month + 1, 1);
+    return DateTime(date.year, date.month + 1);
   }
 
   /// Get previous month's first day
   static DateTime getPreviousMonth(DateTime date) {
-    return DateTime(date.year, date.month - 1, 1);
+    return DateTime(date.year, date.month - 1);
   }
 
   /// Calculate booking duration in nights

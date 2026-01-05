@@ -14,6 +14,10 @@ class UnitModel with _$UnitModel {
     /// Parent property ID
     @JsonKey(name: 'property_id') required String propertyId,
 
+    /// Owner user ID (for Firestore security rules)
+    /// Made nullable for backwards compatibility with legacy units
+    @JsonKey(name: 'owner_id') String? ownerId,
+
     /// Unit name/title (e.g., "Apartment A1", "Studio 2")
     required String name,
 
@@ -23,8 +27,14 @@ class UnitModel with _$UnitModel {
     /// Unit description
     String? description,
 
-    /// Price per night in EUR
+    /// Price per night in EUR (base price for weekdays)
     @JsonKey(name: 'base_price') required double pricePerNight,
+
+    /// Weekend base price in EUR (optional, for Fri-Sat nights by default)
+    @JsonKey(name: 'weekend_base_price') double? weekendBasePrice,
+
+    /// Days considered as weekend (1=Mon...7=Sun, default: [5,6] = Fri-Sat nights)
+    @JsonKey(name: 'weekend_days') List<int>? weekendDays,
 
     /// Currency code (default: EUR)
     @Default('EUR') String? currency,
@@ -52,6 +62,9 @@ class UnitModel with _$UnitModel {
 
     /// Maximum stay in nights (null = unlimited)
     @JsonKey(name: 'max_stay_nights') int? maxStayNights,
+
+    /// Sort order for display (lower = first, null = end of list)
+    @JsonKey(name: 'sort_order') @Default(0) int sortOrder,
 
     /// Unit creation timestamp
     @JsonKey(name: 'created_at')

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
@@ -5,6 +6,7 @@ import '../../../../core/services/logging_service.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/onboarding_state.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 part 'onboarding_provider.g.dart';
 
@@ -34,7 +36,9 @@ class OnboardingNotifier extends _$OnboardingNotifier {
         state = OnboardingState.fromJson(doc.data()!);
       }
     } catch (e) {
-      LoggingService.logError('Failed to load onboarding progress', e);
+      unawaited(
+        LoggingService.logError('Failed to load onboarding progress', e),
+      );
     }
   }
 
@@ -51,9 +55,14 @@ class OnboardingNotifier extends _$OnboardingNotifier {
           .doc('current')
           .set(state.toJson());
 
-      LoggingService.log('Onboarding progress saved: Step ${state.currentStep}', tag: 'ONBOARDING');
+      LoggingService.log(
+        'Onboarding progress saved: Step ${state.currentStep}',
+        tag: 'ONBOARDING',
+      );
     } catch (e) {
-      LoggingService.logError('Failed to save onboarding progress', e);
+      unawaited(
+        LoggingService.logError('Failed to save onboarding progress', e),
+      );
       rethrow;
     }
   }
@@ -73,7 +82,9 @@ class OnboardingNotifier extends _$OnboardingNotifier {
 
       LoggingService.log('Onboarding progress deleted', tag: 'ONBOARDING');
     } catch (e) {
-      LoggingService.logError('Failed to delete onboarding progress', e);
+      unawaited(
+        LoggingService.logError('Failed to delete onboarding progress', e),
+      );
     }
   }
 
@@ -98,10 +109,7 @@ class OnboardingNotifier extends _$OnboardingNotifier {
       final newStep = state.currentStep + 1;
       final completed = [...state.completedSteps, state.currentStep];
 
-      state = state.copyWith(
-        currentStep: newStep,
-        completedSteps: completed,
-      );
+      state = state.copyWith(currentStep: newStep, completedSteps: completed);
 
       await saveProgress();
     }
@@ -117,12 +125,18 @@ class OnboardingNotifier extends _$OnboardingNotifier {
   /// Create actual property in Firebase (from Step 1 data)
   Future<String> createProperty() async {
     if (state.propertyData == null) {
-      throw Exception('Property data is null');
+      throw PropertyException(
+        'Property data is null',
+        code: 'property/data-missing',
+      );
     }
 
     final userId = ref.read(enhancedAuthProvider).firebaseUser?.uid;
     if (userId == null) {
-      throw Exception('User not authenticated');
+      throw AuthException(
+        'User not authenticated',
+        code: 'auth/not-authenticated',
+      );
     }
 
     final data = state.propertyData!;
@@ -143,7 +157,7 @@ class OnboardingNotifier extends _$OnboardingNotifier {
   }
 
   /// Create unit in Firebase (from Step 2 data)
-  Future<String?> createUnit(String propertyId) async {
+  Future<String?> createUnit(String propertyId, String ownerId) async {
     if (state.unitData == null) {
       return null; // Optional step
     }
@@ -154,6 +168,7 @@ class OnboardingNotifier extends _$OnboardingNotifier {
     final unit = UnitModel(
       id: '', // Will be set by repository
       propertyId: propertyId,
+      ownerId: ownerId,
       name: data.name,
       maxGuests: data.maxGuests,
       bedrooms: data.numBeds ?? 1,
@@ -161,7 +176,6 @@ class OnboardingNotifier extends _$OnboardingNotifier {
       description: data.description,
       pricePerNight: state.pricingData?.basePrice ?? 0.0,
       images: [],
-      isAvailable: true,
       createdAt: DateTime.now(),
     );
 
@@ -184,7 +198,9 @@ class OnboardingNotifier extends _$OnboardingNotifier {
 
       LoggingService.log('Wizard completed successfully', tag: 'ONBOARDING');
     } catch (e) {
-      LoggingService.logError('Failed to complete onboarding wizard', e);
+      unawaited(
+        LoggingService.logError('Failed to complete onboarding wizard', e),
+      );
       rethrow;
     }
   }
@@ -202,7 +218,7 @@ class OnboardingNotifier extends _$OnboardingNotifier {
 
       LoggingService.log('Wizard skipped', tag: 'ONBOARDING');
     } catch (e) {
-      LoggingService.logError('Failed to skip onboarding wizard', e);
+      unawaited(LoggingService.logError('Failed to skip onboarding wizard', e));
       rethrow;
     }
   }

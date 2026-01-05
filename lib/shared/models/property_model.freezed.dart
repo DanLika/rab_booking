@@ -24,15 +24,28 @@ mixin _$PropertyModel {
   /// Property ID (UUID)
   String get id => throw _privateConstructorUsedError;
 
-  /// Owner user ID
+  /// Owner user ID (nullable for backwards compatibility with legacy properties)
   @JsonKey(name: 'owner_id')
-  String get ownerId => throw _privateConstructorUsedError;
+  String? get ownerId => throw _privateConstructorUsedError;
 
   /// Property name/title
   String get name => throw _privateConstructorUsedError;
 
   /// URL-friendly slug (e.g., "villa-marija")
   String? get slug => throw _privateConstructorUsedError;
+
+  /// Unique subdomain for widget URLs (e.g., "jasko-rab")
+  /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
+  /// Must be unique across all properties, validated by Cloud Function
+  String? get subdomain => throw _privateConstructorUsedError;
+
+  /// Custom branding configuration for widget appearance
+  PropertyBranding? get branding => throw _privateConstructorUsedError;
+
+  /// Custom domain for enterprise clients (e.g., "booking.villamarija.com")
+  /// Reserved for future implementation
+  @JsonKey(name: 'custom_domain')
+  String? get customDomain => throw _privateConstructorUsedError;
 
   /// Detailed description
   String get description => throw _privateConstructorUsedError;
@@ -133,9 +146,12 @@ abstract class $PropertyModelCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
-    @JsonKey(name: 'owner_id') String ownerId,
+    @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
+    String? subdomain,
+    PropertyBranding? branding,
+    @JsonKey(name: 'custom_domain') String? customDomain,
     String description,
     @JsonKey(name: 'property_type') PropertyType propertyType,
     String location,
@@ -162,6 +178,8 @@ abstract class $PropertyModelCopyWith<$Res> {
     int? bathrooms,
     @JsonKey(name: 'deleted_at') DateTime? deletedAt,
   });
+
+  $PropertyBrandingCopyWith<$Res>? get branding;
 }
 
 /// @nodoc
@@ -180,9 +198,12 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
   @override
   $Res call({
     Object? id = null,
-    Object? ownerId = null,
+    Object? ownerId = freezed,
     Object? name = null,
     Object? slug = freezed,
+    Object? subdomain = freezed,
+    Object? branding = freezed,
+    Object? customDomain = freezed,
     Object? description = null,
     Object? propertyType = null,
     Object? location = null,
@@ -212,10 +233,10 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                       as String,
-            ownerId: null == ownerId
+            ownerId: freezed == ownerId
                 ? _value.ownerId
                 : ownerId // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as String?,
             name: null == name
                 ? _value.name
                 : name // ignore: cast_nullable_to_non_nullable
@@ -223,6 +244,18 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
             slug: freezed == slug
                 ? _value.slug
                 : slug // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            subdomain: freezed == subdomain
+                ? _value.subdomain
+                : subdomain // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            branding: freezed == branding
+                ? _value.branding
+                : branding // ignore: cast_nullable_to_non_nullable
+                      as PropertyBranding?,
+            customDomain: freezed == customDomain
+                ? _value.customDomain
+                : customDomain // ignore: cast_nullable_to_non_nullable
                       as String?,
             description: null == description
                 ? _value.description
@@ -316,6 +349,20 @@ class _$PropertyModelCopyWithImpl<$Res, $Val extends PropertyModel>
           as $Val,
     );
   }
+
+  /// Create a copy of PropertyModel
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $PropertyBrandingCopyWith<$Res>? get branding {
+    if (_value.branding == null) {
+      return null;
+    }
+
+    return $PropertyBrandingCopyWith<$Res>(_value.branding!, (value) {
+      return _then(_value.copyWith(branding: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -329,9 +376,12 @@ abstract class _$$PropertyModelImplCopyWith<$Res>
   @useResult
   $Res call({
     String id,
-    @JsonKey(name: 'owner_id') String ownerId,
+    @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
+    String? subdomain,
+    PropertyBranding? branding,
+    @JsonKey(name: 'custom_domain') String? customDomain,
     String description,
     @JsonKey(name: 'property_type') PropertyType propertyType,
     String location,
@@ -358,6 +408,9 @@ abstract class _$$PropertyModelImplCopyWith<$Res>
     int? bathrooms,
     @JsonKey(name: 'deleted_at') DateTime? deletedAt,
   });
+
+  @override
+  $PropertyBrandingCopyWith<$Res>? get branding;
 }
 
 /// @nodoc
@@ -375,9 +428,12 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? ownerId = null,
+    Object? ownerId = freezed,
     Object? name = null,
     Object? slug = freezed,
+    Object? subdomain = freezed,
+    Object? branding = freezed,
+    Object? customDomain = freezed,
     Object? description = null,
     Object? propertyType = null,
     Object? location = null,
@@ -407,10 +463,10 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
                   as String,
-        ownerId: null == ownerId
+        ownerId: freezed == ownerId
             ? _value.ownerId
             : ownerId // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as String?,
         name: null == name
             ? _value.name
             : name // ignore: cast_nullable_to_non_nullable
@@ -418,6 +474,18 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
         slug: freezed == slug
             ? _value.slug
             : slug // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        subdomain: freezed == subdomain
+            ? _value.subdomain
+            : subdomain // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        branding: freezed == branding
+            ? _value.branding
+            : branding // ignore: cast_nullable_to_non_nullable
+                  as PropertyBranding?,
+        customDomain: freezed == customDomain
+            ? _value.customDomain
+            : customDomain // ignore: cast_nullable_to_non_nullable
                   as String?,
         description: null == description
             ? _value.description
@@ -517,9 +585,12 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
 class _$PropertyModelImpl extends _PropertyModel {
   const _$PropertyModelImpl({
     required this.id,
-    @JsonKey(name: 'owner_id') required this.ownerId,
+    @JsonKey(name: 'owner_id') this.ownerId,
     required this.name,
     this.slug,
+    this.subdomain,
+    this.branding,
+    @JsonKey(name: 'custom_domain') this.customDomain,
     required this.description,
     @JsonKey(name: 'property_type') this.propertyType = PropertyType.apartment,
     required this.location,
@@ -554,10 +625,10 @@ class _$PropertyModelImpl extends _PropertyModel {
   @override
   final String id;
 
-  /// Owner user ID
+  /// Owner user ID (nullable for backwards compatibility with legacy properties)
   @override
   @JsonKey(name: 'owner_id')
-  final String ownerId;
+  final String? ownerId;
 
   /// Property name/title
   @override
@@ -566,6 +637,22 @@ class _$PropertyModelImpl extends _PropertyModel {
   /// URL-friendly slug (e.g., "villa-marija")
   @override
   final String? slug;
+
+  /// Unique subdomain for widget URLs (e.g., "jasko-rab")
+  /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
+  /// Must be unique across all properties, validated by Cloud Function
+  @override
+  final String? subdomain;
+
+  /// Custom branding configuration for widget appearance
+  @override
+  final PropertyBranding? branding;
+
+  /// Custom domain for enterprise clients (e.g., "booking.villamarija.com")
+  /// Reserved for future implementation
+  @override
+  @JsonKey(name: 'custom_domain')
+  final String? customDomain;
 
   /// Detailed description
   @override
@@ -689,7 +776,7 @@ class _$PropertyModelImpl extends _PropertyModel {
 
   @override
   String toString() {
-    return 'PropertyModel(id: $id, ownerId: $ownerId, name: $name, slug: $slug, description: $description, propertyType: $propertyType, location: $location, city: $city, country: $country, postalCode: $postalCode, address: $address, latlng: $latlng, amenities: $amenities, images: $images, coverImage: $coverImage, rating: $rating, reviewCount: $reviewCount, unitsCount: $unitsCount, createdAt: $createdAt, updatedAt: $updatedAt, isActive: $isActive, pricePerNight: $pricePerNight, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, deletedAt: $deletedAt)';
+    return 'PropertyModel(id: $id, ownerId: $ownerId, name: $name, slug: $slug, subdomain: $subdomain, branding: $branding, customDomain: $customDomain, description: $description, propertyType: $propertyType, location: $location, city: $city, country: $country, postalCode: $postalCode, address: $address, latlng: $latlng, amenities: $amenities, images: $images, coverImage: $coverImage, rating: $rating, reviewCount: $reviewCount, unitsCount: $unitsCount, createdAt: $createdAt, updatedAt: $updatedAt, isActive: $isActive, pricePerNight: $pricePerNight, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, deletedAt: $deletedAt)';
   }
 
   @override
@@ -701,6 +788,12 @@ class _$PropertyModelImpl extends _PropertyModel {
             (identical(other.ownerId, ownerId) || other.ownerId == ownerId) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.slug, slug) || other.slug == slug) &&
+            (identical(other.subdomain, subdomain) ||
+                other.subdomain == subdomain) &&
+            (identical(other.branding, branding) ||
+                other.branding == branding) &&
+            (identical(other.customDomain, customDomain) ||
+                other.customDomain == customDomain) &&
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.propertyType, propertyType) ||
@@ -751,6 +844,9 @@ class _$PropertyModelImpl extends _PropertyModel {
     ownerId,
     name,
     slug,
+    subdomain,
+    branding,
+    customDomain,
     description,
     propertyType,
     location,
@@ -792,9 +888,12 @@ class _$PropertyModelImpl extends _PropertyModel {
 abstract class _PropertyModel extends PropertyModel {
   const factory _PropertyModel({
     required final String id,
-    @JsonKey(name: 'owner_id') required final String ownerId,
+    @JsonKey(name: 'owner_id') final String? ownerId,
     required final String name,
     final String? slug,
+    final String? subdomain,
+    final PropertyBranding? branding,
+    @JsonKey(name: 'custom_domain') final String? customDomain,
     required final String description,
     @JsonKey(name: 'property_type') final PropertyType propertyType,
     required final String location,
@@ -832,10 +931,10 @@ abstract class _PropertyModel extends PropertyModel {
   @override
   String get id;
 
-  /// Owner user ID
+  /// Owner user ID (nullable for backwards compatibility with legacy properties)
   @override
   @JsonKey(name: 'owner_id')
-  String get ownerId;
+  String? get ownerId;
 
   /// Property name/title
   @override
@@ -844,6 +943,22 @@ abstract class _PropertyModel extends PropertyModel {
   /// URL-friendly slug (e.g., "villa-marija")
   @override
   String? get slug;
+
+  /// Unique subdomain for widget URLs (e.g., "jasko-rab")
+  /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
+  /// Must be unique across all properties, validated by Cloud Function
+  @override
+  String? get subdomain;
+
+  /// Custom branding configuration for widget appearance
+  @override
+  PropertyBranding? get branding;
+
+  /// Custom domain for enterprise clients (e.g., "booking.villamarija.com")
+  /// Reserved for future implementation
+  @override
+  @JsonKey(name: 'custom_domain')
+  String? get customDomain;
 
   /// Detailed description
   @override

@@ -1,9 +1,18 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/utils/error_display_utils.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
-import '../../../../../core/theme/app_colors.dart';
 import '../../providers/owner_calendar_provider.dart';
 
 /// Calendar search dialog
@@ -38,11 +47,19 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
   /// Load units for displaying unit names in results
   Future<void> _loadUnits() async {
     final unitsAsync = ref.read(allOwnerUnitsProvider);
-    unitsAsync.whenData((units) {
-      setState(() {
-        _unitsMap = {for (var unit in units) unit.id: unit};
-      });
-    });
+    unitsAsync.when(
+      data: (units) {
+        if (mounted) {
+          setState(() {
+            _unitsMap = {for (var unit in units) unit.id: unit};
+          });
+        }
+      },
+      loading: () {},
+      error: (error, stackTrace) {
+        // Silently fail - unit names will just show as IDs
+      },
+    );
   }
 
   /// Perform search across all bookings
@@ -64,14 +81,17 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
       final bookingsAsync = ref.read(calendarBookingsProvider);
       await bookingsAsync.when(
         data: (bookingsMap) async {
-          final allBookings = bookingsMap.values.expand((list) => list).toList();
+          final allBookings = bookingsMap.values
+              .expand((list) => list)
+              .toList();
 
           // Filter bookings based on search query
           final results = allBookings.where((booking) {
             final guestName = booking.guestName?.toLowerCase() ?? '';
             final guestEmail = booking.guestEmail?.toLowerCase() ?? '';
             final bookingId = booking.id.toLowerCase();
-            final unitName = _unitsMap[booking.unitId]?.name.toLowerCase() ?? '';
+            final unitName =
+                _unitsMap[booking.unitId]?.name.toLowerCase() ?? '';
 
             return guestName.contains(_searchQuery) ||
                 guestEmail.contains(_searchQuery) ||
@@ -102,36 +122,71 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.8,
-        height: MediaQuery.of(context).size.height * 0.8,
-        constraints: const BoxConstraints(maxWidth: 800, maxHeight: 700),
+        width: screenWidth < 400 ? screenWidth * 0.95 : screenWidth * 0.8,
+        constraints: BoxConstraints(
+          maxWidth: 800,
+          maxHeight:
+              MediaQuery.of(context).size.height *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+        ),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+        ),
         child: Column(
           children: [
-            // Header
+            // Header with gradient
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
+              decoration: BoxDecoration(
+                gradient: context.gradients.brandPrimary,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
                 ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search, color: Colors.white),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Pretraga rezervacija',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.search,
                       color: Colors.white,
+                      size: 20,
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AutoSizeText(
+                      l10n.calendarSearchTitle,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      maxLines: 1,
+                      minFontSize: 14,
+                    ),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
@@ -142,54 +197,69 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
             // Search field
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Pretražite po imenu gosta, email-u, ID-u ili jedinici...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            _performSearch('');
-                          },
-                        )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+              padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+              child: Builder(
+                builder: (ctx) => TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration:
+                      InputDecorationHelper.buildDecoration(
+                        labelText: l10n.calendarSearchHint,
+                        prefixIcon: const Icon(Icons.search),
+                        context: ctx,
+                      ).copyWith(
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _performSearch('');
+                                },
+                              )
+                            : null,
+                      ),
+                  onChanged: _performSearch,
                 ),
-                onChanged: (value) {
-                  _performSearch(value);
-                },
               ),
             ),
 
             // Search info
             if (_searchQuery.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth < 400 ? 12 : 16,
+                ),
                 child: Row(
                   children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: context.gradients.brandPrimary,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(8),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.format_list_numbered,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
                     Text(
-                      'Pronađeno ${_searchResults.length} rezultata',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                      l10n.calendarSearchResultsCount(_searchResults.length),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
               ),
 
-            const Divider(),
+            Divider(color: theme.dividerColor, height: 24),
 
             // Results list
-            Expanded(
-              child: _buildResultsList(),
-            ),
+            Expanded(child: _buildResultsList()),
           ],
         ),
       ),
@@ -198,10 +268,11 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   /// Build search results list
   Widget _buildResultsList() {
+    final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
     if (_isSearching) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_searchQuery.isEmpty) {
@@ -216,17 +287,17 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Unesite termin za pretragu',
+              l10n.calendarSearchEnterTerm,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                color: Theme.of(context).disabledColor,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Pretražite po imenu gosta, email-u, ID-u ili jedinici',
+              l10n.calendarSearchDescription,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                color: Theme.of(context).disabledColor,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -246,17 +317,17 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Nema rezultata',
+              l10n.calendarSearchNoResults,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                color: Theme.of(context).disabledColor,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Pokušajte sa drugim terminom pretrage',
+              l10n.calendarSearchTryAnother,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).disabledColor,
-                  ),
+                color: Theme.of(context).disabledColor,
+              ),
             ),
           ],
         ),
@@ -264,7 +335,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final booking = _searchResults[index];
@@ -276,131 +347,174 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   /// Build result card
   Widget _buildResultCard(BookingModel booking, UnitModel? unit) {
-    final dateFormat = DateFormat('d.M.yyyy');
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat('d.M.yyyy', locale);
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => Navigator.of(context).pop(booking),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with status
-              Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: booking.status.color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      booking.guestName ?? 'N/A',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+      decoration: BoxDecoration(
+        gradient: context.gradients.sectionBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark
+              ? AppColors.sectionDividerDark
+              : AppColors.sectionDividerLight,
+        ),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => Navigator.of(context).pop(booking),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with status
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        color: booking.status.color,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                  ),
-                  Text(
-                    booking.status.displayName,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: booking.status.color,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        booking.guestName ?? 'N/A',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Unit name
-              if (unit != null) ...[
-                Row(
-                  children: [
-                    const Icon(Icons.bed_outlined, size: 16),
                     const SizedBox(width: 8),
                     Text(
-                      unit.name,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              // Dates
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${dateFormat.format(booking.checkIn)} - ${dateFormat.format(booking.checkOut)}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha((0.1 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$nights noć${nights > 1 ? 'i' : ''}',
-                      style: const TextStyle(
+                      booking.status.displayNameLocalized(context),
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.primary,
+                        color: booking.status.color,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
-              const SizedBox(height: 8),
+                const SizedBox(height: 12),
 
-              // Email
-              Row(
-                children: [
-                  const Icon(Icons.email_outlined, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      booking.guestEmail ?? 'N/A',
-                      style: Theme.of(context).textTheme.bodySmall,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Price
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.euro, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${booking.totalPrice.toStringAsFixed(2)} €',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.success,
+                // Unit name
+                if (unit != null) ...[
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.bed_outlined,
+                        size: 16,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        unit.name,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
                         ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 8),
                 ],
-              ),
-            ],
+
+                // Dates
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${dateFormat.format(booking.checkIn)} - ${dateFormat.format(booking.checkOut)}',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.1 * 255).toInt(),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$nights noć${nights > 1 ? 'i' : ''}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Email
+                Row(
+                  children: [
+                    Icon(
+                      Icons.email_outlined,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        booking.guestEmail ?? 'N/A',
+                        style: theme.textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Price
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.euro,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${booking.totalPrice.toStringAsFixed(2)} €',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -409,12 +523,7 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
 
   void _showError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      ErrorDisplayUtils.showErrorSnackBar(context, message);
     }
   }
 }

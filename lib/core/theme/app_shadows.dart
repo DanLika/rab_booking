@@ -19,13 +19,11 @@ class AppShadows {
       color: Color(0x0D000000), // 5% black
       blurRadius: 2,
       offset: Offset(0, 1),
-      spreadRadius: 0,
     ),
     BoxShadow(
       color: Color(0x0A000000), // 4% black
       blurRadius: 1,
       offset: Offset(0, 1),
-      spreadRadius: 0,
     ),
   ];
 
@@ -34,15 +32,13 @@ class AppShadows {
   static const List<BoxShadow> elevation2 = [
     BoxShadow(
       color: Color(0x1F000000), // 12% black (increased from 8%)
-      blurRadius: 8,             // Increased from 4
-      offset: Offset(0, 4),      // Increased from 2
-      spreadRadius: 0,
+      blurRadius: 8, // Increased from 4
+      offset: Offset(0, 4), // Increased from 2
     ),
     BoxShadow(
       color: Color(0x14000000), // 8% black (increased from 6%)
-      blurRadius: 4,             // Increased from 2
-      offset: Offset(0, 2),      // Increased from 1
-      spreadRadius: 0,
+      blurRadius: 4, // Increased from 2
+      offset: Offset(0, 2), // Increased from 1
     ),
   ];
 
@@ -51,15 +47,13 @@ class AppShadows {
   static const List<BoxShadow> elevation3 = [
     BoxShadow(
       color: Color(0x26000000), // 15% black (increased from 10%)
-      blurRadius: 16,            // Doubled from 8
-      offset: Offset(0, 8),      // Doubled from 4
-      spreadRadius: 0,
+      blurRadius: 16, // Doubled from 8
+      offset: Offset(0, 8), // Doubled from 4
     ),
     BoxShadow(
       color: Color(0x1A000000), // 10% black (increased from 8%)
-      blurRadius: 8,             // Doubled from 4
-      offset: Offset(0, 4),      // Doubled from 2
-      spreadRadius: 0,
+      blurRadius: 8, // Doubled from 4
+      offset: Offset(0, 4), // Doubled from 2
     ),
   ];
 
@@ -68,15 +62,13 @@ class AppShadows {
   static const List<BoxShadow> elevation4 = [
     BoxShadow(
       color: Color(0x33000000), // 20% black (increased from 15%)
-      blurRadius: 24,            // Increased from 16
-      offset: Offset(0, 12),     // Increased from 8
-      spreadRadius: 0,
+      blurRadius: 24, // Increased from 16
+      offset: Offset(0, 12), // Increased from 8
     ),
     BoxShadow(
       color: Color(0x26000000), // 15% black (increased from 12%)
-      blurRadius: 16,            // Doubled from 8
-      offset: Offset(0, 8),      // Doubled from 4
-      spreadRadius: 0,
+      blurRadius: 16, // Doubled from 8
+      offset: Offset(0, 8), // Doubled from 4
     ),
   ];
 
@@ -87,13 +79,11 @@ class AppShadows {
       color: Color(0x33000000), // 20% black
       blurRadius: 24,
       offset: Offset(0, 12),
-      spreadRadius: 0,
     ),
     BoxShadow(
       color: Color(0x29000000), // 16% black
       blurRadius: 12,
       offset: Offset(0, 6),
-      spreadRadius: 0,
     ),
   ];
 
@@ -107,13 +97,11 @@ class AppShadows {
       color: Color(0x400066FF), // 25% Azure Blue
       blurRadius: 24,
       offset: Offset(0, 8),
-      spreadRadius: 0,
     ),
     BoxShadow(
       color: Color(0x1A0066FF), // 10% Azure Blue (subtle outer glow)
       blurRadius: 32,
       offset: Offset(0, 12),
-      spreadRadius: 0,
     ),
   ];
 
@@ -123,13 +111,11 @@ class AppShadows {
       color: Color(0x40FF6B6B), // 25% Coral Red
       blurRadius: 24,
       offset: Offset(0, 8),
-      spreadRadius: 0,
     ),
     BoxShadow(
       color: Color(0x1AFF6B6B), // 10% Coral Red (subtle outer glow)
       blurRadius: 32,
       offset: Offset(0, 12),
-      spreadRadius: 0,
     ),
   ];
 
@@ -139,13 +125,11 @@ class AppShadows {
       color: Color(0x40FFB84D), // 25% Golden Sand
       blurRadius: 24,
       offset: Offset(0, 8),
-      spreadRadius: 0,
     ),
     BoxShadow(
       color: Color(0x1AFFB84D), // 10% Golden Sand (subtle outer glow)
       blurRadius: 32,
       offset: Offset(0, 12),
-      spreadRadius: 0,
     ),
   ];
 
@@ -155,7 +139,6 @@ class AppShadows {
       color: Color(0x3310B981), // 20% success green
       blurRadius: 16,
       offset: Offset(0, 4),
-      spreadRadius: 0,
     ),
   ];
 
@@ -165,7 +148,6 @@ class AppShadows {
       color: Color(0x33EF4444), // 20% error red
       blurRadius: 16,
       offset: Offset(0, 4),
-      spreadRadius: 0,
     ),
   ];
 
@@ -188,7 +170,6 @@ class AppShadows {
     BoxShadow(
       color: Color(0x33FFFFFF), // 20% white
       blurRadius: 20,
-      offset: Offset(0, 0),
       spreadRadius: 4,
     ),
   ];
@@ -198,13 +179,11 @@ class AppShadows {
     BoxShadow(
       color: Color(0x4D0066FF), // 30% Azure Blue
       blurRadius: 32,
-      offset: Offset(0, 0),
       spreadRadius: 4,
     ),
     BoxShadow(
       color: Color(0x260066FF), // 15% Azure Blue (outer glow)
       blurRadius: 48,
-      offset: Offset(0, 0),
       spreadRadius: 8,
     ),
   ];
@@ -214,13 +193,11 @@ class AppShadows {
     BoxShadow(
       color: Color(0x4DFF6B6B), // 30% Coral Red
       blurRadius: 32,
-      offset: Offset(0, 0),
       spreadRadius: 4,
     ),
     BoxShadow(
       color: Color(0x26FF6B6B), // 15% Coral Red (outer glow)
       blurRadius: 48,
-      offset: Offset(0, 0),
       spreadRadius: 8,
     ),
   ];
@@ -230,13 +207,11 @@ class AppShadows {
     BoxShadow(
       color: Color(0x4DFFB84D), // 30% Golden Sand
       blurRadius: 32,
-      offset: Offset(0, 0),
       spreadRadius: 4,
     ),
     BoxShadow(
       color: Color(0x26FFB84D), // 15% Golden Sand (outer glow)
       blurRadius: 48,
-      offset: Offset(0, 0),
       spreadRadius: 8,
     ),
   ];
@@ -247,13 +222,11 @@ class AppShadows {
       color: Color(0x1AFFFFFF), // 10% white (light)
       blurRadius: 8,
       offset: Offset(-4, -4),
-      spreadRadius: 0,
     ),
     BoxShadow(
       color: Color(0x1A000000), // 10% black (shadow)
       blurRadius: 8,
       offset: Offset(4, 4),
-      spreadRadius: 0,
     ),
   ];
 
@@ -283,7 +256,6 @@ class AppShadows {
       color: Color(0x33000000), // 20% black
       blurRadius: 4,
       offset: Offset(0, 2),
-      spreadRadius: 0,
     ),
   ];
 
@@ -293,7 +265,6 @@ class AppShadows {
       color: Color(0x40000000), // 25% black
       blurRadius: 8,
       offset: Offset(0, 4),
-      spreadRadius: 0,
     ),
   ];
 
@@ -303,7 +274,6 @@ class AppShadows {
       color: Color(0x4D000000), // 30% black
       blurRadius: 12,
       offset: Offset(0, 6),
-      spreadRadius: 0,
     ),
   ];
 
@@ -313,7 +283,6 @@ class AppShadows {
       color: Color(0x59000000), // 35% black
       blurRadius: 16,
       offset: Offset(0, 8),
-      spreadRadius: 0,
     ),
   ];
 
@@ -323,7 +292,6 @@ class AppShadows {
       color: Color(0x66000000), // 40% black
       blurRadius: 24,
       offset: Offset(0, 12),
-      spreadRadius: 0,
     ),
   ];
 

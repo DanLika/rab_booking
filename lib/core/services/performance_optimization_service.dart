@@ -3,8 +3,23 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'logging_service.dart';
 
-/// Performance optimization service
-/// Provides caching, memoization, and performance monitoring
+/// Performance optimization service.
+///
+/// Provides caching, memoization, and performance monitoring.
+///
+/// Usage:
+/// ```dart
+/// final service = PerformanceOptimizationService.instance;
+///
+/// // Memoize expensive computation
+/// final result = service.memoize('key', () => expensiveOperation());
+///
+/// // Track API call performance
+/// await fetchData().measureTime<Data>('fetchData');
+///
+/// // Get performance report
+/// service.logPerformanceReport();
+/// ```
 class PerformanceOptimizationService {
   PerformanceOptimizationService._();
   static final instance = PerformanceOptimizationService._();
@@ -90,9 +105,7 @@ class PerformanceOptimizationService {
       }
     }
 
-    for (final key in toRemove) {
-      _memoCache.remove(key);
-    }
+    toRemove.forEach(_memoCache.remove);
 
     // If still too large, remove oldest entries
     if (_memoCache.length > _maxCacheSize) {
@@ -172,7 +185,9 @@ class PerformanceOptimizationService {
       LoggingService.logDebug('=== Performance Report ===');
       LoggingService.logDebug('Cache size: ${report['cache_size']}');
       LoggingService.logDebug('Widgets tracked: ${report['widgets_tracked']}');
-      LoggingService.logDebug('API endpoints tracked: ${report['api_endpoints_tracked']}');
+      LoggingService.logDebug(
+        'API endpoints tracked: ${report['api_endpoints_tracked']}',
+      );
 
       LoggingService.logDebug('\nAverage Build Times:');
       final buildTimes = report['average_build_times'] as Map;

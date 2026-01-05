@@ -1,21 +1,53 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
+import '../theme/gradient_extensions.dart';
 
 /// Centralized helper for creating consistent InputDecoration across the app
 class InputDecorationHelper {
   InputDecorationHelper._();
 
+  /// Get dropdown menu color based on theme
+  /// Uses inputFillColor from gradients for consistency with input fields
+  static Color getDropdownColor(BuildContext context) {
+    return context.gradients.inputFillColor;
+  }
+
+  /// Get dropdown border radius
+  static BorderRadius get dropdownBorderRadius => BorderRadius.circular(12);
+
+  /// Build dropdown menu decoration
+  static BoxDecoration getDropdownDecoration(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return BoxDecoration(
+      color: getDropdownColor(context),
+      borderRadius: dropdownBorderRadius,
+      border: Border.all(
+        color: isDark
+            ? AppColors.sectionDividerDark
+            : AppColors.sectionDividerLight,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withAlpha((0.15 * 255).toInt()),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
   /// Creates modern input decoration for form fields
-  static InputDecoration buildDecoration(
-    BuildContext context, {
+  /// Uses design system colors: inputFillColor for background, sectionBorder for borders
+  static InputDecoration buildDecoration({
     required String labelText,
     String? hintText,
     String? helperText,
     Widget? prefixIcon,
     Widget? suffixIcon,
     bool isMobile = false,
+    required BuildContext context,
   }) {
     final theme = Theme.of(context);
-
     return InputDecoration(
       labelText: labelText,
       hintText: hintText,
@@ -24,35 +56,18 @@ class InputDecorationHelper {
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: context.gradients.sectionBorder),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-        ),
+        borderSide: BorderSide(color: context.gradients.sectionBorder),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: theme.colorScheme.primary,
-          width: 2,
-        ),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: theme.colorScheme.error,
-        ),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: theme.colorScheme.error,
-          width: 2,
-        ),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
       ),
       filled: true,
-      fillColor: theme.cardColor,
+      fillColor: context.gradients.inputFillColor,
       contentPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 16,
         vertical: isMobile ? 12 : 16,
@@ -61,17 +76,17 @@ class InputDecorationHelper {
   }
 
   /// Creates filter-specific input decoration (simplified variant)
-  static InputDecoration buildFilterDecoration(
-    BuildContext context, {
+  static InputDecoration buildFilterDecoration({
     required String labelText,
     Widget? prefixIcon,
     bool isMobile = false,
+    required BuildContext context,
   }) {
     return buildDecoration(
-      context,
       labelText: labelText,
       prefixIcon: prefixIcon,
       isMobile: isMobile,
+      context: context,
     );
   }
 }

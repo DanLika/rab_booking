@@ -252,6 +252,7 @@ SecurityEvent _$SecurityEventFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$SecurityEvent {
   SecurityEventType get type => throw _privateConstructorUsedError;
+  @TimestampConverter()
   DateTime get timestamp => throw _privateConstructorUsedError;
   String? get deviceId => throw _privateConstructorUsedError;
   String? get ipAddress => throw _privateConstructorUsedError;
@@ -277,7 +278,7 @@ abstract class $SecurityEventCopyWith<$Res> {
   @useResult
   $Res call({
     SecurityEventType type,
-    DateTime timestamp,
+    @TimestampConverter() DateTime timestamp,
     String? deviceId,
     String? ipAddress,
     String? location,
@@ -350,7 +351,7 @@ abstract class _$$SecurityEventImplCopyWith<$Res>
   @useResult
   $Res call({
     SecurityEventType type,
-    DateTime timestamp,
+    @TimestampConverter() DateTime timestamp,
     String? deviceId,
     String? ipAddress,
     String? location,
@@ -415,7 +416,7 @@ class __$$SecurityEventImplCopyWithImpl<$Res>
 class _$SecurityEventImpl implements _SecurityEvent {
   const _$SecurityEventImpl({
     required this.type,
-    required this.timestamp,
+    @TimestampConverter() required this.timestamp,
     this.deviceId,
     this.ipAddress,
     this.location,
@@ -428,6 +429,7 @@ class _$SecurityEventImpl implements _SecurityEvent {
   @override
   final SecurityEventType type;
   @override
+  @TimestampConverter()
   final DateTime timestamp;
   @override
   final String? deviceId;
@@ -496,7 +498,7 @@ class _$SecurityEventImpl implements _SecurityEvent {
 abstract class _SecurityEvent implements SecurityEvent {
   const factory _SecurityEvent({
     required final SecurityEventType type,
-    required final DateTime timestamp,
+    @TimestampConverter() required final DateTime timestamp,
     final String? deviceId,
     final String? ipAddress,
     final String? location,
@@ -509,6 +511,7 @@ abstract class _SecurityEvent implements SecurityEvent {
   @override
   SecurityEventType get type;
   @override
+  @TimestampConverter()
   DateTime get timestamp;
   @override
   String? get deviceId;

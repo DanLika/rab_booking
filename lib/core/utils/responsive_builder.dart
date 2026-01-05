@@ -5,19 +5,24 @@ import '../constants/app_dimensions.dart';
 /// Provides declarative API for building responsive UIs
 class ResponsiveBuilder extends StatelessWidget {
   /// Widget to display on mobile devices
-  final Widget Function(BuildContext context, BoxConstraints constraints)? mobile;
+  final Widget Function(BuildContext context, BoxConstraints constraints)?
+  mobile;
 
   /// Widget to display on tablet devices
-  final Widget Function(BuildContext context, BoxConstraints constraints)? tablet;
+  final Widget Function(BuildContext context, BoxConstraints constraints)?
+  tablet;
 
   /// Widget to display on desktop devices
-  final Widget Function(BuildContext context, BoxConstraints constraints)? desktop;
+  final Widget Function(BuildContext context, BoxConstraints constraints)?
+  desktop;
 
   /// Widget to display on large desktop devices
-  final Widget Function(BuildContext context, BoxConstraints constraints)? largeDesktop;
+  final Widget Function(BuildContext context, BoxConstraints constraints)?
+  largeDesktop;
 
   /// Default widget if specific breakpoint not provided
-  final Widget Function(BuildContext context, BoxConstraints constraints)? defaultWidget;
+  final Widget Function(BuildContext context, BoxConstraints constraints)?
+  defaultWidget;
 
   const ResponsiveBuilder({
     super.key,
@@ -43,14 +48,19 @@ class ResponsiveBuilder extends StatelessWidget {
 
         // Desktop (>= 1024px)
         if (width >= AppDimensions.tablet) {
-          return (desktop ?? tablet ?? mobile ?? defaultWidget)
-                  ?.call(context, constraints) ??
+          return (desktop ?? tablet ?? mobile ?? defaultWidget)?.call(
+                context,
+                constraints,
+              ) ??
               const SizedBox.shrink();
         }
 
         // Tablet (>= 600px)
         if (width >= AppDimensions.mobile) {
-          return (tablet ?? mobile ?? defaultWidget)?.call(context, constraints) ??
+          return (tablet ?? mobile ?? defaultWidget)?.call(
+                context,
+                constraints,
+              ) ??
               const SizedBox.shrink();
         }
 
@@ -121,9 +131,11 @@ class OrientationBuilder extends StatelessWidget {
         final isLandscape = constraints.maxWidth > constraints.maxHeight;
 
         if (isLandscape) {
-          return (landscape ?? defaultWidget)?.call(context) ?? const SizedBox.shrink();
+          return (landscape ?? defaultWidget)?.call(context) ??
+              const SizedBox.shrink();
         } else {
-          return (portrait ?? defaultWidget)?.call(context) ?? const SizedBox.shrink();
+          return (portrait ?? defaultWidget)?.call(context) ??
+              const SizedBox.shrink();
         }
       },
     );
@@ -131,12 +143,7 @@ class OrientationBuilder extends StatelessWidget {
 }
 
 /// Screen type enum
-enum ScreenType {
-  mobile,
-  tablet,
-  desktop,
-  largeDesktop,
-}
+enum ScreenType { mobile, tablet, desktop, largeDesktop }
 
 /// Get current screen type from width
 ScreenType getScreenType(double width) {
@@ -266,29 +273,16 @@ class ResponsiveWrap extends StatelessWidget {
       builder: (context, constraints) {
         final screenType = getScreenType(constraints.maxWidth);
 
-        // Responsive spacing based on screen size
-        double effectiveSpacing;
-        double effectiveRunSpacing;
-
-        switch (screenType) {
-          case ScreenType.mobile:
-            effectiveSpacing = spacing ?? AppDimensions.spaceS;
-            effectiveRunSpacing = runSpacing ?? AppDimensions.spaceS;
-            break;
-          case ScreenType.tablet:
-            effectiveSpacing = spacing ?? AppDimensions.spaceM;
-            effectiveRunSpacing = runSpacing ?? AppDimensions.spaceM;
-            break;
-          case ScreenType.desktop:
-          case ScreenType.largeDesktop:
-            effectiveSpacing = spacing ?? AppDimensions.spaceL;
-            effectiveRunSpacing = runSpacing ?? AppDimensions.spaceL;
-            break;
-        }
+        // Responsive spacing based on screen size (using switch expression)
+        final defaultSpacing = switch (screenType) {
+          ScreenType.mobile => AppDimensions.spaceS,
+          ScreenType.tablet => AppDimensions.spaceM,
+          ScreenType.desktop || ScreenType.largeDesktop => AppDimensions.spaceL,
+        };
 
         return Wrap(
-          spacing: effectiveSpacing,
-          runSpacing: effectiveRunSpacing,
+          spacing: spacing ?? defaultSpacing,
+          runSpacing: runSpacing ?? defaultSpacing,
           alignment: alignment,
           runAlignment: runAlignment,
           children: children,
@@ -329,10 +323,7 @@ class MaxWidthContainer extends StatelessWidget {
           );
         }
 
-        return Container(
-          padding: padding,
-          child: child,
-        );
+        return Container(padding: padding, child: child);
       },
     );
   }

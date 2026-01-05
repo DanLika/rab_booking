@@ -1,11 +1,14 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../../../core/utils/responsive_spacing_helper.dart';
+import '../../../core/constants/breakpoints.dart';
 
 /// Responsive calendar layout helper
 /// Determines which layout to use based on screen size and orientation
 class ResponsiveCalendarLayout {
-  /// Breakpoints (same as CalendarGridCalculator)
-  static const double mobileBreakpoint = 600;
-  static const double tabletBreakpoint = 900;
+  /// Breakpoints - use centralized constants from Breakpoints class
+  static const double mobileBreakpoint = Breakpoints.calendarMobile;
+  static const double tabletBreakpoint = Breakpoints.calendarTablet;
 
   /// Get responsive layout mode based on context
   static CalendarLayoutMode getLayoutMode(BuildContext context) {
@@ -30,11 +33,8 @@ class ResponsiveCalendarLayout {
   }
 
   /// Check if device is web
-  static bool isWeb(BuildContext context) {
-    return Theme.of(context).platform == TargetPlatform.macOS ||
-        Theme.of(context).platform == TargetPlatform.linux ||
-        Theme.of(context).platform == TargetPlatform.windows;
-  }
+  /// Uses kIsWeb constant for accurate web detection
+  static bool isWeb(BuildContext context) => kIsWeb;
 
   /// Get recommended booking list view mode (card or table)
   static BookingListViewMode getRecommendedBookingListView(
@@ -144,7 +144,8 @@ class ResponsiveCalendarLayout {
   /// Get maximum dialog height
   static double getMaxDialogHeight(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    return screenHeight * 0.85; // 85% of screen height
+    return screenHeight *
+        ResponsiveSpacingHelper.getDialogMaxHeightPercent(context);
   }
 
   /// Check if booking details should use full-screen dialog
@@ -185,18 +186,10 @@ class ResponsiveCalendarLayout {
 }
 
 /// Calendar layout modes
-enum CalendarLayoutMode {
-  mobilePortrait,
-  mobileLandscape,
-  tablet,
-  desktop,
-}
+enum CalendarLayoutMode { mobilePortrait, mobileLandscape, tablet, desktop }
 
 /// Booking list view modes
-enum BookingListViewMode {
-  card,
-  table,
-}
+enum BookingListViewMode { card, table }
 
 extension CalendarLayoutModeX on CalendarLayoutMode {
   bool get isMobile =>

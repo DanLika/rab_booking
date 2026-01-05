@@ -17,8 +17,14 @@ UserProfileRepository userProfileRepository(Ref ref) {
 // ========== USER PROFILE PROVIDERS ==========
 
 /// Watch user profile data
+///
+/// ## AutoDispose Decision: TRUE (default @riverpod behavior)
+/// AutoDispose is correct because:
+/// - Profile data should refresh on re-entry
+/// - Cleans up Firestore listener when not in use
+/// - Memory freed when navigating away from profile screens
 @riverpod
-Stream<UserProfile?> userProfile(Ref ref) {
+Stream<UserProfile?> watchUserProfile(Ref ref) {
   final userId = FirebaseAuth.instance.currentUser?.uid;
   if (userId == null) {
     return Stream.value(null);
@@ -76,42 +82,33 @@ class UserProfileNotifier extends _$UserProfileNotifier {
 
   /// Update user profile
   Future<void> updateProfile(UserProfile profile) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      final repository = ref.read(userProfileRepositoryProvider);
-      await repository.updateUserProfile(profile);
-    });
-
-    if (state.hasError) {
-      throw state.error!;
-    }
+    final repository = ref.read(userProfileRepositoryProvider);
+    await repository.updateUserProfile(profile);
   }
 
   /// Update company details
   Future<void> updateCompany(String userId, CompanyDetails company) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      final repository = ref.read(userProfileRepositoryProvider);
-      await repository.updateCompanyDetails(userId, company);
-    });
+    final repository = ref.read(userProfileRepositoryProvider);
+    await repository.updateCompanyDetails(userId, company);
+  }
 
-    if (state.hasError) {
-      throw state.error!;
-    }
+  /// Update both profile and company in one call
+  /// Note: Simplified to avoid AsyncValue.guard() race condition that
+  /// caused "Future already completed" errors
+  Future<void> updateProfileAndCompany(
+    UserProfile profile,
+    CompanyDetails company,
+  ) async {
+    final repository = ref.read(userProfileRepositoryProvider);
+    await repository.updateUserProfile(profile);
+    await repository.updateCompanyDetails(profile.userId, company);
   }
 
   /// Update notification preferences
   Future<void> updateNotificationPreferences(
     NotificationPreferences preferences,
   ) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      final repository = ref.read(userProfileRepositoryProvider);
-      await repository.updateNotificationPreferences(preferences);
-    });
-
-    if (state.hasError) {
-      throw state.error!;
-    }
+    final repository = ref.read(userProfileRepositoryProvider);
+    await repository.updateNotificationPreferences(preferences);
   }
 }

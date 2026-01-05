@@ -15,10 +15,6 @@ class GuestDetails with _$GuestDetails {
   factory GuestDetails.fromJson(Map<String, dynamic> json) =>
       _$GuestDetailsFromJson(json);
 
-  factory GuestDetails.empty() => const GuestDetails(
-        name: '',
-        email: '',
-        phone: '',
-        message: '',
-      );
+  factory GuestDetails.empty() =>
+      const GuestDetails(name: '', email: '', phone: '');
 }

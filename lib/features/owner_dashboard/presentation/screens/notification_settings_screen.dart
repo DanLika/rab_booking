@@ -1,10 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../shared/models/notification_preferences_model.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../providers/user_profile_provider.dart';
+import '../../../../shared/widgets/common_app_bar.dart';
 
 /// Notification Settings Screen
 class NotificationSettingsScreen extends ConsumerStatefulWidget {
@@ -35,18 +39,39 @@ class _NotificationSettingsScreenState
           .updateNotificationPreferences(updated);
 
       if (mounted) {
+        // Invalidate provider to force refresh from Firestore
+        ref.invalidate(notificationPreferencesProvider);
+
         setState(() {
           _currentPreferences = updated;
           _isSaving = false;
         });
+
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          value
+              ? l10n.notificationSettingsEnabled
+              : l10n.notificationSettingsDisabled,
+        );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      LoggingService.log(
+        'Error toggling master switch: $e',
+        tag: 'NotificationSettings',
+      );
+      await LoggingService.logError(
+        'Failed to toggle master switch',
+        e,
+        stackTrace,
+      );
       if (mounted) {
         setState(() => _isSaving = false);
+        final l10n = AppLocalizations.of(context);
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: 'Greška pri ažuriranju postavki',
+          userMessage: l10n.notificationSettingsUpdateError,
         );
       }
     }
@@ -64,49 +89,62 @@ class _NotificationSettingsScreenState
     setState(() => _isSaving = true);
 
     try {
-      NotificationCategories updatedCategories;
+      final updatedCategories = switch (category) {
+        // 'bookings' removed - owner always receives booking emails
+        'payments' => _currentPreferences!.categories.copyWith(
+          payments: channels,
+        ),
+        'calendar' => _currentPreferences!.categories.copyWith(
+          calendar: channels,
+        ),
+        'marketing' => _currentPreferences!.categories.copyWith(
+          marketing: channels,
+        ),
+        _ => null,
+      };
 
-      switch (category) {
-        case 'bookings':
-          updatedCategories =
-              _currentPreferences!.categories.copyWith(bookings: channels);
-          break;
-        case 'payments':
-          updatedCategories =
-              _currentPreferences!.categories.copyWith(payments: channels);
-          break;
-        case 'calendar':
-          updatedCategories =
-              _currentPreferences!.categories.copyWith(calendar: channels);
-          break;
-        case 'marketing':
-          updatedCategories =
-              _currentPreferences!.categories.copyWith(marketing: channels);
-          break;
-        default:
-          return;
-      }
+      if (updatedCategories == null) return;
 
-      final updated =
-          _currentPreferences!.copyWith(categories: updatedCategories);
+      final updated = _currentPreferences!.copyWith(
+        categories: updatedCategories,
+      );
 
       await ref
           .read(userProfileNotifierProvider.notifier)
           .updateNotificationPreferences(updated);
 
       if (mounted) {
+        // Invalidate provider to force refresh from Firestore
+        ref.invalidate(notificationPreferencesProvider);
+
         setState(() {
           _currentPreferences = updated;
           _isSaving = false;
         });
+
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.notificationSettingsUpdated(category),
+        );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      LoggingService.log(
+        'Error updating category $category: $e',
+        tag: 'NotificationSettings',
+      );
+      await LoggingService.logError(
+        'Failed to update notification category',
+        e,
+        stackTrace,
+      );
       if (mounted) {
         setState(() => _isSaving = false);
+        final l10n = AppLocalizations.of(context);
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: 'Greška pri ažuriranju postavki',
+          userMessage: l10n.notificationSettingsUpdateError,
         );
       }
     }
@@ -121,290 +159,289 @@ class _NotificationSettingsScreenState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notification Settings'),
+      appBar: CommonAppBar(
+        title: l10n.notificationSettingsTitle,
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: preferencesAsync.when(
-        data: (preferences) {
-          // Initialize with default preferences if none exist
-          _currentPreferences ??= preferences ??
-              NotificationPreferences(
-                userId: FirebaseAuth.instance.currentUser?.uid ?? '',
-              );
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: preferencesAsync.when(
+          data: (preferences) {
+            // Initialize with default preferences if none exist
+            _currentPreferences ??=
+                preferences ??
+                NotificationPreferences(
+                  userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                );
 
-          final masterEnabled = _currentPreferences!.masterEnabled;
-          final categories = _currentPreferences!.categories;
+            final masterEnabled = _currentPreferences!.masterEnabled;
+            final categories = _currentPreferences!.categories;
 
-          return ListView(
-            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-            children: [
-              const SizedBox(height: 16),
-              // Premium Master Switch
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: masterEnabled
-                        ? [
-                            const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt()),
-                            const Color(0xFF4A90E2).withAlpha((0.05 * 255).toInt()),
-                          ]
-                        : [
-                            Colors.grey.withAlpha((0.08 * 255).toInt()),
-                            Colors.grey.withAlpha((0.03 * 255).toInt()),
-                          ],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: masterEnabled
-                        ? const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt())
-                        : const Color(0xFFE2E8F0),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: masterEnabled
-                          ? const Color(0xFF6B4CE6).withAlpha((0.1 * 255).toInt())
-                          : Colors.black.withAlpha((0.04 * 255).toInt()),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+            return ListView(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              children: [
+                const SizedBox(height: 16),
+                // Master Switch
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: context.gradients.cardBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: context.gradients.sectionBorder,
+                      width: 1.5,
                     ),
-                  ],
+                    boxShadow: isDark
+                        ? AppShadows.elevation2Dark
+                        : AppShadows.elevation2,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        // Icon
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: masterEnabled
+                                ? theme.colorScheme.primary.withAlpha(
+                                    (0.12 * 255).toInt(),
+                                  )
+                                : theme.colorScheme.surfaceContainerHighest
+                                      .withAlpha((0.3 * 255).toInt()),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            masterEnabled
+                                ? Icons.notifications_active_rounded
+                                : Icons.notifications_off_rounded,
+                            color: masterEnabled
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface.withAlpha(
+                                    (0.38 * 255).toInt(),
+                                  ),
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Text
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.notificationSettingsEnableAll,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                l10n.notificationSettingsMasterSwitch,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Switch
+                        Switch(
+                          value: masterEnabled,
+                          onChanged: _isSaving ? null : _toggleMasterSwitch,
+                          activeThumbColor: theme.colorScheme.primary,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: SwitchListTile(
-                  value: masterEnabled,
-                  onChanged: _isSaving ? null : _toggleMasterSwitch,
-                  title: Text(
-                    'Enable All Notifications',
+
+                // Warning message when disabled
+                if (!masterEnabled)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withAlpha((0.3 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withAlpha(
+                          (0.3 * 255).toInt(),
+                        ),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.error.withAlpha(
+                              (0.12 * 255).toInt(),
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.info_outline,
+                            color: theme.colorScheme.error,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            l10n.notificationSettingsDisabledWarning,
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 12),
+
+                // Categories Header - aligned with card content (16px padding)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, bottom: 12),
+                  child: Text(
+                    l10n.notificationSettingsCategories,
                     style: TextStyle(
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
                       color: theme.colorScheme.onSurface,
                     ),
                   ),
-                  subtitle: Text(
-                    'Master switch for all notification types',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                  secondary: Container(
-                    padding: const EdgeInsets.all(10),
+                ),
+
+                // Bookings Category - REMOVED
+                // Owner always receives booking emails (pending and instant)
+                // This setting was never functional - emails are sent via
+                // forceIfCritical=true in atomicBooking.ts
+
+                // Payments Category
+                _buildCategoryCard(
+                  context: context,
+                  theme: theme,
+                  isDark: isDark,
+                  title: l10n.notificationSettingsPayments,
+                  description: l10n.notificationSettingsPaymentsDesc,
+                  icon: Icons.payment,
+                  iconColor: theme.colorScheme.primary,
+                  channels: categories.payments,
+                  enabled: masterEnabled,
+                  onChanged: (channels) =>
+                      _updateCategory('payments', channels),
+                ),
+
+                // Calendar Category - hidden until implemented
+                // Currently no calendar-related emails are sent
+                // _buildCategoryCard(
+                //   context: context,
+                //   theme: theme,
+                //   isDark: isDark,
+                //   title: l10n.notificationSettingsCalendar,
+                //   description: l10n.notificationSettingsCalendarDesc,
+                //   icon: Icons.calendar_today,
+                //   iconColor: theme.colorScheme.tertiary,
+                //   channels: categories.calendar,
+                //   enabled: masterEnabled,
+                //   onChanged: (channels) =>
+                //       _updateCategory('calendar', channels),
+                // ),
+
+                // Marketing Category - hidden until implemented
+                // Currently no marketing emails are sent
+                // _buildCategoryCard(
+                //   context: context,
+                //   theme: theme,
+                //   isDark: isDark,
+                //   title: l10n.notificationSettingsMarketing,
+                //   description: l10n.notificationSettingsMarketingDesc,
+                //   icon: Icons.campaign,
+                //   iconColor: theme.colorScheme.primary,
+                //   channels: categories.marketing,
+                //   enabled: masterEnabled,
+                //   onChanged: (channels) =>
+                //       _updateCategory('marketing', channels),
+                // ),
+                const SizedBox(height: 24),
+              ],
+            );
+          },
+          loading: () => Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.colorScheme.primary,
+              ),
+            ),
+          ),
+          error: (error, stack) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: masterEnabled
-                            ? [
-                                const Color(0xFF6B4CE6).withAlpha((0.15 * 255).toInt()),
-                                const Color(0xFF4A90E2).withAlpha((0.08 * 255).toInt()),
-                              ]
-                            : [
-                                Colors.grey.withAlpha((0.1 * 255).toInt()),
-                                Colors.grey.withAlpha((0.05 * 255).toInt()),
-                              ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.error.withAlpha(
+                            (0.1 * 255).toInt(),
+                          ),
+                          theme.colorScheme.error.withAlpha(
+                            (0.05 * 255).toInt(),
+                          ),
+                        ],
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      masterEnabled
-                          ? Icons.notifications_active_rounded
-                          : Icons.notifications_off_rounded,
-                      color: masterEnabled ? const Color(0xFF6B4CE6) : const Color(0xFF9CA3AF),
-                      size: 26,
+                      Icons.error_outline_rounded,
+                      size: 50,
+                      color: theme.colorScheme.error,
                     ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
-              ),
-
-              // Premium warning message when disabled
-              if (!masterEnabled)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFF59E0B).withAlpha((0.1 * 255).toInt()),
-                        const Color(0xFFEAB308).withAlpha((0.05 * 255).toInt()),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFF59E0B).withAlpha((0.3 * 255).toInt()),
-                      width: 1,
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.notificationSettingsLoadError,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline_rounded, color: Color(0xFFF59E0B), size: 24),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Notifications are disabled. Enable the master switch to receive notifications.',
-                          style: TextStyle(
-                            color: Color(0xFFF59E0B),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 16),
-
-              // Premium Categories Header
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 24,
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF6B4CE6), Color(0xFF4A90E2)],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        borderRadius: BorderRadius.all(Radius.circular(2)),
-                      ),
+                  const SizedBox(height: 12),
+                  Text(
+                    error.toString(),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 14,
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Notification Categories',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Bookings Category
-              _buildCategoryCard(
-                context: context,
-                theme: theme,
-                isDark: isDark,
-                title: 'Bookings',
-                description:
-                    'New bookings, cancellations, and booking updates',
-                icon: Icons.event_note,
-                iconColor: Colors.blue,
-                channels: categories.bookings,
-                enabled: masterEnabled,
-                onChanged: (channels) =>
-                    _updateCategory('bookings', channels),
-              ),
-
-              // Payments Category
-              _buildCategoryCard(
-                context: context,
-                theme: theme,
-                isDark: isDark,
-                title: 'Payments',
-                description: 'Payment confirmations and transaction updates',
-                icon: Icons.payment,
-                iconColor: Colors.green,
-                channels: categories.payments,
-                enabled: masterEnabled,
-                onChanged: (channels) =>
-                    _updateCategory('payments', channels),
-              ),
-
-              // Calendar Category
-              _buildCategoryCard(
-                context: context,
-                theme: theme,
-                isDark: isDark,
-                title: 'Calendar',
-                description:
-                    'Availability changes, blocked dates, and price updates',
-                icon: Icons.calendar_today,
-                iconColor: Colors.orange,
-                channels: categories.calendar,
-                enabled: masterEnabled,
-                onChanged: (channels) =>
-                    _updateCategory('calendar', channels),
-              ),
-
-              // Marketing Category
-              _buildCategoryCard(
-                context: context,
-                theme: theme,
-                isDark: isDark,
-                title: 'Marketing',
-                description: 'Promotional offers, tips, and platform news',
-                icon: Icons.campaign,
-                iconColor: Colors.purple,
-                channels: categories.marketing,
-                enabled: masterEnabled,
-                onChanged: (channels) =>
-                    _updateCategory('marketing', channels),
-              ),
-
-              const SizedBox(height: 24),
-            ],
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6B4CE6)),
-          ),
-        ),
-        error: (error, stack) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        const Color(0xFFEF4444).withAlpha((0.1 * 255).toInt()),
-                        const Color(0xFFDC2626).withAlpha((0.05 * 255).toInt()),
-                      ],
-                    ),
-                    shape: BoxShape.circle,
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  child: const Icon(
-                    Icons.error_outline_rounded,
-                    size: 50,
-                    color: Color(0xFFEF4444),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Error loading preferences',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  error.toString(),
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -427,43 +464,22 @@ class _NotificationSettingsScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: context.gradients.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha((0.04 * 255).toInt()),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: context.gradients.sectionBorder),
+        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          iconColor: Theme.of(context).colorScheme.primary,
+          collapsedIconColor: Theme.of(context).colorScheme.primary,
+          tilePadding: const EdgeInsets.all(16),
           leading: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  iconColor.withAlpha((0.15 * 255).toInt()),
-                  iconColor.withAlpha((0.08 * 255).toInt()),
-                ],
-              ),
+              color: iconColor.withAlpha((0.12 * 255).toInt()),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: iconColor.withAlpha((0.2 * 255).toInt()),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Icon(icon, color: iconColor, size: 24),
           ),
@@ -481,67 +497,59 @@ class _NotificationSettingsScreenState
               description,
               style: TextStyle(
                 fontSize: 13,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           children: [
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+            Divider(
               height: 1,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.transparent,
-                    const Color(0xFFE2E8F0),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
+              thickness: 1,
+              color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
+              indent: 16,
+              endIndent: 16,
             ),
             const SizedBox(height: 8),
-            _buildChannelOption(
-              context: context,
-              theme: theme,
-              value: enabled && channels.email,
-              onChanged: enabled && !_isSaving
-                  ? (value) => onChanged(channels.copyWith(email: value))
-                  : null,
-              title: 'Email',
-              subtitle: 'Receive notifications via email',
-              icon: Icons.email_outlined,
-              iconColor: const Color(0xFF6B4CE6),
-              enabled: enabled,
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return _buildChannelOption(
+                  context: context,
+                  theme: theme,
+                  value: enabled && channels.email,
+                  onChanged: enabled && !_isSaving
+                      ? (value) => onChanged(channels.copyWith(email: value))
+                      : null,
+                  title: l10n.notificationSettingsEmailChannel,
+                  subtitle: l10n.notificationSettingsEmailChannelDesc,
+                  icon: Icons.email_outlined,
+                  iconColor: theme.colorScheme.primary,
+                  enabled: enabled,
+                  isLast:
+                      true, // Push notifications hidden until mobile app release
+                );
+              },
             ),
-            _buildChannelOption(
-              context: context,
-              theme: theme,
-              value: enabled && channels.push,
-              onChanged: enabled && !_isSaving
-                  ? (value) => onChanged(channels.copyWith(push: value))
-                  : null,
-              title: 'Push Notifications',
-              subtitle: 'Receive push notifications on your device',
-              icon: Icons.notifications_outlined,
-              iconColor: const Color(0xFFF59E0B),
-              enabled: enabled,
-            ),
-            _buildChannelOption(
-              context: context,
-              theme: theme,
-              value: enabled && channels.sms,
-              onChanged: enabled && !_isSaving
-                  ? (value) => onChanged(channels.copyWith(sms: value))
-                  : null,
-              title: 'SMS',
-              subtitle: 'Receive notifications via SMS',
-              icon: Icons.sms_outlined,
-              iconColor: const Color(0xFF10B981),
-              enabled: enabled,
-              isLast: true,
-            ),
+            // Push notifications - hidden until mobile app release (FCM implemented but not exposed)
+            // Builder(
+            //   builder: (context) {
+            //     final l10n = AppLocalizations.of(context);
+            //     return _buildChannelOption(
+            //       context: context,
+            //       theme: theme,
+            //       value: enabled && channels.push,
+            //       onChanged: enabled && !_isSaving
+            //           ? (value) => onChanged(channels.copyWith(push: value))
+            //           : null,
+            //       title: l10n.notificationSettingsPushChannel,
+            //       subtitle: l10n.notificationSettingsPushChannelDesc,
+            //       icon: Icons.notifications_outlined,
+            //       iconColor: theme.colorScheme.tertiary,
+            //       enabled: enabled,
+            //       isLast: true,
+            //     );
+            //   },
+            // ),
           ],
         ),
       ),
@@ -562,50 +570,82 @@ class _NotificationSettingsScreenState
   }) {
     return Column(
       children: [
-        SwitchListTile(
-          value: value,
-          onChanged: onChanged,
-          title: Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: enabled
-                  ? theme.colorScheme.onSurface
-                  : theme.colorScheme.onSurface.withOpacity(0.4),
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: enabled
+                      ? iconColor.withAlpha((0.12 * 255).toInt())
+                      : theme.colorScheme.surfaceContainerHighest.withAlpha(
+                          (0.3 * 255).toInt(),
+                        ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: enabled
+                      ? iconColor
+                      : theme.colorScheme.onSurface.withAlpha(
+                          (0.38 * 255).toInt(),
+                        ),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 14),
+              // Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: enabled
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.4,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: enabled
+                            ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.3,
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Switch
+              Switch(
+                value: value,
+                onChanged: onChanged,
+                activeThumbColor: iconColor,
+              ),
+            ],
           ),
-          subtitle: Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 12,
-              color: enabled
-                  ? theme.colorScheme.onSurface.withOpacity(0.6)
-                  : theme.colorScheme.onSurface.withOpacity(0.3),
-            ),
-          ),
-          secondary: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: enabled
-                  ? iconColor.withAlpha((0.1 * 255).toInt())
-                  : const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              icon,
-              color: enabled ? iconColor : const Color(0xFF9CA3AF),
-              size: 22,
-            ),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
         ),
         if (!isLast)
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 72),
+          Divider(
             height: 1,
-            color: const Color(0xFFF3F4F6),
+            thickness: 1,
+            color: theme.colorScheme.outline.withAlpha((0.08 * 255).toInt()),
+            indent: 62,
+            endIndent: 16,
           ),
+        if (isLast) const SizedBox(height: 8),
       ],
     );
   }

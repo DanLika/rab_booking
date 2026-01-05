@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 
 /// Premium input field with glow effect for auth screens
 class PremiumInputField extends StatefulWidget {
@@ -10,6 +11,7 @@ class PremiumInputField extends StatefulWidget {
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final int? maxLines;
+  final FocusNode? focusNode;
 
   const PremiumInputField({
     super.key,
@@ -21,6 +23,7 @@ class PremiumInputField extends StatefulWidget {
     this.keyboardType,
     this.validator,
     this.maxLines = 1,
+    this.focusNode,
   });
 
   @override
@@ -28,93 +31,84 @@ class PremiumInputField extends StatefulWidget {
 }
 
 class _PremiumInputFieldState extends State<PremiumInputField> {
+  static const _borderRadius = BorderRadius.all(Radius.circular(12));
   bool _isFocused = false;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final gradients = context.gradients;
+    final primaryColor = theme.colorScheme.primary;
+    final inactiveColor = theme.colorScheme.onSurfaceVariant;
+    final defaultBorder = BorderSide(
+      color: gradients.sectionBorder.withAlpha(128),
+    );
+
     return Focus(
-      onFocusChange: (hasFocus) {
-        setState(() => _isFocused = hasFocus);
-      },
+      onFocusChange: (hasFocus) => setState(() => _isFocused = hasFocus),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: _borderRadius,
           boxShadow: _isFocused
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF6B4CE6).withAlpha((0.3 * 255).toInt()),
-                    blurRadius: 20,
-                    spreadRadius: 0,
-                  ),
-                ]
-              : [],
+              ? [BoxShadow(color: primaryColor.withAlpha(77), blurRadius: 20)]
+              : const [],
         ),
         child: TextFormField(
           controller: widget.controller,
+          focusNode: widget.focusNode,
           obscureText: widget.obscureText,
           keyboardType: widget.keyboardType,
           validator: widget.validator,
           maxLines: widget.maxLines,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
+            color: theme.colorScheme.onSurface,
           ),
           decoration: InputDecoration(
             labelText: widget.labelText,
             labelStyle: TextStyle(
-              color: _isFocused ? const Color(0xFF6B4CE6) : Colors.grey.shade600,
+              color: _isFocused ? primaryColor : inactiveColor,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,
-                    color: _isFocused ? const Color(0xFF6B4CE6) : Colors.grey.shade500,
+                    color: _isFocused ? primaryColor : inactiveColor,
                     size: 20,
                   )
                 : null,
             suffixIcon: widget.suffixIcon,
             filled: true,
-            fillColor: Colors.white.withAlpha((0.7 * 255).toInt()),
+            fillColor: gradients.inputFillColor,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Colors.grey.shade300,
-                width: 1.5,
-              ),
+              borderRadius: _borderRadius,
+              borderSide: defaultBorder,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Colors.grey.shade300,
-                width: 1.5,
-              ),
+              borderRadius: _borderRadius,
+              borderSide: defaultBorder,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF6B4CE6),
-                width: 2,
-              ),
+              borderRadius: _borderRadius,
+              borderSide: BorderSide(color: primaryColor, width: 2),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: _borderRadius,
               borderSide: BorderSide(
-                color: Colors.red.shade400,
+                color: theme.colorScheme.error,
                 width: 1.5,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Colors.red.shade400,
-                width: 2,
-              ),
+              borderRadius: _borderRadius,
+              borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
             ),
           ),
         ),

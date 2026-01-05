@@ -1,609 +1,274 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/constants/app_dimensions.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
-/// Hover-animated card that lifts and intensifies shadow
-/// Perfect for property cards, booking cards, etc.
+import '../../../core/design_tokens/animation_tokens.dart';
+
+/// Animated card with hover effects (scale + elevation) for desktop
+///
+/// Usage:
+/// ```dart
+/// HoverScaleCard(
+///   onTap: () => handleTap(),
+///   child: MyCardContent(),
+/// )
+/// ```
 class HoverScaleCard extends StatefulWidget {
+  /// Card content
   final Widget child;
+
+  /// Tap callback
   final VoidCallback? onTap;
+
+  /// Scale factor on hover (default: 1.02)
+  final double hoverScale;
+
+  /// Base elevation (default: 1)
+  final double baseElevation;
+
+  /// Hover elevation (default: 4)
+  final double hoverElevation;
+
+  /// Card border radius (default: 12)
   final double borderRadius;
+
+  /// Card background color
   final Color? backgroundColor;
-  final double scaleAmount;
-  final double elevationAmount;
-  final Duration animationDuration;
-  final bool enableHover;
+
+  /// Card border color
+  final Color? borderColor;
+
+  /// Card padding
+  final EdgeInsetsGeometry? padding;
+
+  /// Animation duration (default: fast - 200ms)
+  final Duration duration;
 
   const HoverScaleCard({
     super.key,
     required this.child,
     this.onTap,
-    this.borderRadius = AppDimensions.radiusL,
+    this.hoverScale = 1.02,
+    this.baseElevation = 1,
+    this.hoverElevation = 4,
+    this.borderRadius = 12,
     this.backgroundColor,
-    this.scaleAmount = 1.02,
-    this.elevationAmount = 8,
-    this.animationDuration = const Duration(milliseconds: 200),
-    this.enableHover = true,
+    this.borderColor,
+    this.padding,
+    this.duration = AnimationTokens.fast,
   });
 
   @override
   State<HoverScaleCard> createState() => _HoverScaleCardState();
 }
 
-class _HoverScaleCardState extends State<HoverScaleCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _elevationAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.animationDuration,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: widget.scaleAmount,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
-
-    _elevationAnimation = Tween<double>(
-      begin: 2.0,
-      end: widget.elevationAmount,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handleHoverEnter(PointerEvent event) {
-    if (widget.enableHover) {
-      _controller.forward();
-    }
-  }
-
-  void _handleHoverExit(PointerEvent event) {
-    if (widget.enableHover) {
-      _controller.reverse();
-    }
-  }
+class _HoverScaleCardState extends State<HoverScaleCard> {
+  bool _isHovered = false;
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final effectiveBackgroundColor =
+        widget.backgroundColor ?? theme.colorScheme.surface;
+
     return MouseRegion(
-      onEnter: _handleHoverEnter,
-      onExit: _handleHoverExit,
-      cursor: widget.onTap != null
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: widget.backgroundColor ?? Colors.white,
-                  borderRadius: BorderRadius.circular(widget.borderRadius),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: _elevationAnimation.value,
-                      offset: Offset(0, _elevationAnimation.value / 2),
-                    ),
-                  ],
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) {
+          setState(() => _isPressed = false);
+          widget.onTap?.call();
+        },
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedContainer(
+          duration: widget.duration,
+          curve: AnimationTokens.easeOut,
+          transform: Matrix4.identity()
+            ..setEntry(
+              0,
+              0,
+              _isPressed
+                  ? 0.98
+                  : _isHovered
+                  ? widget.hoverScale
+                  : 1.0,
+            )
+            ..setEntry(
+              1,
+              1,
+              _isPressed
+                  ? 0.98
+                  : _isHovered
+                  ? widget.hoverScale
+                  : 1.0,
+            ),
+          transformAlignment: Alignment.center,
+          child: AnimatedContainer(
+            duration: widget.duration,
+            curve: AnimationTokens.easeOut,
+            decoration: BoxDecoration(
+              color: effectiveBackgroundColor,
+              borderRadius: BorderRadius.circular(widget.borderRadius),
+              border: widget.borderColor != null
+                  ? Border.all(color: widget.borderColor!)
+                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(
+                    ((_isHovered ? 0.12 : 0.06) * 255).toInt(),
+                  ),
+                  blurRadius: _isHovered
+                      ? widget.hoverElevation * 2
+                      : widget.baseElevation * 2,
+                  offset: Offset(
+                    0,
+                    _isHovered ? widget.hoverElevation : widget.baseElevation,
+                  ),
                 ),
-                child: child,
-              ),
-            );
-          },
-          child: widget.child,
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(widget.borderRadius),
+              child: widget.padding != null
+                  ? Padding(padding: widget.padding!, child: widget.child)
+                  : widget.child,
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-/// Card with animated border glow on hover/focus
-class GlowCard extends StatefulWidget {
-  final Widget child;
+/// Animated list tile with hover highlight effect
+///
+/// Usage:
+/// ```dart
+/// HoverListTile(
+///   onTap: () => handleTap(),
+///   leading: Icon(Icons.notification),
+///   title: Text('New booking'),
+///   subtitle: Text('Just now'),
+/// )
+/// ```
+class HoverListTile extends StatefulWidget {
+  /// Tile tap callback
   final VoidCallback? onTap;
-  final double borderRadius;
-  final Color? backgroundColor;
-  final Color? glowColor;
-  final double glowIntensity;
-  final Duration animationDuration;
-  final bool enableGlow;
-  final EdgeInsets? padding;
 
-  const GlowCard({
+  /// Leading widget
+  final Widget? leading;
+
+  /// Title widget
+  final Widget title;
+
+  /// Subtitle widget
+  final Widget? subtitle;
+
+  /// Trailing widget
+  final Widget? trailing;
+
+  /// Animation duration (default: fast - 200ms)
+  final Duration duration;
+
+  /// Content padding
+  final EdgeInsetsGeometry? contentPadding;
+
+  const HoverListTile({
     super.key,
-    required this.child,
     this.onTap,
-    this.borderRadius = AppDimensions.radiusL,
-    this.backgroundColor,
-    this.glowColor,
-    this.glowIntensity = 12,
-    this.animationDuration = const Duration(milliseconds: 300),
-    this.enableGlow = true,
-    this.padding,
+    this.leading,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.duration = AnimationTokens.fast,
+    this.contentPadding,
   });
 
   @override
-  State<GlowCard> createState() => _GlowCardState();
+  State<HoverListTile> createState() => _HoverListTileState();
 }
 
-class _GlowCardState extends State<GlowCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _glowAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.animationDuration,
-    );
-
-    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handleHoverEnter(PointerEvent event) {
-    if (widget.enableGlow) {
-      _controller.forward();
-    }
-  }
-
-  void _handleHoverExit(PointerEvent event) {
-    if (widget.enableGlow) {
-      _controller.reverse();
-    }
-  }
+class _HoverListTileState extends State<HoverListTile> {
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
-    final glowColor = widget.glowColor ?? AppColors.primary;
+    final theme = Theme.of(context);
 
     return MouseRegion(
-      onEnter: _handleHoverEnter,
-      onExit: _handleHoverExit,
-      cursor: widget.onTap != null
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.basic,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedBuilder(
-          animation: _glowAnimation,
-          builder: (context, child) {
-            return Container(
-              padding: widget.padding,
-              decoration: BoxDecoration(
-                color: widget.backgroundColor ?? Colors.white,
-                borderRadius: BorderRadius.circular(widget.borderRadius),
-                border: Border.all(
-                  color: glowColor.withValues(alpha: _glowAnimation.value * 0.5),
-                  width: 1 + (_glowAnimation.value * 1),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: glowColor.withValues(alpha: _glowAnimation.value * 0.3),
-                    blurRadius: widget.glowIntensity * _glowAnimation.value,
-                    spreadRadius: _glowAnimation.value * 2,
-                  ),
-                ],
-              ),
-              child: child,
-            );
-          },
-          child: widget.child,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: widget.duration,
+        curve: AnimationTokens.easeOut,
+        color: _isHovered
+            ? theme.colorScheme.primary.withAlpha((0.08 * 255).toInt())
+            : Colors.transparent,
+        child: ListTile(
+          onTap: widget.onTap,
+          leading: widget.leading,
+          title: widget.title,
+          subtitle: widget.subtitle,
+          trailing: widget.trailing,
+          contentPadding: widget.contentPadding,
         ),
       ),
     );
   }
 }
 
-/// Flip card animation (front/back)
-class FlipCard extends StatefulWidget {
-  final Widget front;
-  final Widget back;
-  final Duration flipDuration;
-  final bool flipOnTap;
-
-  const FlipCard({
-    super.key,
-    required this.front,
-    required this.back,
-    this.flipDuration = const Duration(milliseconds: 600),
-    this.flipOnTap = true,
-  });
-
-  @override
-  State<FlipCard> createState() => FlipCardState();
-}
-
-class FlipCardState extends State<FlipCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  bool _showFront = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.flipDuration,
-    );
-
-    _animation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void flip() {
-    if (_showFront) {
-      _controller.forward();
-    } else {
-      _controller.reverse();
-    }
-    setState(() => _showFront = !_showFront);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.flipOnTap ? flip : null,
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          final angle = _animation.value * 3.14159;
-          final transform = Matrix4.identity()
-            ..setEntry(3, 2, 0.001)
-            ..rotateY(angle);
-
-          return Transform(
-            transform: transform,
-            alignment: Alignment.center,
-            child: angle >= 3.14159 / 2
-                ? Transform(
-                    transform: Matrix4.identity()..rotateY(3.14159),
-                    alignment: Alignment.center,
-                    child: widget.back,
-                  )
-                : widget.front,
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Expandable card with smooth height animation
-class ExpandableCard extends StatefulWidget {
-  final Widget header;
-  final Widget expandedContent;
-  final bool initiallyExpanded;
-  final Duration expansionDuration;
-  final Color? backgroundColor;
-  final double borderRadius;
-  final EdgeInsets? padding;
-
-  const ExpandableCard({
-    super.key,
-    required this.header,
-    required this.expandedContent,
-    this.initiallyExpanded = false,
-    this.expansionDuration = const Duration(milliseconds: 300),
-    this.backgroundColor,
-    this.borderRadius = AppDimensions.radiusM,
-    this.padding,
-  });
-
-  @override
-  State<ExpandableCard> createState() => _ExpandableCardState();
-}
-
-class _ExpandableCardState extends State<ExpandableCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _expansionAnimation;
-  late Animation<double> _iconRotation;
-  late bool _isExpanded;
-
-  @override
-  void initState() {
-    super.initState();
-    _isExpanded = widget.initiallyExpanded;
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.expansionDuration,
-    );
-
-    _expansionAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-
-    _iconRotation = Tween<double>(begin: 0, end: 0.5).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    if (_isExpanded) {
-      _controller.value = 1.0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _toggle() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-      if (_isExpanded) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: widget.backgroundColor ?? Colors.white,
-        borderRadius: BorderRadius.circular(widget.borderRadius),
-        boxShadow: AppShadows.elevation2,
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: _toggle,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(widget.borderRadius),
-              topRight: Radius.circular(widget.borderRadius),
-              bottomLeft: _isExpanded
-                  ? Radius.zero
-                  : Radius.circular(widget.borderRadius),
-              bottomRight: _isExpanded
-                  ? Radius.zero
-                  : Radius.circular(widget.borderRadius),
-            ),
-            child: Padding(
-              padding: widget.padding ??
-                  const EdgeInsets.all(AppDimensions.spaceM),
-              child: Row(
-                children: [
-                  Expanded(child: widget.header),
-                  RotationTransition(
-                    turns: _iconRotation,
-                    child: const Icon(Icons.keyboard_arrow_down),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SizeTransition(
-            sizeFactor: _expansionAnimation,
-            child: Padding(
-              padding: widget.padding ??
-                  const EdgeInsets.all(AppDimensions.spaceM),
-              child: widget.expandedContent,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Pressable card with scale-down animation
-class PressableCard extends StatefulWidget {
+/// Entrance animation wrapper for cards/list items
+///
+/// Uses flutter_animate for declarative animations with BookBed's
+/// animation design tokens.
+///
+/// Usage:
+/// ```dart
+/// AnimatedCardEntrance(
+///   delay: Duration(milliseconds: index * 100),
+///   child: MyCard(),
+/// )
+/// ```
+class AnimatedCardEntrance extends StatelessWidget {
+  /// Card content
   final Widget child;
-  final VoidCallback? onPressed;
-  final double borderRadius;
-  final Color? backgroundColor;
-  final EdgeInsets? padding;
-  final double pressScale;
 
-  const PressableCard({
+  /// Animation delay
+  final Duration delay;
+
+  /// Animation duration (default: fast - 200ms)
+  final Duration duration;
+
+  /// Slide offset (default: 30 pixels from bottom)
+  final double slideOffset;
+
+  /// Whether to animate (set false to skip animation)
+  final bool animate;
+
+  const AnimatedCardEntrance({
     super.key,
     required this.child,
-    this.onPressed,
-    this.borderRadius = AppDimensions.radiusL,
-    this.backgroundColor,
-    this.padding,
-    this.pressScale = 0.97,
+    this.delay = Duration.zero,
+    this.duration = AnimationTokens.fast,
+    this.slideOffset = 30,
+    this.animate = true,
   });
 
   @override
-  State<PressableCard> createState() => _PressableCardState();
-}
-
-class _PressableCardState extends State<PressableCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: widget.pressScale,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _handleTapDown(TapDownDetails details) {
-    _controller.forward();
-  }
-
-  void _handleTapUp(TapUpDetails details) {
-    _controller.reverse();
-  }
-
-  void _handleTapCancel() {
-    _controller.reverse();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      onTap: widget.onPressed,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          );
-        },
-        child: Container(
-          padding: widget.padding,
-          decoration: BoxDecoration(
-            color: widget.backgroundColor ?? Colors.white,
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-            boxShadow: AppShadows.elevation2,
-          ),
-          child: widget.child,
-        ),
-      ),
-    );
-  }
-}
+    if (!animate) {
+      return child;
+    }
 
-/// Shimmer card for premium loading states
-class ShimmerCard extends StatefulWidget {
-  final double? width;
-  final double? height;
-  final double borderRadius;
-  final Color? baseColor;
-  final Color? highlightColor;
-
-  const ShimmerCard({
-    super.key,
-    this.width,
-    this.height,
-    this.borderRadius = AppDimensions.radiusL,
-    this.baseColor,
-    this.highlightColor,
-  });
-
-  @override
-  State<ShimmerCard> createState() => _ShimmerCardState();
-}
-
-class _ShimmerCardState extends State<ShimmerCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat();
-
-    _animation = Tween<double>(begin: -2, end: 2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = widget.baseColor ??
-        (isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariantLight);
-    final highlightColor = widget.highlightColor ??
-        (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.8));
-
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Container(
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(widget.borderRadius),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [baseColor, highlightColor, baseColor],
-              stops: const [0.0, 0.5, 1.0],
-              transform: _GradientTransform(_animation.value),
-            ),
-          ),
+    return child
+        .animate(delay: delay)
+        .fadeIn(duration: duration, curve: AnimationTokens.easeOut)
+        .slideY(
+          duration: duration,
+          curve: AnimationTokens.easeOut,
+          begin: slideOffset,
+          end: 0,
         );
-      },
-    );
-  }
-}
-
-class _GradientTransform extends GradientTransform {
-  final double slidePercent;
-
-  const _GradientTransform(this.slidePercent);
-
-  @override
-  Matrix4 transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues(bounds.width * slidePercent, 0.0, 0.0);
   }
 }

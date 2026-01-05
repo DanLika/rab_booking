@@ -14,9 +14,11 @@
 /// - Animation: Durations, curves, common configurations
 /// - Icon Size: Standardized icon sizing scale
 /// - Gradient: Reusable gradients for backgrounds and effects
+/// - Glassmorphism: Glass effect tokens for modern UI
 /// - Constraints: Layout constraints and sizing
+library;
 
-export 'responsive_breakpoints.dart';
+// Note: For responsive breakpoints, use lib/core/constants/breakpoints.dart
 export 'color_tokens.dart';
 export 'spacing_tokens.dart';
 export 'border_tokens.dart';
@@ -26,4 +28,5 @@ export 'opacity_tokens.dart';
 export 'animation_tokens.dart';
 export 'icon_size_tokens.dart';
 export 'gradient_tokens.dart';
+export 'glassmorphism_tokens.dart';
 export 'constraints_tokens.dart';

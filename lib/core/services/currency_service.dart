@@ -1,6 +1,24 @@
+/// Currency conversion service with persistent storage.
+///
+/// Supports EUR, USD, GBP, and HRK with configurable exchange rates.
+///
+/// Usage:
+/// ```dart
+/// // Watch selected currency
+/// final currency = ref.watch(selectedCurrencyProvider).valueOrNull ?? Currency.eur;
+///
+/// // Change currency
+/// ref.read(selectedCurrencyProvider.notifier).setCurrency(Currency.usd);
+///
+/// // Format price (converts from EUR)
+/// final formatted = 150.0.toCurrency(currency); // "$163.50"
+/// ```
+library;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../shared/providers/repository_providers.dart';
 
 part 'currency_service.g.dart';
 
@@ -40,19 +58,46 @@ class SelectedCurrency extends _$SelectedCurrency {
 
   @override
   Future<Currency> build() async {
-    // Load from storage
-    final prefs = await SharedPreferences.getInstance();
-    final code = prefs.getString(_storageKey);
-    return code != null ? Currency.fromCode(code) : Currency.eur;
+    // Try to use the provider first (initialized in main.dart)
+    final prefsFromProvider = ref.read(sharedPreferencesProvider);
+
+    // If provider has SharedPreferences, use it
+    if (prefsFromProvider != null) {
+      final code = prefsFromProvider.getString(_storageKey);
+      return code != null ? Currency.fromCode(code) : Currency.eur;
+    }
+
+    // Fallback: try to get instance directly (for widget_main.dart or if provider not ready)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final code = prefs.getString(_storageKey);
+      return code != null ? Currency.fromCode(code) : Currency.eur;
+    } catch (e) {
+      // If SharedPreferences is not available, return default currency
+      return Currency.eur;
+    }
   }
 
   /// Change the selected currency
   Future<void> setCurrency(Currency currency) async {
     state = AsyncValue.data(currency);
 
-    // Persist to storage
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_storageKey, currency.code);
+    // Try to use the provider first
+    final prefsFromProvider = ref.read(sharedPreferencesProvider);
+
+    if (prefsFromProvider != null) {
+      await prefsFromProvider.setString(_storageKey, currency.code);
+      return;
+    }
+
+    // Fallback: try to get instance directly
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_storageKey, currency.code);
+    } catch (e) {
+      // If SharedPreferences is not available, just update state (no persistence)
+      // This can happen during initialization or on web if not properly set up
+    }
   }
 }
 
@@ -63,11 +108,7 @@ class CurrencyService {
   }
 
   /// Convert amount from source currency to target currency
-  double convertBetween(
-    double amount,
-    Currency from,
-    Currency to,
-  ) {
+  double convertBetween(double amount, Currency from, Currency to) {
     // Convert to EUR first, then to target currency
     final amountInEur = amount / from.rateToEur;
     return amountInEur * to.rateToEur;

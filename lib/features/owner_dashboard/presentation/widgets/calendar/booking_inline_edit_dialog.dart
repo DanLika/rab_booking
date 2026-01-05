@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/theme/app_colors.dart';
+import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/utils/error_display_utils.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../core/utils/responsive_dialog_utils.dart';
+import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/constants/enums.dart';
+import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../providers/owner_calendar_provider.dart';
-import '../../../utils/calendar_grid_calculator.dart';
+import '../../../utils/booking_overlap_detector.dart';
 
 /// Inline booking edit dialog
 /// Quick edit for booking dates, guest count, status, and notes
 class BookingInlineEditDialog extends ConsumerStatefulWidget {
   final BookingModel booking;
 
-  const BookingInlineEditDialog({
-    super.key,
-    required this.booking,
-  });
+  const BookingInlineEditDialog({super.key, required this.booking});
 
   @override
   ConsumerState<BookingInlineEditDialog> createState() =>
@@ -50,49 +56,81 @@ class _BookingInlineEditDialogState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < CalendarGridCalculator.mobileBreakpoint;
+    final l10n = AppLocalizations.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = ResponsiveDialogUtils.isMobile(context);
+
+    // Use ResponsiveDialogUtils for consistent sizing
+    final dialogWidth = ResponsiveDialogUtils.getDialogWidth(
+      context,
+      maxWidth: 500,
+    );
+    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
       child: Container(
-        width: isMobile ? double.infinity : 500,
+        width: dialogWidth,
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxHeight:
+              MediaQuery.of(context).size.height *
+              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
+        ),
+        decoration: BoxDecoration(
+          gradient: context.gradients.sectionBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.gradients.sectionBorder.withAlpha(
+              (0.5 * 255).toInt(),
+            ),
+          ),
+          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
+            // Header with gradient - matches CommonAppBar height (52px)
             Container(
-              padding: const EdgeInsets.all(16),
+              height: ResponsiveDialogUtils.kHeaderHeight,
+              padding: EdgeInsets.symmetric(horizontal: headerPadding),
               decoration: BoxDecoration(
-                color: theme.primaryColor,
+                gradient: context.gradients.brandPrimary,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(4),
+                  top: Radius.circular(11),
                 ),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.edit,
-                    color: theme.colorScheme.onPrimary,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: AutoSizeText(
-                      'Quick Edit Booking',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: theme.colorScheme.onPrimary,
+                      l10n.bookingInlineEditTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                       maxLines: 1,
                       minFontSize: 14,
                     ),
                   ),
                   IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: theme.colorScheme.onPrimary,
-                    ),
+                    icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -102,40 +140,102 @@ class _BookingInlineEditDialogState
             // Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Guest name (read-only)
                     _buildInfoRow(
-                      'Guest',
+                      l10n.bookingInlineEditGuest,
                       widget.booking.guestName ?? 'N/A',
                       Icons.person,
                     ),
                     const SizedBox(height: 16),
 
-                    // Check-in date
-                    _buildDateField(
-                      label: 'Check-in',
-                      date: _checkIn,
-                      onTap: () => _selectDate(context, isCheckIn: true),
+                    // Dates section title
+                    _SectionHeader(
+                      icon: Icons.calendar_today_outlined,
+                      title: l10n.bookingInlineEditDates,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
-                    // Check-out date
-                    _buildDateField(
-                      label: 'Check-out',
-                      date: _checkOut,
-                      onTap: () => _selectDate(context, isCheckIn: false),
-                    ),
-                    const SizedBox(height: 16),
+                    // Date fields - responsive layout
+                    if (isMobile)
+                      Column(
+                        children: [
+                          _buildDateField(
+                            label: l10n.bookingInlineEditCheckIn,
+                            date: _checkIn,
+                            onTap: () => _selectDate(context, isCheckIn: true),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildDateField(
+                            label: l10n.bookingInlineEditCheckOut,
+                            date: _checkOut,
+                            onTap: () => _selectDate(context, isCheckIn: false),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildDateField(
+                              label: l10n.bookingInlineEditCheckIn,
+                              date: _checkIn,
+                              onTap: () =>
+                                  _selectDate(context, isCheckIn: true),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildDateField(
+                              label: l10n.bookingInlineEditCheckOut,
+                              date: _checkOut,
+                              onTap: () =>
+                                  _selectDate(context, isCheckIn: false),
+                            ),
+                          ),
+                        ],
+                      ),
 
-                    // Nights (calculated)
-                    _buildInfoRow(
-                      'Nights',
-                      '${_checkOut.difference(_checkIn).inDays}',
-                      Icons.nightlight_round,
+                    const SizedBox(height: 12),
+
+                    // Nights badge - styled like booking_create_dialog
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha(
+                          (0.1 * 255).toInt(),
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: theme.colorScheme.primary.withAlpha(
+                            (0.3 * 255).toInt(),
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.nights_stay,
+                            size: 18,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_checkOut.difference(_checkIn).inDays} ${_checkOut.difference(_checkIn).inDays == 1 ? l10n.bookingInlineEditNightSingular : l10n.bookingInlineEditNightPlural}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+
                     const SizedBox(height: 16),
 
                     // Guest count
@@ -155,33 +255,64 @@ class _BookingInlineEditDialogState
 
             // Footer buttons
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth < 400 ? 8 : 16,
+                vertical: 12,
+              ),
               decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.dialogFooterDark
+                    : AppColors.dialogFooterLight,
                 border: Border(
-                  top: BorderSide(color: theme.dividerColor),
+                  top: BorderSide(
+                    color: isDark
+                        ? AppColors.sectionDividerDark
+                        : AppColors.sectionDividerLight,
+                  ),
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(11),
                 ),
               ),
               child: isMobile
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Save button (full width on mobile)
-                        ElevatedButton.icon(
-                          onPressed: _isSaving ? null : _saveChanges,
-                          icon: _isSaving
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.save),
-                          label: AutoSizeText(
-                            _isSaving ? 'Saving...' : 'Save Changes',
-                            maxLines: 1,
-                            minFontSize: 12,
+                        // Save button (full width on mobile) with gradient
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: context.gradients.brandPrimary,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(8),
+                            ),
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: _isSaving ? null : _saveChanges,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            icon: _isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.save, color: Colors.white),
+                            label: AutoSizeText(
+                              _isSaving
+                                  ? l10n.bookingInlineEditSaving
+                                  : l10n.bookingInlineEditSave,
+                              style: const TextStyle(color: Colors.white),
+                              maxLines: 1,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -190,8 +321,8 @@ class _BookingInlineEditDialogState
                           onPressed: _isSaving
                               ? null
                               : () => Navigator.of(context).pop(),
-                          child: const AutoSizeText(
-                            'Cancel',
+                          child: AutoSizeText(
+                            l10n.bookingInlineEditCancel,
                             maxLines: 1,
                             minFontSize: 11,
                           ),
@@ -206,8 +337,8 @@ class _BookingInlineEditDialogState
                             onPressed: _isSaving
                                 ? null
                                 : () => Navigator.of(context).pop(),
-                            child: const AutoSizeText(
-                              'Cancel',
+                            child: AutoSizeText(
+                              l10n.bookingInlineEditCancel,
                               maxLines: 1,
                               minFontSize: 11,
                             ),
@@ -215,22 +346,40 @@ class _BookingInlineEditDialogState
                         ),
                         const SizedBox(width: 8),
                         Flexible(
-                          child: ElevatedButton.icon(
-                            onPressed: _isSaving ? null : _saveChanges,
-                            icon: _isSaving
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.save),
-                            label: AutoSizeText(
-                              _isSaving ? 'Saving...' : 'Save Changes',
-                              maxLines: 1,
-                              minFontSize: 12,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: context.gradients.brandPrimary,
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(8),
+                              ),
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: _isSaving ? null : _saveChanges,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              icon: _isSaving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save, color: Colors.white),
+                              label: AutoSizeText(
+                                _isSaving
+                                    ? l10n.bookingInlineEditSaving
+                                    : l10n.bookingInlineEditSave,
+                                style: const TextStyle(color: Colors.white),
+                                maxLines: 1,
+                              ),
                             ),
                           ),
                         ),
@@ -273,35 +422,39 @@ class _BookingInlineEditDialogState
     required DateTime date,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: const Icon(Icons.calendar_today),
-        ),
-        child: Text(
-          '${date.day}/${date.month}/${date.year}',
-          style: Theme.of(context).textTheme.bodyLarge,
+    return Builder(
+      builder: (ctx) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: InputDecorator(
+          decoration: InputDecorationHelper.buildDecoration(
+            labelText: label,
+            context: ctx,
+          ).copyWith(suffixIcon: const Icon(Icons.calendar_today)),
+          child: Text(
+            '${date.day}/${date.month}/${date.year}',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildGuestCountField() {
+    final l10n = AppLocalizations.of(context);
     return Row(
       children: [
         Expanded(
-          child: InputDecorator(
-            decoration: const InputDecoration(
-              labelText: 'Number of Guests',
-              border: OutlineInputBorder(),
-            ),
-            child: Text(
-              '$_guestCount',
-              style: Theme.of(context).textTheme.bodyLarge,
+          child: Builder(
+            builder: (ctx) => InputDecorator(
+              decoration: InputDecorationHelper.buildDecoration(
+                labelText: l10n.bookingInlineEditGuestCount,
+                context: ctx,
+              ),
+              child: Text(
+                '$_guestCount',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
             ),
           ),
         ),
@@ -310,68 +463,86 @@ class _BookingInlineEditDialogState
           onPressed: _guestCount > 1
               ? () => setState(() => _guestCount--)
               : null,
-          icon: const Icon(Icons.remove),
+          icon: Icon(
+            Icons.remove,
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
         ),
         const SizedBox(width: 4),
         IconButton.filledTonal(
           onPressed: () => setState(() => _guestCount++),
-          icon: const Icon(Icons.add),
+          icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildStatusField() {
-    return DropdownButtonFormField<BookingStatus>(
-      initialValue: _status,
-      decoration: const InputDecoration(
-        labelText: 'Status',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.info_outline),
-      ),
-      items: BookingStatus.values.map((status) {
-        return DropdownMenuItem(
-          value: status,
-          child: Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: _getStatusColor(status),
-                  shape: BoxShape.circle,
+    return Builder(
+      builder: (ctx) => DropdownButtonFormField<BookingStatus>(
+        initialValue: _status,
+        dropdownColor: InputDecorationHelper.getDropdownColor(ctx),
+        borderRadius: InputDecorationHelper.dropdownBorderRadius,
+        decoration: InputDecorationHelper.buildDecoration(
+          labelText: 'Status',
+          prefixIcon: const Icon(Icons.info_outline),
+          context: ctx,
+        ),
+        items: BookingStatus.values.map((status) {
+          return DropdownMenuItem(
+            value: status,
+            child: Row(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(status),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(status.displayName),
-            ],
-          ),
-        );
-      }).toList(),
-      onChanged: (value) {
-        if (value != null) {
-          setState(() => _status = value);
-        }
-      },
+                const SizedBox(width: 8),
+                Text(status.displayNameLocalized(context)),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value != null) {
+            setState(() => _status = value);
+          }
+        },
+      ),
     );
   }
 
   Widget _buildNotesField() {
-    return TextField(
-      controller: _notesController,
-      decoration: const InputDecoration(
-        labelText: 'Internal Notes',
-        border: OutlineInputBorder(),
-        hintText: 'Add notes for this booking...',
-        prefixIcon: Icon(Icons.notes),
+    final l10n = AppLocalizations.of(context);
+    return Builder(
+      builder: (ctx) => TextField(
+        controller: _notesController,
+        decoration: InputDecorationHelper.buildDecoration(
+          labelText: l10n.bookingEditInternalNotes,
+          hintText: l10n.bookingEditNotesHint,
+          prefixIcon: const Icon(Icons.notes),
+          context: ctx,
+        ),
+        maxLines: 3,
+        textCapitalization: TextCapitalization.sentences,
       ),
-      maxLines: 3,
-      textCapitalization: TextCapitalization.sentences,
     );
   }
 
-  Future<void> _selectDate(BuildContext context,
-      {required bool isCheckIn}) async {
+  Future<void> _selectDate(
+    BuildContext context, {
+    required bool isCheckIn,
+  }) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: isCheckIn ? _checkIn : _checkOut,
@@ -402,6 +573,41 @@ class _BookingInlineEditDialogState
     setState(() => _isSaving = true);
 
     try {
+      // FIXED: Validate for overlaps before saving
+      final allBookingsMap = await ref.read(calendarBookingsProvider.future);
+
+      // Check if new dates would overlap with existing bookings
+      final conflicts = BookingOverlapDetector.getConflictingBookings(
+        unitId: widget.booking.unitId,
+        newCheckIn: _checkIn,
+        newCheckOut: _checkOut,
+        bookingIdToExclude: widget.booking.id,
+        allBookings: allBookingsMap,
+      );
+
+      if (conflicts.isNotEmpty) {
+        setState(() => _isSaving = false);
+
+        if (mounted) {
+          // Show detailed error with conflicting booking info
+          final conflict = conflicts.first;
+          final conflictGuestName = conflict.guestName ?? 'Unknown';
+          final conflictCheckIn =
+              '${conflict.checkIn.day}.${conflict.checkIn.month}.${conflict.checkIn.year}';
+          final conflictCheckOut =
+              '${conflict.checkOut.day}.${conflict.checkOut.month}.${conflict.checkOut.year}';
+
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            conflicts.length == 1
+                ? 'Overlap detected with booking for $conflictGuestName ($conflictCheckIn - $conflictCheckOut)'
+                : 'Overlap detected with ${conflicts.length} existing bookings',
+            duration: const Duration(seconds: 5),
+          );
+        }
+        return;
+      }
+
       final repository = ref.read(bookingRepositoryProvider);
 
       // Create updated booking
@@ -424,42 +630,57 @@ class _BookingInlineEditDialogState
 
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to indicate success
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Booking updated successfully'),
-            backgroundColor: Colors.green,
-          ),
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          'Booking updated successfully',
         );
       }
     } catch (e) {
       setState(() => _isSaving = false);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update booking: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: 'Failed to update booking',
         );
       }
     }
   }
 
   Color _getStatusColor(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pending:
-        return Colors.orange.shade400;
-      case BookingStatus.confirmed:
-        return Colors.green.shade400;
-      case BookingStatus.inProgress:
-        return Colors.blue.shade400;
-      case BookingStatus.completed:
-        return Colors.grey.shade400;
-      case BookingStatus.cancelled:
-        return Colors.red.shade400;
-      case BookingStatus.blocked:
-        return Colors.grey.shade600;
-    }
+    // Use the color defined in the status enum
+    return status.color;
+  }
+}
+
+/// Section header widget with icon and gradient accent
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: context.gradients.brandPrimary,
+            borderRadius: const BorderRadius.all(Radius.circular(8)),
+          ),
+          child: Icon(icon, color: Colors.white, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
   }
 }

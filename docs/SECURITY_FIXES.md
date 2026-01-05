@@ -18,6 +18,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 10. [SF-010: Year Calendar Race Condition Fix](#sf-010-year-calendar-race-condition-fix)
 11. [SF-011: Ignore Service Account Key (CRITICAL)](#sf-011-ignore-service-account-key-critical)
 12. [SF-012: Secure Error Handling & Email Sanitization](#sf-012-secure-error-handling--email-sanitization)
+13. [SF-013: Haptic Feedback on Password Toggle](#sf-013-haptic-feedback-on-password-toggle)
 
 ---
 
@@ -796,6 +797,51 @@ final message = _sanitizeInput(_messageController.text);
 
 - Korisnici neće vidjeti tehničke detalje grešaka (namjerno)
 - HTML formatiranje u email porukama neće raditi (sigurnosna mjera)
+
+---
+
+## SF-013: Haptic Feedback on Password Toggle
+
+**Datum**: 2026-01-05  
+**Prioritet**: Low  
+**Status**: ✅ Riješeno  
+**Zahvaćeni fajlovi**: `lib/features/auth/presentation/screens/enhanced_login_screen.dart`  
+**Predložio**: Google Palette
+
+### Problem
+
+Password visibility toggle button na login screenu nije imao taktilni feedback. Na mobilnim uređajima, korisnik nije dobivao fizičku potvrdu da je gumb pritisnut.
+
+### Rješenje
+
+Dodano `HapticFeedback.mediumImpact()` prije toggle akcije:
+
+**Prije:**
+```dart
+onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+```
+
+**Poslije:**
+```dart
+onPressed: () {
+  HapticFeedback.mediumImpact();
+  setState(() => _obscurePassword = !_obscurePassword);
+},
+```
+
+### Testiranje
+
+1. ✅ iOS - vibracija pri pritisku
+2. ✅ Android - vibracija pri pritisku
+3. ✅ Web - nema efekta (očekivano, web nema haptic)
+
+### Moguće nuspojave
+
+- Nema - ovo je čisto UX poboljšanje
+
+### Accessibility
+
+Poboljšava accessibility jer pruža dodatni non-visual feedback koji potvrđuje akciju korisnika.
 
 ---
 

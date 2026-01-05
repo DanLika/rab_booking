@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -465,7 +466,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           color: theme.colorScheme.onSurfaceVariant,
           size: 20,
         ),
-        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+        onPressed: () {
+          // SF-013: Add haptic feedback for better UX on mobile
+          HapticFeedback.mediumImpact();
+          setState(() => _obscurePassword = !_obscurePassword);
+        },
       ),
       validator: (value) {
         if (_passwordErrorFromServer != null) {

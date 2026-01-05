@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/widget_repository_providers.dart';
@@ -64,13 +65,9 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
     ]);
 
     // Bug #24 Fix: Use safe casting with type checks to prevent TypeError
-    final property = results[0] is PropertyModel
-        ? results[0] as PropertyModel
-        : null;
+    final property = results[0] is PropertyModel ? results[0] as PropertyModel : null;
     final unit = results[1] is UnitModel ? results[1] as UnitModel : null;
-    final settings = results[2] is WidgetSettings
-        ? results[2] as WidgetSettings
-        : null;
+    final settings = results[2] is WidgetSettings ? results[2] as WidgetSettings : null;
 
     // Validate property
     if (property == null) {
@@ -79,9 +76,7 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
 
     // Validate unit
     if (unit == null) {
-      throw WidgetContextException(
-        'Unit not found: $unitId in property $propertyId',
-      );
+      throw WidgetContextException('Unit not found: $unitId in property $propertyId');
     }
 
     // Get settings or use defaults
@@ -92,9 +87,7 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
           propertyId: propertyId,
           ownerId: property.ownerId,
           widgetMode: WidgetMode.bookingPending,
-          contactOptions: const ContactOptions(
-            customMessage: 'Contact us for booking!',
-          ),
+          contactOptions: const ContactOptions(customMessage: 'Contact us for booking!'),
           emailConfig: const EmailNotificationConfig(),
           taxLegalConfig: const TaxLegalConfig(),
           requireOwnerApproval: true,
@@ -102,20 +95,17 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
           updatedAt: DateTime.now().toUtc(),
         );
 
-    return WidgetContext(
-      property: property,
-      unit: unit,
-      settings: effectiveSettings,
-      ownerId: property.ownerId ?? '',
+    return WidgetContext(property: property, unit: unit, settings: effectiveSettings, ownerId: property.ownerId ?? '');
+  } catch (e, stackTrace) {
+    // SECURITY FIX SF-009: Log detailed error for debugging but throw generic message
+    // This prevents leaking internal implementation details (Firestore errors, TypeErrors)
+    // to the frontend, which could inform an attacker.
+    await LoggingService.logError('widgetContextProvider: Failed to load context for $params', e, stackTrace);
+
+    // Throw a generic, user-safe exception
+    throw WidgetContextException(
+      'Unable to load booking widget configuration. Please check the property and unit IDs.',
     );
-  } catch (e) {
-    // Bug #24 Fix: Wrap all exceptions in WidgetContextException for consistent error handling
-    if (e is WidgetContextException) {
-      // Re-throw WidgetContextException as-is
-      rethrow;
-    }
-    // Convert other exceptions (TypeError, PropertyException, etc.) to WidgetContextException
-    throw WidgetContextException('Failed to load widget context: $e');
   }
 }
 
@@ -138,18 +128,13 @@ Future<WidgetContext> widgetContextByUnitOnly(Ref ref, String unitId) async {
     }
 
     // Now use the main provider with both IDs
-    return ref.read(
-      widgetContextProvider((
-        propertyId: unit.propertyId,
-        unitId: unitId,
-      )).future,
-    );
-  } catch (e) {
-    // Bug #24 Fix: Wrap exceptions in WidgetContextException
-    if (e is WidgetContextException) {
-      rethrow;
-    }
-    throw WidgetContextException('Failed to load widget context by unit: $e');
+    return ref.read(widgetContextProvider((propertyId: unit.propertyId, unitId: unitId)).future);
+  } catch (e, stackTrace) {
+    // SECURITY FIX SF-009: Log detailed error but throw generic message
+    await LoggingService.logError('widgetContextByUnitOnly: Failed to load context for unit $unitId', e, stackTrace);
+
+    // Throw a generic, user-safe exception
+    throw WidgetContextException('Unable to load booking widget configuration. Please ensure the unit ID is correct.');
   }
 }
 
@@ -158,10 +143,7 @@ Future<WidgetContext> widgetContextByUnitOnly(Ref ref, String unitId) async {
 /// Use this in booking_price_provider to avoid duplicate unit fetch.
 /// Returns the cached context if available, otherwise fetches it.
 @riverpod
-Future<WidgetContext> cachedWidgetContext(
-  Ref ref,
-  WidgetContextParams params,
-) async {
+Future<WidgetContext> cachedWidgetContext(Ref ref, WidgetContextParams params) async {
   // This just delegates to the main provider which handles caching
   return ref.read(widgetContextProvider(params).future);
 }

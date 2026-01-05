@@ -117,6 +117,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get password => 'Lozinka';
 
   @override
+  String get authShowPassword => 'Prikaži lozinku';
+
+  @override
+  String get authHidePassword => 'Sakrij lozinku';
+
+  @override
   String get forgotPassword => 'Zaboravili ste lozinku?';
 
   @override

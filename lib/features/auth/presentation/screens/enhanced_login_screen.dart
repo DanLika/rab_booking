@@ -516,6 +516,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       prefixIcon: Icons.lock_outline,
       obscureText: _obscurePassword,
       suffixIcon: IconButton(
+        tooltip: _obscurePassword
+            ? l10n.authShowPassword
+            : l10n.authHidePassword,
         icon: Icon(
           _obscurePassword ? Icons.visibility_off : Icons.visibility,
           color: theme.colorScheme.onSurfaceVariant,

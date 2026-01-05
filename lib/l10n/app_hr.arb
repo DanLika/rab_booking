@@ -39,6 +39,8 @@
   "logout": "Odjava",
   "email": "Email",
   "password": "Lozinka",
+  "authShowPassword": "Prikaži lozinku",
+  "authHidePassword": "Sakrij lozinku",
   "forgotPassword": "Zaboravili ste lozinku?",
   "resetPassword": "Resetiraj lozinku",
   "firstName": "Ime",

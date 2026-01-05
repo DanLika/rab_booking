@@ -39,6 +39,8 @@
   "logout": "Logout",
   "email": "Email",
   "password": "Password",
+  "authShowPassword": "Show password",
+  "authHidePassword": "Hide password",
   "forgotPassword": "Forgot Password?",
   "resetPassword": "Reset Password",
   "firstName": "First Name",

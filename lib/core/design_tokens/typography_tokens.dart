@@ -103,60 +103,67 @@ class TypographyTokens {
   // Powered by badge size (very small)
   static const double poweredBySize = 9.0;
 
-  // Common text styles
-  static TextStyle heading({Color? color}) => TextStyle(
-        fontSize: fontSizeXXXL,
-        fontWeight: bold,
-        height: lineHeightTight,
-        letterSpacing: letterSpacingTight,
-        color: color,
-      );
+  // --- CACHED COMPILE-TIME CONSTANT TEXT STYLES ---
+  // By caching the base text styles as compile-time constants (`const`),
+  // we ensure they are created only once during compilation, not at runtime.
+  // The `copyWith` method is then used to efficiently apply dynamic properties
+  // like color. This is the most performant approach for static styles.
 
-  static TextStyle subheading({Color? color}) => TextStyle(
-        fontSize: fontSizeXXL,
-        fontWeight: semiBold,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingNormal,
-        color: color,
-      );
+  static const TextStyle _heading = TextStyle(
+    fontSize: fontSizeXXXL,
+    fontWeight: bold,
+    height: lineHeightTight,
+    letterSpacing: letterSpacingTight,
+  );
+  static TextStyle heading({Color? color}) => _heading.copyWith(color: color);
 
-  static TextStyle body({Color? color}) => TextStyle(
-        fontSize: fontSizeL,
-        fontWeight: regular,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingNormal,
-        color: color,
-      );
+  static const TextStyle _subheading = TextStyle(
+    fontSize: fontSizeXXL,
+    fontWeight: semiBold,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingNormal,
+  );
+  static TextStyle subheading({Color? color}) =>
+      _subheading.copyWith(color: color);
 
-  static TextStyle bodyMedium({Color? color}) => TextStyle(
-        fontSize: fontSizeL,
-        fontWeight: medium,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingNormal,
-        color: color,
-      );
+  static const TextStyle _body = TextStyle(
+    fontSize: fontSizeL,
+    fontWeight: regular,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingNormal,
+  );
+  static TextStyle body({Color? color}) => _body.copyWith(color: color);
 
-  static TextStyle caption({Color? color}) => TextStyle(
-        fontSize: fontSizeM,
-        fontWeight: regular,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingNormal,
-        color: color,
-      );
+  static const TextStyle _bodyMedium = TextStyle(
+    fontSize: fontSizeL,
+    fontWeight: medium,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingNormal,
+  );
+  static TextStyle bodyMedium({Color? color}) =>
+      _bodyMedium.copyWith(color: color);
 
-  static TextStyle label({Color? color}) => TextStyle(
-        fontSize: fontSizeS,
-        fontWeight: medium,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingWide,
-        color: color,
-      );
+  static const TextStyle _caption = TextStyle(
+    fontSize: fontSizeM,
+    fontWeight: regular,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingNormal,
+  );
+  static TextStyle caption({Color? color}) => _caption.copyWith(color: color);
 
-  static TextStyle button({Color? color}) => TextStyle(
-        fontSize: fontSizeL,
-        fontWeight: semiBold,
-        height: lineHeightNormal,
-        letterSpacing: letterSpacingWide,
-        color: color,
-      );
+  static const TextStyle _label = TextStyle(
+    fontSize: fontSizeS,
+    fontWeight: medium,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingWide,
+  );
+  static TextStyle label({Color? color}) => _label.copyWith(color: color);
+
+  static const TextStyle _button = TextStyle(
+    fontSize: fontSizeL,
+    fontWeight: semiBold,
+    height: lineHeightNormal,
+    letterSpacing: letterSpacingWide,
+  );
+  static TextStyle button({Color? color}) => _button.copyWith(color: color);
 }

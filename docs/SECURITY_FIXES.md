@@ -20,6 +20,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 12. [SF-012: Secure Error Handling & Email Sanitization](#sf-012-secure-error-handling--email-sanitization)
 13. [SF-013: Haptic Feedback on Password Toggle](#sf-013-haptic-feedback-on-password-toggle)
 14. [SF-014: Prevent PII Exposure in Booking Widget (HIGH)](#sf-014-prevent-pii-exposure-in-booking-widget-high)
+15. [SF-015: DebouncedSearchField ValueNotifier Optimization](#sf-015-debouncedsearchfield-valuenotifier-optimization)
 
 ---
 
@@ -919,6 +920,73 @@ BookingModel? _mapDocumentToBooking(
 ### GDPR/Privacy implikacije
 
 Ova ispravka je važna za usklađenost s GDPR-om jer sprječava neovlašteno izlaganje osobnih podataka gostiju trećim stranama.
+
+---
+
+## SF-015: DebouncedSearchField ValueNotifier Optimization
+
+**Datum**: 2026-01-05  
+**Prioritet**: Low  
+**Status**: ✅ Riješeno  
+**Zahvaćeni fajlovi**: `lib/shared/widgets/debounced_search_field.dart`  
+**Predložio**: Google Bolt
+
+### Problem
+
+`DebouncedSearchField` i `CompactDebouncedSearchField` widgeti su koristili `setState()` za toggle vidljivosti clear buttona. Ovo je uzrokovalo rebuild cijelog widgeta na svaki keystroke, što može uzrokovati input lag na sporijim uređajima.
+
+**Prije:**
+```dart
+bool _showClearButton = false;
+
+void _onTextChanged() {
+  setState(() {
+    _showClearButton = _controller.text.isNotEmpty;
+  });
+}
+```
+
+### Rješenje
+
+Zamjena `setState` s `ValueNotifier` + `ValueListenableBuilder` pattern:
+
+```dart
+late final ValueNotifier<bool> _showClearButtonNotifier;
+
+void _onTextChanged() {
+  _showClearButtonNotifier.value = _controller.text.isNotEmpty;
+}
+
+// U build():
+suffixIcon: ValueListenableBuilder<bool>(
+  valueListenable: _showClearButtonNotifier,
+  builder: (context, showClear, child) {
+    return showClear ? IconButton(...) : const SizedBox.shrink();
+  },
+),
+```
+
+### Zahvaćeni widgeti
+
+1. `DebouncedSearchField` - standardno search polje
+2. `CompactDebouncedSearchField` - kompaktno search polje za app bar
+
+### Testiranje
+
+1. ✅ Clear button se prikazuje kad ima teksta
+2. ✅ Clear button se skriva kad je polje prazno
+3. ✅ Debounce i dalje radi ispravno
+4. ✅ Nema vidljivog input laga
+
+### Performance poboljšanje
+
+- Prije: Cijeli widget se rebuilda na svaki keystroke
+- Poslije: Samo `ValueListenableBuilder` i clear button se rebuilda
+- Rezultat: Manje CPU usage, glatkije tipkanje na sporijim uređajima
+
+### Moguće nuspojave
+
+- Nema - ovo je čista optimizacija bez promjene funkcionalnosti
 
 ---
 

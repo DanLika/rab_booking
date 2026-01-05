@@ -58,14 +58,15 @@ class DebouncedSearchField extends StatefulWidget {
 class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
   late final TextEditingController _controller;
   late final Debouncer _debouncer;
-  bool _showClearButton = false;
+  // SF-015: Use ValueNotifier to avoid rebuilding the whole widget on every keystroke
+  late final ValueNotifier<bool> _showClearButtonNotifier;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialValue);
     _debouncer = Debouncer(delay: widget.debounceDelay);
-    _showClearButton = _controller.text.isNotEmpty;
+    _showClearButtonNotifier = ValueNotifier<bool>(_controller.text.isNotEmpty);
 
     _controller.addListener(_onTextChanged);
   }
@@ -75,13 +76,13 @@ class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
     _debouncer.dispose();
+    _showClearButtonNotifier.dispose();
     super.dispose();
   }
 
   void _onTextChanged() {
-    setState(() {
-      _showClearButton = _controller.text.isNotEmpty;
-    });
+    // SF-015: Only update the notifier, no need for setState
+    _showClearButtonNotifier.value = _controller.text.isNotEmpty;
 
     // Debounce the search callback
     _debouncer.run(() {
@@ -107,13 +108,15 @@ class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
               prefixIcon: Icon(widget.prefixIcon),
               context: ctx,
             ).copyWith(
-              suffixIcon: _showClearButton
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: _clearSearch,
-                      tooltip: 'Očisti',
-                    )
-                  : null,
+              // SF-015: Use ValueListenableBuilder to rebuild only the clear button
+              suffixIcon: ValueListenableBuilder<bool>(
+                valueListenable: _showClearButtonNotifier,
+                builder: (context, showClear, child) {
+                  return showClear
+                      ? IconButton(icon: const Icon(Icons.clear), onPressed: _clearSearch, tooltip: 'Očisti')
+                      : const SizedBox.shrink();
+                },
+              ),
             ),
         onSubmitted: (_) {
           // Cancel debounce and trigger immediately on submit
@@ -143,15 +146,15 @@ class CompactDebouncedSearchField extends StatefulWidget {
   final VoidCallback? onClose;
 
   @override
-  State<CompactDebouncedSearchField> createState() =>
-      _CompactDebouncedSearchFieldState();
+  State<CompactDebouncedSearchField> createState() => _CompactDebouncedSearchFieldState();
 }
 
-class _CompactDebouncedSearchFieldState
-    extends State<CompactDebouncedSearchField> {
+class _CompactDebouncedSearchFieldState extends State<CompactDebouncedSearchField> {
   late final TextEditingController _controller;
   late final Debouncer _debouncer;
   late final FocusNode _focusNode;
+  // SF-015: Use ValueNotifier to avoid rebuilding the whole widget on every keystroke
+  late final ValueNotifier<bool> _showClearButtonNotifier;
 
   @override
   void initState() {
@@ -159,6 +162,7 @@ class _CompactDebouncedSearchFieldState
     _controller = TextEditingController(text: widget.initialValue);
     _debouncer = Debouncer(delay: widget.debounceDelay);
     _focusNode = FocusNode();
+    _showClearButtonNotifier = ValueNotifier<bool>(_controller.text.isNotEmpty);
 
     _controller.addListener(_onTextChanged);
 
@@ -174,10 +178,14 @@ class _CompactDebouncedSearchFieldState
     _controller.dispose();
     _debouncer.dispose();
     _focusNode.dispose();
+    _showClearButtonNotifier.dispose();
     super.dispose();
   }
 
   void _onTextChanged() {
+    // SF-015: Only update the notifier, no need for setState
+    _showClearButtonNotifier.value = _controller.text.isNotEmpty;
+
     _debouncer.run(() {
       widget.onSearch(_controller.text);
     });
@@ -199,20 +207,24 @@ class _CompactDebouncedSearchFieldState
         suffixIcon: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_controller.text.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.clear),
-                onPressed: () {
-                  _controller.clear();
-                  widget.onSearch('');
-                },
-                tooltip: 'Očisti',
-              ),
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: _close,
-              tooltip: 'Zatvori pretragu',
+            // SF-015: Use ValueListenableBuilder to rebuild only the clear button
+            ValueListenableBuilder<bool>(
+              valueListenable: _showClearButtonNotifier,
+              builder: (context, showClear, child) {
+                if (!showClear) {
+                  return const SizedBox.shrink();
+                }
+                return IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _controller.clear();
+                    widget.onSearch('');
+                  },
+                  tooltip: 'Očisti',
+                );
+              },
             ),
+            IconButton(icon: const Icon(Icons.close), onPressed: _close, tooltip: 'Zatvori pretragu'),
           ],
         ),
       ),

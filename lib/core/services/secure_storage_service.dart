@@ -11,7 +11,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// Storing plaintext passwords (even in "secure" storage) is a security risk
 /// if the device's local storage is compromised.
 class SecureStorageService {
-  static final SecureStorageService _instance = SecureStorageService._internal();
+  static final SecureStorageService _instance =
+      SecureStorageService._internal();
   factory SecureStorageService() => _instance;
   SecureStorageService._internal();
 

@@ -19,7 +19,10 @@ class PasswordValidationResult {
     return PasswordValidationResult(isValid: true, strength: strength);
   }
 
-  factory PasswordValidationResult.invalid(String message, {List<String> missing = const []}) {
+  factory PasswordValidationResult.invalid(
+    String message, {
+    List<String> missing = const [],
+  }) {
     return PasswordValidationResult(
       isValid: false,
       errorMessage: message,
@@ -48,7 +51,10 @@ class PasswordValidator {
   /// Validate password and return detailed result
   static PasswordValidationResult validate(String? password) {
     if (password == null || password.isEmpty) {
-      return PasswordValidationResult.invalid('Password is required', missing: ['Enter a password']);
+      return PasswordValidationResult.invalid(
+        'Password is required',
+        missing: ['Enter a password'],
+      );
     }
 
     final missing = <String>[];
@@ -59,7 +65,9 @@ class PasswordValidator {
     }
 
     if (password.length > maxLength) {
-      return PasswordValidationResult.invalid('Password must be less than $maxLength characters');
+      return PasswordValidationResult.invalid(
+        'Password must be less than $maxLength characters',
+      );
     }
 
     // Check for uppercase letter
@@ -84,7 +92,10 @@ class PasswordValidator {
 
     // If any requirements are missing, return invalid
     if (missing.isNotEmpty) {
-      return PasswordValidationResult.invalid('Password must contain: ${missing.join(', ')}', missing: missing);
+      return PasswordValidationResult.invalid(
+        'Password must contain: ${missing.join(', ')}',
+        missing: missing,
+      );
     }
 
     // Calculate strength
@@ -172,7 +183,8 @@ class PasswordValidator {
       if (c2 == c1 + 1 && c3 == c2 + 1) {
         final substr = lowercased.substring(i, i + 3);
         // Only flag if all digits or all letters (avoid mixed like '9ab')
-        if (_digitRegex.allMatches(substr).length == 3 || _lowercaseRegex.allMatches(substr).length == 3) {
+        if (_digitRegex.allMatches(substr).length == 3 ||
+            _lowercaseRegex.allMatches(substr).length == 3) {
           return true;
         }
       }
@@ -180,7 +192,8 @@ class PasswordValidator {
       // Check for descending sequence (e.g., cba, 321)
       if (c2 == c1 - 1 && c3 == c2 - 1) {
         final substr = lowercased.substring(i, i + 3);
-        if (_digitRegex.allMatches(substr).length == 3 || _lowercaseRegex.allMatches(substr).length == 3) {
+        if (_digitRegex.allMatches(substr).length == 3 ||
+            _lowercaseRegex.allMatches(substr).length == 3) {
           return true;
         }
       }

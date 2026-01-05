@@ -31,8 +31,10 @@ class SubmitBookingParams {
 
   // Payment
   final double totalPrice;
-  final double servicesTotal; // Additional services total (for server-side validation)
-  final String paymentMethod; // 'stripe', 'bank_transfer', 'pay_on_arrival', 'none'
+  final double
+  servicesTotal; // Additional services total (for server-side validation)
+  final String
+  paymentMethod; // 'stripe', 'bank_transfer', 'pay_on_arrival', 'none'
   final String paymentOption; // 'deposit', 'full', 'none'
 
   // Tax/Legal
@@ -106,28 +108,39 @@ class SubmitBookingUseCase {
   /// Throws exceptions on failure (BookingConflictException, PaymentException, etc.).
   /// Widget should catch and handle errors with appropriate UI feedback.
   Future<BookingSubmissionResult> execute(SubmitBookingParams params) async {
-    final widgetMode = params.widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
+    final widgetMode =
+        params.widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     // Sanitize user input to prevent XSS and injection attacks
-    final sanitizedGuestName = InputSanitizer.sanitizeName(params.fullGuestName);
+    final sanitizedGuestName = InputSanitizer.sanitizeName(
+      params.fullGuestName,
+    );
     final sanitizedEmail = InputSanitizer.sanitizeEmail(params.email);
-    final sanitizedPhone = InputSanitizer.sanitizePhone(params.phoneWithCountryCode);
+    final sanitizedPhone = InputSanitizer.sanitizePhone(
+      params.phoneWithCountryCode,
+    );
     final sanitizedNotes = params.notes?.trim().isEmpty ?? true
         ? null
         : InputSanitizer.sanitizeText(params.notes!.trim());
 
     // SECURITY FIX SF-008: Limit notes length to prevent DoS and storage abuse
     if (sanitizedNotes != null && sanitizedNotes.length > 1000) {
-      throw Exception('Notes cannot exceed 1000 characters. Please shorten your message.');
+      throw Exception(
+        'Notes cannot exceed 1000 characters. Please shorten your message.',
+      );
     }
 
     // Validate that required fields are not empty after sanitization
     // This prevents sending empty strings to the backend which would cause 400 errors
     if (sanitizedGuestName == null || sanitizedGuestName.trim().isEmpty) {
-      throw Exception('Guest name is required and cannot be empty. Please enter your first and last name.');
+      throw Exception(
+        'Guest name is required and cannot be empty. Please enter your first and last name.',
+      );
     }
     if (sanitizedEmail == null || sanitizedEmail.trim().isEmpty) {
-      throw Exception('Guest email is required and cannot be empty. Please enter a valid email address.');
+      throw Exception(
+        'Guest email is required and cannot be empty. Please enter a valid email address.',
+      );
     }
 
     // SECURITY FIX SF-005: Validate phone number after sanitization
@@ -149,15 +162,20 @@ class SubmitBookingUseCase {
         checkOut: params.checkOut,
         guestName: sanitizedGuestName, // Validated above - guaranteed non-null
         guestEmail: sanitizedEmail, // Validated above - guaranteed non-null
-        guestPhone: sanitizedPhone, // SF-005: Validated above - guaranteed non-null
+        guestPhone:
+            sanitizedPhone, // SF-005: Validated above - guaranteed non-null
         guestCount: params.totalGuests,
         totalPrice: params.totalPrice,
         servicesTotal: params.servicesTotal,
         paymentOption: 'none', // No payment for pending bookings
         paymentMethod: 'none',
-        requireOwnerApproval: true, // Always requires approval in bookingPending mode
+        requireOwnerApproval:
+            true, // Always requires approval in bookingPending mode
         notes: sanitizedNotes,
-        taxLegalAccepted: _computeTaxLegalAccepted(params.widgetSettings, params.taxLegalAccepted),
+        taxLegalAccepted: _computeTaxLegalAccepted(
+          params.widgetSettings,
+          params.taxLegalAccepted,
+        ),
       );
 
       final booking = bookingResult.booking!;
@@ -183,24 +201,35 @@ class SubmitBookingUseCase {
       checkOut: params.checkOut,
       guestName: sanitizedGuestName, // Validated above - guaranteed non-null
       guestEmail: sanitizedEmail, // Validated above - guaranteed non-null
-      guestPhone: sanitizedPhone, // SF-005: Validated above - guaranteed non-null
+      guestPhone:
+          sanitizedPhone, // SF-005: Validated above - guaranteed non-null
       guestCount: params.totalGuests,
       totalPrice: params.totalPrice,
       servicesTotal: params.servicesTotal,
       paymentOption: params.paymentOption, // 'deposit' or 'full'
-      paymentMethod: params.paymentMethod, // 'stripe', 'bank_transfer', 'pay_on_arrival'
-      requireOwnerApproval: params.widgetSettings?.requireOwnerApproval ?? false,
+      paymentMethod:
+          params.paymentMethod, // 'stripe', 'bank_transfer', 'pay_on_arrival'
+      requireOwnerApproval:
+          params.widgetSettings?.requireOwnerApproval ?? false,
       notes: sanitizedNotes,
-      taxLegalAccepted: _computeTaxLegalAccepted(params.widgetSettings, params.taxLegalAccepted),
+      taxLegalAccepted: _computeTaxLegalAccepted(
+        params.widgetSettings,
+        params.taxLegalAccepted,
+      ),
     );
 
     // Stripe flow: Return booking data for checkout (booking not created yet)
     if (params.paymentMethod == 'stripe') {
-      if (!bookingResult.isStripeValidation || bookingResult.stripeBookingData == null) {
-        throw Exception('Invalid Stripe validation response from booking service');
+      if (!bookingResult.isStripeValidation ||
+          bookingResult.stripeBookingData == null) {
+        throw Exception(
+          'Invalid Stripe validation response from booking service',
+        );
       }
 
-      return BookingSubmissionResult.stripeValidation(bookingData: bookingResult.stripeBookingData!);
+      return BookingSubmissionResult.stripeValidation(
+        bookingData: bookingResult.stripeBookingData!,
+      );
     }
 
     // Non-Stripe flow: Booking created, send emails
@@ -230,7 +259,8 @@ class SubmitBookingUseCase {
     // Calculate payment deadline for bank transfer (if applicable)
     String? paymentDeadline;
     if (paymentMethod == 'bank_transfer') {
-      final deadlineDays = widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
+      final deadlineDays =
+          widgetSettings?.bankTransferConfig?.paymentDeadlineDays ?? 3;
       // Use UTC for consistency with backend (atomicBooking.ts uses server timestamp/UTC)
       // Backend uses fixed 3 days, but we use paymentDeadlineDays from settings for email display
       final deadline = DateTime.now().toUtc().add(Duration(days: deadlineDays));

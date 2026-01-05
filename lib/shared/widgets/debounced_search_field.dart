@@ -113,7 +113,11 @@ class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
                 valueListenable: _showClearButtonNotifier,
                 builder: (context, showClear, child) {
                   return showClear
-                      ? IconButton(icon: const Icon(Icons.clear), onPressed: _clearSearch, tooltip: 'Očisti')
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: _clearSearch,
+                          tooltip: 'Očisti',
+                        )
                       : const SizedBox.shrink();
                 },
               ),
@@ -146,10 +150,12 @@ class CompactDebouncedSearchField extends StatefulWidget {
   final VoidCallback? onClose;
 
   @override
-  State<CompactDebouncedSearchField> createState() => _CompactDebouncedSearchFieldState();
+  State<CompactDebouncedSearchField> createState() =>
+      _CompactDebouncedSearchFieldState();
 }
 
-class _CompactDebouncedSearchFieldState extends State<CompactDebouncedSearchField> {
+class _CompactDebouncedSearchFieldState
+    extends State<CompactDebouncedSearchField> {
   late final TextEditingController _controller;
   late final Debouncer _debouncer;
   late final FocusNode _focusNode;
@@ -224,7 +230,11 @@ class _CompactDebouncedSearchFieldState extends State<CompactDebouncedSearchFiel
                 );
               },
             ),
-            IconButton(icon: const Icon(Icons.close), onPressed: _close, tooltip: 'Zatvori pretragu'),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: _close,
+              tooltip: 'Zatvori pretragu',
+            ),
           ],
         ),
       ),

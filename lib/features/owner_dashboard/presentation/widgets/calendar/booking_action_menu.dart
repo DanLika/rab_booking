@@ -753,18 +753,18 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                     );
                   },
                   loading: () => const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (error, stack) => Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    l10n.bookingActionError(
-                      LoggingService.safeErrorToString(error),
+                    padding: EdgeInsets.all(24),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (error, stack) => Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      l10n.bookingActionError(
+                        LoggingService.safeErrorToString(error),
+                      ),
                     ),
                   ),
                 ),
-              ),
               ),
 
               const SizedBox(height: 16),

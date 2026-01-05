@@ -142,7 +142,11 @@ void _setupErrorHandling() {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Color(0xFFD32F2F)),
+              const Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Color(0xFFD32F2F),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Widget Error',

@@ -33,13 +33,19 @@ class BookingDetailsScreen extends ConsumerStatefulWidget {
   final BookingDetailsModel booking;
   final WidgetSettings? widgetSettings;
 
-  const BookingDetailsScreen({super.key, required this.booking, this.widgetSettings});
+  const BookingDetailsScreen({
+    super.key,
+    required this.booking,
+    this.widgetSettings,
+  });
 
   @override
-  ConsumerState<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
+  ConsumerState<BookingDetailsScreen> createState() =>
+      _BookingDetailsScreenState();
 }
 
-class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> with ThemeDetectionMixin {
+class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
+    with ThemeDetectionMixin {
   bool _isCancelling = false;
 
   // Local state for booking status (updated after cancellation)
@@ -118,7 +124,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
     }
 
     // Check cancellation deadline with safe date parsing
-    final deadlineHours = widget.widgetSettings?.cancellationDeadlineHours ?? 48;
+    final deadlineHours =
+        widget.widgetSettings?.cancellationDeadlineHours ?? 48;
 
     final hoursUntilCheckIn = _getHoursUntilCheckIn();
     // If date parsing fails (null), allow cancellation (owner can decide)
@@ -142,7 +149,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
       return tr.guestCancellationNotEnabled;
     }
 
-    final deadlineHours = widget.widgetSettings?.cancellationDeadlineHours ?? 48;
+    final deadlineHours =
+        widget.widgetSettings?.cancellationDeadlineHours ?? 48;
 
     // Safe date parsing with helper method
     final hoursUntilCheckIn = _getHoursUntilCheckIn();
@@ -223,83 +231,111 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
 
     // Use pure black background for dark theme in widget
-    final backgroundColor = isDarkMode ? ColorTokens.pureBlack : colors.backgroundPrimary;
+    final backgroundColor = isDarkMode
+        ? ColorTokens.pureBlack
+        : colors.backgroundPrimary;
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SafeArea(
-        left: false,
-        right: false,
-        child: Column(
-          children: [
-            // Custom header with centered title (no back button)
-            _buildHeader(colors),
-            Divider(height: 1, thickness: 1, color: colors.borderDefault),
-            // Content
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  // Responsive padding - smaller on mobile
-                  final screenWidth = constraints.maxWidth;
-                  final horizontalPadding = screenWidth < 600 ? SpacingTokens.m : SpacingTokens.l;
-                  final verticalPadding = SpacingTokens.l;
+      body:
+          SafeArea(
+            left: false,
+            right: false,
+            child: Column(
+              children: [
+                // Custom header with centered title (no back button)
+                _buildHeader(colors),
+                Divider(height: 1, thickness: 1, color: colors.borderDefault),
+                // Content
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Responsive padding - smaller on mobile
+                      final screenWidth = constraints.maxWidth;
+                      final horizontalPadding = screenWidth < 600
+                          ? SpacingTokens.m
+                          : SpacingTokens.l;
+                      final verticalPadding = SpacingTokens.l;
 
-                  return SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
-                    child: Center(
-                      child: ConstrainedBox(
-                        // On mobile (<600px), use full width; on desktop, limit to 600px
-                        constraints: BoxConstraints(maxWidth: screenWidth < 600 ? double.infinity : 600),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Status banner - full width
-                            // Uses _currentStatus which updates after cancellation
-                            BookingStatusBanner(status: _currentStatus, colors: colors),
-
-                            const SizedBox(height: SpacingTokens.l),
-
-                            // Booking reference - full width, prominent
-                            DetailsReferenceCard(bookingReference: widget.booking.bookingReference, colors: colors),
-
-                            const SizedBox(height: SpacingTokens.l),
-
-                            // Single column layout
-                            _buildContentCards(colors, isDarkMode),
-
-                            const SizedBox(height: SpacingTokens.xl),
-
-                            // Action buttons - full width
-                            _buildActionButtons(colors, isDarkMode),
-
-                            const SizedBox(height: SpacingTokens.m),
-
-                            // Help text
-                            Builder(
-                              builder: (context) {
-                                final tr = WidgetTranslations.of(context, ref);
-                                return Text(
-                                  tr.needHelpContactOwner,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: TypographyTokens.fontSizeS, color: colors.textTertiary),
-                                );
-                              },
-                            ),
-
-                            // Extra bottom padding for safe area
-                            const SizedBox(height: SpacingTokens.xl),
-                          ],
+                      return SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: verticalPadding,
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                        child: Center(
+                          child: ConstrainedBox(
+                            // On mobile (<600px), use full width; on desktop, limit to 600px
+                            constraints: BoxConstraints(
+                              maxWidth: screenWidth < 600
+                                  ? double.infinity
+                                  : 600,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Status banner - full width
+                                // Uses _currentStatus which updates after cancellation
+                                BookingStatusBanner(
+                                  status: _currentStatus,
+                                  colors: colors,
+                                ),
+
+                                const SizedBox(height: SpacingTokens.l),
+
+                                // Booking reference - full width, prominent
+                                DetailsReferenceCard(
+                                  bookingReference:
+                                      widget.booking.bookingReference,
+                                  colors: colors,
+                                ),
+
+                                const SizedBox(height: SpacingTokens.l),
+
+                                // Single column layout
+                                _buildContentCards(colors, isDarkMode),
+
+                                const SizedBox(height: SpacingTokens.xl),
+
+                                // Action buttons - full width
+                                _buildActionButtons(colors, isDarkMode),
+
+                                const SizedBox(height: SpacingTokens.m),
+
+                                // Help text
+                                Builder(
+                                  builder: (context) {
+                                    final tr = WidgetTranslations.of(
+                                      context,
+                                      ref,
+                                    );
+                                    return Text(
+                                      tr.needHelpContactOwner,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: TypographyTokens.fontSizeS,
+                                        color: colors.textTertiary,
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                // Extra bottom padding for safe area
+                                const SizedBox(height: SpacingTokens.xl),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ).animate().fadeIn(duration: const Duration(milliseconds: 600), curve: Curves.easeIn),
+          ).animate().fadeIn(
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeIn,
+          ),
     );
   }
 
@@ -312,7 +348,10 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
     const double iconSize = 28;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.m, vertical: SpacingTokens.s),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SpacingTokens.m,
+        vertical: SpacingTokens.s,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -323,8 +362,11 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
               color: colors.textPrimary,
               size: iconSize,
             ),
-            onPressed: () => ref.read(themeProvider.notifier).state = !isDarkMode,
-            tooltip: isDarkMode ? tr.tooltipSwitchToLightMode : tr.tooltipSwitchToDarkMode,
+            onPressed: () =>
+                ref.read(themeProvider.notifier).state = !isDarkMode,
+            tooltip: isDarkMode
+                ? tr.tooltipSwitchToLightMode
+                : tr.tooltipSwitchToDarkMode,
             hoverColor: colors.backgroundSecondary,
             splashColor: colors.backgroundSecondary,
           ),
@@ -341,7 +383,11 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
           const SizedBox(width: SpacingTokens.s),
           // Language switcher button (right side)
           IconButton(
-            icon: Icon(Icons.language, color: colors.textPrimary, size: iconSize),
+            icon: Icon(
+              Icons.language,
+              color: colors.textPrimary,
+              size: iconSize,
+            ),
             onPressed: () => _showLanguageDialog(colors),
             tooltip: tr.tooltipChangeLanguage,
             hoverColor: colors.backgroundSecondary,
@@ -360,7 +406,10 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: colors.backgroundPrimary,
-        title: Text(tr.selectLanguage, style: TextStyle(color: colors.textPrimary)),
+        title: Text(
+          tr.selectLanguage,
+          style: TextStyle(color: colors.textPrimary),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -374,12 +423,20 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
     );
   }
 
-  Widget _buildLanguageOption(String code, String name, String current, WidgetColorScheme colors) {
+  Widget _buildLanguageOption(
+    String code,
+    String name,
+    String current,
+    WidgetColorScheme colors,
+  ) {
     final isSelected = current == code;
     return ListTile(
       title: Text(
         name,
-        style: TextStyle(color: colors.textPrimary, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+        style: TextStyle(
+          color: colors.textPrimary,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
       ),
       trailing: isSelected ? Icon(Icons.check, color: colors.primary) : null,
       onTap: () {
@@ -441,7 +498,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
           ),
         ],
         // Contact info
-        if (widget.booking.ownerEmail != null || widget.booking.ownerPhone != null) ...[
+        if (widget.booking.ownerEmail != null ||
+            widget.booking.ownerPhone != null) ...[
           const SizedBox(height: SpacingTokens.l),
           ContactOwnerCard(
             ownerEmail: widget.booking.ownerEmail,
@@ -453,13 +511,15 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
         if (widget.widgetSettings?.allowGuestCancellation == true) ...[
           const SizedBox(height: SpacingTokens.l),
           CancellationPolicyCard(
-            deadlineHours: widget.widgetSettings?.cancellationDeadlineHours ?? 48,
+            deadlineHours:
+                widget.widgetSettings?.cancellationDeadlineHours ?? 48,
             checkIn: widget.booking.checkIn,
             colors: colors,
           ),
         ],
         // Notes
-        if (widget.booking.notes != null && widget.booking.notes!.isNotEmpty) ...[
+        if (widget.booking.notes != null &&
+            widget.booking.notes!.isNotEmpty) ...[
           const SizedBox(height: SpacingTokens.l),
           BookingNotesCard(notes: widget.booking.notes!, colors: colors),
         ],
@@ -478,7 +538,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
 
     // Cancel button colors based on theme (from ColorTokens)
     final cancelBg = colors.statusCancelledBackground;
-    final cancelText = isDarkMode ? ColorTokens.pureWhite : ColorTokens.pureBlack;
+    final cancelText = isDarkMode
+        ? ColorTokens.pureWhite
+        : ColorTokens.pureBlack;
 
     // If booking is cancelled, don't show cancel button
     if (isCancelled) {
@@ -492,11 +554,24 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
         child: ElevatedButton.icon(
           onPressed: canCancel && !_isCancelling ? _handleCancelBooking : null,
           icon: _isCancelling
-              ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: cancelText))
-              : Icon(Icons.cancel_outlined, color: canCancel ? cancelText : colors.textTertiary),
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: cancelText,
+                  ),
+                )
+              : Icon(
+                  Icons.cancel_outlined,
+                  color: canCancel ? cancelText : colors.textTertiary,
+                ),
           label: Text(
             _isCancelling ? tr.cancelling : tr.cancelBooking,
-            style: const TextStyle(fontSize: TypographyTokens.fontSizeL, fontWeight: TypographyTokens.bold),
+            style: const TextStyle(
+              fontSize: TypographyTokens.fontSizeL,
+              fontWeight: TypographyTokens.bold,
+            ),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: canCancel ? cancelBg : colors.buttonDisabled,
@@ -504,7 +579,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen> wit
             disabledBackgroundColor: colors.buttonDisabled,
             disabledForegroundColor: colors.textTertiary,
             padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-            shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularRounded),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderTokens.circularRounded,
+            ),
           ),
         ),
       ),

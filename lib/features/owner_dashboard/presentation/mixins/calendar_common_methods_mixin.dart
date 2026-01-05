@@ -12,7 +12,8 @@ import '../widgets/calendar/booking_inline_edit_dialog.dart';
 
 /// Mixin with common methods shared across calendar screens
 /// (Week, Month, Timeline)
-mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
+mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget>
+    on ConsumerState<T> {
   /// Show search dialog (unified with Month and Timeline views)
   void showSearchDialog() async {
     final selectedBooking = await showDialog<BookingModel>(
@@ -45,7 +46,11 @@ mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget> on ConsumerSt
     } catch (e) {
       if (mounted) {
         // SECURITY FIX SF-012: Prevent info leakage - show generic message
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: 'Greška pri osvježavanju kalendara');
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: 'Greška pri osvježavanju kalendara',
+        );
       }
     }
   }
@@ -53,7 +58,10 @@ mixin CalendarCommonMethodsMixin<T extends ConsumerStatefulWidget> on ConsumerSt
   /// Show filters panel
   /// Returns true if filters were applied, false/null otherwise
   Future<bool?> showFiltersPanel() async {
-    final result = await showDialog<bool>(context: context, builder: (context) => const CalendarFiltersPanel());
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => const CalendarFiltersPanel(),
+    );
     return result;
   }
 

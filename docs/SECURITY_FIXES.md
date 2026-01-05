@@ -17,6 +17,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 9. [SF-009: Error Handling Info Leakage Prevention](#sf-009-error-handling-info-leakage-prevention)
 10. [SF-010: Year Calendar Race Condition Fix](#sf-010-year-calendar-race-condition-fix)
 11. [SF-011: Ignore Service Account Key (CRITICAL)](#sf-011-ignore-service-account-key-critical)
+12. [SF-012: Secure Error Handling & Email Sanitization](#sf-012-secure-error-handling--email-sanitization)
 
 ---
 
@@ -716,6 +717,85 @@ service-account-key.json
   1. Rotirati ključ u Firebase Console
   2. Očistiti Git history (BFG Repo-Cleaner ili git filter-branch)
   3. Force push na sve brancheve
+
+---
+
+## SF-012: Secure Error Handling & Email Sanitization
+
+**Datum**: 2026-01-05  
+**Prioritet**: Medium  
+**Status**: ✅ Riješeno  
+**Zahvaćeni fajlovi**: 
+- `lib/features/owner_dashboard/presentation/mixins/calendar_common_methods_mixin.dart`
+- `lib/features/owner_dashboard/presentation/screens/change_password_screen.dart`
+- `lib/features/owner_dashboard/presentation/widgets/send_email_dialog.dart`
+
+**Otkrio**: Google Sentinel
+
+### Problem
+
+Tri sigurnosna problema:
+
+1. **Calendar refresh** - Prikazivao tehničke detalje greške korisniku
+2. **Change password** - Uključivao `e.message` u error poruku, otkrivajući interne detalje
+3. **Send email dialog** - Nije sanitizirao HTML tagove u subject/message poljima
+
+### Rješenje
+
+#### 1. Calendar Refresh Error Handling
+
+**Prije:**
+```dart
+ErrorDisplayUtils.showErrorSnackBar(context, e);
+```
+
+**Poslije:**
+```dart
+ErrorDisplayUtils.showErrorSnackBar(
+  context,
+  e,
+  userMessage: 'Greška pri osvježavanju kalendara',
+);
+```
+
+#### 2. Change Password Info Leakage
+
+**Prije:**
+```dart
+message = '${l10n.passwordChangeError}: ${e.message}';
+```
+
+**Poslije:**
+```dart
+message = l10n.passwordChangeError;
+```
+
+#### 3. Send Email Input Sanitization
+
+Dodana `_sanitizeInput()` funkcija:
+```dart
+String _sanitizeInput(String input) {
+  return input.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ').trim();
+}
+```
+
+Koristi se za sanitizaciju `subject` i `message` prije slanja:
+```dart
+final subject = _sanitizeInput(_subjectController.text);
+final message = _sanitizeInput(_messageController.text);
+```
+
+### Testiranje
+
+1. ✅ Calendar refresh error - prikazuje generičku poruku
+2. ✅ Password change error - ne otkriva `e.message`
+3. ✅ Email s HTML tagovima - tagovi su uklonjeni
+4. ✅ Email s HTML entities - entities su uklonjeni
+
+### Moguće nuspojave
+
+- Korisnici neće vidjeti tehničke detalje grešaka (namjerno)
+- HTML formatiranje u email porukama neće raditi (sigurnosna mjera)
 
 ---
 

@@ -53,11 +53,11 @@ class MonthCalendarSkeleton extends StatelessWidget {
             ),
           ),
         )
-        .animate(onPlay: (controller) => controller.repeat(reverse: true))
-        .fade(
+        .animate(onPlay: (controller) => controller.repeat())
+        .shimmer(
           duration: const Duration(milliseconds: 1500),
-          begin: 0.4,
-          end: 0.8,
+          color: isDark ? Colors.white.withAlpha(40) : Colors.black.withAlpha(20),
+          angle: 45,
           curve: Curves.easeInOut,
         );
   }

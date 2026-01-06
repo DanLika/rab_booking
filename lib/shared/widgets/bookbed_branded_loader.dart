@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/design_tokens/design_tokens.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/presentation/widgets/auth_logo_icon.dart';
@@ -109,7 +110,9 @@ class BookBedBrandedLoader extends StatelessWidget {
 }
 
 /// Indeterminate progress animation with branded colors
-class _BrandedIndeterminateProgress extends StatefulWidget {
+/// Indeterminate progress animation with branded colors
+/// Refactored to use flutter_animate for consistency and simplicity.
+class _BrandedIndeterminateProgress extends StatelessWidget {
   static const Duration _animationDuration = Duration(milliseconds: 1500);
   static const double _indicatorWidth = 0.3;
 
@@ -118,47 +121,15 @@ class _BrandedIndeterminateProgress extends StatefulWidget {
   const _BrandedIndeterminateProgress({required this.color});
 
   @override
-  State<_BrandedIndeterminateProgress> createState() =>
-      _BrandedIndeterminateProgressState();
-}
-
-class _BrandedIndeterminateProgressState
-    extends State<_BrandedIndeterminateProgress>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: _BrandedIndeterminateProgress._animationDuration,
-      vsync: this,
-    )..repeat();
-
-    _animation = Tween<double>(
-      begin: -1.0,
-      end: 2.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return FractionallySizedBox(
-          widthFactor: _BrandedIndeterminateProgress._indicatorWidth,
-          alignment: Alignment(_animation.value, 0),
-          child: Container(color: widget.color),
+    return FractionallySizedBox(
+      widthFactor: _indicatorWidth,
+      child: Container(color: color),
+    ).animate(onPlay: (controller) => controller.repeat()).slideX(
+          duration: _animationDuration,
+          begin: -1.5,
+          end: 1.5,
+          curve: Curves.easeInOut,
         );
-      },
-    );
   }
 }

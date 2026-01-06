@@ -44,6 +44,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   bool _obscurePassword = true;
   bool _rememberMe = true;
   bool _isLoading = false;
+  bool _isLoginButtonEnabled = false;
   String? _passwordErrorFromServer;
   String? _emailErrorFromServer;
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
@@ -57,6 +58,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     super.initState();
     _passwordController.addListener(_clearServerError);
     _emailController.addListener(_clearServerError);
+    _emailController.addListener(_updateLoginButtonState);
+    _passwordController.addListener(_updateLoginButtonState);
 
     // Initialize shake animation
     _shakeController = AnimationController(
@@ -71,6 +74,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     _loadSavedCredentials();
   }
 
+  void _updateLoginButtonState() {
+    setState(() {
+      _isLoginButtonEnabled = _emailController.text.isNotEmpty &&
+          _passwordController.text.isNotEmpty;
+    });
+  }
+
   /// Load saved email from secure storage
   /// SECURITY FIX SF-007: Only loads email, not password
   Future<void> _loadSavedCredentials() async {
@@ -82,6 +92,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           // SF-007: Password is no longer stored/loaded
           _rememberMe = true;
         });
+        _updateLoginButtonState();
       }
     } catch (e) {
       // Silently fail - secure storage might not be available
@@ -431,7 +442,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                     },
                                     child: GradientAuthButton(
                                       text: l10n.login,
-                                      onPressed: _handleLogin,
+                                      onPressed: _isLoginButtonEnabled ? _handleLogin : null,
                                       isLoading: _isLoading,
                                       icon: Icons.login_rounded,
                                     ),

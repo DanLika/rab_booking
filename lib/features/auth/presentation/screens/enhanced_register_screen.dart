@@ -48,6 +48,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  bool _isRegisterButtonEnabled = false;
   bool _acceptedTerms = false;
   bool _acceptedPrivacy = false;
   bool _newsletterOptIn = false;
@@ -60,6 +61,21 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   void initState() {
     super.initState();
     _emailController.addListener(_clearServerError);
+    _fullNameController.addListener(_updateRegisterButtonState);
+    _emailController.addListener(_updateRegisterButtonState);
+    _passwordController.addListener(_updateRegisterButtonState);
+    _confirmPasswordController.addListener(_updateRegisterButtonState);
+  }
+
+  void _updateRegisterButtonState() {
+    setState(() {
+      final bool fieldsAreValid = _fullNameController.text.isNotEmpty &&
+          _emailController.text.isNotEmpty &&
+          _passwordController.text.isNotEmpty &&
+          _confirmPasswordController.text.isNotEmpty &&
+          _passwordController.text == _confirmPasswordController.text;
+      _isRegisterButtonEnabled = fieldsAreValid && _acceptedTerms && _acceptedPrivacy;
+    });
   }
 
   @override
@@ -257,7 +273,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                   SizedBox(height: isCompact ? 20 : 24),
                                   GradientAuthButton(
                                     text: l10n.authCreateAccount,
-                                    onPressed: _handleRegister,
+                                    onPressed: _isRegisterButtonEnabled ? _handleRegister : null,
                                     isLoading: _isLoading,
                                     icon: Icons.person_add_rounded,
                                   ),
@@ -437,7 +453,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       children: [
         _buildLegalCheckbox(
           value: _acceptedTerms,
-          onChanged: (value) => setState(() => _acceptedTerms = value!),
+          onChanged: (value) {
+            setState(() => _acceptedTerms = value!);
+            _updateRegisterButtonState();
+          },
           linkText: l10n.authTermsConditions,
           prefixText: l10n.authAcceptTerms,
           onLinkTap: () => Navigator.of(context).push(
@@ -448,7 +467,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         const SizedBox(height: 6),
         _buildLegalCheckbox(
           value: _acceptedPrivacy,
-          onChanged: (value) => setState(() => _acceptedPrivacy = value!),
+          onChanged: (value) {
+            setState(() => _acceptedPrivacy = value!);
+            _updateRegisterButtonState();
+          },
           linkText: l10n.authPrivacyPolicy,
           prefixText: l10n.authAcceptTerms,
           onLinkTap: () => Navigator.of(context).push(

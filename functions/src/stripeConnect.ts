@@ -3,6 +3,7 @@ import {admin, db} from "./firebase";
 import {getStripeClient, stripeSecretKey} from "./stripe";
 import {logInfo, logError} from "./logger";
 import {setUser} from "./sentry";
+import {isAllowedReturnUrl} from "./utils/urlValidation";
 
 /**
  * Cloud Function: Create or Get Stripe Connect Account
@@ -20,6 +21,16 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
 
   // Set user context for Sentry error tracking
   setUser(ownerId);
+
+  // SECURITY FIX: Validate returnUrl and refreshUrl to prevent Open Redirect
+  if (!returnUrl || !isAllowedReturnUrl(returnUrl)) {
+    logError(`Invalid returnUrl: ${returnUrl}`);
+    throw new HttpsError("invalid-argument", "Invalid return URL.");
+  }
+  if (refreshUrl && !isAllowedReturnUrl(refreshUrl)) {
+    logError(`Invalid refreshUrl: ${refreshUrl}`);
+    throw new HttpsError("invalid-argument", "Invalid refresh URL.");
+  }
 
   try {
     // Get owner data

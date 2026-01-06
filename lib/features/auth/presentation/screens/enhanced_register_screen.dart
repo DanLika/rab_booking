@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -31,8 +32,7 @@ class EnhancedRegisterScreen extends ConsumerStatefulWidget {
   const EnhancedRegisterScreen({super.key});
 
   @override
-  ConsumerState<EnhancedRegisterScreen> createState() =>
-      _EnhancedRegisterScreenState();
+  ConsumerState<EnhancedRegisterScreen> createState() => _EnhancedRegisterScreenState();
 }
 
 class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
@@ -96,24 +96,18 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       final (firstName, lastName) = _parseFullName(_fullNameController.text);
 
       // SECURITY: Sanitize all inputs before sending to backend
-      final sanitizedEmail =
-          InputSanitizer.sanitizeEmail(_emailController.text.trim()) ??
-          _emailController.text.trim();
-      final sanitizedFirstName =
-          InputSanitizer.sanitizeName(firstName) ?? firstName;
-      final sanitizedLastName =
-          InputSanitizer.sanitizeName(lastName) ?? lastName;
+      final sanitizedEmail = InputSanitizer.sanitizeEmail(_emailController.text.trim()) ?? _emailController.text.trim();
+      final sanitizedFirstName = InputSanitizer.sanitizeName(firstName) ?? firstName;
+      final sanitizedLastName = InputSanitizer.sanitizeName(lastName) ?? lastName;
       final sanitizedPhone = _phoneController.text.trim().isNotEmpty
-          ? (InputSanitizer.sanitizePhone(_phoneController.text.trim()) ??
-                _phoneController.text.trim())
+          ? (InputSanitizer.sanitizePhone(_phoneController.text.trim()) ?? _phoneController.text.trim())
           : null;
 
       await ref
           .read(enhancedAuthProvider.notifier)
           .registerWithEmail(
             email: sanitizedEmail,
-            password: _passwordController
-                .text, // Password doesn't need sanitization (Firebase Auth handles it)
+            password: _passwordController.text, // Password doesn't need sanitization (Firebase Auth handles it)
             firstName: sanitizedFirstName,
             lastName: sanitizedLastName,
             phone: sanitizedPhone,
@@ -152,8 +146,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       if (_isEmailError(errorMessage)) {
         setState(() {
           _emailErrorFromServer =
-              errorMessage.contains('already exists') ||
-                  errorMessage.contains('email-already-in-use')
+              errorMessage.contains('already exists') || errorMessage.contains('email-already-in-use')
               ? l10n.errorEmailInUse
               : l10n.authErrorInvalidEmail;
           _isLoading = false;
@@ -167,22 +160,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   }
 
   (String, String) _parseFullName(String fullName) {
-    final parts = fullName
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((p) => p.isNotEmpty)
-        .toList();
+    final parts = fullName.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
     final firstName = parts.isNotEmpty ? parts.first : '';
     final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
     return (firstName, lastName);
   }
 
   bool _isEmailError(String message) {
-    const emailErrorPatterns = [
-      'already exists',
-      'email-already-in-use',
-      'Invalid email',
-    ];
+    const emailErrorPatterns = ['already exists', 'email-already-in-use', 'Invalid email'];
     return emailErrorPatterns.any(message.contains);
   }
 
@@ -198,8 +183,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         body: Stack(
-          alignment:
-              Alignment.topLeft, // Explicit to avoid TextDirection null check
+          alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
             AuthBackground(
               child: SafeArea(
@@ -207,31 +191,22 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                   builder: (context, constraints) {
                     // Get keyboard height to adjust padding dynamically (with null safety)
                     final mediaQuery = MediaQuery.maybeOf(context);
-                    final keyboardHeight =
-                        (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
-                          0.0,
-                          double.infinity,
-                        );
+                    final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
                     final isKeyboardOpen = keyboardHeight > 0;
 
                     // Calculate minHeight safely - ensure it's always finite and valid
                     double minHeight;
-                    if (isKeyboardOpen &&
-                        constraints.maxHeight.isFinite &&
-                        constraints.maxHeight > 0) {
+                    if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
                       final calculated = constraints.maxHeight - keyboardHeight;
                       minHeight = calculated.clamp(0.0, constraints.maxHeight);
                     } else {
-                      minHeight = constraints.maxHeight.isFinite
-                          ? constraints.maxHeight
-                          : 0.0;
+                      minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
                     }
                     // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
                     return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: EdgeInsets.only(
                         left: isCompact ? 12 : 20,
                         right: isCompact ? 12 : 20,
@@ -273,8 +248,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                 ),
               ),
             ),
-            if (_isLoading)
-              const LoadingOverlay(message: 'Creating your account...'),
+            if (_isLoading) const LoadingOverlay(message: 'Creating your account...'),
           ],
         ),
       ),
@@ -323,11 +297,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     );
   }
 
-  Widget _buildFormFields(
-    ThemeData theme,
-    AppLocalizations l10n,
-    bool isCompact,
-  ) {
+  Widget _buildFormFields(ThemeData theme, AppLocalizations l10n, bool isCompact) {
     final fieldSpacing = SizedBox(height: isCompact ? 12 : 14);
 
     return Column(
@@ -340,11 +310,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             if (value == null || value.trim().isEmpty) {
               return l10n.authEnterFullName;
             }
-            final parts = value
-                .trim()
-                .split(RegExp(r'\s+'))
-                .where((p) => p.isNotEmpty)
-                .toList();
+            final parts = value.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
             if (parts.length < 2) {
               return l10n.authEnterFirstLastName;
             }
@@ -378,14 +344,20 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           labelText: l10n.password,
           prefixIcon: Icons.lock_outline,
           obscureText: _obscurePassword,
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-              color: theme.colorScheme.onSurfaceVariant,
-              size: 20,
+          // UX-019: Add tooltip for accessibility (screen readers)
+          suffixIcon: Tooltip(
+            message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
+            child: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
             ),
-            onPressed: () =>
-                setState(() => _obscurePassword = !_obscurePassword),
           ),
           validator: PasswordValidator.validateMinimumLength,
         ),
@@ -395,20 +367,22 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           labelText: l10n.authConfirmPassword,
           prefixIcon: Icons.lock_outline,
           obscureText: _obscureConfirmPassword,
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-              color: theme.colorScheme.onSurfaceVariant,
-              size: 20,
-            ),
-            onPressed: () => setState(
-              () => _obscureConfirmPassword = !_obscureConfirmPassword,
+          // UX-019: Add tooltip for accessibility (screen readers)
+          suffixIcon: Tooltip(
+            message: _obscureConfirmPassword ? l10n.showPassword : l10n.hidePassword,
+            child: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
+              },
             ),
           ),
-          validator: (value) => PasswordValidator.validateConfirmPassword(
-            _passwordController.text,
-            value,
-          ),
+          validator: (value) => PasswordValidator.validateConfirmPassword(_passwordController.text, value),
         ),
       ],
     );
@@ -422,9 +396,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           onChanged: (value) => setState(() => _acceptedTerms = value!),
           linkText: l10n.authTermsConditions,
           prefixText: l10n.authAcceptTerms,
-          onLinkTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const TermsConditionsScreen()),
-          ),
+          onLinkTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TermsConditionsScreen())),
           theme: theme,
         ),
         const SizedBox(height: 6),
@@ -433,9 +405,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           onChanged: (value) => setState(() => _acceptedPrivacy = value!),
           linkText: l10n.authPrivacyPolicy,
           prefixText: l10n.authAcceptTerms,
-          onLinkTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
-          ),
+          onLinkTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen())),
           theme: theme,
         ),
         const SizedBox(height: 6),
@@ -444,10 +414,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           onChanged: (value) => setState(() => _newsletterOptIn = value!),
           child: Text(
             l10n.authNewsletterOptIn,
-            style: TextStyle(
-              fontSize: 12,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -470,10 +437,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       onChanged: onChanged,
       child: RichText(
         text: TextSpan(
-          style: TextStyle(
-            fontSize: 12,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
           children: [
             TextSpan(text: prefixText),
             TextSpan(
@@ -510,9 +474,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           child: Checkbox(
             value: value,
             onChanged: onChanged,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             activeColor: theme.colorScheme.primary,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
@@ -529,23 +491,15 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     return Center(
       child: TextButton(
         onPressed: () => context.go(OwnerRoutes.login),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        ),
+        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12)),
         child: RichText(
           text: TextSpan(
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
             children: [
               TextSpan(text: '${l10n.authHaveAccount} '),
               TextSpan(
                 text: l10n.login,
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
               ),
             ],
           ),

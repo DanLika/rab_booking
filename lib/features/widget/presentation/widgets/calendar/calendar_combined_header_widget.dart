@@ -40,8 +40,7 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
 
   // Layout constants
   static const _smallScreenBreakpoint = 400.0;
-  static const _tinyScreenBreakpoint =
-      360.0; // iPhone SE, Galaxy S small devices
+  static const _tinyScreenBreakpoint = 360.0; // iPhone SE, Galaxy S small devices
   static const _smallIconSize = 16.0;
   static const _tinyIconSize = 14.0;
   static const _smallContainerSize = 28.0;
@@ -79,18 +78,10 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Left padding for centering (matches right side spacing after navigationWidget)
-            SizedBox(
-              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
-            ),
+            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
             // View Switcher (year/month toggle)
-            CalendarViewSwitcherWidget(
-              colors: colors,
-              isDarkMode: isDarkMode,
-              translations: translations,
-            ),
-            SizedBox(
-              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
-            ),
+            CalendarViewSwitcherWidget(colors: colors, isDarkMode: isDarkMode, translations: translations),
+            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
 
             // Theme Toggle Button
             IconButton(
@@ -106,9 +97,7 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
               onPressed: () {
                 ref.read(themeProvider.notifier).state = !isDarkMode;
               },
-              tooltip: isDarkMode
-                  ? translations.tooltipSwitchToLightMode
-                  : translations.tooltipSwitchToDarkMode,
+              tooltip: isDarkMode ? translations.tooltipSwitchToLightMode : translations.tooltipSwitchToDarkMode,
               padding: EdgeInsets.zero,
               constraints: BoxConstraints(
                 minWidth: isTinyScreen
@@ -125,23 +114,15 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
             ),
 
             // Language Switcher Button (minimal spacing to theme button)
-            _LanguageSwitcherButton(
-              colors: colors,
-              isSmallScreen: isSmallScreen,
-              isTinyScreen: isTinyScreen,
-            ),
+            _LanguageSwitcherButton(colors: colors, isSmallScreen: isSmallScreen, isTinyScreen: isTinyScreen),
 
             // Spacing before navigation widget
-            SizedBox(
-              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
-            ),
+            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
 
             // Custom Navigation Widget (year or month navigation)
             navigationWidget,
             // Right padding for centering (matches left side spacing)
-            SizedBox(
-              width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs,
-            ),
+            SizedBox(width: isSmallScreen ? SpacingTokens.xxs : SpacingTokens.xs),
           ],
         ),
       ),
@@ -155,11 +136,7 @@ class _LanguageSwitcherButton extends ConsumerWidget {
   final bool isSmallScreen;
   final bool isTinyScreen;
 
-  const _LanguageSwitcherButton({
-    required this.colors,
-    required this.isSmallScreen,
-    required this.isTinyScreen,
-  });
+  const _LanguageSwitcherButton({required this.colors, required this.isSmallScreen, required this.isTinyScreen});
 
   // Size constants
   static const _tinyFontSize = 12.0;
@@ -192,27 +169,23 @@ class _LanguageSwitcherButton extends ConsumerWidget {
         ? CalendarCombinedHeaderWidget._smallContainerSize
         : ConstraintTokens.iconContainerSmall;
 
+    final translations = WidgetTranslations.of(context, ref);
+
     return PopupMenuButton<String>(
-      icon: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            _getFlagEmoji(currentLanguage),
-            style: TextStyle(fontSize: fontSize),
-          ),
-          Icon(
-            Icons.arrow_drop_down,
-            size: fontSize,
-            color: colors.textPrimary,
-          ),
-        ],
+      // UX-019: Add semantic label for screen readers
+      icon: Semantics(
+        label: translations.semanticLabelChangeLanguage(_getLanguageName(currentLanguage)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_getFlagEmoji(currentLanguage), style: TextStyle(fontSize: fontSize)),
+            Icon(Icons.arrow_drop_down, size: fontSize, color: colors.textPrimary),
+          ],
+        ),
       ),
-      tooltip: WidgetTranslations.of(context, ref).tooltipChangeLanguage,
+      tooltip: translations.tooltipChangeLanguage,
       padding: EdgeInsets.zero,
-      constraints: BoxConstraints(
-        minWidth: buttonWidth,
-        minHeight: containerSize,
-      ),
+      constraints: BoxConstraints(minWidth: buttonWidth, minHeight: containerSize),
       offset: const Offset(0, _menuOffset),
       shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularMedium),
       color: colors.backgroundPrimary,
@@ -226,12 +199,7 @@ class _LanguageSwitcherButton extends ConsumerWidget {
     );
   }
 
-  PopupMenuItem<String> _buildLanguageItem(
-    String code,
-    String name,
-    String flag,
-    String currentLanguage,
-  ) {
+  PopupMenuItem<String> _buildLanguageItem(String code, String name, String flag, String currentLanguage) {
     final isSelected = currentLanguage == code;
     return PopupMenuItem<String>(
       value: code,
@@ -246,10 +214,7 @@ class _LanguageSwitcherButton extends ConsumerWidget {
               color: isSelected ? colors.primary : colors.textPrimary,
             ),
           ),
-          if (isSelected) ...[
-            const Spacer(),
-            Icon(Icons.check, size: _checkIconSize, color: colors.primary),
-          ],
+          if (isSelected) ...[const Spacer(), Icon(Icons.check, size: _checkIconSize, color: colors.primary)],
         ],
       ),
     );
@@ -268,6 +233,22 @@ class _LanguageSwitcherButton extends ConsumerWidget {
       default:
         // Use globe emoji for unknown languages (neutral fallback)
         return '🌐';
+    }
+  }
+
+  // UX-019: Helper for semantic label
+  String _getLanguageName(String languageCode) {
+    switch (languageCode) {
+      case 'hr':
+        return 'Hrvatski';
+      case 'en':
+        return 'English';
+      case 'de':
+        return 'Deutsch';
+      case 'it':
+        return 'Italiano';
+      default:
+        return 'Unknown';
     }
   }
 

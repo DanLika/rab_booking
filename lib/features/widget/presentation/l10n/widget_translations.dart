@@ -125,46 +125,14 @@ class WidgetTranslations {
   List<String> get weekdaysFull {
     switch (locale.languageCode) {
       case 'hr':
-        return [
-          'Ponedjeljak',
-          'Utorak',
-          'Srijeda',
-          'Četvrtak',
-          'Petak',
-          'Subota',
-          'Nedjelja',
-        ];
+        return ['Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota', 'Nedjelja'];
       case 'de':
-        return [
-          'Montag',
-          'Dienstag',
-          'Mittwoch',
-          'Donnerstag',
-          'Freitag',
-          'Samstag',
-          'Sonntag',
-        ];
+        return ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
       case 'it':
-        return [
-          'Lunedì',
-          'Martedì',
-          'Mercoledì',
-          'Giovedì',
-          'Venerdì',
-          'Sabato',
-          'Domenica',
-        ];
+        return ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
       case 'en':
       default:
-        return [
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-          'Sunday',
-        ];
+        return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     }
   }
 
@@ -3756,6 +3724,21 @@ class WidgetTranslations {
       case 'en':
       default:
         return 'Change Language';
+    }
+  }
+
+  // UX-019: Semantic label for screen readers
+  String semanticLabelChangeLanguage(String languageName) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Promijeni jezik, trenutni jezik: $languageName';
+      case 'de':
+        return 'Sprache ändern, aktuelle Sprache: $languageName';
+      case 'it':
+        return 'Cambia lingua, lingua attuale: $languageName';
+      case 'en':
+      default:
+        return 'Change language, current language: $languageName';
     }
   }
 

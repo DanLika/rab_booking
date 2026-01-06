@@ -29,14 +29,11 @@ class EnhancedLoginScreen extends ConsumerStatefulWidget {
   const EnhancedLoginScreen({super.key});
 
   @override
-  ConsumerState<EnhancedLoginScreen> createState() =>
-      _EnhancedLoginScreenState();
+  ConsumerState<EnhancedLoginScreen> createState() => _EnhancedLoginScreenState();
 }
 
 class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
-    with
-        AndroidKeyboardDismissFixApproach1<EnhancedLoginScreen>,
-        SingleTickerProviderStateMixin {
+    with AndroidKeyboardDismissFixApproach1<EnhancedLoginScreen>, SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -59,13 +56,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     _emailController.addListener(_clearServerError);
 
     // Initialize shake animation
-    _shakeController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-    _shakeAnimation = Tween<double>(begin: 0, end: 10).animate(
-      CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
-    );
+    _shakeController = AnimationController(duration: const Duration(milliseconds: 500), vsync: this);
+    _shakeAnimation = Tween<double>(
+      begin: 0,
+      end: 10,
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn));
 
     // Auto-fill saved credentials if "Remember Me" was enabled
     _loadSavedCredentials();
@@ -117,11 +112,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
     if (!_formKey.currentState!.validate()) {
       _shakeForm(); // Shake animation on validation error
-      ErrorDisplayUtils.showErrorSnackBar(
-        context,
-        l10n.pleaseFixErrors,
-        duration: const Duration(seconds: 10),
-      );
+      ErrorDisplayUtils.showErrorSnackBar(context, l10n.pleaseFixErrors, duration: const Duration(seconds: 10));
       return;
     }
 
@@ -134,11 +125,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     try {
       await ref
           .read(enhancedAuthProvider.notifier)
-          .signInWithEmail(
-            email: email,
-            password: password,
-            rememberMe: _rememberMe,
-          );
+          .signInWithEmail(email: email, password: password, rememberMe: _rememberMe);
 
       if (!mounted) return;
 
@@ -213,15 +200,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       // Get error message from exception (prefer thrown message over state)
       // When a string is thrown directly, toString() returns the string itself
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
-      debugPrint(
-        '[LOGIN_SCREEN] Error message after processing: $errorMessage',
-      );
+      debugPrint('[LOGIN_SCREEN] Error message after processing: $errorMessage');
 
       final isPassError = _isPasswordError(errorMessage);
       final isEmailErr = _isEmailError(errorMessage);
-      debugPrint(
-        '[LOGIN_SCREEN] Is password error: $isPassError, Is email error: $isEmailErr',
-      );
+      debugPrint('[LOGIN_SCREEN] Is password error: $isPassError, Is email error: $isEmailErr');
 
       // Set appropriate field error and enable autovalidate mode
       setState(() {
@@ -264,8 +247,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     final errorLower = error.toLowerCase();
 
     // Authentication errors - use new auth-specific keys
-    if (errorLower.contains('user-not-found') ||
-        errorLower.contains('no account found')) {
+    if (errorLower.contains('user-not-found') || errorLower.contains('no account found')) {
       return l10n.authErrorUserNotFound;
     }
     if (errorLower.contains('wrong-password') ||
@@ -273,23 +255,19 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         errorLower.contains('incorrect password')) {
       return l10n.authErrorWrongPassword;
     }
-    if (errorLower.contains('invalid-email') ||
-        errorLower.contains('invalid email')) {
+    if (errorLower.contains('invalid-email') || errorLower.contains('invalid email')) {
       return l10n.authErrorInvalidEmail;
     }
-    if (errorLower.contains('user-disabled') ||
-        errorLower.contains('account has been disabled')) {
+    if (errorLower.contains('user-disabled') || errorLower.contains('account has been disabled')) {
       return l10n.authErrorUserDisabled;
     }
-    if (errorLower.contains('too-many-requests') ||
-        errorLower.contains('too many')) {
+    if (errorLower.contains('too-many-requests') || errorLower.contains('too many')) {
       return l10n.authErrorTooManyRequests;
     }
     if (errorLower.contains('network') || errorLower.contains('connection')) {
       return l10n.errorNetworkFailed;
     }
-    if (errorLower.contains('permission-denied') ||
-        errorLower.contains('permission denied')) {
+    if (errorLower.contains('permission-denied') || errorLower.contains('permission denied')) {
       return l10n.errorPermissionDenied;
     }
     if (errorLower.contains('not-found') || errorLower.contains('not found')) {
@@ -298,8 +276,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     if (errorLower.contains('timeout')) {
       return l10n.errorTimeout;
     }
-    if (errorLower.contains('already exists') ||
-        errorLower.contains('email-already-in-use')) {
+    if (errorLower.contains('already exists') || errorLower.contains('email-already-in-use')) {
       return l10n.errorEmailInUse;
     }
 
@@ -308,22 +285,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   }
 
   bool _isPasswordError(String message) {
-    const passwordErrorPatterns = [
-      'Incorrect password',
-      'Invalid password',
-      'wrong-password',
-      'invalid-credential',
-    ];
+    const passwordErrorPatterns = ['Incorrect password', 'Invalid password', 'wrong-password', 'invalid-credential'];
     return passwordErrorPatterns.any(message.contains);
   }
 
   bool _isEmailError(String message) {
-    const emailErrorPatterns = [
-      'user-not-found',
-      'No account found',
-      'invalid-email',
-      'Invalid email',
-    ];
+    const emailErrorPatterns = ['user-not-found', 'No account found', 'invalid-email', 'Invalid email'];
     return emailErrorPatterns.any(message.contains);
   }
 
@@ -335,10 +302,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     } catch (e) {
       if (!mounted) return;
       final authState = ref.read(enhancedAuthProvider);
-      ErrorDisplayUtils.showErrorSnackBar(
-        context,
-        authState.error ?? e.toString(),
-      );
+      ErrorDisplayUtils.showErrorSnackBar(context, authState.error ?? e.toString());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -356,11 +320,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     return KeyedSubtree(
       key: ValueKey('login_screen_$keyboardFixRebuildKey'),
       child: Scaffold(
-        resizeToAvoidBottomInset:
-            true, // PRISTUP 1: Omogući automatsko prilagođavanje
+        resizeToAvoidBottomInset: true, // PRISTUP 1: Omogući automatsko prilagođavanje
         body: Stack(
-          alignment:
-              Alignment.topLeft, // Explicit to avoid TextDirection null check
+          alignment: Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
             AuthBackground(
               child: SafeArea(
@@ -368,31 +330,22 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                   builder: (context, constraints) {
                     // Get keyboard height to adjust padding dynamically (with null safety)
                     final mediaQuery = MediaQuery.maybeOf(context);
-                    final keyboardHeight =
-                        (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
-                          0.0,
-                          double.infinity,
-                        );
+                    final keyboardHeight = (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(0.0, double.infinity);
                     final isKeyboardOpen = keyboardHeight > 0;
 
                     // Calculate minHeight safely - ensure it's always finite and valid
                     double minHeight;
-                    if (isKeyboardOpen &&
-                        constraints.maxHeight.isFinite &&
-                        constraints.maxHeight > 0) {
+                    if (isKeyboardOpen && constraints.maxHeight.isFinite && constraints.maxHeight > 0) {
                       final calculated = constraints.maxHeight - keyboardHeight;
                       minHeight = calculated.clamp(0.0, constraints.maxHeight);
                     } else {
-                      minHeight = constraints.maxHeight.isFinite
-                          ? constraints.maxHeight
-                          : 0.0;
+                      minHeight = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
                     }
                     // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
                     return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: EdgeInsets.only(
                         left: isCompact ? 12 : 20,
                         right: isCompact ? 12 : 20,
@@ -422,10 +375,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                     animation: _shakeAnimation,
                                     builder: (context, child) {
                                       return Transform.translate(
-                                        offset: Offset(
-                                          _shakeAnimation.value,
-                                          0,
-                                        ),
+                                        offset: Offset(_shakeAnimation.value, 0),
                                         child: child,
                                       );
                                     },
@@ -437,8 +387,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                     ),
                                   ),
                                   if (AuthFeatureFlags.isGoogleSignInEnabled ||
-                                      AuthFeatureFlags
-                                          .isAppleSignInEnabled) ...[
+                                      AuthFeatureFlags.isAppleSignInEnabled) ...[
                                     SizedBox(height: isCompact ? 16 : 20),
                                     _buildDivider(theme, l10n),
                                     SizedBox(height: isCompact ? 16 : 20),
@@ -468,18 +417,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     return Column(
       children: [
         Center(
-          child: AuthLogoIcon(
-            size: isCompact ? 70 : 80,
-            isWhite: theme.brightness == Brightness.dark,
-          ),
+          child: AuthLogoIcon(size: isCompact ? 70 : 80, isWhite: theme.brightness == Brightness.dark),
         ),
         SizedBox(height: isCompact ? 16 : 20),
         Text(
           l10n.authOwnerLogin,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: isCompact ? 22 : 26,
-          ),
+          style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: isCompact ? 22 : 26),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
@@ -517,17 +460,21 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.password,
       prefixIcon: Icons.lock_outline,
       obscureText: _obscurePassword,
-      suffixIcon: IconButton(
-        icon: Icon(
-          _obscurePassword ? Icons.visibility_off : Icons.visibility,
-          color: theme.colorScheme.onSurfaceVariant,
-          size: 20,
+      // UX-019: Add tooltip for accessibility (screen readers)
+      suffixIcon: Tooltip(
+        message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
+        child: IconButton(
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: theme.colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
+          onPressed: () {
+            // SF-013: Add haptic feedback for better UX on mobile
+            HapticFeedback.mediumImpact();
+            setState(() => _obscurePassword = !_obscurePassword);
+          },
         ),
-        onPressed: () {
-          // SF-013: Add haptic feedback for better UX on mobile
-          HapticFeedback.mediumImpact();
-          setState(() => _obscurePassword = !_obscurePassword);
-        },
       ),
       validator: (value) {
         if (_passwordErrorFromServer != null) {
@@ -552,18 +499,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                   child: Checkbox(
                     value: _rememberMe,
                     onChanged: (value) => setState(() => _rememberMe = value!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                     activeColor: theme.colorScheme.primary,
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  l10n.authRememberMe,
-                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
-                ),
+                Text(l10n.authRememberMe, style: theme.textTheme.bodySmall?.copyWith(fontSize: 13)),
               ],
             ),
           ),
@@ -596,10 +538,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             l10n.authOrContinueWith,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 12,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
           ),
         ),
         Expanded(child: Divider(color: theme.colorScheme.outline)),
@@ -660,9 +599,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     return Center(
       child: TextButton(
         onPressed: () => context.go(OwnerRoutes.register),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        ),
+        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12)),
         child: RichText(
           text: TextSpan(
             style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
@@ -670,10 +607,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
               TextSpan(text: '${l10n.authNoAccount} '),
               TextSpan(
                 text: l10n.authCreateAccount,
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
               ),
             ],
           ),

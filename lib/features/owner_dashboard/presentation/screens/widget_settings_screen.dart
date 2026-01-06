@@ -82,6 +82,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
 
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _hasChanges = false;
   WidgetSettings? _existingSettings;
   CompanyDetails? _companyDetails;
 
@@ -555,6 +556,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
           context,
           l10n.widgetSettingsSaveSuccess,
         );
+        _hasChanges = false;
         // Only navigate back when used as standalone screen (with AppBar)
         // When embedded in tabs (showAppBar: false), stay on current tab
         if (widget.showAppBar) {
@@ -716,14 +718,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     }
 
     return PopScope(
-      onPopInvokedWithResult: (didPop, result) async {
-        if (!didPop) {
-          // Handle browser back button on Chrome Android
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/owner/properties');
-          }
+      canPop: !_hasChanges,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        final confirm = await _showUnsavedChangesDialog();
+        if (confirm == true && mounted) {
+          Navigator.of(context).pop();
         }
       },
       child: KeyedSubtree(
@@ -842,7 +842,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
               ...WidgetMode.values.map(
                 (mode) => InkWell(
                   onTap: () {
-                    setState(() => _selectedMode = mode);
+                    setState(() {
+                      _selectedMode = mode;
+                      _hasChanges = true;
+                    });
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1063,9 +1066,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                         divisions: 20,
                         label: '$_globalDepositPercentage%',
                         onChanged: (value) {
-                          setState(
-                            () => _globalDepositPercentage = value.round(),
-                          );
+                          setState(() {
+                            _globalDepositPercentage = value.round();
+                            _hasChanges = true;
+                          });
                         },
                       ),
                     ),
@@ -1103,7 +1107,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                 title: l10n.widgetSettingsStripePayment,
                 subtitle: l10n.widgetSettingsCardPayment,
                 enabled: _stripeEnabled,
-                onToggle: (val) => setState(() => _stripeEnabled = val),
+                onToggle: (val) => setState(() {
+                  _stripeEnabled = val;
+                  _hasChanges = true;
+                }),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1198,7 +1205,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                         ],
                         onChanged: (value) {
                           if (value != null) {
-                            setState(() => _bankPaymentDeadlineDays = value);
+                            setState(() {
+                              _bankPaymentDeadlineDays = value;
+                              _hasChanges = true;
+                            });
                           }
                         },
                       ),
@@ -1215,8 +1225,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                           label: l10nInner.widgetSettingsCustomNote,
                           subtitle: l10nInner.widgetSettingsAddMessage,
                           value: _bankUseCustomNotes,
-                          onChanged: (val) =>
-                              setState(() => _bankUseCustomNotes = val),
+                          onChanged: (val) => setState(() {
+                            _bankUseCustomNotes = val;
+                            _hasChanges = true;
+                          }),
                         );
                       },
                     ),
@@ -1266,7 +1278,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                     value: _payOnArrivalEnabled,
                     onChanged: isForced
                         ? null
-                        : (val) => setState(() => _payOnArrivalEnabled = val),
+                        : (val) => setState(() {
+                              _payOnArrivalEnabled = val;
+                              _hasChanges = true;
+                            }),
                     isWarning: isForced,
                   );
                 },
@@ -1567,8 +1582,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                     label: l10nInner.widgetSettingsAllowCancellation,
                     subtitle: l10nInner.widgetSettingsGuestsCanCancel,
                     value: _allowCancellation,
-                    onChanged: (val) =>
-                        setState(() => _allowCancellation = val),
+                    onChanged: (val) => setState(() {
+                      _allowCancellation = val;
+                      _hasChanges = true;
+                    }),
                   );
 
                   // Build cancellation deadline card (only shown when cancellation is enabled)
@@ -1657,9 +1674,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                             label: '$_cancellationHours h',
                             onChanged: _allowCancellation
                                 ? (value) {
-                                    setState(
-                                      () => _cancellationHours = value.round(),
-                                    );
+                                    setState(() {
+                                      _cancellationHours = value.round();
+                                      _hasChanges = true;
+                                    });
                                   }
                                 : null,
                           ),
@@ -1890,7 +1908,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                             label: l10n.widgetSettingsPhone,
                             controller: _phoneController,
                             enabled: _showPhone,
-                            onToggle: (val) => setState(() => _showPhone = val),
+                            onToggle: (val) => setState(() {
+                              _showPhone = val;
+                              _hasChanges = true;
+                            }),
                             keyboardType: TextInputType.phone,
                           ),
                         ),
@@ -1901,7 +1922,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                             label: l10n.widgetSettingsEmail,
                             controller: _emailController,
                             enabled: _showEmail,
-                            onToggle: (val) => setState(() => _showEmail = val),
+                            onToggle: (val) => setState(() {
+                              _showEmail = val;
+                              _hasChanges = true;
+                            }),
                             keyboardType: TextInputType.emailAddress,
                           ),
                         ),
@@ -2162,6 +2186,27 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<bool?> _showUnsavedChangesDialog() {
+    final l10n = AppLocalizations.of(context);
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.editProfileDiscardTitle),
+        content: Text(l10n.editProfileDiscardMessage),
+        actions: [
+          TextButton(
+            child: Text(l10n.cancel),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          TextButton(
+            child: Text(l10n.editProfileDiscard),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
       ),
     );
   }

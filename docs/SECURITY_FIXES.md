@@ -29,6 +29,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
     - [BUG-002: IP Geolocation Service - nedostaje in-memory cache](#-bug-002-ip-geolocation-service---nedostaje-in-memory-cache)
     - [BUG-003: iCal Sync - sekvencijalno vs paralelno procesiranje](#-bug-003-ical-sync---sekvencijalno-vs-paralelno-procesiranje)
     - [BUG-004: Owner Bookings Repository - print umjesto LoggingService](#-bug-004-owner-bookings-repository---print-umjesto-loggingservice)
+    - [BUG-005: Dashboard Overview - deferred loading za graphic library](#-bug-005-dashboard-overview---deferred-loading-za-graphic-library)
 
 ---
 
@@ -1761,3 +1762,42 @@ U `getOwnerBookings()` metodi koristi se `print()` za logiranje grešaka umjesto
 - Rizik od merge konflikta nije vrijedan benefita
 - `print` radi u development modu, a u produkciji se ionako ne vidi
 - Može se popraviti kad bude veći refactor tog fajla
+
+---
+
+### 🐛 BUG-005: Dashboard Overview - deferred loading za graphic library
+
+**Prioritet:** Low  
+**Status:** ❌ Neriješeno  
+**Zahvaćeni fajl:** `lib/features/owner_dashboard/presentation/screens/dashboard_overview_tab.dart`  
+**Predložio:** Google Jules
+
+**Problem:**
+`graphic` library se učitava sinkrono pri startu aplikacije, što povećava initial bundle size na webu.
+
+**Trenutni kod:**
+```dart
+import 'package:graphic/graphic.dart';
+```
+
+**Predloženo rješenje:**
+```dart
+import 'package:graphic/graphic.dart' deferred as graphic;
+
+// U build metodi:
+FutureBuilder(
+  future: graphic.loadLibrary(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.done) {
+      return graphic.Chart(...);
+    }
+    return SkeletonLoader(...);
+  },
+)
+```
+
+**Razlog odgode:**
+- Kompleksna promjena - treba zamijeniti SVE reference na graphic klase
+- Može uzrokovati UX probleme (loading flash pri prvom prikazu)
+- Benefit je samo za web (mobile ne koristi deferred loading)
+- Rizik od regresije u chart renderingu

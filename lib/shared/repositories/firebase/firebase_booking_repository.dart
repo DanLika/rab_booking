@@ -20,6 +20,10 @@ class FirebaseBookingRepository implements BookingRepository {
     // - iCal export (visible to external calendars)
     // - Availability checking
     // - Calendar display
+    // PERF-002: Add limit to prevent fetching excessive historical data
+    // Firestore index recommendation:
+    // Collection: bookings (collection group)
+    // Fields: unit_id (asc), created_at (desc)
     final snapshot = await _firestore
         .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
@@ -31,6 +35,8 @@ class FirebaseBookingRepository implements BookingRepository {
             BookingStatus.completed.value,
           ],
         )
+        .orderBy('created_at', descending: true)
+        .limit(1000) // Safe upper limit for a single unit's bookings
         .get();
     return snapshot.docs
         .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
@@ -54,24 +60,21 @@ class FirebaseBookingRepository implements BookingRepository {
     }
 
     // If unitId provided, we can try a more targeted search
-    if (unitId != null) {
-      // Query bookings for this unit and find by ID
-      final unitBookings = await _firestore
-          .collectionGroup('bookings')
-          .where('unit_id', isEqualTo: unitId)
-          .get();
-      for (final doc in unitBookings.docs) {
-        if (doc.id == id) {
-          return BookingModel.fromJson({...doc.data(), 'id': doc.id});
-        }
-      }
+    if (unitId == null) {
+      // PERF-002: The fallback query which scanned the entire 'bookings' collection
+      // group has been removed. Callers must provide a 'unitId' to find a booking by ID.
+      // Returning null to prevent a costly and dangerous full scan.
+      return null;
     }
 
-    // Fall back: Search through collection group (least efficient)
-    // This queries all bookings - use sparingly
-    final snapshot = await _firestore.collectionGroup('bookings').get();
+    // Query bookings for this unit and find by ID. This is still a scan
+    // but it is scoped to a single unit, which is a major improvement.
+    final unitBookings = await _firestore
+        .collectionGroup('bookings')
+        .where('unit_id', isEqualTo: unitId)
+        .get();
 
-    for (final doc in snapshot.docs) {
+    for (final doc in unitBookings.docs) {
       if (doc.id == id) {
         return BookingModel.fromJson({...doc.data(), 'id': doc.id});
       }
@@ -179,9 +182,15 @@ class FirebaseBookingRepository implements BookingRepository {
   @override
   Future<List<BookingModel>> fetchUserBookings(String userId) async {
     // NEW STRUCTURE: Use collection group query
+    // PERF-002: Add limit to prevent fetching excessive historical data
+    // Firestore index recommendation:
+    // Collection: bookings (collection group)
+    // Fields: user_id (asc), created_at (desc)
     final snapshot = await _firestore
         .collectionGroup('bookings')
         .where('user_id', isEqualTo: userId)
+        .orderBy('created_at', descending: true)
+        .limit(100) // Limit to the 100 most recent bookings for a user
         .get();
     return snapshot.docs
         .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
@@ -191,9 +200,15 @@ class FirebaseBookingRepository implements BookingRepository {
   @override
   Future<List<BookingModel>> fetchPropertyBookings(String propertyId) async {
     // NEW STRUCTURE: Use collection group query
+    // PERF-002: Add limit to prevent fetching excessive data for large properties
+    // Firestore index recommendation:
+    // Collection: bookings (collection group)
+    // Fields: property_id (asc), created_at (desc)
     final snapshot = await _firestore
         .collectionGroup('bookings')
         .where('property_id', isEqualTo: propertyId)
+        .orderBy('created_at', descending: true)
+        .limit(1000) // Limit to the 1000 most recent bookings for a property
         .get();
     return snapshot.docs
         .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
@@ -277,6 +292,9 @@ class FirebaseBookingRepository implements BookingRepository {
     required DateTime checkOut,
   }) async {
     // NEW STRUCTURE: Use collection group query
+    // Firestore does not support range filters on different fields.
+    // The query is narrowed down by filtering on check_in < checkOut
+    // and the remaining logic is handled client-side.
     final snapshot = await _firestore
         .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
@@ -288,6 +306,7 @@ class FirebaseBookingRepository implements BookingRepository {
             BookingStatus.completed.value,
           ],
         )
+        .where('check_in', isLessThan: checkOut)
         .get();
 
     final bookings = snapshot.docs
@@ -376,9 +395,13 @@ class FirebaseBookingRepository implements BookingRepository {
   @override
   Future<List<BookingModel>> getCurrentBookings(String userId) async {
     // NEW STRUCTURE: Use collection group query
+    // PERF-002: Add a filter to narrow down the query to potentially current bookings
+    final now = DateTime.now();
     final snapshot = await _firestore
         .collectionGroup('bookings')
         .where('user_id', isEqualTo: userId)
+        .where('check_out', isGreaterThan: now)
+        .limit(50) // A user is unlikely to have more than 50 current bookings
         .get();
 
     final bookings = snapshot.docs

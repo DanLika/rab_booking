@@ -107,6 +107,7 @@ class FirebaseOwnerBookingsRepository {
   }
 
   /// Get all bookings for owner's properties
+  /// PERF-002: Refactored to reduce N+1 queries.
   Future<List<OwnerBooking>> getOwnerBookings({
     String? ownerId,
     String? propertyId,
@@ -124,74 +125,18 @@ class FirebaseOwnerBookingsRepository {
         );
       }
 
-      // Step 1: Get all properties for owner (if not filtering by specific property)
-      List<String> propertyIds = [];
-      if (propertyId != null) {
-        propertyIds = [propertyId];
-      } else {
-        final propertiesSnapshot = await _firestore
-            .collection('properties')
-            .where('owner_id', isEqualTo: userId)
-            .get();
-        propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
-      }
-
-      if (propertyIds.isEmpty) return [];
-
-      // Step 2: Get all units for these properties (if not filtering by specific unit)
-      List<String> unitIds = [];
-      final Map<String, UnitModel> unitsMap = {};
-      final Map<String, String> unitToPropertyMap = {};
-
-      if (unitId != null) {
-        // Get specific unit - need to find which property it belongs to
-        for (final propertyId in propertyIds) {
-          final unitDoc = await _firestore
-              .collection('properties')
-              .doc(propertyId)
-              .collection('units')
-              .doc(unitId)
-              .get();
-          if (unitDoc.exists) {
-            final unit = UnitModel.fromJson({
-              ...unitDoc.data()!,
-              'id': unitDoc.id,
-            });
-            unitIds = [unitId];
-            unitsMap[unitId] = unit;
-            unitToPropertyMap[unitId] = propertyId;
-            break;
-          }
-        }
-      } else {
-        // Get all units for properties from subcollections
-        for (final propertyId in propertyIds) {
-          final unitsSnapshot = await _firestore
-              .collection('properties')
-              .doc(propertyId)
-              .collection('units')
-              .get();
-
-          for (final doc in unitsSnapshot.docs) {
-            final unit = UnitModel.fromJson({...doc.data(), 'id': doc.id});
-            unitIds.add(doc.id);
-            unitsMap[doc.id] = unit;
-            unitToPropertyMap[doc.id] = propertyId;
-          }
-        }
-      }
-
-      if (unitIds.isEmpty) return [];
-
-      // Step 3: Get bookings using collection group query (NEW STRUCTURE)
-      // 🎉 NO MORE whereIn batching! Direct query with owner_id filter
-      final List<BookingModel> bookings = [];
-
+      // Step 1: Get bookings using a collection group query.
       var query = _firestore
           .collectionGroup('bookings')
           .where('owner_id', isEqualTo: userId);
 
       // Apply filters
+      if (propertyId != null) {
+        query = query.where('property_id', isEqualTo: propertyId);
+      }
+      if (unitId != null) {
+        query = query.where('unit_id', isEqualTo: unitId);
+      }
       if (status != null) {
         query = query.where('status', isEqualTo: status.value);
       }
@@ -202,100 +147,29 @@ class FirebaseOwnerBookingsRepository {
         query = query.where('check_out', isLessThanOrEqualTo: endDate);
       }
 
-      final bookingsSnapshot = await query.get().withListFetchTimeout(
+      // Add a limit to prevent fetching excessive data.
+      final bookingsSnapshot =
+      await query.limit(500).get().withListFetchTimeout(
         'getOwnerBookings',
       );
-      for (final doc in bookingsSnapshot.docs) {
+
+      final bookings = bookingsSnapshot.docs.map((doc) {
         try {
-          final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
-          // Filter by property/unit if specified
-          if (propertyId != null && booking.propertyId != propertyId) continue;
-          if (unitId != null && booking.unitId != unitId) continue;
-
-          bookings.add(booking);
+          return BookingModel.fromJson({...doc.data(), 'id': doc.id});
         } catch (e) {
-          // Skip invalid bookings - log for debugging but don't fail entire query
-          // ignore: avoid_print
           print('WARNING: Failed to parse booking ${doc.id}: $e');
+          return null;
         }
-      }
+      }).where((b) => b != null).cast<BookingModel>().toList();
 
-      // Step 4: Get properties data
-      final Map<String, PropertyModel> propertiesMap = {};
-      final uniquePropertyIds = unitToPropertyMap.values.toSet().toList();
-      for (int i = 0; i < uniquePropertyIds.length; i += 10) {
-        final batch = uniquePropertyIds.skip(i).take(10).toList();
-        for (final propId in batch) {
-          final propDoc = await _firestore
-              .collection('properties')
-              .doc(propId)
-              .get();
-          if (propDoc.exists) {
-            propertiesMap[propId] = PropertyModel.fromJson({
-              ...propDoc.data()!,
-              'id': propDoc.id,
-            });
-          }
-        }
-      }
+      if (bookings.isEmpty) return [];
 
-      // Step 5: Get user (guest) data for each booking (skip null userIds from widget bookings)
-      final Map<String, Map<String, dynamic>> usersMap = {};
-      final uniqueUserIds = bookings
-          .map((b) => b.userId)
-          .where((id) => id != null)
-          .cast<String>()
-          .toSet()
-          .toList();
-      for (final userId in uniqueUserIds) {
-        final userDoc = await _firestore.collection('users').doc(userId).get();
-        if (userDoc.exists) {
-          usersMap[userId] = userDoc.data()!;
-        }
-      }
+      // Step 2: Enrich bookings with related data.
+      final ownerBookings = await _enrichBookingsWithRelatedData(bookings);
 
-      // Step 6: Combine all data into OwnerBooking objects
-      final ownerBookings = <OwnerBooking>[];
-      for (final booking in bookings) {
-        final unit = unitsMap[booking.unitId];
-        if (unit == null) continue;
-
-        final propertyId = unitToPropertyMap[booking.unitId];
-        if (propertyId == null) continue;
-
-        final property = propertiesMap[propertyId];
-        if (property == null) continue;
-
-        // For widget bookings, use guest details from booking; for authenticated bookings, use user data
-        final userData = booking.userId != null
-            ? usersMap[booking.userId]
-            : null;
-        final guestName =
-            booking.guestName ??
-            (userData != null
-                ? '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'
-                      .trim()
-                : 'Unknown Guest');
-        final guestEmail =
-            booking.guestEmail ?? (userData?['email'] as String?) ?? '';
-        final guestPhone =
-            booking.guestPhone ?? (userData?['phone'] as String?);
-
-        ownerBookings.add(
-          OwnerBooking(
-            booking: booking,
-            property: property,
-            unit: unit,
-            guestName: guestName.isEmpty ? 'Unknown Guest' : guestName,
-            guestEmail: guestEmail,
-            guestPhone: guestPhone,
-          ),
-        );
-      }
-
-      // Sort by check-in date descending
+      // Sort by check-in date descending.
       ownerBookings.sort(
-        (a, b) => b.booking.checkIn.compareTo(a.booking.checkIn),
+            (a, b) => b.booking.checkIn.compareTo(a.booking.checkIn),
       );
 
       return ownerBookings;
@@ -383,10 +257,16 @@ class FirebaseOwnerBookingsRepository {
       final Map<String, List<BookingModel>> bookingsByUnit = {};
 
       // Single collection group query instead of batched whereIn
+      // PERF-002: Add limit to prevent fetching excessive historical data
+      // Firestore index recommendation:
+      // Collection: bookings (collection group)
+      // Fields: owner_id (asc), check_in (desc)
       final bookingsSnapshot = await _firestore
           .collectionGroup('bookings')
           .where('owner_id', isEqualTo: ownerId)
           .where('check_in', isLessThanOrEqualTo: endDate)
+          .orderBy('check_in', descending: true)
+          .limit(1000) // Limit to 1000 bookings for the calendar view
           .get()
           .withListFetchTimeout('getCalendarBookings');
 
@@ -458,10 +338,16 @@ class FirebaseOwnerBookingsRepository {
       if (userId == null) return {};
 
       // Single collection group query instead of batched whereIn
+      // PERF-002: Add limit to prevent fetching excessive historical data
+      // Firestore index recommendation:
+      // Collection: bookings (collection group)
+      // Fields: owner_id (asc), check_in (desc)
       final bookingsSnapshot = await _firestore
           .collectionGroup('bookings')
           .where('owner_id', isEqualTo: userId)
           .where('check_in', isLessThanOrEqualTo: endDate)
+          .orderBy('check_in', descending: true)
+          .limit(1000) // Limit to 1000 bookings for the calendar view
           .get()
           .withListFetchTimeout('getCalendarBookingsWithUnitIds');
 
@@ -552,11 +438,17 @@ class FirebaseOwnerBookingsRepository {
     // Query iCal events from NEW subcollection structure
     // Path: properties/{propertyId}/ical_events
     for (final propertyId in propertyIds) {
+      // PERF-002: Add limit to prevent fetching excessive historical data
+      // Firestore index recommendation:
+      // Collection: ical_events
+      // Fields: start_date (desc)
       final icalSnapshot = await _firestore
           .collection('properties')
           .doc(propertyId)
           .collection('ical_events')
           .where('start_date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+          .orderBy('start_date', descending: true)
+          .limit(500) // Limit to 500 iCal events per property
           .get();
 
       // Convert iCal events to pseudo-BookingModel objects
@@ -1532,3 +1424,134 @@ class DashboardStatsData {
     required this.upcomingCheckIns,
   });
 }
+
+  /// Enrich bookings with property, unit, and user data
+  /// Used by paginated query to fetch related data for current page only
+  ///
+  /// OPTIMIZED: Uses batch queries instead of N×M individual queries
+  /// - Before: 50+ queries for 5 properties × 10 units
+  /// - After: ~5-7 queries total (1 properties + 1 per property for units + 1 users)
+  Future<List<OwnerBooking>> _enrichBookingsWithRelatedData(
+    List<BookingModel> bookings,
+  ) async {
+    if (bookings.isEmpty) return [];
+
+    // Collect unique IDs
+    final unitIds = bookings.map((b) => b.unitId).toSet().toList();
+    final userIds = bookings
+        .map((b) => b.userId)
+        .where((id) => id != null)
+        .cast<String>()
+        .toSet()
+        .toList();
+
+    // Maps to store fetched data
+    final Map<String, UnitModel> unitsMap = {};
+    final Map<String, String> unitToPropertyMap = {};
+    final Map<String, PropertyModel> propertiesMap = {};
+
+    // ===== OPTIMIZED: Get only owner's properties (not ALL properties) =====
+    // We need to find which properties contain our units
+    // Strategy: Query each property's units subcollection with batch whereIn
+
+    // First, get the current user's properties only
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return [];
+
+    final ownerPropertiesSnapshot = await _firestore
+        .collection('properties')
+        .where('owner_id', isEqualTo: userId)
+        .get(); // 1 QUERY
+
+    for (final propDoc in ownerPropertiesSnapshot.docs) {
+      propertiesMap[propDoc.id] = PropertyModel.fromJson({
+        ...propDoc.data(),
+        'id': propDoc.id,
+      });
+    }
+
+    // ===== OPTIMIZED: Batch fetch units using whereIn =====
+    // Instead of N×M individual queries, do 1 query per property with batch
+    for (final propertyId in propertiesMap.keys) {
+      // Firestore whereIn limit is 30, batch if needed
+      for (int i = 0; i < unitIds.length; i += 30) {
+        final batch = unitIds.skip(i).take(30).toList();
+        if (batch.isEmpty) continue;
+
+        final unitsSnapshot = await _firestore
+            .collection('properties')
+            .doc(propertyId)
+            .collection('units')
+            .where(FieldPath.documentId, whereIn: batch)
+            .get(); // 1 QUERY per property (max ~5 for typical owner)
+
+        for (final unitDoc in unitsSnapshot.docs) {
+          unitsMap[unitDoc.id] = UnitModel.fromJson({
+            ...unitDoc.data(),
+            'id': unitDoc.id,
+          });
+          unitToPropertyMap[unitDoc.id] = propertyId;
+        }
+      }
+
+      // Early exit if we found all units
+      if (unitsMap.length >= unitIds.length) break;
+    }
+
+    // ===== OPTIMIZED: Batch fetch users using whereIn =====
+    // Instead of N individual queries, do batched queries
+    final Map<String, Map<String, dynamic>> usersMap = {};
+    if (userIds.isNotEmpty) {
+      // Firestore whereIn limit is 30, batch if needed
+      for (int i = 0; i < userIds.length; i += 30) {
+        final batch = userIds.skip(i).take(30).toList();
+        if (batch.isEmpty) continue;
+
+        final usersSnapshot = await _firestore
+            .collection('users')
+            .where(FieldPath.documentId, whereIn: batch)
+            .get(); // 1 QUERY for up to 30 users
+
+        for (final userDoc in usersSnapshot.docs) {
+          usersMap[userDoc.id] = userDoc.data();
+        }
+      }
+    }
+
+    // Build OwnerBooking objects
+    final ownerBookings = <OwnerBooking>[];
+    for (final booking in bookings) {
+      final unit = unitsMap[booking.unitId];
+      if (unit == null) continue;
+
+      final propertyId = unitToPropertyMap[booking.unitId];
+      if (propertyId == null) continue;
+
+      final property = propertiesMap[propertyId];
+      if (property == null) continue;
+
+      final userData = booking.userId != null ? usersMap[booking.userId] : null;
+      final guestName =
+          booking.guestName ??
+          (userData != null
+              ? '${userData['first_name'] ?? ''} ${userData['last_name'] ?? ''}'
+                    .trim()
+              : 'Unknown Guest');
+      final guestEmail =
+          booking.guestEmail ?? (userData?['email'] as String?) ?? '';
+      final guestPhone = booking.guestPhone ?? (userData?['phone'] as String?);
+
+      ownerBookings.add(
+        OwnerBooking(
+          booking: booking,
+          property: property,
+          unit: unit,
+          guestName: guestName.isEmpty ? 'Unknown Guest' : guestName,
+          guestEmail: guestEmail,
+          guestPhone: guestPhone,
+        ),
+      );
+    }
+
+    return ownerBookings;
+  }

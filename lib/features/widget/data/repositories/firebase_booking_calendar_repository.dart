@@ -53,10 +53,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     // Stream bookings (NEW STRUCTURE: collection group query)
     // Note: Using client-side filtering to avoid Firestore limitation of
     // whereIn + inequality filters requiring composite index
+    // PERF-002: Add limit to prevent excessive reads on units with many bookings
     final bookingsStream = _firestore
         .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
         .where('status', whereIn: ['pending', 'confirmed'])
+        .limit(500) // Max 500 bookings per year view
         .snapshots();
 
     // Stream prices (NEW STRUCTURE: subcollection path)
@@ -72,11 +74,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
     // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
     // Note: Using client-side filtering to avoid Firestore index requirement for inequality filter
+    // PERF-002: Add limit to prevent excessive reads
     final icalEventsStream = _firestore
         .collection('properties')
         .doc(propertyId)
         .collection('ical_events')
         .where('unit_id', isEqualTo: unitId)
+        .limit(500) // Max 500 iCal events per year view
         .snapshots();
 
     // Stream widget settings to get minNights
@@ -204,10 +208,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     // Stream bookings (NEW STRUCTURE: collection group query)
     // Note: Using client-side filtering to avoid Firestore limitation of
     // whereIn + inequality filters requiring composite index
+    // PERF-002: Add limit to prevent excessive reads on units with many bookings
     final bookingsStream = _firestore
         .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
         .where('status', whereIn: ['pending', 'confirmed'])
+        .limit(100) // Max 100 bookings per month view is a safe upper bound
         .snapshots();
 
     // Stream prices (NEW STRUCTURE: subcollection path)
@@ -223,11 +229,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
     // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
     // NOTE: Removed start_date filter to avoid index issues - filter in code instead
+    // PERF-002: Add limit to prevent excessive reads
     final icalEventsStream = _firestore
         .collection('properties')
         .doc(propertyId)
         .collection('ical_events')
         .where('unit_id', isEqualTo: unitId)
+        .limit(100) // Max 100 iCal events per month is a safe upper bound
         .snapshots();
 
     // Stream widget settings to get minNights

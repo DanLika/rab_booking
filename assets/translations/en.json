@@ -26,5 +26,6 @@
   "per_night": "per night",
   "view_details": "View Details",
   "book_now": "Book Now",
-  "retry": "Retry"
+  "retry": "Retry",
+  "close": "Close"
 }

@@ -64,7 +64,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(context, e);
+        // SECURITY FIX: Do not display raw error messages.
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          AppLocalizations.of(context).authErrorGeneric,
+        );
       }
     }
   }

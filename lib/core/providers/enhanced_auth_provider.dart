@@ -409,7 +409,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
       unawaited(LoggingService.logError('Sign in ERROR', e));
-      final errorMessage = e.toString();
+      // SECURITY FIX: Do not expose raw error messages to the user.
+      // Log the full error for debugging, but throw a generic message.
+      const errorMessage = 'An unexpected error occurred during sign in.';
       // CRITICAL: Always reset isLoading to prevent infinite loading state
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message
@@ -614,7 +616,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
-      final errorMessage = e.toString();
+      unawaited(LoggingService.logError('Registration ERROR', e));
+      // SECURITY FIX: Do not expose raw error messages to the user.
+      const errorMessage = 'An unexpected error occurred during registration.';
       // CRITICAL: Always reset isLoading to prevent infinite loading state
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message
@@ -1027,6 +1031,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   }) async {
     LoggingService.log('Updating email to: $newEmail', tag: 'ENHANCED_AUTH');
 
+    // SECURITY: Add client-side validation before making any backend calls
+    final emailError = ProfileValidators.validateEmail(newEmail);
+    if (emailError != null) {
+      throw AuthException(emailError, code: 'auth/invalid-email');
+    }
+
     final user = _auth.currentUser;
     if (user == null) {
       throw AuthException('No user logged in', code: 'auth/no-user');
@@ -1070,7 +1080,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       throw _getAuthErrorMessage(e);
     } catch (e) {
       unawaited(LoggingService.logError('Email update error', e));
-      const errorMessage = 'Failed to update email. Please try again.';
+      // SECURITY FIX: Do not expose raw error messages to the user.
+      const errorMessage = 'An unexpected error occurred while updating your email.';
       throw errorMessage; // Throw user-friendly message instead of raw exception
     }
   }

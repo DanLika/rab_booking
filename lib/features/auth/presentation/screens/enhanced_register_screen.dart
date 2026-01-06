@@ -130,7 +130,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
       if (authState.error != null) {
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(context, authState.error);
+        // SECURITY FIX: Do not display raw error messages.
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.authErrorGeneric);
         return;
       }
 
@@ -161,7 +162,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         _formKey.currentState!.validate();
       } else {
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
+        // SECURITY FIX: Do not display raw error messages.
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.authErrorGeneric);
       }
     }
   }

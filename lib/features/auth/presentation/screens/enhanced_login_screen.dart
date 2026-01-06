@@ -335,9 +335,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     } catch (e) {
       if (!mounted) return;
       final authState = ref.read(enhancedAuthProvider);
+      // SECURITY FIX: Always use a localized, generic error message.
+      // Do not display raw error messages from authState.error or e.toString().
       ErrorDisplayUtils.showErrorSnackBar(
         context,
-        authState.error ?? e.toString(),
+        AppLocalizations.of(context).authErrorGeneric,
       );
     } finally {
       if (mounted) {

@@ -53,7 +53,49 @@ export const scheduledSyncReminders = onSchedule(
         count: bookingsSnapshot.size,
       });
 
-      // Group bookings by owner and unit
+      // PERFORMANCE: Solve N+1 query problem by batching fetches
+      const unitIds = [...new Set(
+        bookingsSnapshot.docs
+          .map(doc => doc.data().unit_id)
+          .filter(Boolean)
+      )];
+
+      // 1. Batch fetch all required platform connections
+      const connectionsByUnit = new Map<string, any[]>();
+      if (unitIds.length > 0) {
+        const connectionsSnapshot = await db
+          .collection("platform_connections")
+          .where("unit_id", "in", unitIds)
+          .where("status", "==", "active")
+          .get();
+
+        connectionsSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          if (!connectionsByUnit.has(data.unit_id)) {
+            connectionsByUnit.set(data.unit_id, []);
+          }
+          connectionsByUnit.get(data.unit_id)!.push(data);
+        });
+      }
+
+      // 2. Batch fetch all required unit names
+      // PERFORMANCE: Firestore `in` query limit is 30, process in chunks
+      const unitNames = new Map<string, string>();
+      if (unitIds.length > 0) {
+        for (let i = 0; i < unitIds.length; i += 30) {
+          const chunk = unitIds.slice(i, i + 30);
+          const unitsSnapshot = await db
+            .collection("units")
+            .where(admin.firestore.FieldPath.documentId(), "in", chunk)
+            .get();
+
+          unitsSnapshot.docs.forEach(doc => {
+            unitNames.set(doc.id, doc.data()?.name || "Unknown Unit");
+          });
+        }
+      }
+
+      // 3. Process bookings with cached data
       const remindersByOwner = new Map<string, Array<{
         bookingId: string;
         unitId: string;
@@ -65,32 +107,20 @@ export const scheduledSyncReminders = onSchedule(
 
       for (const bookingDoc of bookingsSnapshot.docs) {
         const bookingData = bookingDoc.data();
-        const ownerId = bookingData.owner_id;
         const unitId = bookingData.unit_id;
+
+        // Skip if this unit has no active connections
+        if (!unitId || !connectionsByUnit.has(unitId)) {
+          continue;
+        }
+
+        const ownerId = bookingData.owner_id;
         const checkIn = bookingData.check_in?.toDate();
         const checkOut = bookingData.check_out?.toDate();
 
-        if (!ownerId || !unitId || !checkIn || !checkOut) {
+        if (!ownerId || !checkIn || !checkOut) {
           continue;
         }
-
-        // Check if owner has external platform connections
-        const connectionsSnapshot = await db
-          .collection("platform_connections")
-          .where("unit_id", "==", unitId)
-          .where("status", "==", "active")
-          .get();
-
-        // Only send reminder if there are platform connections
-        if (connectionsSnapshot.empty) {
-          continue;
-        }
-
-        // Get unit name
-        const unitDoc = await db.collection("units").doc(unitId).get();
-        const unitName = unitDoc.exists
-          ? (unitDoc.data()?.name || "Unknown Unit")
-          : "Unknown Unit";
 
         if (!remindersByOwner.has(ownerId)) {
           remindersByOwner.set(ownerId, []);
@@ -99,7 +129,7 @@ export const scheduledSyncReminders = onSchedule(
         remindersByOwner.get(ownerId)!.push({
           bookingId: bookingDoc.id,
           unitId,
-          unitName,
+          unitName: unitNames.get(unitId) || "Unknown Unit",
           checkIn,
           checkOut,
           guestName: bookingData.guest_name || "Guest",
@@ -155,24 +185,24 @@ async function sendSyncReminder(
     const ownerName = ownerData.name || "Owner";
     const ownerPhone = ownerData.phone;
 
-    // Get platform connections for all units
+    // PERFORMANCE: Get platform connections for all units in a single query
     const unitIds = [...new Set(bookings.map((b) => b.unitId))];
     const allConnections: Array<{unitId: string; platform: string}> = [];
 
-    for (const unitId of unitIds) {
+    if (unitIds.length > 0) {
       const connectionsSnapshot = await db
         .collection("platform_connections")
-        .where("unit_id", "==", unitId)
+        .where("unit_id", "in", unitIds)
         .where("status", "==", "active")
         .get();
 
-      for (const connDoc of connectionsSnapshot.docs) {
+      connectionsSnapshot.docs.forEach(connDoc => {
         const connData = connDoc.data();
         allConnections.push({
-          unitId,
+          unitId: connData.unit_id,
           platform: connData.platform,
         });
-      }
+      });
     }
 
     if (allConnections.length === 0) {

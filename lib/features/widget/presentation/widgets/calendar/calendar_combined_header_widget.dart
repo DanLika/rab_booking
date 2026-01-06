@@ -192,22 +192,29 @@ class _LanguageSwitcherButton extends ConsumerWidget {
         ? CalendarCombinedHeaderWidget._smallContainerSize
         : ConstraintTokens.iconContainerSmall;
 
+    final translations = WidgetTranslations.of(context, ref);
+
     return PopupMenuButton<String>(
-      icon: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            _getFlagEmoji(currentLanguage),
-            style: TextStyle(fontSize: fontSize),
-          ),
-          Icon(
-            Icons.arrow_drop_down,
-            size: fontSize,
-            color: colors.textPrimary,
-          ),
-        ],
+      icon: Semantics(
+        label: translations.semanticLabelChangeLanguage(
+          _getLanguageName(currentLanguage),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _getFlagEmoji(currentLanguage),
+              style: TextStyle(fontSize: fontSize),
+            ),
+            Icon(
+              Icons.arrow_drop_down,
+              size: fontSize,
+              color: colors.textPrimary,
+            ),
+          ],
+        ),
       ),
-      tooltip: WidgetTranslations.of(context, ref).tooltipChangeLanguage,
+      tooltip: translations.tooltipChangeLanguage,
       padding: EdgeInsets.zero,
       constraints: BoxConstraints(
         minWidth: buttonWidth,
@@ -285,5 +292,20 @@ class _LanguageSwitcherButton extends ConsumerWidget {
 
     // Use replaceState instead of navigateToUrl (no reload!)
     replaceUrlState(newUrl.toString());
+  }
+
+  String _getLanguageName(String languageCode) {
+    switch (languageCode) {
+      case 'hr':
+        return 'Hrvatski';
+      case 'en':
+        return 'English';
+      case 'de':
+        return 'Deutsch';
+      case 'it':
+        return 'Italiano';
+      default:
+        return 'Unknown';
+    }
   }
 }

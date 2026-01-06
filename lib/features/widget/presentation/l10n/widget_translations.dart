@@ -4363,6 +4363,20 @@ class WidgetTranslations {
     }
   }
 
+  String semanticLabelChangeLanguage(String languageName) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Promijeni jezik, trenutni jezik: $languageName';
+      case 'de':
+        return 'Sprache ändern, aktuelle Sprache: $languageName';
+      case 'it':
+        return 'Cambia lingua, lingua attuale: $languageName';
+      case 'en':
+      default:
+        return 'Change language, current language: $languageName';
+    }
+  }
+
   // ============================================================================
   // CALENDAR ERROR MESSAGES
   // ============================================================================

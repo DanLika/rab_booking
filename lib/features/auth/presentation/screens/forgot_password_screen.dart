@@ -43,10 +43,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showErrorSnackBar(
-        context,
-        'Please enter a valid email address',
-      );
       return;
     }
 

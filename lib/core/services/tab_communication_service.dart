@@ -10,6 +10,9 @@ enum TabMessageType {
 
   /// Calendar should refresh (new booking, update, etc.)
   calendarRefresh,
+
+  /// User signed out in another tab
+  signOut,
 }
 
 /// Parsed message from cross-tab communication
@@ -43,6 +46,9 @@ class TabMessage {
         case 'calendar_refresh':
           type = TabMessageType.calendarRefresh;
           break;
+      case 'sign_out':
+        type = TabMessageType.signOut;
+        break;
         default:
           return null;
       }
@@ -66,6 +72,9 @@ class TabMessage {
         break;
       case TabMessageType.calendarRefresh:
         typeStr = 'calendar_refresh';
+        break;
+      case TabMessageType.signOut:
+        typeStr = 'sign_out';
         break;
     }
 
@@ -138,6 +147,12 @@ abstract class TabCommunicationService {
     send(message.serialize());
   }
 
+  /// Send sign out message to other tabs
+  void sendSignOut() {
+    final message = TabMessage(type: TabMessageType.signOut, params: {});
+    send(message.serialize());
+  }
+
   /// Send booking cancelled message to other tabs
   void sendBookingCancelled({required String bookingId}) {
     final message = TabMessage(
@@ -189,6 +204,11 @@ class TabCommunicationServiceStub implements TabCommunicationService {
 
   @override
   void sendCalendarRefresh({String? unitId}) {
+    // No-op
+  }
+
+  @override
+  void sendSignOut() {
     // No-op
   }
 

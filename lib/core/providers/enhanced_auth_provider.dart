@@ -63,18 +63,23 @@ class EnhancedAuthState {
 
 /// Enhanced Auth Notifier with BedBooking security features
 class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
+  Timer? _tokenRefreshTimer;
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
   final RateLimitService _rateLimit;
   final SecurityEventsService _security;
   final IpGeolocationService _geolocation;
+  final TabCommunicationService _tabComm;
+  final Ref _ref;
 
   EnhancedAuthNotifier(
+    this._ref,
     this._auth,
     this._firestore,
     this._rateLimit,
     this._security,
     this._geolocation,
+    this._tabComm,
   ) : super(const EnhancedAuthState()) {
     // Listen to auth state changes
     _auth.authStateChanges().listen((User? user) {
@@ -93,6 +98,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         LoggingService.clearUser();
         // Set isLoading to false when no user (initial check complete)
         state = const EnhancedAuthState(isLoading: false);
+      }
+    });
+
+    _tabComm.messageStream.listen((message) {
+      if (message.type == TabMessageType.signOut) {
+        signOut();
       }
     });
   }
@@ -199,6 +210,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
         // Update last login time (non-blocking to speed up auth)
         unawaited(_updateLastLogin(firebaseUser.uid));
+
+        // Start proactive token refresh timer
+        _startTokenRefreshTimer();
       } else {
         LoggingService.log(
           'User profile NOT found, creating new profile...',
@@ -737,6 +751,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
   /// Sign out
   Future<void> signOut() async {
+    _tabComm.sendSignOut();
+    _tokenRefreshTimer?.cancel();
     final userId = _auth.currentUser?.uid;
     if (userId != null) {
       await _security.logLogout(userId);
@@ -764,6 +780,49 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     await _auth.signOut();
     // Keep isLoading false after sign out (not an initial check)
     state = const EnhancedAuthState(isLoading: false);
+    ref.invalidateSelf();
+  }
+
+  void _startTokenRefreshTimer() {
+    _tokenRefreshTimer?.cancel();
+    _tokenRefreshTimer =
+        Timer.periodic(const Duration(minutes: 5), (timer) async {
+      await _proactiveTokenRefresh();
+    });
+  }
+
+  Future<void> _proactiveTokenRefresh() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      _tokenRefreshTimer?.cancel();
+      return;
+    }
+
+    try {
+      final idTokenResult = await user.getIdTokenResult(true);
+      final tokenExpiration = idTokenResult.expirationTime;
+      final timeUntilExpiration =
+          tokenExpiration?.difference(DateTime.now()) ?? Duration.zero;
+
+      LoggingService.log(
+        'Proactive token refresh check: time until expiration is ${timeUntilExpiration.inMinutes} minutes',
+        tag: 'ENHANCED_AUTH',
+      );
+
+      if (timeUntilExpiration < const Duration(minutes: 10)) {
+        LoggingService.log(
+          'Token is about to expire, forcing refresh...',
+          tag: 'ENHANCED_AUTH',
+        );
+        await user.getIdToken(true);
+        LoggingService.log('Token refreshed successfully', tag: 'ENHANCED_AUTH');
+      }
+    } catch (e) {
+      LoggingService.log(
+        'Error during proactive token refresh: $e',
+        tag: 'AUTH_WARNING',
+      );
+    }
   }
 
   /// Sign out from all devices
@@ -803,6 +862,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       // Sign out locally after tokens are revoked
       await _auth.signOut();
       state = const EnhancedAuthState(isLoading: false);
+      _ref.invalidateSelf();
     } on FirebaseFunctionsException catch (e) {
       LoggingService.log(
         'Failed to revoke tokens: ${e.message}',
@@ -1122,12 +1182,15 @@ final enhancedAuthProvider =
       final rateLimit = RateLimitService();
       final security = SecurityEventsService();
       final geolocation = IpGeolocationService();
+      final tabComm = ref.watch(tabCommunicationServiceProvider);
 
       return EnhancedAuthNotifier(
+        ref,
         auth,
         firestore,
         rateLimit,
         security,
         geolocation,
+        tabComm,
       );
     });

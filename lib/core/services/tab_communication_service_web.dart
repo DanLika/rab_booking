@@ -208,6 +208,12 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   }
 
   @override
+  void sendSignOut() {
+    final message = TabMessage(type: TabMessageType.signOut, params: {});
+    send(message.serialize());
+  }
+
+  @override
   void sendBookingCancelled({required String bookingId}) {
     final message = TabMessage(
       type: TabMessageType.bookingCancelled,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/services/rate_limit_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -52,19 +53,45 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
     setState(() => _isLoading = true);
 
-    try {
-      await ref
-          .read(enhancedAuthProvider.notifier)
-          .resetPassword(_emailController.text.trim());
+    final email = _emailController.text.trim();
+    final rateLimitService = RateLimitService();
 
-      setState(() {
-        _emailSent = true;
-        _isLoading = false;
-      });
+    try {
+      // 1. Check rate limit before calling Firebase
+      final attempt = await rateLimitService.checkRateLimit(email);
+      if (attempt?.isLocked ?? false) {
+        if (mounted) {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            rateLimitService.getRateLimitMessage(attempt!),
+          );
+          setState(() => _isLoading = false);
+        }
+        return;
+      }
+
+      // 2. Call the reset password function
+      await ref.read(enhancedAuthProvider.notifier).resetPassword(email);
+
+      // 3. On success, show confirmation and reset rate limit
+      await rateLimitService.resetAttempts(email);
+      if (mounted) {
+        setState(() {
+          _emailSent = true;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
+      // 4. On failure, record the attempt
+      await rateLimitService.recordFailedAttempt(email);
       if (mounted) {
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(context, e);
+        // SECURITY: Show a generic message to prevent user enumeration.
+        // This is the same message shown on success.
+        setState(() {
+          _emailSent = true;
+          _isLoading = false;
+        });
       }
     }
   }

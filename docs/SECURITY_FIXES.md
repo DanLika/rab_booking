@@ -28,6 +28,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
     - [BUG-001: iCal Feeds Provider - nedostaje autoDispose](#-bug-001-ical-feeds-provider---nedostaje-autodispose)
     - [BUG-002: IP Geolocation Service - nedostaje in-memory cache](#-bug-002-ip-geolocation-service---nedostaje-in-memory-cache)
     - [BUG-003: iCal Sync - sekvencijalno vs paralelno procesiranje](#-bug-003-ical-sync---sekvencijalno-vs-paralelno-procesiranje)
+    - [BUG-004: Owner Bookings Repository - print umjesto LoggingService](#-bug-004-owner-bookings-repository---print-umjesto-loggingservice)
 
 ---
 
@@ -1727,3 +1728,36 @@ for (let i = 0; i < feedsToProcess.length; i += CONCURRENCY_LIMIT) {
 - Scheduled sync ima 9 min timeout - dovoljno za stotine feedova sekvencijalno
 - Naš 1s delay je namjeran da budemo "nice" prema OTA API-jima
 - Kompleksniji error handling kod paralelnog procesiranja
+
+---
+
+### 🐛 BUG-004: Owner Bookings Repository - print umjesto LoggingService
+
+**Prioritet:** Low  
+**Status:** ❌ Neriješeno  
+**Zahvaćeni fajl:** `lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart`  
+**Predložio:** Google Jules
+
+**Problem:**
+U `getOwnerBookings()` metodi koristi se `print()` za logiranje grešaka umjesto centraliziranog `LoggingService`.
+
+**Trenutni kod:**
+```dart
+} catch (e) {
+  // ignore: avoid_print
+  print('WARNING: Failed to parse booking ${doc.id}: $e');
+}
+```
+
+**Predloženo rješenje:**
+```dart
+} catch (e) {
+  LoggingService.logWarning('Failed to parse booking ${doc.id}: $e');
+}
+```
+
+**Razlog odgode:**
+- Mikro-promjena u 1500+ linija fajlu
+- Rizik od merge konflikta nije vrijedan benefita
+- `print` radi u development modu, a u produkciji se ionako ne vidi
+- Može se popraviti kad bude veći refactor tog fajla

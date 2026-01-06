@@ -27,6 +27,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings/bookings_table_view.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../widgets/responsive_scaffold.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/bookings/bookings_filters_dialog.dart';
 // Booking card components
@@ -491,13 +492,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
+    return ResponsiveScaffold(
+      currentRoute: 'bookings',
       appBar: CommonAppBar(
         title: l10n.ownerBookingsTitle,
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
-      drawer: const OwnerAppDrawer(currentRoute: 'bookings'),
       body: Stack(
         children: [
           Container(

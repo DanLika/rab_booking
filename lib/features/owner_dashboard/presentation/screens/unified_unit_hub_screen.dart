@@ -16,6 +16,7 @@ import '../providers/owner_properties_provider.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../widgets/responsive_scaffold.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import 'unit_pricing_screen.dart';
@@ -177,36 +178,34 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: isDesktop
-          ? CommonAppBar(
-              title: l10n.unitHubTitle,
-              leadingIcon: Icons.menu,
-              onLeadingIconTap: (_) => _scaffoldKey.currentState?.openDrawer(),
-            )
+    return ResponsiveScaffold(
+      currentRoute: 'unit-hub',
+      appBar: isDesktop ? CommonAppBar(title: l10n.unitHubTitle) : null,
+      mobileAppBar: isDesktop
+          ? null
           : AppBar(
               title: Text(
                 _selectedUnit?.name ?? l10n.unitHubTitle,
                 style: const TextStyle(color: Colors.white),
               ),
               centerTitle: false,
-              leadingWidth:
-                  72, // Increased from default 56 to add more left padding
-              leading: Padding(
-                padding: const EdgeInsets.only(
-                  left: 8.0,
-                ), // Additional left padding
-                child: IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.white),
-                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              leadingWidth: 72,
+              leading: Builder(
+                builder: (context) => Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.white),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
                 ),
               ),
               actions: [
-                IconButton(
-                  icon: const Icon(Icons.list, color: Colors.white),
-                  onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-                  tooltip: l10n.unitHubShowAllUnits,
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.list, color: Colors.white),
+                    onPressed: () => Scaffold.of(context).openEndDrawer(),
+                    tooltip: l10n.unitHubShowAllUnits,
+                  ),
                 ),
               ],
               flexibleSpace: Container(
@@ -215,34 +214,31 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 ),
               ),
             ),
-      drawer: const OwnerAppDrawer(currentRoute: 'unit-hub'),
-      // EndDrawer for mobile/tablet - shows master panel
-      endDrawer: !isDesktop
-          ? Drawer(
+      endDrawer: isDesktop
+          ? null
+          : Drawer(
               width: _kMasterPanelWidth,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: context.gradients.sectionBackground,
                 ),
                 child: SafeArea(
-                  bottom: false, // List handles its own bottom padding (80px)
+                  bottom: false,
                   child: Builder(
                     builder: (drawerContext) => _buildMasterPanel(
                       theme,
                       isDark,
                       onUnitSelected: () {
-                        // Check if drawer context is still valid before popping
                         if (drawerContext.mounted) {
                           Navigator.of(drawerContext).pop();
                         }
                       },
-                      isEndDrawer: true, // Mark as endDrawer for styling
+                      isEndDrawer: true,
                     ),
                   ),
                 ),
               ),
-            )
-          : null,
+            ),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: isDesktop

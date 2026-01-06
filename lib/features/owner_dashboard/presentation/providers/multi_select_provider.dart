@@ -94,6 +94,7 @@ class MultiSelectNotifier extends StateNotifier<MultiSelectState> {
 
 /// Multi-select provider
 final multiSelectProvider =
-    StateNotifierProvider<MultiSelectNotifier, MultiSelectState>((ref) {
-      return MultiSelectNotifier();
-    });
+    StateNotifierProvider.autoDispose<MultiSelectNotifier, MultiSelectState>(
+        (ref) {
+  return MultiSelectNotifier();
+});

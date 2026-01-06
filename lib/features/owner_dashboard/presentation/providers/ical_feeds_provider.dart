@@ -4,7 +4,7 @@ import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../domain/models/ical_feed.dart';
 
 /// Provider for all iCal feeds (real-time stream)
-final icalFeedsStreamProvider = StreamProvider<List<IcalFeed>>((ref) {
+final icalFeedsStreamProvider = StreamProvider.autoDispose<List<IcalFeed>>((ref) {
   final userId = ref.watch(enhancedAuthProvider).firebaseUser?.uid;
   if (userId == null) {
     return Stream.value([]);

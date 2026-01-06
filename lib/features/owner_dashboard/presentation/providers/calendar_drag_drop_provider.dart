@@ -34,10 +34,10 @@ class DragDropState {
 }
 
 /// Provider for drag-and-drop state and operations
-final dragDropProvider = StateNotifierProvider<DragDropNotifier, DragDropState>(
-  (ref) {
-    final bookingRepository = ref.watch(bookingRepositoryProvider);
-    return DragDropNotifier(bookingRepository, ref);
+final dragDropProvider =
+    StateNotifierProvider.autoDispose<DragDropNotifier, DragDropState>((ref) {
+  final bookingRepository = ref.watch(bookingRepositoryProvider);
+  return DragDropNotifier(bookingRepository, ref);
   },
 );
 

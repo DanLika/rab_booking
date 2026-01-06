@@ -55,7 +55,8 @@ final unitAdditionalServicesProvider =
     });
 
 /// Provider for selected additional services with quantities
-final selectedAdditionalServicesProvider = StateProvider<Map<String, int>>((
+final selectedAdditionalServicesProvider =
+    StateProvider.autoDispose<Map<String, int>>((
   ref,
 ) {
   return {};

@@ -86,8 +86,8 @@ class BookingLookupService {
 }
 
 /// State provider for manual lookup form
-final bookingReferenceProvider = StateProvider<String>((ref) => '');
-final lookupEmailProvider = StateProvider<String>((ref) => '');
+final bookingReferenceProvider = StateProvider.autoDispose<String>((ref) => '');
+final lookupEmailProvider = StateProvider.autoDispose<String>((ref) => '');
 
 /// Async provider for booking lookup result
 /// This provider is used when user performs manual lookup

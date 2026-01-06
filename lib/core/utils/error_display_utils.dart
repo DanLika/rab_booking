@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
+import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 
 /// Utility for displaying user-friendly error messages
@@ -119,7 +119,7 @@ class ErrorDisplayUtils {
         duration: duration,
         action: onRetry != null
             ? SnackBarAction(
-                label: 'Pokušaj ponovo',
+                label: AppLocalizations.of(context).retry,
                 textColor: Colors.white,
                 onPressed: onRetry,
               )
@@ -309,7 +309,7 @@ class ErrorDisplayUtils {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Zatvori'),
+            child: Text(AppLocalizations.of(context).close),
           ),
           if (onRetry != null)
             FilledButton(
@@ -317,7 +317,7 @@ class ErrorDisplayUtils {
                 Navigator.of(context).pop();
                 onRetry();
               },
-              child: const Text('Pokušaj ponovo'),
+              child: Text(AppLocalizations.of(context).retry),
             ),
         ],
       ),

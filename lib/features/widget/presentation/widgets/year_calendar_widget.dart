@@ -550,16 +550,13 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               });
             }
           },
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderTokens.circularTiny,
-            child: InkWell(
-              onTap: widget.onRangeSelected != null
-                  ? () => _onDateTapped(date, dateInfo, data, colors)
-                  : () => _onViewOnlyTap(translations),
-              borderRadius: BorderTokens.circularTiny,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
+          child: GestureDetector(
+            // In calendar_only mode (onRangeSelected is null), show helpful snackbar
+            onTap: widget.onRangeSelected != null
+                ? () => _onDateTapped(date, dateInfo, data, colors)
+                : () => _onViewOnlyTap(translations),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
               width: cellSize,
               height: cellSize,
               clipBehavior:
@@ -669,8 +666,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                 ],
               ),
             ), // AnimatedContainer
-            ),
-          ), // Material/InkWell
+          ), // GestureDetector
         ), // MouseRegion
       ); // Semantics
     } catch (e) {

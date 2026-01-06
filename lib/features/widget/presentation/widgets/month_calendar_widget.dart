@@ -499,12 +499,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       child: MouseRegion(
         onEnter: (_) => setState(() => _hoveredDate = date),
         onExit: (_) => setState(() => _hoveredDate = null),
-        child: InkWell(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          // In calendar_only mode (onRangeSelected is null), show helpful message on tap
           onTap: widget.onRangeSelected != null
               ? () => _onDateTapped(date, dateInfo, data, colors)
               : () => _onViewOnlyTap(translations),
-          borderRadius: BorderTokens.calendarCell,
-          child: Ink(
+          child: Container(
+            margin: const EdgeInsets.all(BorderTokens.widthThin),
             decoration: BoxDecoration(
               border: Border.all(
                 color: isRangeStart || isRangeEnd
@@ -589,7 +591,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
               ],
             ),
           ),
-        ), // InkWell
+        ), // GestureDetector
       ), // MouseRegion
     ); // Semantics
   }

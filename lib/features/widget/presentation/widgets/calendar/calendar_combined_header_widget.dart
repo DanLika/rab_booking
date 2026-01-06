@@ -6,7 +6,6 @@ import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../l10n/widget_translations.dart';
-import 'calendar_status_legend_dialog.dart';
 import 'calendar_view_switcher_widget.dart';
 
 /// Combined header widget used by both year and month calendar views.
@@ -130,39 +129,6 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
               colors: colors,
               isSmallScreen: isSmallScreen,
               isTinyScreen: isTinyScreen,
-            ),
-
-            // Legend Info Button
-            IconButton(
-              icon: Icon(
-                Icons.info_outline,
-                size: isTinyScreen
-                    ? _tinyIconSize
-                    : isSmallScreen
-                        ? _smallIconSize
-                        : IconSizeTokens.small,
-                color: colors.textPrimary,
-              ),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (_) => CalendarStatusLegendDialog(colors: colors),
-                );
-              },
-              tooltip: translations.calendarLegendTitle,
-              padding: EdgeInsets.zero,
-              constraints: BoxConstraints(
-                minWidth: isTinyScreen
-                    ? _tinyContainerSize
-                    : isSmallScreen
-                        ? _smallContainerSize
-                        : ConstraintTokens.iconContainerSmall,
-                minHeight: isTinyScreen
-                    ? _tinyContainerSize
-                    : isSmallScreen
-                        ? _smallContainerSize
-                        : ConstraintTokens.iconContainerSmall,
-              ),
             ),
 
             // Spacing before navigation widget

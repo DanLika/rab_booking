@@ -79,7 +79,7 @@ class BookingLookupService {
 }
 
 /// State provider for manual lookup form
-/// PERF: autoDispose clears form state when user leaves the screen
+/// SECURITY: autoDispose clears sensitive data (email) when user leaves screen
 final bookingReferenceProvider = StateProvider.autoDispose<String>((ref) => '');
 final lookupEmailProvider = StateProvider.autoDispose<String>((ref) => '');
 

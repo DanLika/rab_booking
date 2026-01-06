@@ -46,14 +46,34 @@ class InputDecorationHelper {
     Widget? suffixIcon,
     bool isMobile = false,
     required BuildContext context,
+    ValueNotifier<bool>? showClearButtonNotifier,
+    VoidCallback? onClear,
   }) {
     final theme = Theme.of(context);
+
+    Widget? finalSuffixIcon = suffixIcon;
+    if (showClearButtonNotifier != null && onClear != null) {
+      finalSuffixIcon = ValueListenableBuilder<bool>(
+        valueListenable: showClearButtonNotifier,
+        builder: (context, showClear, child) {
+          if (showClear) {
+            return IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: onClear,
+              tooltip: 'Očisti',
+            );
+          }
+          return suffixIcon ?? const SizedBox.shrink();
+        },
+      );
+    }
+
     return InputDecoration(
       labelText: labelText,
       hintText: hintText,
       helperText: helperText,
       prefixIcon: prefixIcon,
-      suffixIcon: suffixIcon,
+      suffixIcon: finalSuffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: context.gradients.sectionBorder),

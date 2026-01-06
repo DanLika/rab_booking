@@ -33,6 +33,30 @@ class PremiumInputField extends StatefulWidget {
 class _PremiumInputFieldState extends State<PremiumInputField> {
   static const _borderRadius = BorderRadius.all(Radius.circular(12));
   bool _isFocused = false;
+  late final ValueNotifier<bool> _showClearButtonNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _showClearButtonNotifier =
+        ValueNotifier<bool>(widget.controller.text.isNotEmpty);
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    _showClearButtonNotifier.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    _showClearButtonNotifier.value = widget.controller.text.isNotEmpty;
+  }
+
+  void _onClear() {
+    widget.controller.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +104,20 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
                     size: 20,
                   )
                 : null,
-            suffixIcon: widget.suffixIcon,
+            suffixIcon: widget.suffixIcon ??
+                ValueListenableBuilder<bool>(
+                  valueListenable: _showClearButtonNotifier,
+                  builder: (context, showClear, child) {
+                    if (showClear) {
+                      return IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _onClear,
+                        tooltip: 'Očisti',
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
             filled: true,
             fillColor: gradients.inputFillColor,
             contentPadding: const EdgeInsets.symmetric(

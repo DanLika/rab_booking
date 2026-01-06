@@ -1,6 +1,6 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
-import {logInfo, logError, logSuccess} from "./logger";
+import {logInfo, logError, logSuccess, logWarn} from "./logger";
 import {sendBookingConfirmationEmail} from "./emailService";
 import {
   generateBookingAccessToken,
@@ -8,6 +8,8 @@ import {
 } from "./bookingAccessToken";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
+import {enforceRateLimit} from "./utils/rateLimit";
+import {logSecurityEvent, SecurityEventType} from "./utils/securityMonitoring";
 
 /**
  * Helper to convert Firestore Timestamp or Date to Date object
@@ -50,6 +52,25 @@ export const resendBookingEmail = onCall(async (request) => {
 
   // Set user context for Sentry error tracking
   setUser(request.auth.uid);
+
+  // SECURITY: Rate limit this action to prevent spamming guests
+  try {
+    await enforceRateLimit(request.auth.uid, "resend_booking_email", {
+      maxCalls: 10, // 10 resends per hour per user
+      windowMs: 3600000,
+    });
+  } catch (error: any) {
+    if (error instanceof HttpsError && error.code === "resource-exhausted") {
+      logWarn("Resend booking email rate limit exceeded", {
+        userId: request.auth.uid,
+      });
+      logSecurityEvent(SecurityEventType.RATE_LIMIT_EXCEEDED, {
+        userId: request.auth.uid,
+        action: "resend_booking_email",
+      }).catch(() => {});
+    }
+    throw error; // Re-throw to block execution
+  }
 
   const {bookingId} = request.data;
 

@@ -7,12 +7,14 @@
 
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {getAuth} from "firebase-admin/auth";
-import {logError, logSuccess, logOperation} from "./logger";
+import {logError, logSuccess, logOperation, logWarn} from "./logger";
 import {validateEmail} from "./utils/emailValidation";
 import {sanitizeEmail} from "./utils/inputSanitization";
 import {sendPasswordResetEmailV2} from "./email";
 import {Resend} from "resend";
 import {setUser} from "./sentry";
+import {checkRateLimit} from "./utils/rateLimit";
+import {logSecurityEvent, SecurityEventType} from "./utils/securityMonitoring";
 
 // Lazy initialization of Resend client
 let resend: Resend | null = null;
@@ -57,6 +59,20 @@ export const sendPasswordResetEmail = onCall(
   {cors: true},
   async (request) => {
     try {
+      // SECURITY: IP-based rate limiting for this unauthenticated endpoint
+      const clientIp = request.rawRequest.ip || "unknown";
+      if (!checkRateLimit(`password_reset:${clientIp}`, 5, 600)) { // 5 requests per 10 minutes
+        logWarn("Password reset rate limit exceeded", {ip: clientIp});
+        logSecurityEvent(SecurityEventType.RATE_LIMIT_EXCEEDED, {
+          ip: clientIp,
+          action: "password_reset",
+        }).catch(() => {});
+        throw new HttpsError(
+          "resource-exhausted",
+          "Too many password reset requests. Please wait 10 minutes and try again."
+        );
+      }
+
       const {email} = request.data;
 
       // Set user context for Sentry error tracking (unauthenticated action - use email)

@@ -27,7 +27,6 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings/bookings_table_view.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../widgets/responsive_scaffold.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/bookings/bookings_filters_dialog.dart';
 // Booking card components
@@ -492,11 +491,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
     final l10n = AppLocalizations.of(context);
 
-    return ResponsiveScaffold(
-      currentRoute: 'bookings',
+    return Scaffold(
       appBar: CommonAppBar(
         title: l10n.ownerBookingsTitle,
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
+      drawer: const OwnerAppDrawer(currentRoute: 'bookings'),
       body: Stack(
         children: [
           Container(
@@ -1207,16 +1208,37 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
 
   Widget _buildEmptyState() {
     final l10n = AppLocalizations.of(context);
+    final filters = ref.watch(bookingsFiltersNotifierProvider);
+
+    final hasFilters = filters.hasActiveFilters;
+
     return Center(
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.spaceL),
           child: AnimatedEmptyState(
-            icon: Icons.event_available_outlined,
-            title: l10n.ownerBookingsNoBookings,
-            subtitle: l10n.ownerBookingsNoBookingsDescription,
+            icon: hasFilters
+                ? Icons.filter_alt_off_outlined
+                : Icons.event_available_outlined,
+            title: hasFilters
+                ? l10n.ownerBookingsNoBookingsWithFilters
+                : l10n.ownerBookingsNoBookings,
+            subtitle: hasFilters
+                ? l10n.ownerBookingsNoBookingsWithFiltersDescription
+                : l10n.ownerBookingsNoBookingsDescription,
             iconSize: 70,
             iconColor: Theme.of(context).colorScheme.primary,
+            actionButton: hasFilters
+                ? FilledButton.icon(
+                    onPressed: () {
+                      ref
+                          .read(bookingsFiltersNotifierProvider.notifier)
+                          .clearFilters();
+                    },
+                    icon: const Icon(Icons.clear_all),
+                    label: Text(l10n.ownerBookingsClearAllFilters),
+                  )
+                : null,
           ),
         ),
       ),

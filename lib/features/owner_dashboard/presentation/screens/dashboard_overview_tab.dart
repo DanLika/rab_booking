@@ -11,7 +11,6 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../widgets/responsive_scaffold.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
@@ -41,11 +40,13 @@ class DashboardOverviewTab extends ConsumerWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    return ResponsiveScaffold(
-      currentRoute: 'overview',
+    return Scaffold(
       appBar: CommonAppBar(
         title: l10n.ownerOverview,
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
+      drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: Builder(

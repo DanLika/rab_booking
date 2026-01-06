@@ -16,7 +16,6 @@ import '../widgets/calendar/multi_select_action_bar.dart';
 import '../widgets/calendar/unit_future_bookings_dialog.dart';
 import '../widgets/booking_create_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../widgets/responsive_scaffold.dart';
 import '../mixins/calendar_common_methods_mixin.dart';
 import '../providers/multi_select_provider.dart';
 import '../providers/show_empty_units_provider.dart';
@@ -133,11 +132,15 @@ class _OwnerTimelineCalendarScreenState
         },
         child: Focus(
           autofocus: true,
-          child: ResponsiveScaffold(
-            currentRoute: 'calendar/timeline',
+          child: Scaffold(
+            backgroundColor:
+                Colors.transparent, // Transparent to show gradient background
             appBar: CommonAppBar(
               title: calendarTitle,
+              leadingIcon: Icons.menu,
+              onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
             ),
+            drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
             body: Container(
               decoration: BoxDecoration(
                 gradient: context.gradients.pageBackground,

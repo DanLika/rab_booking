@@ -2914,10 +2914,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     return Form(
       key: _formKey,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           // Section title
           Text(
             tr.guestInformation,
@@ -3077,7 +3076,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
             ),
         ],
-      ),
       ),
     );
   }

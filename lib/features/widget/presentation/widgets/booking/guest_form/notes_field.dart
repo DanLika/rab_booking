@@ -35,7 +35,6 @@ class NotesField extends ConsumerWidget {
       maxLines: _maxLines,
       maxLength: _maxLength,
       style: TextStyle(color: colors.textPrimary),
-      scrollPadding: const EdgeInsets.all(250.0),
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: NotesValidator.validate,
       decoration: WidgetInputDecorationHelper.buildDecoration(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/constants/enums.dart';
 import '../../../../../../core/constants/booking_status_extensions.dart';
+import '../../../../../../core/utils/color_utils.dart';
 import '../../../../../../shared/models/booking_model.dart';
 
 /// Header section for booking card showing status badge and booking ID
@@ -18,6 +19,8 @@ class BookingCardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final statusColor = booking.status.color;
+    final textColor = ColorUtils.getTextColorForBackground(statusColor);
 
     return Container(
       padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -40,7 +43,7 @@ class BookingCardHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
-              color: booking.status.color,
+              color: statusColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -48,14 +51,14 @@ class BookingCardHeader extends StatelessWidget {
               children: [
                 Icon(
                   _getStatusIcon(booking.status),
-                  color: Colors.white,
+                  color: textColor,
                   size: 20,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   booking.status.displayNameLocalized(context),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),

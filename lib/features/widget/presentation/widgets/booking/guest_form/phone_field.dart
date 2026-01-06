@@ -35,7 +35,6 @@ class PhoneField extends ConsumerWidget {
       keyboardType: TextInputType.phone,
       inputFormatters: [PhoneNumberFormatter(dialCode)],
       style: TextStyle(color: colors.textPrimary),
-      scrollPadding: const EdgeInsets.all(200.0),
       decoration: WidgetInputDecorationHelper.buildDecoration(
         labelText: tr.labelPhone,
         hintText: '99 123 4567',

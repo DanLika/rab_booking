@@ -1382,6 +1382,28 @@ Sljedeći prijedlozi iz Jules AI audita su analizirani i odbijeni zbog visokog r
 
 
 
+### ✅ UX-019: Accessibility Improvements (Palette)
+
+**Branch:** `palette-auth-ux-improvements-8533954737293328923`  
+**Status:** Djelomično implementirano
+
+**Implementirano:**
+1. **Tooltip na password visibility toggle** (login + register) - koristi postojeće `showPassword`/`hidePassword` stringove
+2. **Haptic feedback na register screen** - usklađeno s login screenom (SF-013)
+3. **Semantic label za language switcher** - poboljšava accessibility za screen readere
+
+**Odbijeno:**
+- **Disable auth buttons kad forma nije validna** - loša implementacija, provjerava samo da polja nisu prazna (`isNotEmpty`), ne da su validna
+- **Unsaved changes warning** - dobra ideja ali zahtijeva puno boilerplate koda
+
+**Zahvaćeni fajlovi:**
+- `lib/features/auth/presentation/screens/enhanced_login_screen.dart`
+- `lib/features/auth/presentation/screens/enhanced_register_screen.dart`
+- `lib/features/widget/presentation/widgets/calendar/calendar_combined_header_widget.dart`
+- `lib/features/widget/presentation/l10n/widget_translations.dart`
+
+
+
 ### ❌ Rate Limiting za Password Reset
 
 **Branch:** `feat/rate-limiting-auth-12758559440638463678`  
@@ -1440,7 +1462,7 @@ try {
 | `feat/rate-limiting-auth-12758559440638463678` | ❌ Odbijeno | IP rate limiting već implementiran |
 | `enhance-password-validation-2867371911688008985` | ✅ Implementirano | SF-018 Password blacklist |
 | `bolt-memoize-chart-calculation-14900076675884265651` | ⏭️ Preskočeno | Stari dev branch, nije audit |
-| `palette-auth-ux-improvements-8533954737293328923` | ⏭️ Preskočeno | Stari dev branch, nije audit |
+| `palette-auth-ux-improvements-8533954737293328923` | ✅ Djelomično | UX-019 Tooltips + Semantic labels |
 
 ### Ključni zaključci:
 

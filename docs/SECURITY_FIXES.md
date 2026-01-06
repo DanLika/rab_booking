@@ -23,6 +23,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 15. [SF-015: DebouncedSearchField ValueNotifier Optimization](#sf-015-debouncedsearchfield-valuenotifier-optimization)
 16. [SF-016: AnimatedGradientFAB ValueNotifier Optimization](#sf-016-animatedgradientfab-valuenotifier-optimization)
 17. [SF-017: Password Visibility Toggle Tooltips](#sf-017-password-visibility-toggle-tooltips)
+18. [SF-018: Common Password Blacklist](#sf-018-common-password-blacklist)
 
 ---
 
@@ -1154,6 +1155,88 @@ Ova promjena poboljšava WCAG 2.1 usklađenost:
 ### Moguće nuspojave
 
 - Nema - ovo je čisto accessibility poboljšanje bez utjecaja na funkcionalnost
+
+---
+
+## SF-018: Common Password Blacklist
+
+**Datum**: 2026-01-06  
+**Prioritet**: Medium  
+**Status**: ✅ Riješeno  
+**Zahvaćeni fajlovi**: `lib/core/utils/password_validator.dart`  
+**Predložio**: Google Jules (branch: `enhance-password-validation-2867371911688008985`)
+
+### Problem
+
+Password validator nije provjeravao da li je lozinka na listi najčešćih lozinki. Korisnici su mogli koristiti lozinke poput "Password123!" koje tehnički zadovoljavaju sve zahtjeve (uppercase, lowercase, broj, special char) ali su izuzetno slabe jer su na svim dictionary attack listama.
+
+### Rješenje
+
+Dodana `_commonPasswords` Set konstanta s 15 najčešćih lozinki i provjera u dvije metode:
+
+**1. Blacklist konstanta:**
+```dart
+/// SECURITY: Common passwords blacklist
+/// These passwords are rejected regardless of complexity requirements
+static const Set<String> _commonPasswords = {
+  'password',
+  'password1',
+  'password123',
+  'qwerty123',
+  'letmein',
+  'welcome1',
+  'admin123',
+  'iloveyou',
+  'sunshine',
+  'princess',
+  'football',
+  'baseball',
+  'trustno1',
+  'dragon12',
+  'master12',
+};
+```
+
+**2. Provjera u `validate()` metodi:**
+```dart
+// SECURITY: Check against common passwords blacklist
+if (_commonPasswords.contains(password.toLowerCase())) {
+  return PasswordValidationResult.invalid(
+    'This password is too common. Please choose a stronger password.',
+    missing: ['Choose a less common password'],
+  );
+}
+```
+
+**3. Provjera u `_calculateStrength()` metodi:**
+```dart
+// SECURITY: Common passwords are always weak
+if (_commonPasswords.contains(password.toLowerCase())) {
+  return PasswordStrength.weak;
+}
+```
+
+### Testiranje
+
+1. ✅ "password" - odbijeno (common password)
+2. ✅ "Password123!" - odbijeno (common password, case-insensitive)
+3. ✅ "qwerty123" - odbijeno (common password)
+4. ✅ "MyUn1queP@ss!" - prihvaćeno (nije na listi)
+5. ✅ Strength calculation - common passwords vraćaju `weak`
+
+### Moguće nuspojave
+
+- Korisnici koji koriste česte lozinke će morati odabrati drugu lozinku
+- Ovo je **namjerno** ponašanje za bolju sigurnost
+
+### Zašto samo 15 lozinki?
+
+Veće liste (npr. 10,000 lozinki) bi:
+1. Povećale veličinu aplikacije
+2. Usporile validaciju
+3. Bile overkill za client-side provjeru
+
+Server-side (Firebase Auth) već ima robustniju provjeru. Ova lista pokriva najčešće slučajeve.
 
 ---
 

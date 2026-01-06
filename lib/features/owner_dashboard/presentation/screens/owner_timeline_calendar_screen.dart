@@ -42,7 +42,7 @@ class _OwnerTimelineCalendarScreenState
 
   // GlobalKey for accessing TimelineCalendarWidget's scroll methods
   final GlobalKey timelineKey = GlobalKey();
-  bool _showSummary = false;
+  late final ValueNotifier<bool> _showSummaryNotifier;
   int _visibleDays =
       30; // Default to 30 days, will be updated based on screen size
 
@@ -61,6 +61,7 @@ class _OwnerTimelineCalendarScreenState
   @override
   void initState() {
     super.initState();
+    _showSummaryNotifier = ValueNotifier<bool>(false);
     // Initialize with today as start date
     // Number of days will be calculated in didChangeDependencies based on screen size
     _currentRange = DateRangeSelection.days(DateTime.now(), _visibleDays);
@@ -83,6 +84,12 @@ class _OwnerTimelineCalendarScreenState
         );
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _showSummaryNotifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -150,10 +157,13 @@ class _OwnerTimelineCalendarScreenState
                   // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
                   // CONDITIONAL: Hide toolbar when owner has no units
                   if (hasUnits)
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final unreadCountAsync = ref.watch(
-                          unreadNotificationsCountProvider,
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _showSummaryNotifier,
+                      builder: (context, showSummary, _) {
+                        return Consumer(
+                          builder: (context, ref, child) {
+                            final unreadCountAsync = ref.watch(
+                              unreadNotificationsCountProvider,
                         );
                         final multiSelectState = ref.watch(multiSelectProvider);
                         final conflictCount = ref.watch(
@@ -185,20 +195,9 @@ class _OwnerTimelineCalendarScreenState
                           isCompact: MediaQuery.of(context).size.width < 600,
                           // ENHANCED: Analytics toggle integrated in single row
                           showSummaryToggle: true,
-                          isSummaryVisible: _showSummary,
+                          isSummaryVisible: showSummary,
                           onSummaryToggleChanged: (value) {
-                            setState(() {
-                              _showSummary = value;
-                            });
-                            // Force immediate rebuild to prevent delay
-                            // Without this, summary bar wouldn't appear until user scrolled
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) {
-                                setState(() {
-                                  // Trigger second rebuild to ensure AnimatedSize processes
-                                });
-                              }
-                            });
+                            _showSummaryNotifier.value = value;
                           },
                           // Show empty units toggle (persisted via provider)
                           showEmptyUnitsToggle: true,
@@ -241,6 +240,8 @@ class _OwnerTimelineCalendarScreenState
                             ref.invalidate(timelineCalendarBookingsProvider);
                           },
                         );
+                          },
+                        );
                       },
                     ),
 
@@ -251,15 +252,18 @@ class _OwnerTimelineCalendarScreenState
                         final showEmptyUnits = ref.watch(
                           showEmptyUnitsProvider,
                         );
-                        return TimelineCalendarWidget(
-                          // FIXED: Only use counter in key, NOT startDate
-                          // Including startDate caused infinite rebuild loop:
-                          // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
-                          key: timelineKey,
-                          initialScrollToDate: _currentRange
-                              .startDate, // Scroll to selected date
-                          showSummary: _showSummary,
-                          showEmptyUnits: showEmptyUnits,
+                        return ValueListenableBuilder<bool>(
+                          valueListenable: _showSummaryNotifier,
+                          builder: (context, showSummary, _) {
+                            return TimelineCalendarWidget(
+                              // FIXED: Only use counter in key, NOT startDate
+                              // Including startDate caused infinite rebuild loop:
+                              // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
+                              key: timelineKey,
+                              initialScrollToDate: _currentRange
+                                  .startDate, // Scroll to selected date
+                              showSummary: showSummary,
+                              showEmptyUnits: showEmptyUnits,
                           // Problem #19 fix: Pass forceScrollKey to ensure Today button scrolls
                           forceScrollKey: _forceScrollKey,
                           // FIXED: Preserve vertical scroll position during toolbar navigation
@@ -290,6 +294,8 @@ class _OwnerTimelineCalendarScreenState
                             });
                           },
                         );
+                        },
+                       );
                       },
                     ),
                   ),

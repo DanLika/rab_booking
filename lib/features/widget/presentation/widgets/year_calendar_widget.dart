@@ -41,10 +41,24 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
   int _currentYear = DateTime.now().toUtc().year;
-  DateTime? _hoveredDate;
-  Offset _mousePosition = Offset.zero;
+  late final ValueNotifier<DateTime?> _hoveredDateNotifier;
+  late final ValueNotifier<Offset> _mousePositionNotifier;
   bool _isValidating =
       false; // SF-010: Prevent concurrent date range validations
+
+  @override
+  void initState() {
+    super.initState();
+    _hoveredDateNotifier = ValueNotifier<DateTime?>(null);
+    _mousePositionNotifier = ValueNotifier<Offset>(Offset.zero);
+  }
+
+  @override
+  void dispose() {
+    _hoveredDateNotifier.dispose();
+    _mousePositionNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,26 +166,38 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           ),
         ),
         // Hover tooltip overlay (desktop) - highest z-index
-        if (_hoveredDate != null)
-          calendarData.when(
-            data: (data) {
-              // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
-              // Re-read from async value to ensure we have the latest state
-              final currentWidgetCtx = widgetCtxAsync.valueOrNull;
-              final fallbackPrice = currentWidgetCtx?.unit.pricePerNight;
-              return CalendarTooltipBuilder.build(
-                context: context,
-                hoveredDate: _hoveredDate,
-                mousePosition: _mousePosition,
-                data: data,
-                colors: colors,
-                // Use unit's base price as fallback when no daily_price exists
-                fallbackPrice: fallbackPrice,
-              );
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (error, stack) => const SizedBox.shrink(),
-          ),
+        ValueListenableBuilder<DateTime?>(
+          valueListenable: _hoveredDateNotifier,
+          builder: (context, hoveredDate, _) {
+            if (hoveredDate == null) {
+              return const SizedBox.shrink();
+            }
+            return calendarData.when(
+              data: (data) {
+                // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
+                // Re-read from async value to ensure we have the latest state
+                final currentWidgetCtx = widgetCtxAsync.valueOrNull;
+                final fallbackPrice = currentWidgetCtx?.unit.pricePerNight;
+                return ValueListenableBuilder<Offset>(
+                  valueListenable: _mousePositionNotifier,
+                  builder: (context, mousePosition, _) {
+                    return CalendarTooltipBuilder.build(
+                      context: context,
+                      hoveredDate: hoveredDate,
+                      mousePosition: mousePosition,
+                      data: data,
+                      colors: colors,
+                      // Use unit's base price as fallback when no daily_price exists
+                      fallbackPrice: fallbackPrice,
+                    );
+                  },
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (error, stack) => const SizedBox.shrink(),
+            );
+          },
+        ),
       ],
     );
   }
@@ -483,8 +509,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       final isRangeEnd =
           _rangeEnd != null && CalendarDateUtils.isSameDay(date, _rangeEnd!);
       final isHovered =
-          _hoveredDate != null &&
-          CalendarDateUtils.isSameDay(date, _hoveredDate!);
+          _hoveredDateNotifier.value != null &&
+          CalendarDateUtils.isSameDay(date, _hoveredDateNotifier.value!);
       final today = DateTime.now().toUtc();
       final todayNormalized = DateTime.utc(today.year, today.month, today.day);
       final isToday = CalendarDateUtils.isSameDay(date, today);
@@ -513,162 +539,162 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         translations: translations,
       );
 
-      return Semantics(
-        label: semanticLabel,
-        button: widget.onRangeSelected != null,
-        enabled: isInteractive && widget.onRangeSelected != null,
-        selected: isRangeStart || isRangeEnd,
-        child: MouseRegion(
-          cursor: isInteractive
-              ? SystemMouseCursors.click
-              : SystemMouseCursors.basic,
-          // hitTestBehavior prevents flickering on small cells by ensuring
-          // mouse events are captured by the exact cell, not child widgets
-          hitTestBehavior: HitTestBehavior.opaque,
-          onEnter: (_) {
-            if (showTooltip && _hoveredDate != date) {
-              setState(() {
-                _hoveredDate = date;
-              });
-            }
-          },
-          onHover: (event) {
-            if (showTooltip) {
-              // Only update position, don't trigger full rebuild if same date
-              _mousePosition = event.position;
-              if (_hoveredDate != date) {
-                setState(() {
-                  _hoveredDate = date;
-                });
-              }
-            }
-          },
-          onExit: (_) {
-            if (_hoveredDate == date) {
-              setState(() {
-                _hoveredDate = null;
-              });
-            }
-          },
-          child: GestureDetector(
-            // In calendar_only mode (onRangeSelected is null), show helpful snackbar
-            onTap: widget.onRangeSelected != null
-                ? () => _onDateTapped(date, dateInfo, data, colors)
-                : () => _onViewOnlyTap(translations),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              width: cellSize,
-              height: cellSize,
-              clipBehavior:
-                  Clip.antiAlias, // Clip pattern painters to cell bounds
-              decoration: BoxDecoration(
-                color: _getCellColor(
-                  dateInfo,
-                  isInRange,
-                  isHovered,
-                  isInteractive,
-                  colors,
-                ),
-                border: Border.all(
-                  color: isRangeStart || isRangeEnd
-                      ? colors.textPrimary
-                      : isToday
-                      ? colors.textPrimary
-                      : dateInfo.status.getBorderColor(colors),
-                  width: (isRangeStart || isRangeEnd || isToday)
-                      ? BorderTokens.widthMedium
-                      : BorderTokens.widthThin,
-                ),
-                borderRadius: BorderTokens.circularTiny,
-                boxShadow: isHovered && isInteractive
-                    ? ShadowTokens.light
-                    : colors.shadowMinimal,
-              ),
-              child: Stack(
-                children: [
-                  // Diagonal pattern for partial check-in/out
-                  if (isPartialCheckIn || isPartialCheckOut)
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: DiagonalLinePainter(
-                          diagonalColor: dateInfo.isPendingBooking
-                              ? colors.statusPendingBackground
-                              : dateInfo.status.getDiagonalColor(colors),
-                          isCheckIn: isPartialCheckIn,
-                          isPending: dateInfo.isPendingBooking,
-                          patternLineColor: dateInfo.isPendingBooking
-                              ? DateStatus.pending.getPatternLineColor(colors)
-                              : null,
-                        ),
-                      ),
+      return ValueListenableBuilder<DateTime?>(
+        valueListenable: _hoveredDateNotifier,
+        builder: (context, hoveredDate, _) {
+          final isHovered = hoveredDate != null &&
+              CalendarDateUtils.isSameDay(date, hoveredDate);
+          return Semantics(
+            label: semanticLabel,
+            button: widget.onRangeSelected != null,
+            enabled: isInteractive && widget.onRangeSelected != null,
+            selected: isRangeStart || isRangeEnd,
+            child: MouseRegion(
+              cursor: isInteractive
+                  ? SystemMouseCursors.click
+                  : SystemMouseCursors.basic,
+              // hitTestBehavior prevents flickering on small cells by ensuring
+              // mouse events are captured by the exact cell, not child widgets
+              hitTestBehavior: HitTestBehavior.opaque,
+              onEnter: (_) {
+                if (showTooltip) {
+                  _hoveredDateNotifier.value = date;
+                }
+              },
+              onHover: (event) {
+                if (showTooltip) {
+                  _mousePositionNotifier.value = event.position;
+                  if (_hoveredDateNotifier.value != date) {
+                    _hoveredDateNotifier.value = date;
+                  }
+                }
+              },
+              onExit: (_) {
+                if (showTooltip) {
+                  _hoveredDateNotifier.value = null;
+                }
+              },
+              child: GestureDetector(
+                // In calendar_only mode (onRangeSelected is null), show helpful snackbar
+                onTap: widget.onRangeSelected != null
+                    ? () => _onDateTapped(date, dateInfo, data, colors)
+                    : () => _onViewOnlyTap(translations),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  width: cellSize,
+                  height: cellSize,
+                  clipBehavior:
+                      Clip.antiAlias, // Clip pattern painters to cell bounds
+                  decoration: BoxDecoration(
+                    color: _getCellColor(
+                      dateInfo,
+                      isInRange,
+                      isHovered,
+                      isInteractive,
+                      colors,
                     ),
-                  // Split triangles for partialBoth (turnover day)
-                  if (isPartialBoth)
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: PartialBothPainter(
-                          checkoutColor: dateInfo.isCheckOutPending
-                              ? colors.statusPendingBackground
-                              : colors.statusBookedBackground,
-                          checkinColor: dateInfo.isCheckInPending
-                              ? colors.statusPendingBackground
-                              : colors.statusBookedBackground,
-                          isCheckOutPending: dateInfo.isCheckOutPending,
-                          isCheckInPending: dateInfo.isCheckInPending,
-                          patternLineColor: DateStatus.pending
-                              .getPatternLineColor(colors),
-                        ),
-                      ),
+                    border: Border.all(
+                      color: isRangeStart || isRangeEnd
+                          ? colors.textPrimary
+                          : isToday
+                          ? colors.textPrimary
+                          : dateInfo.status.getBorderColor(colors),
+                      width: (isRangeStart || isRangeEnd || isToday)
+                          ? BorderTokens.widthMedium
+                          : BorderTokens.widthThin,
                     ),
-                  // Pending pattern overlay for full booked days (not partial, not partialBoth)
-                  if (dateInfo.isPendingBooking &&
-                      !isPartialCheckIn &&
-                      !isPartialCheckOut &&
-                      !isPartialBoth &&
-                      dateInfo.status == DateStatus.booked)
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: PendingPatternPainter(
-                          lineColor: DateStatus.pending.getPatternLineColor(
-                            colors,
+                    borderRadius: BorderTokens.circularTiny,
+                    boxShadow: isHovered && isInteractive
+                        ? ShadowTokens.light
+                        : colors.shadowMinimal,
+                  ),
+                  child: Stack(
+                    children: [
+                      // Diagonal pattern for partial check-in/out
+                      if (isPartialCheckIn || isPartialCheckOut)
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: DiagonalLinePainter(
+                              diagonalColor: dateInfo.isPendingBooking
+                                  ? colors.statusPendingBackground
+                                  : dateInfo.status.getDiagonalColor(colors),
+                              isCheckIn: isPartialCheckIn,
+                              isPending: dateInfo.isPendingBooking,
+                              patternLineColor: dateInfo.isPendingBooking
+                                  ? DateStatus.pending.getPatternLineColor(colors)
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      // Split triangles for partialBoth (turnover day)
+                      if (isPartialBoth)
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: PartialBothPainter(
+                              checkoutColor: dateInfo.isCheckOutPending
+                                  ? colors.statusPendingBackground
+                                  : colors.statusBookedBackground,
+                              checkinColor: dateInfo.isCheckInPending
+                                  ? colors.statusPendingBackground
+                                  : colors.statusBookedBackground,
+                              isCheckOutPending: dateInfo.isCheckOutPending,
+                              isCheckInPending: dateInfo.isCheckInPending,
+                              patternLineColor: DateStatus.pending
+                                  .getPatternLineColor(colors),
+                            ),
+                          ),
+                        ),
+                      // Pending pattern overlay for full booked days (not partial, not partialBoth)
+                      if (dateInfo.isPendingBooking &&
+                          !isPartialCheckIn &&
+                          !isPartialCheckOut &&
+                          !isPartialBoth &&
+                          dateInfo.status == DateStatus.booked)
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: PendingPatternPainter(
+                              lineColor: DateStatus.pending.getPatternLineColor(
+                                colors,
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Day number in center
+                      Center(
+                        child: Text(
+                          day.toString(),
+                          style: TextStyle(
+                            fontSize: (cellSize * 0.45).clamp(8.0, 14.0),
+                            fontWeight: FontWeight.w600,
+                            // Past dates use secondary color for cleaner "disabled" look
+                            color: isPast
+                                ? colors.textSecondary
+                                : colors.textPrimary,
                           ),
                         ),
                       ),
-                    ),
-                  // Day number in center
-                  Center(
-                    child: Text(
-                      day.toString(),
-                      style: TextStyle(
-                        fontSize: (cellSize * 0.45).clamp(8.0, 14.0),
-                        fontWeight: FontWeight.w600,
-                        // Past dates use secondary color for cleaner "disabled" look
-                        color: isPast
-                            ? colors.textSecondary
-                            : colors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  // Today indicator dot
-                  if (isToday)
-                    Positioned(
-                      top: 1,
-                      right: 1,
-                      child: Container(
-                        width: cellSize < 30 ? 3 : 4,
-                        height: cellSize < 30 ? 3 : 4,
-                        decoration: BoxDecoration(
-                          color: colors.textPrimary,
-                          shape: BoxShape.circle,
+                      // Today indicator dot
+                      if (isToday)
+                        Positioned(
+                          top: 1,
+                          right: 1,
+                          child: Container(
+                            width: cellSize < 30 ? 3 : 4,
+                            height: cellSize < 30 ? 3 : 4,
+                            decoration: BoxDecoration(
+                              color: colors.textPrimary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                ],
-              ),
-            ), // AnimatedContainer
-          ), // GestureDetector
-        ), // MouseRegion
-      ); // Semantics
+                    ],
+                  ),
+                ), // AnimatedContainer
+              ), // GestureDetector
+            ), // MouseRegion
+          ); // Semantics
+        },
+      );
     } catch (e) {
       // Invalid date (e.g., Feb 30)
       return _buildEmptyCell(cellSize, colors);

@@ -114,7 +114,7 @@ class _TimelineCalendarWidgetState
   bool _isSyncingScroll = false;
 
   // Zoom state
-  double _zoomScale = kTimelineDefaultZoomScale;
+  late final ValueNotifier<double> _zoomScaleNotifier;
 
   // Windowing state
   int _visibleStartIndex = 0;
@@ -174,6 +174,7 @@ class _TimelineCalendarWidgetState
   @override
   void initState() {
     super.initState();
+    _zoomScaleNotifier = ValueNotifier<double>(kTimelineDefaultZoomScale);
     _timelineLog('initState() called', category: 'Lifecycle');
     // IMPORTANT: _initializeDateRange() must be called FIRST because it creates
     // _horizontalScrollController with the correct initialScrollOffset
@@ -226,7 +227,7 @@ class _TimelineCalendarWidgetState
       bool shouldSkipScroll = false;
       if (_horizontalScrollController.hasClients) {
         try {
-          final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+          final dimensions = context.timelineDimensionsWithZoom(_zoomScaleNotifier.value);
           final daysSinceStart = targetDate.difference(_fixedStartDate).inDays;
           final targetScrollPos = daysSinceStart * dimensions.dayWidth;
           final currentScroll = _horizontalScrollController.offset;
@@ -464,28 +465,26 @@ class _TimelineCalendarWidgetState
     final matrix = _transformationController.value;
     final newScale = matrix.getMaxScaleOnAxis();
 
-    if ((newScale - _zoomScale).abs() > 0.01) {
+    if ((newScale - _zoomScaleNotifier.value).abs() > 0.01) {
       _timelineLog(
         '_onTransformChanged: zoom scale changed',
         category: 'Zoom',
         data: {
-          'from': _zoomScale.toStringAsFixed(2),
+          'from': _zoomScaleNotifier.value.toStringAsFixed(2),
           'to': newScale.toStringAsFixed(2),
         },
       );
-      setState(() {
-        _zoomScale = newScale.clamp(
-          kTimelineMinZoomScale,
-          kTimelineMaxZoomScale,
-        );
-      });
+      _zoomScaleNotifier.value = newScale.clamp(
+        kTimelineMinZoomScale,
+        kTimelineMaxZoomScale,
+      );
     }
   }
 
   void _updateVisibleRange() {
     if (!_horizontalScrollController.hasClients || !mounted) return;
 
-    final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+    final dimensions = context.timelineDimensionsWithZoom(_zoomScaleNotifier.value);
     final scrollOffset = _horizontalScrollController.offset;
     final dayWidth = dimensions.dayWidth;
 
@@ -766,7 +765,7 @@ class _TimelineCalendarWidgetState
       return;
     }
 
-    final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+    final dimensions = context.timelineDimensionsWithZoom(_zoomScaleNotifier.value);
 
     // SIMPLIFIED: Clamp target date to fixed range (no dynamic extension)
     // If target is outside range, clamp to nearest edge
@@ -936,7 +935,7 @@ class _TimelineCalendarWidgetState
       targetDate = DateTime(_fixedEndDate.year, _fixedEndDate.month);
     }
 
-    final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+    final dimensions = context.timelineDimensionsWithZoom(_zoomScaleNotifier.value);
     final daysSinceStart = targetDate.difference(_fixedStartDate).inDays;
     final scrollPosition = daysSinceStart * dimensions.dayWidth;
     final maxScroll = _horizontalScrollController.position.maxScrollExtent;
@@ -1026,7 +1025,7 @@ class _TimelineCalendarWidgetState
       return;
     }
 
-    final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+    final dimensions = context.timelineDimensionsWithZoom(_zoomScaleNotifier.value);
 
     // Scroll horizontally to conflict date
     final daysSinceStart = conflictDate.difference(_fixedStartDate).inDays;
@@ -1187,7 +1186,7 @@ class _TimelineCalendarWidgetState
     }
 
     // Once controller has clients, calculate based on scroll position
-    final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+    final dimensions = context.timelineDimensionsWithZoom(_zoomScaleNotifier.value);
     final scrollOffset = _horizontalScrollController.offset;
     final centerIndex = (scrollOffset / dimensions.dayWidth).floor();
 
@@ -1210,6 +1209,7 @@ class _TimelineCalendarWidgetState
   void dispose() {
     _timelineLog('dispose() called', category: 'Lifecycle');
 
+    _zoomScaleNotifier.dispose();
     // Bug #4 fix: Cancel all timers to prevent callbacks after dispose
     _visibleRangeDebounceTimer?.cancel();
     _verticalScrollThrottleTimer?.cancel();
@@ -1234,13 +1234,16 @@ class _TimelineCalendarWidgetState
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Zoom info banner
-        if (_zoomScale != kTimelineDefaultZoomScale) _buildZoomBanner(),
+    return ValueListenableBuilder<double>(
+        valueListenable: _zoomScaleNotifier,
+        builder: (context, zoomScale, _) {
+          return Column(
+            children: [
+              // Zoom info banner
+              if (zoomScale != kTimelineDefaultZoomScale) _buildZoomBanner(zoomScale),
 
-        // Main timeline
-        Expanded(
+              // Main timeline
+              Expanded(
           child: Consumer(
             builder: (context, ref, child) {
               // Use filteredUnitsProvider to respect property/unit filters
@@ -1272,15 +1275,16 @@ class _TimelineCalendarWidgetState
 
               if (units.isEmpty) return _buildEmptyUnitsState(ref);
 
-              return _buildTimelineView(units, bookingsByUnit);
+              return _buildTimelineView(units, bookingsByUnit, zoomScale);
             },
           ),
         ),
       ],
     );
+        });
   }
 
-  Widget _buildZoomBanner() {
+  Widget _buildZoomBanner(double zoomScale) {
     final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -1292,13 +1296,13 @@ class _TimelineCalendarWidgetState
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            _zoomScale > 1.0 ? Icons.zoom_in : Icons.zoom_out,
+            zoomScale > 1.0 ? Icons.zoom_in : Icons.zoom_out,
             size: AppDimensions.iconS,
             color: AppColors.primary,
           ),
           const SizedBox(width: AppDimensions.spaceXXS),
           Text(
-            l10n.ownerCalendarZoom((_zoomScale * 100).toInt()),
+            l10n.ownerCalendarZoom((zoomScale * 100).toInt()),
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1308,10 +1312,8 @@ class _TimelineCalendarWidgetState
           const SizedBox(width: AppDimensions.spaceXS),
           TextButton(
             onPressed: () {
-              setState(() {
-                _zoomScale = kTimelineDefaultZoomScale;
-                _transformationController.value = Matrix4.identity();
-              });
+              _zoomScaleNotifier.value = kTimelineDefaultZoomScale;
+              _transformationController.value = Matrix4.identity();
             },
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(
@@ -1439,6 +1441,7 @@ class _TimelineCalendarWidgetState
   Widget _buildTimelineView(
     List<UnitModel> units,
     Map<String, List<BookingModel>> bookingsByUnit,
+    double zoomScale,
   ) {
     // FILTER: Optionally hide units without bookings based on toggle
     // SORT: Ascending order (A-Z) for consistent UX with End Drawer
@@ -1453,7 +1456,7 @@ class _TimelineCalendarWidgetState
             (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
           );
 
-    final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+    final dimensions = context.timelineDimensionsWithZoom(zoomScale);
     // Use windowed date range for performance (only render ~90 days instead of 1461)
     // The key fix is to calculate booking positions relative to _fixedStartDate,
     // not relative to the windowed dates list
@@ -1473,7 +1476,7 @@ class _TimelineCalendarWidgetState
       dates.isNotEmpty ? dates.first.day : 0,
       dates.isNotEmpty ? dates.first.month : 0,
       (visibleStartIndex * dimensions.dayWidth).round(),
-      _zoomScale,
+      zoomScale,
       widget.showSummary, // Include so cache invalidates when summary toggled
     );
 
@@ -1737,7 +1740,7 @@ class _TimelineCalendarWidgetState
     int index,
     Map<String, List<BookingModel>> bookingsByUnit,
   ) {
-    final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
+    final dimensions = context.timelineDimensionsWithZoom(_zoomScaleNotifier.value);
     final isPast = date.isBefore(DateTime.now());
     final isToday = DateUtils.isSameDay(date, DateTime.now());
 

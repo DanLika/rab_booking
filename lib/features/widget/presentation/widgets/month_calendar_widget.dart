@@ -43,9 +43,23 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     DateTime.now().toUtc().year,
     DateTime.now().toUtc().month,
   );
-  DateTime? _hoveredDate; // For hover tooltip (desktop)
-  Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
+  late final ValueNotifier<DateTime?> _hoveredDateNotifier;
+  late final ValueNotifier<Offset> _mousePositionNotifier;
   bool _isValidating = false; // Prevent concurrent date range validations
+
+  @override
+  void initState() {
+    super.initState();
+    _hoveredDateNotifier = ValueNotifier<DateTime?>(null);
+    _mousePositionNotifier = ValueNotifier<Offset>(Offset.zero);
+  }
+
+  @override
+  void dispose() {
+    _hoveredDateNotifier.dispose();
+    _mousePositionNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,8 +110,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         // Calendar and tooltip in Stack for overlay positioning
         // Note: No Expanded - calendar takes natural height for proper inline layout
         MouseRegion(
-          onHover: (event) =>
-              setState(() => _mousePosition = event.localPosition),
+          onHover: (event) => _mousePositionNotifier.value = event.localPosition,
           child: GestureDetector(
             // Swipe gesture for month navigation
             onHorizontalDragEnd: (details) {
@@ -151,29 +164,41 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                   ),
                 ),
                 // Hover tooltip overlay (desktop) - highest z-index
-                if (_hoveredDate != null)
-                  calendarData.when(
-                    data: (data) {
-                      // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
-                      // Re-read from async value to ensure we have the latest state
-                      final currentWidgetCtx = widgetCtxAsync.valueOrNull;
-                      final fallbackPrice =
-                          currentWidgetCtx?.unit.pricePerNight;
-                      return CalendarTooltipBuilder.build(
-                        context: context,
-                        hoveredDate: _hoveredDate,
-                        mousePosition: _mousePosition,
-                        data: data,
-                        colors: colors,
-                        tooltipHeight: 120.0,
-                        ignorePointer: true,
-                        // Use unit's base price as fallback when no daily_price exists
-                        fallbackPrice: fallbackPrice,
-                      );
-                    },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, stackTrace) => const SizedBox.shrink(),
-                  ),
+                ValueListenableBuilder<DateTime?>(
+                  valueListenable: _hoveredDateNotifier,
+                  builder: (context, hoveredDate, _) {
+                    if (hoveredDate == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return calendarData.when(
+                      data: (data) {
+                        // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
+                        // Re-read from async value to ensure we have the latest state
+                        final currentWidgetCtx = widgetCtxAsync.valueOrNull;
+                        final fallbackPrice =
+                            currentWidgetCtx?.unit.pricePerNight;
+                        return ValueListenableBuilder<Offset>(
+                          valueListenable: _mousePositionNotifier,
+                          builder: (context, mousePosition, _) {
+                            return CalendarTooltipBuilder.build(
+                              context: context,
+                              hoveredDate: hoveredDate,
+                              mousePosition: mousePosition,
+                              data: data,
+                              colors: colors,
+                              tooltipHeight: 120.0,
+                              ignorePointer: true,
+                              // Use unit's base price as fallback when no daily_price exists
+                              fallbackPrice: fallbackPrice,
+                            );
+                          },
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, stackTrace) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -475,8 +500,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final isPast = date.isBefore(todayNormalized);
 
     final isHovered =
-        _hoveredDate != null &&
-        CalendarDateUtils.isSameDay(date, _hoveredDate!);
+        _hoveredDateNotifier.value != null &&
+        CalendarDateUtils.isSameDay(date, _hoveredDateNotifier.value!);
 
     // Generate semantic label for screen readers (localized)
     final translations = WidgetTranslations.of(context, ref);
@@ -489,16 +514,21 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       translations: translations,
     );
 
-    return Semantics(
-      label: semanticLabel,
-      button: widget.onRangeSelected != null,
+    return ValueListenableBuilder<DateTime?>(
+      valueListenable: _hoveredDateNotifier,
+      builder: (context, hoveredDate, _) {
+        final isHovered = hoveredDate != null &&
+            CalendarDateUtils.isSameDay(date, hoveredDate);
+        return Semantics(
+          label: semanticLabel,
+          button: widget.onRangeSelected != null,
       enabled:
           dateInfo.status == DateStatus.available &&
           widget.onRangeSelected != null,
       selected: isRangeStart || isRangeEnd,
       child: MouseRegion(
-        onEnter: (_) => setState(() => _hoveredDate = date),
-        onExit: (_) => setState(() => _hoveredDate = null),
+        onEnter: (_) => _hoveredDateNotifier.value = date,
+        onExit: (_) => _hoveredDateNotifier.value = null,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           // In calendar_only mode (onRangeSelected is null), show helpful message on tap
@@ -593,7 +623,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           ),
         ), // GestureDetector
       ), // MouseRegion
-    ); // Semantics
+        ); // Semantics
+      },
+    );
   }
 
   Widget _buildEmptyCell(WidgetColorScheme colors) {

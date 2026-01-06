@@ -274,13 +274,9 @@ class ErrorDisplayUtils {
       }
     }
 
-    // In release mode, return the error message as-is
-    // The error messages are already user-friendly (from provider or cloud functions)
-    try {
-      return error.toString();
-    } catch (e) {
-      return 'An error occurred. Please try again';
-    }
+    // In release mode, return a generic message to avoid leaking implementation details.
+    // The calling code should provide a user-friendly `userMessage` for specific errors.
+    return 'An error occurred. Please try again';
   }
 
   /// Show error dialog for critical errors

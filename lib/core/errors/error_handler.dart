@@ -41,13 +41,13 @@ class ErrorHandler {
     } else if (error is ValidationException) {
       return error.getUserMessage();
     } else if (error is PaymentException) {
-      return 'Greška prilikom plaćanja: ${error.message}';
+      return 'Došlo je do greške prilikom plaćanja. Molimo pokušajte ponovo.';
     } else if (error is BookingException) {
       return error.getUserMessage();
     } else if (error is NotFoundException) {
       return 'Traženi resurs nije pronađen.';
     } else if (error is ConflictException) {
-      return 'Konflikt podataka. ${error.message}';
+      return 'Došlo je do konflikta u podacima. Molimo osvježite stranicu.';
     } else if (error is TimeoutException) {
       return 'Operacija je istekla. Pokušajte ponovo.';
     } else if (error is AuthorizationException) {

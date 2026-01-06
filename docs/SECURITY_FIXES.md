@@ -1491,3 +1491,107 @@ try {
 - SF-016: AnimatedGradientFAB Optimization ✅
 - SF-017: Password Visibility Tooltips ✅
 - SF-018: Common Password Blacklist ✅
+
+
+---
+
+## NERIJEŠENI BUGOVI / OPTIMIZACIJE (Za buduću implementaciju)
+
+### 🔄 OPT-001: ValueNotifier optimizacija za Month Calendar hover
+
+**Prioritet:** Low (Performance)  
+**Status:** ⏸️ Odgođeno  
+**Zahvaćeni fajl:** `lib/features/widget/presentation/widgets/month_calendar_widget.dart`  
+**Predložio:** Google Jules (Palette branch)
+
+**Problem:**
+Month calendar koristi `setState()` za hover state (`_hoveredDate`, `_mousePosition`). Svaki hover event rebuilda cijeli widget (~35 ćelija).
+
+**Predloženo rješenje:**
+Zamijeniti:
+```dart
+DateTime? _hoveredDate;
+Offset _mousePosition = Offset.zero;
+```
+
+Sa:
+```dart
+late final ValueNotifier<DateTime?> _hoveredDateNotifier;
+late final ValueNotifier<Offset> _mousePositionNotifier;
+```
+
+Plus `initState()` i `dispose()` za lifecycle, i `ValueListenableBuilder` umjesto direktnog čitanja.
+
+**Razlog odgode:**
+- Mikro-optimizacija - calendar nije performance bottleneck
+- Dodaje kompleksnost koda
+- Rizik od bug-a u tooltip prikazu
+- Treba detaljno testiranje
+
+**Napomena:** Slična optimizacija je VEĆ IMPLEMENTIRANA za Timeline Calendar (`_zoomScaleNotifier`) u ranijoj PERF-001 optimizaciji. Ova promjena bi primijenila isti pattern na Month Calendar za hover state.
+
+---
+
+### 🔄 OPT-002: ValueNotifier optimizacija za Year Calendar hover
+
+**Prioritet:** Low-Medium (Performance)  
+**Status:** ⏸️ Odgođeno  
+**Zahvaćeni fajl:** `lib/features/widget/presentation/widgets/year_calendar_widget.dart`  
+**Predložio:** Google Jules (Palette branch)
+
+**Problem:**
+Year calendar koristi `setState()` za hover state. Svaki hover event rebuilda cijeli widget (**372 ćelija** - 31 × 12).
+
+**Predloženo rješenje:**
+Isto kao OPT-001 - zamijeniti state varijable s `ValueNotifier` + `ValueListenableBuilder`.
+
+**Razlog odgode:**
+- Ova optimizacija ima VIŠE smisla za year calendar (372 vs 35 ćelija)
+- Ali i dalje dodaje kompleksnost
+- Rizik od bug-a u tooltip prikazu
+- Treba detaljno testiranje
+
+**Napomena:** Ako se odluči implementirati, implementirati OBA kalendara zajedno za konzistentnost. Pattern je već dokazan u Timeline Calendar (PERF-001).
+
+---
+
+### 🔄 OPT-003: autoDispose za provider caching
+
+**Prioritet:** Low  
+**Status:** ⏸️ Odbijeno  
+**Zahvaćeni fajlovi:** 
+- `calendar_drag_drop_provider.dart`
+- `ical_feeds_provider.dart`
+- `multi_select_provider.dart`
+
+**Predložio:** Google Jules
+
+**Problem:**
+Jules predlaže dodavanje `.autoDispose` na razne providere za automatsko čišćenje memorije.
+
+**Razlog odbijanja:**
+- `dragDropProvider` - može pokvariti Undo funkcionalnost
+- `icalFeedsStreamProvider` - uzrokuje nepotrebne Firestore reconnections
+- `multiSelectProvider` - već imamo ručno čišćenje statea
+
+**Iznimka implementirana:**
+- `bookingReferenceProvider` i `lookupEmailProvider` - ✅ IMPLEMENTIRANO (commit `28e7c76`)
+- Ovi provideri drže osjetljive podatke (email) i trebaju se očistiti kad korisnik napusti ekran
+
+---
+
+### 🔄 OPT-004: IP Geolocation caching
+
+**Prioritet:** Low  
+**Status:** ⏸️ Odbijeno  
+**Zahvaćeni fajl:** `lib/core/services/ip_geolocation_service.dart`  
+**Predložio:** Google Jules
+
+**Problem:**
+Jules predlaže dodavanje 24h in-memory cache za geolokaciju.
+
+**Razlog odbijanja:**
+- In-memory cache se briše kad se app restarta
+- Geolokacija se koristi samo pri loginu (rijetko)
+- IP adresa se može promijeniti (WiFi → mobilni)
+- Minimalni benefit za dodanu kompleksnost

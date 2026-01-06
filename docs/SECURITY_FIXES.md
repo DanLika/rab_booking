@@ -1332,3 +1332,24 @@ Sljedeći prijedlozi iz Jules AI audita su analizirani i odbijeni zbog visokog r
 **Branch:** `sentinel-open-redirect-fix-4599161851353466478`  
 **Razlog odbijanja:** `BookingService.createBooking()` je dizajniran za guest bookings (payment, approval flow). Owner bookings imaju drugačiji flow - direktan Firestore write je ispravan jer owner ima puni pristup svojim podacima. Potrebna bi bila posebna Cloud Function za owner bookings.
 
+
+
+### ❌ Storage IDOR Fix (Ownership Validation)
+
+**Branch:** `sentinel/fix-storage-idor-6126059184660913074`  
+**Razlog odbijanja:** Promjena je **beskorisna** jer path `properties/{propertyId}/` se NE KORISTI u aplikaciji.
+
+**Analiza:**
+- Jules je predložio dodavanje ownership validacije za `properties/{propertyId}/` path
+- ALI: Aplikacija uploaduje slike u `users/{userId}/properties/{propertyId}/` path
+- Taj path je VEĆ ZAŠTIĆEN pravilom: `request.auth.uid == userId`
+- Dakle, IDOR ranjivost NE POSTOJI - korisnik može pisati samo u svoj folder
+
+**Stvarni storage paths u aplikaciji:**
+- `users/$userId/profile/` - profile slike
+- `users/$userId/properties/$propertyId/` - property slike  
+- `users/$userId/properties/$propertyId/units/$unitId/` - unit slike
+- `ical-exports/{propertyId}/{unitId}/` - iCal exports
+
+**Status:** Nije potrebno implementirati. Sigurnost je već osigurana kroz `users/{userId}/` path strukturu.
+

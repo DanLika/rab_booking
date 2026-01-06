@@ -259,6 +259,28 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     try {
       state = state.copyWith(isLoading: true);
 
+      // SECURITY: IP-based rate limiting for login (Cloud Function)
+      try {
+        final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+        final callable = functions.httpsCallable('checkLoginRateLimit');
+        await callable.call({'email': email});
+      } on FirebaseFunctionsException catch (e) {
+        if (e.code == 'resource-exhausted') {
+          LoggingService.log(
+            'IP-based rate limit exceeded for login',
+            tag: 'ENHANCED_AUTH',
+          );
+          state = state.copyWith(isLoading: false, error: e.message);
+          throw e.message ??
+              'Too many login attempts. Please wait before trying again.';
+        }
+        // Continue with login if rate limit check fails (fail-open for availability)
+        LoggingService.log(
+          'IP rate limit check failed, continuing: ${e.message}',
+          tag: 'AUTH_WARNING',
+        );
+      }
+
       // PERFORMANCE: Run rate limit check and persistence setup in PARALLEL
       // Both are independent operations, no need to wait sequentially
       final rateLimitFuture = _rateLimit.checkRateLimit(email);

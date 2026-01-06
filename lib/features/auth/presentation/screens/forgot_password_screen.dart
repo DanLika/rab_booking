@@ -57,10 +57,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
           .read(enhancedAuthProvider.notifier)
           .resetPassword(_emailController.text.trim());
 
-      setState(() {
-        _emailSent = true;
-        _isLoading = false;
-      });
+      // SECURITY: Firebase sendPasswordResetEmail already returns success
+      // regardless of whether email exists (prevents user enumeration)
+      if (mounted) {
+        setState(() {
+          _emailSent = true;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);

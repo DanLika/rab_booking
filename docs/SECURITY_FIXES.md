@@ -1353,3 +1353,13 @@ Sljedeći prijedlozi iz Jules AI audita su analizirani i odbijeni zbog visokog r
 
 **Status:** Nije potrebno implementirati. Sigurnost je već osigurana kroz `users/{userId}/` path strukturu.
 
+
+
+### ✅ Lokalizacija "Retry" i "Close" gumba (Ručno implementirano)
+
+**Branch:** `feat/UX-003-calendar-improvements-9632538979079219527`  
+**Status:** Ručno implementirano od strane korisnika  
+**Promjena:** Zamjena hardcoded "Pokušaj ponovo" i "Zatvori" stringova sa lokaliziranim verzijama u `error_display_utils.dart`
+
+**Ostale promjene iz brancha odbijene** jer brišu naše sigurnosne ispravke (password blacklist, IP rate limiting).
+

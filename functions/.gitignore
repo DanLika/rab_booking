@@ -13,3 +13,8 @@ node_modules/
 # This file grants full admin access to the project.
 # NEVER commit this file to the repository.
 service-account-key.json
+
+# Environment variables
+#
+# Contains sensitive data like API keys and should never be in version control.
+.env*

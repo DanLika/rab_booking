@@ -7,6 +7,10 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
+// Load environment variables from .env file
+import * as dotenv from "dotenv";
+dotenv.config();
+
 // Initialize Sentry for error tracking (must be first)
 import {initSentry} from "./sentry";
 initSentry();

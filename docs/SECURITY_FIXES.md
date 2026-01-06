@@ -1308,3 +1308,27 @@ Sljedeći prijedlozi iz Jules AI audita su analizirani i odbijeni zbog visokog r
 **Branch:** `fix/auth-error-handling-9695836915948502280`  
 **Razlog odbijanja:** Potrebna analiza kako se `placeholderBookingId` generira. Ako se generira novi ID na svakom retry-u, idempotency key je beskoristan.
 
+
+
+### ❌ URL validacija za Stripe Connect (Open Redirect)
+
+**Branch:** `sentinel-open-redirect-fix-4599161851353466478`  
+**Razlog odbijanja:** Analizirano i utvrđeno da rizik nije značajan:
+
+1. **Napadač može samo sebe preusmjeriti** - returnUrl se koristi za redirect nakon Stripe onboarding-a, ali napadač mora biti autentificiran i može samo svoj account preusmjeriti
+2. **Stripe ne šalje osjetljive podatke** - return URL ne sadrži tokene ili credentials
+3. **Već imamo validaciju za payment flow** - `stripePayment.ts` već ima `isAllowedReturnUrl()` za kritičniji payment checkout flow
+4. **Rizik od bug-a** - ako validacija nije savršena, legitimni korisnici neće moći završiti Stripe Connect onboarding
+
+**Status:** Nije potrebno implementirati.
+
+### ❌ Sentry DSN iz environment varijable
+
+**Branch:** `sentinel-open-redirect-fix-4599161851353466478`  
+**Razlog odbijanja:** Breaking change. Zahtijeva dodatnu konfiguraciju (`.env` fajl ili Firebase environment config). Ako `SENTRY_DSN` nije postavljen, error tracking prestaje raditi bez upozorenja.
+
+### ❌ Owner booking kroz Cloud Function
+
+**Branch:** `sentinel-open-redirect-fix-4599161851353466478`  
+**Razlog odbijanja:** `BookingService.createBooking()` je dizajniran za guest bookings (payment, approval flow). Owner bookings imaju drugačiji flow - direktan Firestore write je ispravan jer owner ima puni pristup svojim podacima. Potrebna bi bila posebna Cloud Function za owner bookings.
+

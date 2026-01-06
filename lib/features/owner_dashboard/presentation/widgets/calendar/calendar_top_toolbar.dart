@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../domain/models/date_range_selection.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
+import 'timeline_legend_dialog.dart';
 import '../../../../../shared/widgets/smart_tooltip.dart';
 
 /// Calendar top toolbar widget
@@ -464,6 +465,20 @@ class CalendarTopToolbar extends StatelessWidget {
                     isDark: theme.brightness == Brightness.dark,
                     isActive: isEmptyUnitsVisible,
                   ),
+
+                // Legend button
+                _buildStyledIconButton(
+                  icon: Icons.info_outline,
+                  color: AppColors.info,
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => const TimelineLegendDialog(),
+                    );
+                  },
+                  tooltip: l10n.ownerCalendarLegendTitle,
+                  isDark: theme.brightness == Brightness.dark,
+                ),
               ],
             ),
         ],

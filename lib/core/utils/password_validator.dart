@@ -42,6 +42,27 @@ class PasswordValidator {
   /// Maximum password length
   static const int maxLength = 128;
 
+  // A small, representative list of common passwords to check against.
+  // In a real-world scenario, this list would be much larger and potentially
+  // fetched from a secure service.
+  static final Set<String> _commonPasswords = {
+    '123456',
+    '12345678',
+    '123456789',
+    'password',
+    'qwerty',
+    'admin',
+    '111111',
+    '123123',
+    'password123',
+    'p@ssword',
+    'P@ssword123!',
+    'letmein',
+    'master',
+    'user',
+    'login',
+  };
+
   // Cached regex patterns for performance
   static final RegExp _uppercaseRegex = RegExp(r'[A-Z]');
   static final RegExp _lowercaseRegex = RegExp(r'[a-z]');
@@ -54,6 +75,14 @@ class PasswordValidator {
       return PasswordValidationResult.invalid(
         'Password is required',
         missing: ['Enter a password'],
+      );
+    }
+
+    // SECURITY: Check against common password blacklist (case-insensitive)
+    if (_commonPasswords.contains(password.toLowerCase())) {
+      return PasswordValidationResult.invalid(
+        'Password is too common. Please choose a stronger one.',
+        missing: ['Not a common password'],
       );
     }
 
@@ -98,6 +127,14 @@ class PasswordValidator {
       );
     }
 
+    // SECURITY: Check for sequential characters (e.g., "123", "abc")
+    if (_isSequentialCharacters(password)) {
+      return PasswordValidationResult.invalid(
+        'Password cannot contain sequential characters (e.g., "123" or "abc").',
+        missing: ['No sequential characters'],
+      );
+    }
+
     // Calculate strength
     final strength = _calculateStrength(password);
 
@@ -106,6 +143,11 @@ class PasswordValidator {
 
   /// Calculate password strength
   static PasswordStrength _calculateStrength(String password) {
+    // A common password is always weak, regardless of other criteria.
+    if (_commonPasswords.contains(password.toLowerCase())) {
+      return PasswordStrength.weak;
+    }
+
     int score = 0;
 
     // Length score

@@ -68,6 +68,7 @@ class GuestNameFields extends ConsumerWidget {
       controller: controller,
       maxLength: _maxNameLength,
       style: TextStyle(color: colors.textPrimary),
+      scrollPadding: const EdgeInsets.all(150.0),
       decoration: WidgetInputDecorationHelper.buildDecoration(
         labelText: labelText,
         hintText: hintText,

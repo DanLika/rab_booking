@@ -64,6 +64,7 @@ class EmailFieldWithVerification extends ConsumerWidget {
       maxLength: _maxEmailLength,
       keyboardType: TextInputType.emailAddress,
       style: TextStyle(color: colors.textPrimary),
+      scrollPadding: const EdgeInsets.all(150.0),
       decoration: WidgetInputDecorationHelper.buildDecoration(
         labelText: tr.labelEmail,
         hintText: 'john@example.com',

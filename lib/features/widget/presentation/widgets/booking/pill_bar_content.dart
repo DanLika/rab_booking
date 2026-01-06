@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 import '../../theme/minimalist_colors.dart';
+import 'booking_step_indicator.dart';
 import 'compact_pill_summary.dart';
 
 /// Content widget for the booking pill bar.
@@ -66,7 +67,7 @@ class PillBarContent extends StatelessWidget {
     if (showGuestForm && isWideScreen) {
       return _buildWideScreenLayout(context);
     }
-    return _buildCompactLayout();
+    return _buildCompactLayout(context);
   }
 
   Widget _buildWideScreenLayout(BuildContext context) {
@@ -75,13 +76,13 @@ class PillBarContent extends StatelessWidget {
     final mediaQuery = MediaQuery.maybeOf(context);
     if (mediaQuery == null) {
       // Fallback to compact layout if MediaQuery not available
-      return _buildCompactLayout();
+      return _buildCompactLayout(context);
     }
 
     // Defensive check: ensure size values are valid and finite
     final size = mediaQuery.size;
     if (!size.height.isFinite || size.height <= 0) {
-      return _buildCompactLayout();
+      return _buildCompactLayout(context);
     }
 
     final viewInsets = mediaQuery.viewInsets.bottom;
@@ -97,6 +98,8 @@ class PillBarContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _WideScreenHeader(onClose: onClose, colors: colors),
+        const SizedBox(height: SpacingTokens.m),
+        _buildStepIndicator(context),
         const SizedBox(height: SpacingTokens.m),
         ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
@@ -127,7 +130,7 @@ class PillBarContent extends StatelessWidget {
     );
   }
 
-  Widget _buildCompactLayout() {
+  Widget _buildCompactLayout(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -149,6 +152,8 @@ class PillBarContent extends StatelessWidget {
         ),
         if (showGuestForm && !isWideScreen) ...[
           const SizedBox(height: SpacingTokens.m),
+          _buildStepIndicator(context),
+          const SizedBox(height: SpacingTokens.m),
           guestFormBuilder(),
           additionalServicesBuilder(),
           taxLegalBuilder(),
@@ -156,6 +161,27 @@ class PillBarContent extends StatelessWidget {
           paymentSectionBuilder(),
         ],
       ],
+    );
+  }
+
+  // Helper method to build the step indicator
+  Widget _buildStepIndicator(BuildContext context) {
+    // Define the steps of the booking process
+    final steps = [
+      'Select Dates',
+      'Guest Information',
+      'Payment',
+    ];
+
+    // Determine the current step
+    int currentStep = 0;
+    if (showGuestForm) {
+      currentStep = 1;
+    }
+
+    return BookingStepIndicator(
+      currentStep: currentStep,
+      steps: steps,
     );
   }
 }

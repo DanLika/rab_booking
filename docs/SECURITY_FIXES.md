@@ -27,6 +27,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 19. [Neriješeni bugovi (Jules audit)](#-neriješeni-bugovi-jules-audit)
     - [BUG-001: iCal Feeds Provider - nedostaje autoDispose](#-bug-001-ical-feeds-provider---nedostaje-autodispose)
     - [BUG-002: IP Geolocation Service - nedostaje in-memory cache](#-bug-002-ip-geolocation-service---nedostaje-in-memory-cache)
+    - [BUG-003: iCal Sync - sekvencijalno vs paralelno procesiranje](#-bug-003-ical-sync---sekvencijalno-vs-paralelno-procesiranje)
 
 ---
 
@@ -1699,3 +1700,30 @@ Future<GeoLocationResult?> getGeolocation(String? ipAddress) async {
 - IP adresa se može promijeniti (WiFi → mobilni)
 - Minimalni benefit za dodanu kompleksnost
 - Vanjski API-ji već imaju rate limiting
+
+---
+
+### 🐛 BUG-003: iCal Sync - sekvencijalno vs paralelno procesiranje
+
+**Prioritet:** Low  
+**Status:** ❌ Neriješeno  
+**Zahvaćeni fajl:** `functions/src/icalSync.ts`  
+**Predložio:** Google Jules
+
+**Problem:**
+`scheduledIcalSync` procesira feedove sekvencijalno (jedan po jedan) s 1s delay između svakog. Jules predlaže paralelno procesiranje do 5 feedova istovremeno.
+
+**Predloženo rješenje:**
+```typescript
+const CONCURRENCY_LIMIT = 5;
+for (let i = 0; i < feedsToProcess.length; i += CONCURRENCY_LIMIT) {
+  const batch = feedsToProcess.slice(i, i + CONCURRENCY_LIMIT);
+  const results = await Promise.allSettled(batch.map(...));
+}
+```
+
+**Razlog odgode:**
+- Može preopteretiti eksterne API-je (Airbnb, Booking.com rate limiting)
+- Scheduled sync ima 9 min timeout - dovoljno za stotine feedova sekvencijalno
+- Naš 1s delay je namjeran da budemo "nice" prema OTA API-jima
+- Kompleksniji error handling kod paralelnog procesiranja

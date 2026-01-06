@@ -48,12 +48,40 @@ class PasswordValidator {
   static final RegExp _digitRegex = RegExp(r'[0-9]');
   static final RegExp _specialCharRegex = RegExp(r'[!@#$%^&*(),.?":{}|<>]');
 
+  /// SECURITY: Common passwords blacklist
+  /// These passwords are rejected regardless of complexity requirements
+  static const Set<String> _commonPasswords = {
+    'password',
+    'password1',
+    'password123',
+    'qwerty123',
+    'letmein',
+    'welcome1',
+    'admin123',
+    'iloveyou',
+    'sunshine',
+    'princess',
+    'football',
+    'baseball',
+    'trustno1',
+    'dragon12',
+    'master12',
+  };
+
   /// Validate password and return detailed result
   static PasswordValidationResult validate(String? password) {
     if (password == null || password.isEmpty) {
       return PasswordValidationResult.invalid(
         'Password is required',
         missing: ['Enter a password'],
+      );
+    }
+
+    // SECURITY: Check against common passwords blacklist
+    if (_commonPasswords.contains(password.toLowerCase())) {
+      return PasswordValidationResult.invalid(
+        'This password is too common. Please choose a stronger password.',
+        missing: ['Choose a less common password'],
       );
     }
 
@@ -106,6 +134,11 @@ class PasswordValidator {
 
   /// Calculate password strength
   static PasswordStrength _calculateStrength(String password) {
+    // SECURITY: Common passwords are always weak
+    if (_commonPasswords.contains(password.toLowerCase())) {
+      return PasswordStrength.weak;
+    }
+
     int score = 0;
 
     // Length score

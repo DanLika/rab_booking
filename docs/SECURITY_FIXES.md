@@ -1497,6 +1497,45 @@ try {
 
 ## NERIJEŠENI BUGOVI / OPTIMIZACIJE (Za buduću implementaciju)
 
+### 🔄 PERF-001: ValueNotifier optimizacija za Timeline Calendar zoom
+
+**Prioritet:** Medium (Performance)  
+**Status:** ⏸️ Odgođeno  
+**Zahvaćeni fajl:** `lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart`  
+**Predložio:** Google Jules (PERF-001 task)
+
+**Problem:**
+Timeline calendar koristi `setState()` za zoom state (`_zoomScale`). Svaki pinch-to-zoom event rebuilda cijeli widget (kompleksan timeline s mnogo ćelija).
+
+**Predloženo rješenje:**
+Zamijeniti:
+```dart
+double _zoomScale = kTimelineDefaultZoomScale;
+```
+
+Sa:
+```dart
+late final ValueNotifier<double> _zoomScaleNotifier;
+```
+
+Plus:
+- `initState()` za kreiranje notifiera
+- `dispose()` za čišćenje
+- `ValueListenableBuilder` oko dijelova koji ovise o zoom-u
+- Proslijediti `zoomScale` kao parametar umjesto čitanja iz state-a
+
+**Benefit:**
+- Fluidnije zumiranje
+- Samo dijelovi koji ovise o zoom-u se rebuilda-ju
+- Timeline grid (najskuplji dio) ostaje netaknut
+
+**Razlog odgode:**
+- Kompleksna promjena (mnogo mjesta koristi `_zoomScale`)
+- Treba detaljno testiranje zoom funkcionalnosti
+- Timeline calendar radi, ovo je optimizacija
+
+---
+
 ### 🔄 OPT-001: ValueNotifier optimizacija za Month Calendar hover
 
 **Prioritet:** Low (Performance)  
@@ -1528,8 +1567,6 @@ Plus `initState()` i `dispose()` za lifecycle, i `ValueListenableBuilder` umjest
 - Rizik od bug-a u tooltip prikazu
 - Treba detaljno testiranje
 
-**Napomena:** Slična optimizacija je VEĆ IMPLEMENTIRANA za Timeline Calendar (`_zoomScaleNotifier`) u ranijoj PERF-001 optimizaciji. Ova promjena bi primijenila isti pattern na Month Calendar za hover state.
-
 ---
 
 ### 🔄 OPT-002: ValueNotifier optimizacija za Year Calendar hover
@@ -1551,7 +1588,7 @@ Isto kao OPT-001 - zamijeniti state varijable s `ValueNotifier` + `ValueListenab
 - Rizik od bug-a u tooltip prikazu
 - Treba detaljno testiranje
 
-**Napomena:** Ako se odluči implementirati, implementirati OBA kalendara zajedno za konzistentnost. Pattern je već dokazan u Timeline Calendar (PERF-001).
+**Napomena:** Ako se odluči implementirati, implementirati OBA kalendara zajedno za konzistentnost.
 
 ---
 

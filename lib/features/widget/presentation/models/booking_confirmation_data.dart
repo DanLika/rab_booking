@@ -104,6 +104,8 @@ class BookingConfirmationData {
   factory BookingConfirmationData.fromBooking({
     required BookingModel booking,
     required String propertyName,
+    required String guestName,
+    required String guestEmail,
     String? unitName,
     EmailNotificationConfig? emailConfig,
     WidgetSettings? widgetSettings,
@@ -112,8 +114,8 @@ class BookingConfirmationData {
   }) {
     return BookingConfirmationData(
       bookingReference: _nonEmptyOr(booking.bookingReference, booking.id),
-      guestEmail: _nonEmptyOr(booking.guestEmail, ''),
-      guestName: _nonEmptyOr(booking.guestName, ''),
+      guestEmail: guestEmail,
+      guestName: guestName,
       checkIn: booking.checkIn,
       checkOut: booking.checkOut,
       totalPrice: booking.totalPrice,

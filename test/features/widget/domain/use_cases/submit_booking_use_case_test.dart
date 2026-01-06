@@ -24,9 +24,6 @@ void main() {
     id: 'test-booking-123',
     unitId: 'unit-1',
     ownerId: 'owner-1',
-    guestName: 'John Doe',
-    guestEmail: 'john@example.com',
-    guestPhone: '+385 91 123 4567',
     checkIn: testCheckIn,
     checkOut: testCheckOut,
     status: BookingStatus.pending,
@@ -529,9 +526,6 @@ void main() {
           );
 
           final payOnArrivalBooking = testBooking.copyWith(
-            guestName: 'Jane Smith',
-            guestEmail: 'jane@example.com',
-            guestPhone: '+385 92 987 6543',
             paymentMethod: 'pay_on_arrival',
             guestCount: 1,
             totalPrice: 300.0,
@@ -565,7 +559,6 @@ void main() {
           expect(result, isA<BookingSubmissionCreated>());
           final createdResult = result as BookingSubmissionCreated;
           expect(createdResult.booking.paymentMethod, 'pay_on_arrival');
-          expect(createdResult.booking.guestName, 'Jane Smith');
 
           // Verify booking created with requireOwnerApproval
           verify(

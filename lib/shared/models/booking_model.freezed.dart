@@ -44,18 +44,6 @@ mixin _$BookingModel {
   @JsonKey(name: 'owner_id')
   String? get ownerId => throw _privateConstructorUsedError;
 
-  /// Guest name (for widget bookings without auth)
-  @JsonKey(name: 'guest_name')
-  String? get guestName => throw _privateConstructorUsedError;
-
-  /// Guest email (for widget bookings without auth)
-  @JsonKey(name: 'guest_email')
-  String? get guestEmail => throw _privateConstructorUsedError;
-
-  /// Guest phone (for widget bookings without auth)
-  @JsonKey(name: 'guest_phone')
-  String? get guestPhone => throw _privateConstructorUsedError;
-
   /// Check-in date
   @TimestampConverter()
   @JsonKey(name: 'check_in')
@@ -186,9 +174,6 @@ abstract class $BookingModelCopyWith<$Res> {
     @JsonKey(name: 'user_id') String? userId,
     @JsonKey(name: 'guest_id') String? guestId,
     @JsonKey(name: 'owner_id') String? ownerId,
-    @JsonKey(name: 'guest_name') String? guestName,
-    @JsonKey(name: 'guest_email') String? guestEmail,
-    @JsonKey(name: 'guest_phone') String? guestPhone,
     @TimestampConverter() @JsonKey(name: 'check_in') DateTime checkIn,
     @JsonKey(name: 'check_in_time') String? checkInTime,
     @JsonKey(name: 'check_out_time') String? checkOutTime,
@@ -243,9 +228,6 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
     Object? userId = freezed,
     Object? guestId = freezed,
     Object? ownerId = freezed,
-    Object? guestName = freezed,
-    Object? guestEmail = freezed,
-    Object? guestPhone = freezed,
     Object? checkIn = null,
     Object? checkInTime = freezed,
     Object? checkOutTime = freezed,
@@ -298,18 +280,6 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
             ownerId: freezed == ownerId
                 ? _value.ownerId
                 : ownerId // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            guestName: freezed == guestName
-                ? _value.guestName
-                : guestName // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            guestEmail: freezed == guestEmail
-                ? _value.guestEmail
-                : guestEmail // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            guestPhone: freezed == guestPhone
-                ? _value.guestPhone
-                : guestPhone // ignore: cast_nullable_to_non_nullable
                       as String?,
             checkIn: null == checkIn
                 ? _value.checkIn
@@ -437,9 +407,6 @@ abstract class _$$BookingModelImplCopyWith<$Res>
     @JsonKey(name: 'user_id') String? userId,
     @JsonKey(name: 'guest_id') String? guestId,
     @JsonKey(name: 'owner_id') String? ownerId,
-    @JsonKey(name: 'guest_name') String? guestName,
-    @JsonKey(name: 'guest_email') String? guestEmail,
-    @JsonKey(name: 'guest_phone') String? guestPhone,
     @TimestampConverter() @JsonKey(name: 'check_in') DateTime checkIn,
     @JsonKey(name: 'check_in_time') String? checkInTime,
     @JsonKey(name: 'check_out_time') String? checkOutTime,
@@ -493,9 +460,6 @@ class __$$BookingModelImplCopyWithImpl<$Res>
     Object? userId = freezed,
     Object? guestId = freezed,
     Object? ownerId = freezed,
-    Object? guestName = freezed,
-    Object? guestEmail = freezed,
-    Object? guestPhone = freezed,
     Object? checkIn = null,
     Object? checkInTime = freezed,
     Object? checkOutTime = freezed,
@@ -548,18 +512,6 @@ class __$$BookingModelImplCopyWithImpl<$Res>
         ownerId: freezed == ownerId
             ? _value.ownerId
             : ownerId // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        guestName: freezed == guestName
-            ? _value.guestName
-            : guestName // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        guestEmail: freezed == guestEmail
-            ? _value.guestEmail
-            : guestEmail // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        guestPhone: freezed == guestPhone
-            ? _value.guestPhone
-            : guestPhone // ignore: cast_nullable_to_non_nullable
                   as String?,
         checkIn: null == checkIn
             ? _value.checkIn
@@ -680,9 +632,6 @@ class _$BookingModelImpl extends _BookingModel {
     @JsonKey(name: 'user_id') this.userId,
     @JsonKey(name: 'guest_id') this.guestId,
     @JsonKey(name: 'owner_id') this.ownerId,
-    @JsonKey(name: 'guest_name') this.guestName,
-    @JsonKey(name: 'guest_email') this.guestEmail,
-    @JsonKey(name: 'guest_phone') this.guestPhone,
     @TimestampConverter() @JsonKey(name: 'check_in') required this.checkIn,
     @JsonKey(name: 'check_in_time') this.checkInTime,
     @JsonKey(name: 'check_out_time') this.checkOutTime,
@@ -744,21 +693,6 @@ class _$BookingModelImpl extends _BookingModel {
   @override
   @JsonKey(name: 'owner_id')
   final String? ownerId;
-
-  /// Guest name (for widget bookings without auth)
-  @override
-  @JsonKey(name: 'guest_name')
-  final String? guestName;
-
-  /// Guest email (for widget bookings without auth)
-  @override
-  @JsonKey(name: 'guest_email')
-  final String? guestEmail;
-
-  /// Guest phone (for widget bookings without auth)
-  @override
-  @JsonKey(name: 'guest_phone')
-  final String? guestPhone;
 
   /// Check-in date
   @override
@@ -894,7 +828,7 @@ class _$BookingModelImpl extends _BookingModel {
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, unitId: $unitId, propertyId: $propertyId, userId: $userId, guestId: $guestId, ownerId: $ownerId, guestName: $guestName, guestEmail: $guestEmail, guestPhone: $guestPhone, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, depositAmount: $depositAmount, remainingAmount: $remainingAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, paymentOption: $paymentOption, requireOwnerApproval: $requireOwnerApproval, source: $source, guestCount: $guestCount, notes: $notes, taxLegalAccepted: $taxLegalAccepted, paymentIntentId: $paymentIntentId, stripeSessionId: $stripeSessionId, bookingReference: $bookingReference, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
+    return 'BookingModel(id: $id, unitId: $unitId, propertyId: $propertyId, userId: $userId, guestId: $guestId, ownerId: $ownerId, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, depositAmount: $depositAmount, remainingAmount: $remainingAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, paymentOption: $paymentOption, requireOwnerApproval: $requireOwnerApproval, source: $source, guestCount: $guestCount, notes: $notes, taxLegalAccepted: $taxLegalAccepted, paymentIntentId: $paymentIntentId, stripeSessionId: $stripeSessionId, bookingReference: $bookingReference, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
   }
 
   @override
@@ -909,12 +843,6 @@ class _$BookingModelImpl extends _BookingModel {
             (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.guestId, guestId) || other.guestId == guestId) &&
             (identical(other.ownerId, ownerId) || other.ownerId == ownerId) &&
-            (identical(other.guestName, guestName) ||
-                other.guestName == guestName) &&
-            (identical(other.guestEmail, guestEmail) ||
-                other.guestEmail == guestEmail) &&
-            (identical(other.guestPhone, guestPhone) ||
-                other.guestPhone == guestPhone) &&
             (identical(other.checkIn, checkIn) || other.checkIn == checkIn) &&
             (identical(other.checkInTime, checkInTime) ||
                 other.checkInTime == checkInTime) &&
@@ -975,9 +903,6 @@ class _$BookingModelImpl extends _BookingModel {
     userId,
     guestId,
     ownerId,
-    guestName,
-    guestEmail,
-    guestPhone,
     checkIn,
     checkInTime,
     checkOutTime,
@@ -1028,9 +953,6 @@ abstract class _BookingModel extends BookingModel {
     @JsonKey(name: 'user_id') final String? userId,
     @JsonKey(name: 'guest_id') final String? guestId,
     @JsonKey(name: 'owner_id') final String? ownerId,
-    @JsonKey(name: 'guest_name') final String? guestName,
-    @JsonKey(name: 'guest_email') final String? guestEmail,
-    @JsonKey(name: 'guest_phone') final String? guestPhone,
     @TimestampConverter()
     @JsonKey(name: 'check_in')
     required final DateTime checkIn,
@@ -1101,21 +1023,6 @@ abstract class _BookingModel extends BookingModel {
   @override
   @JsonKey(name: 'owner_id')
   String? get ownerId;
-
-  /// Guest name (for widget bookings without auth)
-  @override
-  @JsonKey(name: 'guest_name')
-  String? get guestName;
-
-  /// Guest email (for widget bookings without auth)
-  @override
-  @JsonKey(name: 'guest_email')
-  String? get guestEmail;
-
-  /// Guest phone (for widget bookings without auth)
-  @override
-  @JsonKey(name: 'guest_phone')
-  String? get guestPhone;
 
   /// Check-in date
   @override

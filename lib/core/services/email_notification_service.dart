@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../shared/models/booking_model.dart';
+import '../../shared/models/guest_pii_model.dart';
 import '../../shared/utils/html_utils.dart';
 import '../../features/widget/domain/models/widget_settings.dart';
 import 'logging_service.dart';
@@ -28,9 +30,30 @@ import '../exceptions/app_exceptions.dart';
 /// ```
 class EmailNotificationService {
   final http.Client _httpClient;
+  final FirebaseFirestore _firestore;
 
-  EmailNotificationService({http.Client? httpClient})
-    : _httpClient = httpClient ?? http.Client();
+  EmailNotificationService({http.Client? httpClient, FirebaseFirestore? firestore})
+      : _httpClient = httpClient ?? http.Client(),
+        _firestore = firestore ?? FirebaseFirestore.instance;
+
+  /// Fetches PII data for a given booking.
+  Future<GuestPiiModel> _fetchPiiData(String bookingId) async {
+    try {
+      final doc = await _firestore
+          .collection('bookings')
+          .doc(bookingId)
+          .collection('pii_data')
+          .doc('guest')
+          .get();
+      if (doc.exists) {
+        return GuestPiiModel.fromJson(doc.data()!);
+      }
+      throw Exception('PII data not found for booking $bookingId');
+    } catch (e, s) {
+      LoggingService.logError('Failed to fetch PII for booking $bookingId', e, s);
+      throw Exception('Could not fetch guest details to send email.');
+    }
+  }
 
   /// Send booking confirmation email to guest
   ///
@@ -64,6 +87,12 @@ class EmailNotificationService {
         return;
       }
 
+      final pii = await _fetchPiiData(booking.id);
+      if (pii.guestEmail == null) {
+        LoggingService.logWarning('[EmailNotificationService] Guest email is null, cannot send email.');
+        return;
+      }
+
       LoggingService.logOperation(
         '[EmailNotificationService] Sending booking confirmation email...',
       );
@@ -71,6 +100,7 @@ class EmailNotificationService {
       final subject = 'Potvrda rezervacije - $propertyName';
       final html = _generateBookingConfirmationHtml(
         booking: booking,
+        pii: pii,
         propertyName: propertyName,
         bookingReference: bookingReference,
         paymentDeadline: paymentDeadline,
@@ -84,7 +114,7 @@ class EmailNotificationService {
       );
 
       await _sendEmail(
-        to: booking.guestEmail!,
+        to: pii.guestEmail!,
         subject: subject,
         html: html,
         fromEmail: emailConfig.fromEmail!,
@@ -93,7 +123,7 @@ class EmailNotificationService {
       );
 
       LoggingService.logSuccess(
-        '[EmailNotificationService] Booking confirmation sent to ${booking.guestEmail}',
+        '[EmailNotificationService] Booking confirmation sent to ${pii.guestEmail}',
       );
     } catch (e) {
       await LoggingService.logError(
@@ -135,9 +165,16 @@ class EmailNotificationService {
         '[EmailNotificationService] Sending payment receipt email...',
       );
 
+      final pii = await _fetchPiiData(booking.id);
+      if (pii.guestEmail == null) {
+        LoggingService.logWarning('[EmailNotificationService] Guest email is null, cannot send email.');
+        return;
+      }
+
       final subject = 'Potvrda plaćanja - $propertyName';
       final html = _generatePaymentReceiptHtml(
         booking: booking,
+        pii: pii,
         propertyName: propertyName,
         bookingReference: bookingReference,
         paidAmount: paidAmount,
@@ -146,7 +183,7 @@ class EmailNotificationService {
       );
 
       await _sendEmail(
-        to: booking.guestEmail!,
+        to: pii.guestEmail!,
         subject: subject,
         html: html,
         fromEmail: emailConfig.fromEmail!,
@@ -155,7 +192,7 @@ class EmailNotificationService {
       );
 
       LoggingService.logSuccess(
-        '[EmailNotificationService] Payment receipt sent to ${booking.guestEmail}',
+        '[EmailNotificationService] Payment receipt sent to ${pii.guestEmail}',
       );
     } catch (e) {
       await LoggingService.logError(
@@ -197,12 +234,15 @@ class EmailNotificationService {
         '[EmailNotificationService] Sending owner notification email...',
       );
 
+      final pii = await _fetchPiiData(booking.id);
+
       final subject = requiresApproval
           ? 'Nova rezervacija zahteva potvrdu - $propertyName'
           : 'Nova rezervacija - $propertyName';
 
       final html = _generateOwnerNotificationHtml(
         booking: booking,
+        pii: pii,
         propertyName: propertyName,
         bookingReference: bookingReference,
         requiresApproval: requiresApproval,
@@ -272,6 +312,7 @@ class EmailNotificationService {
   /// Generate booking confirmation email HTML
   String _generateBookingConfirmationHtml({
     required BookingModel booking,
+    required GuestPiiModel pii,
     required String propertyName,
     required String bookingReference,
     String? paymentDeadline,
@@ -398,7 +439,7 @@ class EmailNotificationService {
             <p>$propertyName</p>
         </div>
 
-        <p>Poštovani ${HtmlUtils.escapeHtml(booking.guestName)},</p>
+        <p>Poštovani ${HtmlUtils.escapeHtml(pii.guestName)},</p>
 
         <p>Hvala Vam što ste odabrali naš smještaj! Vaša rezervacija je uspješno primljena.</p>
 
@@ -512,6 +553,7 @@ class EmailNotificationService {
   /// Generate payment receipt email HTML
   String _generatePaymentReceiptHtml({
     required BookingModel booking,
+    required GuestPiiModel pii,
     required String propertyName,
     required String bookingReference,
     required double paidAmount,
@@ -631,7 +673,7 @@ class EmailNotificationService {
             <div class="success-badge">✓ Plaćanje uspješno primljeno</div>
         </div>
 
-        <p>Poštovani ${HtmlUtils.escapeHtml(booking.guestName)},</p>
+        <p>Poštovani ${HtmlUtils.escapeHtml(pii.guestName)},</p>
 
         <p>Potvrđujemo da smo primili Vašu uplatu. Vaša rezervacija je sada u potpunosti potvrđena!</p>
 
@@ -694,6 +736,7 @@ class EmailNotificationService {
   /// Generate owner notification email HTML
   String _generateOwnerNotificationHtml({
     required BookingModel booking,
+    required GuestPiiModel pii,
     required String propertyName,
     required String bookingReference,
     required bool requiresApproval,
@@ -821,15 +864,15 @@ class EmailNotificationService {
             <h3 style="margin-top: 0; color: #0066cc;">Informacije o gostu</h3>
             <div class="detail-row" style="border: none;">
                 <span class="detail-label">Ime:</span>
-                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestName)}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(pii.guestName)}</span>
             </div>
             <div class="detail-row" style="border: none;">
                 <span class="detail-label">Email:</span>
-                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestEmail)}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(pii.guestEmail)}</span>
             </div>
             <div class="detail-row" style="border: none;">
                 <span class="detail-label">Telefon:</span>
-                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestPhone)}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(pii.guestPhone)}</span>
             </div>
         </div>
 

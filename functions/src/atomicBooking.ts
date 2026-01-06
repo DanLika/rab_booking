@@ -930,9 +930,6 @@ export const createBookingAtomic = onCall(async (request) => {
         unit_id: unitId,
         property_id: propertyId,
         owner_id: ownerId,
-        guest_name: sanitizedGuestName,
-        guest_email: sanitizedGuestEmail,
-        guest_phone: finalGuestPhone,
         check_in: checkInDate,
         check_out: checkOutDate,
         guest_count: numericGuestCount, // Use validated numeric value
@@ -971,6 +968,15 @@ export const createBookingAtomic = onCall(async (request) => {
         .collection("bookings")
         .doc(bookingId);
       transaction.set(bookingDocRef, bookingData);
+
+      // Save PII to a subcollection for enhanced security
+      const piiDocRef = bookingDocRef.collection("pii_data").doc("guest");
+      const piiData = {
+        guest_name: sanitizedGuestName,
+        guest_email: sanitizedGuestEmail,
+        guest_phone: finalGuestPhone,
+      };
+      transaction.set(piiDocRef, piiData);
 
       // SECURITY FIX: Removed guestEmail from log (PII reduction)
       logSuccess("[AtomicBooking] Booking created atomically", {

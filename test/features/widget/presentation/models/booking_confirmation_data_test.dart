@@ -169,11 +169,13 @@ void main() {
           booking: testBooking,
           propertyName: 'Test Property',
           unitName: 'Test Unit',
+          guestName: 'Test Guest',
+          guestEmail: 'test@example.com',
         );
 
         expect(data.bookingReference, testBooking.id);
-        expect(data.guestEmail, '');
-        expect(data.guestName, '');
+        expect(data.guestEmail, 'test@example.com');
+        expect(data.guestName, 'Test Guest');
         expect(data.checkIn, testBooking.checkIn);
         expect(data.checkOut, testBooking.checkOut);
         expect(data.totalPrice, testBooking.totalPrice);

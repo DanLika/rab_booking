@@ -28,15 +28,6 @@ class BookingModel with _$BookingModel {
     /// Owner ID (denormalized)
     @JsonKey(name: 'owner_id') String? ownerId,
 
-    /// Guest name (for widget bookings without auth)
-    @JsonKey(name: 'guest_name') String? guestName,
-
-    /// Guest email (for widget bookings without auth)
-    @JsonKey(name: 'guest_email') String? guestEmail,
-
-    /// Guest phone (for widget bookings without auth)
-    @JsonKey(name: 'guest_phone') String? guestPhone,
-
     /// Check-in date
     @TimestampConverter() @JsonKey(name: 'check_in') required DateTime checkIn,
 

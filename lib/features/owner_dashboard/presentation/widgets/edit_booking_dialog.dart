@@ -33,6 +33,7 @@ Future<void> showEditBookingDialog(
 ) async {
   return showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (context) => _EditBookingDialog(booking: booking),
   );
 }

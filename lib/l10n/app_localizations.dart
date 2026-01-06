@@ -13542,6 +13542,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update Booking'**
   String get updateBooking;
+
+  /// No description provided for @authShowPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get authShowPassword;
+
+  /// No description provided for @authHidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get authHidePassword;
 }
 
 class _AppLocalizationsDelegate

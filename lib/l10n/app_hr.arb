@@ -3206,5 +3206,7 @@
       }
     }
   },
-  "updateBooking": "Ažuriraj rezervaciju"
+  "updateBooking": "Ažuriraj rezervaciju",
+  "authShowPassword": "Prikaži lozinku",
+  "authHidePassword": "Sakrij lozinku"
 }

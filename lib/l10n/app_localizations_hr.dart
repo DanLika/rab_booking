@@ -7528,4 +7528,10 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get updateBooking => 'Ažuriraj rezervaciju';
+
+  @override
+  String get authShowPassword => 'Prikaži lozinku';
+
+  @override
+  String get authHidePassword => 'Sakrij lozinku';
 }

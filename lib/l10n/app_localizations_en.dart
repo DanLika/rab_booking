@@ -7474,4 +7474,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateBooking => 'Update Booking';
+
+  @override
+  String get authShowPassword => 'Show password';
+
+  @override
+  String get authHidePassword => 'Hide password';
 }

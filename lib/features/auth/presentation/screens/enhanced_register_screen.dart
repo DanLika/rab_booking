@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -378,14 +379,21 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           labelText: l10n.password,
           prefixIcon: Icons.lock_outline,
           obscureText: _obscurePassword,
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-              color: theme.colorScheme.onSurfaceVariant,
-              size: 20,
+          suffixIcon: Tooltip(
+            message: _obscurePassword
+                ? l10n.authShowPassword
+                : l10n.authHidePassword,
+            child: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
             ),
-            onPressed: () =>
-                setState(() => _obscurePassword = !_obscurePassword),
           ),
           validator: PasswordValidator.validateMinimumLength,
         ),
@@ -395,14 +403,24 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           labelText: l10n.authConfirmPassword,
           prefixIcon: Icons.lock_outline,
           obscureText: _obscureConfirmPassword,
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-              color: theme.colorScheme.onSurfaceVariant,
-              size: 20,
-            ),
-            onPressed: () => setState(
-              () => _obscureConfirmPassword = !_obscureConfirmPassword,
+          suffixIcon: Tooltip(
+            message: _obscureConfirmPassword
+                ? l10n.authShowPassword
+                : l10n.authHidePassword,
+            child: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword
+                    ? Icons.visibility_off
+                    : Icons.visibility,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                setState(
+                  () => _obscureConfirmPassword = !_obscureConfirmPassword,
+                );
+              },
             ),
           ),
           validator: (value) => PasswordValidator.validateConfirmPassword(

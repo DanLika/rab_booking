@@ -3199,5 +3199,7 @@
       "platforms": {"type": "String"}
     }
   },
-  "updateBooking": "Update Booking"
+  "updateBooking": "Update Booking",
+  "authShowPassword": "Show password",
+  "authHidePassword": "Hide password"
 }

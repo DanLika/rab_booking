@@ -322,18 +322,23 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                     children: [
                       _buildHeaderRowWithYearSelector(cellSize, colors),
                       const SizedBox(height: SpacingTokens.s),
-                      // RepaintBoundary: Each month row repaints independently
-                      // when date selection changes, improving scroll performance
-                      ...List.generate(
-                        12,
-                        (monthIndex) => RepaintBoundary(
-                          child: _buildMonthRow(
-                            monthIndex + 1,
-                            data,
-                            cellSize,
-                            colors,
-                            WidgetTranslations.of(context, ref),
-                          ),
+                      // Use ListView.builder for virtualization
+                      SizedBox(
+                        height: 12 * cellSize, // Set a fixed height for the list
+                        child: ListView.builder(
+                          itemCount: 12,
+                          itemExtent: cellSize, // Set a fixed extent for each item
+                          itemBuilder: (context, monthIndex) {
+                            return RepaintBoundary(
+                              child: _buildMonthRow(
+                                monthIndex + 1,
+                                data,
+                                cellSize,
+                                colors,
+                                WidgetTranslations.of(context, ref),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],

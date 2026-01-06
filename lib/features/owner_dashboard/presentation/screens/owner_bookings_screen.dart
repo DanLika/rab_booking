@@ -1125,85 +1125,74 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
-  /// Build bookings list using SliverList for proper lazy loading
-  /// Eliminates nested ListView anti-pattern and fixes performance issues
+  /// Build bookings list using ListView.builder for proper lazy loading and performance
   Widget _buildBookingsSliverList(List<OwnerBooking> bookings, bool isMobile) {
-    // Calculate screen width for responsive layout
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
-
     final horizontalPad = context.horizontalPadding;
 
-    if (isDesktop) {
-      // Desktop: 2-column layout using SliverList
-      final rowCount = (bookings.length / 2).ceil();
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(horizontalPad, 0, horizontalPad, 24),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (isDesktop) {
+              // Desktop: 2-column layout
+              final leftIndex = index * 2;
+              if (leftIndex >= bookings.length) return null;
 
-      return SliverPadding(
-        padding: EdgeInsets.fromLTRB(horizontalPad, 0, horizontalPad, 24),
-        sliver: SliverList(
-          delegate: SliverChildBuilderDelegate((context, rowIndex) {
-            final leftIndex = rowIndex * 2;
-            final rightIndex = leftIndex + 1;
+              final rightIndex = leftIndex + 1;
+              final leftBooking = bookings[leftIndex];
+              final rightBooking = rightIndex < bookings.length
+                  ? bookings[rightIndex]
+                  : null;
 
-            final leftBooking = bookings[leftIndex];
-            final rightBooking = rightIndex < bookings.length
-                ? bookings[rightIndex]
-                : null;
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    // Web performance: RepaintBoundary isolates card repaints
-                    child: RepaintBoundary(
-                      child: _BookingCard(
-                        key: ValueKey(leftBooking.booking.id),
-                        ownerBooking: leftBooking,
-                      ),
-                    ),
-                  ),
-                  if (rightBooking != null) ...[
-                    const SizedBox(width: 16),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Expanded(
-                      // Web performance: RepaintBoundary isolates card repaints
                       child: RepaintBoundary(
                         child: _BookingCard(
-                          key: ValueKey(rightBooking.booking.id),
-                          ownerBooking: rightBooking,
+                          key: ValueKey(leftBooking.booking.id),
+                          ownerBooking: leftBooking,
                         ),
                       ),
                     ),
-                  ] else
-                    const Spacer(),
-                ],
-              ),
-            );
-          }, childCount: rowCount),
-        ),
-      );
-    } else {
-      // Mobile/Tablet: Single column with SliverList for true lazy loading
-      return SliverPadding(
-        padding: EdgeInsets.fromLTRB(horizontalPad, 0, horizontalPad, 24),
-        sliver: SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final ownerBooking = bookings[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              // Web performance: RepaintBoundary isolates card repaints
-              child: RepaintBoundary(
-                child: _BookingCard(
-                  key: ValueKey(ownerBooking.booking.id),
-                  ownerBooking: ownerBooking,
+                    if (rightBooking != null) ...[
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: RepaintBoundary(
+                          child: _BookingCard(
+                            key: ValueKey(rightBooking.booking.id),
+                            ownerBooking: rightBooking,
+                          ),
+                        ),
+                      ),
+                    ] else
+                      const Spacer(),
+                  ],
                 ),
-              ),
-            );
-          }, childCount: bookings.length),
+              );
+            } else {
+              // Mobile/Tablet: Single column
+              final ownerBooking = bookings[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: RepaintBoundary(
+                  child: _BookingCard(
+                    key: ValueKey(ownerBooking.booking.id),
+                    ownerBooking: ownerBooking,
+                  ),
+                ),
+              );
+            }
+          },
+          childCount: isDesktop ? (bookings.length / 2).ceil() : bookings.length,
         ),
-      );
-    }
+      ),
+    );
   }
 
   Widget _buildEmptyState() {

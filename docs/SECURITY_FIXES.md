@@ -1270,3 +1270,41 @@ Server-side (Firebase Auth) već ima robustniju provjeru. Ova lista pokriva naj�
 
 [Lista povezanih bugova ili "Nema poznatih povezanih bugova"]
 ```
+
+
+---
+
+## ODBIJENI PRIJEDLOZI (Jules Audit)
+
+Sljedeći prijedlozi iz Jules AI audita su analizirani i odbijeni zbog visokog rizika ili nepotrebnosti:
+
+### ❌ Uklanjanje email iz booking URL-a
+
+**Branch:** `fix/auth-error-handling-9695836915948502280`  
+**Razlog odbijanja:** Email u URL-u služi kao dodatni faktor validacije. Uklanjanje bi smanjilo sigurnost - samo token bi štitio pristup booking detaljima. Potrebna dublja analiza backend validacije prije implementacije.
+
+### ❌ Rate limiting za password reset (Cloud Function)
+
+**Branch:** `fix/auth-error-handling-9695836915948502280`  
+**Razlog odbijanja:** Firebase `sendPasswordResetEmail` već ima built-in rate limiting. Dodatni IP-based limit može blokirati legitimne korisnike na shared IP adresama (korporativne mreže, VPN).
+
+### ❌ Rate limiting za resend booking email
+
+**Branch:** `fix/auth-error-handling-9695836915948502280`  
+**Razlog odbijanja:** Limit od 10 emailova/sat je previše restriktivan. Owner s 50 bookinga ne može poslati reminder svima. Potrebna fleksibilnija implementacija.
+
+### ❌ Generičke auth error poruke
+
+**Branch:** `fix/auth-error-handling-9695836915948502280`  
+**Razlog odbijanja:** Zamjena specifičnih poruka ("Wrong password", "Email not found") sa generičkom "An error occurred" drastično pogoršava UX. Korisnici neće znati što je pošlo po zlu. Firebase Auth već štiti od user enumeration vraćajući iste poruke za nepostojeće emailove.
+
+### ❌ Access token iz Firestore umjesto Stripe metadata
+
+**Branch:** `fix/auth-error-handling-9695836915948502280`  
+**Razlog odbijanja:** Breaking change. Postojeći bookings nemaju `access_token` polje u placeholder dokumentu. Webhook bi failao za sve in-flight transakcije.
+
+### ❌ Idempotency key za Stripe checkout
+
+**Branch:** `fix/auth-error-handling-9695836915948502280`  
+**Razlog odbijanja:** Potrebna analiza kako se `placeholderBookingId` generira. Ako se generira novi ID na svakom retry-u, idempotency key je beskoristan.
+

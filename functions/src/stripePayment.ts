@@ -701,8 +701,6 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       metadata: {
         // Placeholder booking (webhook will update this to confirmed)
         placeholder_booking_id: placeholderResult.placeholderBookingId,
-        // Access token for "View my reservation" email link (plaintext)
-        access_token_plaintext: placeholderResult.accessToken,
         // Booking identifiers
         booking_reference: bookingRef,
         unit_id: unitId,
@@ -725,6 +723,8 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
         tax_legal_accepted: taxLegalAccepted ? "true" : "false",
       },
       customer_email: guestEmail,
+    }, {
+      idempotencyKey: placeholderResult.placeholderBookingId,
     });
 
     logInfo(`Stripe checkout session created: ${session.id}`);
@@ -906,11 +906,11 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
 
       logInfo(`Placeholder booking ${placeholderBookingId} confirmed after Stripe payment`);
 
-      // Extract plaintext access token from metadata (for email "View my reservation" link)
-      const accessTokenPlaintext = metadata.access_token_plaintext;
+      // SECURITY FIX: Retrieve access token from placeholder booking, not metadata
+      const accessTokenPlaintext = placeholderData.access_token;
 
       if (!accessTokenPlaintext) {
-        logWarn("Missing access_token_plaintext in metadata - email link may not work");
+        logWarn("Missing access_token in placeholder booking - email link may not work");
       }
 
       // Prepare result for email sending (match old structure)

@@ -24,6 +24,9 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 16. [SF-016: AnimatedGradientFAB ValueNotifier Optimization](#sf-016-animatedgradientfab-valuenotifier-optimization)
 17. [SF-017: Password Visibility Toggle Tooltips](#sf-017-password-visibility-toggle-tooltips)
 18. [SF-018: Common Password Blacklist](#sf-018-common-password-blacklist)
+19. [Neriješeni bugovi (Jules audit)](#-neriješeni-bugovi-jules-audit)
+    - [BUG-001: iCal Feeds Provider - nedostaje autoDispose](#-bug-001-ical-feeds-provider---nedostaje-autodispose)
+    - [BUG-002: IP Geolocation Service - nedostaje in-memory cache](#-bug-002-ip-geolocation-service---nedostaje-in-memory-cache)
 
 ---
 
@@ -1632,3 +1635,67 @@ Jules predlaže dodavanje 24h in-memory cache za geolokaciju.
 - Geolokacija se koristi samo pri loginu (rijetko)
 - IP adresa se može promijeniti (WiFi → mobilni)
 - Minimalni benefit za dodanu kompleksnost
+
+---
+
+## 🐛 Neriješeni bugovi (Jules audit)
+
+Ovi bugovi su identificirani tijekom Jules AI audita, ali nisu implementirani jer zahtijevaju dodatnu analizu ili nose rizik od breaking changes.
+
+---
+
+### 🐛 BUG-001: iCal Feeds Provider - nedostaje autoDispose
+
+**Prioritet:** Low  
+**Status:** ❌ Neriješeno  
+**Zahvaćeni fajl:** `lib/features/ical/presentation/providers/ical_feeds_provider.dart`  
+**Predložio:** Google Jules
+
+**Problem:**
+`icalFeedsStreamProvider` nema `.autoDispose` modifier. Kad korisnik napusti iCal ekran, stream ostaje aktivan i troši resurse.
+
+**Predloženo rješenje:**
+```dart
+final icalFeedsStreamProvider = StreamProvider.autoDispose<List<IcalFeed>>((ref) {
+  // ...
+});
+```
+
+**Razlog odgode:**
+- Može uzrokovati nepotrebne Firestore reconnections
+- Stream se ionako zatvara kad se provider više ne koristi
+- Potrebno testirati utjecaj na UX (loading state pri povratku na ekran)
+
+---
+
+### 🐛 BUG-002: IP Geolocation Service - nedostaje in-memory cache
+
+**Prioritet:** Low  
+**Status:** ❌ Neriješeno  
+**Zahvaćeni fajl:** `lib/core/services/ip_geolocation_service.dart`  
+**Predložio:** Google Jules
+
+**Problem:**
+`IpGeolocationService` nema in-memory cache. Svaki poziv `getGeolocation()` šalje HTTP request prema vanjskim API-jima, čak i za isti IP.
+
+**Predloženo rješenje:**
+```dart
+final Map<String, _CacheEntry> _cache = {};
+static const Duration _cacheDuration = Duration(hours: 24);
+
+Future<GeoLocationResult?> getGeolocation(String? ipAddress) async {
+  final cacheKey = ipAddress ?? 'current';
+  final cached = _cache[cacheKey];
+  if (cached != null && !cached.isExpired) {
+    return cached.result;
+  }
+  // ... fetch from API
+}
+```
+
+**Razlog odgode:**
+- In-memory cache se briše kad se app restarta
+- Geolokacija se koristi samo pri loginu (rijetko)
+- IP adresa se može promijeniti (WiFi → mobilni)
+- Minimalni benefit za dodanu kompleksnost
+- Vanjski API-ji već imaju rate limiting

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/property_model.dart';
@@ -473,12 +474,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       child: AspectRatio(
         aspectRatio: aspectRatio,
         child: widget.property.primaryImage != null
-            ? Image.network(
-                widget.property.primaryImage!,
+            ? CachedNetworkImage(
+                imageUrl: widget.property.primaryImage!,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildPlaceholder(isSmallMobile);
-                },
+                placeholder: (context, url) => _buildPlaceholder(isSmallMobile),
+                errorWidget: (context, url, error) =>
+                    _buildPlaceholder(isSmallMobile),
               )
             : _buildPlaceholder(isSmallMobile),
       ),

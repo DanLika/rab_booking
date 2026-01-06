@@ -1380,3 +1380,92 @@ Sljedeći prijedlozi iz Jules AI audita su analizirani i odbijeni zbog visokog r
 
 **Napomena:** Kao i svi Jules branchevi, ovaj također briše naše sigurnosne ispravke (password blacklist, IP rate limiting).
 
+
+
+### ❌ Rate Limiting za Password Reset
+
+**Branch:** `feat/rate-limiting-auth-12758559440638463678`  
+**Status:** Odbijeno
+
+**Predložene promjene:**
+1. IP-based rate limiting za login - **VEĆ IMPLEMENTIRANO** u našem kodu
+2. Email-based rate limiting za password reset - **ODBIJENO**
+
+**Razlozi odbijanja rate limiting-a za password reset:**
+
+1. **Firebase već ima built-in rate limiting** - `sendPasswordResetEmail` automatski ograničava broj zahtjeva po email adresi
+2. **Loš UX** - Jules-ova implementacija prikazuje "Email sent" poruku čak i kad reset NIJE uspio:
+   ```dart
+   } catch (e) {
+     // SECURITY: Show a generic message to prevent user enumeration.
+     // This is the same message shown on success.
+     setState(() {
+       _emailSent = true;  // ❌ LOŠE - korisnik misli da je email poslan
+       _isLoading = false;
+     });
+   }
+   ```
+3. **Korisnik ne zna da je nešto pošlo po zlu** - ako je greška (npr. network error), korisnik će čekati email koji nikad neće doći
+4. **Naš kod već ima ispravnu implementaciju** - prikazujemo grešku ako nešto pođe po zlu, a Firebase već štiti od user enumeration vraćajući success za nepostojeće emailove
+
+**Naš trenutni kod (ispravan):**
+```dart
+try {
+  await ref.read(enhancedAuthProvider.notifier).resetPassword(email);
+  // SECURITY: Firebase sendPasswordResetEmail already returns success
+  // regardless of whether email exists (prevents user enumeration)
+  setState(() => _emailSent = true);
+} catch (e) {
+  ErrorDisplayUtils.showErrorSnackBar(context, e);  // ✅ Prikazuje grešku
+}
+```
+
+
+
+---
+
+## Sažetak Jules AI Audit Brancheva
+
+**Datum analize:** 2026-01-06
+
+### Analizirani branchevi:
+
+| Branch | Status | Implementirano |
+|--------|--------|----------------|
+| `fix/auth-error-handling-9695836915948502280` | ❌ Odbijeno | Ništa |
+| `sentinel-open-redirect-fix-4599161851353466478` | ❌ Odbijeno | Ništa |
+| `sentinel/fix-storage-idor-6126059184660913074` | ❌ Odbijeno | Ništa (path se ne koristi) |
+| `feat/UX-003-calendar-improvements-9632538979079219527` | ✅ Djelomično | Lokalizacija "retry"/"close" (ručno) |
+| `feat/responsive-navigation-16940434846776266174` | ❌ Odbijeno | Ništa |
+| `feat/rate-limiting-auth-12758559440638463678` | ❌ Odbijeno | IP rate limiting već implementiran |
+| `enhance-password-validation-2867371911688008985` | ✅ Implementirano | SF-018 Password blacklist |
+| `bolt-memoize-chart-calculation-14900076675884265651` | ⏭️ Preskočeno | Stari dev branch, nije audit |
+| `palette-auth-ux-improvements-8533954737293328923` | ⏭️ Preskočeno | Stari dev branch, nije audit |
+
+### Ključni zaključci:
+
+1. **SVI Jules branchevi brišu naše sigurnosne ispravke** - nikad ne merge-ati cijeli branch
+2. **Firebase ima built-in zaštite** - rate limiting za auth, user enumeration protection
+3. **Većina prijedloga je nepotrebna ili rizična** - bolje preskočiti nego riskirati bug
+4. **Jedina korisna promjena:** SF-018 Password blacklist (cherry-picked)
+
+### Implementirane sigurnosne ispravke (SF-001 do SF-018):
+
+- SF-001: Owner ID Validation ✅
+- SF-002: SSRF Prevention ✅
+- SF-003: Revenue Chart (ODBIJENO)
+- SF-004: IconButton Feedback ✅
+- SF-005: Phone Validation ✅
+- SF-006: Sequential Characters ✅
+- SF-007: Remove Insecure Password Storage ✅
+- SF-008: Booking Notes Limit ✅
+- SF-009: Error Info Leakage ✅
+- SF-010: Year Calendar Race Condition ✅
+- SF-011: Ignore Service Account Key ✅
+- SF-012: Secure Error Handling ✅
+- SF-013: Haptic Feedback ✅
+- SF-014: Prevent PII Exposure ✅
+- SF-015: DebouncedSearchField Optimization ✅
+- SF-016: AnimatedGradientFAB Optimization ✅
+- SF-017: Password Visibility Tooltips ✅
+- SF-018: Common Password Blacklist ✅

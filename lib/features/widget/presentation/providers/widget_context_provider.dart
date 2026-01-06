@@ -120,7 +120,7 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
     );
 
     // Throw a generic, user-safe exception
-    throw WidgetContextException(
+    throw const WidgetContextException(
       'Unable to load booking widget configuration. Please check the property and unit IDs.',
     );
   }
@@ -160,7 +160,7 @@ Future<WidgetContext> widgetContextByUnitOnly(Ref ref, String unitId) async {
     );
 
     // Throw a generic, user-safe exception
-    throw WidgetContextException(
+    throw const WidgetContextException(
       'Unable to load booking widget configuration. Please ensure the unit ID is correct.',
     );
   }

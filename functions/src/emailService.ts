@@ -310,14 +310,12 @@ function isValidSubdomain(subdomain: string): boolean {
  */
 function generateViewBookingUrl(
   bookingReference: string,
-  guestEmail: string,
   accessToken: string,
   propertyData?: PropertyData,
   language?: string
 ): string {
   const params = new URLSearchParams();
   params.set("ref", bookingReference);
-  params.set("email", guestEmail);
   params.set("token", accessToken);
   
   // Add language if provided and valid
@@ -401,7 +399,6 @@ export async function sendBookingConfirmationEmail(
     // Generate view booking URL with pre-fetched data (no duplicate fetch)
     const viewBookingUrl = generateViewBookingUrl(
       bookingReference,
-      guestEmail,
       accessToken,
       propertyData
     );
@@ -471,7 +468,6 @@ export async function sendBookingApprovedEmail(
     // Generate view booking URL if accessToken provided (uses pre-fetched data)
     const viewBookingUrl = accessToken ? generateViewBookingUrl(
       bookingReference,
-      guestEmail,
       accessToken,
       propertyData
     ) : undefined;
@@ -818,7 +814,6 @@ export async function sendPaymentReminderEmail(
     // Generate view booking URL if accessToken provided (uses pre-fetched data)
     const viewBookingUrl = accessToken ? generateViewBookingUrl(
       bookingReference,
-      guestEmail,
       accessToken,
       propertyData
     ) : undefined;
@@ -881,7 +876,6 @@ export async function sendCheckInReminderEmail(
     // Generate view booking URL if accessToken provided (uses pre-fetched data)
     const viewBookingUrl = accessToken ? generateViewBookingUrl(
       bookingReference,
-      guestEmail,
       accessToken,
       propertyData
     ) : undefined;

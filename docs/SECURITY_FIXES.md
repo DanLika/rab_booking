@@ -2221,3 +2221,59 @@ void rollbackUpdate(
 **Moguće nuspojave:**
 - Pozivi `rollbackUpdate` moraju koristiti nullable tip - ali to je ispravno ponašanje
 
+
+---
+
+### 🔐 SEC-001: IDOR Vulnerability in Firebase Storage Rules (CRITICAL)
+
+**Datum:** 2026-01-07  
+**Prioritet:** 🚨 CRITICAL  
+**Status:** ✅ Riješeno  
+**Zahvaćeni fajl:** `storage.rules`  
+**Otkrio:** Google Sentinel Security Scanner
+
+**Problem:**
+Firebase Storage write pravila za `/properties/{propertyId}` i `/ical-exports/{propertyId}` su samo provjeravala da li je korisnik autenticiran (`request.auth != null`), ali NE da li je vlasnik resursa.
+
+**Ranjivost (IDOR - Insecure Direct Object Reference):**
+Bilo koji autenticirani korisnik mogao je:
+1. Prepisati slike tuđih nekretnina
+2. Obrisati iCal exporte drugih vlasnika
+3. Uploadati maliciozne fajlove na tuđe property-je
+
+**Prije ispravke:**
+```javascript
+match /properties/{propertyId}/{allPaths=**} {
+  allow read: if true;
+  allow write: if request.auth != null;  // ❌ RANJIVO!
+}
+```
+
+**Rješenje:**
+Dodana Firestore lookup provjera koja verificira da `request.auth.uid` odgovara `owner_id` property-ja:
+
+```javascript
+match /properties/{propertyId}/{allPaths=**} {
+  allow read: if true;
+  // SEC-001: Write allowed ONLY by property owner (IDOR fix)
+  allow write: if request.auth != null &&
+    get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
+}
+```
+
+**Zahvaćeni pathovi:**
+- `/properties/{propertyId}/**` - slike nekretnina
+- `/ical-exports/{propertyId}/**` - kalendar exporti
+
+**Testiranje:**
+1. ✅ Vlasnik uploada sliku → uspješno
+2. ✅ Drugi korisnik pokušava upload → ODBIJENO
+3. ✅ Neautenticirani korisnik → ODBIJENO
+4. ✅ Read ostaje public (za widget prikaz)
+
+**Moguće nuspojave:**
+- Svaki write na storage sada radi dodatni Firestore read (minimalan trošak)
+- Property dokument MORA imati `owner_id` field (već postoji)
+
+**GDPR/Security implikacije:**
+Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podataka, što je kritično za sigurnost i usklađenost s regulativama.

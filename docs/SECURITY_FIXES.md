@@ -2023,3 +2023,63 @@ calendar[current] = infoToUpdate.copyWith(
 **Moguće nuspojave:**
 - Nema - `copyWith` čuva sve postojeće vrijednosti osim onih koje eksplicitno mijenjamo
 
+
+
+---
+
+### 🐛 BUG-009: iCal Empty Data Validation - Prevent Data Loss During Sync
+
+**Datum:** 2026-01-07  
+**Prioritet:** Critical  
+**Status:** ✅ Riješeno  
+**Zahvaćeni fajl:** `functions/src/icalSync.ts`  
+**Predložio:** Google Jules (branch: `fix/LOGIC-003-calendar-data-consistency-8111192320731936509`)
+
+**Problem:**
+U `syncSingleFeed` funkciji nije postojala validacija da li je dohvaćeni iCal odgovor validan. Ako vanjski API (Airbnb, Booking.com) vrati prazan string, HTML error stranicu, ili neispravan format:
+
+1. `parseIcalData` parsira prazan/neispravan sadržaj → 0 evenata
+2. `deleteOldEvents` briše SVE postojeće evente za taj feed
+3. `insertNewEvents` insertira 0 novih evenata
+4. **KATASTROFA:** Kalendar pokazuje slobodne datume koji su zapravo zauzeti!
+
+**Scenarij buga:**
+1. Airbnb ima privremeni downtime → vraća HTML error stranicu
+2. `fetchIcalData` vraća `"<html>503 Service Unavailable</html>"`
+3. `parseIcalData` ne pronalazi VEVENT → vraća `[]`
+4. `deleteOldEvents` briše 15 postojećih evenata
+5. `insertNewEvents` insertira 0 evenata
+6. Gost može rezervirati već zauzete datume → **DOUBLE BOOKING!**
+
+**Rješenje:**
+Dodana validacija prije parsiranja i brisanja:
+
+```typescript
+// Fetch iCal data
+const icalData = await fetchIcalData(ical_url);
+
+// BUG-009 FIX: Validate fetched iCal data before processing
+// Prevents accidental deletion of all events if the fetched data is empty/malformed
+// Every valid iCal file MUST contain "BEGIN:VCALENDAR" per RFC 5545
+if (!icalData || !icalData.includes("BEGIN:VCALENDAR")) {
+  throw new Error(`Fetched iCal data is empty or invalid for feed: ${feedId}. ` +
+    `Expected iCal format but received: ${icalData ? icalData.substring(0, 100) + '...' : 'empty response'}`);
+}
+
+// Parse iCal data
+const events = await parseIcalData(icalData);
+```
+
+**Zašto `BEGIN:VCALENDAR`?**
+Svaki validan iCal fajl MORA početi s `BEGIN:VCALENDAR` prema RFC 5545 standardu. Ako taj string ne postoji, odgovor je neispravan.
+
+**Testiranje:**
+1. ✅ Normalan iCal feed → sync radi normalno
+2. ✅ Prazan odgovor → sync FAIL-a s greškom, eventi se NE brišu
+3. ✅ HTML error stranica → sync FAIL-a s greškom, eventi se NE brišu
+4. ✅ Feed se označava kao `status: 'error'` s detaljnom porukom
+
+**Moguće nuspojave:**
+- Nema negativnih - sync koji bi inače obrisao sve evente sada FAIL-a s jasnom greškom
+- Owner vidi error status i može reagirati
+

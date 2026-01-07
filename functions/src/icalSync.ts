@@ -273,6 +273,14 @@ async function syncSingleFeed(
     // Fetch iCal data
     const icalData = await fetchIcalData(ical_url);
 
+    // BUG-009 FIX: Validate fetched iCal data before processing
+    // Prevents accidental deletion of all events if the fetched data is empty/malformed
+    // Every valid iCal file MUST contain "BEGIN:VCALENDAR" per RFC 5545
+    if (!icalData || !icalData.includes("BEGIN:VCALENDAR")) {
+      throw new Error(`Fetched iCal data is empty or invalid for feed: ${feedId}. ` +
+        `Expected iCal format but received: ${icalData ? icalData.substring(0, 100) + '...' : 'empty response'}`);
+    }
+
     // Parse iCal data
     const events = await parseIcalData(icalData);
 

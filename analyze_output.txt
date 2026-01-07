@@ -1,0 +1,5 @@
+Analyzing app...
+
+   info - lib/features/auth/presentation/screens/enhanced_register_screen.dart:1:8 - The import of 'dart:typed_data' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/services.dart'. Try removing the import directive. - unnecessary_import
+
+1 issue found.

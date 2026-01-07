@@ -18,7 +18,7 @@
 | Cjenovnik tab (`unified_unit_hub_screen.dart`) | FROZEN - referentna implementacija |
 | Unit Wizard publish flow | 3 Firestore docs redoslijed kriti
 an |
-| Timeline Calendar z-index | Cancelled PRVI, confirmed ZADNJI |
+| Timeline Calendar z-index | Cancelled bookings at base level (drawn first), confirmed on top |
 | Calendar Repository (`firebase_booking_calendar_repository.dart`) | 989 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |
 | Owner email u `atomicBooking.ts` | UVIJEK aalje - NE vraaj conditional check |
 | Subdomain validation regex | `/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/` (3-30 chars) |
@@ -30,8 +30,8 @@ an |
 ## <? STANDARDI
 
 ```dart
-// Gradients
-final gradients = Theme.of(context).extension<AppGradients>()!;
+// Gradients (preferred method)
+final gradients = context.gradients;
 
 // Input fields - UVIJEK 12px borderRadius
 InputDecorationHelper.buildDecoration()
@@ -86,16 +86,16 @@ today.setUTCHours(0, 0, 0, 0);  // CORRECT
 // NE: today.setHours(0, 0, 0, 0) - koristi local timezone
 ```
 
-**Rate Limiting** - dostupno u `utils/rateLimit.ts`:
+**Rate Limiting** - dostupno u `functions/src/utils/rateLimit.ts`:
 - `checkRateLimit()` - in-memory, za hot paths
 - `enforceRateLimit()` - Firestore-backed, za critical actions
 
-**Input Sanitization** - `utils/inputSanitization.ts`:
+**Input Sanitization** - `functions/src/utils/inputSanitization.ts`:
 ```typescript
 sanitizeText(name), sanitizeEmail(email), sanitizePhone(phone)
 ```
 
-**Booking Lookup** - `utils/bookingLookup.ts`:
+**Booking Lookup** - `functions/src/utils/bookingLookup.ts`:
 ```typescript
 // ⚠️ NIKADA ne koristi FieldPath.documentId() sa collectionGroup()!
 // Umjesto toga koristi helper funkcije:

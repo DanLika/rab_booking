@@ -133,7 +133,6 @@ export {
   EMAIL_COLORS_DARK,
   EMAIL_COLORS_NEUTRAL,
   getEmailColors,
-  LEGACY_COLORS,
   type EmailColorScheme,
 } from "./styles/colors";
 

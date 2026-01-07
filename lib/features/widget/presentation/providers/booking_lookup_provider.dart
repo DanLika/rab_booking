@@ -19,7 +19,8 @@ final bookingLookupServiceProvider = Provider<BookingLookupService>((ref) {
 class BookingLookupService {
   final FirebaseFunctions _functions;
 
-  BookingLookupService({required FirebaseFunctions functions}) : _functions = functions;
+  BookingLookupService({required FirebaseFunctions functions})
+    : _functions = functions;
 
   /// Verify booking access and retrieve booking details
   ///
@@ -55,14 +56,20 @@ class BookingLookupService {
       // Handle specific Firebase Functions errors
       switch (e.code) {
         case 'not-found':
-          throw BookingException('Booking not found. Please check your booking reference.', code: 'booking/not-found');
+          throw BookingException(
+            'Booking not found. Please check your booking reference.',
+            code: 'booking/not-found',
+          );
         case 'permission-denied':
           throw BookingException(
             'Email does not match booking records or link has expired.',
             code: 'booking/permission-denied',
           );
         case 'invalid-argument':
-          throw BookingException('Booking reference and email are required.', code: 'booking/invalid-argument');
+          throw BookingException(
+            'Booking reference and email are required.',
+            code: 'booking/invalid-argument',
+          );
         default:
           throw BookingException.lookupFailed(e.message);
       }
@@ -85,15 +92,19 @@ final lookupEmailProvider = StateProvider.autoDispose<String>((ref) => '');
 
 /// Async provider for booking lookup result
 /// This provider is used when user performs manual lookup
-final bookingLookupProvider = FutureProvider.family<BookingDetailsModel, LookupParams>((ref, params) async {
-  final service = ref.watch(bookingLookupServiceProvider);
+final bookingLookupProvider =
+    FutureProvider.family<BookingDetailsModel, LookupParams>((
+      ref,
+      params,
+    ) async {
+      final service = ref.watch(bookingLookupServiceProvider);
 
-  return await service.verifyBookingAccess(
-    bookingReference: params.bookingReference,
-    email: params.email,
-    accessToken: params.accessToken,
-  );
-});
+      return await service.verifyBookingAccess(
+        bookingReference: params.bookingReference,
+        email: params.email,
+        accessToken: params.accessToken,
+      );
+    });
 
 /// Parameters for booking lookup
 class LookupParams {
@@ -101,7 +112,11 @@ class LookupParams {
   final String email;
   final String? accessToken;
 
-  const LookupParams({required this.bookingReference, required this.email, this.accessToken});
+  const LookupParams({
+    required this.bookingReference,
+    required this.email,
+    this.accessToken,
+  });
 
   @override
   bool operator ==(Object other) {
@@ -113,5 +128,6 @@ class LookupParams {
   }
 
   @override
-  int get hashCode => bookingReference.hashCode ^ email.hashCode ^ (accessToken?.hashCode ?? 0);
+  int get hashCode =>
+      bookingReference.hashCode ^ email.hashCode ^ (accessToken?.hashCode ?? 0);
 }

@@ -143,3 +143,43 @@ firebase deploy --only hosting
 ```
 
 ---
+
+## 6. Subdomain Setup (Optional)
+
+The application uses the `view.bookbed.io` subdomain to display booking details pages. This setup is required for production environments and can be configured for staging or development as needed.
+
+### Overview
+
+- **`app.bookbed.io`**: Used for the owner dashboard.
+- **`view.bookbed.io`**: Used for the public-facing booking widget and details pages.
+
+The booking details page is part of the `bookbed-widget` Firebase Hosting target.
+
+### Steps to Configure
+
+1.  **Add Custom Domain in Firebase:**
+    -   Go to the Firebase Console -> Hosting.
+    -   Select the `bookbed-widget` site.
+    -   Click "Add custom domain" and enter `view.bookbed.io`.
+    -   Follow the instructions to verify domain ownership.
+
+2.  **Configure DNS:**
+    -   In your DNS provider (e.g., Cloudflare), add a `CNAME` record.
+    -   **Name**: `view`
+    -   **Target**: `bookbed-widget.web.app`
+    -   **Proxy Status (Cloudflare)**: Set to "DNS only" during Firebase verification, then switch to "Proxied" after verification is complete.
+
+3.  **Set Environment Variable:**
+    -   Ensure the `BOOKING_DOMAIN` environment variable in your Firebase Functions is set to your root domain (e.g., `bookbed.io`). The email service will automatically construct links using `view.bookbed.io`.
+
+    ```bash
+    # Set the secret in Firebase Functions (v2)
+    firebase functions:secrets:set BOOKING_DOMAIN
+    # When prompted, enter your root domain (e.g., bookbed.io)
+    ```
+
+4.  **Deploy:**
+    -   Deploying the widget will automatically include the booking details page.
+    ```bash
+    firebase deploy --only hosting:widget
+    ```

@@ -1249,16 +1249,16 @@ Server-side (Firebase Auth) već ima robustniju provjeru. Ova lista pokriva naj�
 
 ## SF-019: Idempotency Protection in Booking Creation
 
-**Datum**: 2026-01-08
-**Prioritet**: High
-**Status**: ✅ Riješeno
-**Zahvaćeni fajlovi**: `functions/src/atomicBooking.ts`
+**Date**: 2024-01-08
+**Priority**: High
+**Status**: ✅ Resolved
+**Affected Files**: `functions/src/atomicBooking.ts`
 
 ### Problem
 
 The `createBookingAtomic` Cloud Function did not have idempotency protection, creating a risk of duplicate bookings if a user double-clicked the "Book Now" button or if network requests were retried. This could lead to a race condition where two identical bookings for the same dates could be created simultaneously.
 
-### Rješenje
+### Solution
 
 The function now accepts an optional `idempotencyKey` from the client.
 
@@ -1266,7 +1266,7 @@ The function now accepts an optional `idempotencyKey` from the client.
 2.  **Return Existing**: If the key exists, the function immediately returns the ID of the existing booking, preventing a duplicate.
 3.  **Store New Key**: If the key is new, the function proceeds with the booking creation. After the booking is successfully created, it stores the `idempotencyKey` in the `idempotency_keys` collection to prevent future duplicates.
 
-**Kod:**
+**Code:**
 ```typescript
 if (idempotencyKey && typeof idempotencyKey === "string" && idempotencyKey.length >= 16) {
   const idempotencyRef = db.collection("idempotency_keys").doc(idempotencyKey);

@@ -36,6 +36,23 @@ class InputSanitizer {
     r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]',
   );
 
+  // LOGIC-011 FIX: Add confusables map to align with backend sanitization
+  static final Map<String, String> _confusablesMap = {
+    // Cyrillic -> Latin
+    'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c',
+    'у': 'y', 'х': 'x', 'і': 'i', 'ј': 'j', 'ѕ': 's',
+    'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M',
+    'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T',
+    'Х': 'X',
+    // Greek -> Latin
+    'α': 'a', 'ε': 'e', 'ο': 'o', 'ν': 'v', 'ρ': 'r',
+    'Α': 'A', 'Β': 'B', 'Ε': 'E', 'Η': 'H', 'Ι': 'I',
+    'Κ': 'K', 'Μ': 'M', 'Ν': 'N', 'Ο': 'O', 'Ρ': 'P',
+    'Τ': 'T', 'Χ': 'X', 'Υ': 'Y', 'Ζ': 'Z',
+    // Zero-width characters (remove)
+    '\u200B': '', '\u200C': '', '\u200D': '', '\uFEFF': '', '\u00AD': '',
+  };
+
   /// Sanitizes general text input (notes, descriptions, etc.)
   ///
   /// Removes:
@@ -53,11 +70,21 @@ class InputSanitizer {
 
     var sanitized = input.trim();
 
+    // LOGIC-011 FIX: Normalize confusables to prevent homoglyph attacks
+    sanitized = _normalizeConfusables(sanitized);
+
     // Remove script tags
     sanitized = sanitized.replaceAll(_scriptPattern, '');
 
-    // Remove HTML tags
-    sanitized = sanitized.replaceAll(_htmlTagPattern, '');
+    // LOGIC-011 FIX: Encode HTML entities instead of stripping them
+    // This prevents data loss (e.g., "a < b" is preserved as "a &lt; b")
+    // and is a more secure method of preventing XSS.
+    sanitized = sanitized
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#x27;');
 
     // Remove SQL keywords (case-insensitive)
     sanitized = sanitized.replaceAll(_sqlKeywordsPattern, '');
@@ -72,6 +99,15 @@ class InputSanitizer {
     sanitized = sanitized.trim();
 
     return sanitized.isEmpty ? null : sanitized;
+  }
+
+  // LOGIC-011 FIX: Helper to normalize Unicode confusables
+  static String _normalizeConfusables(String input) {
+    var normalized = input;
+    _confusablesMap.forEach((key, value) {
+      normalized = normalized.replaceAll(key, value);
+    });
+    return normalized;
   }
 
   /// Sanitizes email input
@@ -156,8 +192,10 @@ class InputSanitizer {
     // Remove control characters
     sanitized = sanitized.replaceAll(_controlCharPattern, '');
 
-    // Keep only digits and spaces
-    sanitized = sanitized.replaceAll(RegExp(r'[^\d\s]'), '');
+    // LOGIC-011 FIX: Keep only valid phone characters, including '+'
+    // This aligns with the backend's `sanitizePhone` function, which
+    // preserves characters necessary for international phone numbers.
+    sanitized = sanitized.replaceAll(RegExp(r'[^\d\s+()-]'), '');
 
     // Normalize whitespace
     sanitized = sanitized.replaceAll(RegExp(r'\s+'), ' ');

@@ -289,8 +289,8 @@ void main() {
       test('removes special characters but keeps digits and spaces', () {
         final input = '+385 91 234 5678';
         final result = InputSanitizer.sanitizePhone(input);
-        // + is removed, only digits and spaces kept
-        expect(result, '385 91 234 5678');
+        // LOGIC-011 FIX: Test now expects '+' to be preserved
+        expect(result, '+385 91 234 5678');
       });
 
       test('removes script tags', () {
@@ -319,8 +319,8 @@ void main() {
       test('removes parentheses and dashes (only digits and spaces)', () {
         final input = '+385 (91) 234-5678';
         final result = InputSanitizer.sanitizePhone(input);
-        // Removes +, (, ), - - only digits and spaces kept
-        expect(result, '385 91 2345678');
+        // LOGIC-011 FIX: Test now expects standard phone characters to be preserved
+        expect(result, '+385 (91) 234-5678');
       });
 
       test('preserves extension notation', () {

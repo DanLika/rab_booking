@@ -49,7 +49,7 @@ class ErrorHandler {
     } else if (error is ConflictException) {
       return 'Konflikt podataka. ${error.message}';
     } else if (error is TimeoutException) {
-      return 'Operacija je istekla. Pokušajte ponovo.';
+      return 'Operacija je istekla. Molimo provjerite vašu internet konekciju i pokušajte ponovo.';
     } else if (error is AuthorizationException) {
       return 'Nemate dozvolu za ovu akciju.';
     } else if (error is DatesNotAvailableException) {

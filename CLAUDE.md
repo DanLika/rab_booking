@@ -1192,3 +1192,15 @@ window.pwaPromptInstall()  // async function
 3. Webhook Events - Stripe webhooks, booking events
 
 **Izvor sadržaja:** Ovaj projekt (CLAUDE.md, SECURITY_FIXES.md, kod)
+
+
+---
+
+## ⚠️ OBAVEZNO PRIJE COMMITA
+
+**Dart formatiranje** - CI će odbiti PR ako kod nije formatiran:
+```bash
+dart format .
+```
+
+**Za AI agente (Jules, Sentinel, Bolt):** UVIJEK pokreni `dart format .` prije kreiranja commita. CI workflow provjerava formatiranje i odbija neformatirani kod.

@@ -30,6 +30,7 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
     - [BUG-003: iCal Sync - sekvencijalno vs paralelno procesiranje](#-bug-003-ical-sync---sekvencijalno-vs-paralelno-procesiranje)
     - [BUG-004: Owner Bookings Repository - print umjesto LoggingService](#-bug-004-owner-bookings-repository---print-umjesto-loggingservice)
     - [BUG-005: Dashboard Overview - deferred loading za graphic library](#-bug-005-dashboard-overview---deferred-loading-za-graphic-library)
+    - [BUG-006: QR Code Payment - deferred loading za qr_flutter library](#-bug-006-qr-code-payment---deferred-loading-za-qr_flutter-library)
 
 ---
 
@@ -1801,3 +1802,45 @@ FutureBuilder(
 - Može uzrokovati UX probleme (loading flash pri prvom prikazu)
 - Benefit je samo za web (mobile ne koristi deferred loading)
 - Rizik od regresije u chart renderingu
+
+---
+
+### 🐛 BUG-006: QR Code Payment - deferred loading za qr_flutter library
+
+**Prioritet:** Low  
+**Status:** ❌ Neriješeno  
+**Zahvaćeni fajl:** `lib/features/widget/presentation/widgets/bank_transfer/qr_code_payment_section.dart`  
+**Predložio:** Google Jules
+
+**Problem:**
+`qr_flutter` library se učitava sinkrono pri startu aplikacije, što povećava initial bundle size na webu.
+
+**Trenutni kod:**
+```dart
+import 'package:qr_flutter/qr_flutter.dart';
+
+// Direktno korištenje:
+QrImageView(data: epcData, size: 200.0, ...)
+```
+
+**Predloženo rješenje:**
+```dart
+import 'package:qr_flutter/qr_flutter.dart' deferred as qr;
+
+// U build metodi:
+FutureBuilder(
+  future: qr.loadLibrary(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.done) {
+      return qr.QrImageView(data: epcData, size: 200.0, ...);
+    }
+    return CircularProgressIndicator();
+  },
+)
+```
+
+**Razlog odgode:**
+- Kompleksna promjena - treba dodati FutureBuilder wrapper
+- Može uzrokovati UX probleme (loading spinner pri prvom prikazu QR koda)
+- Benefit je samo za web (mobile ne koristi deferred loading)
+- QR kod se prikazuje samo na bank transfer payment screenu (rijetko korišteno)

@@ -44,9 +44,6 @@ dependencies:
   # UI & Styling
   google_fonts: ^6.2.1
 
-  # Calendar - Timeline views for professional booking management
-  syncfusion_flutter_calendar: ^31.2.16
-
   # Internationalization
   intl: ^0.20.1
 
@@ -90,7 +87,6 @@ dependencies:
   sentry_flutter: ^8.12.0
 
   # Charts
-  fl_chart: ^1.1.1
   graphic: ^2.6.0
 
 dev_dependencies:

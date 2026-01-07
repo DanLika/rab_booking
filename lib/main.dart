@@ -351,21 +351,27 @@ Future<void> _initializeInBackground() async {
   final stopwatch = Stopwatch()..start();
 
   try {
-    // Initialize Firebase
-    LoggingService.log('Initializing Firebase...', tag: 'INIT');
-    await Firebase.initializeApp(
+    // ⚡ Optimization: Run Firebase and SharedPreferences initialization in parallel.
+    // This reduces startup time by overlapping I/O-bound operations.
+    // The total time will be closer to the longest single operation, not their sum.
+    final firebaseFuture = Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    final prefsFuture = SharedPreferences.getInstance();
+
+    // Await both futures simultaneously.
+    await Future.wait([firebaseFuture, prefsFuture.catchError((_) => null)]);
+
+    // Handle Firebase result (Future.wait would have thrown if it failed)
     AppInitState.firebaseReady.complete();
     LoggingService.log(
       'Firebase ready (${stopwatch.elapsedMilliseconds}ms)',
       tag: 'INIT',
     );
 
-    // Initialize SharedPreferences
-    LoggingService.log('Initializing SharedPreferences...', tag: 'INIT');
+    // Handle SharedPreferences result gracefully
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await prefsFuture;
       AppInitState.prefsReady.complete(prefs);
       LoggingService.log(
         'SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)',
@@ -376,12 +382,10 @@ Future<void> _initializeInBackground() async {
         'SharedPreferences init failed: $e',
         tag: 'INIT_ERROR',
       );
-      // Complete with error so app can handle it gracefully
       if (!AppInitState.prefsReady.isCompleted) {
         AppInitState.prefsReady.completeError(e, stack);
       }
-      // Re-throw to be caught by outer catch block
-      rethrow;
+      // Do not rethrow; allow the app to continue without persisted state.
     }
 
     // Initialize Sentry for web (non-blocking)
@@ -397,9 +401,13 @@ Future<void> _initializeInBackground() async {
     );
   } catch (e, stack) {
     LoggingService.log('Initialization error: $e', tag: 'INIT_ERROR');
-    // Complete with error so app can handle it
+    // This will now primarily catch Firebase errors.
     if (!AppInitState.firebaseReady.isCompleted) {
       AppInitState.firebaseReady.completeError(e, stack);
+    }
+    // If prefs failed, it's handled above. If it hasn't been handled, complete with error.
+    if (!AppInitState.prefsReady.isCompleted) {
+      AppInitState.prefsReady.completeError(e, stack);
     }
     if (!AppInitState.allReady.isCompleted) {
       AppInitState.allReady.completeError(e, stack);

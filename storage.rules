@@ -14,8 +14,10 @@ service firebase.storage {
     match /properties/{propertyId}/{allPaths=**} {
       // Anyone can read (for public widget display)
       allow read: if true;
-      // Only authenticated users can write (owner validation done at app level)
-      allow write: if request.auth != null;
+      // SEC-001: Write allowed ONLY by property owner (IDOR fix)
+      // Validates request UID against the property's owner_id in Firestore
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
     }
 
     // iCal exports (public read for calendar subscriptions, authenticated write)
@@ -23,8 +25,10 @@ service firebase.storage {
     match /ical-exports/{propertyId}/{unitId}/{allPaths=**} {
       // Anyone can read (for public calendar subscriptions)
       allow read: if true;
-      // Only authenticated users can write (owner validation done at app level)
-      allow write: if request.auth != null;
+      // SEC-001: Write allowed ONLY by property owner (IDOR fix)
+      // Validates request UID against the property's owner_id in Firestore
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
     }
 
     // Public assets (logos, default images, etc.)

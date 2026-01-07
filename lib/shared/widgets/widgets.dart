@@ -17,6 +17,7 @@ export 'button.dart';
 export 'card.dart';
 
 // Adaptive & Responsive Layouts
+export 'adaptive_layout.dart';
 
 // Animations
 export 'animations/skeleton_loader.dart';

@@ -1247,6 +1247,71 @@ Server-side (Firebase Auth) već ima robustniju provjeru. Ova lista pokriva naj�
 
 ---
 
+## SF-019: Idempotency Protection in Booking Creation
+
+**Datum**: 2026-01-08
+**Prioritet**: High
+**Status**: ✅ Riješeno
+**Zahvaćeni fajlovi**: `functions/src/atomicBooking.ts`
+
+### Problem
+
+The `createBookingAtomic` Cloud Function did not have idempotency protection, creating a risk of duplicate bookings if a user double-clicked the "Book Now" button or if network requests were retried. This could lead to a race condition where two identical bookings for the same dates could be created simultaneously.
+
+### Rješenje
+
+The function now accepts an optional `idempotencyKey` from the client.
+
+1.  **Key Check**: Before initiating the booking process, the function checks if the provided `idempotencyKey` already exists in the `idempotency_keys` Firestore collection.
+2.  **Return Existing**: If the key exists, the function immediately returns the ID of the existing booking, preventing a duplicate.
+3.  **Store New Key**: If the key is new, the function proceeds with the booking creation. After the booking is successfully created, it stores the `idempotencyKey` in the `idempotency_keys` collection to prevent future duplicates.
+
+**Kod:**
+```typescript
+if (idempotencyKey && typeof idempotencyKey === "string" && idempotencyKey.length >= 16) {
+  const idempotencyRef = db.collection("idempotency_keys").doc(idempotencyKey);
+  const idempotencyDoc = await idempotencyRef.get();
+
+  if (idempotencyDoc.exists) {
+    const existingData = idempotencyDoc.data();
+    if (existingData?.bookingId) {
+      logInfo("[AtomicBooking] Idempotency key already used, returning existing booking", {
+        idempotencyKey: idempotencyKey.substring(0, 8) + "...",
+        existingBookingId: existingData.bookingId,
+      });
+      return {
+        success: true,
+        bookingId: existingData.bookingId,
+        idempotent: true, // Flag that this was a duplicate request
+      };
+    }
+  }
+}
+
+// ... after successful booking ...
+if (idempotencyKey && typeof idempotencyKey === "string" && idempotencyKey.length >= 16) {
+  await db.collection("idempotency_keys").doc(idempotencyKey).set({
+    bookingId: result.bookingId,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    expiresAt: admin.firestore.Timestamp.fromDate(
+      new Date(Date.now() + 24 * 60 * 60 * 1000)
+    ),
+  });
+}
+```
+
+### Testiranje
+
+1.  ✅ Submitting a booking with a new `idempotencyKey` creates a new booking.
+2.  ✅ Submitting the same request again with the same `idempotencyKey` returns the ID of the first booking and does not create a duplicate.
+3.  ✅ Submitting a request without an `idempotencyKey` proceeds as normal (for backward compatibility).
+
+### Moguće nuspojave
+
+- This fix relies on the client to generate a unique and reliable idempotency key for each booking attempt.
+
+---
+
 ## Template za buduće ispravke
 
 ```markdown
@@ -1309,13 +1374,6 @@ Sljedeći prijedlozi iz Jules AI audita su analizirani i odbijeni zbog visokog r
 
 **Branch:** `fix/auth-error-handling-9695836915948502280`  
 **Razlog odbijanja:** Breaking change. Postojeći bookings nemaju `access_token` polje u placeholder dokumentu. Webhook bi failao za sve in-flight transakcije.
-
-### ❌ Idempotency key za Stripe checkout
-
-**Branch:** `fix/auth-error-handling-9695836915948502280`  
-**Razlog odbijanja:** Potrebna analiza kako se `placeholderBookingId` generira. Ako se generira novi ID na svakom retry-u, idempotency key je beskoristan.
-
-
 
 ### ❌ URL validacija za Stripe Connect (Open Redirect)
 

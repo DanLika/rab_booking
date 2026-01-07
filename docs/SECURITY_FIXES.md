@@ -1844,3 +1844,182 @@ FutureBuilder(
 - Može uzrokovati UX probleme (loading spinner pri prvom prikazu QR koda)
 - Benefit je samo za web (mobile ne koristi deferred loading)
 - QR kod se prikazuje samo na bank transfer payment screenu (rijetko korišteno)
+
+
+---
+
+### 🐛 BUG-007: FirebaseBookingRepository - query limits i optimizacije
+
+**Prioritet:** Medium  
+**Status:** ❌ Neriješeno  
+**Zahvaćeni fajl:** `lib/shared/repositories/firebase/firebase_booking_repository.dart`  
+**Predložio:** Google Jules
+
+**Problem:**
+Više metoda u `FirebaseBookingRepository` nema `.limit()` ili optimalne Firestore filtere, što može uzrokovati performance probleme s rastom baze.
+
+**Predložene promjene:**
+
+1. **`fetchBookingById`** - ukloniti full scan fallback:
+```dart
+// TRENUTNO: Skenira SVE bookinge ako unitId nije proslijeđen
+final snapshot = await _firestore.collectionGroup('bookings').get();
+for (final doc in snapshot.docs) { if (doc.id == id) ... }
+
+// JULES: Vraća null umjesto full scan
+if (unitId == null) {
+  return null; // Callers must provide unitId
+}
+```
+
+2. **`fetchUnitBookings`** - dodati limit:
+```dart
+.orderBy('created_at', descending: true)
+.limit(1000)
+```
+
+3. **`fetchUserBookings`** - dodati limit:
+```dart
+.orderBy('created_at', descending: true)
+.limit(100)
+```
+
+4. **`fetchPropertyBookings`** - dodati limit:
+```dart
+.orderBy('created_at', descending: true)
+.limit(1000)
+```
+
+5. **`getOverlappingBookings`** - dodati Firestore filter:
+```dart
+// TRENUTNO: Dohvaća sve bookinge za unit, filtrira u memoriji
+// JULES: Dodaje check_in filter na Firestore nivou
+.where('check_in', isLessThan: checkOut)
+```
+
+6. **`getCurrentBookings`** - optimizirati query:
+```dart
+// TRENUTNO: Dohvaća SVE user bookinge, filtrira u memoriji
+// JULES: Dodaje check_out filter i limit
+.where('check_out', isGreaterThan: now)
+.limit(50)
+```
+
+**Razlog odgode:**
+- Promjene mijenjaju ponašanje metoda (npr. `fetchBookingById` više ne radi bez `unitId`)
+- Potrebno provjeriti sve pozive tih metoda u aplikaciji
+- Limiti mogu "odrezati" podatke ako ih ima više od limita
+- Zahtijeva dodavanje novih Firestore indeksa
+- Srednji rizik od regresije - bolje testirati temeljito prije implementacije
+
+
+---
+
+## 🚀 BUDUĆE FUNKCIONALNOSTI (Za razmatranje)
+
+### 💡 FEAT-001: Stripe Refund Webhook Handler
+
+**Prioritet:** Low  
+**Status:** ⏸️ Odgođeno (svjesna odluka)  
+**Zahvaćeni fajl:** `functions/src/stripePayment.ts`  
+**Predložio:** Google Jules (branch: `fix-refund-logic-12134180205821183120`)
+
+**Opis:**
+Webhook handler za Stripe `charge.refunded` event koji bi automatski ažurirao booking status kada Owner izvrši refund putem Stripe Dashboard-a.
+
+**Predložena funkcionalnost:**
+- Handler za `charge.refunded` event
+- Automatsko ažuriranje `payment_status` na `refunded` ili `partially_refunded`
+- Automatsko otkazivanje bookinga pri full refund
+- Email i in-app notifikacija Owner-u i Guest-u
+
+**Razlog odgode:**
+Trenutni flow je **namjerno manualan**:
+1. Owner ručno radi refund u Stripe Dashboard
+2. Owner ručno otkazuje booking u aplikaciji
+3. Owner ima punu kontrolu nad procesom
+
+**Zašto NE implementirati automatizaciju:**
+- Owner želi kontrolu - ne želi da sistem automatski otkazuje bookinge
+- Refund ne znači uvijek otkazivanje (npr. partial refund za popust)
+- Manualni proces je jednostavniji i transparentniji
+- Manje koda = manje bug-ova
+
+**Kada razmotriti implementaciju:**
+- Ako Owner-i počnu tražiti automatizaciju
+- Ako se pojave problemi sa sinkronizacijom Stripe ↔ aplikacija
+- Ako se uvede self-service refund za goste
+
+**Branch za referencu:** `fix-refund-logic-12134180205821183120` (može se obrisati)
+
+
+
+---
+
+### 🐛 BUG-008: Calendar Date Restrictions Lost During Booking Overlay
+
+**Datum:** 2026-01-07  
+**Prioritet:** High  
+**Status:** ✅ Riješeno  
+**Zahvaćeni fajl:** `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart`  
+**Predložio:** Google Jules (branch: `fix/LOGIC-003-calendar-data-consistency-8111192320731936509`)
+
+**Problem:**
+Kada se booking ili iCal event prikazuje na kalendaru, `CalendarDateInfo` se kreirao iznova umjesto da se koristi `copyWith`. Ovo je uzrokovalo gubitak restrikcija iz `daily_prices`:
+
+- `blockCheckIn` - zabrana check-in na taj datum
+- `blockCheckOut` - zabrana check-out na taj datum
+- `minDaysAdvance` - minimalno dana unaprijed za rezervaciju
+- `maxDaysAdvance` - maksimalno dana unaprijed za rezervaciju
+- `minNightsOnArrival` - minimalni broj noćenja pri dolasku
+- `maxNightsOnArrival` - maksimalni broj noćenja pri dolasku
+
+**Scenarij buga:**
+1. Owner postavi `blockCheckIn: true` za 15. januar (npr. zbog čišćenja)
+2. Gost rezervira 10-15. januar
+3. Kalendar prikaže 15. januar kao `partialCheckOut`
+4. **BUG:** `blockCheckIn` je sada `false` (default) umjesto `true`
+5. Drugi gost može odabrati 15. januar kao check-in (ne bi trebao moći!)
+
+**Rješenje:**
+Korištenje `copyWith` umjesto kreiranja novog `CalendarDateInfo` objekta na 4 mjesta:
+
+```dart
+// PRIJE (buggy):
+calendar[current] = CalendarDateInfo(
+  date: current,
+  status: status,
+  price: priceMap[priceKey]?.price,
+  isPendingBooking: isPending,
+  // ❌ Restrikcije se gube!
+);
+
+// POSLIJE (fix):
+final infoToUpdate = existingInfo ?? CalendarDateInfo(
+  date: current,
+  status: DateStatus.available,
+  price: priceMap[priceKey]?.price,
+);
+calendar[current] = infoToUpdate.copyWith(
+  status: status,
+  isPendingBooking: isPending,
+  isCheckOutPending: isCheckOutPending,
+  isCheckInPending: isCheckInPending,
+);
+```
+
+**Zahvaćena mjesta (4 lokacije):**
+1. `_buildCalendarMap` - booking loop
+2. `_buildCalendarMap` - iCal loop
+3. `_buildYearCalendarMap` - booking loop
+4. `_buildYearCalendarMap` - iCal loop
+
+**Testiranje:**
+1. ✅ Kreirati `daily_price` s `blockCheckIn: true` za datum X
+2. ✅ Kreirati booking koji završava na datum X (checkout)
+3. ✅ Provjeriti da `calendar[X].blockCheckIn == true`
+4. ✅ Provjeriti da validacija blokira check-in na datum X
+
+**Moguće nuspojave:**
+- Nema - `copyWith` čuva sve postojeće vrijednosti osim onih koje eksplicitno mijenjamo
+

@@ -87,13 +87,13 @@ class _OwnerTimelineCalendarScreenState
 
   @override
   Widget build(BuildContext context) {
-    // Activate real-time listener for calendar updates
-    // This ensures bookings created/modified anywhere are reflected immediately
-    ref.watch(ownerCalendarRealtimeManagerProvider);
-
-    // Activate auto-resolution of overbooking conflicts
-    // Automatically rejects pending bookings when they conflict with confirmed bookings
-    ref.watch(overbookingAutoResolverProvider);
+    // ⚡ Bolt: Use ref.read instead of ref.watch for background listeners.
+    // This prevents the entire screen from rebuilding when these providers update,
+    // as they don't directly contribute to the UI of this widget.
+    // The providers are initialized here to start their listeners, but we don't
+    // need to subscribe to their changes at this level.
+    ref.read(ownerCalendarRealtimeManagerProvider);
+    ref.read(overbookingAutoResolverProvider);
 
     // Check if owner has any units - hide toolbar and FAB if empty
     final unitsAsync = ref.watch(allOwnerUnitsProvider);

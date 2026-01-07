@@ -1160,3 +1160,35 @@ window.pwaPromptInstall()  // async function
 **Changelog 4.7**: Multi-platform build dokumentacija - Android release mode, conditional imports, dependency verzije.
 
 **Changelog 4.6**: URL slug sistem za clean URLs (`/apartman-6` umjesto query params).
+
+---
+
+## 📝 TODO: Bookbed Website Documentation
+
+**Prioritet:** High  
+**Rok:** 2-3 dana  
+**Lokacija:** Bookbed React website (docs sekcija)
+
+### Potrebna dokumentacija:
+
+**Za Owners (Property Managers):**
+1. Getting Started - Kreiranje property-ja i unita
+2. Pricing Setup - Postavljanje cijena i sezonskih pravila
+3. Stripe Connect - Povezivanje Stripe računa
+4. Widget Configuration - Embed kod i postavke
+5. Managing Bookings - Pregled i upravljanje rezervacijama
+6. iCal Sync - Sinkronizacija sa Booking.com/Airbnb
+7. Notifications - Email postavke i obavijesti
+
+**Za Guests:**
+1. How to Book - Koraci za rezervaciju
+2. Payment Options - Stripe, bank transfer, pay on arrival
+3. Booking Lookup - Pregled postojeće rezervacije
+4. Cancellation - Otkazivanje rezervacije
+
+**API Reference:**
+1. Cloud Functions API - createBookingAtomic, verifyBookingAccess, etc.
+2. Widget Embed Options - URL parametri, customization
+3. Webhook Events - Stripe webhooks, booking events
+
+**Izvor sadržaja:** Ovaj projekt (CLAUDE.md, SECURITY_FIXES.md, kod)

@@ -2083,3 +2083,60 @@ Svaki validan iCal fajl MORA početi s `BEGIN:VCALENDAR` prema RFC 5545 standard
 - Nema negativnih - sync koji bi inače obrisao sve evente sada FAIL-a s jasnom greškom
 - Owner vidi error status i može reagirati
 
+
+
+---
+
+### 🐛 BUG-010: Timezone Handling in Past Date Validation
+
+**Datum:** 2026-01-07  
+**Prioritet:** Medium  
+**Status:** ✅ Riješeno  
+**Zahvaćeni fajl:** `functions/src/utils/dateValidation.ts`  
+**Predložio:** Google Jules (branch: `fix/LOGIC-003-calendar-data-consistency-8111192320731936509`)
+
+**Problem:**
+U `validateAndConvertBookingDates` i `calculateDaysInAdvance` funkcijama, "today" se kreirao na nekonzistentan način:
+
+```typescript
+// BUGGY: setUTCHours on local Date
+const today = new Date();
+today.setUTCHours(0, 0, 0, 0);
+```
+
+`new Date()` vraća trenutno vrijeme u lokalnoj timezone servera (npr. Europe/Amsterdam za Firebase europe-west1). Zatim `setUTCHours(0, 0, 0, 0)` postavlja UTC sate na 0, ali datum ostaje lokalni, što može uzrokovati nekonzistentno ponašanje.
+
+**Scenarij buga:**
+- Server u UTC-8 (Los Angeles), 7. januar 14:30 PST
+- `new Date()` = 2026-01-07T14:30:00-08:00
+- `setUTCHours(0, 0, 0, 0)` = 2026-01-06T16:00:00-08:00 (prethodni dan lokalno!)
+- Booking za 7. januar bi bio odbijen kao "u prošlosti"
+
+**Rješenje:**
+Korištenje `Date.UTC()` za eksplicitno kreiranje UTC datuma:
+
+```typescript
+// BUG-010 FIX: Use Date.UTC() for consistent cross-timezone validation
+const now = new Date();
+const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+const checkInMidnight = new Date(Date.UTC(
+  checkInDateObj.getUTCFullYear(),
+  checkInDateObj.getUTCMonth(),
+  checkInDateObj.getUTCDate()
+));
+```
+
+**Zahvaćene funkcije:**
+1. `validateAndConvertBookingDates` - past date validation
+2. `calculateDaysInAdvance` - days in advance calculation
+
+**Testiranje:**
+1. ✅ Booking za danas → prolazi
+2. ✅ Booking za sutra → prolazi
+3. ✅ Booking za jučer → odbijen
+4. ✅ Konzistentno ponašanje bez obzira na server timezone
+
+**Moguće nuspojave:**
+- Nema - rezultat je isti u većini slučajeva, fix samo osigurava konzistentnost u edge case-ovima
+

@@ -171,13 +171,18 @@ export function validateAndConvertBookingDates(
   // STEP 5: VALIDATE CHECK-IN IS NOT IN PAST
   // ========================================================================
 
-  // Get today at midnight UTC for consistent cross-timezone validation
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  // BUG-010 FIX: Use Date.UTC() for consistent cross-timezone validation
+  // Previous implementation used setUTCHours on local Date which could cause
+  // inconsistent behavior depending on server timezone (europe-west1, us-central1, etc.)
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
   // Normalize check-in to midnight UTC for comparison
-  const checkInMidnight = new Date(checkInDateObj);
-  checkInMidnight.setUTCHours(0, 0, 0, 0);
+  const checkInMidnight = new Date(Date.UTC(
+    checkInDateObj.getUTCFullYear(),
+    checkInDateObj.getUTCMonth(),
+    checkInDateObj.getUTCDate()
+  ));
 
   // Check: Is check-in in the past?
   if (checkInMidnight < today) {
@@ -231,15 +236,19 @@ export function calculateBookingNights(
 export function calculateDaysInAdvance(
   checkInDate: admin.firestore.Timestamp
 ): number {
-  // Use UTC for consistent cross-timezone calculation
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  // BUG-010 FIX: Use Date.UTC() for consistent cross-timezone calculation
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
   const checkInDateObj = checkInDate.toDate();
-  checkInDateObj.setUTCHours(0, 0, 0, 0);
+  const checkInMidnight = new Date(Date.UTC(
+    checkInDateObj.getUTCFullYear(),
+    checkInDateObj.getUTCMonth(),
+    checkInDateObj.getUTCDate()
+  ));
 
   const daysInAdvance = Math.floor(
-    (checkInDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    (checkInMidnight.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
   );
 
   return daysInAdvance;

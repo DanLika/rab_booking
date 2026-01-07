@@ -121,9 +121,7 @@ flutter:
   generate: true
 
   # Assets
-  assets:
-    - assets/translations/
-
+  assets: []
   # Custom Fonts
   fonts:
     - family: TablerIcons

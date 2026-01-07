@@ -277,10 +277,12 @@ service cloud.firestore {
 
     // iCal feeds - owner dashboard manages external calendar imports
     match /ical_feeds/{feedId} {
-      allow read: if isAuthenticated() && (
-        resource == null ||
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
-      );
+      // LOGIC-008 FIX: Removed `resource == null` which allowed collection-wide scans.
+      // This prevents authenticated users from listing all iCal feed documents,
+      // which could expose sensitive iCal URLs. Now, only direct document reads
+      // with ownership verification are permitted.
+      allow read: if isAuthenticated() &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
       allow create: if isAuthenticated() &&
         ('property_id' in request.resource.data) &&
         get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;

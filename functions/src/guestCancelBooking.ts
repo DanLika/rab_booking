@@ -109,6 +109,14 @@ export const guestCancelBooking = onCall(async (request) => {
       );
     }
 
+    // LOGIC-008 FIX: Verify that the authenticated user's email matches the guest email
+    if (request.auth?.token.email?.toLowerCase() !== guestEmail.toLowerCase()) {
+      throw new HttpsError(
+        "permission-denied",
+        "You are not authorized to cancel this booking."
+      );
+    }
+
     // Check if booking can be cancelled (status)
     if (booking.status !== "confirmed" && booking.status !== "pending") {
       throw new HttpsError(

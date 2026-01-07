@@ -4,11 +4,12 @@ import { defineSecret } from "firebase-functions/params";
 import {
   sendBookingApprovedEmail,
   sendOwnerNotificationEmail,
+  sendOwnerRefundNotificationEmail,
 } from "./emailService";
 import { sendEmailIfAllowed } from "./emailNotificationHelper";
 import { admin, db } from "./firebase";
 import { getStripeClient, stripeSecretKey } from "./stripe";
-import { createPaymentNotification } from "./notificationService";
+import { createPaymentNotification, createRefundNotification } from "./notificationService";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
@@ -1021,6 +1022,114 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
     } catch (error: any) {
       logError("Error processing webhook", error);
       res.status(500).send(`Error: ${error.message}`);
+    }
+  } else if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    const paymentIntentId = charge.payment_intent as string;
+
+    if (!paymentIntentId) {
+      logError("Missing payment_intent_id in charge.refunded event", null, {
+        chargeId: charge.id,
+      });
+      res.status(400).send("Missing payment_intent_id in event payload");
+      return;
+    }
+
+    logInfo(`Processing charge.refunded event for payment intent: ${paymentIntentId}`);
+
+    try {
+      // Find the booking associated with this payment intent
+      const bookingsQuery = db
+        .collectionGroup("bookings")
+        .where("payment_intent_id", "==", paymentIntentId)
+        .limit(1);
+
+      const bookingsSnapshot = await bookingsQuery.get();
+
+      if (bookingsSnapshot.empty) {
+        logWarn(`No booking found for payment intent: ${paymentIntentId}`);
+        res.status(404).send("Booking not found for this payment intent");
+        return;
+      }
+
+      const bookingDoc = bookingsSnapshot.docs[0];
+      const bookingData = bookingDoc.data();
+      const bookingRef = bookingDoc.ref;
+
+      // CORRECTED LOGIC (Fixes LOGIC-002): Use charge object for authoritative state
+      // This prevents incorrect calculations on multiple partial refunds.
+      const totalChargeAmount = charge.amount / 100;
+      const amountRefunded = charge.amount_refunded / 100;
+
+      let newPaymentStatus: string;
+      let newBookingStatus: string | undefined;
+
+      // Determine refund status based on charge data, not DB state
+      if (amountRefunded >= totalChargeAmount) {
+        newPaymentStatus = "refunded";
+        newBookingStatus = "cancelled"; // Cancel the booking on a full refund
+        logInfo(`Full refund detected for booking ${bookingDoc.id}. Amount: ${amountRefunded}`);
+      } else {
+        newPaymentStatus = "partially_refunded";
+        logInfo(`Partial refund detected for booking ${bookingDoc.id}. Amount: ${amountRefunded}`);
+      }
+
+      // Calculate the new paid amount based on the original charge and total refunded amount
+      const newPaidAmount = Math.max(0, totalChargeAmount - amountRefunded);
+
+      // Prepare the data for Firestore update
+      const updateData: { [key: string]: any } = {
+        payment_status: newPaymentStatus,
+        paid_amount: newPaidAmount,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      if (newBookingStatus) {
+        updateData.status = newBookingStatus;
+      }
+
+      // Update the booking document
+      await bookingRef.update(updateData);
+
+      logInfo(`Booking ${bookingDoc.id} status updated to ${newPaymentStatus}.`);
+
+      // After successful update, send notifications
+      try {
+        const ownerId = bookingData.owner_id;
+        const ownerDoc = await db.collection("users").doc(ownerId).get();
+        const ownerData = ownerDoc.data();
+
+        if (ownerData?.email) {
+          // Send email notification to owner
+          await sendOwnerRefundNotificationEmail(
+            ownerData.email,
+            bookingData.booking_reference,
+            bookingData.guest_name,
+            amountRefunded,
+            newPaymentStatus === "partially_refunded"
+          );
+        }
+
+        // Create in-app notification for owner
+        await createRefundNotification(
+          ownerId,
+          bookingDoc.id,
+          bookingData.booking_reference,
+          bookingData.guest_name,
+          amountRefunded,
+          newPaymentStatus === "partially_refunded"
+        );
+
+        logInfo(`Refund notifications sent for booking ${bookingDoc.id}.`);
+      } catch (notificationError) {
+        // Log the error, but don't fail the webhook response
+        logError(`Failed to send refund notifications for booking ${bookingDoc.id}`, notificationError);
+      }
+
+      res.json({ received: true, status: "refund_processed" });
+    } catch (error: any) {
+      logError(`Error processing refund for payment intent ${paymentIntentId}`, error);
+      res.status(500).send("Internal server error while processing refund");
     }
   } else {
     // Unexpected event type

@@ -438,6 +438,48 @@ export async function sendBookingConfirmationEmail(
 }
 
 /**
+ * Send owner refund notification email
+ *
+ */
+export async function sendOwnerRefundNotificationEmail(
+  ownerEmail: string,
+  bookingReference: string,
+  guestName: string,
+  refundAmount: number,
+  isPartial: boolean
+): Promise<void> {
+  // Input validation
+  validateEmail(ownerEmail, "ownerEmail");
+  validateRequiredString(bookingReference, "bookingReference");
+  validateRequiredString(guestName, "guestName");
+  validateAmount(refundAmount, "refundAmount");
+
+  try {
+    // Build params for new template
+    const params: RefundNotificationParams = {
+      guestEmail: ownerEmail, // sending to owner
+      guestName: guestName,
+      bookingReference: bookingReference,
+      refundAmount: refundAmount,
+      reason: isPartial ? "Djelomični povrat novca" : "Cjelokupni povrat novca",
+    };
+
+    // Send email using V2 template (OPCIJA A: Refined Premium)
+    await sendRefundNotificationEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Owner refund notification email sent (V2 - Refined Premium)", { email: ownerEmail });
+  } catch (error) {
+    logError("Error sending owner refund notification email", error);
+    throw error;
+  }
+}
+
+/**
  * Send booking approved email to guest
  *
  * MIGRATED: Now uses modern email template with success gradient

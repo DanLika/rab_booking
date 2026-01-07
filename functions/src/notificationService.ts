@@ -106,3 +106,32 @@ export async function createPaymentNotification(
     },
   });
 }
+
+/**
+ * Create refund notification
+ */
+export async function createRefundNotification(
+  ownerId: string,
+  bookingId: string,
+  bookingReference: string,
+  guestName: string,
+  amount: number,
+  isPartial: boolean
+): Promise<void> {
+  const title = isPartial ? "Djelomični povrat novca" : "Cjelokupni povrat novca";
+  const message = `Izvršen ${isPartial ? "djelomični " : ""}povrat novca za rezervaciju ${bookingReference} (${guestName}) u iznosu od €${amount.toFixed(2)}.`;
+
+  await createNotification({
+    ownerId,
+    type: "payment_refunded",
+    title: title,
+    message: message,
+    bookingId,
+    metadata: {
+      guestName,
+      amount,
+      isPartial,
+      bookingReference,
+    },
+  });
+}

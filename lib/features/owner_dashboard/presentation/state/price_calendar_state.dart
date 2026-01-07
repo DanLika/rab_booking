@@ -20,7 +20,12 @@ class PriceCalendarState extends ChangeNotifier {
   }
 
   // Optimistically update a single date
-  void updateDateOptimistically(DateTime month, DateTime date, DailyPriceModel? newPrice, DailyPriceModel? oldPrice) {
+  void updateDateOptimistically(
+    DateTime month,
+    DateTime date,
+    DailyPriceModel? newPrice,
+    DailyPriceModel? oldPrice,
+  ) {
     final monthKey = DateTime(month.year, month.month);
     final dateKey = DateTime(date.year, date.month, date.day);
 
@@ -57,7 +62,10 @@ class PriceCalendarState extends ChangeNotifier {
 
   // BUG-012 FIX: Rollback optimistic update on error
   // Changed parameter type to allow null values for deleted prices
-  void rollbackUpdate(DateTime month, Map<DateTime, DailyPriceModel?> oldPrices) {
+  void rollbackUpdate(
+    DateTime month,
+    Map<DateTime, DailyPriceModel?> oldPrices,
+  ) {
     final monthKey = DateTime(month.year, month.month);
     _priceCache[monthKey] ??= {};
 

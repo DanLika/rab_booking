@@ -44,7 +44,9 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isHovered ? theme.colorScheme.primary.withValues(alpha: 0.5) : theme.dividerColor,
+            color: _isHovered
+                ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                : theme.dividerColor,
             width: _isHovered ? 2 : 1,
           ),
           boxShadow: [
@@ -83,10 +85,17 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
 
                             // Main Content (without action buttons)
                             Padding(
-                              padding: EdgeInsets.all(isSmallMobile ? 10 : (isMobile ? 12 : 14)),
+                              padding: EdgeInsets.all(
+                                isSmallMobile ? 10 : (isMobile ? 12 : 14),
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: _buildMainContent(context, theme, isMobile, isSmallMobile),
+                                children: _buildMainContent(
+                                  context,
+                                  theme,
+                                  isMobile,
+                                  isSmallMobile,
+                                ),
                               ),
                             ),
                           ],
@@ -101,7 +110,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                           isSmallMobile ? 10 : (isMobile ? 12 : 16),
                           isSmallMobile ? 10 : (isMobile ? 12 : 16),
                         ),
-                        child: _buildActions(context, theme, isMobile, isSmallMobile),
+                        child: _buildActions(
+                          context,
+                          theme,
+                          isMobile,
+                          isSmallMobile,
+                        ),
                       ),
                     ],
                   ),
@@ -114,7 +128,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     );
   }
 
-  List<Widget> _buildMainContent(BuildContext context, ThemeData theme, bool isMobile, bool isSmallMobile) {
+  List<Widget> _buildMainContent(
+    BuildContext context,
+    ThemeData theme,
+    bool isMobile,
+    bool isSmallMobile,
+  ) {
     return [
       // Title and type
       Row(
@@ -135,7 +154,10 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 ),
                 SizedBox(height: isSmallMobile ? 3 : 4),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: isSmallMobile ? 6 : 8, vertical: isSmallMobile ? 2 : 3),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallMobile ? 6 : 8,
+                    vertical: isSmallMobile ? 2 : 3,
+                  ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -164,7 +186,11 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       // Location
       Row(
         children: [
-          Icon(Icons.location_on_rounded, size: isSmallMobile ? 16 : 18, color: theme.colorScheme.primary),
+          Icon(
+            Icons.location_on_rounded,
+            size: isSmallMobile ? 16 : 18,
+            color: theme.colorScheme.primary,
+          ),
           SizedBox(width: isSmallMobile ? 4 : 6),
           Expanded(
             child: Text(
@@ -185,7 +211,13 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       Container(
         height: 1,
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [Colors.transparent, theme.dividerColor, Colors.transparent]),
+          gradient: LinearGradient(
+            colors: [
+              Colors.transparent,
+              theme.dividerColor,
+              Colors.transparent,
+            ],
+          ),
         ),
       ),
       SizedBox(height: isSmallMobile ? 8 : (isMobile ? 10 : 12)),
@@ -197,7 +229,9 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
             child: _buildStat(
               context,
               icon: Icons.apartment,
-              label: AppLocalizations.of(context).propertyCardUnits(widget.property.unitsCount),
+              label: AppLocalizations.of(
+                context,
+              ).propertyCardUnits(widget.property.unitsCount),
               isMobile: isMobile,
               isSmallMobile: isSmallMobile,
             ),
@@ -227,13 +261,24 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
     ];
   }
 
-  Widget _buildActions(BuildContext context, ThemeData theme, bool isMobile, bool isSmallMobile) {
+  Widget _buildActions(
+    BuildContext context,
+    ThemeData theme,
+    bool isMobile,
+    bool isSmallMobile,
+  ) {
     return Column(
       children: [
         Container(
           height: 1,
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.transparent, theme.dividerColor, Colors.transparent]),
+            gradient: LinearGradient(
+              colors: [
+                Colors.transparent,
+                theme.dividerColor,
+                Colors.transparent,
+              ],
+            ),
           ),
         ),
         SizedBox(height: isSmallMobile ? 8 : (isMobile ? 10 : 12)),
@@ -247,13 +292,20 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 children: [
                   // Published toggle with styled switch
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: widget.property.isActive
                             ? [
-                                theme.colorScheme.tertiary.withValues(alpha: 0.1),
-                                theme.colorScheme.tertiary.withValues(alpha: 0.05),
+                                theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.05,
+                                ),
                               ]
                             : [
                                 theme.colorScheme.error.withValues(alpha: 0.1),
@@ -272,11 +324,17 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                         Flexible(
                           child: Text(
                             widget.property.isActive
-                                ? AppLocalizations.of(context).propertyCardPublished
-                                : AppLocalizations.of(context).propertyCardHidden,
+                                ? AppLocalizations.of(
+                                    context,
+                                  ).propertyCardPublished
+                                : AppLocalizations.of(
+                                    context,
+                                  ).propertyCardHidden,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: widget.property.isActive ? theme.colorScheme.tertiary : theme.colorScheme.error,
+                              color: widget.property.isActive
+                                  ? theme.colorScheme.tertiary
+                                  : theme.colorScheme.error,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -285,7 +343,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                           value: widget.property.isActive,
                           onChanged: widget.onTogglePublished,
                           activeThumbColor: theme.colorScheme.primary,
-                          activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+                          activeTrackColor: theme.colorScheme.primary
+                              .withValues(alpha: 0.5),
                         ),
                       ],
                     ),
@@ -306,7 +365,9 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       _StyledIconButton(
                         onPressed: widget.onDelete,
                         icon: Icons.delete_outline,
-                        tooltip: AppLocalizations.of(context).propertyCardDelete,
+                        tooltip: AppLocalizations.of(
+                          context,
+                        ).propertyCardDelete,
                         color: theme.colorScheme.error,
                       ),
                     ],
@@ -320,13 +381,20 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 // Published toggle with styled switch
                 Flexible(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: widget.property.isActive
                             ? [
-                                theme.colorScheme.tertiary.withValues(alpha: 0.1),
-                                theme.colorScheme.tertiary.withValues(alpha: 0.05),
+                                theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                theme.colorScheme.tertiary.withValues(
+                                  alpha: 0.05,
+                                ),
                               ]
                             : [
                                 theme.colorScheme.error.withValues(alpha: 0.1),
@@ -345,10 +413,14 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                       children: [
                         Flexible(
                           child: Text(
-                            widget.property.isActive ? l10n.propertyCardPublished : l10n.propertyCardHidden,
+                            widget.property.isActive
+                                ? l10n.propertyCardPublished
+                                : l10n.propertyCardHidden,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: widget.property.isActive ? theme.colorScheme.tertiary : theme.colorScheme.error,
+                              color: widget.property.isActive
+                                  ? theme.colorScheme.tertiary
+                                  : theme.colorScheme.error,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -358,7 +430,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                           value: widget.property.isActive,
                           onChanged: widget.onTogglePublished,
                           activeThumbColor: theme.colorScheme.primary,
-                          activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+                          activeTrackColor: theme.colorScheme.primary
+                              .withValues(alpha: 0.5),
                         ),
                       ],
                     ),
@@ -405,7 +478,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
                 imageUrl: widget.property.primaryImage!,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => _buildPlaceholder(isSmallMobile),
-                errorWidget: (context, url, error) => _buildPlaceholder(isSmallMobile),
+                errorWidget: (context, url, error) =>
+                    _buildPlaceholder(isSmallMobile),
               )
             : _buildPlaceholder(isSmallMobile),
       ),
@@ -417,7 +491,11 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
       builder: (context) => Container(
         color: context.surfaceVariantColor,
         child: Center(
-          child: Icon(Icons.villa, size: isSmallMobile ? 48 : 64, color: context.iconColorSecondary),
+          child: Icon(
+            Icons.villa,
+            size: isSmallMobile ? 48 : 64,
+            color: context.iconColorSecondary,
+          ),
         ),
       ),
     );
@@ -446,7 +524,11 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: isSmallMobile ? 14 : (isMobile ? 16 : 18), color: theme.colorScheme.primary),
+          Icon(
+            icon,
+            size: isSmallMobile ? 14 : (isMobile ? 16 : 18),
+            color: theme.colorScheme.primary,
+          ),
           SizedBox(width: isSmallMobile ? 3 : (isMobile ? 4 : 6)),
           Flexible(
             child: Text(
@@ -468,7 +550,12 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
 
 /// Styled icon button with gradient background
 class _StyledIconButton extends StatelessWidget {
-  const _StyledIconButton({required this.onPressed, required this.icon, required this.tooltip, required this.color});
+  const _StyledIconButton({
+    required this.onPressed,
+    required this.icon,
+    required this.tooltip,
+    required this.color,
+  });
 
   final VoidCallback onPressed;
   final IconData icon;
@@ -487,7 +574,12 @@ class _StyledIconButton extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.08)]),
+              gradient: LinearGradient(
+                colors: [
+                  color.withValues(alpha: 0.15),
+                  color.withValues(alpha: 0.08),
+                ],
+              ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: color.withValues(alpha: 0.3)),
             ),

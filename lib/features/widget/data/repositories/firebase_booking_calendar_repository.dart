@@ -713,12 +713,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             }
           }
 
-          // Preserve price when updating status
+          // Preserve price and restrictions when updating status
+          // FIX: Use copyWith to avoid overwriting restrictions from daily_prices
+          // FIX: Handle case where date might not be in the map (e.g., booking spans across months)
           final priceKey = DateKeyGenerator.fromDate(current);
-          calendar[current] = CalendarDateInfo(
-            date: current,
+          final infoToUpdate = existingInfo ??
+              CalendarDateInfo(
+                date: current,
+                status: DateStatus.available,
+                price: priceMap[priceKey]?.price,
+              );
+          calendar[current] = infoToUpdate.copyWith(
             status: status,
-            price: priceMap[priceKey]?.price,
             isPendingBooking: isPending,
             isCheckOutPending: isCheckOutPending,
             isCheckInPending: isCheckInPending,
@@ -804,11 +810,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
               }
             }
 
+            // Preserve price and restrictions when updating status
+            // FIX: Use copyWith to avoid overwriting restrictions from daily_prices
+            // FIX: Handle case where date might not be in the map (e.g., event spans across months)
             final priceKey = DateKeyGenerator.fromDate(current);
-            calendar[current] = CalendarDateInfo(
-              date: current,
+            final infoToUpdate = existingInfo ??
+                CalendarDateInfo(
+                  date: current,
+                  status: DateStatus.available,
+                  price: priceMap[priceKey]?.price,
+                );
+            calendar[current] = infoToUpdate.copyWith(
               status: status,
-              price: priceMap[priceKey]?.price,
               isCheckOutPending: isCheckOutPending,
               isCheckInPending: isCheckInPending,
             );
@@ -958,12 +971,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             }
           }
 
-          // Preserve price when updating status
+          // Preserve price and restrictions when updating status
+          // FIX: Use copyWith to avoid overwriting restrictions from daily_prices
+          // FIX: Handle case where date might not be in the map (e.g., booking spans across years)
           final priceKey = DateKeyGenerator.fromDate(current);
-          calendar[current] = CalendarDateInfo(
-            date: current,
+          final infoToUpdate = existingInfo ??
+              CalendarDateInfo(
+                date: current,
+                status: DateStatus.available,
+                price: priceMap[priceKey]?.price,
+              );
+          calendar[current] = infoToUpdate.copyWith(
             status: status,
-            price: priceMap[priceKey]?.price,
             isPendingBooking: isPending,
             isCheckOutPending: isCheckOutPending,
             isCheckInPending: isCheckInPending,
@@ -1049,11 +1068,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
               }
             }
 
+            // Preserve price and restrictions when updating status
+            // FIX: Use copyWith to avoid overwriting restrictions from daily_prices
+            // FIX: Handle case where date might not be in the map (e.g., event spans across years)
             final priceKey = DateKeyGenerator.fromDate(current);
-            calendar[current] = CalendarDateInfo(
-              date: current,
+            final infoToUpdate = existingInfo ??
+                CalendarDateInfo(
+                  date: current,
+                  status: DateStatus.available,
+                  price: priceMap[priceKey]?.price,
+                );
+            calendar[current] = infoToUpdate.copyWith(
               status: status,
-              price: priceMap[priceKey]?.price,
               isCheckOutPending: isCheckOutPending,
               isCheckInPending: isCheckInPending,
             );

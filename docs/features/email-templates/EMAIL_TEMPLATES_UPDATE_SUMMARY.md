@@ -155,11 +155,7 @@ All templates received HTML escaping and mobile responsiveness improvements:
     - Added `escapeHtml()` to reset link display text
     - Optimized padding and font sizes
 
-13. **`suspicious-activity-v2.ts`**
-    - Added `escapeHtml()` to all user content
-    - Optimized padding and font sizes
-
-### Phase 2: Refactoring to Minimalist Design (13 templates)
+### Phase 2: Refactoring to Minimalist Design (12 templates)
 All V2 templates were refactored to use helper functions:
 
 **Refactoring Changes:**
@@ -263,7 +259,7 @@ export function escapeHtml(text: string | undefined | null): string {
 
 ## Files Modified
 
-### Template Files (13 files)
+### Template Files (12 files)
 All located in `functions/src/email/templates/version-2/`:
 
 1. `booking-approved-v2.ts`
@@ -278,7 +274,6 @@ All located in `functions/src/email/templates/version-2/`:
 10. `pending-owner-notification-v2.ts`
 11. `pending-request-v2.ts`
 12. `refund-notification-v2.ts`
-13. `suspicious-activity-v2.ts`
 
 ### Service Files (1 file)
 1. `functions/src/bookingManagement.ts` - Updated auto-cancellation email parameters

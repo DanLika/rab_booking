@@ -1,66 +1,66 @@
 # Email System Documentation
 
-**Last Updated**: 2025-12-16
-**Status**: Active
+**Last Updated**: 2024-07-30
+**Status**: Active & Verified
 
 ---
 
 ## Overview
 
-BookBed koristi Resend API za slanje transakcijskih emailova. Svi template-i koriste minimalist dizajn sa HTML escaping-om za sigurnost i inline CSS za Gmail kompatibilnost.
+BookBed uses the Resend API for sending transactional emails. All templates use a minimalist design with HTML escaping for security and inline CSS for Gmail compatibility.
 
 ---
 
-## Template Lista (16 template-a)
+## Template List (16 templates)
 
 ### Booking Flow (4)
-| Template | Primatelj | Trigger |
-|----------|-----------|---------|
-| `booking-confirmation.ts` | Guest | Nakon kreiranja rezervacije |
-| `booking-approved.ts` | Guest | Owner odobri pending request |
-| `booking-rejected.ts` | Guest | Owner odbije pending request |
-| `pending-request.ts` | Guest | Guest pošalje pending request |
+| Template | Recipient | Trigger Function | Trigger Description |
+|---|---|---|---|
+| `booking-confirmation.ts` | Guest | `sendBookingConfirmationEmail` | Sent after a booking is successfully created and payment is confirmed. |
+| `booking-approved.ts` | Guest | `sendBookingApprovedEmail` | Sent to the guest when a property owner approves a pending booking request. |
+| `booking-rejected.ts` | Guest | `sendBookingRejectedEmail` | Sent to the guest when a property owner rejects a pending booking request. |
+| `pending-request.ts` | Guest | `sendPendingBookingRequestEmail` | Sent to the guest after they submit a booking request that requires owner approval. |
 
 ### Cancellation (3)
-| Template | Primatelj | Trigger |
-|----------|-----------|---------|
-| `guest-cancellation.ts` | Guest | Guest otkaže rezervaciju |
-| `owner-cancellation.ts` | Guest | Owner otkaže rezervaciju |
-| `refund-notification.ts` | Guest | Stripe automatski refundira |
+| Template | Recipient | Trigger Function | Trigger Description |
+|---|---|---|---|
+| `guest-cancellation.ts` | Guest | `sendGuestCancellationEmail` | Sent to the guest when they cancel a booking. |
+| `owner-cancellation.ts` | Guest | `sendOwnerCancellationNotificationEmail` | Sent to the guest when the property owner cancels their booking. |
+| `refund-notification.ts` | Guest | `sendRefundNotificationEmail` | Sent to the guest when a refund is processed for their booking. |
 
 ### Reminders (3)
-| Template | Primatelj | Trigger |
-|----------|-----------|---------|
-| `check-in-reminder.ts` | Guest | **7 dana** prije check-in-a |
-| `check-out-reminder.ts` | Guest | 1 dan prije check-out-a |
-| `payment-reminder.ts` | Guest | **Dan 6** od 7 (1 dan prije isteka roka) |
+| Template | Recipient | Trigger Function | Trigger Description |
+|---|---|---|---|
+| `check-in-reminder.ts` | Guest | `sendCheckInReminderEmail` | Scheduled to be sent **7 days** before the check-in date. |
+| `check-out-reminder.ts` | Guest | `sendCheckOutReminderEmail` | Scheduled to be sent 1 day before the check-out date. |
+| `payment-reminder.ts` | Guest | `sendPaymentReminderEmail` | Scheduled to be sent on **Day 6** of a 7-day payment window for pending bank transfer bookings. |
 
 ### Owner Notifications (3)
-| Template | Primatelj | Trigger |
-|----------|-----------|---------|
-| `owner-notification.ts` | Owner | Novi confirmed booking |
-| `pending-owner-notification.ts` | Owner | Novi pending request |
-| `overbooking-detected.ts` | Owner | Detektovan konflikt (samo owner, nikad gosti) |
+| Template | Recipient | Trigger Function | Trigger Description |
+|---|---|---|---|
+| `owner-notification.ts` | Owner | `sendOwnerNotificationEmail` | Sent to the property owner when a new booking is confirmed. |
+| `pending-owner-notification.ts` | Owner | `sendPendingBookingOwnerNotification` | Sent to the property owner when a guest submits a new booking request that requires approval. |
+| `overbooking-detected.ts` | Owner | `sendOverbookingDetectedEmailV2` | Sent to the property owner when a booking conflict (overbooking) is detected. |
 
 ### Auth (2)
-| Template | Primatelj | Trigger |
-|----------|-----------|---------|
-| `email-verification.ts` | User | Verifikacija email adrese |
-| `password-reset.ts` | User | Reset passworda |
+| Template | Recipient | Trigger Function | Trigger Description |
+|---|---|---|---|
+| `email-verification.ts` | User | `sendEmailVerificationCode` | Sent to a new user to verify their email address during registration. |
+| `password-reset.ts` | User | `sendPasswordResetEmail` | Sent to a user when they request to reset their password. |
 
 ### Custom (1)
-| Template | Primatelj | Trigger |
-|----------|-----------|---------|
-| `custom-email.ts` | Bilo ko | Owner ručno šalje (unese email) |
+| Template | Recipient | Trigger Function | Trigger Description |
+|---|---|---|---|
+| `custom-email.ts` | Any | `sendCustomGuestEmail` | Sent manually by a property owner to any email address. |
 
 ---
 
-## Folder Struktura
+## Folder Structure
 
 ```
 functions/src/email/
 ├── templates/
-│   ├── base.ts                      ← Shared utility
+│   ├── base.ts
 │   ├── booking-confirmation.ts
 │   ├── booking-approved.ts
 │   ├── booking-rejected.ts
@@ -78,54 +78,44 @@ functions/src/email/
 │   ├── password-reset.ts
 │   └── custom-email.ts
 ├── utils/
-│   └── template-helpers.ts          ← Helper funkcije (escapeHtml, generateCard, etc.)
+│   └── template-helpers.ts
 ├── styles/
-│   └── base-styles.ts               ← HTML wrapper & CSS reset
-└── index.ts                         ← Central export
+│   └── base-styles.ts
+└── index.ts
 ```
 
 ---
 
-## Ključni Parametri
+## Key Parameters & Logic
 
 ### Payment Flow
-| Parametar | Vrijednost |
-|-----------|------------|
-| Rok za plaćanje (bank transfer) | **7 dana** |
-| Payment reminder | **Dan 6** (1 dan prije isteka) |
-| Auto-cancel bez uplate | **Da** (Cloud Function) |
+- **Payment Deadline (Bank Transfer)**: 7 days
+- **Payment Reminder**: Sent on Day 6 (1 day before deadline)
+- **Auto-Cancellation**: Pending bank transfer bookings are automatically cancelled if not paid within 7 days.
 
 ### Reminders
-| Parametar | Vrijednost |
-|-----------|------------|
-| Check-in reminder | **7 dana** prije |
-| Check-out reminder | 1 dan prije |
+- **Check-in Reminder**: 7 days before check-in
+- **Check-out Reminder**: 1 day before check-out
 
 ---
 
 ## Multi-Language Support
 
-### Podržani jezici
-| Jezik | Kod | Koristi se za |
-|-------|-----|---------------|
-| Hrvatski | `hr` | Owner Dashboard + Widget |
-| English | `en` | Owner Dashboard + Widget |
-| Deutsch | `de` | Widget only |
-| Italiano | `it` | Widget only |
-
-### Implementacija
-- Owner Dashboard emailovi: HR + EN
-- Widget emailovi (guest-facing): HR + EN + DE + IT
-- Jezik se detektira iz:
-  1. URL parameter (`?lang=hr`)
-  2. Browser language
-  3. Default: `hr`
+- **Supported Languages**:
+    - `hr` (Hrvatski)
+    - `en` (English)
+    - `de` (Deutsch)
+    - `it` (Italiano)
+- **Implementation**:
+    - Owner Dashboard emails support `hr` and `en`.
+    - Guest-facing widget emails support all four languages.
+    - Language is determined by the `lang` URL parameter, browser settings, or defaults to `hr`.
 
 ---
 
 ## Security: HTML Escaping
 
-**KRITIČNO**: Sav user-provided content MORA biti escaped!
+**CRITICAL**: All user-provided content **MUST** be escaped to prevent XSS vulnerabilities. The `escapeHtml` utility is used for this purpose.
 
 ```typescript
 import { escapeHtml } from "../utils/template-helpers";
@@ -133,228 +123,36 @@ import { escapeHtml } from "../utils/template-helpers";
 // ✅ CORRECT
 const html = `<div>${escapeHtml(guestName)}</div>`;
 
-// ❌ WRONG - XSS vulnerability
+// ❌ WRONG
 const html = `<div>${guestName}</div>`;
 ```
 
-### Što se escape-a:
-- `guestName`, `ownerName`
-- `bookingReference`
-- `propertyName`, `unitName`
-- `contactEmail`, `contactPhone`
-- `reason`, `rejectionReason`, `cancellationReason`
-- Sav ostali user input
-
-### Escaping mapa:
-| Karakter | Escape |
-|----------|--------|
-| `&` | `&amp;` |
-| `<` | `&lt;` |
-| `>` | `&gt;` |
-| `"` | `&quot;` |
-| `'` | `&#39;` |
+- **What is escaped**: Guest names, owner names, booking references, property/unit names, contact info, reasons for cancellation/rejection, and all other user-generated input.
 
 ---
 
 ## Design Standards
 
-### Minimalist Philosophy
-- **No gradients** - solid colors only
-- **No shadows** - flat design
-- **Sharp edges** - `border-radius: 0` (buttons: 4px)
-- **Reduced padding** - 16px cards, 12px mobile
-- **Reduced fonts** - 16px body, 14px mobile
-
-### Color Palette (Neutral)
-```typescript
-const COLORS = {
-  pageBg: "#F9FAFB",
-  cardBg: "#FFFFFF",
-  textPrimary: "#1F2937",
-  textSecondary: "#6B7280",
-  border: "#E5E7EB",
-  buttonPrimary: "#374151",
-  success: "#059669",
-  warning: "#D97706",
-  error: "#DC2626",
-  info: "#2563EB",
-};
-```
+- **Philosophy**: Minimalist, flat design. No gradients or shadows. Sharp edges with minimal `border-radius`.
+- **Colors**: A neutral color palette is used for consistency. See `base-styles.ts` for details.
 
 ---
 
-## Helper Functions
+## Template Anatomy & Helper Functions
 
-### Available in `template-helpers.ts`:
+Templates are constructed using a set of reusable helper functions from `template-helpers.ts`. This ensures consistency and simplifies template creation.
 
-```typescript
-// Text Utilities
-escapeHtml(text: string): string
-formatCurrency(amount: number): string         // €XX.XX
-formatDate(date: Date): string                 // Croatian locale
-formatDateRange(start: Date, end: Date): string
-calculateNights(start: Date, end: Date): number
-
-// Layout Components
-generateHeader(options: HeaderOptions): string
-generateCard(title: string, content: string): string
-generateDetailsTable(rows: DetailRow[]): string
-generateButton(options: ButtonOptions): string
-generateAlert(options: AlertOptions): string
-generateBadge(text: string, type: string): string
-generateDivider(): string
-generateFooter(options?: FooterOptions): string
-
-// Content Blocks
-generateGreeting(name: string): string         // "Poštovani/a {name},"
-generateIntro(text: string): string
-generateList(items: string[]): string
-generateInfoBox(text: string): string
-
-// Booking-Specific
-generateBookingDetailsCard(params): string
-generatePaymentDetailsCard(params): string
-generateBankTransferCard(params): string
-```
-
----
-
-## Template Anatomy
-
-```typescript
-// 1. IMPORTS
-import { generateEmailHtml } from "./base";
-import {
-  escapeHtml,
-  generateHeader,
-  generateCard,
-  generateButton,
-  // ... other helpers
-} from "../utils/template-helpers";
-
-// 2. PARAMS INTERFACE
-export interface BookingConfirmationParams {
-  guestEmail: string;
-  guestName: string;
-  bookingReference: string;
-  // ... other params
-}
-
-// 3. GENERATE FUNCTION
-export function generateBookingConfirmationEmail(
-  params: BookingConfirmationParams
-): string {
-  const header = generateHeader({
-    icon: getSuccessIcon(),
-    title: "Rezervacija potvrđena!",
-    bookingReference: escapeHtml(params.bookingReference),
-  });
-
-  const content = `
-    ${generateGreeting(escapeHtml(params.guestName))}
-    ${generateCard("Detalji", detailsHtml)}
-    ${generateButton({ text: "Pregledaj", url: params.viewUrl })}
-  `;
-
-  return generateEmailHtml({
-    header,
-    content,
-    footer: { contactEmail: escapeHtml(params.contactEmail) },
-  });
-}
-
-// 4. SEND FUNCTION
-export async function sendBookingConfirmationEmail(
-  params: BookingConfirmationParams
-): Promise<void> {
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const html = generateBookingConfirmationEmail(params);
-
-  await resend.emails.send({
-    from: "BookBed <noreply@bookbed.io>",
-    to: params.guestEmail,
-    subject: `Rezervacija - ${escapeHtml(params.bookingReference)}`,
-    html,
-  });
-}
-```
-
----
-
-## Owner Email Behavior
-
-### KRITIČNO: Owner UVIJEK dobija email za booking
-
-```typescript
-// atomicBooking.ts - NE MIJENJATI
-await sendOwnerNotificationEmail(...);  // UVIJEK se šalje
-
-// NE vraćati conditional check:
-// const shouldSend = await shouldSendEmailNotification(ownerId, "bookings");
-// if (shouldSend) { ... }
-```
-
-**Razlog**: Dok nema push notifikacija, owner NE SMIJE propustiti niti jednu rezervaciju.
-
-### Notification Preferences (Widget)
-- Widget flow poštuje owner notification preferences
-- **Izuzetak**: Pending bookings UVIJEK šalju email (kritično - owner mora odobriti)
-- Fallback: Ako provjera preferences ne uspije → email se šalje
-
----
-
-## Scheduled Functions
-
-### Check-In Reminder
-- **Trigger**: Scheduled Cloud Function (daily)
-- **Šalje se**: 7 dana prije check-in-a
-- **Uvjet**: Booking status = `confirmed`
-
-### Check-Out Reminder
-- **Trigger**: Scheduled Cloud Function (daily)
-- **Šalje se**: 1 dan prije check-out-a
-- **Uvjet**: Booking status = `confirmed`
-
-### Payment Reminder
-- **Trigger**: Scheduled Cloud Function (daily)
-- **Šalje se**: Dan 6 od 7 (1 dan prije isteka)
-- **Uvjet**: Booking status = `pending`, payment_method = `bank_transfer`
-
-### Auto-Cancel Unpaid
-- **Trigger**: Scheduled Cloud Function (daily)
-- **Akcija**: Cancel booking nakon 7 dana bez uplate
-- **Uvjet**: Booking status = `pending`, payment_method = `bank_transfer`, created > 7 dana
-
----
-
-## TODO (Future)
-
-- [ ] **Welcome Email** - Za novog owner-a nakon email verifikacije
-- [ ] **Suspicious Activity** - Security alert (kad definišemo trigere)
-- [ ] **Custom reminder intervals** - Owner bira koliko dana prije check-in-a
+- **Structure**: Each template file exports a `generate...Email` function that builds the HTML and a `send...Email` function that sends it via Resend.
+- **Key Helpers**: `generateEmailHtml`, `generateHeader`, `generateCard`, `generateButton`, `generateDetailsTable`, etc.
 
 ---
 
 ## Related Files
 
 | File | Purpose |
-|------|---------|
-| `functions/src/email/index.ts` | Central export |
-| `functions/src/emailService.ts` | Email sending logic |
-| `functions/src/emailNotificationHelper.ts` | Notification preferences |
-| `lib/features/widget/utils/email_notification_helper.dart` | Widget email logic |
-
----
-
-## Changelog
-
-### 2025-12-16
-- Uklonjen `suspicious-activity.ts` (TODO za budućnost)
-- Check-in reminder: 1 dan → **7 dana** prije
-- Payment rok: 3 dana → **7 dana**
-- Payment reminder: **Dan 6** (1 dan prije isteka)
-- Auto-cancel nakon 7 dana bez uplate
-- Uklonjeni V1 legacy template-i
-- Uklonjeni `-v2` suffix iz imena
-- Premješteno iz `version-2/` u `templates/`
-- Multi-language: HR + EN za sve, DE + IT za widget
+|---|---|
+| `functions/src/emailService.ts` | Contains the core logic for sending most emails. |
+| `functions/src/passwordReset.ts` | Handles the trigger for the password reset email. |
+| `functions/src/overbookingNotifications.ts`| Handles the trigger for the overbooking detected email. |
+| `functions/src/emailNotificationHelper.ts` | Manages user notification preferences. |
+| `functions/src/email/index.ts` | Central export for all email templates and functions. |

@@ -39,7 +39,6 @@ import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
 import '../../features/widget/presentation/screens/booking_widget_screen.dart';
-import '../../features/widget/presentation/screens/booking_view_screen.dart';
 import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
@@ -324,12 +323,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // URL: /view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
       GoRoute(
         path: '/view',
-        builder: (context, state) {
-          final ref = state.uri.queryParameters['ref'];
-          final email = state.uri.queryParameters['email'];
-          final token = state.uri.queryParameters['token'];
-          return BookingViewScreen(bookingRef: ref, email: email, token: token);
-        },
+        redirect: (context, state) => OwnerRoutes.notFound,
         routes: [
           // Booking details sub-route
           GoRoute(

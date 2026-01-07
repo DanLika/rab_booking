@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../services/sentry_navigator_observer.dart';
 import '../../features/widget/presentation/screens/booking_widget_screen.dart';
-import '../../features/widget/presentation/screens/booking_view_screen.dart';
 import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 
@@ -46,12 +45,7 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
       // IMPORTANT: Must be defined BEFORE /:slug catch-all route!
       GoRoute(
         path: '/view',
-        builder: (context, state) {
-          final ref = state.uri.queryParameters['ref'];
-          final email = state.uri.queryParameters['email'];
-          final token = state.uri.queryParameters['token'];
-          return BookingViewScreen(bookingRef: ref, email: email, token: token);
-        },
+        redirect: (context, state) => '/404',
         routes: [
           // Booking details sub-route
           // URL: /view/details?ref=BOOKING_REF&email=EMAIL
@@ -64,7 +58,6 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
               // Check if we have query params (for page refresh scenario)
               final ref = state.uri.queryParameters['ref'];
               final email = state.uri.queryParameters['email'];
-              final token = state.uri.queryParameters['token'];
 
               // If extra is null but we have query params, redirect to /view to re-lookup
               // This handles the page refresh case
@@ -72,13 +65,7 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
               // instead of navigating (which would cause infinite loop)
               if (extra == null && ref != null && email != null) {
                 // Return BookingViewScreen in "show details inline" mode
-                return BookingViewScreen(
-                  bookingRef: ref,
-                  email: email,
-                  token: token,
-                  showDetailsInline:
-                      true, // Prevents navigation loop on refresh
-                );
+                return const NotFoundScreen();
               }
 
               if (extra == null) {

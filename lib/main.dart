@@ -23,10 +23,9 @@ import 'l10n/app_localizations.dart';
 import 'shared/providers/repository_providers.dart';
 import 'shared/widgets/global_navigation_loader.dart';
 
-// GlitchTip DSN for web error tracking (Crashlytics doesn't support web)
-// GlitchTip is Sentry SDK-compatible, uses same sentry_flutter package
+// Sentry DSN for web error tracking (Crashlytics doesn't support web)
 const String _sentryDsn =
-    'https://25ab187e691143f9b2a14b33d1b039a1@app.glitchtip.com/14195';
+    'https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144';
 
 /// Global initialization state - tracks what has been initialized
 class AppInitState {

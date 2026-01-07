@@ -68,7 +68,7 @@ class EnvironmentConfig {
   /// Sentry DSN (disable in development)
   static String? get sentryDsn {
     if (_current == Environment.development) return null;
-    return 'YOUR_SENTRY_DSN_HERE';
+    return 'https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144';
   }
 
   /// Log level

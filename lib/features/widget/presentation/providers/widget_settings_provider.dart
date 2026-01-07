@@ -76,18 +76,31 @@ final allPropertyWidgetSettingsProvider =
 ///
 /// Returns default settings that can be used as fallback
 final defaultWidgetSettingsProvider = Provider<WidgetSettings>((ref) {
+  // LOGIC-004 FIX: Provide comprehensive default settings
+  // This ensures that when a unit has no saved settings, the widget falls
+  // back to a safe, functional, and predictable configuration instead of
+  // failing due to null values for critical fields.
   return WidgetSettings(
     id: 'default',
     propertyId: 'default',
+    ownerId:
+        null, // ownerId should be populated by the caller when using defaults
     widgetMode:
-        WidgetMode.bookingPending, // Default: simple booking without payment
+        WidgetMode.bookingPending, // Safest default: no payment processing
+    minNights: 1, // Universal default for minimum stay
+    globalDepositPercentage: 20, // Common default deposit
+    stripeConfig: null, // Default to disabled
+    bankTransferConfig: null, // Default to disabled
+    allowPayOnArrival: false, // Default to disabled for security
+    requireOwnerApproval: true, // Safest default: always require approval
+    allowGuestCancellation: true, // Common default
+    cancellationDeadlineHours: 48, // Common default (2 days)
     contactOptions: const ContactOptions(
-      customMessage: 'Kontaktirajte nas za rezervaciju!',
+      showPhone: false,
+      showEmail: false,
     ),
-    emailConfig:
-        const EmailNotificationConfig(), // Default disabled email config
-    taxLegalConfig: const TaxLegalConfig(), // Default enabled tax/legal config
-    requireOwnerApproval: true, // Default: require approval
+    emailConfig: const EmailNotificationConfig(), // Defaults to disabled
+    taxLegalConfig: const TaxLegalConfig(enabled: false), // Default to disabled
     createdAt: DateTime.now().toUtc(),
     updatedAt: DateTime.now().toUtc(),
   );

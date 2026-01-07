@@ -623,12 +623,14 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             }
           }
 
-          // Preserve price when updating status
+          // BUG-008 FIX: Preserve price AND restrictions when updating status
+          // Use copyWith to avoid overwriting restrictions from daily_prices
           final priceKey = DateKeyGenerator.fromDate(current);
-          calendar[current] = CalendarDateInfo(
-            date: current,
+          final infoToUpdate =
+              existingInfo ??
+              CalendarDateInfo(date: current, status: DateStatus.available, price: priceMap[priceKey]?.price);
+          calendar[current] = infoToUpdate.copyWith(
             status: status,
-            price: priceMap[priceKey]?.price,
             isPendingBooking: isPending,
             isCheckOutPending: isCheckOutPending,
             isCheckInPending: isCheckInPending,
@@ -703,11 +705,14 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
               }
             }
 
+            // BUG-008 FIX: Preserve price AND restrictions when updating status
+            // Use copyWith to avoid overwriting restrictions from daily_prices
             final priceKey = DateKeyGenerator.fromDate(current);
-            calendar[current] = CalendarDateInfo(
-              date: current,
+            final infoToUpdate =
+                existingInfo ??
+                CalendarDateInfo(date: current, status: DateStatus.available, price: priceMap[priceKey]?.price);
+            calendar[current] = infoToUpdate.copyWith(
               status: status,
-              price: priceMap[priceKey]?.price,
               isCheckOutPending: isCheckOutPending,
               isCheckInPending: isCheckInPending,
             );
@@ -846,12 +851,14 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             }
           }
 
-          // Preserve price when updating status
+          // BUG-008 FIX: Preserve price AND restrictions when updating status
+          // Use copyWith to avoid overwriting restrictions from daily_prices
           final priceKey = DateKeyGenerator.fromDate(current);
-          calendar[current] = CalendarDateInfo(
-            date: current,
+          final infoToUpdate =
+              existingInfo ??
+              CalendarDateInfo(date: current, status: DateStatus.available, price: priceMap[priceKey]?.price);
+          calendar[current] = infoToUpdate.copyWith(
             status: status,
-            price: priceMap[priceKey]?.price,
             isPendingBooking: isPending,
             isCheckOutPending: isCheckOutPending,
             isCheckInPending: isCheckInPending,
@@ -926,11 +933,14 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
               }
             }
 
+            // BUG-008 FIX: Preserve price AND restrictions when updating status
+            // Use copyWith to avoid overwriting restrictions from daily_prices
             final priceKey = DateKeyGenerator.fromDate(current);
-            calendar[current] = CalendarDateInfo(
-              date: current,
+            final infoToUpdate =
+                existingInfo ??
+                CalendarDateInfo(date: current, status: DateStatus.available, price: priceMap[priceKey]?.price);
+            calendar[current] = infoToUpdate.copyWith(
               status: status,
-              price: priceMap[priceKey]?.price,
               isCheckOutPending: isCheckOutPending,
               isCheckInPending: isCheckInPending,
             );

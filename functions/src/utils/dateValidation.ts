@@ -172,8 +172,8 @@ export function validateAndConvertBookingDates(
   // ========================================================================
 
   // Get today at midnight UTC for consistent cross-timezone validation
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
   // Normalize check-in to midnight UTC for comparison
   const checkInMidnight = new Date(checkInDateObj);

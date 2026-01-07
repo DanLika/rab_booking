@@ -73,18 +73,6 @@ class SecurityEvent with _$SecurityEvent {
   }
 }
 
-/// Employee permissions (for employee role users)
-@freezed
-class EmployeePermissions with _$EmployeePermissions {
-  const factory EmployeePermissions({
-    required EmployeeRole role,
-    Map<String, bool>? customPermissions,
-  }) = _EmployeePermissions;
-
-  factory EmployeePermissions.fromJson(Map<String, dynamic> json) =>
-      _$EmployeePermissionsFromJson(json);
-}
-
 /// User model representing a user in the system
 @freezed
 class UserModel with _$UserModel {
@@ -127,9 +115,6 @@ class UserModel with _$UserModel {
 
     /// Employee-specific: Owner user ID (if this user is an employee)
     String? employeeOf,
-
-    /// Employee-specific: Permissions
-    EmployeePermissions? permissions,
 
     /// Stripe Connect account ID
     @JsonKey(name: 'stripe_account_id') String? stripeAccountId,

@@ -51,31 +51,6 @@ const _$SecurityEventTypeEnumMap = {
   SecurityEventType.emailVerification: 'emailVerification',
 };
 
-_$EmployeePermissionsImpl _$$EmployeePermissionsImplFromJson(
-  Map<String, dynamic> json,
-) => _$EmployeePermissionsImpl(
-  role: $enumDecode(_$EmployeeRoleEnumMap, json['role']),
-  customPermissions: (json['customPermissions'] as Map<String, dynamic>?)?.map(
-    (k, e) => MapEntry(k, e as bool),
-  ),
-);
-
-Map<String, dynamic> _$$EmployeePermissionsImplToJson(
-  _$EmployeePermissionsImpl instance,
-) => <String, dynamic>{
-  'role': _$EmployeeRoleEnumMap[instance.role]!,
-  'customPermissions': instance.customPermissions,
-};
-
-const _$EmployeeRoleEnumMap = {
-  EmployeeRole.administrator: 'administrator',
-  EmployeeRole.reception: 'reception',
-  EmployeeRole.cleaning: 'cleaning',
-  EmployeeRole.investor: 'investor',
-  EmployeeRole.fullAccess: 'fullAccess',
-  EmployeeRole.own: 'own',
-};
-
 _$UserModelImpl _$$UserModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$UserModelImpl(
@@ -94,11 +69,6 @@ _$UserModelImpl _$$UserModelImplFromJson(
   onboardingCompleted: json['onboardingCompleted'] as bool? ?? false,
   lastLoginAt: const NullableTimestampConverter().fromJson(json['lastLoginAt']),
   employeeOf: json['employeeOf'] as String?,
-  permissions: json['permissions'] == null
-      ? null
-      : EmployeePermissions.fromJson(
-          json['permissions'] as Map<String, dynamic>,
-        ),
   stripeAccountId: json['stripe_account_id'] as String?,
   stripeConnectedAt: const NullableTimestampConverter().fromJson(
     json['stripe_connected_at'],
@@ -138,7 +108,6 @@ Map<String, dynamic> _$$UserModelImplToJson(
     instance.lastLoginAt,
   ),
   'employeeOf': instance.employeeOf,
-  'permissions': instance.permissions,
   'stripe_account_id': instance.stripeAccountId,
   'stripe_connected_at': const NullableTimestampConverter().toJson(
     instance.stripeConnectedAt,

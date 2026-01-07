@@ -530,196 +530,6 @@ abstract class _SecurityEvent implements SecurityEvent {
       throw _privateConstructorUsedError;
 }
 
-EmployeePermissions _$EmployeePermissionsFromJson(Map<String, dynamic> json) {
-  return _EmployeePermissions.fromJson(json);
-}
-
-/// @nodoc
-mixin _$EmployeePermissions {
-  EmployeeRole get role => throw _privateConstructorUsedError;
-  Map<String, bool>? get customPermissions =>
-      throw _privateConstructorUsedError;
-
-  /// Serializes this EmployeePermissions to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of EmployeePermissions
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $EmployeePermissionsCopyWith<EmployeePermissions> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $EmployeePermissionsCopyWith<$Res> {
-  factory $EmployeePermissionsCopyWith(
-    EmployeePermissions value,
-    $Res Function(EmployeePermissions) then,
-  ) = _$EmployeePermissionsCopyWithImpl<$Res, EmployeePermissions>;
-  @useResult
-  $Res call({EmployeeRole role, Map<String, bool>? customPermissions});
-}
-
-/// @nodoc
-class _$EmployeePermissionsCopyWithImpl<$Res, $Val extends EmployeePermissions>
-    implements $EmployeePermissionsCopyWith<$Res> {
-  _$EmployeePermissionsCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of EmployeePermissions
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? role = null, Object? customPermissions = freezed}) {
-    return _then(
-      _value.copyWith(
-            role: null == role
-                ? _value.role
-                : role // ignore: cast_nullable_to_non_nullable
-                      as EmployeeRole,
-            customPermissions: freezed == customPermissions
-                ? _value.customPermissions
-                : customPermissions // ignore: cast_nullable_to_non_nullable
-                      as Map<String, bool>?,
-          )
-          as $Val,
-    );
-  }
-}
-
-/// @nodoc
-abstract class _$$EmployeePermissionsImplCopyWith<$Res>
-    implements $EmployeePermissionsCopyWith<$Res> {
-  factory _$$EmployeePermissionsImplCopyWith(
-    _$EmployeePermissionsImpl value,
-    $Res Function(_$EmployeePermissionsImpl) then,
-  ) = __$$EmployeePermissionsImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({EmployeeRole role, Map<String, bool>? customPermissions});
-}
-
-/// @nodoc
-class __$$EmployeePermissionsImplCopyWithImpl<$Res>
-    extends _$EmployeePermissionsCopyWithImpl<$Res, _$EmployeePermissionsImpl>
-    implements _$$EmployeePermissionsImplCopyWith<$Res> {
-  __$$EmployeePermissionsImplCopyWithImpl(
-    _$EmployeePermissionsImpl _value,
-    $Res Function(_$EmployeePermissionsImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of EmployeePermissions
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? role = null, Object? customPermissions = freezed}) {
-    return _then(
-      _$EmployeePermissionsImpl(
-        role: null == role
-            ? _value.role
-            : role // ignore: cast_nullable_to_non_nullable
-                  as EmployeeRole,
-        customPermissions: freezed == customPermissions
-            ? _value._customPermissions
-            : customPermissions // ignore: cast_nullable_to_non_nullable
-                  as Map<String, bool>?,
-      ),
-    );
-  }
-}
-
-/// @nodoc
-@JsonSerializable()
-class _$EmployeePermissionsImpl implements _EmployeePermissions {
-  const _$EmployeePermissionsImpl({
-    required this.role,
-    final Map<String, bool>? customPermissions,
-  }) : _customPermissions = customPermissions;
-
-  factory _$EmployeePermissionsImpl.fromJson(Map<String, dynamic> json) =>
-      _$$EmployeePermissionsImplFromJson(json);
-
-  @override
-  final EmployeeRole role;
-  final Map<String, bool>? _customPermissions;
-  @override
-  Map<String, bool>? get customPermissions {
-    final value = _customPermissions;
-    if (value == null) return null;
-    if (_customPermissions is EqualUnmodifiableMapView)
-      return _customPermissions;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(value);
-  }
-
-  @override
-  String toString() {
-    return 'EmployeePermissions(role: $role, customPermissions: $customPermissions)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$EmployeePermissionsImpl &&
-            (identical(other.role, role) || other.role == role) &&
-            const DeepCollectionEquality().equals(
-              other._customPermissions,
-              _customPermissions,
-            ));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    role,
-    const DeepCollectionEquality().hash(_customPermissions),
-  );
-
-  /// Create a copy of EmployeePermissions
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$EmployeePermissionsImplCopyWith<_$EmployeePermissionsImpl> get copyWith =>
-      __$$EmployeePermissionsImplCopyWithImpl<_$EmployeePermissionsImpl>(
-        this,
-        _$identity,
-      );
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$EmployeePermissionsImplToJson(this);
-  }
-}
-
-abstract class _EmployeePermissions implements EmployeePermissions {
-  const factory _EmployeePermissions({
-    required final EmployeeRole role,
-    final Map<String, bool>? customPermissions,
-  }) = _$EmployeePermissionsImpl;
-
-  factory _EmployeePermissions.fromJson(Map<String, dynamic> json) =
-      _$EmployeePermissionsImpl.fromJson;
-
-  @override
-  EmployeeRole get role;
-  @override
-  Map<String, bool>? get customPermissions;
-
-  /// Create a copy of EmployeePermissions
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$EmployeePermissionsImplCopyWith<_$EmployeePermissionsImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
 UserModel _$UserModelFromJson(Map<String, dynamic> json) {
   return _UserModel.fromJson(json);
 }
@@ -768,9 +578,6 @@ mixin _$UserModel {
 
   /// Employee-specific: Owner user ID (if this user is an employee)
   String? get employeeOf => throw _privateConstructorUsedError;
-
-  /// Employee-specific: Permissions
-  EmployeePermissions? get permissions => throw _privateConstructorUsedError;
 
   /// Stripe Connect account ID
   @JsonKey(name: 'stripe_account_id')
@@ -832,7 +639,6 @@ abstract class $UserModelCopyWith<$Res> {
     bool onboardingCompleted,
     @NullableTimestampConverter() DateTime? lastLoginAt,
     String? employeeOf,
-    EmployeePermissions? permissions,
     @JsonKey(name: 'stripe_account_id') String? stripeAccountId,
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_connected_at')
@@ -847,8 +653,6 @@ abstract class $UserModelCopyWith<$Res> {
     List<DeviceInfo> devices,
     List<SecurityEvent> recentSecurityEvents,
   });
-
-  $EmployeePermissionsCopyWith<$Res>? get permissions;
 }
 
 /// @nodoc
@@ -879,7 +683,6 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? onboardingCompleted = null,
     Object? lastLoginAt = freezed,
     Object? employeeOf = freezed,
-    Object? permissions = freezed,
     Object? stripeAccountId = freezed,
     Object? stripeConnectedAt = freezed,
     Object? stripeDisconnectedAt = freezed,
@@ -942,10 +745,6 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
                 ? _value.employeeOf
                 : employeeOf // ignore: cast_nullable_to_non_nullable
                       as String?,
-            permissions: freezed == permissions
-                ? _value.permissions
-                : permissions // ignore: cast_nullable_to_non_nullable
-                      as EmployeePermissions?,
             stripeAccountId: freezed == stripeAccountId
                 ? _value.stripeAccountId
                 : stripeAccountId // ignore: cast_nullable_to_non_nullable
@@ -978,20 +777,6 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
           as $Val,
     );
   }
-
-  /// Create a copy of UserModel
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $EmployeePermissionsCopyWith<$Res>? get permissions {
-    if (_value.permissions == null) {
-      return null;
-    }
-
-    return $EmployeePermissionsCopyWith<$Res>(_value.permissions!, (value) {
-      return _then(_value.copyWith(permissions: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -1017,7 +802,6 @@ abstract class _$$UserModelImplCopyWith<$Res>
     bool onboardingCompleted,
     @NullableTimestampConverter() DateTime? lastLoginAt,
     String? employeeOf,
-    EmployeePermissions? permissions,
     @JsonKey(name: 'stripe_account_id') String? stripeAccountId,
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_connected_at')
@@ -1032,9 +816,6 @@ abstract class _$$UserModelImplCopyWith<$Res>
     List<DeviceInfo> devices,
     List<SecurityEvent> recentSecurityEvents,
   });
-
-  @override
-  $EmployeePermissionsCopyWith<$Res>? get permissions;
 }
 
 /// @nodoc
@@ -1064,7 +845,6 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? onboardingCompleted = null,
     Object? lastLoginAt = freezed,
     Object? employeeOf = freezed,
-    Object? permissions = freezed,
     Object? stripeAccountId = freezed,
     Object? stripeConnectedAt = freezed,
     Object? stripeDisconnectedAt = freezed,
@@ -1127,10 +907,6 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value.employeeOf
             : employeeOf // ignore: cast_nullable_to_non_nullable
                   as String?,
-        permissions: freezed == permissions
-            ? _value.permissions
-            : permissions // ignore: cast_nullable_to_non_nullable
-                  as EmployeePermissions?,
         stripeAccountId: freezed == stripeAccountId
             ? _value.stripeAccountId
             : stripeAccountId // ignore: cast_nullable_to_non_nullable
@@ -1181,7 +957,6 @@ class _$UserModelImpl extends _UserModel {
     this.onboardingCompleted = false,
     @NullableTimestampConverter() this.lastLoginAt,
     this.employeeOf,
-    this.permissions,
     @JsonKey(name: 'stripe_account_id') this.stripeAccountId,
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_connected_at')
@@ -1259,10 +1034,6 @@ class _$UserModelImpl extends _UserModel {
   @override
   final String? employeeOf;
 
-  /// Employee-specific: Permissions
-  @override
-  final EmployeePermissions? permissions;
-
   /// Stripe Connect account ID
   @override
   @JsonKey(name: 'stripe_account_id')
@@ -1319,7 +1090,7 @@ class _$UserModelImpl extends _UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents)';
+    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents)';
   }
 
   @override
@@ -1349,8 +1120,6 @@ class _$UserModelImpl extends _UserModel {
                 other.lastLoginAt == lastLoginAt) &&
             (identical(other.employeeOf, employeeOf) ||
                 other.employeeOf == employeeOf) &&
-            (identical(other.permissions, permissions) ||
-                other.permissions == permissions) &&
             (identical(other.stripeAccountId, stripeAccountId) ||
                 other.stripeAccountId == stripeAccountId) &&
             (identical(other.stripeConnectedAt, stripeConnectedAt) ||
@@ -1385,7 +1154,6 @@ class _$UserModelImpl extends _UserModel {
     onboardingCompleted,
     lastLoginAt,
     employeeOf,
-    permissions,
     stripeAccountId,
     stripeConnectedAt,
     stripeDisconnectedAt,
@@ -1424,7 +1192,6 @@ abstract class _UserModel extends UserModel {
     final bool onboardingCompleted,
     @NullableTimestampConverter() final DateTime? lastLoginAt,
     final String? employeeOf,
-    final EmployeePermissions? permissions,
     @JsonKey(name: 'stripe_account_id') final String? stripeAccountId,
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_connected_at')
@@ -1501,10 +1268,6 @@ abstract class _UserModel extends UserModel {
   /// Employee-specific: Owner user ID (if this user is an employee)
   @override
   String? get employeeOf;
-
-  /// Employee-specific: Permissions
-  @override
-  EmployeePermissions? get permissions;
 
   /// Stripe Connect account ID
   @override

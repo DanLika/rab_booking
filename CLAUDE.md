@@ -597,7 +597,27 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2026-01-05 | **Version**: 6.26
+**Last Updated**: 2024-07-29 | **Version**: 6.28
+
+**Changelog 6.28**: Code Comment Accuracy Update:
+- **Task**: DOC-008
+- **Analysis**: Reviewed comments in `lib/` and `functions/` for accuracy.
+- **Fixes**:
+  - Removed unused `LEGACY_COLORS` object and associated "TODO" from email styles.
+  - Clarified comment for `CalendarDataBuilder` in `firebase_booking_calendar_repository.dart`.
+  - Most other comments and TODOs were found to be accurate and relevant.
+
+**Changelog 6.27**: Documentation Consolidation & Accuracy:
+- **Task**: DOC-003, DOC-007
+- **Consolidation**:
+  - Created a new, single source of truth for project setup at `docs/setup.md`.
+  - Moved setup instructions from the main `README.md` to the new guide.
+  - Integrated the `SUBDOMAIN_SETUP.md` guide into the new setup document.
+- **Archiving**:
+  - Archived `docs/Implemented Plans` and other old documents to `docs/archive/` to preserve historical context without cluttering the main documentation.
+- **Accuracy Updates**:
+  - Updated `CLAUDE.md` to correct minor inaccuracies in the z-index description, gradient code examples, and Cloud Function file paths.
+  - The `README.md` now links to the new, comprehensive setup guide.
 
 **Changelog 6.26**: Security Audit Complete (SF-001 through SF-017):
 - **Analizirani branchevi**: 12 AI agent brancheva (Google Jules, Sentinel, Bolt, Palette)

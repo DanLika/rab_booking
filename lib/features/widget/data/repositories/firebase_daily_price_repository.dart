@@ -220,7 +220,9 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
           }
           current = current.add(const Duration(days: 1));
         }
-        return total;
+        // LOGIC-007 FIX: Round to 2 decimal places to match backend validation
+        // and prevent floating-point mismatches.
+        return (total * 100).round() / 100.0;
       }
 
       // Sum up all daily prices
@@ -255,7 +257,9 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         current = current.add(const Duration(days: 1));
       }
 
-      return total;
+      // LOGIC-007 FIX: Round to 2 decimal places to match backend validation
+      // and prevent floating-point mismatches.
+      return (total * 100).round() / 100.0;
     } catch (e) {
       unawaited(LoggingService.logError('Error calculating booking price', e));
       return 0.0;

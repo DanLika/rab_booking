@@ -26,9 +26,6 @@ export * from "./stripeConnect";
 // Export custom email functions (Phase 2)
 export * from "./customEmail";
 
-// Export security alert functions (Phase 3)
-export * from "./securityEmail";
-
 // Export iCal sync functions (Overbooking prevention)
 // Note: Scheduled function removed, only manual sync available
 export * from "./icalSync";

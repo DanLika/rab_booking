@@ -18,34 +18,6 @@ import '../constants/timeout_constants.dart';
 /// );
 /// ```
 extension FutureTimeoutExtension<T> on Future<T> {
-  /// Dodaje standardni Firestore timeout (30s)
-  ///
-  /// Baca [TimeoutException] ako operacija ne završi u roku.
-  Future<T> withFirestoreTimeout([String? operationName]) {
-    return timeout(
-      TimeoutConstants.firestoreQuery,
-      onTimeout: () => throw TimeoutException(
-        operationName != null
-            ? '$operationName timed out after ${TimeoutConstants.firestoreQuery.inSeconds}s'
-            : 'Firestore query timed out after ${TimeoutConstants.firestoreQuery.inSeconds}s',
-      ),
-    );
-  }
-
-  /// Dodaje standardni HTTP timeout (15s)
-  ///
-  /// Baca [TimeoutException] ako operacija ne završi u roku.
-  Future<T> withHttpTimeout([String? operationName]) {
-    return timeout(
-      TimeoutConstants.httpRequest,
-      onTimeout: () => throw TimeoutException(
-        operationName != null
-            ? '$operationName timed out after ${TimeoutConstants.httpRequest.inSeconds}s'
-            : 'HTTP request timed out after ${TimeoutConstants.httpRequest.inSeconds}s',
-      ),
-    );
-  }
-
   /// Dodaje standardni Cloud Function timeout (60s)
   ///
   /// Baca [TimeoutException] ako operacija ne završi u roku.
@@ -102,35 +74,4 @@ extension FutureTimeoutExtension<T> on Future<T> {
     );
   }
 
-  /// Dodaje custom timeout
-  ///
-  /// Baca [TimeoutException] ako operacija ne završi u roku.
-  Future<T> withCustomTimeout(Duration duration, [String? operationName]) {
-    return timeout(
-      duration,
-      onTimeout: () => throw TimeoutException(
-        operationName != null
-            ? '$operationName timed out after ${duration.inSeconds}s'
-            : 'Operation timed out after ${duration.inSeconds}s',
-      ),
-    );
-  }
-}
-
-/// Extension za Stream timeout na prvi element
-extension StreamTimeoutExtension<T> on Stream<T> {
-  /// Čeka prvi element sa timeout-om
-  ///
-  /// Korisno za real-time listener-e gdje želimo prvi snapshot sa timeout-om.
-  Future<T> firstWithTimeout([Duration? duration, String? operationName]) {
-    final timeout = duration ?? TimeoutConstants.realtimeInitial;
-    return first.timeout(
-      timeout,
-      onTimeout: () => throw TimeoutException(
-        operationName != null
-            ? '$operationName timed out waiting for first value after ${timeout.inSeconds}s'
-            : 'Stream timed out waiting for first value after ${timeout.inSeconds}s',
-      ),
-    );
-  }
 }

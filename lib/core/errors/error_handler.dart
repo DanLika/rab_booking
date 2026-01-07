@@ -49,7 +49,8 @@ class ErrorHandler {
     } else if (error is ConflictException) {
       return 'Konflikt podataka. ${error.message}';
     } else if (error is TimeoutException) {
-      return 'Operacija je istekla. Pokušajte ponovo.';
+      // UX-020: Improved timeout message with actionable advice
+      return 'Operacija je istekla. Molimo provjerite vašu internet konekciju i pokušajte ponovo.';
     } else if (error is AuthorizationException) {
       return 'Nemate dozvolu za ovu akciju.';
     } else if (error is DatesNotAvailableException) {
@@ -66,11 +67,7 @@ class ErrorHandler {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: () {},
-        ),
+        action: SnackBarAction(label: 'OK', textColor: Colors.white, onPressed: () {}),
       ),
     );
   }
@@ -78,11 +75,7 @@ class ErrorHandler {
   /// Log error to console in debug mode and to error tracking service in production
   static Future<void> logError(dynamic error, StackTrace? stackTrace) async {
     // Log using LoggingService
-    await LoggingService.logError(
-      'ErrorHandler caught error',
-      error,
-      stackTrace,
-    );
+    await LoggingService.logError('ErrorHandler caught error', error, stackTrace);
 
     // In production, send to error tracking service
     // NOTE: Crashlytics is NOT supported on web platform
@@ -92,10 +85,7 @@ class ErrorHandler {
         error,
         stackTrace,
         reason: 'ErrorHandler caught error',
-        information: [
-          'source: ErrorHandler',
-          'user_friendly_message: ${getUserFriendlyMessage(error)}',
-        ],
+        information: ['source: ErrorHandler', 'user_friendly_message: ${getUserFriendlyMessage(error)}'],
         printDetails: false,
       );
     }
@@ -108,12 +98,7 @@ class ErrorHandler {
       builder: (context) => AlertDialog(
         title: const Text('Greška'),
         content: Text(getUserFriendlyMessage(error)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
       ),
     );
   }

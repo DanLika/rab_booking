@@ -44,9 +44,6 @@ dependencies:
   # UI & Styling
   google_fonts: ^6.2.1
 
-  # Calendar - Timeline views for professional booking management
-  syncfusion_flutter_calendar: ^31.2.16
-
   # Internationalization
   intl: ^0.20.1
 
@@ -54,13 +51,9 @@ dependencies:
   cached_network_image: ^3.4.1
   image_picker: ^1.1.2
 
-  # PDF & Receipt Generation
-  pdf: ^3.10.8
-  printing: ^5.12.0
-  path_provider: ^2.1.2
-
   # QR Code Generation
   qr_flutter: ^4.1.0
+  path_provider: ^2.1.2
 
   # Loading States
   shimmer: ^3.0.0
@@ -90,7 +83,6 @@ dependencies:
   sentry_flutter: ^8.12.0
 
   # Charts
-  fl_chart: ^1.1.1
   graphic: ^2.6.0
 
 dev_dependencies:

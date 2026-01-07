@@ -1,6 +1,8 @@
 # BookBed Pre-Production Testing Plan (v1.0)
 
 **Last Updated**: 2025-12-18
+
+> **Note**: This document covers the plan for **manual, end-to-end testing**. For instructions on running unit, widget, and integration tests, please refer to the [Automated Testing Guide](./AUTOMATED_TESTING.md).
 **Target Platforms**: iOS Simulator, Android Samsung Device, Web (Chrome, Safari Desktop, Safari iOS, Chrome Mobile)
 **Testing Scope**: Owner Dashboard + Booking Widget
 **Bug Tracking**: Sentry (automated) + Manual UI Issue Log

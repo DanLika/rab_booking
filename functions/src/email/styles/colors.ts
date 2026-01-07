@@ -145,22 +145,3 @@ export function getColorVariables(theme: EmailColorScheme): string {
   `.trim();
 }
 
-/**
- * Legacy color constants for backward compatibility
- * TODO: Remove after migration is complete
- */
-export const LEGACY_COLORS = {
-  primary: "#6B4CE6",
-  primaryLight: "#F5F3FF",
-  success: "#10B981",
-  successLight: "#D1FAE5",
-  warning: "#F59E0B",
-  warningLight: "#FEF3C7",
-  error: "#EF4444",
-  errorLight: "#FEE2E2",
-  background: "#FFFFFF",
-  textPrimary: "#111827",
-  textSecondary: "#6B7280",
-  border: "#E5E7EB",
-  borderLight: "#F3F4F6",
-};

@@ -627,6 +627,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
     // Mark booked dates
     // Bug #71 Fix: Optimize for long-term bookings by calculating date range intersection
+    _applyAdvanceBookingRestrictions(calendar);
     final monthStart = DateTime.utc(year, month);
     final monthEnd = DateTime.utc(year, month, daysInMonth);
 
@@ -872,6 +873,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
     // Mark booked dates from regular bookings
     // Bug #71 Fix: Optimize for long-term bookings by calculating date range intersection
+    _applyAdvanceBookingRestrictions(calendar);
     final yearStart = DateTime.utc(year);
     final yearEnd = DateTime.utc(year, 12, 31);
 
@@ -1127,6 +1129,36 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
     // Apply updates
     calendar.addAll(datesToUpdate);
+  }
+
+  /// LOGIC-001 FIX: Apply advance booking day restrictions to the calendar.
+  ///
+  /// This ensures dates are blocked on the client-side if they don't meet
+  /// the min/max days in advance settings from daily_prices, matching backend logic.
+  void _applyAdvanceBookingRestrictions(
+      Map<DateTime, CalendarDateInfo> calendar) {
+    final nowUtc = DateTime.now().toUtc();
+    final today = DateTime.utc(nowUtc.year, nowUtc.month, nowUtc.day);
+
+    calendar.forEach((date, info) {
+      if (info.status == DateStatus.available) {
+        final daysInAdvance = date.difference(today).inDays;
+
+        // Check min days advance
+        if (info.minDaysAdvance != null &&
+            info.minDaysAdvance! > 0 &&
+            daysInAdvance < info.minDaysAdvance!) {
+          calendar[date] = info.copyWith(status: DateStatus.blocked);
+        }
+
+        // Check max days advance
+        if (info.maxDaysAdvance != null &&
+            info.maxDaysAdvance! > 0 &&
+            daysInAdvance > info.maxDaysAdvance!) {
+          calendar[date] = info.copyWith(status: DateStatus.blocked);
+        }
+      }
+    });
   }
 
   /// Apply gap blocking based on minimum nights requirement

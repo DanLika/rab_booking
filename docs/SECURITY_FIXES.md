@@ -2140,3 +2140,84 @@ const checkInMidnight = new Date(Date.UTC(
 **Moguće nuspojave:**
 - Nema - rezultat je isti u većini slučajeva, fix samo osigurava konzistentnost u edge case-ovima
 
+
+
+---
+
+### 🐛 BUG-011: Notification Idempotency Key Missing Action
+
+**Datum:** 2026-01-07  
+**Prioritet:** Medium  
+**Status:** ✅ Riješeno  
+**Zahvaćeni fajl:** `functions/src/notificationService.ts`  
+**Predložio:** Google Jules (branch: `fix/LOGIC-003-calendar-data-consistency-8111192320731936509`)
+
+**Problem:**
+Idempotency key format nije uključivao `action` parametar. Ako se u istoj minuti dogode različite akcije za isti booking (npr. "created" pa odmah "updated"), moglo je doći do gubitka notifikacija.
+
+**Stari format:** `{ownerId}_{type}_{bookingId}_{timestamp_minute}`
+**Novi format:** `{ownerId}_{type}_{bookingId}_{action}_{timestamp_minute}`
+
+**Rješenje:**
+1. Dodano `action` u idempotency key format
+2. Dodano `action` u metadata objekta za `createBookingNotification`
+
+```typescript
+// BUG-011 FIX: Improved idempotency key to include action
+const actionPart = data.metadata?.action || "default";
+const idempotencyKey = `${data.ownerId}_${data.type}_${bookingPart}_${actionPart}_${timestampMinute}`;
+```
+
+**Testiranje:**
+1. ✅ Kreiranje notifikacije → jedinstveni key
+2. ✅ Retry iste notifikacije → isti key (idempotent)
+3. ✅ Različite akcije u istoj minuti → različiti keyevi
+
+**Moguće nuspojave:**
+- Nema - samo poboljšava granularnost idempotency keya
+
+---
+
+### 🐛 BUG-012: Price Rollback Logic for Deleted Prices
+
+**Datum:** 2026-01-07  
+**Prioritet:** Medium  
+**Status:** ✅ Riješeno  
+**Zahvaćeni fajl:** `lib/features/owner_dashboard/presentation/state/price_calendar_state.dart`  
+**Predložio:** Google Jules (branch: `fix/LOGIC-003-calendar-data-consistency-8111192320731936509`)
+
+**Problem:**
+`rollbackUpdate` funkcija nije ispravno rukovala slučajem kada je cijena bila obrisana (optimistic delete). Tip `Map<DateTime, DailyPriceModel>` nije dozvoljavao `null` vrijednosti, pa rollback nije mogao vratiti stanje "nema cijene".
+
+**Scenarij buga:**
+1. Korisnik obriše cijenu za 15. januar (optimistic delete)
+2. Server vrati grešku
+3. Rollback pokušava vratiti staro stanje
+4. **BUG:** `oldPrices[15.jan] = null` nije moguće s tipom `Map<DateTime, DailyPriceModel>`
+
+**Rješenje:**
+Promijenjen tip parametra na `Map<DateTime, DailyPriceModel?>` i dodana provjera:
+
+```dart
+void rollbackUpdate(
+  DateTime month,
+  Map<DateTime, DailyPriceModel?> oldPrices,  // Nullable values
+) {
+  for (final entry in oldPrices.entries) {
+    if (entry.value != null) {
+      _priceCache[monthKey]![entry.key] = entry.value!;
+    } else {
+      _priceCache[monthKey]!.remove(entry.key);  // Restore deletion
+    }
+  }
+}
+```
+
+**Testiranje:**
+1. ✅ Rollback postojeće cijene → cijena vraćena
+2. ✅ Rollback obrisane cijene → cijena uklonjena iz cache-a
+3. ✅ Rollback mješovitih promjena → ispravno stanje
+
+**Moguće nuspojave:**
+- Pozivi `rollbackUpdate` moraju koristiti nullable tip - ali to je ispravno ponašanje
+

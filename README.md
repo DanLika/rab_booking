@@ -6,51 +6,9 @@ BookBed enables accommodation owners to create and manage their bookings through
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Getting Started
 
-### Prerequisites
-
-- **Flutter** 3.x+ (SDK)
-- **Node.js** 18+ (za Firebase Functions)
-- **Firebase CLI** (`npm install -g firebase-tools`)
-- **Stripe CLI** (za webhook testing)
-- **Git**
-
-### Installation
-
-```bash
-# 1. Clone repository
-git clone https://github.com/yourusername/bookbed.git
-cd bookbed
-
-# 2. Install Flutter dependencies
-flutter pub get
-
-# 3. Install Firebase Functions dependencies
-cd functions
-npm install
-cd ..
-
-# 4. Setup Firebase
-firebase login
-firebase use --add  # Select your Firebase project
-
-# 5. Setup environment variables
-cp .env.example .env  # Add your API keys
-```
-
-### Running Locally
-
-```bash
-# Start Flutter web app (port 5000)
-flutter run -d chrome --web-port=5000
-
-# Start Firebase Emulators (separate terminal)
-firebase emulators:start
-
-# Start Stripe webhook listener (separate terminal)
-stripe listen --forward-to localhost:5001/your-project/us-central1/handleStripeWebhook
-```
+For detailed instructions on how to set up, run, and deploy the application, please see the **[Comprehensive Setup Guide](./docs/setup.md)**.
 
 ---
 
@@ -159,33 +117,6 @@ currentSettings.emailConfig.copyWith(requireEmailVerification: false)
 
 ---
 
-## 🌐 Deployment
-
-### Deploy Firebase Functions
-
-```bash
-cd functions
-npm run build
-firebase deploy --only functions
-```
-
-### Deploy Flutter Web
-
-```bash
-flutter build web --release
-firebase deploy --only hosting
-```
-
-### Environment Variables
-
-```bash
-# Stripe
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Resend
-RESEND_API_KEY=re_...
-```
 
 ---
 

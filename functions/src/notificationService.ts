@@ -22,11 +22,12 @@ export interface NotificationData {
 export async function createNotification(data: NotificationData): Promise<void> {
   try {
     // Generate idempotency key to prevent duplicates
-    // Format: {ownerId}_{type}_{bookingId}_{timestamp_minute}
+    // Format: {ownerId}_{type}_{bookingId}_{action}_{timestamp_minute}
     // Timestamp rounded to minute to allow same-minute retries to deduplicate
     const timestampMinute = Math.floor(Date.now() / 60000); // Round to minute
     const bookingPart = data.bookingId || "general";
-    const idempotencyKey = `${data.ownerId}_${data.type}_${bookingPart}_${timestampMinute}`;
+    const actionPart = data.metadata?.action || "default";
+    const idempotencyKey = `${data.ownerId}_${data.type}_${bookingPart}_${actionPart}_${timestampMinute}`;
 
     // Use set() with merge:false to prevent duplicates
     // If document already exists, this will overwrite (idempotent behavior)
@@ -80,8 +81,8 @@ export async function createBookingNotification(
     type: `booking_${action}`,
     title: titles[action] || "Obavještenje",
     message: messages[action] || "Nova aktivnost na rezervaciji.",
-    bookingId,
-    metadata: {guestName},
+    bookingId: bookingId,
+    metadata: {guestName, action},
   });
 }
 

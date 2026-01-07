@@ -18,7 +18,7 @@ import '../../utils/date_key_generator.dart';
 /// This repository delegates to extracted helper classes:
 /// - [AvailabilityChecker] - Availability checking logic
 /// - [BookingPriceCalculator] - Price calculation with hierarchy
-/// - [CalendarDataBuilder] - Available for testing/future use
+/// - [CalendarDataBuilder] - Extracted helper class, available for future use
 ///
 /// The public API remains unchanged for backward compatibility.
 /// Calendar building remains inline (optimized with Bug #71 fixes).

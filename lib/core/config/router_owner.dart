@@ -270,7 +270,8 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       if (isAuthenticated &&
           requiresEmailVerification &&
           !isEmailVerificationRoute &&
-          !isPublicAuthRoute) {
+          !isPublicAuthRoute &&
+          !isLoggingIn) {
         if (kDebugMode) {
           LoggingService.log(
             '  → Redirecting to email verification (email not verified)',

@@ -518,6 +518,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.password,
       prefixIcon: Icons.lock_outline,
       obscureText: _obscurePassword,
+      autofillHints: const [AutofillHints.password],
       // UX-019: Add tooltip for accessibility (screen readers)
       suffixIcon: Tooltip(
         message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,

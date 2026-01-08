@@ -12,6 +12,7 @@ class PremiumInputField extends StatefulWidget {
   final String? Function(String?)? validator;
   final int? maxLines;
   final FocusNode? focusNode;
+  final Iterable<String>? autofillHints;
 
   const PremiumInputField({
     super.key,
@@ -24,6 +25,7 @@ class PremiumInputField extends StatefulWidget {
     this.validator,
     this.maxLines = 1,
     this.focusNode,
+    this.autofillHints,
   });
 
   @override
@@ -60,6 +62,7 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
           obscureText: widget.obscureText,
           keyboardType: widget.keyboardType,
           validator: widget.validator,
+          autofillHints: widget.autofillHints,
           maxLines: widget.maxLines,
           style: TextStyle(
             fontSize: 15,

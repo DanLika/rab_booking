@@ -340,6 +340,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                   labelText: l10n.currentPassword,
                                   prefixIcon: Icons.lock_outline,
                                   obscureText: _obscureCurrentPassword,
+                                  autofillHints: const [AutofillHints.password],
                                   suffixIcon: IconButton(
                                     // SF-017: Add tooltip for accessibility
                                     tooltip: _obscureCurrentPassword
@@ -372,6 +373,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                   labelText: l10n.newPassword,
                                   prefixIcon: Icons.lock,
                                   obscureText: _obscureNewPassword,
+                                  autofillHints: const [AutofillHints.newPassword],
                                   suffixIcon: IconButton(
                                     // SF-017: Add tooltip for accessibility
                                     tooltip: _obscureNewPassword
@@ -390,7 +392,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                     },
                                   ),
                                   validator: (value) {
-                                    if (value ==
+                                    if (value != null && value.isNotEmpty && value ==
                                         _currentPasswordController.text) {
                                       return l10n.passwordsMustBeDifferent;
                                     }
@@ -528,6 +530,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                   labelText: l10n.confirmNewPassword,
                                   prefixIcon: Icons.lock_open,
                                   obscureText: _obscureConfirmPassword,
+                                  autofillHints: const [AutofillHints.newPassword],
                                   suffixIcon: IconButton(
                                     // SF-017: Add tooltip for accessibility
                                     tooltip: _obscureConfirmPassword

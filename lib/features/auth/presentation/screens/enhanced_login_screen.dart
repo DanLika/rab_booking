@@ -18,7 +18,6 @@ import '../widgets/auth_background.dart';
 import '../widgets/auth_logo_icon.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_auth_button.dart';
-import '../utils/auth_utils.dart';
 import '../widgets/premium_input_field.dart';
 import '../widgets/social_login_button.dart';
 
@@ -48,10 +47,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   String? _passwordErrorFromServer;
   String? _emailErrorFromServer;
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
-
-  // Cooldown timer state
-  Timer? _cooldownTimer;
-  int _cooldownSeconds = 0;
 
   // Shake animation controller
   late AnimationController _shakeController;
@@ -206,10 +201,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       // (will be disposed when widget unmounts)
       debugPrint('[LOGIN_SCREEN] Login successful, navigating to dashboard');
       if (mounted) {
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          l10n.loginSuccessful,
-        );
         context.go(OwnerRoutes.overview);
       }
     } catch (e) {
@@ -272,12 +263,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   String _getLocalizedError(String error, AppLocalizations l10n) {
     final errorLower = error.toLowerCase();
 
-    // Rate limit check
-    if (errorLower.contains('too many')) {
-      _startCooldownTimer(error);
-      return l10n.authErrorTooManyRequests;
-    }
-
     // Authentication errors - use new auth-specific keys
     if (errorLower.contains('user-not-found') ||
         errorLower.contains('no account found')) {
@@ -296,11 +281,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         errorLower.contains('account has been disabled')) {
       return l10n.authErrorUserDisabled;
     }
-    if (errorLower.contains('operation-not-allowed')) {
-      return l10n.authErrorOperationNotAllowed;
-    }
-    if (errorLower.contains('requires-recent-login')) {
-      return l10n.authErrorRequiresRecentLogin;
+    if (errorLower.contains('too-many-requests') ||
+        errorLower.contains('too many')) {
+      return l10n.authErrorTooManyRequests;
     }
     if (errorLower.contains('network') || errorLower.contains('connection')) {
       return l10n.errorNetworkFailed;
@@ -342,6 +325,25 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       'Invalid email',
     ];
     return emailErrorPatterns.any(message.contains);
+  }
+
+  Future<void> _handleOAuthSignIn(Future<void> Function() signInMethod) async {
+    setState(() => _isLoading = true);
+
+    try {
+      await signInMethod();
+    } catch (e) {
+      if (!mounted) return;
+      final authState = ref.read(enhancedAuthProvider);
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        authState.error ?? e.toString(),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -434,15 +436,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                       icon: Icons.login_rounded,
                                     ),
                                   ),
-                                  if (_cooldownSeconds > 0)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 16.0),
-                                      child: Text(
-                                        'Try again in $_cooldownSeconds seconds',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(color: theme.colorScheme.error),
-                                      ),
-                                    ),
                                   if (AuthFeatureFlags.isGoogleSignInEnabled ||
                                       AuthFeatureFlags
                                           .isAppleSignInEnabled) ...[
@@ -519,35 +512,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     );
   }
 
-  void _startCooldownTimer(String errorMessage) {
-    final RegExpMatch? match = RegExp(r'(\d+)\s+minutes').firstMatch(errorMessage);
-    if (match != null) {
-      final minutes = int.tryParse(match.group(1) ?? '0') ?? 0;
-      if (minutes > 0) {
-        setState(() {
-          _cooldownSeconds = minutes * 60;
-        });
-        _cooldownTimer?.cancel();
-        _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          if (_cooldownSeconds > 0) {
-            setState(() {
-              _cooldownSeconds--;
-            });
-          } else {
-            timer.cancel();
-          }
-        });
-      }
-    }
-  }
-
   Widget _buildPasswordField(ThemeData theme, AppLocalizations l10n) {
     return PremiumInputField(
       controller: _passwordController,
       labelText: l10n.password,
       prefixIcon: Icons.lock_outline,
       obscureText: _obscurePassword,
-      autofillHints: const [AutofillHints.password],
       // UX-019: Add tooltip for accessibility (screen readers)
       suffixIcon: Tooltip(
         message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
@@ -657,13 +627,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return SocialLoginButton(
         customIcon: const GoogleBrandIcon(),
         label: 'Google',
-        onPressed: () => handleOAuthSignIn(
-          context: context,
-          ref: ref,
-          signInMethod: authNotifier.signInWithGoogle,
-          setLoading: (loading) => setState(() => _isLoading = loading),
-          isMounted: () => mounted,
-        ),
+        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
       );
     }
 
@@ -671,13 +635,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return SocialLoginButton(
         customIcon: const AppleBrandIcon(),
         label: 'Apple',
-        onPressed: () => handleOAuthSignIn(
-          context: context,
-          ref: ref,
-          signInMethod: authNotifier.signInWithApple,
-          setLoading: (loading) => setState(() => _isLoading = loading),
-          isMounted: () => mounted,
-        ),
+        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
       );
     }
 
@@ -688,13 +646,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           child: SocialLoginButton(
             customIcon: const GoogleBrandIcon(),
             label: 'Google',
-            onPressed: () => handleOAuthSignIn(
-              context: context,
-              ref: ref,
-              signInMethod: authNotifier.signInWithGoogle,
-              setLoading: (loading) => setState(() => _isLoading = loading),
-              isMounted: () => mounted,
-            ),
+            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
           ),
         ),
         const SizedBox(width: 10),
@@ -702,13 +654,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           child: SocialLoginButton(
             customIcon: const AppleBrandIcon(),
             label: 'Apple',
-            onPressed: () => handleOAuthSignIn(
-              context: context,
-              ref: ref,
-              signInMethod: authNotifier.signInWithApple,
-              setLoading: (loading) => setState(() => _isLoading = loading),
-              isMounted: () => mounted,
-            ),
+            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
           ),
         ),
       ],

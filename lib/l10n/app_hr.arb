@@ -62,8 +62,6 @@
   "authErrorInvalidEmail": "Nevažeća email adresa.",
   "authErrorUserDisabled": "Ovaj račun je onemogućen.",
   "authErrorTooManyRequests": "Previše neuspješnih pokušaja. Pokušajte kasnije.",
-  "authErrorOperationNotAllowed": "Operacija nije dozvoljena. Molimo kontaktirajte podršku.",
-  "authErrorRequiresRecentLogin": "Ova operacija je osjetljiva i zahtijeva nedavnu autentifikaciju. Molimo prijavite se ponovo prije nego što pokušate ponovo.",
   "authErrorGeneric": "Prijava nije uspjela. Provjerite podatke i pokušajte ponovo.",
   "authForgotPassword": "Zaboravili lozinku?",
   "authOrContinueWith": "ili nastavite s",

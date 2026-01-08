@@ -62,8 +62,6 @@
   "authErrorInvalidEmail": "Invalid email address.",
   "authErrorUserDisabled": "This account has been disabled.",
   "authErrorTooManyRequests": "Too many failed attempts. Please try again later.",
-  "authErrorOperationNotAllowed": "Operation not allowed. Please contact support.",
-  "authErrorRequiresRecentLogin": "This operation is sensitive and requires recent authentication. Please log in again before retrying.",
   "authErrorGeneric": "Login failed. Please check your credentials and try again.",
   "authForgotPassword": "Forgot password?",
   "authOrContinueWith": "or continue with",

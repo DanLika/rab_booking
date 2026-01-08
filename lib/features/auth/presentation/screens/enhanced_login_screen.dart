@@ -201,6 +201,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       // (will be disposed when widget unmounts)
       debugPrint('[LOGIN_SCREEN] Login successful, navigating to dashboard');
       if (mounted) {
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.loginSuccessful,
+        );
         context.go(OwnerRoutes.overview);
       }
     } catch (e) {

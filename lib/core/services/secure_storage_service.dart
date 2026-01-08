@@ -6,6 +6,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// - iOS: Keychain
 /// - Web: Not recommended for production (uses localStorage - not encrypted)
 ///
+/// **Data Persistence on Uninstall:**
+/// - **Android**: Data stored via EncryptedSharedPreferences is **cleared**
+///   when the app is uninstalled.
+/// - **iOS**: Data stored in the Keychain **persists** after the app is
+///   uninstalled. This is a platform behavior.
+///
 /// SECURITY FIX SF-007: This service NO LONGER stores passwords.
 /// Only email is saved for "Remember Me" functionality.
 /// Storing plaintext passwords (even in "secure" storage) is a security risk

@@ -285,6 +285,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         errorLower.contains('too many')) {
       return l10n.authErrorTooManyRequests;
     }
+    if (errorLower.contains('operation-not-allowed')) {
+      return l10n.authErrorOperationNotAllowed;
+    }
+    if (errorLower.contains('requires-recent-login')) {
+      return l10n.authErrorRequiresRecentLogin;
+    }
     if (errorLower.contains('network') || errorLower.contains('connection')) {
       return l10n.errorNetworkFailed;
     }

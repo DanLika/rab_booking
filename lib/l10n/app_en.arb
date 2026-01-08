@@ -3199,5 +3199,9 @@
       "platforms": {"type": "String"}
     }
   },
-  "updateBooking": "Update Booking"
+  "updateBooking": "Update Booking",
+  "unitFormImageRequired": "Please upload at least one image.",
+  "unitFormNameMinLength": "Name must be at least 3 characters",
+  "unitFormNameMaxLength": "Name must be less than 100 characters",
+  "unitFormDescriptionMaxLength": "Description must be less than 5000 characters"
 }

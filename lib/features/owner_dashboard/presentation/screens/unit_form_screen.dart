@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../utils/unit_validators.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../shared/models/unit_model.dart';
@@ -52,6 +53,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
   bool _isAvailable = true;
   bool _isLoading = false;
   bool _isManualSlugEdit = false;
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   bool get _isEditing => widget.unit != null;
 
@@ -144,6 +146,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                   children: [
                     Form(
                       key: _formKey,
+                      autovalidateMode: _autovalidateMode,
                       child: ListView(
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
@@ -172,12 +175,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                       isMobile: isMobile,
                                       context: context,
                                     ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormUnitNameRequired;
-                                  }
-                                  return null;
-                                },
+                                validator: (value) =>
+                                    UnitValidators.validateUnitName(value, l10n),
                                 onChanged: (value) => _autoGenerateSlug(),
                               ),
                               const SizedBox(height: AppDimensions.spaceM),
@@ -229,6 +228,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                       context: context,
                                     ),
                                 maxLines: 3,
+                                validator: (value) =>
+                                    UnitValidators.validateDescription(value, l10n),
                               ),
                             ],
                           ),
@@ -253,16 +254,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = int.tryParse(value);
-                                  if (num == null || num < 0) {
-                                    return l10n.unitFormInvalidNumber;
-                                  }
-                                  return null;
-                                },
+                                validator: (value) =>
+                                    UnitValidators.validateCapacity(value, l10n),
                               ),
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
@@ -278,16 +271,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = int.tryParse(value);
-                                  if (num == null || num < 1) {
-                                    return l10n.unitFormMin1;
-                                  }
-                                  return null;
-                                },
+                                validator: (value) =>
+                                    UnitValidators.validateBeds(value, l10n),
                               ),
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
@@ -303,16 +288,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = int.tryParse(value);
-                                  if (num == null || num < 1 || num > 16) {
-                                    return l10n.unitFormRange1to16;
-                                  }
-                                  return null;
-                                },
+                                validator: (value) =>
+                                    UnitValidators.validateCapacity(value, l10n),
                               ),
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
@@ -354,16 +331,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = double.tryParse(value);
-                                  if (num == null || num <= 0) {
-                                    return l10n.unitFormInvalidAmount;
-                                  }
-                                  return null;
-                                },
+                                validator: (value) =>
+                                    UnitValidators.validatePrice(value, l10n),
                               ),
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
@@ -379,16 +348,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.unitFormRequired;
-                                  }
-                                  final num = int.tryParse(value);
-                                  if (num == null || num < 1) {
-                                    return l10n.unitFormMin1;
-                                  }
-                                  return null;
-                                },
+                                validator: (value) =>
+                                    UnitValidators.validateCapacity(value, l10n),
                               ),
                             ],
                           ),
@@ -897,6 +858,12 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
 
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) {
+      setState(() => _autovalidateMode = AutovalidateMode.onUserInteraction);
+      return;
+    }
+
+    if (_existingImages.isEmpty && _selectedImages.isEmpty) {
+      ErrorDisplayUtils.showErrorSnackBar(context, l10n.unitFormImageRequired);
       return;
     }
 

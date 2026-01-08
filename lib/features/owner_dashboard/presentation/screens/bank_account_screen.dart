@@ -13,6 +13,7 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/message_box.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../providers/user_profile_provider.dart';
+import '../utils/bank_details_validators.dart';
 import '../widgets/owner_app_drawer.dart';
 
 /// Dedicated Bank Account Screen for bank transfer payment settings
@@ -203,12 +204,16 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                   controller: _ibanController,
                   labelText: l10n.bankAccountIban,
                   prefixIcon: Icons.credit_card,
+                  validator: (value) =>
+                      BankDetailsValidators.validateIban(value, l10n),
                 ),
                 const SizedBox(height: 16),
                 PremiumInputField(
                   controller: _swiftController,
                   labelText: l10n.bankAccountSwift,
                   prefixIcon: Icons.code,
+                  validator: (value) =>
+                      BankDetailsValidators.validateSwift(value, l10n),
                 ),
                 const SizedBox(height: 16),
                 PremiumInputField(

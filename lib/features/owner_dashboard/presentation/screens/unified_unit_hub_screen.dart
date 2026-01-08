@@ -1032,10 +1032,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ),
       child: InkWell(
         onTap: () {
-          // Reset tab to the first page for a consistent user experience
-          if (_selectedUnit?.id != unit.id) {
-            _tabController.animateTo(0);
-          }
           // OPTIMIZED: Use passed property directly - eliminates N+1 query pattern
           setState(() {
             _selectedUnit = unit;
@@ -1256,11 +1252,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 indicatorColor: theme.colorScheme.primary,
                 indicatorWeight: 3,
                 indicatorSize: TabBarIndicatorSize.label,
-                // Responsive padding: 8 for mobile, 16 for tablet, 24 for desktop
+                // Responsive padding: smaller for mobile, larger for desktop
                 labelPadding: EdgeInsets.symmetric(
-                  horizontal: screenWidth < _kMobileBreakpoint
-                      ? 8
-                      : (screenWidth < _kDesktopBreakpoint ? 16 : 24),
+                  horizontal: screenWidth < _kMobileBreakpoint ? 8 : 20,
                 ),
                 labelStyle: const TextStyle(
                   fontSize: 14,

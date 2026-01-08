@@ -34,6 +34,7 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
     return Semantics(
       button: true,
       label: widget.label,
+      enabled: widget.onPressed != null,
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),

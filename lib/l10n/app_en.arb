@@ -1502,6 +1502,7 @@
   "unitFormInvalidNumber": "Invalid number",
   "unitFormMin1": "Min 1",
   "unitFormRange1to16": "1-16",
+  "unitFormRange0to16": "Value must be between 0 and 16",
   "unitFormPricing": "Price and conditions",
   "unitFormPricePerNight": "Price per night (€) *",
   "unitFormInvalidAmount": "Invalid amount",

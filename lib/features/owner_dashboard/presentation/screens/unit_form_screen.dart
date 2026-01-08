@@ -255,7 +255,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 validator: (value) =>
-                                    UnitValidators.validateCapacity(value, l10n),
+                                    UnitValidators.validateBedrooms(value, l10n),
                               ),
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
@@ -289,7 +289,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 validator: (value) =>
-                                    UnitValidators.validateCapacity(value, l10n),
+                                    UnitValidators.validateBeds(value, l10n),
                               ),
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
@@ -929,6 +929,14 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
       }
 
       if (mounted) {
+        // Invalidate providers to refetch data
+        ref.invalidate(ownerPropertiesProvider);
+        ref.invalidate(ownerUnitsProvider);
+        ref.invalidate(propertyByIdProvider(widget.propertyId));
+        if (_isEditing) {
+          ref.invalidate(unitByIdProvider(widget.propertyId, widget.unit!.id));
+        }
+
         final l10nSuccess = AppLocalizations.of(context);
         Navigator.of(context).pop();
         ErrorDisplayUtils.showSuccessSnackBar(

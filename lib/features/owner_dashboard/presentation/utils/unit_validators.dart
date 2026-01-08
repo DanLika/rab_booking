@@ -16,6 +16,17 @@ class UnitValidators {
     return null;
   }
 
+  static String? validateBedrooms(String? value, AppLocalizations l10n) {
+    if (value == null || value.isEmpty) {
+      return l10n.unitFormRequired;
+    }
+    final num = int.tryParse(value);
+    if (num == null || num < 0 || num > 16) {
+      return l10n.unitFormRange0to16;
+    }
+    return null;
+  }
+
   static String? validateBeds(String? value, AppLocalizations l10n) {
     if (value == null || value.isEmpty) {
       return l10n.unitFormRequired;

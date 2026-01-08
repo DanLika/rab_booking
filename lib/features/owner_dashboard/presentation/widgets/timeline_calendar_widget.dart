@@ -1,6 +1,7 @@
 import 'dart:async' show Timer;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
@@ -112,6 +113,7 @@ class _TimelineCalendarWidgetState
   late VoidCallback _scrollSyncListener;
   late VoidCallback _verticalScrollSyncListener;
   bool _isSyncingScroll = false;
+  bool _isSyncScheduled = false;
 
   // Zoom state
   double _zoomScale = kTimelineDefaultZoomScale;
@@ -408,56 +410,63 @@ class _TimelineCalendarWidgetState
   }
 
   /// Perform horizontal scroll sync (header follows main grid)
-  /// CRITICAL: This must be instant (no throttling) for smooth header alignment
+  /// OPTIMIZED: Defers jumpTo to a post-frame callback to avoid jank
   void _performHorizontalScrollSync(double mainOffset) {
-    if (_isSyncingScroll || !_horizontalScrollController.hasClients) return;
+    if (_isSyncingScroll ||
+        !_horizontalScrollController.hasClients ||
+        _isSyncScheduled) return;
 
-    // Skip if offset hasn't changed significantly (reduces unnecessary work)
+    // Skip if offset hasn't changed significantly
     if ((mainOffset - _lastHorizontalScrollOffset).abs() < 0.5) return;
     _lastHorizontalScrollOffset = mainOffset;
 
-    _isSyncingScroll = true;
-    try {
-      if (_headerScrollController.hasClients) {
-        _headerScrollController.jumpTo(mainOffset);
+    _isSyncScheduled = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _isSyncingScroll = true;
+      try {
+        if (_headerScrollController.hasClients) {
+          _headerScrollController.jumpTo(mainOffset);
+        }
+      } finally {
+        _isSyncingScroll = false;
+        _isSyncScheduled = false;
       }
-    } finally {
-      _isSyncingScroll = false;
-    }
+    });
   }
 
-  /// Perform vertical scroll sync (extracted for throttling)
+  /// Perform vertical scroll sync (unit names follow main grid)
+  /// OPTIMIZED: Defers jumpTo to a post-frame callback to avoid jank
   void _performVerticalScrollSync(double mainOffset) {
-    if (_isSyncingScroll || !_verticalScrollController.hasClients) return;
+    if (_isSyncingScroll ||
+        !_verticalScrollController.hasClients ||
+        _isSyncScheduled) return;
 
-    // Skip if offset hasn't changed significantly (reduces unnecessary work)
+    // Skip if offset hasn't changed significantly
     if ((mainOffset - _lastVerticalScrollOffset).abs() < 0.5) return;
 
-    // Log only large jumps (>100px) to detect sync issues without flooding console
-    if ((mainOffset - _lastVerticalScrollOffset).abs() > 100) {
-      _timelineLog(
-        '_performVerticalScrollSync: large jump detected',
-        category: 'ScrollSync',
-        data: {
-          'from': _lastVerticalScrollOffset.toStringAsFixed(1),
-          'to': mainOffset.toStringAsFixed(1),
-        },
-      );
-    }
     _lastVerticalScrollOffset = mainOffset;
 
-    _isSyncingScroll = true;
-    try {
-      if (_unitNamesScrollController.hasClients) {
-        final maxExtent = _unitNamesScrollController.position.maxScrollExtent;
-        final clampedOffset = mainOffset.clamp(0.0, maxExtent);
-        if ((_unitNamesScrollController.offset - clampedOffset).abs() > 0.5) {
-          _unitNamesScrollController.jumpTo(clampedOffset);
+    _isSyncScheduled = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _isSyncingScroll = true;
+      try {
+        if (_unitNamesScrollController.hasClients) {
+          final maxExtent =
+              _unitNamesScrollController.position.maxScrollExtent;
+          final clampedOffset = mainOffset.clamp(0.0, maxExtent);
+          if ((_unitNamesScrollController.offset - clampedOffset).abs() > 0.5) {
+            _unitNamesScrollController.jumpTo(clampedOffset);
+          }
         }
+      } finally {
+        _isSyncingScroll = false;
+        _isSyncScheduled = false;
       }
-    } finally {
-      _isSyncingScroll = false;
-    }
+    });
   }
 
   void _onTransformChanged() {

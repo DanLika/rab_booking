@@ -392,8 +392,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
               },
             ),
           ),
-          validator: (value) =>
-              PasswordValidator.validateMinimumLength(value, l10n),
+          validator: PasswordValidator.validateMinimumLength,
         ),
         fieldSpacing,
         PremiumInputField(
@@ -425,7 +424,6 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           validator: (value) => PasswordValidator.validateConfirmPassword(
             _passwordController.text,
             value,
-            l10n,
           ),
         ),
       ],

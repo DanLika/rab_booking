@@ -57,29 +57,12 @@
   "authRememberMe": "Zapamti me",
   "authRememberMeHint": "Drži me prijavljenim na ovom uređaju",
 
-  "authErrorWrongPassword": "Unesena lozinka je netočna. Molimo pokušajte ponovo.",
-  "authErrorUserNotFound": "Nije pronađen račun s ovom email adresom. Molimo provjerite email ili se registrirajte.",
-  "authErrorInvalidEmail": "Email adresa nije važeća. Molimo provjerite format.",
-  "authErrorUserDisabled": "Ovaj račun je onemogućen. Molimo kontaktirajte podršku.",
-  "authErrorTooManyRequests": "Pristup ovom računu je privremeno onemogućen zbog previše neuspješnih pokušaja prijave. Možete ga odmah vratiti resetiranjem lozinke ili pokušati ponovo kasnije.",
-  "authErrorNetworkConnection": "Došlo je do mrežne pogreške. Molimo provjerite internetsku vezu i pokušajte ponovo.",
-  "authErrorGeneric": "Došlo je do neočekivane pogreške. Molimo pokušajte ponovo.",
-
-  "authErrorWeakPassword": "Lozinka je preslaba. Molimo odaberite jaču lozinku.",
-  "authErrorPasswordTooShort": "Lozinka mora imati najmanje {minLength} znakova.",
-  "@authErrorPasswordTooShort": {
-    "placeholders": {
-      "minLength": {"type": "int"}
-    }
-  },
-  "authErrorPasswordsDoNotMatch": "Unesene lozinke se ne podudaraju. Molimo pokušajte ponovo.",
-  "authErrorPasswordTooLong": "Lozinka ne može biti duža od {maxLength} znakova.",
-  "@authErrorPasswordTooLong": {
-    "placeholders": {
-      "maxLength": {"type": "int"}
-    }
-  },
-
+  "authErrorWrongPassword": "Pogrešna lozinka. Molimo pokušajte ponovo.",
+  "authErrorUserNotFound": "Nije pronađen račun sa ovim emailom.",
+  "authErrorInvalidEmail": "Nevažeća email adresa.",
+  "authErrorUserDisabled": "Ovaj račun je onemogućen.",
+  "authErrorTooManyRequests": "Previše neuspješnih pokušaja. Pokušajte kasnije.",
+  "authErrorGeneric": "Prijava nije uspjela. Provjerite podatke i pokušajte ponovo.",
   "authForgotPassword": "Zaboravili lozinku?",
   "authOrContinueWith": "ili nastavite s",
   "authPreviewDemo": "Pregled demo (Anonimno)",

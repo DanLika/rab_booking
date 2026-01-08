@@ -57,29 +57,12 @@
   "authRememberMe": "Remember me",
   "authRememberMeHint": "Keep me logged in on this device",
 
-  "authErrorWrongPassword": "The password you entered is incorrect. Please try again.",
-  "authErrorUserNotFound": "No account found with this email address. Please check the email or sign up.",
-  "authErrorInvalidEmail": "The email address is not valid. Please check the format.",
-  "authErrorUserDisabled": "This account has been disabled. Please contact support.",
-  "authErrorTooManyRequests": "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.",
-  "authErrorNetworkConnection": "A network error occurred. Please check your internet connection and try again.",
-  "authErrorGeneric": "An unexpected error occurred. Please try again.",
-
-  "authErrorWeakPassword": "Password is too weak. Please choose a stronger password.",
-  "authErrorPasswordTooShort": "Password must be at least {minLength} characters long.",
-  "@authErrorPasswordTooShort": {
-    "placeholders": {
-      "minLength": {"type": "int"}
-    }
-  },
-  "authErrorPasswordsDoNotMatch": "The passwords you entered do not match. Please try again.",
-  "authErrorPasswordTooLong": "Password cannot be longer than {maxLength} characters.",
-  "@authErrorPasswordTooLong": {
-    "placeholders": {
-      "maxLength": {"type": "int"}
-    }
-  },
-
+  "authErrorWrongPassword": "Incorrect password. Please try again.",
+  "authErrorUserNotFound": "No account found with this email.",
+  "authErrorInvalidEmail": "Invalid email address.",
+  "authErrorUserDisabled": "This account has been disabled.",
+  "authErrorTooManyRequests": "Too many failed attempts. Please try again later.",
+  "authErrorGeneric": "Login failed. Please check your credentials and try again.",
   "authForgotPassword": "Forgot password?",
   "authOrContinueWith": "or continue with",
   "authPreviewDemo": "Preview Demo (Anonymous)",

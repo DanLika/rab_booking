@@ -263,29 +263,47 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   String _getLocalizedError(String error, AppLocalizations l10n) {
     final errorLower = error.toLowerCase();
 
-    // New, more specific auth errors
+    // Authentication errors - use new auth-specific keys
     if (errorLower.contains('user-not-found') ||
-        errorLower.contains('no user record')) {
+        errorLower.contains('no account found')) {
       return l10n.authErrorUserNotFound;
     }
     if (errorLower.contains('wrong-password') ||
-        errorLower.contains('invalid-credential')) {
+        errorLower.contains('invalid-credential') ||
+        errorLower.contains('incorrect password')) {
       return l10n.authErrorWrongPassword;
     }
-    if (errorLower.contains('invalid-email')) {
+    if (errorLower.contains('invalid-email') ||
+        errorLower.contains('invalid email')) {
       return l10n.authErrorInvalidEmail;
     }
-    if (errorLower.contains('user-disabled')) {
+    if (errorLower.contains('user-disabled') ||
+        errorLower.contains('account has been disabled')) {
       return l10n.authErrorUserDisabled;
     }
-    if (errorLower.contains('too-many-requests')) {
+    if (errorLower.contains('too-many-requests') ||
+        errorLower.contains('too many')) {
       return l10n.authErrorTooManyRequests;
     }
-    if (errorLower.contains('network-request-failed') ||
-        errorLower.contains('connection')) {
-      return l10n.authErrorNetworkConnection;
+    if (errorLower.contains('network') || errorLower.contains('connection')) {
+      return l10n.errorNetworkFailed;
     }
-    // Fallback for other auth errors to a generic message
+    if (errorLower.contains('permission-denied') ||
+        errorLower.contains('permission denied')) {
+      return l10n.errorPermissionDenied;
+    }
+    if (errorLower.contains('not-found') || errorLower.contains('not found')) {
+      return l10n.errorNotFound;
+    }
+    if (errorLower.contains('timeout')) {
+      return l10n.errorTimeout;
+    }
+    if (errorLower.contains('already exists') ||
+        errorLower.contains('email-already-in-use')) {
+      return l10n.errorEmailInUse;
+    }
+
+    // Fallback to generic auth error for unmapped errors
     return l10n.authErrorGeneric;
   }
 

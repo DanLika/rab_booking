@@ -1032,6 +1032,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ),
       child: InkWell(
         onTap: () {
+          // Reset tab to the first page for a consistent user experience
+          if (_selectedUnit?.id != unit.id) {
+            _tabController.animateTo(0);
+          }
           // OPTIMIZED: Use passed property directly - eliminates N+1 query pattern
           setState(() {
             _selectedUnit = unit;

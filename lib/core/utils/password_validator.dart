@@ -1,5 +1,3 @@
-import '../../l10n/app_localizations.dart';
-
 /// Password strength levels
 enum PasswordStrength { weak, medium, strong }
 
@@ -176,19 +174,30 @@ class PasswordValidator {
 
   /// Minimum length validation (8+ characters only) - for login and register
   /// Includes minimal validation to prevent weak passwords like "12345678" or "11111111"
-  static String? validateMinimumLength(String? password, AppLocalizations l10n) {
+  static String? validateMinimumLength(String? password) {
     if (password == null || password.isEmpty) {
-      return l10n.passwordRequired;
+      return 'Please enter your password';
     }
+
     if (password.length < minLength) {
-      return l10n.authErrorPasswordTooShort(minLength);
+      return 'Password must be at least $minLength characters';
     }
+
     if (password.length > maxLength) {
-      return l10n.authErrorPasswordTooLong(maxLength);
+      return 'Password must be less than $maxLength characters';
     }
-    if (_isSequentialCharacters(password) || _isRepeatingCharacters(password)) {
-      return l10n.authErrorWeakPassword;
+
+    // Minimal validation: Prevent obvious weak passwords
+    // SECURITY FIX SF-006: Check for sequential characters (numbers AND letters)
+    if (_isSequentialCharacters(password)) {
+      return 'Password cannot contain sequential characters (e.g., "12345" or "abcde")';
     }
+
+    // Check for repeating characters (11111111, aaaaaaaa)
+    if (_isRepeatingCharacters(password)) {
+      return 'Password cannot be repeating characters (e.g., 11111111)';
+    }
+
     return null;
   }
 
@@ -235,17 +244,15 @@ class PasswordValidator {
   }
 
   /// Check if two passwords match
-  static String? validateConfirmPassword(
-    String? password,
-    String? confirm,
-    AppLocalizations l10n,
-  ) {
+  static String? validateConfirmPassword(String? password, String? confirm) {
     if (confirm == null || confirm.isEmpty) {
-      return l10n.confirmPasswordRequired;
+      return 'Please confirm your password';
     }
+
     if (password != confirm) {
-      return l10n.authErrorPasswordsDoNotMatch;
+      return 'Passwords do not match';
     }
+
     return null;
   }
 }

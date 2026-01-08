@@ -48,35 +48,36 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 400.0;
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final tr = WidgetTranslations.of(context, ref);
 
-    // Year calendar needs minimum width to be usable - show rotate message on very narrow screens
-    const minWidthForYearCalendar = 350.0;
+    return LayoutBuilder(builder: (context, constraints) {
+      final availableWidth = constraints.maxWidth;
+      // Year calendar needs minimum width to be usable - show rotate message on very narrow screens
+      const minWidthForYearCalendar = 350.0;
 
-    // Check if overlay should be shown based on screen width and orientation
-    final shouldShowOverlay = screenWidth < minWidthForYearCalendar;
+      // Check if overlay should be shown based on screen width and orientation
+      final shouldShowOverlay = availableWidth < minWidthForYearCalendar;
 
-    if (shouldShowOverlay) {
-      // In iframe context, use physical screen orientation instead of iframe dimensions
-      // MediaQuery returns iframe dimensions which may differ from device orientation
-      bool isLandscape;
-      if (isWebPlatform && isInIframe) {
-        // Physical device is landscape = don't show overlay
-        isLandscape = isDeviceLandscape();
-      } else {
-        // Fallback for non-iframe: use MediaQuery
-        final orientation = MediaQuery.of(context).orientation;
-        isLandscape = orientation == Orientation.landscape;
+      if (shouldShowOverlay) {
+        // In iframe context, use physical screen orientation instead of iframe dimensions
+        // MediaQuery returns iframe dimensions which may differ from device orientation
+        bool isLandscape;
+        if (isWebPlatform && isInIframe) {
+          // Physical device is landscape = don't show overlay
+          isLandscape = isDeviceLandscape();
+        } else {
+          // Fallback for non-iframe: use MediaQuery
+          final orientation = MediaQuery.of(context).orientation;
+          isLandscape = orientation == Orientation.landscape;
+        }
+
+        // Ne prikazuj overlay ako je landscape (čak i ako je širina < 350px)
+        if (!isLandscape) {
+          return _buildRotateDeviceOverlay(colors, tr);
+        }
       }
-
-      // Ne prikazuj overlay ako je landscape (čak i ako je širina < 350px)
-      if (!isLandscape) {
-        return _buildRotateDeviceOverlay(colors, tr);
-      }
-    }
 
     // OPTIMIZED: Get minNights from cached widgetContext (eliminates duplicate unit fetch)
     final widgetCtxAsync = ref.watch(
@@ -129,7 +130,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                 CalendarCombinedHeaderWidget(
                   colors: colors,
                   isDarkMode: isDarkMode,
-                  navigationWidget: _buildCompactYearNavigation(colors),
+                  navigationWidget:
+                      _buildCompactYearNavigation(colors, availableWidth),
                   translations: WidgetTranslations.of(context, ref),
                 ),
                 // Min nights info banner - between header and calendar
@@ -174,6 +176,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           ),
       ],
     );
+  });
   }
 
   /// Shows a friendly message asking user to rotate device to landscape
@@ -217,9 +220,9 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     );
   }
 
-  Widget _buildCompactYearNavigation(WidgetColorScheme colors) {
-    final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 400.0;
-    final isSmallScreen = screenWidth < 400; // iPhone SE and similar
+  Widget _buildCompactYearNavigation(
+      WidgetColorScheme colors, double availableWidth) {
+    final isSmallScreen = availableWidth < 400; // iPhone SE and similar
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -279,27 +282,19 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     Map<String, CalendarDateInfo> data,
     WidgetColorScheme colors,
   ) {
-    final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 400.0;
-    final isDesktop = screenWidth >= 1024;
-    final padding = isDesktop ? SpacingTokens.l : SpacingTokens.m;
-
-    // Use LayoutBuilder to get actual available width for accurate cell sizing
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Defensive check: ensure constraints are bounded and finite
-        final maxWidth =
-            constraints.maxWidth.isFinite &&
-                constraints.maxWidth != double.infinity
-            ? constraints.maxWidth
-            : 1200.0; // Fallback to reasonable default
+        final availableWidth = constraints.maxWidth;
+        final isDesktop = availableWidth >= 1024;
+        final padding = isDesktop ? SpacingTokens.l : SpacingTokens.m;
         // Calculate available width after padding
-        final availableWidth = (maxWidth - (padding * 2)).clamp(
+        final widthForCells = (availableWidth - (padding * 2)).clamp(
           300.0,
-          maxWidth,
+          availableWidth,
         );
         // Get cell size that fits within available width
         final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
-          availableWidth,
+          widthForCells,
         );
         final calendarWidth =
             ConstraintTokens.monthLabelWidth + (31 * cellSize);

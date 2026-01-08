@@ -9,8 +9,13 @@ class ResponsiveHelper {
   /// Tablet breakpoint - >= 1024px
   static const double tablet = 1024;
 
+  /// Check if the given width is mobile
+  static bool isMobile(double width) {
+    return width < mobile;
+  }
+
   /// Check if screen is mobile
-  static bool isMobile(BuildContext context) {
+  static bool isMobileFromContext(BuildContext context) {
     return MediaQuery.of(context).size.width < mobile;
   }
 
@@ -32,8 +37,9 @@ class ResponsiveHelper {
     required T tablet,
     required T desktop,
   }) {
-    if (isMobile(context)) return mobile;
-    if (isTablet(context)) return tablet;
+    final width = MediaQuery.of(context).size.width;
+    if (width < ResponsiveHelper.mobile) return mobile;
+    if (width < ResponsiveHelper.tablet) return tablet;
     return desktop;
   }
 

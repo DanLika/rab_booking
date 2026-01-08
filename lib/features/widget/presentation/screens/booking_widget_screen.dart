@@ -236,6 +236,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   final _contentKey = GlobalKey();
   // Track last sent height to avoid redundant postMessages
   double _lastSentHeight = 0;
+  bool _panEnabled = false;
 
   @override
   void initState() {
@@ -1977,221 +1978,245 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             // Outer Stack: pill bar OUTSIDE scroll area for proper viewport centering
             return Stack(
               children: [
-                // Scrollable calendar content
-                SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      // Always use full viewport height to enable vertical centering
-                      // Defensive check: ensure maxHeight is finite
-                      minHeight:
-                          constraints.maxHeight.isFinite &&
-                              constraints.maxHeight != double.infinity
-                          ? constraints.maxHeight
-                          : 800.0, // Fallback to reasonable default
-                    ),
-                    child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center, // Vertically center content
-                      children: [
-                        // No-scroll content (embedded widget - host site scrolls)
-                        // On large screens, center content with max-width constraint
-                        Center(
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: isLargeScreen
-                                  ? maxContentWidth
-                                  : double.infinity,
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: horizontalPadding,
-                                vertical: verticalPadding,
+                // Scrollable and Zoomable calendar content
+                InteractiveViewer(
+                  minScale: 1.0,
+                  maxScale: 3.0,
+                  panEnabled: _panEnabled,
+                  scaleEnabled: true,
+                  constrained: false,
+                  boundaryMargin: const EdgeInsets.all(double.infinity),
+                  onInteractionUpdate: (details) {
+                    if (details.scale != 1.0 && !_panEnabled) {
+                      setState(() => _panEnabled = true);
+                    } else if (details.scale == 1.0 && _panEnabled) {
+                      setState(() => _panEnabled = false);
+                    }
+                  },
+                  child: SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        // Always use full viewport height to enable vertical centering
+                        // Defensive check: ensure maxHeight is finite
+                        minHeight:
+                            constraints.maxHeight.isFinite &&
+                                constraints.maxHeight != double.infinity
+                            ? constraints.maxHeight
+                            : 800.0, // Fallback to reasonable default
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment
+                            .center, // Vertically center content
+                        children: [
+                          // No-scroll content (embedded widget - host site scrolls)
+                          // On large screens, center content with max-width constraint
+                          Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: isLargeScreen
+                                    ? maxContentWidth
+                                    : double.infinity,
                               ),
-                              child: Column(
-                                key:
-                                    _contentKey, // For iframe height measurement
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Custom title header (if configured)
-                                  ...() {
-                                    final customTitle = _widgetSettings
-                                        ?.themeOptions
-                                        ?.customTitle;
-                                    if (customTitle != null &&
-                                        customTitle.isNotEmpty) {
-                                      return [
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 16,
-                                          ),
-                                          child: Text(
-                                            customTitle,
-                                            style: TextStyle(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                              color:
-                                                  minimalistColors.textPrimary,
-                                              fontFamily: 'Manrope',
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: horizontalPadding,
+                                  vertical: verticalPadding,
+                                ),
+                                child: Column(
+                                  key:
+                                      _contentKey, // For iframe height measurement
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Custom title header (if configured)
+                                    ...() {
+                                      final customTitle = _widgetSettings
+                                          ?.themeOptions
+                                          ?.customTitle;
+                                      if (customTitle != null &&
+                                          customTitle.isNotEmpty) {
+                                        return [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 16,
                                             ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      ];
-                                    }
-                                    return <Widget>[];
-                                  }(),
-
-                                  // NOTE: iCal sync warning banner removed from guest widget
-                                  // This is owner-only information - guests don't need to see sync status
-                                  // Owners can monitor sync status in their dashboard
-
-                                  // Calendar-only mode banner - explain view-only nature
-                                  // Spacing matches header-to-legend: 24px desktop, 16px mobile
-                                  if (widgetMode == WidgetMode.calendarOnly)
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        top: 8,
-                                        bottom: screenWidth >= 1024 ? 24 : 16,
-                                      ),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 10,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          // Consistent styling with contact pill bar
-                                          color: minimalistColors
-                                              .backgroundTertiary,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color:
-                                                minimalistColors.borderDefault,
-                                          ),
-                                          // Subtle elevation - matches contact pill bar
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(
-                                                alpha: 0.04,
+                                            child: Text(
+                                              customTitle,
+                                              style: TextStyle(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.bold,
+                                                color: minimalistColors
+                                                    .textPrimary,
+                                                fontFamily: 'Manrope',
                                               ),
-                                              blurRadius: 2,
-                                              offset: const Offset(0, 1),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.center,
                                             ),
-                                          ],
+                                          ),
+                                        ];
+                                      }
+                                      return <Widget>[];
+                                    }(),
+
+                                    // NOTE: iCal sync warning banner removed from guest widget
+                                    // This is owner-only information - guests don't need to see sync status
+                                    // Owners can monitor sync status in their dashboard
+
+                                    // Calendar-only mode banner - explain view-only nature
+                                    // Spacing matches header-to-legend: 24px desktop, 16px mobile
+                                    if (widgetMode == WidgetMode.calendarOnly)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                          top: 8,
+                                          bottom:
+                                              screenWidth >= 1024 ? 24 : 16,
                                         ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.info_outline,
-                                              size: 18,
-                                              color: minimalistColors
-                                                  .buttonPrimary,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 10,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            // Consistent styling with contact pill bar
+                                            color: minimalistColors
+                                                .backgroundTertiary,
+                                            borderRadius:
+                                                BorderRadius.circular(
+                                              12,
                                             ),
-                                            const SizedBox(width: 8),
-                                            Flexible(
-                                              child: Text(
-                                                WidgetTranslations.of(
-                                                  context,
-                                                  ref,
-                                                ).calendarOnlyBanner,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  color: minimalistColors
-                                                      .textSecondary,
+                                            border: Border.all(
+                                              color: minimalistColors
+                                                  .borderDefault,
+                                            ),
+                                            // Subtle elevation - matches contact pill bar
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.04,
+                                                ),
+                                                blurRadius: 2,
+                                                offset: const Offset(0, 1),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.info_outline,
+                                                size: 18,
+                                                color: minimalistColors
+                                                    .buttonPrimary,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Flexible(
+                                                child: Text(
+                                                  WidgetTranslations.of(
+                                                    context,
+                                                    ref,
+                                                  ).calendarOnlyBanner,
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    color: minimalistColors
+                                                        .textSecondary,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
+
+                                    // Calendar with lazy loading - shows skeleton first for faster perceived load
+                                    LazyCalendarContainer(
+                                      propertyId: _propertyId ?? '',
+                                      unitId: unitId,
+                                      forceMonthView: forceMonthView,
+                                      // Disable date selection in calendar_only mode
+                                      onRangeSelected:
+                                          widgetMode == WidgetMode.calendarOnly
+                                              ? null
+                                              : (start, end) {
+                                                  // Validate minimum nights requirement
+                                                  if (start != null &&
+                                                      end != null) {
+                                                    // Use unit's minStayNights (source of truth), NOT widget_settings
+                                                    final minNights = _unit
+                                                            ?.minStayNights ??
+                                                        1;
+                                                    final selectedNights = end
+                                                        .difference(start)
+                                                        .inDays;
+
+                                                    if (selectedNights <
+                                                        minNights) {
+                                                      // Show error message
+                                                      final tr =
+                                                          WidgetTranslations
+                                                              .of(
+                                                        context,
+                                                        ref,
+                                                      );
+                                                      ScaffoldMessenger.of(
+                                                        context,
+                                                      ).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text(
+                                                            tr.minimumNightsRequired(
+                                                              minNights,
+                                                              selectedNights,
+                                                            ),
+                                                          ),
+                                                          backgroundColor:
+                                                              minimalistColors
+                                                                  .error,
+                                                          duration:
+                                                              const Duration(
+                                                            seconds: 3,
+                                                          ),
+                                                        ),
+                                                      );
+                                                      return;
+                                                    }
+                                                  }
+
+                                                  setState(() {
+                                                    _checkIn = start;
+                                                    _checkOut = end;
+                                                    // Bug Fix: Date selection IS interaction - show booking flow
+                                                    _hasInteractedWithBookingFlow =
+                                                        true;
+                                                    _pillBarDismissed =
+                                                        false; // Reset dismissed flag for new date selection
+                                                  });
+
+                                                  // Bug #53: Save form data after date selection
+                                                  _saveFormData();
+                                                },
                                     ),
 
-                                  // Calendar with lazy loading - shows skeleton first for faster perceived load
-                                  LazyCalendarContainer(
-                                    propertyId: _propertyId ?? '',
-                                    unitId: unitId,
-                                    forceMonthView: forceMonthView,
-                                    // Disable date selection in calendar_only mode
-                                    onRangeSelected:
-                                        widgetMode == WidgetMode.calendarOnly
-                                        ? null
-                                        : (start, end) {
-                                            // Validate minimum nights requirement
-                                            if (start != null && end != null) {
-                                              // Use unit's minStayNights (source of truth), NOT widget_settings
-                                              final minNights =
-                                                  _unit?.minStayNights ?? 1;
-                                              final selectedNights = end
-                                                  .difference(start)
-                                                  .inDays;
-
-                                              if (selectedNights < minNights) {
-                                                // Show error message
-                                                final tr =
-                                                    WidgetTranslations.of(
-                                                      context,
-                                                      ref,
-                                                    );
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      tr.minimumNightsRequired(
-                                                        minNights,
-                                                        selectedNights,
-                                                      ),
-                                                    ),
-                                                    backgroundColor:
-                                                        minimalistColors.error,
-                                                    duration: const Duration(
-                                                      seconds: 3,
-                                                    ),
-                                                  ),
-                                                );
-                                                return;
-                                              }
-                                            }
-
-                                            setState(() {
-                                              _checkIn = start;
-                                              _checkOut = end;
-                                              // Bug Fix: Date selection IS interaction - show booking flow
-                                              _hasInteractedWithBookingFlow =
-                                                  true;
-                                              _pillBarDismissed =
-                                                  false; // Reset dismissed flag for new date selection
-                                            });
-
-                                            // Bug #53: Save form data after date selection
-                                            _saveFormData();
-                                          },
-                                  ),
-
-                                  // Contact pill card (calendar only mode - inline, below calendar)
-                                  if (widgetMode ==
-                                      WidgetMode.calendarOnly) ...[
-                                    const SizedBox(height: 8),
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      child: ContactPillCardWidget(
-                                        contactOptions:
-                                            _widgetSettings?.contactOptions,
-                                        isDarkMode: isDarkMode,
-                                        screenWidth: screenWidth,
+                                    // Contact pill card (calendar only mode - inline, below calendar)
+                                    if (widgetMode ==
+                                        WidgetMode.calendarOnly) ...[
+                                      const SizedBox(height: 8),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            bottom: 8),
+                                        child: ContactPillCardWidget(
+                                          contactOptions: _widgetSettings
+                                              ?.contactOptions,
+                                          isDarkMode: isDarkMode,
+                                          screenWidth: screenWidth,
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

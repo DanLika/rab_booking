@@ -74,112 +74,117 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    return Column(
-      mainAxisSize:
-          MainAxisSize.min, // Take only needed height for iframe embedding
-      children: [
-        // Combined header - explicitly outside any GestureDetector
-        CalendarCombinedHeaderWidget(
-          colors: colors,
-          isDarkMode: isDarkMode,
-          navigationWidget: _buildCompactMonthNavigation(colors),
-          translations: WidgetTranslations.of(context, ref),
-        ),
-        // Min nights info banner - between header and calendar
-        if (minNights > 1)
-          CalendarCompactLegend(
-            minNights: minNights,
+    return LayoutBuilder(builder: (context, constraints) {
+      final availableWidth = constraints.maxWidth;
+
+      return Column(
+        mainAxisSize:
+            MainAxisSize.min, // Take only needed height for iframe embedding
+        children: [
+          // Combined header - explicitly outside any GestureDetector
+          CalendarCombinedHeaderWidget(
             colors: colors,
+            isDarkMode: isDarkMode,
+            navigationWidget:
+                _buildCompactMonthNavigation(colors, availableWidth),
             translations: WidgetTranslations.of(context, ref),
           ),
+          // Min nights info banner - between header and calendar
+          if (minNights > 1)
+            CalendarCompactLegend(
+              minNights: minNights,
+              colors: colors,
+              translations: WidgetTranslations.of(context, ref),
+            ),
 
-        // Calendar and tooltip in Stack for overlay positioning
-        // Note: No Expanded - calendar takes natural height for proper inline layout
-        MouseRegion(
-          onHover: (event) =>
-              setState(() => _mousePosition = event.localPosition),
-          child: GestureDetector(
-            // Swipe gesture for month navigation
-            onHorizontalDragEnd: (details) {
-              // Swipe right (previous month) - positive velocity
-              if (details.primaryVelocity != null &&
-                  details.primaryVelocity! > 0) {
-                setState(() {
-                  _currentMonth = _previousMonth(_currentMonth);
-                  // Only clear range if BOTH dates are selected (complete selection)
-                  if (_rangeStart != null && _rangeEnd != null) {
-                    _rangeStart = null;
-                    _rangeEnd = null;
-                    widget.onRangeSelected?.call(null, null);
-                  }
-                });
-              }
-              // Swipe left (next month) - negative velocity
-              else if (details.primaryVelocity != null &&
-                  details.primaryVelocity! < 0) {
-                setState(() {
-                  _currentMonth = _nextMonth(_currentMonth);
-                  // Only clear range if BOTH dates are selected (complete selection)
-                  if (_rangeStart != null && _rangeEnd != null) {
-                    _rangeStart = null;
-                    _rangeEnd = null;
-                    widget.onRangeSelected?.call(null, null);
-                  }
-                });
-              }
-            },
-            child: Stack(
-              children: [
-                // Calendar with GestureDetector for deselection
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    // Deselect dates when clicking outside the calendar
-                    if (_rangeStart != null || _rangeEnd != null) {
-                      setState(() {
-                        _rangeStart = null;
-                        _rangeEnd = null;
-                      });
+          // Calendar and tooltip in Stack for overlay positioning
+          // Note: No Expanded - calendar takes natural height for proper inline layout
+          MouseRegion(
+            onHover: (event) =>
+                setState(() => _mousePosition = event.localPosition),
+            child: GestureDetector(
+              // Swipe gesture for month navigation
+              onHorizontalDragEnd: (details) {
+                // Swipe right (previous month) - positive velocity
+                if (details.primaryVelocity != null &&
+                    details.primaryVelocity! > 0) {
+                  setState(() {
+                    _currentMonth = _previousMonth(_currentMonth);
+                    // Only clear range if BOTH dates are selected (complete selection)
+                    if (_rangeStart != null && _rangeEnd != null) {
+                      _rangeStart = null;
+                      _rangeEnd = null;
                       widget.onRangeSelected?.call(null, null);
                     }
-                  },
-                  child: calendarData.when(
-                    data: (data) => _buildMonthView(data, colors),
-                    loading: () => const MonthCalendarSkeleton(),
-                    error: (error, stack) =>
-                        Center(child: Text(ErrorMessages.calendarError(error))),
-                  ),
-                ),
-                // Hover tooltip overlay (desktop) - highest z-index
-                if (_hoveredDate != null)
-                  calendarData.when(
-                    data: (data) {
-                      // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
-                      // Re-read from async value to ensure we have the latest state
-                      final currentWidgetCtx = widgetCtxAsync.valueOrNull;
-                      final fallbackPrice =
-                          currentWidgetCtx?.unit.pricePerNight;
-                      return CalendarTooltipBuilder.build(
-                        context: context,
-                        hoveredDate: _hoveredDate,
-                        mousePosition: _mousePosition,
-                        data: data,
-                        colors: colors,
-                        tooltipHeight: 120.0,
-                        ignorePointer: true,
-                        // Use unit's base price as fallback when no daily_price exists
-                        fallbackPrice: fallbackPrice,
-                      );
+                  });
+                }
+                // Swipe left (next month) - negative velocity
+                else if (details.primaryVelocity != null &&
+                    details.primaryVelocity! < 0) {
+                  setState(() {
+                    _currentMonth = _nextMonth(_currentMonth);
+                    // Only clear range if BOTH dates are selected (complete selection)
+                    if (_rangeStart != null && _rangeEnd != null) {
+                      _rangeStart = null;
+                      _rangeEnd = null;
+                      widget.onRangeSelected?.call(null, null);
+                    }
+                  });
+                }
+              },
+              child: Stack(
+                children: [
+                  // Calendar with GestureDetector for deselection
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      // Deselect dates when clicking outside the calendar
+                      if (_rangeStart != null || _rangeEnd != null) {
+                        setState(() {
+                          _rangeStart = null;
+                          _rangeEnd = null;
+                        });
+                        widget.onRangeSelected?.call(null, null);
+                      }
                     },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, stackTrace) => const SizedBox.shrink(),
+                    child: calendarData.when(
+                      data: (data) => _buildMonthView(data, colors),
+                      loading: () => const MonthCalendarSkeleton(),
+                      error: (error, stack) => Center(
+                          child: Text(ErrorMessages.calendarError(error))),
+                    ),
                   ),
-              ],
+                  // Hover tooltip overlay (desktop) - highest z-index
+                  if (_hoveredDate != null)
+                    calendarData.when(
+                      data: (data) {
+                        // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
+                        // Re-read from async value to ensure we have the latest state
+                        final currentWidgetCtx = widgetCtxAsync.valueOrNull;
+                        final fallbackPrice =
+                            currentWidgetCtx?.unit.pricePerNight;
+                        return CalendarTooltipBuilder.build(
+                          context: context,
+                          hoveredDate: _hoveredDate,
+                          mousePosition: _mousePosition,
+                          data: data,
+                          colors: colors,
+                          tooltipHeight: 120.0,
+                          ignorePointer: true,
+                          // Use unit's base price as fallback when no daily_price exists
+                          fallbackPrice: fallbackPrice,
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, stackTrace) => const SizedBox.shrink(),
+                    ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   /// Navigate to previous month with proper year boundary handling
@@ -200,11 +205,10 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     }
   }
 
-  Widget _buildCompactMonthNavigation(WidgetColorScheme colors) {
-    final mediaQuery = MediaQuery.maybeOf(context);
-    final screenWidth = mediaQuery?.size.width ?? 400.0;
-    final isSmallScreen = screenWidth < 400; // iPhone SE and similar
-    final isTinyScreen = screenWidth < 360; // Very small screens
+  Widget _buildCompactMonthNavigation(
+      WidgetColorScheme colors, double availableWidth) {
+    final isSmallScreen = availableWidth < 400; // iPhone SE and similar
+    final isTinyScreen = availableWidth < 360; // Very small screens
     final locale = Localizations.localeOf(context);
     final monthYear = DateFormat.yMMM(locale.toString()).format(_currentMonth);
 
@@ -288,20 +292,14 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final mediaQuery = MediaQuery.maybeOf(context);
-        final screenWidth = mediaQuery?.size.width ?? 400.0;
-        final screenHeight = mediaQuery?.size.height ?? 800.0;
-        final maxHeight =
-            screenHeight * 0.75; // 75% of screen height for better centering
-
-        // Desktop: Show 1 month + booking sidebar (>= 1024px)
-        final isDesktop = screenWidth >= 1024;
+        final availableWidth = constraints.maxWidth;
+        final isDesktop = availableWidth >= 1024;
 
         if (isDesktop) {
-          return _buildDesktopLayoutWithSidebar(data, maxHeight, colors);
+          return _buildDesktopLayoutWithSidebar(data, colors);
         } else {
           // Tablet & Mobile: Show 1 month + booking flow below (if dates selected)
-          return _buildMobileLayout(data, maxHeight, colors);
+          return _buildMobileLayout(data, colors);
         }
       },
     );
@@ -309,7 +307,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
   Widget _buildDesktopLayoutWithSidebar(
     Map<String, CalendarDateInfo> data,
-    double maxHeight,
     WidgetColorScheme colors,
   ) {
     return Center(
@@ -322,7 +319,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         ),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 650),
-          child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
+          child: _buildSingleMonthGrid(_currentMonth, data, colors),
         ),
       ),
     );
@@ -330,7 +327,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
 
   Widget _buildMobileLayout(
     Map<String, CalendarDateInfo> data,
-    double maxHeight,
     WidgetColorScheme colors,
   ) {
     return Center(
@@ -343,7 +339,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         ),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
-          child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
+          child: _buildSingleMonthGrid(_currentMonth, data, colors),
         ),
       ),
     );
@@ -352,7 +348,6 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   Widget _buildSingleMonthGrid(
     DateTime month,
     Map<String, CalendarDateInfo> data,
-    double maxHeight,
     WidgetColorScheme colors,
   ) {
     return Column(
@@ -417,13 +412,12 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     final weeksNeeded = (totalCells / 7).ceil();
 
     final cellGap = SpacingTokens.calendarCellGap(context);
-    final isMobile = ResponsiveHelper.isMobile(context);
+    return LayoutBuilder(builder: (context, constraints) {
+      final isMobile = ResponsiveHelper.isMobile(constraints.maxWidth);
+      final aspectRatio = isMobile ? 1.0 : 0.95;
 
-    // Responsive aspect ratio: mobile gets perfect squares, desktop gets slightly taller cells
-    final aspectRatio = isMobile ? 1.0 : 0.95;
-
-    return GridView.builder(
-      shrinkWrap: true,
+      return GridView.builder(
+        shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 7,
@@ -446,6 +440,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         return _buildDayCell(date, data, colors);
       },
     );
+  });
   }
 
   Widget _buildDayCell(

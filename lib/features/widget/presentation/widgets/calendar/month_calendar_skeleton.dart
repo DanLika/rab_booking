@@ -22,7 +22,7 @@ class MonthCalendarSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1024;
-    final isMobile = ResponsiveHelper.isMobile(context);
+    final isMobile = ResponsiveHelper.isMobileFromContext(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Match real calendar constraints

@@ -1072,6 +1072,18 @@
   "editProfileFacebook": "Facebook Page",
   "editProfilePropertyType": "Property Type",
 
+  "profileImageTooLarge": "Image is too large. Maximum size is {size} MB.",
+  "@profileImageTooLarge": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "profileImageInvalidFormat": "Invalid image format. Supported formats: JPG, PNG.",
+  "profileImagePickError": "Failed to pick image.",
+  "profileImageUploadError": "Failed to upload image. Please try again.",
+
   "notificationSettingsTitle": "Notification Settings",
   "notificationSettingsEnableAll": "Enable All Notifications",
   "notificationSettingsMasterSwitch": "Turn off to stop all email notifications to you. Guest emails are not affected.",

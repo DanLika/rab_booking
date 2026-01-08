@@ -38,33 +38,41 @@ class StorageService {
     required String userId,
     required Uint8List imageBytes,
     required String fileName,
+    Function(double)? onProgress,
   }) async {
     try {
-      // Create a reference to the file location
       final String path = 'users/$userId/profile/$fileName';
-      final Reference ref = _storage.ref().child(path);
+      final ref = _storage.ref().child(path);
 
-      // Set metadata
-      final SettableMetadata metadata = SettableMetadata(
-        contentType: 'image/jpeg',
+      final metadata = SettableMetadata(
+        // Allow Firebase to auto-detect content type from file extension
+        contentType: null,
         customMetadata: {
           'userId': userId,
           'uploadedAt': DateTime.now().toIso8601String(),
         },
       );
 
-      // Upload the file
-      final UploadTask uploadTask = ref.putData(imageBytes, metadata);
+      final uploadTask = ref.putData(imageBytes, metadata);
 
-      // Wait for upload to complete
-      final TaskSnapshot snapshot = await uploadTask;
+      // Listen for state changes and report progress
+      if (onProgress != null) {
+        uploadTask.snapshotEvents.listen((taskSnapshot) {
+          final progress = taskSnapshot.bytesTransferred / taskSnapshot.totalBytes;
+          onProgress(progress);
+        });
+      }
 
-      // Get download URL
-      final String downloadUrl = await snapshot.ref.getDownloadURL();
+      final snapshot = await uploadTask;
+      return await snapshot.ref.getDownloadURL();
 
-      return downloadUrl;
     } catch (e) {
-      throw StorageException.uploadFailed('profile image', e);
+      // Improved error handling
+      throw StorageException.uploadFailed(
+        'profile image',
+        e,
+        // Add more context if helpful, e.g., fileName
+      );
     }
   }
 

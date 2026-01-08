@@ -1,9 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
-/// Profile Image Picker Widget
-/// Displays a circular avatar with option to upload/change image
+import 'package:path/path.dart' as p;
+import '../../../../l10n/app_localizations.dart';
 class ProfileImagePicker extends StatefulWidget {
   final String? imageUrl;
   final Function(Uint8List?, String?) onImageSelected;
@@ -29,39 +28,71 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
 
   Future<void> _pickImage() async {
     setState(() => _isUploading = true);
+    final l10n = AppLocalizations.of(context);
 
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
+        // Keep resizing options to compress larger images on the client-side
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 85,
       );
 
-      if (image != null) {
-        final bytes = await image.readAsBytes();
-        if (!mounted) return;
-        setState(() {
-          _imageBytes = bytes;
-          _isUploading = false;
-        });
-        widget.onImageSelected(bytes, image.name);
-      } else {
-        // User cancelled picker
-        if (!mounted) return;
-        setState(() => _isUploading = false);
+      // User cancelled the picker
+      if (image == null) {
+        if (mounted) setState(() => _isUploading = false);
+        return;
       }
+
+      // === Validation Logic ===
+      const maxSizeInBytes = 5 * 1024 * 1024; // 5 MB
+      final imageSizeBytes = await image.length();
+
+      // 1. Size Check
+      if (imageSizeBytes > maxSizeInBytes) {
+        if (mounted) {
+          setState(() => _isUploading = false);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            l10n.profileImageTooLarge(5), // Assuming l10n has this
+          );
+        }
+        return;
+      }
+
+      // 2. Format Check
+      final supportedFormats = ['.jpg', '.jpeg', '.png'];
+      final fileExtension = p.extension(image.name).toLowerCase();
+      if (!supportedFormats.contains(fileExtension)) {
+        if (mounted) {
+          setState(() => _isUploading = false);
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            l10n.profileImageInvalidFormat, // Assuming l10n has this
+          );
+        }
+        return;
+      }
+      // === End Validation ===
+
+      final bytes = await image.readAsBytes();
+      if (!mounted) return;
+
+      setState(() {
+        _imageBytes = bytes;
+        _isUploading = false;
+      });
+      widget.onImageSelected(bytes, image.name);
+
     } catch (e) {
       if (!mounted) return;
       setState(() => _isUploading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Failed to pick image: ${e.toString().split(':').last.trim()}',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        l10n.profileImagePickError, // Assuming l10n has this
+        error: e,
       );
     }
   }

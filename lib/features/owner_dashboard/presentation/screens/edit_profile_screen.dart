@@ -62,6 +62,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   Uint8List? _profileImageBytes;
   String? _profileImageName;
   String? _currentAvatarUrl;
+  double? _uploadProgress;
 
   UserProfile? _originalProfile;
 
@@ -160,45 +161,48 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   Future<void> _saveProfile() async {
     final l10n = AppLocalizations.of(context);
 
-    // Validate form and show error if validation fails
     if (!_formKey.currentState!.validate()) {
-      if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          l10n.editProfileValidationError,
-        );
-      }
+      ErrorDisplayUtils.showErrorSnackBar(context, l10n.editProfileValidationError);
       return;
     }
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return;
 
-    setState(() => _isSaving = true);
+    setState(() {
+      _isSaving = true;
+      _uploadProgress = 0.0;
+    });
 
     try {
       String? avatarUrl = _currentAvatarUrl;
+      final storageService = StorageService();
 
-      // Upload new profile image if selected
       if (_profileImageBytes != null && _profileImageName != null) {
-        final storageService = StorageService();
+        // Clean up old image before uploading new one
+        if (_currentAvatarUrl != null && _currentAvatarUrl!.isNotEmpty) {
+          try {
+            await storageService.deleteProfileImage(userId, _currentAvatarUrl!);
+          } catch (e) {
+            LoggingService.log('Failed to delete old profile image: $e', tag: 'EditProfile');
+          }
+        }
+
         avatarUrl = await storageService.uploadProfileImage(
           userId: userId,
           imageBytes: _profileImageBytes!,
           fileName: _profileImageName!,
+          onProgress: (progress) {
+            setState(() => _uploadProgress = progress);
+          },
         );
 
-        // Update avatarUrl in Firebase Auth user profile
         await FirebaseAuth.instance.currentUser?.updatePhotoURL(avatarUrl);
-
-        // Update avatarUrl in Firestore users collection
-        // Use set with merge to handle case where document doesn't exist
-        await FirebaseFirestore.instance.collection('users').doc(userId).set({
-          'avatar_url': avatarUrl,
-        }, SetOptions(merge: true));
+        await FirebaseFirestore.instance.collection('users').doc(userId).set(
+          {'avatar_url': avatarUrl},
+          SetOptions(merge: true),
+        );
       }
-
-      // Create updated profile
       final updatedProfile = UserProfile(
         userId: userId,
         displayName: '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}',
@@ -237,56 +241,53 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         ),
       );
 
-      // Save profile and company details to Firestore (combined to avoid state race condition)
-      await ref
-          .read(userProfileNotifierProvider.notifier)
-          .updateProfileAndCompany(updatedProfile, updatedCompany);
+      // Save profile and company details to Firestore
+      await ref.read(userProfileNotifierProvider.notifier).updateProfileAndCompany(updatedProfile, updatedCompany);
 
-      // Also update first_name/last_name in root users document
-      // (enhancedAuthProvider reads from there for dashboard display)
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'first_name': _firstNameController.text.trim(),
-        'last_name': _lastNameController.text.trim(),
-        'phone': _phoneController.text.trim().isNotEmpty
-            ? _phoneController.text.trim()
-            : null,
-        'updated_at': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      // Also update first_name/last_name in the root users document
+      await FirebaseFirestore.instance.collection('users').doc(userId).set(
+        {
+          'first_name': _firstNameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'phone': _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+          'updated_at': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
 
+      if (!mounted) return;
+
+      setState(() {
+        _isDirty = false;
+        _isSaving = false;
+        _uploadProgress = null;
+      });
+
+      ref.invalidate(enhancedAuthProvider);
+      ErrorDisplayUtils.showSuccessSnackBar(context, l10n.editProfileSaveSuccess);
+
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/owner/profile');
+      }
+    } on StorageException catch (e, stackTrace) {
+      await LoggingService.logError('Failed to upload profile image', e, stackTrace);
       if (mounted) {
         setState(() {
-          _isDirty = false;
           _isSaving = false;
+          _uploadProgress = null;
         });
-
-        // Refresh auth provider to update name and avatarUrl
-        ref.invalidate(enhancedAuthProvider);
-
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          l10n.editProfileSaveSuccess,
-        );
-
-        // Use canPop check - page may be accessed directly via URL
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go('/owner/profile');
-        }
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.profileImageUploadError, error: e);
       }
     } catch (e, stackTrace) {
-      // Log the actual error for debugging
-      LoggingService.log('Error saving profile: $e', tag: 'EditProfileScreen');
       await LoggingService.logError('Failed to save profile', e, stackTrace);
-
       if (mounted) {
-        setState(() => _isSaving = false);
-
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: l10n.editProfileSaveError,
-        );
+        setState(() {
+          _isSaving = false;
+          _uploadProgress = null;
+        });
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.editProfileSaveError, error: e);
       }
     }
   }
@@ -535,28 +536,30 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     return PopScope(
       canPop: !_isDirty,
       onPopInvokedWithResult: (didPop, result) async {
-        if (!didPop && _isDirty) {
-          final l10n = AppLocalizations.of(context);
-          final shouldPop = await showDialog<bool>(
-            context: context,
-            builder: (dialogContext) => AlertDialog(
-              title: Text(l10n.editProfileDiscardTitle),
-              content: Text(l10n.editProfileDiscardMessage),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, false),
-                  child: Text(l10n.cancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, true),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                  child: Text(l10n.editProfileDiscard),
-                ),
-              ],
-            ),
-          );
-          if (shouldPop == true && context.mounted) {
-            // Use canPop check - page may be accessed directly via URL
+        if (didPop || !_isDirty) return;
+
+        final l10n = AppLocalizations.of(context);
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.editProfileDiscardTitle),
+            content: Text(l10n.editProfileDiscardMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: Text(l10n.editProfileDiscard),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldPop ?? false) {
+          if (mounted) {
             if (context.canPop()) {
               context.pop();
             } else {
@@ -655,17 +658,33 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                     ),
                                     const SizedBox(height: 8),
 
-                                    // Profile Image Picker
-                                    ProfileImagePicker(
-                                      imageUrl: _currentAvatarUrl,
-                                      initials: authState.userModel?.initials,
-                                      onImageSelected: (bytes, name) {
-                                        setState(() {
-                                          _profileImageBytes = bytes;
-                                          _profileImageName = name;
-                                          _markDirty();
-                                        });
-                                      },
+                                    // Profile Image Picker & Progress Indicator
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        ProfileImagePicker(
+                                          imageUrl: _currentAvatarUrl,
+                                          initials: authState.userModel?.initials,
+                                          onImageSelected: (bytes, name) {
+                                            setState(() {
+                                              _profileImageBytes = bytes;
+                                              _profileImageName = name;
+                                              _markDirty();
+                                            });
+                                          },
+                                        ),
+                                        if (_isSaving && _uploadProgress != null)
+                                          SizedBox(
+                                            width: 130,
+                                            height: 130,
+                                            child: CircularProgressIndicator(
+                                              value: _uploadProgress,
+                                              strokeWidth: 6,
+                                              backgroundColor:
+                                                  Colors.black.withOpacity(0.2),
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                     const SizedBox(height: 32),
 

@@ -1072,6 +1072,18 @@
   "editProfileFacebook": "Facebook Stranica",
   "editProfilePropertyType": "Vrsta Nekretnine",
 
+  "profileImageTooLarge": "Slika je prevelika. Maksimalna veličina je {size} MB.",
+  "@profileImageTooLarge": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      }
+    }
+  },
+  "profileImageInvalidFormat": "Nevažeći format slike. Podržani formati: JPG, PNG.",
+  "profileImagePickError": "Greška pri odabiru slike.",
+  "profileImageUploadError": "Greška pri uploadu slike. Molimo pokušajte ponovo.",
+
   "notificationSettingsTitle": "Postavke Obavijesti",
   "notificationSettingsEnableAll": "Omogući Sve Obavijesti",
   "notificationSettingsMasterSwitch": "Isključite da zaustavite sve email obavijesti. Emailovi gostima nisu zahvaćeni.",

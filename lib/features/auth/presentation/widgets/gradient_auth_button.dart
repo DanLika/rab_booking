@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:bookbed/l10n/app_localizations.dart';
 
 /// Premium gradient button for auth screens with animations
 ///
@@ -27,6 +28,7 @@ class _GradientAuthButtonState extends State<GradientAuthButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     Widget buttonContent = Container(
@@ -97,13 +99,20 @@ class _GradientAuthButtonState extends State<GradientAuthButton> {
           );
     }
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
-        child: buttonContent,
+    // A11Y-002: Add Semantics for screen readers
+    return Semantics(
+      button: true,
+      label: widget.isLoading ? l10n.loading : widget.text,
+      enabled: !widget.isLoading && widget.onPressed != null,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          transform:
+              Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
+          child: buttonContent,
+        ),
       ),
     );
   }

@@ -54,9 +54,7 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
               ? [BoxShadow(color: primaryColor.withAlpha(77), blurRadius: 20)]
               : const [],
         ),
-        child: Semantics(
-          label: widget.labelText,
-          child: TextFormField(
+        child: TextFormField(
             controller: widget.controller,
             focusNode: widget.focusNode,
             obscureText: widget.obscureText,

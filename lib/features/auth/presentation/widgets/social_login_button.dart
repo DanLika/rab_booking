@@ -24,25 +24,30 @@ class SocialLoginButton extends StatefulWidget {
 
 class _SocialLoginButtonState extends State<SocialLoginButton> {
   bool _isHovered = false;
+  bool _isFocused = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+    // A11Y-002: Add Semantics for screen readers
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _isHovered
+            color: _isHovered || _isFocused
                 ? theme.colorScheme.primary
                 : theme.colorScheme.outline,
             width: 1.5,
           ),
-          color: _isHovered
+          color: _isHovered || _isFocused
               ? theme.colorScheme.primary.withAlpha(20)
               : theme.colorScheme.surfaceContainerHighest.withAlpha(77),
         ),
@@ -50,6 +55,7 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onPressed,
+            onFocusChange: (hasFocus) => setState(() => _isFocused = hasFocus),
             borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -62,7 +68,7 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
                     Icon(
                       widget.icon,
                       size: 22,
-                      color: _isHovered
+                      color: _isHovered || _isFocused
                           ? theme.colorScheme.primary
                           : theme.colorScheme.onSurface,
                     ),
@@ -72,7 +78,7 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _isHovered
+                      color: _isHovered || _isFocused
                           ? theme.colorScheme.primary
                           : theme.colorScheme.onSurface,
                     ),

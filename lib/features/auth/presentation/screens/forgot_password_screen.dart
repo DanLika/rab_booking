@@ -34,19 +34,32 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
   bool _isLoading = false;
   bool _emailSent = false;
+  bool _isFormValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_validateForm);
+  }
 
   @override
   void dispose() {
+    _emailController.removeListener(_validateForm);
     _emailController.dispose();
     super.dispose();
   }
 
+  void _validateForm() {
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (_isFormValid != isValid) {
+      setState(() {
+        _isFormValid = isValid;
+      });
+    }
+  }
+
   Future<void> _handleResetPassword() async {
-    if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showErrorSnackBar(
-        context,
-        'Please enter a valid email address',
-      );
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
@@ -186,11 +199,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
             prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             validator: ProfileValidators.validateEmail,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           SizedBox(height: isCompact ? 20 : 24),
           GradientAuthButton(
             text: l10n.authSendResetLink,
-            onPressed: _handleResetPassword,
+            onPressed: _isFormValid ? _handleResetPassword : null,
             isLoading: _isLoading,
             icon: Icons.email_outlined,
           ),

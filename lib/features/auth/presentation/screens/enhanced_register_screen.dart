@@ -370,6 +370,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           prefixIcon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
           validator: ProfileValidators.validatePhone,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         fieldSpacing,
         PremiumInputField(

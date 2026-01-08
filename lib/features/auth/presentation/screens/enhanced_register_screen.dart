@@ -17,6 +17,7 @@ import '../../../../shared/widgets/loading_overlay.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_auth_button.dart';
+import '../widgets/password_strength_indicator.dart';
 import '../widgets/premium_input_field.dart';
 import '../widgets/profile_image_picker.dart';
 import 'privacy_policy_screen.dart';
@@ -59,6 +60,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   void initState() {
     super.initState();
     _emailController.addListener(_clearServerError);
+    _passwordController.addListener(() => setState(() {}));
   }
 
   @override
@@ -351,6 +353,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             }
             return ProfileValidators.validateEmail(value, l10n);
           },
+          autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         fieldSpacing,
         PremiumInputField(
@@ -360,6 +363,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           keyboardType: TextInputType.phone,
           autofillHints: const [AutofillHints.telephoneNumber],
           validator: (value) => ProfileValidators.validatePhone(value, l10n),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         fieldSpacing,
         PremiumInputField(
@@ -382,8 +386,17 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
               },
             ),
           ),
-          validator: PasswordValidator.validateMinimumLength,
+          validator: (value) =>
+              PasswordValidator.validateSimple(value, l10n),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
+        if (_passwordController.text.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          PasswordStrengthIndicator(
+            password: _passwordController.text,
+            l10n: l10n,
+          ),
+        ],
         fieldSpacing,
         PremiumInputField(
           controller: _confirmPasswordController,
@@ -414,7 +427,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           validator: (value) => PasswordValidator.validateConfirmPassword(
             _passwordController.text,
             value,
+            l10n,
           ),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
       ],
     );

@@ -1,3 +1,5 @@
+import '../../l10n/app_localizations.dart';
+
 /// Password strength levels
 enum PasswordStrength { weak, medium, strong }
 
@@ -69,19 +71,22 @@ class PasswordValidator {
   };
 
   /// Validate password and return detailed result
-  static PasswordValidationResult validate(String? password) {
+  static PasswordValidationResult validate(
+    String? password,
+    AppLocalizations l10n,
+  ) {
     if (password == null || password.isEmpty) {
       return PasswordValidationResult.invalid(
-        'Password is required',
-        missing: ['Enter a password'],
+        l10n.passwordRequired,
+        missing: [l10n.authPasswordEnter],
       );
     }
 
     // SECURITY: Check against common passwords blacklist
     if (_commonPasswords.contains(password.toLowerCase())) {
       return PasswordValidationResult.invalid(
-        'This password is too common. Please choose a stronger password.',
-        missing: ['Choose a less common password'],
+        l10n.authPasswordTooCommon,
+        missing: [l10n.authPasswordChooseLessCommon],
       );
     }
 
@@ -89,40 +94,56 @@ class PasswordValidator {
 
     // Check length
     if (password.length < minLength) {
-      missing.add('At least $minLength characters');
+      missing.add(l10n.authPasswordMinLength(minLength));
     }
 
     if (password.length > maxLength) {
       return PasswordValidationResult.invalid(
-        'Password must be less than $maxLength characters',
+        l10n.authPasswordMaxLength(maxLength),
       );
     }
 
     // Check for uppercase letter
     if (!_uppercaseRegex.hasMatch(password)) {
-      missing.add('One uppercase letter');
+      missing.add(l10n.authPasswordUppercase);
     }
 
     // Check for lowercase letter
     if (!_lowercaseRegex.hasMatch(password)) {
-      missing.add('One lowercase letter');
+      missing.add(l10n.authPasswordLowercase);
     }
 
     // Check for digit
     if (!_digitRegex.hasMatch(password)) {
-      missing.add('One number');
+      missing.add(l10n.authPasswordOneNumber);
     }
 
     // Check for special character
     if (!_specialCharRegex.hasMatch(password)) {
-      missing.add('One special character');
+      missing.add(l10n.authPasswordOneSpecialChar);
     }
 
     // If any requirements are missing, return invalid
     if (missing.isNotEmpty) {
       return PasswordValidationResult.invalid(
-        'Password must contain: ${missing.join(', ')}',
+        '${l10n.authPasswordMustContain}: ${missing.join(', ')}',
         missing: missing,
+      );
+    }
+
+    // SECURITY FIX SF-006: Check for sequential characters (numbers AND letters)
+    if (_isSequentialCharacters(password)) {
+      return PasswordValidationResult.invalid(
+        l10n.authPasswordSequentialChars,
+        missing: [l10n.authPasswordSequentialChars],
+      );
+    }
+
+    // Check for repeating characters (11111111, aaaaaaaa)
+    if (_isRepeatingCharacters(password)) {
+      return PasswordValidationResult.invalid(
+        l10n.authPasswordRepeatingChars,
+        missing: [l10n.authPasswordRepeatingChars],
       );
     }
 
@@ -167,35 +188,38 @@ class PasswordValidator {
   }
 
   /// Simple validation for form fields (returns error message or null)
-  static String? validateSimple(String? password) {
-    final result = validate(password);
+  static String? validateSimple(String? password, AppLocalizations l10n) {
+    final result = validate(password, l10n);
     return result.isValid ? null : result.errorMessage;
   }
 
   /// Minimum length validation (8+ characters only) - for login and register
   /// Includes minimal validation to prevent weak passwords like "12345678" or "11111111"
-  static String? validateMinimumLength(String? password) {
+  static String? validateMinimumLength(
+    String? password,
+    AppLocalizations l10n,
+  ) {
     if (password == null || password.isEmpty) {
-      return 'Please enter your password';
+      return l10n.authPasswordEnter;
     }
 
     if (password.length < minLength) {
-      return 'Password must be at least $minLength characters';
+      return l10n.authPasswordMinLength(minLength);
     }
 
     if (password.length > maxLength) {
-      return 'Password must be less than $maxLength characters';
+      return l10n.authPasswordMaxLength(maxLength);
     }
 
     // Minimal validation: Prevent obvious weak passwords
     // SECURITY FIX SF-006: Check for sequential characters (numbers AND letters)
     if (_isSequentialCharacters(password)) {
-      return 'Password cannot contain sequential characters (e.g., "12345" or "abcde")';
+      return l10n.authPasswordSequentialChars;
     }
 
     // Check for repeating characters (11111111, aaaaaaaa)
     if (_isRepeatingCharacters(password)) {
-      return 'Password cannot be repeating characters (e.g., 11111111)';
+      return l10n.authPasswordRepeatingChars;
     }
 
     return null;
@@ -244,13 +268,17 @@ class PasswordValidator {
   }
 
   /// Check if two passwords match
-  static String? validateConfirmPassword(String? password, String? confirm) {
+  static String? validateConfirmPassword(
+    String? password,
+    String? confirm,
+    AppLocalizations l10n,
+  ) {
     if (confirm == null || confirm.isEmpty) {
-      return 'Please confirm your password';
+      return l10n.confirmPasswordRequired;
     }
 
     if (password != confirm) {
-      return 'Passwords do not match';
+      return l10n.passwordsDoNotMatch;
     }
 
     return null;

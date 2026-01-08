@@ -95,4 +95,10 @@ export * from "./passwordHistory";
 // Export token revocation (logout from all devices)
 export * from "./revokeTokens";
 
+// Export scheduled payment reminders for bank transfers
+export * from "./sendPaymentReminders";
+
+// Export scheduled cancellation for expired bank transfer bookings
+export * from "./cancelExpiredBankBookings";
+
 // REMOVED: migrations/migrateToSubcollections - One-time migration complete, no longer needed

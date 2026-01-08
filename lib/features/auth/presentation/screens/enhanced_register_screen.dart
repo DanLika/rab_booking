@@ -17,8 +17,12 @@ import '../../../../shared/widgets/loading_overlay.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_auth_button.dart';
+import '../utils/auth_utils.dart';
+import '../../../../core/constants/auth_feature_flags.dart';
+import '../utils/auth_utils.dart';
 import '../widgets/premium_input_field.dart';
 import '../widgets/profile_image_picker.dart';
+import '../widgets/social_login_button.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_conditions_screen.dart';
 
@@ -259,6 +263,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                     isLoading: _isLoading,
                                     icon: Icons.person_add_rounded,
                                   ),
+                                  if (AuthFeatureFlags.isGoogleSignInEnabled ||
+                                      AuthFeatureFlags.isAppleSignInEnabled) ...[
+                                    SizedBox(height: isCompact ? 16 : 20),
+                                    _buildDivider(theme, l10n),
+                                    SizedBox(height: isCompact ? 16 : 20),
+                                    _buildSocialButtons(),
+                                  ],
                                   SizedBox(height: isCompact ? 16 : 20),
                                   _buildLoginLink(theme, l10n),
                                 ],
@@ -508,6 +519,95 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         overflow: TextOverflow.ellipsis,
       ),
       theme: theme,
+    );
+  }
+
+  Widget _buildDivider(ThemeData theme, AppLocalizations l10n) {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: theme.colorScheme.outline)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            l10n.authOrContinueWith,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: theme.colorScheme.outline)),
+      ],
+    );
+  }
+
+  Widget _buildSocialButtons() {
+    final authNotifier = ref.read(enhancedAuthProvider.notifier);
+    final isAppleEnabled = AuthFeatureFlags.isAppleSignInEnabled;
+    final isGoogleEnabled = AuthFeatureFlags.isGoogleSignInEnabled;
+
+    if (!isGoogleEnabled && !isAppleEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    if (isGoogleEnabled && !isAppleEnabled) {
+      return SocialLoginButton(
+        customIcon: const GoogleBrandIcon(),
+        label: 'Google',
+        onPressed: () => handleOAuthSignIn(
+          context: context,
+          ref: ref,
+          signInMethod: authNotifier.signInWithGoogle,
+          setLoading: (loading) => setState(() => _isLoading = loading),
+          isMounted: () => mounted,
+        ),
+      );
+    }
+
+    if (!isGoogleEnabled && isAppleEnabled) {
+      return SocialLoginButton(
+        customIcon: const AppleBrandIcon(),
+        label: 'Apple',
+        onPressed: () => handleOAuthSignIn(
+          context: context,
+          ref: ref,
+          signInMethod: authNotifier.signInWithApple,
+          setLoading: (loading) => setState(() => _isLoading = loading),
+          isMounted: () => mounted,
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: SocialLoginButton(
+            customIcon: const GoogleBrandIcon(),
+            label: 'Google',
+            onPressed: () => handleOAuthSignIn(
+              context: context,
+              ref: ref,
+              signInMethod: authNotifier.signInWithGoogle,
+              setLoading: (loading) => setState(() => _isLoading = loading),
+              isMounted: () => mounted,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: SocialLoginButton(
+            customIcon: const AppleBrandIcon(),
+            label: 'Apple',
+            onPressed: () => handleOAuthSignIn(
+              context: context,
+              ref: ref,
+              signInMethod: authNotifier.signInWithApple,
+              setLoading: (loading) => setState(() => _isLoading = loading),
+              isMounted: () => mounted,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

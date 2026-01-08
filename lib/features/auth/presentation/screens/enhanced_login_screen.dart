@@ -18,6 +18,7 @@ import '../widgets/auth_background.dart';
 import '../widgets/auth_logo_icon.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_auth_button.dart';
+import '../utils/auth_utils.dart';
 import '../widgets/premium_input_field.dart';
 import '../widgets/social_login_button.dart';
 
@@ -343,25 +344,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     return emailErrorPatterns.any(message.contains);
   }
 
-  Future<void> _handleOAuthSignIn(Future<void> Function() signInMethod) async {
-    setState(() => _isLoading = true);
-
-    try {
-      await signInMethod();
-    } catch (e) {
-      if (!mounted) return;
-      final authState = ref.read(enhancedAuthProvider);
-      ErrorDisplayUtils.showErrorSnackBar(
-        context,
-        authState.error ?? e.toString(),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -675,7 +657,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return SocialLoginButton(
         customIcon: const GoogleBrandIcon(),
         label: 'Google',
-        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
+        onPressed: () => handleOAuthSignIn(
+          context: context,
+          ref: ref,
+          signInMethod: authNotifier.signInWithGoogle,
+          setLoading: (loading) => setState(() => _isLoading = loading),
+          isMounted: () => mounted,
+        ),
       );
     }
 
@@ -683,7 +671,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return SocialLoginButton(
         customIcon: const AppleBrandIcon(),
         label: 'Apple',
-        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
+        onPressed: () => handleOAuthSignIn(
+          context: context,
+          ref: ref,
+          signInMethod: authNotifier.signInWithApple,
+          setLoading: (loading) => setState(() => _isLoading = loading),
+          isMounted: () => mounted,
+        ),
       );
     }
 
@@ -694,7 +688,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           child: SocialLoginButton(
             customIcon: const GoogleBrandIcon(),
             label: 'Google',
-            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
+            onPressed: () => handleOAuthSignIn(
+              context: context,
+              ref: ref,
+              signInMethod: authNotifier.signInWithGoogle,
+              setLoading: (loading) => setState(() => _isLoading = loading),
+              isMounted: () => mounted,
+            ),
           ),
         ),
         const SizedBox(width: 10),
@@ -702,7 +702,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           child: SocialLoginButton(
             customIcon: const AppleBrandIcon(),
             label: 'Apple',
-            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
+            onPressed: () => handleOAuthSignIn(
+              context: context,
+              ref: ref,
+              signInMethod: authNotifier.signInWithApple,
+              setLoading: (loading) => setState(() => _isLoading = loading),
+              isMounted: () => mounted,
+            ),
           ),
         ),
       ],

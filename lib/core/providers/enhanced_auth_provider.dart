@@ -16,6 +16,7 @@ import '../../core/utils/password_validator.dart';
 import '../../shared/models/user_model.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../constants/enums.dart';
+import '../services/fcm_service.dart';
 
 /// Enhanced Auth state model with BedBooking security features
 class EnhancedAuthState {
@@ -199,6 +200,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
         // Update last login time (non-blocking to speed up auth)
         unawaited(_updateLastLogin(firebaseUser.uid));
+
+        // Initialize FCM service for push notifications (non-blocking)
+        unawaited(fcmService.initialize());
       } else {
         LoggingService.log(
           'User profile NOT found, creating new profile...',
@@ -763,6 +767,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     if (userId != null) {
       await _security.logLogout(userId);
     }
+
+    // FCM: Remove token on sign out
+    unawaited(fcmService.removeToken());
 
     // Clear user context for Sentry/Crashlytics error tracking
     LoggingService.clearUser();

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -59,6 +60,23 @@ void main() async {
   // Start Flutter UI IMMEDIATELY - don't wait for Firebase
   // This allows the splash screen to show while initialization happens
   _runAppWithDeferredInit();
+}
+
+/// FCM: Background message handler
+/// Must be a top-level function and annotated with `@pragma('vm:entry-point')`
+/// to ensure it can be found by the Flutter engine when the app is killed.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Ensure Firebase is initialized (required for background headless isolate)
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Optional: Perform background tasks with the message data
+  // (e.g., update local database, acknowledge receipt)
+  // For now, we just log it.
+  LoggingService.log(
+    'FCM Background Message: ${message.messageId}',
+    tag: 'FCM_BACKGROUND',
+  );
 }
 
 /// Entry point for environment-specific main files
@@ -386,6 +404,12 @@ Future<void> _initializeInBackground() async {
     // Initialize Sentry for web (non-blocking)
     if (kReleaseMode && kIsWeb && _sentryDsn.isNotEmpty) {
       unawaited(_initSentry());
+    }
+
+    // Configure FCM background message handler
+    if (!kIsWeb) {
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      LoggingService.log('FCM background handler configured', tag: 'INIT');
     }
 
     // Mark all initialization as complete

@@ -1102,6 +1102,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   /// AppLocalizations for proper multi-language support.
   String _getAuthErrorMessage(FirebaseAuthException e) {
     switch (e.code) {
+      case 'account-exists-with-different-credential':
+        return 'This email is already in use with another login method. Please sign in with your original method.';
       case 'user-not-found':
         return 'No account found with this email';
       case 'wrong-password':

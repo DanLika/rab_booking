@@ -48,6 +48,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  bool _isFormValid = false;
   bool _acceptedTerms = false;
   bool _acceptedPrivacy = false;
   bool _newsletterOptIn = false;
@@ -61,6 +62,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     super.initState();
     _emailController.addListener(_clearServerError);
     _passwordController.addListener(() => setState(() {}));
+
+    _firstNameController.addListener(_validateForm);
+    _lastNameController.addListener(_validateForm);
+    _emailController.addListener(_validateForm);
+    _passwordController.addListener(_validateForm);
+    _confirmPasswordController.addListener(_validateForm);
   }
 
   @override
@@ -80,11 +87,35 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     }
   }
 
+  void _validateForm() {
+    final l10n = AppLocalizations.of(context);
+    final bool isFormValid = _formKey.currentState?.validate() ?? false;
+    final bool passwordsMatch =
+        _passwordController.text == _confirmPasswordController.text;
+
+    setState(() {
+      _isFormValid = isFormValid &&
+          passwordsMatch &&
+          _acceptedTerms &&
+          _acceptedPrivacy;
+    });
+  }
+
   Future<void> _handleRegister() async {
     final l10n = AppLocalizations.of(context);
 
-    if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showErrorSnackBar(context, l10n.pleaseFixErrors);
+    if (!_isFormValid) {
+      // This is a safeguard, as the button should be disabled.
+      // However, it's good practice to have it.
+      if (!_formKey.currentState!.validate()) {
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.pleaseFixErrors);
+        return;
+      }
+      if (!_acceptedTerms || !_acceptedPrivacy) {
+        ErrorDisplayUtils.showErrorSnackBar(
+            context, l10n.authMustAcceptTerms);
+        return;
+      }
       return;
     }
 
@@ -249,7 +280,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                   SizedBox(height: isCompact ? 20 : 24),
                                   GradientAuthButton(
                                     text: l10n.authCreateAccount,
-                                    onPressed: _handleRegister,
+                                    onPressed:
+                                        (_isFormValid && !_isLoading) ? _handleRegister : null,
                                     isLoading: _isLoading,
                                     icon: Icons.person_add_rounded,
                                   ),
@@ -270,6 +302,35 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
               const LoadingOverlay(message: 'Creating your account...'),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildConfirmPasswordSuffixIcon(
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    final passwordsMatch =
+        _passwordController.text == _confirmPasswordController.text &&
+            _confirmPasswordController.text.isNotEmpty;
+
+    if (passwordsMatch) {
+      return const Icon(Icons.check_circle, color: Colors.green, size: 20);
+    }
+
+    return Tooltip(
+      message:
+          _obscureConfirmPassword ? l10n.showPassword : l10n.hidePassword,
+      child: IconButton(
+        icon: Icon(
+          _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+          color: theme.colorScheme.onSurfaceVariant,
+          size: 20,
+        ),
+        onPressed: () {
+          HapticFeedback.mediumImpact();
+          setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
+        },
       ),
     );
   }
@@ -404,26 +465,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           prefixIcon: Icons.lock_outline,
           obscureText: _obscureConfirmPassword,
           // UX-019: Add tooltip for accessibility (screen readers)
-          suffixIcon: Tooltip(
-            message: _obscureConfirmPassword
-                ? l10n.showPassword
-                : l10n.hidePassword,
-            child: IconButton(
-              icon: Icon(
-                _obscureConfirmPassword
-                    ? Icons.visibility_off
-                    : Icons.visibility,
-                color: theme.colorScheme.onSurfaceVariant,
-                size: 20,
-              ),
-              onPressed: () {
-                HapticFeedback.mediumImpact();
-                setState(
-                  () => _obscureConfirmPassword = !_obscureConfirmPassword,
-                );
-              },
-            ),
-          ),
+          suffixIcon: _buildConfirmPasswordSuffixIcon(theme, l10n),
           validator: (value) => PasswordValidator.validateConfirmPassword(
             _passwordController.text,
             value,
@@ -440,7 +482,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       children: [
         _buildLegalCheckbox(
           value: _acceptedTerms,
-          onChanged: (value) => setState(() => _acceptedTerms = value!),
+          onChanged: (value) {
+            setState(() => _acceptedTerms = value!);
+            _validateForm();
+          },
           linkText: l10n.authTermsConditions,
           prefixText: l10n.authAcceptTerms,
           onLinkTap: () => Navigator.of(context).push(
@@ -451,7 +496,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         const SizedBox(height: 6),
         _buildLegalCheckbox(
           value: _acceptedPrivacy,
-          onChanged: (value) => setState(() => _acceptedPrivacy = value!),
+          onChanged: (value) {
+            setState(() => _acceptedPrivacy = value!);
+            _validateForm();
+          },
           linkText: l10n.authPrivacyPolicy,
           prefixText: l10n.authAcceptTerms,
           onLinkTap: () => Navigator.of(context).push(

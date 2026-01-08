@@ -37,7 +37,8 @@ class EnhancedRegisterScreen extends ConsumerStatefulWidget {
 class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     with AndroidKeyboardDismissFixApproach1<EnhancedRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -62,7 +63,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -92,7 +94,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     setState(() => _isLoading = true);
 
     try {
-      final (firstName, lastName) = _parseFullName(_fullNameController.text);
+      final firstName = _firstNameController.text.trim();
+      final lastName = _lastNameController.text.trim();
 
       // SECURITY: Sanitize all inputs before sending to backend
       final sanitizedEmail =
@@ -163,17 +166,6 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
       }
     }
-  }
-
-  (String, String) _parseFullName(String fullName) {
-    final parts = fullName
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((p) => p.isNotEmpty)
-        .toList();
-    final firstName = parts.isNotEmpty ? parts.first : '';
-    final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
-    return (firstName, lastName);
   }
 
   bool _isEmailError(String message) {
@@ -285,8 +277,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       children: [
         ProfileImagePicker(
           size: isCompact ? 80 : 90,
-          initials: _fullNameController.text.trim().isNotEmpty
-              ? _fullNameController.text.trim().substring(0, 1).toUpperCase()
+          initials: _firstNameController.text.trim().isNotEmpty
+              ? _firstNameController.text.trim().substring(0, 1).toUpperCase()
               : null,
           onImageSelected: (bytes, name) {
             setState(() {
@@ -332,23 +324,19 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     return Column(
       children: [
         PremiumInputField(
-          controller: _fullNameController,
-          labelText: l10n.authFullName,
+          controller: _firstNameController,
+          labelText: l10n.authFirstName,
           prefixIcon: Icons.person_outline,
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return l10n.authEnterFullName;
-            }
-            final parts = value
-                .trim()
-                .split(RegExp(r'\s+'))
-                .where((p) => p.isNotEmpty)
-                .toList();
-            if (parts.length < 2) {
-              return l10n.authEnterFirstLastName;
-            }
-            return null;
-          },
+          validator: (value) => ProfileValidators.validateFirstName(value, l10n),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+        ),
+        fieldSpacing,
+        PremiumInputField(
+          controller: _lastNameController,
+          labelText: l10n.authLastName,
+          prefixIcon: Icons.person_outline,
+          validator: (value) => ProfileValidators.validateLastName(value, l10n),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         fieldSpacing,
         PremiumInputField(

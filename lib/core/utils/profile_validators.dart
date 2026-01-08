@@ -4,6 +4,55 @@ class ProfileValidators {
 
   // ========== NAME VALIDATION ==========
 
+  /// Validate First Name (2-50 characters, letters, spaces, ', -)
+  static String? validateFirstName(String? value, l10n) {
+    if (value == null || value.trim().isEmpty) {
+      return l10n.authEnterFirstName;
+    }
+
+    final trimmed = value.trim();
+    if (trimmed.length < 2) {
+      return l10n.authFirstNameTooShort;
+    }
+
+    if (trimmed.length > 50) {
+      return l10n.authFirstNameTooLong;
+    }
+
+    // Allows letters (both cases), spaces, apostrophes, and hyphens.
+    // This is a common pattern for Western names.
+    final nameRegex = RegExp(r"^[a-zA-Z\s'-]+$");
+    if (!nameRegex.hasMatch(trimmed)) {
+      return l10n.authNameInvalidChars;
+    }
+
+    return null;
+  }
+
+  /// Validate Last Name (2-50 characters, letters, spaces, ', -)
+  static String? validateLastName(String? value, l10n) {
+    if (value == null || value.trim().isEmpty) {
+      return l10n.authEnterLastName;
+    }
+
+    final trimmed = value.trim();
+    if (trimmed.length < 2) {
+      return l10n.authLastNameTooShort;
+    }
+
+    if (trimmed.length > 50) {
+      return l10n.authLastNameTooLong;
+    }
+
+    // Allows letters (both cases), spaces, apostrophes, and hyphens.
+    final nameRegex = RegExp(r"^[a-zA-Z\s'-]+$");
+    if (!nameRegex.hasMatch(trimmed)) {
+      return l10n.authNameInvalidChars;
+    }
+
+    return null;
+  }
+
   /// Validate display name (2-80 characters)
   static String? validateName(String? value) {
     if (value == null || value.trim().isEmpty) {

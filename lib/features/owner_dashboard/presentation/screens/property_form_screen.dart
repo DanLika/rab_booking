@@ -294,6 +294,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                         ),
                         child: Form(
                           key: _formKey,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           child: ListView(
                             keyboardDismissBehavior:
                                 ScrollViewKeyboardDismissBehavior.onDrag,
@@ -337,14 +338,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                                     isMobile: isMobile,
                                                     context: context,
                                                   ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormPropertyNameRequired;
-                                                }
-                                                return null;
-                                              },
+                                              validator:
+                                                  ProfileValidators.validateName,
                                               onChanged: (value) {
                                                 _autoGenerateSlug();
                                                 _autoGenerateSubdomain();
@@ -422,14 +417,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                                     isMobile: isMobile,
                                                     context: context,
                                                   ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormPropertyNameRequired;
-                                                }
-                                                return null;
-                                              },
+                                              validator:
+                                                  ProfileValidators.validateName,
                                               onChanged: (value) {
                                                 _autoGenerateSlug();
                                                 _autoGenerateSubdomain();
@@ -536,19 +525,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                           context: context,
                                         ),
                                     maxLines: 5,
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return l10n
-                                            .propertyFormDescriptionRequired;
-                                      }
-                                      if (value.length < 100) {
-                                        return l10n
-                                            .propertyFormDescriptionTooShort(
-                                              value.length,
-                                            );
-                                      }
-                                      return null;
-                                    },
+                                    validator: ProfileValidators.validateDescription,
                                   ),
                                 ],
                               ),
@@ -586,14 +563,12 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                                     isMobile: isMobile,
                                                     context: context,
                                                   ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormLocationRequired;
-                                                }
-                                                return null;
-                                              },
+                                              validator: (value) =>
+                                                  ProfileValidators
+                                                      .validateAddressField(
+                                                    value,
+                                                    l10n.propertyFormLocationLabel,
+                                                  ),
                                             ),
                                             const SizedBox(
                                               height: AppDimensions.spaceM,
@@ -637,14 +612,12 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                                     isMobile: isMobile,
                                                     context: context,
                                                   ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormLocationRequired;
-                                                }
-                                                return null;
-                                              },
+                                              validator: (value) =>
+                                                  ProfileValidators
+                                                      .validateAddressField(
+                                                    value,
+                                                    l10n.propertyFormLocationLabel,
+                                                  ),
                                             ),
                                           ),
                                           const SizedBox(width: 16),

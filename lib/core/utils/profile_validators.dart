@@ -213,4 +213,24 @@ class ProfileValidators {
 
     return null;
   }
+
+  // ========== DESCRIPTION VALIDATION ==========
+
+  /// Validate description field (20-1000 characters)
+  static String? validateDescription(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Description is required';
+    }
+
+    final trimmed = value.trim();
+    if (trimmed.length < 20) {
+      return 'Description must be at least 20 characters';
+    }
+
+    if (trimmed.length > 1000) {
+      return 'Description must be less than 1000 characters';
+    }
+
+    return null;
+  }
 }

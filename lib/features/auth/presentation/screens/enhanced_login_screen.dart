@@ -402,10 +402,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minHeight: minHeight),
                         child: Center(
-                          child: GlassCard(
-                            child: Form(
-                              key: _formKey,
-                              autovalidateMode: _autovalidateMode,
+                          child: GestureDetector(
+                            onTap: () => FocusScope.of(context).unfocus(),
+                            child: GlassCard(
+                              child: Form(
+                                key: _formKey,
+                                autovalidateMode: _autovalidateMode,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -449,6 +451,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                 ],
                               ),
                             ),
+                                ),
                           ),
                         ),
                       ),
@@ -576,11 +579,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         ),
         TextButton(
           onPressed: () => context.push(OwnerRoutes.forgotPassword),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
           child: Text(
             l10n.authForgotPassword,
             style: theme.textTheme.bodySmall?.copyWith(

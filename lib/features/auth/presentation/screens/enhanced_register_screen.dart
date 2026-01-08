@@ -240,10 +240,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minHeight: minHeight),
                         child: Center(
-                          child: GlassCard(
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
+                          child: GestureDetector(
+                            onTap: () => FocusScope.of(context).unfocus(),
+                            child: GlassCard(
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
@@ -265,6 +267,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                               ),
                             ),
                           ),
+                              ),
                         ),
                       ),
                     );

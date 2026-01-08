@@ -228,11 +228,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                     // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
-                    return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.only(
-                        left: isCompact ? 12 : 20,
+                    return GestureDetector(
+                      onTap: () => FocusScope.of(context).unfocus(),
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.only(
+                          left: isCompact ? 12 : 20,
                         right: isCompact ? 12 : 20,
                         top: isCompact ? 16 : 20,
                         bottom: isCompact ? 16 : 20,
@@ -267,7 +269,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                           ),
                         ),
                       ),
-                    );
+                    ));
                   },
                 ),
               ),
@@ -335,6 +337,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           controller: _fullNameController,
           labelText: l10n.authFullName,
           prefixIcon: Icons.person_outline,
+          autofillHints: const [AutofillHints.name],
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return l10n.authEnterFullName;
@@ -356,6 +359,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           labelText: l10n.email,
           prefixIcon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
           validator: (value) {
             if (_emailErrorFromServer != null) {
               return _emailErrorFromServer;
@@ -369,6 +373,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           labelText: l10n.authPhone,
           prefixIcon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
+          autofillHints: const [AutofillHints.telephoneNumber],
           validator: ProfileValidators.validatePhone,
         ),
         fieldSpacing,
@@ -377,6 +382,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           labelText: l10n.password,
           prefixIcon: Icons.lock_outline,
           obscureText: _obscurePassword,
+          autofillHints: const [AutofillHints.newPassword],
           // UX-019: Add tooltip for accessibility (screen readers)
           suffixIcon: Tooltip(
             message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,

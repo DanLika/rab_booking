@@ -390,11 +390,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                     // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
-                    return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.only(
-                        left: isCompact ? 12 : 20,
+                    return GestureDetector(
+                      onTap: () => FocusScope.of(context).unfocus(),
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.only(
+                          left: isCompact ? 12 : 20,
                         right: isCompact ? 12 : 20,
                         top: isCompact ? 16 : 20,
                         bottom: isCompact ? 16 : 20,
@@ -452,7 +454,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                           ),
                         ),
                       ),
-                    );
+                    ));
                   },
                 ),
               ),
@@ -501,6 +503,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.email,
       prefixIcon: Icons.email_outlined,
       keyboardType: TextInputType.emailAddress,
+      autofillHints: const [AutofillHints.email],
       validator: (value) {
         // Show server error if present (e.g., "No account found with this email")
         if (_emailErrorFromServer != null) {
@@ -517,6 +520,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.password,
       prefixIcon: Icons.lock_outline,
       obscureText: _obscurePassword,
+      autofillHints: const [AutofillHints.password],
       // UX-019: Add tooltip for accessibility (screen readers)
       suffixIcon: Tooltip(
         message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
@@ -574,11 +578,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         ),
         TextButton(
           onPressed: () => context.push(OwnerRoutes.forgotPassword),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
           child: Text(
             l10n.authForgotPassword,
             style: theme.textTheme.bodySmall?.copyWith(

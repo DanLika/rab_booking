@@ -564,7 +564,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                       borderRadius: BorderRadius.circular(4),
                     ),
                     activeColor: theme.colorScheme.primary,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
                 const SizedBox(width: 8),

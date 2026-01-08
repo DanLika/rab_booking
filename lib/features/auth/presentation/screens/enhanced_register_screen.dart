@@ -536,7 +536,6 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
               borderRadius: BorderRadius.circular(4),
             ),
             activeColor: theme.colorScheme.primary,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
         const SizedBox(width: 12),

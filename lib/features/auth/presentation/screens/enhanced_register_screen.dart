@@ -344,11 +344,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           labelText: l10n.email,
           prefixIcon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
           validator: (value) {
             if (_emailErrorFromServer != null) {
               return _emailErrorFromServer;
             }
-            return ProfileValidators.validateEmail(value);
+            return ProfileValidators.validateEmail(value, l10n);
           },
         ),
         fieldSpacing,

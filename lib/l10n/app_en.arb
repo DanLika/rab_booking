@@ -90,6 +90,7 @@
   "authLastNameTooShort": "Last name must be at least 2 characters.",
   "authLastNameTooLong": "Last name must be less than 50 characters.",
   "authNameInvalidChars": "Name contains invalid characters.",
+  "authInvalidEmail": "Please enter a valid email address.",
   "authAcceptTerms": "I accept the ",
   "authTermsConditions": "Terms & Conditions",
   "authPrivacyPolicy": "Privacy Policy",

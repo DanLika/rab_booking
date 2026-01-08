@@ -74,17 +74,17 @@ class ProfileValidators {
   // ========== EMAIL VALIDATION ==========
 
   /// Validate email (RFC 5322 compliant)
-  static String? validateEmail(String? value) {
+  static String? validateEmail(String? value, l10n) {
     if (value == null || value.trim().isEmpty) {
-      return 'Email is required';
+      return l10n.emailRequired;
     }
 
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
 
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid email address';
+    if (!emailRegex.hasMatch(value.trim().toLowerCase())) {
+      return l10n.authInvalidEmail;
     }
 
     return null;

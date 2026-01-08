@@ -301,7 +301,19 @@ class FirebaseOwnerPropertiesRepository {
         );
       }
 
-      await _firestore.collection('properties').doc(propertyId).delete();
+      // Use a batch to delete the property and its widget settings atomically
+      final batch = _firestore.batch();
+
+      // Delete the property itself
+      final propertyRef = _firestore.collection('properties').doc(propertyId);
+      batch.delete(propertyRef);
+
+      // Delete the associated widget_settings document
+      final widgetSettingsRef =
+          _firestore.collection('widget_settings').doc(propertyId);
+      batch.delete(widgetSettingsRef);
+
+      await batch.commit();
     } catch (e) {
       rethrow;
     }

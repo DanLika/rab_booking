@@ -867,6 +867,20 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
+  /// Confirm password reset
+  Future<void> confirmPasswordReset({
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      await _auth.confirmPasswordReset(code: code, newPassword: newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _getAuthErrorMessage(e);
+    } catch (e) {
+      throw 'Failed to reset password: $e';
+    }
+  }
+
   /// Sign in with Google (OAuth)
   /// NOTE: Requires Firebase configuration with Google Sign-In enabled
   /// Setup steps in Firebase Console:

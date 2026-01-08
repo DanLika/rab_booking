@@ -38,6 +38,7 @@ import '../../features/owner_dashboard/presentation/screens/platform_connections
 import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
+import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/widget/presentation/screens/booking_widget_screen.dart';
 import '../../features/widget/presentation/screens/booking_view_screen.dart';
 import '../../features/widget/presentation/screens/booking_details_screen.dart';
@@ -70,6 +71,7 @@ class OwnerRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+  static const String resetPassword = '/auth/reset-password';
   static const String emailVerification = '/email-verification';
   static const String privacyPolicy = '/privacy-policy';
   static const String termsConditions = '/terms-conditions';
@@ -407,6 +409,16 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: const ForgotPasswordScreen(),
         ),
+      ),
+      GoRoute(
+        path: OwnerRoutes.resetPassword,
+        pageBuilder: (context, state) {
+          final oobCode = state.uri.queryParameters['oobCode'];
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: ResetPasswordScreen(oobCode: oobCode),
+          );
+        },
       ),
       GoRoute(
         path: OwnerRoutes.emailVerification,

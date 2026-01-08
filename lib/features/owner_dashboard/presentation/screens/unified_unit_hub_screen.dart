@@ -1256,9 +1256,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 indicatorColor: theme.colorScheme.primary,
                 indicatorWeight: 3,
                 indicatorSize: TabBarIndicatorSize.label,
-                // Responsive padding: smaller for mobile, larger for desktop
+                // Responsive padding: 8 for mobile, 16 for tablet, 24 for desktop
                 labelPadding: EdgeInsets.symmetric(
-                  horizontal: screenWidth < _kMobileBreakpoint ? 8 : 20,
+                  horizontal: screenWidth < _kMobileBreakpoint
+                      ? 8
+                      : (screenWidth < _kDesktopBreakpoint ? 16 : 24),
                 ),
                 labelStyle: const TextStyle(
                   fontSize: 14,

@@ -68,11 +68,15 @@ class UnifiedUnitHubScreen extends ConsumerStatefulWidget {
       _UnifiedUnitHubScreenState();
 }
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../data/firebase/firebase_owner_bookings_repository.dart';
+
 class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     with SingleTickerProviderStateMixin {
   UnitModel? _selectedUnit;
   PropertyModel? _selectedProperty;
   late TabController _tabController;
+  bool _isDeleting = false;
 
   // GlobalKey for Scaffold to avoid context issues
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -915,6 +919,38 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   ) async {
     final theme = Theme.of(dialogContext);
     final l10n = AppLocalizations.of(dialogContext);
+    final bookingsRepository = ref.read(ownerBookingsRepositoryProvider);
+
+    // Check for active bookings before showing confirmation
+    try {
+      final hasActiveBookings =
+          await bookingsRepository.hasActiveBookings(unit.id);
+      if (hasActiveBookings) {
+        if (!dialogContext.mounted) return;
+        await showDialog<void>(
+          context: dialogContext,
+          builder: (ctx) => AlertDialog(
+            title: Text(l10n.unitHubCannotDeleteWithBookings),
+            content: Text(l10n.unitHubCannotDeleteWithBookingsDesc),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l10n.ok),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          l10n.unitHubDeleteError(e.toString()),
+        );
+      }
+      return;
+    }
 
     final confirmed = await showDialog<bool>(
       context: dialogContext,
@@ -938,6 +974,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
 
     if (confirmed == true && mounted) {
+      setState(() => _isDeleting = true);
       try {
         await ref
             .read(ownerPropertiesRepositoryProvider)
@@ -956,7 +993,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
         if (mounted) {
           final l10nCtx = AppLocalizations.of(context);
-          // ignore: use_build_context_synchronously - State.context is safe after mounted check
           ErrorDisplayUtils.showSuccessSnackBar(
             context,
             l10nCtx.unitHubUnitDeleted(unit.name),
@@ -965,11 +1001,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       } catch (e) {
         if (mounted) {
           final l10nCtx = AppLocalizations.of(context);
-          // ignore: use_build_context_synchronously - State.context is safe after mounted check
           ErrorDisplayUtils.showErrorSnackBar(
             context,
             l10nCtx.unitHubDeleteError(e.toString()),
           );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isDeleting = false);
         }
       }
     }

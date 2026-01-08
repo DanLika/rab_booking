@@ -95,4 +95,7 @@ export * from "./passwordHistory";
 // Export token revocation (logout from all devices)
 export * from "./revokeTokens";
 
+// Export unit management functions (cascade delete)
+export * from "./unitManagement";
+
 // REMOVED: migrations/migrateToSubcollections - One-time migration complete, no longer needed

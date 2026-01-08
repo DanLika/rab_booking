@@ -3204,5 +3204,8 @@
   "unitFormImageRequired": "Please upload at least one image.",
   "unitFormNameMinLength": "Name must be at least 3 characters",
   "unitFormNameMaxLength": "Name must be less than 100 characters",
-  "unitFormDescriptionMaxLength": "Description must be less than 5000 characters"
+  "unitFormDescriptionMaxLength": "Description must be less than 5000 characters",
+  "unitHubCannotDeleteWithBookings": "Cannot delete unit with active bookings",
+  "unitHubCannotDeleteWithBookingsDesc": "This unit has active (pending or confirmed) bookings. Please cancel or complete them before deleting the unit.",
+  "unitHubDeleting": "Deleting unit..."
 }

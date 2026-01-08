@@ -170,10 +170,48 @@ class OwnerAppDrawer extends ConsumerWidget {
               onTap: () => context.go(OwnerRoutes.profile),
             ),
 
+            const SizedBox(height: 4),
+
+            _DrawerItem(
+              icon: Icons.logout,
+              title: l10n.authLogout,
+              isSelected: false,
+              onTap: () => _showLogoutConfirmationDialog(context, ref),
+            ),
+
             const SizedBox(height: 32),
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _showLogoutConfirmationDialog(
+      BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(l10n.authLogout),
+          content: Text(l10n.authLogoutConfirmation),
+          actions: <Widget>[
+            TextButton(
+              child: Text(l10n.cancel),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text(l10n.authLogout),
+              onPressed: () {
+                ref.read(enhancedAuthProvider.notifier).signOut();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 

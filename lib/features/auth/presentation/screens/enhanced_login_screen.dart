@@ -48,6 +48,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   String? _emailErrorFromServer;
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
+  // Cooldown timer state
+  Timer? _cooldownTimer;
+  int _cooldownSeconds = 0;
+
   // Shake animation controller
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
@@ -267,6 +271,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   String _getLocalizedError(String error, AppLocalizations l10n) {
     final errorLower = error.toLowerCase();
 
+    // Rate limit check
+    if (errorLower.contains('too many')) {
+      _startCooldownTimer(error);
+      return l10n.authErrorTooManyRequests;
+    }
+
     // Authentication errors - use new auth-specific keys
     if (errorLower.contains('user-not-found') ||
         errorLower.contains('no account found')) {
@@ -284,10 +294,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     if (errorLower.contains('user-disabled') ||
         errorLower.contains('account has been disabled')) {
       return l10n.authErrorUserDisabled;
-    }
-    if (errorLower.contains('too-many-requests') ||
-        errorLower.contains('too many')) {
-      return l10n.authErrorTooManyRequests;
     }
     if (errorLower.contains('operation-not-allowed')) {
       return l10n.authErrorOperationNotAllowed;
@@ -446,6 +452,15 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                       icon: Icons.login_rounded,
                                     ),
                                   ),
+                                  if (_cooldownSeconds > 0)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 16.0),
+                                      child: Text(
+                                        'Try again in $_cooldownSeconds seconds',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: theme.colorScheme.error),
+                                      ),
+                                    ),
                                   if (AuthFeatureFlags.isGoogleSignInEnabled ||
                                       AuthFeatureFlags
                                           .isAppleSignInEnabled) ...[
@@ -520,6 +535,28 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         return ProfileValidators.validateEmail(value);
       },
     );
+  }
+
+  void _startCooldownTimer(String errorMessage) {
+    final RegExpMatch? match = RegExp(r'(\d+)\s+minutes').firstMatch(errorMessage);
+    if (match != null) {
+      final minutes = int.tryParse(match.group(1) ?? '0') ?? 0;
+      if (minutes > 0) {
+        setState(() {
+          _cooldownSeconds = minutes * 60;
+        });
+        _cooldownTimer?.cancel();
+        _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (_cooldownSeconds > 0) {
+            setState(() {
+              _cooldownSeconds--;
+            });
+          } else {
+            timer.cancel();
+          }
+        });
+      }
+    }
   }
 
   Widget _buildPasswordField(ThemeData theme, AppLocalizations l10n) {

@@ -90,6 +90,7 @@ class FirebaseWidgetSettingsRepository {
     required String ownerId,
     String? ownerEmail,
     String? ownerPhone,
+    List<int>? weekendDays,
   }) async {
     try {
       final settings = WidgetSettings(
@@ -106,6 +107,8 @@ class FirebaseWidgetSettingsRepository {
         emailConfig: const EmailNotificationConfig(), // Default disabled
         taxLegalConfig: const TaxLegalConfig(), // Default enabled
         requireOwnerApproval: true, // Owner approval required
+        weekendDays: weekendDays ??
+            const [5, 6], // Use provided or default to Fri, Sat
         createdAt: DateTime.now().toUtc(),
         updatedAt: DateTime.now().toUtc(),
       );

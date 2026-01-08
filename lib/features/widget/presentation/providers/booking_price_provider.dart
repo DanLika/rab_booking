@@ -124,29 +124,36 @@ Future<BookingPriceCalculation?> bookingPrice(
   List<int>? weekendDays;
 
   if (propertyId != null) {
-    // Try to get unit from cached context (no additional query)
+    // Try to get unit and settings from cached context (no additional query)
     try {
       final context = await ref.read(
         widgetContextProvider((propertyId: propertyId, unitId: unitId)).future,
       );
-      // Defensive null checks: properties are required but handle edge cases
       final unit = context.unit;
+      final settings = context.settings;
       basePrice = unit.pricePerNight;
       weekendBasePrice = unit.weekendBasePrice;
-      weekendDays = unit.weekendDays;
+      // Use weekendDays from WidgetSettings for consistency
+      weekendDays = settings.weekendDays;
     } catch (e) {
-      // Fall back to direct fetch if context not available
+      // Fallback to direct fetch if context not available
       final unitRepo = ref.watch(unitRepositoryProvider);
       final unit = await unitRepo.fetchUnitById(unitId);
       if (unit?.pricePerNight != null) {
         basePrice = unit!.pricePerNight;
+        weekendBasePrice = unit.weekendBasePrice;
+        // Fetch settings separately if unit is fetched directly
+        final settingsRepo = ref.watch(widgetSettingsRepositoryProvider);
+        final settings = await settingsRepo.getWidgetSettings(
+          propertyId: propertyId,
+          unitId: unitId,
+        );
+        weekendDays = settings?.weekendDays ?? unit.weekendDays;
       } else {
         LoggingService.logWarning(
           'BookingPrice: Unit $unitId has no pricePerNight, using fallback $fallbackBasePrice. Error: $e',
         );
       }
-      weekendBasePrice = unit?.weekendBasePrice;
-      weekendDays = unit?.weekendDays;
     }
   } else {
     // No propertyId provided - must fetch directly
@@ -154,13 +161,13 @@ Future<BookingPriceCalculation?> bookingPrice(
     final unit = await unitRepo.fetchUnitById(unitId);
     if (unit?.pricePerNight != null) {
       basePrice = unit!.pricePerNight;
+      weekendBasePrice = unit.weekendBasePrice;
+      weekendDays = unit.weekendDays; // Fallback to unit's weekend days
     } else {
       LoggingService.logWarning(
         'BookingPrice: Unit $unitId not found or has no pricePerNight, using fallback $fallbackBasePrice',
       );
     }
-    weekendBasePrice = unit?.weekendBasePrice;
-    weekendDays = unit?.weekendDays;
   }
 
   // Calculate room price from daily prices with weekend pricing support

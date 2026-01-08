@@ -464,6 +464,7 @@ class FirebaseOwnerPropertiesRepository {
     String? coverImage,
     int quantity = 1,
     int minStayNights = 1,
+    List<int>? weekendDays,
   }) async {
     try {
       final docRef = await _firestore
@@ -477,6 +478,7 @@ class FirebaseOwnerPropertiesRepository {
             'slug': slug,
             'description': description,
             'base_price': basePrice,
+            'weekend_days': weekendDays,
             'max_guests': maxGuests,
             'bedrooms': bedrooms,
             'bathrooms': bathrooms,
@@ -500,6 +502,7 @@ class FirebaseOwnerPropertiesRepository {
           propertyId: propertyId,
           unitId: unitId,
           ownerId: ownerId,
+          weekendDays: weekendDays,
         );
         LoggingService.log(
           'Widget settings auto-created for unit: $unitId',

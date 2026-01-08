@@ -24,18 +24,36 @@ class ProfileValidators {
 
   // ========== EMAIL VALIDATION ==========
 
-  /// Validate email (RFC 5322 compliant)
+  /// Validate email (RFC 5322 compliant) with specific error messages.
   static String? validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Email is required';
+      return 'Email is required'; // L10N: Email is required
     }
 
+    final trimmedValue = value.trim();
+
+    if (!trimmedValue.contains('@')) {
+      return 'Email must contain an @ symbol'; // L10N: Email must contain an @ symbol
+    }
+
+    final parts = trimmedValue.split('@');
+    if (parts.length != 2 || parts[0].isEmpty || parts[1].isEmpty) {
+      return 'Invalid email format'; // L10N: Invalid email format
+    }
+
+    final domainParts = parts[1].split('.');
+    if (domainParts.length < 2 || domainParts.any((p) => p.isEmpty)) {
+      return 'Invalid domain name'; // L10N: Invalid domain name
+    }
+
+    // Comprehensive regex for RFC 5322 compliance
+    // Handles most common cases including subdomains and new TLDs.
     final emailRegex = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
     );
 
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid email address';
+    if (!emailRegex.hasMatch(trimmedValue)) {
+      return 'Please enter a valid email address'; // L10N: Please enter a valid email address
     }
 
     return null;

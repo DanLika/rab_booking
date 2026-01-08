@@ -501,6 +501,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.email,
       prefixIcon: Icons.email_outlined,
       keyboardType: TextInputType.emailAddress,
+      autofillHints: const [AutofillHints.email],
       validator: (value) {
         // Show server error if present (e.g., "No account found with this email")
         if (_emailErrorFromServer != null) {

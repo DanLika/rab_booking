@@ -68,15 +68,12 @@ class UnifiedUnitHubScreen extends ConsumerStatefulWidget {
       _UnifiedUnitHubScreenState();
 }
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../data/firebase/firebase_owner_bookings_repository.dart';
-
 class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     with SingleTickerProviderStateMixin {
   UnitModel? _selectedUnit;
   PropertyModel? _selectedProperty;
   late TabController _tabController;
-  bool _isDeleting = false;
+  String? _deletingUnitId;
 
   // GlobalKey for Scaffold to avoid context issues
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -974,7 +971,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
 
     if (confirmed == true && mounted) {
-      setState(() => _isDeleting = true);
+      setState(() => _deletingUnitId = unit.id);
       try {
         await ref
             .read(ownerPropertiesRepositoryProvider)
@@ -1008,7 +1005,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         }
       } finally {
         if (mounted) {
-          setState(() => _isDeleting = false);
+          setState(() => _deletingUnitId = null);
         }
       }
     }
@@ -1170,6 +1167,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     child: Builder(
                       builder: (context) {
                         final l10n = AppLocalizations.of(context);
+                        if (_deletingUnitId == unit.id) {
+                          return const Padding(
+                            padding: EdgeInsets.all(5.0),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          );
+                        }
                         return IconButton(
                           onPressed: () => _confirmDeleteUnit(context, unit),
                           icon: Icon(

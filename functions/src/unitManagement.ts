@@ -35,6 +35,16 @@ export const onUnitDeleted = onDocumentDeleted(
         logInfo(`Deleted ${widgetSettingsSnapshot.size} documents from widget_settings subcollection`);
       }
 
+      // 3. Delete bookings subcollection
+      const bookingsRef = db.collection(`properties/${propertyId}/units/${unitId}/bookings`);
+      const bookingsSnapshot = await bookingsRef.get();
+      if (!bookingsSnapshot.empty) {
+        const batch = db.batch();
+        bookingsSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        logInfo(`Deleted ${bookingsSnapshot.size} documents from bookings subcollection`);
+      }
+
       logInfo(`Cascade delete completed for unit ${unitId}`);
     } catch (error) {
       logError(`Error during cascade delete for unit ${unitId}:`, error);

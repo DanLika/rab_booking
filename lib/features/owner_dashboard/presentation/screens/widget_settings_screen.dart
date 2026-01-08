@@ -842,7 +842,18 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
               ...WidgetMode.values.map(
                 (mode) => InkWell(
                   onTap: () {
-                    setState(() => _selectedMode = mode);
+                    setState(() {
+                      _selectedMode = mode;
+                      // Reset settings when mode changes
+                      if (mode == WidgetMode.calendarOnly) {
+                        _stripeEnabled = false;
+                        _bankTransferEnabled = false;
+                        _payOnArrivalEnabled = false;
+                      } else {
+                        _showPhone = true;
+                        _showEmail = true;
+                      }
+                    });
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),

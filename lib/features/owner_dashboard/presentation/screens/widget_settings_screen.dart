@@ -1115,27 +1115,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                 subtitle: l10n.widgetSettingsCardPayment,
                 enabled: _stripeEnabled,
                 onToggle: (val) => setState(() => _stripeEnabled = val),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    // Require Approval switch - Only applies to Stripe
-                    // Bank transfer and Pay on Arrival always require approval
-                    Builder(
-                      builder: (context) {
-                        final l10nInner = AppLocalizations.of(context);
-                        return _buildCompactSwitchCard(
-                          icon: Icons.approval,
-                          label: l10nInner.widgetSettingsRequireApproval,
-                          subtitle: l10nInner.widgetSettingsStripeApprovalNote,
-                          value: _requireApproval,
-                          onChanged: (val) =>
-                              setState(() => _requireApproval = val),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                // Stripe has no specific options, so child is an empty SizedBox
+                child: const SizedBox.shrink(),
               ),
 
               const SizedBox(height: 12),
@@ -1564,13 +1545,29 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                 ],
               ),
               const SizedBox(height: 16),
-              // Booking Behavior: Cancellation switch + deadline slider
-              // Note: Require Approval is now in Stripe section (only applies to Stripe)
-              // Bank transfer and Pay on Arrival always require approval
+              // Booking Behavior: Approval, Cancellation + Deadline
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isDesktop = constraints.maxWidth >= 600;
                   final l10nInner = AppLocalizations.of(context);
+
+                  // When in bookingPending mode, approval is always required.
+                  final isApprovalForced =
+                      _selectedMode == WidgetMode.bookingPending;
+
+                  // Build approval switch card
+                  final approvalCard = _buildBehaviorSwitchCard(
+                    icon: Icons.approval,
+                    label: l10nInner.widgetSettingsRequireApproval,
+                    subtitle: isApprovalForced
+                        ? l10nInner.widgetSettingsApprovalForcedNote
+                        : l10nInner.widgetSettingsStripeApprovalNote,
+                    value: isApprovalForced ? true : _requireApproval,
+                    onChanged: isApprovalForced
+                        ? null // Disable switch when forced
+                        : (val) =>
+                            setState(() => _requireApproval = val),
+                  );
 
                   // Build cancellation switch card
                   final cancellationCard = _buildBehaviorSwitchCard(
@@ -1679,11 +1676,13 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                     ),
                   );
 
-                  // Desktop: cancellation switch left, deadline slider right
+                  // Desktop: 3 columns for approval, cancellation, and deadline
                   if (isDesktop) {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Expanded(child: approvalCard),
+                        const SizedBox(width: 12),
                         Expanded(child: cancellationCard),
                         const SizedBox(width: 12),
                         Expanded(child: deadlineCard),
@@ -1693,6 +1692,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                     // Mobile: Vertical layout
                     return Column(
                       children: [
+                        approvalCard,
+                        const SizedBox(height: 12),
                         cancellationCard,
                         const SizedBox(height: 12),
                         deadlineCard,

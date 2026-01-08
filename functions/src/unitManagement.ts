@@ -8,6 +8,40 @@ import {logError, logInfo} from "./logger";
  * Triggered when a unit is deleted. Deletes all associated documents in
  * subcollections to ensure data integrity.
  */
+/**
+ * Deletes all documents in a collection in batches.
+ *
+ * @param {FirebaseFirestore.CollectionReference} collectionRef - The reference to the collection to delete.
+ * @param {number} batchSize - The number of documents to delete in each batch.
+ */
+async function deleteCollectionInBatch(
+  collectionRef: FirebaseFirestore.CollectionReference,
+  batchSize = 500
+) {
+  let query = collectionRef.limit(batchSize);
+  let snapshot = await query.get();
+  let numDeleted = 0;
+
+  while (snapshot.size > 0) {
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    numDeleted += snapshot.size;
+
+    // Get the next batch
+    const lastVisible = snapshot.docs[snapshot.docs.length - 1];
+    query = collectionRef.startAfter(lastVisible).limit(batchSize);
+    snapshot = await query.get();
+  }
+
+  if (numDeleted > 0) {
+    logInfo(`Deleted ${numDeleted} documents from ${collectionRef.path}`);
+  }
+}
+
 export const onUnitDeleted = onDocumentDeleted(
   "properties/{propertyId}/units/{unitId}",
   async (event) => {
@@ -15,34 +49,12 @@ export const onUnitDeleted = onDocumentDeleted(
     logInfo(`Unit deleted, starting cascade delete for unit ${unitId} in property ${propertyId}`);
 
     try {
-      // 1. Delete daily_prices subcollection
-      const dailyPricesRef = db.collection(`properties/${propertyId}/units/${unitId}/daily_prices`);
-      const dailyPricesSnapshot = await dailyPricesRef.get();
-      if (!dailyPricesSnapshot.empty) {
-        const batch = db.batch();
-        dailyPricesSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
-        await batch.commit();
-        logInfo(`Deleted ${dailyPricesSnapshot.size} documents from daily_prices subcollection`);
-      }
+      // Define all subcollections to be deleted
+      const subcollections = ["daily_prices", "widget_settings", "bookings"];
 
-      // 2. Delete widget_settings subcollection
-      const widgetSettingsRef = db.collection(`properties/${propertyId}/units/${unitId}/widget_settings`);
-      const widgetSettingsSnapshot = await widgetSettingsRef.get();
-      if (!widgetSettingsSnapshot.empty) {
-        const batch = db.batch();
-        widgetSettingsSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
-        await batch.commit();
-        logInfo(`Deleted ${widgetSettingsSnapshot.size} documents from widget_settings subcollection`);
-      }
-
-      // 3. Delete bookings subcollection
-      const bookingsRef = db.collection(`properties/${propertyId}/units/${unitId}/bookings`);
-      const bookingsSnapshot = await bookingsRef.get();
-      if (!bookingsSnapshot.empty) {
-        const batch = db.batch();
-        bookingsSnapshot.docs.forEach((doc) => batch.delete(doc.ref));
-        await batch.commit();
-        logInfo(`Deleted ${bookingsSnapshot.size} documents from bookings subcollection`);
+      for (const subcollection of subcollections) {
+        const collectionRef = db.collection(`properties/${propertyId}/units/${unitId}/${subcollection}`);
+        await deleteCollectionInBatch(collectionRef);
       }
 
       logInfo(`Cascade delete completed for unit ${unitId}`);

@@ -255,7 +255,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 validator: (value) =>
-                                    UnitValidators.validateBedrooms(value, l10n),
+                                    UnitValidators.validateBeds(value, l10n),
                               ),
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
@@ -272,7 +272,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 validator: (value) =>
-                                    UnitValidators.validateBeds(value, l10n),
+                                    UnitValidators.validateBaths(value, l10n),
                               ),
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
@@ -289,7 +289,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 validator: (value) =>
-                                    UnitValidators.validateBeds(value, l10n),
+                                    UnitValidators.validateCapacity(value, l10n),
                               ),
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(

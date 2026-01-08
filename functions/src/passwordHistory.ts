@@ -22,8 +22,10 @@ const db = admin.firestore();
 
 /**
  * Number of previous passwords to track
+ * Configurable via environment variable, defaults to 5
  */
-const PASSWORD_HISTORY_SIZE = 5;
+const PASSWORD_HISTORY_SIZE =
+  parseInt(process.env.PASSWORD_HISTORY_LIMIT || "5", 10) || 5;
 
 /**
  * Hash a password using SHA-256

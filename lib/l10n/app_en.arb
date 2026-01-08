@@ -91,6 +91,7 @@
   "authLastNameTooLong": "Last name must be less than 50 characters.",
   "authNameInvalidChars": "Name contains invalid characters.",
   "authInvalidEmail": "Please enter a valid email address.",
+  "authInvalidPhone": "Please enter a valid phone number.",
   "authAcceptTerms": "I accept the ",
   "authTermsConditions": "Terms & Conditions",
   "authPrivacyPolicy": "Privacy Policy",

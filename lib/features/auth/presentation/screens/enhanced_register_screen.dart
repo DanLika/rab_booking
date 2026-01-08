@@ -358,7 +358,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           labelText: l10n.authPhone,
           prefixIcon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
-          validator: ProfileValidators.validatePhone,
+          autofillHints: const [AutofillHints.telephoneNumber],
+          validator: (value) => ProfileValidators.validatePhone(value, l10n),
         ),
         fieldSpacing,
         PremiumInputField(

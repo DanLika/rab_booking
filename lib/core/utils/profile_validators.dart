@@ -94,7 +94,7 @@ class ProfileValidators {
 
   /// Validate phone number (flexible format)
   /// Accepts: +385911234567, 0911234567, 091-123-4567, (091) 123 4567
-  static String? validatePhone(String? value) {
+  static String? validatePhone(String? value, l10n) {
     if (value == null || value.trim().isEmpty) {
       return null; // Phone is optional
     }
@@ -108,7 +108,7 @@ class ProfileValidators {
     final phoneRegex = RegExp(r'^\+?[0-9]{6,15}$');
 
     if (!phoneRegex.hasMatch(cleaned)) {
-      return 'Please enter a valid phone number';
+      return l10n.authInvalidPhone;
     }
 
     return null;

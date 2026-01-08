@@ -91,6 +91,7 @@
   "authLastNameTooLong": "Prezime mora imati manje od 50 znakova.",
   "authNameInvalidChars": "Ime sadrži nevažeće znakove.",
   "authInvalidEmail": "Molimo unesite valjanu email adresu.",
+  "authInvalidPhone": "Molimo unesite ispravan broj telefona.",
   "authAcceptTerms": "Prihvaćam ",
   "authTermsConditions": "Uvjete korištenja",
   "authPrivacyPolicy": "Politiku privatnosti",

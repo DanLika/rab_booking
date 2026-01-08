@@ -560,7 +560,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                       borderRadius: BorderRadius.circular(4),
                     ),
                     activeColor: theme.colorScheme.primary,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -574,11 +573,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         ),
         TextButton(
           onPressed: () => context.push(OwnerRoutes.forgotPassword),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
           child: Text(
             l10n.authForgotPassword,
             style: theme.textTheme.bodySmall?.copyWith(

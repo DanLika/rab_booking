@@ -54,25 +54,29 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
               ? [BoxShadow(color: primaryColor.withAlpha(77), blurRadius: 20)]
               : const [],
         ),
-        child: TextFormField(
-          controller: widget.controller,
-          focusNode: widget.focusNode,
-          obscureText: widget.obscureText,
-          keyboardType: widget.keyboardType,
-          validator: widget.validator,
-          maxLines: widget.maxLines,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: theme.colorScheme.onSurface,
-          ),
-          decoration: InputDecoration(
-            labelText: widget.labelText,
-            labelStyle: TextStyle(
-              color: _isFocused ? primaryColor : inactiveColor,
-              fontSize: 14,
+        child: Semantics(
+          label: widget.labelText,
+          child: TextFormField(
+            controller: widget.controller,
+            focusNode: widget.focusNode,
+            obscureText: widget.obscureText,
+            keyboardType: widget.keyboardType,
+            validator: widget.validator,
+            maxLines: widget.maxLines,
+            style: TextStyle(
+              fontSize: 15,
               fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurface,
             ),
+            decoration: InputDecoration(
+              labelText: widget.labelText,
+              helperText:
+                  ' ', // Reserve space for validation messages
+              labelStyle: TextStyle(
+                color: _isFocused ? primaryColor : inactiveColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,

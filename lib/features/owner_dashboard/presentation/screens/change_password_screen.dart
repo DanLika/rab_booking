@@ -149,6 +149,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
           l10n.passwordChangedSuccessfully,
         );
 
+        await Future.delayed(const Duration(seconds: 1));
+
+        if (!mounted) return;
+
         // Use canPop check - page may be accessed directly via URL
         if (context.canPop()) {
           context.pop();

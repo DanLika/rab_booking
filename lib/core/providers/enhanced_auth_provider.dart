@@ -68,6 +68,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   final RateLimitService _rateLimit;
   final SecurityEventsService _security;
   final IpGeolocationService _geolocation;
+  StreamSubscription<DocumentSnapshot>? _userProfileSubscription;
 
   EnhancedAuthNotifier(
     this._auth,
@@ -83,12 +84,13 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         tag: 'ENHANCED_AUTH',
       );
       if (user != null) {
-        _loadUserProfile(user);
+        _listenToUserProfile(user);
       } else {
         LoggingService.log(
           'User signed out, clearing state',
           tag: 'ENHANCED_AUTH',
         );
+        _userProfileSubscription?.cancel();
         // Clear user context for Sentry/Crashlytics
         LoggingService.clearUser();
         // Set isLoading to false when no user (initial check complete)
@@ -97,125 +99,140 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     });
   }
 
-  /// Load user profile from Firestore
-  Future<void> _loadUserProfile(User firebaseUser) async {
+  /// Listen to user profile changes in real-time
+  void _listenToUserProfile(User firebaseUser) {
     LoggingService.log(
-      'Loading user profile for ${firebaseUser.uid}...',
+      'Listening to user profile for ${firebaseUser.uid}...',
       tag: 'ENHANCED_AUTH',
     );
-    try {
-      final doc = await _firestore
-          .collection('users')
-          .doc(firebaseUser.uid)
-          .get();
 
-      if (doc.exists && doc.data() != null) {
-        LoggingService.log(
-          'User profile found in Firestore',
-          tag: 'ENHANCED_AUTH',
-        );
+    // Cancel any existing subscription to prevent leaks
+    _userProfileSubscription?.cancel();
 
-        final data = doc.data()!;
-
-        UserModel userModel;
+    _userProfileSubscription = _firestore
+        .collection('users')
+        .doc(firebaseUser.uid)
+        .snapshots()
+        .listen(
+      (doc) async {
         try {
-          // Try parsing the user model
-          userModel = UserModel.fromJson({...data, 'id': doc.id});
-        } catch (parseError, stackTrace) {
-          // Log detailed error information
-          LoggingService.log(
-            'Failed to parse UserModel. Error: $parseError',
-            tag: 'ENHANCED_AUTH_ERROR',
-          );
-          LoggingService.log(
-            'Stack trace: $stackTrace',
-            tag: 'ENHANCED_AUTH_ERROR',
-          );
-
-          // Log all field types to help identify the problem
-          LoggingService.log(
-            'Firestore fields (${data.length}):',
-            tag: 'ENHANCED_AUTH_ERROR',
-          );
-          data.forEach((key, value) {
+          if (doc.exists && doc.data() != null) {
             LoggingService.log(
-              '  $key: ${value.runtimeType} = ${value.toString().length > 50 ? '${value.toString().substring(0, 50)}...' : value}',
-              tag: 'ENHANCED_AUTH_ERROR',
+              'User profile found in Firestore',
+              tag: 'ENHANCED_AUTH',
             );
-          });
 
-          // Create fallback UserModel instead of crashing
-          try {
-            userModel = UserModel(
-              id: doc.id,
-              email:
-                  data['email'] as String? ??
-                  firebaseUser.email ??
-                  'unknown@email.com',
-              firstName: data['first_name'] as String? ?? '',
-              lastName: data['last_name'] as String? ?? '',
-              role: UserRole.values.firstWhere(
-                (r) => r.name == (data['role'] as String?),
-                orElse: () => UserRole.owner,
-              ),
-              emailVerified: data['emailVerified'] as bool? ?? false,
-              onboardingCompleted:
-                  data['onboardingCompleted'] as bool? ?? false,
-              displayName: data['displayName'] as String?,
-              phone: data['phone'] as String?,
-              avatarUrl: data['avatar_url'] as String?,
-              createdAt: DateTime.now(), // Fallback
+            final data = doc.data()!;
+
+            UserModel userModel;
+            try {
+              // Try parsing the user model
+              userModel = UserModel.fromJson({...data, 'id': doc.id});
+            } catch (parseError, stackTrace) {
+              // Log detailed error information
+              LoggingService.log(
+                'Failed to parse UserModel. Error: $parseError',
+                tag: 'ENHANCED_AUTH_ERROR',
+              );
+              LoggingService.log(
+                'Stack trace: $stackTrace',
+                tag: 'ENHANCED_AUTH_ERROR',
+              );
+
+              // Log all field types to help identify the problem
+              LoggingService.log(
+                'Firestore fields (${data.length}):',
+                tag: 'ENHANCED_AUTH_ERROR',
+              );
+              data.forEach((key, value) {
+                LoggingService.log(
+                  '  $key: ${value.runtimeType} = ${value.toString().length > 50 ? '${value.toString().substring(0, 50)}...' : value}',
+                  tag: 'ENHANCED_AUTH_ERROR',
+                );
+              });
+
+              // Create fallback UserModel instead of crashing
+              try {
+                userModel = UserModel(
+                  id: doc.id,
+                  email:
+                      data['email'] as String? ??
+                      firebaseUser.email ??
+                      'unknown@email.com',
+                  firstName: data['first_name'] as String? ?? '',
+                  lastName: data['last_name'] as String? ?? '',
+                  role: UserRole.values.firstWhere(
+                    (r) => r.name == (data['role'] as String?),
+                    orElse: () => UserRole.owner,
+                  ),
+                  emailVerified: data['emailVerified'] as bool? ?? false,
+                  onboardingCompleted:
+                      data['onboardingCompleted'] as bool? ?? false,
+                  displayName: data['displayName'] as String?,
+                  phone: data['phone'] as String?,
+                  avatarUrl: data['avatar_url'] as String?,
+                  createdAt: DateTime.now(), // Fallback
+                );
+              } catch (fallbackError) {
+                rethrow;
+              }
+            }
+
+            // Check email verification status (respects feature flag)
+            final requiresVerification =
+                AuthFeatureFlags.requireEmailVerification &&
+                !firebaseUser.emailVerified &&
+                !userModel.emailVerified;
+
+            // Check onboarding status
+            final requiresOnboarding = userModel.needsOnboarding;
+
+            // Set isLoading to false when user profile is loaded (initial check complete)
+            state = EnhancedAuthState(
+              firebaseUser: firebaseUser,
+              userModel: userModel,
+              isLoading: false,
+              requiresEmailVerification: requiresVerification,
+              requiresOnboarding: requiresOnboarding,
             );
-          } catch (fallbackError) {
-            rethrow;
+
+            // Set user context for Sentry/Crashlytics error tracking
+            LoggingService.setUser(firebaseUser.uid, email: userModel.email);
+
+            LoggingService.log(
+              'State updated: isAuthenticated=${state.isAuthenticated}, requiresVerification=$requiresVerification, requiresOnboarding=$requiresOnboarding',
+              tag: 'ENHANCED_AUTH',
+            );
+
+            // Update last login time (non-blocking to speed up auth)
+            unawaited(_updateLastLogin(firebaseUser.uid));
+          } else {
+            LoggingService.log(
+              'User profile NOT found, creating new profile...',
+              tag: 'ENHANCED_AUTH',
+            );
+            // Create user profile if it doesn't exist
+            await _createUserProfile(firebaseUser);
           }
+        } catch (e) {
+          unawaited(LoggingService.logError('ERROR loading user profile', e));
+          // Set isLoading to false even on error (initial check complete)
+          state = EnhancedAuthState(
+            firebaseUser: firebaseUser,
+            isLoading: false,
+            error: 'Failed to load user profile: $e',
+          );
         }
-
-        // Check email verification status (respects feature flag)
-        final requiresVerification =
-            AuthFeatureFlags.requireEmailVerification &&
-            !firebaseUser.emailVerified &&
-            !userModel.emailVerified;
-
-        // Check onboarding status
-        final requiresOnboarding = userModel.needsOnboarding;
-
-        // Set isLoading to false when user profile is loaded (initial check complete)
+      },
+      onError: (e) {
+        unawaited(LoggingService.logError('ERROR in user profile stream', e));
         state = EnhancedAuthState(
           firebaseUser: firebaseUser,
-          userModel: userModel,
           isLoading: false,
-          requiresEmailVerification: requiresVerification,
-          requiresOnboarding: requiresOnboarding,
+          error: 'Failed to listen to user profile: $e',
         );
-
-        // Set user context for Sentry/Crashlytics error tracking
-        LoggingService.setUser(firebaseUser.uid, email: userModel.email);
-
-        LoggingService.log(
-          'State updated: isAuthenticated=${state.isAuthenticated}, requiresVerification=$requiresVerification, requiresOnboarding=$requiresOnboarding',
-          tag: 'ENHANCED_AUTH',
-        );
-
-        // Update last login time (non-blocking to speed up auth)
-        unawaited(_updateLastLogin(firebaseUser.uid));
-      } else {
-        LoggingService.log(
-          'User profile NOT found, creating new profile...',
-          tag: 'ENHANCED_AUTH',
-        );
-        // Create user profile if it doesn't exist
-        await _createUserProfile(firebaseUser);
-      }
-    } catch (e) {
-      unawaited(LoggingService.logError('ERROR loading user profile', e));
-      // Set isLoading to false even on error (initial check complete)
-      state = EnhancedAuthState(
-        firebaseUser: firebaseUser,
-        isLoading: false,
-        error: 'Failed to load user profile: $e',
-      );
-    }
+      },
+    );
   }
 
   /// Create user profile in Firestore
@@ -317,18 +334,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         tag: 'ENHANCED_AUTH',
       );
 
-      // Explicitly load user profile immediately
-      // (Don't rely solely on auth state listener which may not trigger)
-      // _loadUserProfile will set isLoading=false when profile is loaded
-      LoggingService.log(
-        'Explicitly loading user profile...',
-        tag: 'ENHANCED_AUTH',
-      );
-      await _loadUserProfile(credential.user!);
-      LoggingService.log(
-        'User profile loaded, isLoading should be false now',
-        tag: 'ENHANCED_AUTH',
-      );
+      // Auth state listener will handle profile loading via the stream
 
       // Save or clear credentials based on Remember Me setting (non-blocking)
       // SECURITY FIX SF-007: Only save email, never password
@@ -669,7 +675,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     final refreshedUser = _auth.currentUser;
 
     if (refreshedUser != null && refreshedUser.emailVerified) {
-      // Update Firestore
+      // Update Firestore (stream will handle state update)
       await _firestore.collection('users').doc(user.uid).update({
         'emailVerified': true,
       });
@@ -677,8 +683,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       // Log verification success
       await _security.logEmailVerification(user.uid);
 
-      // Reload profile
-      await _loadUserProfile(refreshedUser);
+      // No need to manually reload profile, stream will handle it
     }
   }
 
@@ -763,6 +768,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     if (userId != null) {
       await _security.logLogout(userId);
     }
+
+    // Cancel user profile subscription
+    await _userProfileSubscription?.cancel();
 
     // Clear user context for Sentry/Crashlytics error tracking
     LoggingService.clearUser();

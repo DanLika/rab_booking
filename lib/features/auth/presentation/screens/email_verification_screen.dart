@@ -19,39 +19,56 @@ class EmailVerificationScreen extends ConsumerStatefulWidget {
 
 class _EmailVerificationScreenState
     extends ConsumerState<EmailVerificationScreen> {
-  Timer? _refreshTimer;
+  late final AppLifecycleListener _listener;
   bool _isResending = false;
   int _resendCooldown = 0;
   Timer? _cooldownTimer;
+  bool _isCheckingStatus = false;
 
   @override
   void initState() {
     super.initState();
-    // Auto-check verification status every 3 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _checkVerificationStatus();
-    });
+    // Check verification status when app is resumed
+    _listener = AppLifecycleListener(
+      onResume: () => _checkVerificationStatus(),
+    );
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
+    _listener.dispose();
     _cooldownTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _checkVerificationStatus() async {
-    await ref
-        .read(enhancedAuthProvider.notifier)
-        .refreshEmailVerificationStatus();
+    if (!mounted) return;
+    setState(() => _isCheckingStatus = true);
 
-    final authState = ref.read(enhancedAuthProvider);
-    if (!authState.requiresEmailVerification && mounted) {
-      // Email verified! Let router handle navigation based on onboarding status
-      // Router will redirect to:
-      // - /onboarding/wizard if requiresOnboarding is true
-      // - /owner/overview if requiresOnboarding is false
-      context.go('/');
+    try {
+      await ref
+          .read(enhancedAuthProvider.notifier)
+          .refreshEmailVerificationStatus();
+
+      final authState = ref.read(enhancedAuthProvider);
+      if (!authState.requiresEmailVerification && mounted) {
+        // Email verified! Let router handle navigation based on onboarding status
+        // Router will redirect to:
+        // - /onboarding/wizard if requiresOnboarding is true
+        // - /owner/overview if requiresOnboarding is false
+        context.go('/');
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          'Failed to check verification status: $e',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCheckingStatus = false);
+      }
     }
   }
 
@@ -311,33 +328,31 @@ class _EmailVerificationScreenState
                     ),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(context).colorScheme.primary,
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 14,
+                            height: 1.5,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Click the link in the email to verify your account',
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                fontSize: 14,
-                              ),
+                          children: const [
+                            TextSpan(
+                              text: '1. Click the link in the email to verify your account.\n',
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                          ),
-                        ],
+                            TextSpan(
+                              text: '2. Return to the app and tap the button below to confirm.',
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       Text(
-                        'Email may take up to 10 minutes to arrive. Check your spam folder if needed.',
+                        'Email may take up to 10 minutes to arrive. Remember to check your spam folder.',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant
-                              .withAlpha((0.8 * 255).toInt()),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
                           fontSize: 12,
                         ),
                       ),
@@ -346,6 +361,25 @@ class _EmailVerificationScreenState
                 ),
                 const SizedBox(height: 32),
 
+                // Check Status Button
+                ElevatedButton(
+                  onPressed: _isCheckingStatus ? null : _checkVerificationStatus,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 32,
+                    ),
+                  ),
+                  child: _isCheckingStatus
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text("I've verified, check status"),
+                ),
+                const SizedBox(height: 16),
+
                 // Resend Button
                 OutlinedButton(
                   onPressed: _resendCooldown > 0 || _isResending
@@ -353,8 +387,8 @@ class _EmailVerificationScreenState
                       : _resendVerificationEmail,
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 32,
+                      vertical: 12,
+                      horizontal: 24,
                     ),
                   ),
                   child: _isResending

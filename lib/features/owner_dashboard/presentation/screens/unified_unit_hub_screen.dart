@@ -81,12 +81,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // Deletion loading state
-  bool _isDeleting = false;
-
-  // Deletion loading state
-  bool _isDeleting = false;
-
   // Vertical tabs with icon above text (compact design)
   List<Widget> _buildTabs(AppLocalizations l10n) {
     return [
@@ -249,18 +243,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               ),
             )
           : null,
-      body: Stack(
-        children: [
-          Container(
-            decoration:
-                BoxDecoration(gradient: context.gradients.pageBackground),
-            child: isDesktop
-                ? _buildDesktopLayout(theme, isDark, screenWidth)
-                : _buildMobileLayout(theme, isDark),
-          ),
-          if (_isDeleting)
-            const LoadingOverlay(message: 'Deleting property...'),
-        ],
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: isDesktop
+            ? _buildDesktopLayout(theme, isDark, screenWidth)
+            : _buildMobileLayout(theme, isDark),
       ),
     );
   }
@@ -883,7 +870,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     );
 
     if (confirmed == true && mounted) {
-      setState(() => _isDeleting = true);
       try {
         await ref
             .read(ownerPropertiesRepositoryProvider)
@@ -917,10 +903,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             context,
             l10nCtx.unitHubDeleteError(e.toString()),
           );
-        }
-      } finally {
-        if (mounted) {
-          setState(() => _isDeleting = false);
         }
       }
     }

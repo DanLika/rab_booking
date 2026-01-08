@@ -17,6 +17,7 @@ import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../providers/price_list_provider.dart';
 import '../providers/platform_connections_provider.dart';
+import '../providers/unit_bookings_provider.dart';
 import '../state/price_calendar_state.dart';
 import 'calendar/calendar_day_cell.dart';
 import 'dialogs/unblock_warning_dialog.dart';
@@ -643,6 +644,8 @@ class _PriceListCalendarWidgetState
         MonthlyPricesParams(unitId: widget.unit.id, month: _selectedMonth),
       ),
     );
+    // Watch bookings for the current unit
+    final bookingsAsync = ref.watch(unitBookingsProvider(widget.unit.id));
 
     // Use LayoutBuilder to get screen constraints for responsive sizing
     return LayoutBuilder(
@@ -709,48 +712,141 @@ class _PriceListCalendarWidgetState
                                 _localState.getMonthPrices(_selectedMonth) ??
                                 priceMap;
 
-                            return GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 7,
-                                    mainAxisSpacing: 8,
-                                    crossAxisSpacing: 8,
-                                    childAspectRatio: aspectRatio,
-                                  ),
-                              itemCount: firstDayOfWeek - 1 + daysInMonth,
-                              itemBuilder: (context, index) {
-                                if (index < firstDayOfWeek - 1) {
-                                  return const SizedBox.shrink();
-                                }
+                            return bookingsAsync.when(
+                                data: (bookings) {
+                                  // Create a set of booked dates for quick lookup
+                                  final bookedDates = bookings
+                                      .expand((booking) {
+                                        final dates = <DateTime>[];
+                                        // Normalize to ignore time component
+                                        var current = DateTime(
+                                          booking.checkInDate.year,
+                                          booking.checkInDate.month,
+                                          booking.checkInDate.day,
+                                        );
+                                        final end = DateTime(
+                                          booking.checkOutDate.year,
+                                          booking.checkOutDate.month,
+                                          booking.checkOutDate.day,
+                                        );
+                                        while (current.isBefore(end)) {
+                                          dates.add(current);
+                                          current = current.add(
+                                            const Duration(days: 1),
+                                          );
+                                        }
+                                        return dates;
+                                      })
+                                      .toSet();
+                                  final today = DateTime.now();
+                                  final todayDateOnly = DateTime(
+                                    today.year,
+                                    today.month,
+                                    today.day,
+                                  );
 
-                                final day = index - (firstDayOfWeek - 1) + 1;
-                                final date = DateTime(
-                                  _selectedMonth.year,
-                                  _selectedMonth.month,
-                                  day,
-                                );
+                                  return GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 7,
+                                      mainAxisSpacing: 8,
+                                      crossAxisSpacing: 8,
+                                      childAspectRatio: aspectRatio,
+                                    ),
+                                    itemCount:
+                                        firstDayOfWeek - 1 + daysInMonth,
+                                    itemBuilder: (context, index) {
+                                      if (index < firstDayOfWeek - 1) {
+                                        return const SizedBox.shrink();
+                                      }
 
-                                // Use extracted CalendarDayCell component
-                                return CalendarDayCell(
-                                  date: date,
-                                  priceData:
-                                      displayMap[DateTime(
+                                      final day =
+                                          index - (firstDayOfWeek - 1) + 1;
+                                      final date = DateTime(
+                                        _selectedMonth.year,
+                                        _selectedMonth.month,
+                                        day,
+                                      );
+                                      final dateOnly = DateTime(
                                         date.year,
                                         date.month,
                                         date.day,
-                                      )],
-                                  basePrice: widget.unit.pricePerNight,
-                                  isSelected: _selectedDays.contains(date),
-                                  isBulkEditMode: _bulkEditMode,
-                                  onTap: () => _onDayCellTap(date),
-                                  isMobile: isMobile,
-                                  isSmallMobile: isSmallMobile,
-                                  weekendDays: widget.unit.weekendDays,
-                                );
-                              },
-                            );
+                                      );
+
+                                      // Use extracted CalendarDayCell component
+                                      return CalendarDayCell(
+                                        date: date,
+                                        priceData: displayMap[dateOnly],
+                                        basePrice: widget.unit.pricePerNight,
+                                        isSelected: _selectedDays.contains(
+                                          date,
+                                        ),
+                                        isBulkEditMode: _bulkEditMode,
+                                        onTap: () => _onDayCellTap(date),
+                                        isMobile: isMobile,
+                                        isSmallMobile: isSmallMobile,
+                                        weekendDays: widget.unit.weekendDays,
+                                        isPastDay: dateOnly.isBefore(
+                                          todayDateOnly,
+                                        ),
+                                        isBooked: bookedDates.contains(date),
+                                      );
+                                    },
+                                  );
+                                },
+                                loading: () => Center(
+                                      child: CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
+                                      ),
+                                    ),
+                                error: (error, stack) {
+                                  // Same error widget as price loading
+                                  final l10n = AppLocalizations.of(context);
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.error_outline,
+                                            size: 48,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.error,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            l10n
+                                                .priceCalendarErrorLoadingPrices,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.error,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            error.toString(),
+                                            style:
+                                                const TextStyle(fontSize: 12),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                });
                           },
                           loading: () => Center(
                             child: CircularProgressIndicator(

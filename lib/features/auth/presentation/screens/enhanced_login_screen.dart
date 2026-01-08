@@ -503,7 +503,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.email,
       prefixIcon: Icons.email_outlined,
       keyboardType: TextInputType.emailAddress,
-      autofillHints: const [AutofillHints.email],
+      autofillHints: const [AutofillHints.email, AutofillHints.username],
       validator: (value) {
         // Show server error if present (e.g., "No account found with this email")
         if (_emailErrorFromServer != null) {
@@ -520,7 +520,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.password,
       prefixIcon: Icons.lock_outline,
       obscureText: _obscurePassword,
-      autofillHints: const [AutofillHints.password],
+      autofillHints: const [AutofillHints.currentPassword],
       // UX-019: Add tooltip for accessibility (screen readers)
       suffixIcon: Tooltip(
         message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,

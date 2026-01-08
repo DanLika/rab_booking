@@ -13,6 +13,8 @@ class CalendarDayCell extends StatelessWidget {
   final VoidCallback onTap;
   final bool isMobile;
   final bool isSmallMobile;
+  final bool isPastDay;
+  final bool isBooked;
 
   /// Days considered as weekend for pricing purposes.
   /// Uses ISO weekday format: 1=Monday, 5=Friday, 6=Saturday, 7=Sunday.
@@ -30,6 +32,8 @@ class CalendarDayCell extends StatelessWidget {
     required this.isMobile,
     required this.isSmallMobile,
     this.weekendDays,
+    this.isPastDay = false,
+    this.isBooked = false,
   });
 
   @override
@@ -97,6 +101,8 @@ class CalendarDayCell extends StatelessWidget {
               isWeekend,
               hasPrice,
             ),
+            if (isBooked)
+              _buildBookingIndicator(context),
             if (blockCheckIn || blockCheckOut)
               _buildStatusIndicators(context, blockCheckIn, blockCheckOut),
           ],
@@ -116,6 +122,12 @@ class CalendarDayCell extends StatelessWidget {
     // Cell opacity increased from 8% to 15% for better visibility
     if (isSelected) {
       return context.primaryColor.withValues(alpha: 0.25); // Was 0.2
+    }
+    if (isPastDay) {
+      return context.surfaceColor.withValues(alpha: 0.5);
+    }
+    if (isBooked) {
+      return context.errorColor.withValues(alpha: 0.15);
     }
     if (!isAvailable) {
       return context.surfaceVariantColor.withValues(alpha: 0.5);
@@ -213,22 +225,57 @@ class CalendarDayCell extends StatelessWidget {
     bool blockCheckIn,
     bool blockCheckOut,
   ) {
+    // If both are blocked, show a single, more prominent indicator
+    if (blockCheckIn && blockCheckOut) {
+      return Center(
+        child: Icon(
+          Icons.block,
+          size: isSmallMobile ? 10 : (isMobile ? 12 : 14),
+          color: context.errorColor.withValues(alpha: 0.8),
+        ),
+      );
+    }
+    // Otherwise, show individual indicators
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (blockCheckIn)
-          Icon(
-            Icons.login,
-            size: isSmallMobile ? 10 : (isMobile ? 12 : 14),
-            color: context.errorColor,
+          Tooltip(
+            message: 'Check-in blocked',
+            child: Icon(
+              Icons.login,
+              size: isSmallMobile ? 10 : (isMobile ? 12 : 14),
+              color: context.errorColor.withValues(alpha: 0.8),
+            ),
           ),
         if (blockCheckOut)
-          Icon(
-            Icons.logout,
-            size: isSmallMobile ? 10 : (isMobile ? 12 : 14),
-            color: context.errorColor,
+          Tooltip(
+            message: 'Check-out blocked',
+            child: Icon(
+              Icons.logout,
+              size: isSmallMobile ? 10 : (isMobile ? 12 : 14),
+              color: context.errorColor.withValues(alpha: 0.8),
+            ),
           ),
       ],
+    );
+  }
+
+  Widget _buildBookingIndicator(BuildContext context) {
+    return Positioned(
+      bottom: 4,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: context.errorColor,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -72,14 +72,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   }
 
   /// Load saved email from secure storage
-  /// SECURITY FIX SF-007: Only loads email, not password
   Future<void> _loadSavedCredentials() async {
     try {
       final email = await SecureStorageService().getEmail();
       if (email != null && mounted) {
         setState(() {
           _emailController.text = email;
-          // SF-007: Password is no longer stored/loaded
           _rememberMe = true;
         });
       }

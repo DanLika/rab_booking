@@ -34,7 +34,6 @@ class SecureStorageService {
 
   /// Get saved email if "Remember Me" was enabled.
   /// Returns null if no email is saved or "Remember Me" was not checked.
-  /// SECURITY FIX SF-007: No longer returns password.
   Future<String?> getEmail() async {
     final rememberMe = await _storage.read(key: _keyRememberMe);
     if (rememberMe != 'true') return null;

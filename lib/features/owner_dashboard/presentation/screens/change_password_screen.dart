@@ -57,7 +57,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
   }
 
   void _updatePasswordStrength() {
-    final result = PasswordValidator.validate(_newPasswordController.text);
+    final l10n = AppLocalizations.of(context);
+    final result = PasswordValidator.validate(_newPasswordController.text, l10n);
     setState(() {
       _passwordStrength = result.strength;
       _missingRequirements = result.missingRequirements;
@@ -396,6 +397,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                     }
                                     return PasswordValidator.validateSimple(
                                       value,
+                                      l10n,
                                     );
                                   },
                                 ),
@@ -549,6 +551,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                     return PasswordValidator.validateConfirmPassword(
                                       _newPasswordController.text,
                                       value,
+                                      l10n,
                                     );
                                   },
                                 ),

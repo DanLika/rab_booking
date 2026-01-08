@@ -53,6 +53,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   bool _acceptedPrivacy = false;
   bool _newsletterOptIn = false;
   String? _emailErrorFromServer;
+  String? _passwordErrorFromServer;
 
   Uint8List? _profileImageBytes;
   String? _profileImageName;
@@ -61,7 +62,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   void initState() {
     super.initState();
     _emailController.addListener(_clearServerError);
-    _passwordController.addListener(() => setState(() {}));
+    _passwordController.addListener(() {
+      setState(() {
+        if (_passwordErrorFromServer != null) {
+          _passwordErrorFromServer = null;
+        }
+      });
+    });
 
     _firstNameController.addListener(_validateForm);
     _lastNameController.addListener(_validateForm);
@@ -194,6 +201,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           _isLoading = false;
         });
         _formKey.currentState!.validate();
+      } else if (_isPasswordError(errorMessage)) {
+        setState(() {
+          _passwordErrorFromServer = errorMessage;
+          _isLoading = false;
+        });
+        _formKey.currentState!.validate();
       } else {
         setState(() => _isLoading = false);
         ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
@@ -208,6 +221,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       'Invalid email',
     ];
     return emailErrorPatterns.any(message.contains);
+  }
+
+  bool _isPasswordError(String message) {
+    return message.toLowerCase().contains('password');
   }
 
   @override
@@ -447,8 +464,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
               },
             ),
           ),
-          validator: (value) =>
-              PasswordValidator.validateSimple(value, l10n),
+          validator: (value) {
+            if (_passwordErrorFromServer != null) {
+              return _passwordErrorFromServer;
+            }
+            return PasswordValidator.validateSimple(value, l10n);
+          },
           autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         if (_passwordController.text.isNotEmpty) ...[

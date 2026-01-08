@@ -138,6 +138,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
             email: email,
             password: password,
             rememberMe: _rememberMe,
+            l10n: l10n,
           );
 
       if (!mounted) return;
@@ -506,7 +507,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         if (_emailErrorFromServer != null) {
           return _emailErrorFromServer;
         }
-        return ProfileValidators.validateEmail(value);
+        return ProfileValidators.validateEmail(value, l10n);
       },
     );
   }
@@ -537,7 +538,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         if (_passwordErrorFromServer != null) {
           return _passwordErrorFromServer;
         }
-        return PasswordValidator.validateMinimumLength(value);
+        return PasswordValidator.validateMinimumLength(value, l10n);
       },
     );
   }

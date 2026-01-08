@@ -250,6 +250,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   Future<void> signInWithEmail({
     required String email,
     required String password,
+    required AppLocalizations l10n,
     bool rememberMe = false,
   }) async {
     LoggingService.log(
@@ -416,14 +417,14 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         final updatedLimit = await _rateLimit.checkRateLimit(email);
         errorMessage = updatedLimit != null && updatedLimit.isLocked
             ? _rateLimit.getRateLimitMessage(updatedLimit)
-            : _getAuthErrorMessage(e);
+            : _getAuthErrorMessage(e, l10n);
       } catch (rateLimitError) {
         // If rate limit check fails, just use the original auth error message
         LoggingService.log(
           'Rate limit check failed: $rateLimitError',
           tag: 'ENHANCED_AUTH',
         );
-        errorMessage = _getAuthErrorMessage(e);
+        errorMessage = _getAuthErrorMessage(e, l10n);
       }
 
       // CRITICAL: Always reset isLoading to prevent infinite loading state
@@ -444,6 +445,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     required String password,
     required String firstName,
     required String lastName,
+    required AppLocalizations l10n,
     String? phone,
     String? avatarUrl,
     Uint8List? profileImageBytes,
@@ -454,11 +456,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   }) async {
     // Validate firstName and lastName
     if (firstName.trim().isEmpty || lastName.trim().isEmpty) {
-      throw 'First name and last name are required';
+      throw l10n.authEnterFirstLastName;
     }
 
     // Validate password minimum length (8+ characters)
-    final passwordError = PasswordValidator.validateMinimumLength(password);
+    final passwordError = PasswordValidator.validateMinimumLength(password, l10n);
     if (passwordError != null) {
       throw passwordError;
     }
@@ -622,14 +624,14 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         final updatedLimit = await _rateLimit.checkRateLimit(email);
         errorMessage = updatedLimit != null && updatedLimit.isLocked
             ? _rateLimit.getRateLimitMessage(updatedLimit)
-            : _getAuthErrorMessage(e);
+            : _getAuthErrorMessage(e, l10n);
       } catch (rateLimitError) {
         // If rate limit check fails, just use the original auth error message
         LoggingService.log(
           'Rate limit check failed: $rateLimitError',
           tag: 'ENHANCED_AUTH',
         );
-        errorMessage = _getAuthErrorMessage(e);
+        errorMessage = _getAuthErrorMessage(e, l10n);
       }
 
       // CRITICAL: Always reset isLoading to prevent infinite loading state
@@ -1100,31 +1102,31 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   /// Get user-friendly error message
   /// Note: These are English-only fallbacks. The login screen should use
   /// AppLocalizations for proper multi-language support.
-  String _getAuthErrorMessage(FirebaseAuthException e) {
+  String _getAuthErrorMessage(FirebaseAuthException e, AppLocalizations l10n) {
     switch (e.code) {
       case 'user-not-found':
-        return 'No account found with this email';
+        return l10n.authErrorUserNotFound;
       case 'wrong-password':
       case 'invalid-credential':
-        return 'Incorrect password. Try again or reset your password';
+        return l10n.authErrorWrongPassword;
       case 'email-already-in-use':
-        return 'An account already exists with this email';
+        return l10n.errorEmailInUse;
       case 'invalid-email':
-        return 'Invalid email address';
+        return l10n.authErrorInvalidEmail;
       case 'weak-password':
-        return 'Password must be at least 8 characters with uppercase, lowercase, number, and special character';
+        return l10n.authErrorWeakPassword;
       case 'operation-not-allowed':
-        return 'Operation not allowed. Contact support';
+        return l10n.authErrorOperationNotAllowed;
       case 'user-disabled':
-        return 'Your account has been disabled. Contact support';
+        return l10n.authErrorUserDisabled;
       case 'too-many-requests':
-        return 'Too many login attempts. Please try again later';
+        return l10n.authErrorTooManyRequests;
       case 'requires-recent-login':
-        return 'This operation requires recent authentication. Please log in again';
+        return l10n.authErrorRequiresRecentLogin;
       case 'network-request-failed':
-        return 'Network error. Please check your internet connection';
+        return l10n.authErrorNetworkRequestFailed;
       default:
-        return e.message ?? 'An error occurred. Please try again';
+        return e.message ?? l10n.authErrorGeneric;
     }
   }
 }

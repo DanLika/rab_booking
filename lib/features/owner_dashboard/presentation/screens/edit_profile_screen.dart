@@ -35,7 +35,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   bool _isSaving = false;
 
   // Controllers - Personal Info
-  final _displayNameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailContactController = TextEditingController();
   final _phoneController = TextEditingController();
   final _countryController = TextEditingController();
@@ -67,7 +68,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   @override
   void dispose() {
     // Personal Info
-    _displayNameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailContactController.dispose();
     _phoneController.dispose();
     _countryController.dispose();
@@ -100,7 +102,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     final company = userData.company;
 
     // Personal Info
-    _displayNameController.text = profile.displayName;
+    final nameParts = profile.displayName.split(' ');
+    _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
+    _lastNameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
     _emailContactController.text = profile.emailContact;
     _phoneController.text = profile.phoneE164;
     _countryController.text = profile.address.country;
@@ -123,7 +127,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     _companyPostalCodeController.text = company.address.postalCode;
 
     // Add listeners after loading
-    _displayNameController.addListener(_markDirty);
+    _firstNameController.addListener(_markDirty);
+    _lastNameController.addListener(_markDirty);
     _emailContactController.addListener(_markDirty);
     _phoneController.addListener(_markDirty);
     _countryController.addListener(_markDirty);
@@ -196,7 +201,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       // Create updated profile
       final updatedProfile = UserProfile(
         userId: userId,
-        displayName: _displayNameController.text.trim(),
+        displayName: '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}',
         emailContact: _emailContactController.text.trim(),
         phoneE164: _phoneController.text.trim(),
         address: Address(
@@ -239,16 +244,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
 
       // Also update first_name/last_name in root users document
       // (enhancedAuthProvider reads from there for dashboard display)
-      final displayName = _displayNameController.text.trim();
-      final nameParts = displayName.split(' ');
-      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-      final lastName = nameParts.length > 1
-          ? nameParts.sublist(1).join(' ')
-          : '';
-
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'first_name': firstName,
-        'last_name': lastName,
+        'first_name': _firstNameController.text.trim(),
+        'last_name': _lastNameController.text.trim(),
         'phone': _phoneController.text.trim().isNotEmpty
             ? _phoneController.text.trim()
             : null,
@@ -712,12 +710,29 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                       subtitle:
                                           l10n.editProfilePersonalDataSubtitle,
                                       children: [
-                                        PremiumInputField(
-                                          controller: _displayNameController,
-                                          labelText: l10n.editProfileFullName,
-                                          prefixIcon: Icons.person_outline,
-                                          validator:
-                                              ProfileValidators.validateName,
+                                        Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: PremiumInputField(
+                                                controller: _firstNameController,
+                                                labelText: l10n.authFirstName,
+                                                prefixIcon: Icons.person_outline,
+                                                validator: (value) =>
+                                                    ProfileValidators.validateFirstName(value, l10n),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: PremiumInputField(
+                                                controller: _lastNameController,
+                                                labelText: l10n.authLastName,
+                                                prefixIcon: Icons.person_outline,
+                                                validator: (value) =>
+                                                    ProfileValidators.validateLastName(value, l10n),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                         const SizedBox(height: 16),
                                         PremiumInputField(
@@ -726,8 +741,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                           prefixIcon: Icons.email_outlined,
                                           keyboardType:
                                               TextInputType.emailAddress,
-                                          validator:
-                                              ProfileValidators.validateEmail,
+                                          validator: (value) =>
+                                              ProfileValidators.validateEmail(value, l10n),
                                         ),
                                         const SizedBox(height: 16),
                                         PremiumInputField(
@@ -735,8 +750,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                           labelText: l10n.editProfilePhone,
                                           prefixIcon: Icons.phone_outlined,
                                           keyboardType: TextInputType.phone,
-                                          validator:
-                                              ProfileValidators.validatePhone,
+                                          validator: (value) =>
+                                              ProfileValidators.validatePhone(value, l10n),
                                         ),
                                       ],
                                     ),

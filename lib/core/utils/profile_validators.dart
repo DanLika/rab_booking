@@ -53,24 +53,6 @@ class ProfileValidators {
     return null;
   }
 
-  /// Validate display name (2-80 characters)
-  static String? validateName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Name is required';
-    }
-
-    final trimmed = value.trim();
-    if (trimmed.length < 2) {
-      return 'Name must be at least 2 characters';
-    }
-
-    if (trimmed.length > 80) {
-      return 'Name must be less than 80 characters';
-    }
-
-    return null;
-  }
-
   // ========== EMAIL VALIDATION ==========
 
   /// Validate email (RFC 5322 compliant)

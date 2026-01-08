@@ -185,7 +185,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
             labelText: l10n.email,
             prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
-            validator: ProfileValidators.validateEmail,
+            validator: (value) => ProfileValidators.validateEmail(value, l10n),
           ),
           SizedBox(height: isCompact ? 20 : 24),
           GradientAuthButton(

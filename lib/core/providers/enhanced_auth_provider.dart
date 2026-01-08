@@ -69,6 +69,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   final SecurityEventsService _security;
   final IpGeolocationService _geolocation;
   StreamSubscription<DocumentSnapshot>? _userProfileSubscription;
+  Timer? _sessionTimer;
 
   EnhancedAuthNotifier(
     this._auth,
@@ -97,6 +98,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         state = const EnhancedAuthState(isLoading: false);
       }
     });
+  }
+
+  void _startSessionTimer() {
+    _sessionTimer?.cancel();
+    _sessionTimer = Timer(const Duration(minutes: 30), signOut);
   }
 
   /// Listen to user profile changes in real-time
@@ -333,6 +339,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         'Firebase sign in successful for ${credential.user?.uid}',
         tag: 'ENHANCED_AUTH',
       );
+
+      _startSessionTimer();
 
       // Auth state listener will handle profile loading via the stream
 
@@ -769,6 +777,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       await _security.logLogout(userId);
     }
 
+    _sessionTimer?.cancel();
     // Cancel user profile subscription
     await _userProfileSubscription?.cancel();
 
@@ -912,6 +921,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         throw AuthException.noUserReturned('Google');
       }
 
+      _startSessionTimer();
+
       // Check if this is a new user
       final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
 
@@ -988,6 +999,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       if (userCredential.user == null) {
         throw AuthException.noUserReturned('Apple');
       }
+
+      _startSessionTimer();
 
       // Check if this is a new user
       final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;

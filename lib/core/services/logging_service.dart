@@ -54,6 +54,21 @@ class LoggingService {
     setUser(null);
   }
 
+  /// Set a custom key-value pair for debugging in Sentry/Crashlytics
+  static Future<void> setCustomKey(String key, dynamic value) async {
+    if (kReleaseMode) {
+      if (kIsWeb) {
+        // For web, use Sentry tags (must be strings)
+        Sentry.configureScope((scope) {
+          scope.setTag(key, value.toString());
+        });
+      } else {
+        // For mobile, use Crashlytics custom keys
+        await FirebaseCrashlytics.instance.setCustomKey(key, value);
+      }
+    }
+  }
+
   /// Add breadcrumb for debugging context
   /// Helps understand what user did before error
   static void addBreadcrumb(
@@ -223,6 +238,9 @@ class LoggingService {
 
     // Add breadcrumb for Sentry (helps debug errors)
     addBreadcrumb(action, category: 'user_action', data: data);
+
+    // Set custom key for last action in Crashlytics/Sentry
+    setCustomKey('last_action', action);
   }
 
   /// Log navigation event
@@ -234,6 +252,9 @@ class LoggingService {
 
     // Add breadcrumb for Sentry (helps understand user flow before error)
     addBreadcrumb('Navigate to $route', category: 'navigation', data: params);
+
+    // Set custom key for current screen in Crashlytics/Sentry
+    setCustomKey('current_screen', route);
   }
 
   /// Log performance metrics

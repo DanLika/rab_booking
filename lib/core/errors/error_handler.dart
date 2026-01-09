@@ -84,22 +84,6 @@ class ErrorHandler {
       error,
       stackTrace,
     );
-
-    // In production, send to error tracking service
-    // NOTE: Crashlytics is NOT supported on web platform
-    if (kReleaseMode && !kIsWeb) {
-      // Send to Firebase Crashlytics
-      await FirebaseCrashlytics.instance.recordError(
-        error,
-        stackTrace,
-        reason: 'ErrorHandler caught error',
-        information: [
-          'source: ErrorHandler',
-          'user_friendly_message: ${getUserFriendlyMessage(error)}',
-        ],
-        printDetails: false,
-      );
-    }
   }
 
   /// Show error dialog to user

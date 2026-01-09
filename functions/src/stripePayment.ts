@@ -701,8 +701,6 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       metadata: {
         // Placeholder booking (webhook will update this to confirmed)
         placeholder_booking_id: placeholderResult.placeholderBookingId,
-        // Access token for "View my reservation" email link (plaintext)
-        access_token_plaintext: placeholderResult.accessToken,
         // Booking identifiers
         booking_reference: bookingRef,
         unit_id: unitId,
@@ -890,6 +888,13 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
 
       logInfo(`Updating placeholder booking ${placeholderBookingId} to confirmed status`);
 
+      // Generate a fresh access token for the confirmation email link
+      const {token: newAccessToken, hashedToken: newHashedToken} =
+        generateBookingAccessToken();
+      const newExpiration = calculateTokenExpiration(
+        placeholderData.check_out.toDate()
+      );
+
       // Update placeholder booking to confirmed
       await placeholderBookingRef.update({
         status: "confirmed", // Stripe payments are always confirmed (paid)
@@ -902,22 +907,21 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
         updated_at: admin.firestore.FieldValue.serverTimestamp(),
         // Remove placeholder expiration field (no longer needed)
         stripe_pending_expires_at: admin.firestore.FieldValue.delete(),
+        // Add the secure access token
+        access_token: newHashedToken,
+        token_expires_at: newExpiration,
       });
 
       logInfo(`Placeholder booking ${placeholderBookingId} confirmed after Stripe payment`);
 
-      // Extract plaintext access token from metadata (for email "View my reservation" link)
-      const accessTokenPlaintext = metadata.access_token_plaintext;
-
-      if (!accessTokenPlaintext) {
-        logWarn("Missing access_token_plaintext in metadata - email link may not work");
-      }
-
-      // Prepare result for email sending (match old structure)
+      // SECURITY FIX: The plaintext access token is no longer read from Stripe metadata.
+      // The email service requires a plaintext token, which we will generate fresh
+      // before updating the booking record. For now, create a result object to be
+      // populated.
       const result = {
         bookingId: placeholderBookingId,
         bookingData: placeholderData,
-        accessToken: accessTokenPlaintext || "", // Plaintext token for email link
+        accessToken: newAccessToken, // Use the newly generated token for the email.
       };
 
       // Extract booking details for emails

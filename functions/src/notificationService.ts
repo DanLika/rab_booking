@@ -94,17 +94,31 @@ export async function createPaymentNotification(
   ownerId: string,
   bookingId: string,
   guestName: string,
-  amount: number
+  amount: number,
+  isFailure = false
 ): Promise<void> {
-  await createNotification({
-    ownerId,
-    type: "payment_received",
-    title: "Plaćanje primljeno",
-    message: `Primljeno plaćanje od ${guestName} u iznosu od €${amount.toFixed(2)}.`,
-    bookingId,
-    metadata: {
-      guestName,
-      amount,
-    },
-  });
+  if (isFailure) {
+    await createNotification({
+      ownerId,
+      type: "payment_failed",
+      title: "Plaćanje neuspjelo",
+      message: `Plaćanje od ${guestName} za rezervaciju ${bookingId} nije uspjelo. Molimo provjerite Stripe i kontaktirajte gosta.`,
+      bookingId,
+      metadata: {
+        guestName,
+      },
+    });
+  } else {
+    await createNotification({
+      ownerId,
+      type: "payment_received",
+      title: "Plaćanje primljeno",
+      message: `Primljeno plaćanje od ${guestName} u iznosu od €${amount.toFixed(2)}.`,
+      bookingId,
+      metadata: {
+        guestName,
+        amount,
+      },
+    });
+  }
 }

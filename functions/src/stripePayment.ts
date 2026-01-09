@@ -5,7 +5,10 @@ import {
   sendBookingApprovedEmail,
   sendOwnerNotificationEmail,
 } from "./emailService";
-import { sendPaymentPushNotification } from "./fcmService";
+import {
+  sendPaymentPushNotification,
+  sendPaymentFailedPushNotification,
+} from "./fcmService";
 import { sendEmailIfAllowed } from "./emailNotificationHelper";
 import { admin, db } from "./firebase";
 import { getStripeClient, stripeSecretKey } from "./stripe";
@@ -1032,6 +1035,39 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       logError("Error processing webhook", error);
       res.status(500).send(`Error: ${error.message}`);
     }
+  } else if (event.type === "checkout.session.async_payment_failed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const metadata = session.metadata;
+
+    if (metadata?.placeholder_booking_id && metadata.owner_id) {
+      logWarn("Payment failed for checkout session", {
+        sessionId: session.id,
+        bookingId: metadata.placeholder_booking_id,
+      });
+
+      // Send notifications for payment failure
+      try {
+        await createPaymentNotification(
+          metadata.owner_id,
+          metadata.placeholder_booking_id,
+          metadata.guest_name || "Guest",
+          0, // Amount is 0 for failed payment
+          true // isFailure flag
+        );
+
+        await sendPaymentFailedPushNotification(
+          metadata.owner_id,
+          metadata.placeholder_booking_id,
+          metadata.guest_name || "Guest"
+        );
+      } catch (notificationError) {
+        logError(
+          "Failed to send payment failure notifications",
+          notificationError
+        );
+      }
+    }
+    res.json({ received: true });
   } else {
     // Unexpected event type
     logInfo(`Unhandled event type: ${event.type}`);

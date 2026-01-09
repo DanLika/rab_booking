@@ -286,6 +286,25 @@ export async function sendBookingPushNotification(
 }
 
 /**
+ * Send payment failed notification via push
+ */
+export async function sendPaymentFailedPushNotification(
+  userId: string,
+  bookingId: string,
+  guestName: string
+): Promise<boolean> {
+  return sendPushNotification({
+    userId,
+    title: "Payment Failed",
+    body: `A payment from ${guestName} for booking ${bookingId} failed. Please check Stripe and contact the guest.`,
+    category: "payments",
+    data: {
+      bookingId,
+    },
+  });
+}
+
+/**
  * Send pending booking notification via push
  */
 export async function sendPendingBookingPushNotification(

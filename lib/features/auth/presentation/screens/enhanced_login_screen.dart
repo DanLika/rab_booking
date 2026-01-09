@@ -390,63 +390,68 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                     // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
-                    return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.only(
-                        left: isCompact ? 12 : 20,
-                        right: isCompact ? 12 : 20,
-                        top: isCompact ? 16 : 20,
-                        bottom: isCompact ? 16 : 20,
-                      ),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: minHeight),
-                        child: Center(
-                          child: GlassCard(
-                            child: Form(
-                              key: _formKey,
-                              autovalidateMode: _autovalidateMode,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _buildHeader(theme, l10n, isCompact),
-                                  SizedBox(height: isCompact ? 24 : 32),
-                                  _buildEmailField(l10n),
-                                  SizedBox(height: isCompact ? 12 : 14),
-                                  _buildPasswordField(theme, l10n),
-                                  SizedBox(height: isCompact ? 12 : 14),
-                                  _buildRememberMeRow(theme, l10n),
-                                  SizedBox(height: isCompact ? 20 : 24),
-                                  AnimatedBuilder(
-                                    animation: _shakeAnimation,
-                                    builder: (context, child) {
-                                      return Transform.translate(
-                                        offset: Offset(
-                                          _shakeAnimation.value,
-                                          0,
-                                        ),
-                                        child: child,
-                                      );
-                                    },
-                                    child: GradientAuthButton(
-                                      text: l10n.login,
-                                      onPressed: _handleLogin,
-                                      isLoading: _isLoading,
-                                      icon: Icons.login_rounded,
+                    return GestureDetector(
+                      onTap: () => FocusScope.of(context).unfocus(),
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.only(
+                          left: isCompact ? 12 : 20,
+                          right: isCompact ? 12 : 20,
+                          top: isCompact ? 16 : 20,
+                          bottom: isCompact ? 16 : 20,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: minHeight),
+                          child: Center(
+                            child: GlassCard(
+                              child: Form(
+                                key: _formKey,
+                                autovalidateMode: _autovalidateMode,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    _buildHeader(theme, l10n, isCompact),
+                                    SizedBox(height: isCompact ? 24 : 32),
+                                    _buildEmailField(l10n),
+                                    SizedBox(height: isCompact ? 12 : 14),
+                                    _buildPasswordField(theme, l10n),
+                                    SizedBox(height: isCompact ? 12 : 14),
+                                    _buildRememberMeRow(theme, l10n),
+                                    SizedBox(height: isCompact ? 20 : 24),
+                                    AnimatedBuilder(
+                                      animation: _shakeAnimation,
+                                      builder: (context, child) {
+                                        return Transform.translate(
+                                          offset: Offset(
+                                            _shakeAnimation.value,
+                                            0,
+                                          ),
+                                          child: child,
+                                        );
+                                      },
+                                      child: GradientAuthButton(
+                                        text: l10n.login,
+                                        onPressed: _handleLogin,
+                                        isLoading: _isLoading,
+                                        icon: Icons.login_rounded,
+                                      ),
                                     ),
-                                  ),
-                                  if (AuthFeatureFlags.isGoogleSignInEnabled ||
-                                      AuthFeatureFlags
-                                          .isAppleSignInEnabled) ...[
-                                    SizedBox(height: isCompact ? 16 : 20),
-                                    _buildDivider(theme, l10n),
-                                    SizedBox(height: isCompact ? 16 : 20),
-                                    _buildSocialButtons(),
+                                    if (AuthFeatureFlags
+                                            .isGoogleSignInEnabled ||
+                                        AuthFeatureFlags
+                                            .isAppleSignInEnabled) ...[
+                                      SizedBox(height: isCompact ? 16 : 20),
+                                      _buildDivider(theme, l10n),
+                                      SizedBox(height: isCompact ? 16 : 20),
+                                      _buildSocialButtons(),
+                                    ],
+                                    SizedBox(height: isCompact ? 20 : 24),
+                                    _buildRegisterLink(theme, l10n),
                                   ],
-                                  SizedBox(height: isCompact ? 20 : 24),
-                                  _buildRegisterLink(theme, l10n),
-                                ],
+                                ),
                               ),
                             ),
                           ),
@@ -501,6 +506,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.email,
       prefixIcon: Icons.email_outlined,
       keyboardType: TextInputType.emailAddress,
+      autofillHints: const [AutofillHints.email, AutofillHints.username],
       validator: (value) {
         // Show server error if present (e.g., "No account found with this email")
         if (_emailErrorFromServer != null) {
@@ -517,6 +523,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       labelText: l10n.password,
       prefixIcon: Icons.lock_outline,
       obscureText: _obscurePassword,
+      autofillHints: const [AutofillHints.password],
       // UX-019: Add tooltip for accessibility (screen readers)
       suffixIcon: Tooltip(
         message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
@@ -560,7 +567,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                       borderRadius: BorderRadius.circular(4),
                     ),
                     activeColor: theme.colorScheme.primary,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -574,11 +580,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         ),
         TextButton(
           onPressed: () => context.push(OwnerRoutes.forgotPassword),
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
           child: Text(
             l10n.authForgotPassword,
             style: theme.textTheme.bodySmall?.copyWith(

@@ -96,3 +96,9 @@ export * from "./passwordHistory";
 export * from "./revokeTokens";
 
 // REMOVED: migrations/migrateToSubcollections - One-time migration complete, no longer needed
+
+// Export user creation trigger for trial initialization
+export * from "./auth/onUserCreate";
+
+// Export migration scripts
+export * from "./migrations/migrateTrialStatus";

@@ -66,22 +66,22 @@ export async function createBookingNotification(
   action: "created" | "updated" | "cancelled"
 ): Promise<void> {
   const titles: Record<string, string> = {
-    created: "Nova rezervacija",
-    updated: "Rezervacija ažurirana",
-    cancelled: "Rezervacija otkazana",
+    created: "New Booking",
+    updated: "Booking Updated",
+    cancelled: "Booking Cancelled",
   };
 
   const messages: Record<string, string> = {
-    created: `${guestName} je kreirao novu rezervaciju.`,
-    updated: `Rezervacija za ${guestName} je ažurirana.`,
-    cancelled: `Rezervacija za ${guestName} je otkazana.`,
+    created: `${guestName} has created a new booking.`,
+    updated: `The booking for ${guestName} has been updated.`,
+    cancelled: `The booking for ${guestName} has been cancelled.`,
   };
 
   await createNotification({
     ownerId,
     type: `booking_${action}`,
-    title: titles[action] || "Obavještenje",
-    message: messages[action] || "Nova aktivnost na rezervaciji.",
+    title: titles[action] || "Booking Notification",
+    message: messages[action] || "There is new activity on a booking.",
     bookingId: bookingId,
     metadata: {guestName, action},  // BUG-011 FIX: Include action in metadata for idempotency
   });
@@ -101,8 +101,8 @@ export async function createPaymentNotification(
     await createNotification({
       ownerId,
       type: "payment_failed",
-      title: "Plaćanje neuspjelo",
-      message: `Plaćanje od ${guestName} za rezervaciju ${bookingId} nije uspjelo. Molimo provjerite Stripe i kontaktirajte gosta.`,
+      title: "Payment Failed",
+      message: `A payment from ${guestName} for booking ${bookingId} failed. Please check Stripe and contact the guest.`,
       bookingId,
       metadata: {
         guestName,
@@ -112,8 +112,8 @@ export async function createPaymentNotification(
     await createNotification({
       ownerId,
       type: "payment_received",
-      title: "Plaćanje primljeno",
-      message: `Primljeno plaćanje od ${guestName} u iznosu od €${amount.toFixed(2)}.`,
+      title: "Payment Received",
+      message: `A payment of €${amount.toFixed(2)} was received from ${guestName}.`,
       bookingId,
       metadata: {
         guestName,

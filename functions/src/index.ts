@@ -62,6 +62,9 @@ export * from "./subdomainService";
 // Export cleanup scheduled functions (Stripe pending bookings)
 export * from "./cleanupExpiredPendingBookings";
 
+// Export payment deadline checker
+export * from "./bookings/checkPaymentDeadlines";
+
 // Export auto-complete scheduled function (Checked-out bookings)
 export * from "./completeCheckedOutBookings";
 

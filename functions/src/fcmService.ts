@@ -286,6 +286,25 @@ export async function sendBookingPushNotification(
 }
 
 /**
+ * Send payment deadline reminder notification via push
+ */
+export async function sendPaymentDeadlinePushNotification(
+  userId: string,
+  bookingId: string,
+  guestName: string
+): Promise<boolean> {
+  return sendPushNotification({
+    userId,
+    title: "Payment Deadline Approaching",
+    body: `The payment deadline for the booking from ${guestName} is approaching.`,
+    category: "payments",
+    data: {
+      bookingId,
+    },
+  });
+}
+
+/**
  * Send payment failed notification via push
  */
 export async function sendPaymentFailedPushNotification(

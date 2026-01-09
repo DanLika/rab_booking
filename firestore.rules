@@ -28,6 +28,11 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Check if user is an admin via custom claims
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.isAdmin == true;
+    }
+
     // Check if user owns the parent property
     // STRICT: No legacy support - property must have valid owner_id
     function isPropertyOwner(propertyId) {
@@ -39,13 +44,23 @@ service cloud.firestore {
     // USERS COLLECTION
     // ========================================================================
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
+
+      // Users can update their own data, but NOT protected status fields.
+      // Admins can update anything.
+      allow write: if (isOwner(userId) && !request.resource.data.keys().hasAny([
+          'accountStatus', 'trialStartDate', 'trialExpiresAt',
+          'statusChangedAt', 'statusChangedBy'
+        ])) || isAdmin();
 
       // User data subcollection (profile, company, preferences)
       match /data/{document} {
-        allow read: if isOwner(userId);
-        allow write: if isOwner(userId);
+        allow read: if isOwner(userId) || isAdmin();
+        // Same logic as parent document: user can't change status fields.
+        allow write: if (isOwner(userId) && !request.resource.data.keys().hasAny([
+            'accountStatus', 'trialStartDate', 'trialExpiresAt',
+            'statusChangedAt', 'statusChangedBy'
+          ])) || isAdmin();
       }
 
       // Security events subcollection

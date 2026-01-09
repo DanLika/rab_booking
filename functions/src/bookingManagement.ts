@@ -8,6 +8,7 @@ import {
   sendBookingCancellationEmail,
   sendBookingRejectedEmail,
 } from "./emailService";
+import {sendBookingPushNotification} from "./fcmService";
 import {sendEmailWithRetry} from "./utils/emailRetry";
 import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess, logWarn} from "./logger";
@@ -332,6 +333,24 @@ export const onBookingStatusChange = onDocumentUpdated(
           );
           // Don't throw - approval should succeed even if email fails
         }
+
+        // Create in-app notification for owner about confirmation
+        try {
+          const propertyDoc = await db.collection("properties").doc(after.property_id).get();
+          const ownerId = propertyDoc.data()?.owner_id;
+          if (ownerId) {
+            await createBookingNotification(
+              ownerId,
+              event.params.bookingId,
+              after.guest_name || "Guest",
+              "updated" // "updated" signifies the status change to confirmed
+            );
+            logSuccess("In-app confirmation notification created for owner", {ownerId});
+          }
+        } catch (notificationError) {
+          logError("Failed to create in-app confirmation notification", notificationError);
+          // Continue - notification failure shouldn't break the flow
+        }
       }
 
       // If booking was rejected (pending -> cancelled with rejection_reason)
@@ -494,6 +513,16 @@ export const onBookingStatusChange = onDocumentUpdated(
               "cancelled"
             );
             logSuccess("In-app cancellation notification created for owner", {ownerId});
+
+            // Send push notification to owner
+            sendBookingPushNotification(
+              ownerId,
+              event.params.bookingId,
+              after.guest_name || "Guest",
+              "cancelled",
+              safeToDate(after.check_in, "check_in"),
+              safeToDate(after.check_out, "check_out")
+            ).catch((e) => logError("Cancellation push notification failed", e));
           }
         } catch (notificationError) {
           logError("Failed to create in-app cancellation notification", notificationError);

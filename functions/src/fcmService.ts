@@ -85,6 +85,9 @@ export async function sendPushNotification(
       return false;
     }
 
+    // Get unread notification count for badge
+    const unreadCount = await getUnreadNotificationCount(userId);
+
     // Build the message
     const message: admin.messaging.MulticastMessage = {
       tokens,
@@ -112,7 +115,7 @@ export async function sendPushNotification(
         payload: {
           aps: {
             sound: "default",
-            badge: 1,
+            badge: unreadCount,
             contentAvailable: true,
           },
         },
@@ -203,6 +206,26 @@ async function cleanupInvalidTokens(
     });
   } catch (error) {
     logWarn("[FCM] Error cleaning up invalid tokens", {userId, error});
+  }
+}
+
+/**
+ * Get unread notification count for a user
+ */
+async function getUnreadNotificationCount(userId: string): Promise<number> {
+  try {
+    const notificationsSnapshot = await admin
+      .firestore()
+      .collection("users")
+      .doc(userId)
+      .collection("notifications")
+      .where("isRead", "==", false)
+      .get();
+
+    return notificationsSnapshot.size;
+  } catch (error) {
+    logError("[FCM] Error fetching unread notification count", {userId, error});
+    return 1; // Fallback to 1 if count fails
   }
 }
 

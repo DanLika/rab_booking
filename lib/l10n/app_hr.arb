@@ -3206,5 +3206,44 @@
       }
     }
   },
-  "updateBooking": "Ažuriraj rezervaciju"
+  "updateBooking": "Ažuriraj rezervaciju",
+
+  "permissionRequired": "Potrebno je dopuštenje za {permission}",
+  "@permissionRequired": {
+    "placeholders": {
+      "permission": {"type": "String"}
+    }
+  },
+  "permissionPermanentlyDenied": "Da biste koristili ovu značajku, morate odobriti dopuštenje za {permission} u postavkama aplikacije.",
+  "@permissionPermanentlyDenied": {
+    "placeholders": {
+      "permission": {"type": "String"}
+    }
+  },
+  "permissionDenied": "Dopuštenje za {permission} je odbijeno.",
+  "@permissionDenied": {
+    "placeholders": {
+      "permission": {"type": "String"}
+    }
+  },
+  "openSettings": "Otvori postavke",
+  "photos": "Fotografije",
+  "camera": "Kamera",
+
+  "permissionRequest": "Zahtjev za {permission}",
+  "@permissionRequest": {
+    "placeholders": {
+      "permission": {"type": "String"}
+    }
+  },
+  "permissionRationaleCamera": "Kako biste snimili fotografije svoje nekretnine ili profila, aplikacija treba pristup vašoj kameri. Vaše fotografije se prenose samo kada ih odaberete.",
+  "permissionRationalePhotos": "Kako biste odabrali slike nekretnine ili profila iz galerije, aplikacija treba dopuštenje za pristup vašim fotografijama. Pristupamo samo fotografijama koje odaberete.",
+  "notNow": "Ne sada",
+  "continueA": "Nastavi",
+  "permissionName": "{permission, select, Permission.camera{Kamera} Permission.photos{Fotografije} Permission.storage{Pohrana} other{Dopuštenje}}",
+  "@permissionName": {
+    "placeholders": {
+      "permission": {}
+    }
+  }
 }

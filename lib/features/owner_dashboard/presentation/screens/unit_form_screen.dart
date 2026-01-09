@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'package:bookbed/l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:bookbed/shared/widgets/permission_denied_dialog.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -885,14 +888,44 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
   }
 
   Future<void> _pickImages() async {
-    final ImagePicker picker = ImagePicker();
-    final List<XFile> images = await picker.pickMultiImage();
+    final l10n = AppLocalizations.of(context);
+    final permissionService = ref.read(permissionServiceProvider);
+    final platformService = ref.read(platformServiceProvider);
+    final permission =
+        platformService.isAndroid ? Permission.storage : Permission.photos;
+    final status = await permissionService.requestPermission(permission, context);
 
-    if (images.isNotEmpty) {
-      setState(() {
-        _selectedImages.addAll(images);
-      });
+    if (status.isGranted) {
+      final ImagePicker picker = ImagePicker();
+      final List<XFile> images = await picker.pickMultiImage();
+
+      if (images.isNotEmpty) {
+        setState(() {
+          _selectedImages.addAll(images);
+        });
+      }
+    } else if (status.isPermanentlyDenied) {
+      _showPermissionDeniedDialog();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.permissionDenied(l10n.photos)),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
+  }
+
+  void _showPermissionDeniedDialog() {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return PermissionDeniedDialog(
+          permission: l10n.photos,
+        );
+      },
+    );
   }
 
   Future<void> _handleSave() async {

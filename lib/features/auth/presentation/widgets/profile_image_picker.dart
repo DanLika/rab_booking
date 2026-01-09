@@ -1,10 +1,15 @@
 import 'dart:typed_data';
+import 'package:bookbed/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:bookbed/shared/widgets/permission_denied_dialog.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bookbed/shared/providers/service_providers.dart';
 
 /// Profile Image Picker Widget
 /// Displays a circular avatar with option to upload/change image
-class ProfileImagePicker extends StatefulWidget {
+class ProfileImagePicker extends ConsumerStatefulWidget {
   final String? imageUrl;
   final Function(Uint8List?, String?) onImageSelected;
   final double size;
@@ -22,48 +27,120 @@ class ProfileImagePicker extends StatefulWidget {
   State<ProfileImagePicker> createState() => _ProfileImagePickerState();
 }
 
-class _ProfileImagePickerState extends State<ProfileImagePicker> {
+class _ProfileImagePickerState extends ConsumerState<ProfileImagePicker> {
   Uint8List? _imageBytes;
   bool _isHovered = false;
   bool _isUploading = false;
 
-  Future<void> _pickImage() async {
-    setState(() => _isUploading = true);
+  Future<void> _showImageSourceDialog() async {
+    final l10n = AppLocalizations.of(context);
+    final isWeb = ref.read(platformServiceProvider).isWeb;
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: Text(l10n.photos),
+                onTap: () {
+                  _pickImage(ImageSource.gallery);
+                  Navigator.of(context).pop();
+                },
+              ),
+              if (!isWeb)
+                ListTile(
+                  leading: const Icon(Icons.photo_camera),
+                  title: Text(l10n.camera),
+                  onTap: () {
+                    _pickImage(ImageSource.camera);
+                    Navigator.of(context).pop();
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 85,
-      );
+  Future<void> _pickImage(ImageSource source) async {
+    final l10n = AppLocalizations.of(context);
+    final permissionService = ref.read(permissionServiceProvider);
+    final platformService = ref.read(platformServiceProvider);
 
-      if (image != null) {
-        final bytes = await image.readAsBytes();
-        if (!mounted) return;
-        setState(() {
-          _imageBytes = bytes;
-          _isUploading = false;
-        });
-        widget.onImageSelected(bytes, image.name);
-      } else {
-        // User cancelled picker
+    Permission permission;
+    if (source == ImageSource.camera) {
+      permission = Permission.camera;
+    } else {
+      permission =
+          platformService.isAndroid ? Permission.storage : Permission.photos;
+    }
+
+    final status = await permissionService.requestPermission(permission, context);
+
+    if (status.isGranted) {
+      setState(() => _isUploading = true);
+
+      try {
+        final ImagePicker picker = ImagePicker();
+        final XFile? image = await picker.pickImage(
+          source: source,
+          maxWidth: 512,
+          maxHeight: 512,
+          imageQuality: 85,
+        );
+
+        if (image != null) {
+          final bytes = await image.readAsBytes();
+          if (!mounted) return;
+          setState(() {
+            _imageBytes = bytes;
+            _isUploading = false;
+          });
+          widget.onImageSelected(bytes, image.name);
+        } else {
+          // User cancelled picker
+          if (!mounted) return;
+          setState(() => _isUploading = false);
+        }
+      } catch (e) {
         if (!mounted) return;
         setState(() => _isUploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to pick image: ${e.toString().split(':').last.trim()}',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isUploading = false);
+    } else if (status.isPermanentlyDenied) {
+      _showPermissionDeniedDialog(source);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Failed to pick image: ${e.toString().split(':').last.trim()}',
+            l10n.permissionDenied(source == ImageSource.camera ? l10n.camera : l10n.photos),
           ),
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
+  }
+
+  void _showPermissionDeniedDialog(ImageSource source) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return PermissionDeniedDialog(
+          permission: source == ImageSource.camera ? l10n.camera : l10n.photos,
+        );
+      },
+    );
   }
 
   Widget _buildImageContent() {
@@ -218,7 +295,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: _isUploading ? null : _pickImage,
+                  onTap: _isUploading ? null : _showImageSourceDialog,
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     padding: const EdgeInsets.all(10),

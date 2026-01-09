@@ -3199,5 +3199,44 @@
       "platforms": {"type": "String"}
     }
   },
-  "updateBooking": "Update Booking"
+  "updateBooking": "Update Booking",
+
+  "permissionRequired": "{permission} Permission Required",
+  "@permissionRequired": {
+    "placeholders": {
+      "permission": {"type": "String"}
+    }
+  },
+  "permissionPermanentlyDenied": "To use this feature, you need to grant the {permission} permission in the app settings.",
+  "@permissionPermanentlyDenied": {
+    "placeholders": {
+      "permission": {"type": "String"}
+    }
+  },
+  "permissionDenied": "{permission} permission denied.",
+  "@permissionDenied": {
+    "placeholders": {
+      "permission": {"type": "String"}
+    }
+  },
+  "openSettings": "Open Settings",
+  "photos": "Photos",
+  "camera": "Camera",
+
+  "permissionRequest": "{permission} Request",
+  "@permissionRequest": {
+    "placeholders": {
+      "permission": {"type": "String"}
+    }
+  },
+  "permissionRationaleCamera": "To take photos of your property or profile, the app needs access to your camera. Your photos are only uploaded when you select them.",
+  "permissionRationalePhotos": "To select property or profile pictures from your gallery, the app needs permission to access your photos. We only access photos you select.",
+  "notNow": "Not Now",
+  "continueA": "Continue",
+  "permissionName": "{permission, select, Permission.camera{Camera} Permission.photos{Photos} Permission.storage{Storage} other{Permission}}",
+  "@permissionName": {
+    "placeholders": {
+      "permission": {}
+    }
+  }
 }

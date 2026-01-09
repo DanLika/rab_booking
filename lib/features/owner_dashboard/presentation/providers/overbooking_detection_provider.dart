@@ -5,7 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/enums.dart';
 import '../../utils/booking_overlap_detector.dart';
-import '../providers/owner_calendar_provider.dart';
+import 'owner_calendar_provider.dart';
 import '../../domain/models/overbooking_conflict.dart';
 import '../../../../shared/providers/repository_providers.dart';
 
@@ -50,7 +50,7 @@ String _generateConflictId(BookingModel booking1, BookingModel booking2) {
 /// Automatically detects conflicts between bookings in real-time
 @riverpod
 Stream<List<OverbookingConflict>> overbookingConflicts(Ref ref) async* {
-  // Watch calendar bookings provider
+  // Watch calendar bookings provider (now unified)
   final bookingsAsync = ref.watch(calendarBookingsProvider);
 
   // Wait for bookings to load

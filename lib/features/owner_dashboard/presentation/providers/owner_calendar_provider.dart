@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../shared/models/booking_model.dart';
+import '../../../../shared/models/ical_event_model.dart'; // Import iCal event model
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -57,15 +58,14 @@ Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
   return allUnits;
 }
 
-/// Calendar bookings provider - returns all bookings except cancelled
-/// Cancelled bookings are hidden as they don't occupy dates
-///
-/// OPTIMIZED: Uses pre-cached unitIds from allOwnerUnitsProvider
-/// Saves 1 + N queries (properties + units) per invocation
+/// UNIFIED Calendar bookings provider
+/// Returns a merged map of regular bookings and iCal events
+/// This is the single source of truth for all calendar data
 @riverpod
 Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final auth = FirebaseAuth.instance;
+  final firestore = FirebaseFirestore.instance;
   final userId = auth.currentUser?.uid;
 
   if (userId == null) {
@@ -81,24 +81,68 @@ Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
 
   if (unitIds.isEmpty) return {};
 
-  // Date range aligned with widget's max scroll limits (_kMaxDaysLimit = 365)
-  // 1 year back for historical visibility, 1 year forward for future planning
+  // === 1. Fetch Regular Bookings ===
   final now = DateTime.now();
   final startDate = DateTime(now.year, now.month - 12, now.day); // 1 year back
   final endDate = DateTime(now.year + 1, now.month, now.day); // 1 year forward
 
-  // OPTIMIZED: Use method that accepts unitIds directly (skips properties/units fetch)
-  final allBookings = await repository.getCalendarBookingsWithUnitIds(
+  final regularBookingsMap = await repository.getCalendarBookingsWithUnitIds(
     unitIds: unitIds,
     startDate: startDate,
     endDate: endDate,
   );
 
-  // FILTER: Show active bookings + completed on timeline (exclude only cancelled)
-  // Completed bookings are included for historical visibility
-  // Cancelled bookings are hidden as they don't occupy dates
+  // === 2. Fetch iCal Events (with query chunking for >30 units) ===
+  final iCalBookingsMap = <String, List<BookingModel>>{};
+  try {
+    List<ICalEvent> allICalEvents = [];
+    for (var i = 0; i < unitIds.length; i += 30) {
+      final chunk = unitIds.sublist(i, i + 30 > unitIds.length ? unitIds.length : i + 30);
+      final iCalQuery = firestore
+          .collectionGroup('ical_events')
+          .where('unit_id', whereIn: chunk);
+
+      final iCalSnapshot = await iCalQuery.get();
+      final chunkEvents = iCalSnapshot.docs
+          .map((doc) => ICalEvent.fromMap(doc.data()))
+          .toList();
+      allICalEvents.addAll(chunkEvents);
+    }
+
+    // Convert iCal events to BookingModel objects
+    for (final event in allICalEvents) {
+      final booking = BookingModel(
+        id: event.uid,
+        unitId: event.unitId,
+        checkIn: event.dtstart,
+        checkOut: event.dtend,
+        status: BookingStatus.confirmed, // Treat iCal events as confirmed
+        guestName: event.summary,
+        totalPrice: 0,
+        bookingDate: event.created,
+        source: event.source,
+      );
+      (iCalBookingsMap[event.unitId] ??= []).add(booking);
+    }
+  } catch (e) {
+    LoggingService.log('Non-critical error fetching iCal events: $e',
+        tag: 'iCal');
+  }
+
+  // === 3. Merge Bookings and iCal Events ===
+  final mergedBookings = <String, List<BookingModel>>{...regularBookingsMap};
+  iCalBookingsMap.forEach((unitId, bookings) {
+    mergedBookings.update(
+      unitId,
+      (existing) => [...existing, ...bookings],
+      ifAbsent: () => bookings,
+    );
+  });
+
+  // === 4. Filter for Display ===
+  // Exclude only cancelled bookings for UI display
   final visibleBookingsMap = <String, List<BookingModel>>{};
-  for (final entry in allBookings.entries) {
+  for (final entry in mergedBookings.entries) {
     final visibleBookings = entry.value
         .where((booking) => booking.status != BookingStatus.cancelled)
         .toList();

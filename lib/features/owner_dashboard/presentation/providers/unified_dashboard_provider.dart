@@ -88,19 +88,25 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       // Query upcoming check-ins (always next 7 days, regardless of selected period)
       final upcomingCheckIns = await _queryUpcomingCheckIns(unitIds: unitIds);
 
+      // Filter for confirmed/completed bookings for most metrics
+      final confirmedAndCompletedBookings = bookings
+          .where((b) =>
+              b['status'] == 'confirmed' || b['status'] == 'completed')
+          .toList();
+
       // Calculate metrics
-      final revenue = bookings.fold<double>(
+      final revenue = confirmedAndCompletedBookings.fold<double>(
         0.0,
         (total, b) => total + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
       );
 
-      final bookingsCount = bookings.length;
+      // Bookings count now reflects only confirmed and completed bookings
+      final bookingsCount = confirmedAndCompletedBookings.length;
 
       // Calculate occupancy rate based on UNITS (not properties)
-      final totalDaysInRange = dateRange.endDate
-          .difference(dateRange.startDate)
-          .inDays;
-      final bookedDays = bookings.fold<int>(0, (total, b) {
+      final totalDaysInRange =
+          dateRange.endDate.difference(dateRange.startDate).inDays;
+      final bookedDays = confirmedAndCompletedBookings.fold<int>(0, (total, b) {
         final checkIn = _parseCheckIn(b);
         final checkOut = _parseCheckOut(b);
         if (checkIn == null || checkOut == null) return total; // Skip invalid

@@ -44,8 +44,8 @@ class LoggingService {
     }
 
     // Set Crashlytics user context (mobile)
-    if (!kIsWeb && userId != null) {
-      FirebaseCrashlytics.instance.setUserIdentifier(userId);
+    if (!kIsWeb) {
+      FirebaseCrashlytics.instance.setUserIdentifier(userId ?? '');
     }
   }
 

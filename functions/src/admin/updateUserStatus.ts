@@ -1,91 +1,140 @@
-import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
-
-const db = admin.firestore();
-const validStatuses = ["trial", "active", "trial_expired", "suspended"];
+import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {admin, db} from "../firebase";
+import {logError, logSuccess} from "../logger";
 
 /**
- * A callable Cloud Function for an admin to update a user's account status.
+ * Admin: Update User Status
+ * 
+ * Callable Cloud Function for admins to update a user's account status.
  *
  * @remarks
- * - **Security:** Checks if the caller has an `isAdmin` custom claim.
- * - **Validation:** Ensures the provided `userId` exists and `newStatus` is a valid enum value.
- * - **Auditing:** Records the admin's UID in the `statusChangedBy` field.
- *
- * @param {object} data - The data passed to the function.
- * @param {string} data.userId - The ID of the user to update.
- * @param {string} data.newStatus - The new status to set for the user.
- * @param {string} [data.reason] - An optional reason for the status change.
- * @param {context} context - The context object for the callable function.
- *
- * @returns {Promise<object>} A result object indicating success.
- * @throws {functions.https.HttpsError} Throws an error if the user is not an admin,
- *   if the user is not found, or if the parameters are invalid.
+ * - **Security:** Checks if the caller has an `isAdmin` custom claim
+ * - **Validation:** Ensures the provided `userId` exists and `newStatus` is valid
+ * - **Auditing:** Records the admin's UID in the `statusChangedBy` field
  */
-export const updateUserStatus = functions.https.onCall(async (data, context) => {
-  // 1. Security Check: Ensure the caller is an admin
-  if (!context.auth?.token.isAdmin) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "This function can only be called by an administrator.",
-    );
-  }
 
-  const { userId, newStatus, reason } = data;
-  const adminUid = context.auth.uid;
+// Valid account statuses
+const VALID_STATUSES = ["trial", "active", "trial_expired", "suspended"] as const;
+type AccountStatus = typeof VALID_STATUSES[number];
 
-  // 2. Input Validation
-  if (!userId || !newStatus) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "The function must be called with 'userId' and 'newStatus' arguments.",
-    );
-  }
+interface UpdateUserStatusRequest {
+  userId: string;
+  newStatus: AccountStatus;
+  reason?: string;
+}
 
-  if (!validStatuses.includes(newStatus)) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      `Invalid 'newStatus'. Must be one of: ${validStatuses.join(", ")}.`,
-    );
-  }
+export const updateUserStatus = onCall(
+  {
+    region: "europe-west1",
+  },
+  async (request) => {
+    // 1. Security Check: Ensure the caller is authenticated
+    if (!request.auth) {
+      throw new HttpsError(
+        "unauthenticated",
+        "You must be logged in to perform this action."
+      );
+    }
 
-  const userRef = db.collection("users").doc(userId);
+    // 2. Security Check: Ensure the caller is an admin
+    const isAdmin = request.auth.token.isAdmin === true;
+    if (!isAdmin) {
+      logError("[Admin] Non-admin attempted to update user status", null, {
+        callerUid: request.auth.uid,
+      });
+      throw new HttpsError(
+        "permission-denied",
+        "This function can only be called by an administrator."
+      );
+    }
 
-  try {
-    // 3. Perform the update in a transaction for atomicity
-    await db.runTransaction(async (transaction) => {
-      const userDoc = await transaction.get(userRef);
+    const {userId, newStatus, reason} = request.data as UpdateUserStatusRequest;
+    const adminUid = request.auth.uid;
 
-      if (!userDoc.exists) {
-        throw new functions.https.HttpsError(
-          "not-found",
-          `User with ID ${userId} not found.`,
-        );
-      }
+    // 3. Input Validation
+    if (!userId || typeof userId !== "string") {
+      throw new HttpsError(
+        "invalid-argument",
+        "The 'userId' argument is required and must be a string."
+      );
+    }
 
-      const updatePayload: { [key: string]: unknown } = {
-        accountStatus: newStatus,
-        statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
-        statusChangedBy: adminUid,
+    if (!newStatus || !VALID_STATUSES.includes(newStatus)) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Invalid 'newStatus'. Must be one of: ${VALID_STATUSES.join(", ")}.`
+      );
+    }
+
+    const userRef = db.collection("users").doc(userId);
+
+    try {
+      // 4. Perform the update in a transaction for atomicity
+      await db.runTransaction(async (transaction) => {
+        const userDoc = await transaction.get(userRef);
+
+        if (!userDoc.exists) {
+          throw new HttpsError(
+            "not-found",
+            `User with ID ${userId} not found.`
+          );
+        }
+
+        const currentStatus = userDoc.data()?.accountStatus;
+
+        const updatePayload: Record<string, admin.firestore.FieldValue | string | boolean | null> = {
+          accountStatus: newStatus,
+          statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+          statusChangedBy: adminUid,
+          previousStatus: currentStatus || null,
+        };
+
+        if (reason) {
+          updatePayload.statusChangeReason = reason;
+        }
+
+        // If activating from trial_expired, clear the expired flag
+        if (newStatus === "active" && currentStatus === "trial_expired") {
+          updatePayload.trialExpiredEmailSent = false;
+        }
+
+        // If setting to trial, reset warning flags
+        if (newStatus === "trial") {
+          updatePayload.trialWarning7DaysSent = false;
+          updatePayload.trialWarning3DaysSent = false;
+          updatePayload.trialWarning1DaySent = false;
+          updatePayload.trialExpiredEmailSent = false;
+        }
+
+        transaction.update(userRef, updatePayload);
+      });
+
+      logSuccess("[Admin] User status updated", {
+        userId,
+        newStatus,
+        adminUid,
+        reason: reason || "No reason provided",
+      });
+
+      return {
+        success: true,
+        message: `User ${userId} status updated to ${newStatus}.`,
       };
+    } catch (error) {
+      logError("[Admin] Error updating user status", error, {
+        userId,
+        adminUid,
+      });
 
-      if (reason) {
-        updatePayload.statusChangeReason = reason;
+      // Re-throw HttpsError to the client
+      if (error instanceof HttpsError) {
+        throw error;
       }
 
-      transaction.update(userRef, updatePayload);
-    });
-
-    functions.logger.info(`Admin ${adminUid} successfully updated user ${userId} to status '${newStatus}'.`);
-    return { success: true, message: `User ${userId} status updated to ${newStatus}.` };
-  } catch (error) {
-    functions.logger.error(`Error updating user ${userId} status by admin ${adminUid}:`, error);
-
-    // Re-throw HttpsError to the client, or wrap other errors
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
-    } else {
-      throw new functions.https.HttpsError("internal", "An unexpected error occurred.", error);
+      throw new HttpsError(
+        "internal",
+        "An unexpected error occurred while updating user status."
+      );
     }
   }
-});
+);

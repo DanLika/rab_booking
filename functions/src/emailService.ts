@@ -1161,3 +1161,239 @@ export async function sendEmailVerificationCode(
     throw error;
   }
 }
+
+
+// ============================================================================
+// TRIAL EMAIL FUNCTIONS
+// ============================================================================
+
+/**
+ * Send Trial Expiring Warning Email
+ *
+ * Notifies user that their trial is about to expire.
+ *
+ * @param email - User's email address
+ * @param name - User's name
+ * @param daysRemaining - Number of days until trial expires (1, 3, or 7)
+ * @param userId - User ID for tracking
+ */
+export async function sendTrialExpiringEmail(
+  email: string,
+  name: string,
+  daysRemaining: number,
+  userId: string
+): Promise<void> {
+  try {
+    const resend = getResendClient();
+
+    const upgradeUrl = `https://app.bookbed.io/subscription?utm_source=trial_warning&utm_medium=email&days=${daysRemaining}`;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Trial is Expiring Soon</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F9FAFB;">
+  <div style="max-width: 560px; margin: 0 auto; padding: 20px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);">
+      
+      <!-- Header -->
+      <div style="text-align: center; padding: 32px 24px; background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);">
+        <div style="font-size: 48px; margin-bottom: 16px;">⏰</div>
+        <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #1F2937;">
+          Your Trial Expires in ${daysRemaining} Day${daysRemaining === 1 ? "" : "s"}
+        </h1>
+        <p style="margin: 0; font-size: 14px; color: #6B7280;">
+          Don't lose access to your booking management tools
+        </p>
+      </div>
+      
+      <!-- Content -->
+      <div style="padding: 24px;">
+        <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
+          Hi ${name},
+        </p>
+        
+        <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">
+          Your free trial of BookBed will expire in <strong>${daysRemaining} day${daysRemaining === 1 ? "" : "s"}</strong>. 
+          To continue managing your bookings without interruption, please upgrade to a paid plan.
+        </p>
+        
+        <!-- Warning Box -->
+        <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 16px; margin: 20px 0;">
+          <div style="display: flex; align-items: flex-start;">
+            <span style="font-size: 18px; margin-right: 12px;">⚠️</span>
+            <div>
+              <strong style="display: block; font-size: 15px; color: #D97706; margin-bottom: 6px;">
+                What happens when your trial ends?
+              </strong>
+              <span style="font-size: 14px; color: #6B7280; line-height: 1.5;">
+                You'll lose access to the owner dashboard, booking management, and calendar sync features. 
+                Your existing bookings and data will be preserved.
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${upgradeUrl}" style="display: inline-block; background-color: #374151; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+            Upgrade Now
+          </a>
+        </div>
+        
+        <p style="margin: 0; font-size: 13px; color: #9CA3AF; text-align: center;">
+          Questions? Reply to this email and we'll help you out.
+        </p>
+      </div>
+      
+      <!-- Footer -->
+      <div style="text-align: center; padding: 24px; border-top: 1px solid #E5E7EB;">
+        <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
+          This email was sent by BookBed. You're receiving this because your trial is expiring soon.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim();
+
+    await resend.emails.send({
+      from: `${FROM_NAME()} <${FROM_EMAIL()}>`,
+      to: email,
+      subject: `⏰ Your BookBed trial expires in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`,
+      html,
+    });
+
+    logSuccess("[Trial Email] Expiring warning sent", {
+      email,
+      daysRemaining,
+      userId,
+    });
+  } catch (error) {
+    logError("[Trial Email] Failed to send expiring warning", error, {
+      email,
+      daysRemaining,
+      userId,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Send Trial Expired Email
+ *
+ * Notifies user that their trial has expired.
+ *
+ * @param email - User's email address
+ * @param name - User's name
+ * @param userId - User ID for tracking
+ */
+export async function sendTrialExpiredEmail(
+  email: string,
+  name: string,
+  userId: string
+): Promise<void> {
+  try {
+    const resend = getResendClient();
+
+    const upgradeUrl = `https://app.bookbed.io/subscription?utm_source=trial_expired&utm_medium=email`;
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Trial Has Expired</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F9FAFB;">
+  <div style="max-width: 560px; margin: 0 auto; padding: 20px;">
+    <div style="background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);">
+      
+      <!-- Header -->
+      <div style="text-align: center; padding: 32px 24px; background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);">
+        <div style="font-size: 48px; margin-bottom: 16px;">😢</div>
+        <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #1F2937;">
+          Your Trial Has Expired
+        </h1>
+        <p style="margin: 0; font-size: 14px; color: #6B7280;">
+          But it's not too late to continue!
+        </p>
+      </div>
+      
+      <!-- Content -->
+      <div style="padding: 24px;">
+        <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
+          Hi ${name},
+        </p>
+        
+        <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">
+          Your free trial of BookBed has ended. Your account is now in read-only mode, 
+          which means you can view your existing data but can't create new bookings or 
+          access premium features.
+        </p>
+        
+        <!-- Info Box -->
+        <div style="background-color: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 16px; margin: 20px 0;">
+          <div style="display: flex; align-items: flex-start;">
+            <span style="font-size: 18px; margin-right: 12px;">ℹ️</span>
+            <div>
+              <strong style="display: block; font-size: 15px; color: #2563EB; margin-bottom: 6px;">
+                Your data is safe
+              </strong>
+              <span style="font-size: 14px; color: #6B7280; line-height: 1.5;">
+                All your bookings, properties, and settings are preserved. 
+                Upgrade anytime to regain full access.
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${upgradeUrl}" style="display: inline-block; background-color: #059669; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+            Upgrade to Continue
+          </a>
+        </div>
+        
+        <p style="margin: 0; font-size: 13px; color: #9CA3AF; text-align: center;">
+          Need help deciding? Reply to this email and we'll answer your questions.
+        </p>
+      </div>
+      
+      <!-- Footer -->
+      <div style="text-align: center; padding: 24px; border-top: 1px solid #E5E7EB;">
+        <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
+          This email was sent by BookBed. You're receiving this because your trial has expired.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+    `.trim();
+
+    await resend.emails.send({
+      from: `${FROM_NAME()} <${FROM_EMAIL()}>`,
+      to: email,
+      subject: "Your BookBed trial has expired - Upgrade to continue",
+      html,
+    });
+
+    logSuccess("[Trial Email] Expired notification sent", {
+      email,
+      userId,
+    });
+  } catch (error) {
+    logError("[Trial Email] Failed to send expired notification", error, {
+      email,
+      userId,
+    });
+    throw error;
+  }
+}

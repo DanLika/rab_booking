@@ -102,3 +102,7 @@ export * from "./auth/onUserCreate";
 
 // Export migration scripts
 export * from "./migrations/migrateTrialStatus";
+
+// Export trial management functions
+export * from "./trial/checkTrialExpiration";
+export * from "./trial/sendTrialExpirationWarning";

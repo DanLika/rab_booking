@@ -36,6 +36,10 @@ export const onUserCreate = functions.firestore
         statusChangedAt: trialStartDate,
         statusChangedBy: "system",
         createdAt: trialStartDate, // Add createdAt for future reference/migrations
+        // Initialize warning flags
+        warningSent_1_days: false,
+        warningSent_3_days: false,
+        warningSent_7_days: false,
       }, { merge: true }); // Use merge:true to avoid overwriting other fields if any
 
       functions.logger.info(`Successfully initialized trial for user: ${userId}`);

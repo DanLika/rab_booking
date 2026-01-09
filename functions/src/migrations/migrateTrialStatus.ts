@@ -24,11 +24,10 @@ const db = admin.firestore();
  * @returns {Promise<object>} A result object with counts of users to migrate and batches processed.
  */
 export const migrateTrialStatus = functions.https.onCall(async (data, context) => {
-  // Basic security check: ensure the caller is an admin in a real scenario
-  // For now, we'll just log a warning. In production, you'd check custom claims.
-  // if (!context.auth?.token.isAdmin) {
-  //   throw new functions.https.HttpsError("permission-denied", "Must be an admin to run this migration.");
-  // }
+  // Security check: This function is destructive and should only be run by an admin.
+  if (!context.auth?.token.isAdmin) {
+    throw new functions.https.HttpsError("permission-denied", "Must be an admin to run this migration.");
+  }
 
   const dryRun = data.dryRun !== false; // Defaults to true if not specified or null
   const batchSize = data.batchSize || 500;
@@ -73,6 +72,10 @@ export const migrateTrialStatus = functions.https.onCall(async (data, context) =
         trialExpiresAt: trialExpiresAt,
         statusChangedAt: admin.firestore.Timestamp.now(),
         statusChangedBy: "system_migration",
+        // Initialize warning flags
+        warningSent_1_days: false,
+        warningSent_3_days: false,
+        warningSent_7_days: false,
       };
 
       if (!dryRun) {

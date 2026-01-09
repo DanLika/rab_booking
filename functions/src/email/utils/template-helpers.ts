@@ -322,10 +322,13 @@ export function generateAlert(options: AlertOptions): string {
       padding: 16px;
       margin: 20px 0;
     ">
-      <div style="display: flex; align-items: flex-start;">
-        <span style="font-size: 18px; margin-right: 12px; line-height: 1;">${emoji}</span>
-        <div style="flex: 1;">
-          ${title ? `
+      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+          <td width="28" valign="top" style="padding-right: 12px;">
+            <span style="font-size: 18px; line-height: 1;">${emoji}</span>
+          </td>
+          <td valign="top">
+            ${title ? `
             <strong style="
               display: block;
               font-size: 15px;
@@ -341,8 +344,9 @@ export function generateAlert(options: AlertOptions): string {
             line-height: 1.6;
             display: block;
           ">${escapeHtml(message)}</span>
-        </div>
-      </div>
+          </td>
+        </tr>
+      </table>
     </div>
   `.trim();
 }
@@ -574,25 +578,35 @@ export function generatePaymentDetailsCard(details: PaymentDetails): string {
 
 export function wrapEmailContent(content: string): string {
   return `
-    <div style="
-      background-color: ${COLORS.pageBg};
-      padding: 12px;
-      min-height: 100%;
-    ">
-      <div style="
-        max-width: 560px;
-        margin: 0 auto;
-        background-color: ${COLORS.cardBg};
-        border-radius: 12px;
-        border: 1px solid ${COLORS.border};
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-        overflow: hidden;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-      ">
-        ${content}
-      </div>
-    </div>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: ${COLORS.pageBg};">
+      <tr>
+        <td align="center" style="padding: 12px;">
+          <!--[if (gte mso 9)|(IE)]>
+            <table align="center" border="0" cellspacing="0" cellpadding="0" width="560">
+            <tr>
+            <td align="center" valign="top" width="560">
+          <![endif]-->
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 560px;">
+            <tr>
+              <td style="
+                background-color: ${COLORS.cardBg};
+                border-radius: 12px;
+                border: 1px solid ${COLORS.border};
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+                overflow: hidden;
+              ">
+                ${content}
+              </td>
+            </tr>
+          </table>
+          <!--[if (gte mso 9)|(IE)]>
+            </td>
+            </tr>
+            </table>
+          <![endif]-->
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 

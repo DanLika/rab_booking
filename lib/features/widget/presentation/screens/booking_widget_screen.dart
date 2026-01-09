@@ -417,7 +417,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e, s) {
+      LoggingService.logError(
+        'Error during agent logging in booking_widget_screen',
+        e,
+        s,
+      );
+    }
     // #endregion
 
     try {
@@ -457,7 +463,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_${logData['hypothesisId']}',
         );
-      } catch (_) {}
+      } catch (e, s) {
+        LoggingService.logError(
+          'Error during agent logging in booking_widget_screen',
+          e,
+          s,
+        );
+      }
       // #endregion
 
       // If in iframe, also listen for postMessage from popup windows
@@ -527,7 +539,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                 tag: 'DEBUG_${logData['hypothesisId']}',
               );
-            } catch (_) {}
+            } catch (e, s) {
+              LoggingService.logError(
+                'Error during agent logging in booking_widget_screen',
+                e,
+                s,
+              );
+            }
             // #endregion
 
             if (sessionId != null && status == 'success') {
@@ -559,7 +577,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e, s) {
+                  LoggingService.logError(
+                    'Error during agent logging in booking_widget_screen',
+                    e,
+                    s,
+                  );
+                }
                 // #endregion
 
                 _paymentCompletionTimeout!.cancel();
@@ -583,7 +607,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e, s) {
+                  LoggingService.logError(
+                    'Error during agent logging in booking_widget_screen',
+                    e,
+                    s,
+                  );
+                }
                 // #endregion
 
                 LoggingService.log(
@@ -616,7 +646,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e, s) {
+                  LoggingService.logError(
+                    'Error during agent logging in booking_widget_screen',
+                    e,
+                    s,
+                  );
+                }
                 // #endregion
 
                 // Reset processing state FIRST (before any async operations)
@@ -642,7 +678,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e, s) {
+                  LoggingService.logError(
+                    'Error during agent logging in booking_widget_screen',
+                    e,
+                    s,
+                  );
+                }
                 // #endregion
 
                 LoggingService.log(
@@ -895,7 +937,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e, s) {
+      LoggingService.logError(
+        'Error during agent logging in booking_widget_screen',
+        e,
+        s,
+      );
+    }
     // #endregion
 
     final bookingId = message.bookingId;
@@ -1132,7 +1180,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_${logData['hypothesisId']}',
         );
-      } catch (_) {}
+      } catch (e, s) {
+        LoggingService.logError(
+          'Error during agent logging in booking_widget_screen',
+          e,
+          s,
+        );
+      }
     }
     // #endregion
 
@@ -1164,7 +1218,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_${logData['hypothesisId']}',
         );
-      } catch (_) {}
+      } catch (e, s) {
+        LoggingService.logError(
+          'Error during agent logging in booking_widget_screen',
+          e,
+          s,
+        );
+      }
       // #endregion
       if (!mounted) {
         LoggingService.log(
@@ -1201,7 +1261,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
             tag: 'DEBUG_${logData['hypothesisId']}',
           );
-        } catch (_) {}
+        } catch (e, s) {
+          LoggingService.logError(
+            'Error during agent logging in booking_widget_screen',
+            e,
+            s,
+          );
+        }
         // #endregion
 
         setState(() {
@@ -1230,7 +1296,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
             tag: 'DEBUG_${logData['hypothesisId']}',
           );
-        } catch (_) {}
+        } catch (e, s) {
+          LoggingService.logError(
+            'Error during agent logging in booking_widget_screen',
+            e,
+            s,
+          );
+        }
         // #endregion
 
         LoggingService.log(
@@ -1259,7 +1331,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e, s) {
+      LoggingService.logError(
+        'Error during agent logging in booking_widget_screen',
+        e,
+        s,
+      );
+    }
     // #endregion
   }
 
@@ -1780,7 +1858,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e, s) {
+      LoggingService.logError(
+        'Error during agent logging in booking_widget_screen',
+        e,
+        s,
+      );
+    }
     // #endregion
 
     _paymentCompletionTimeout?.cancel();
@@ -1803,7 +1887,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e, s) {
+      LoggingService.logError(
+        'Error during agent logging in booking_widget_screen',
+        e,
+        s,
+      );
+    }
     // #endregion
 
     super.dispose();
@@ -3257,7 +3347,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_PRICE',
         );
-      } catch (_) {}
+      } catch (e, s) {
+        LoggingService.logError(
+          'Error during agent logging in booking_widget_screen',
+          e,
+          s,
+        );
+      }
       // #endregion
 
       final params = SubmitBookingParams(

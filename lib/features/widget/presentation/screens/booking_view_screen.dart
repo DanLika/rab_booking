@@ -174,7 +174,13 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_VIEW',
       );
-    } catch (_) {}
+    } catch (e, s) {
+      LoggingService.logError(
+        'Error during agent logging in booking_view_screen',
+        e,
+        s,
+      );
+    }
     // #endregion
 
     try {
@@ -202,7 +208,13 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_VIEW',
         );
-      } catch (_) {}
+      } catch (e, s) {
+        LoggingService.logError(
+          'Error during agent logging in booking_view_screen',
+          e,
+          s,
+        );
+      }
       // #endregion
 
       final booking = await service.verifyBookingAccess(
@@ -232,7 +244,13 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_VIEW',
         );
-      } catch (_) {}
+      } catch (e, s) {
+        LoggingService.logError(
+          'Error during agent logging in booking_view_screen',
+          e,
+          s,
+        );
+      }
       // #endregion
 
       if (mounted) {

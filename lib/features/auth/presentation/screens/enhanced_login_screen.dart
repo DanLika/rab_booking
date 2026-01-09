@@ -203,7 +203,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       if (mounted) {
         context.go(OwnerRoutes.overview);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // Log the error to Sentry/Crashlytics
+      LoggingService.logError(e, stackTrace);
+
       debugPrint('[LOGIN_SCREEN] Caught exception: ${e.runtimeType} = $e');
       if (!mounted) return;
 
@@ -332,7 +335,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
     try {
       await signInMethod();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      // Log the error to Sentry/Crashlytics
+      LoggingService.logError(e, stackTrace);
+
       if (!mounted) return;
       final authState = ref.read(enhancedAuthProvider);
       ErrorDisplayUtils.showErrorSnackBar(

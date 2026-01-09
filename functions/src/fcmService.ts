@@ -44,7 +44,17 @@ async function getUserFcmTokens(userId: string): Promise<string[]> {
 
     // tokens is an array of {token: string, platform: string, updatedAt: Timestamp}
     const tokens = data.tokens as Array<{token: string; platform: string}>;
-    return tokens.map((t) => t.token).filter((t) => t && t.length > 0);
+    return tokens
+      .map((t) => t.token)
+      .filter((token): token is string => {
+        // Basic validation: must be a non-empty string of reasonable length.
+        // This prevents sending to clearly invalid/malformed tokens.
+        const isValid = typeof token === "string" && token.length > 20;
+        if (!isValid) {
+          logWarn("[FCM] Found invalid token format in Firestore", {userId});
+        }
+        return isValid;
+      });
   } catch (error) {
     logError("[FCM] Error fetching user FCM tokens", {userId, error});
     return [];

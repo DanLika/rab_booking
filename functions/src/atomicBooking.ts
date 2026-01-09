@@ -11,6 +11,11 @@ import {
   sendOwnerNotificationEmail,
   sendPendingBookingOwnerNotification,
 } from "./emailService";
+import {
+  sendBookingPushNotification,
+  sendPendingBookingPushNotification,
+} from "./fcmService";
+import {createBookingNotification} from "./notificationService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
 import {validateEmail} from "./utils/emailValidation";
 import {
@@ -1143,6 +1148,23 @@ export const createBookingAtomic = onCall(async (request) => {
             }
           );
         }
+
+        // Send push & in-app notifications for pending booking (non-blocking)
+        sendPendingBookingPushNotification(
+          ownerId,
+          result.bookingId,
+          sanitizedGuestName,
+          checkInDate.toDate(),
+          checkOutDate.toDate()
+        ).catch((e) => logError("[AtomicBooking] Pending push notification failed", e));
+
+        createBookingNotification(
+          ownerId,
+          result.bookingId,
+          sanitizedGuestName,
+          "created" // In-app notification still uses "created" but will show pending status
+        ).catch((e) => logError("[AtomicBooking] Pending in-app notification failed", e));
+
       } else {
         // Auto-confirmed flow - send "Booking Confirmed" email to guest
         // Use retry mechanism for transient failures
@@ -1235,6 +1257,23 @@ export const createBookingAtomic = onCall(async (request) => {
             }
           );
         }
+
+        // Send push & in-app notifications for confirmed booking (non-blocking)
+        sendBookingPushNotification(
+          ownerId,
+          result.bookingId,
+          sanitizedGuestName,
+          "created",
+          checkInDate.toDate(),
+          checkOutDate.toDate()
+        ).catch((e) => logError("[AtomicBooking] Push notification failed", e));
+
+        createBookingNotification(
+          ownerId,
+          result.bookingId,
+          sanitizedGuestName,
+          "created"
+        ).catch((e) => logError("[AtomicBooking] In-app notification failed", e));
       }
     } catch (emailError) {
       // Log error but don't fail the booking

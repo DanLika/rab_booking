@@ -84,7 +84,7 @@ dependencies:
   collection: ^1.18.0  # Collection utilities (firstWhereOrNull, etc.)
 
   # Error Tracking (Web - Crashlytics doesn't support web)
-  sentry_flutter: ^8.12.0
+  sentry_flutter: ^9.9.2
 
   # Charts
   graphic: ^2.6.0

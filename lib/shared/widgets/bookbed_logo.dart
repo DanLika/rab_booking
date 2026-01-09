@@ -1,0 +1,80 @@
+import 'package:flutter/material.dart';
+
+/// BookBed logo widget that displays the official logo image
+///
+/// Uses the logo-light.avif asset. In dark mode, the logo colors are
+/// automatically inverted to ensure visibility on dark backgrounds.
+///
+/// Usage:
+/// ```dart
+/// BookBedLogo(size: 80)
+/// ```
+class BookBedLogo extends StatelessWidget {
+  /// The size of the logo (width and height will be equal)
+  final double size;
+
+  /// Optional box shadow for glow effect
+  final bool showGlow;
+
+  /// Glow color (defaults to primary color with low opacity)
+  final Color? glowColor;
+
+  const BookBedLogo({
+    super.key,
+    this.size = 80,
+    this.showGlow = false,
+    this.glowColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    Widget logoImage = Image.asset(
+      'assets/images/logo-light.avif',
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      // Provide error handling for asset loading
+      errorBuilder: (context, error, stackTrace) {
+        // Fallback to a simple icon if image fails to load
+        return Icon(
+          Icons.home_work_outlined,
+          size: size * 0.6,
+          color: Theme.of(context).colorScheme.primary,
+        );
+      },
+    );
+
+    // In dark mode, invert the logo colors so it's visible on dark backgrounds
+    if (isDarkMode) {
+      logoImage = ColorFiltered(
+        colorFilter: const ColorFilter.matrix(<double>[
+          -1, 0, 0, 0, 255, //
+          0, -1, 0, 0, 255, //
+          0, 0, -1, 0, 255, //
+          0, 0, 0, 1, 0, //
+        ]),
+        child: logoImage,
+      );
+    }
+
+    if (!showGlow) {
+      return logoImage;
+    }
+
+    // Apply glow effect if requested
+    final effectiveGlowColor =
+        glowColor ?? Theme.of(context).colorScheme.primary.withAlpha(40);
+
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: effectiveGlowColor, blurRadius: 20, spreadRadius: 2),
+        ],
+      ),
+      child: logoImage,
+    );
+  }
+}

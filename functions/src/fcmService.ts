@@ -246,14 +246,16 @@ function formatDateRange(checkInDate: Date, checkOutDate: Date): string {
 }
 
 /**
- * Send booking notification via push (simple version)
- * For backwards compatibility - use sendBookingPushNotificationEnhanced for full features
+ * Send booking notification via push
+ * Supports optional date parameters for enhanced messages with date range
  */
 export async function sendBookingPushNotification(
   userId: string,
   bookingId: string,
   guestName: string,
-  action: "created" | "updated" | "cancelled"
+  action: "created" | "updated" | "cancelled",
+  checkInDate?: Date,
+  checkOutDate?: Date
 ): Promise<boolean> {
   const titles: Record<string, string> = {
     created: "New Booking",
@@ -261,10 +263,15 @@ export async function sendBookingPushNotification(
     cancelled: "Booking Cancelled",
   };
 
+  // If dates provided, include date range in message
+  const dateRange = (checkInDate && checkOutDate)
+    ? ` (${formatDateRange(checkInDate, checkOutDate)})`
+    : "";
+
   const bodies: Record<string, string> = {
-    created: `${guestName} made a new booking.`,
-    updated: `Booking for ${guestName} has been updated.`,
-    cancelled: `Booking for ${guestName} has been cancelled.`,
+    created: `${guestName} made a new booking${dateRange}.`,
+    updated: `Booking for ${guestName} has been updated${dateRange}.`,
+    cancelled: `Booking for ${guestName} has been cancelled${dateRange}.`,
   };
 
   return sendPushNotification({

@@ -597,7 +597,30 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2026-01-05 | **Version**: 6.26
+**Last Updated**: 2026-01-09 | **Version**: 6.27
+
+**Changelog 6.27**: Logo Asset Implementation & FCM Push Notifications:
+- **Logo Asset System**:
+  - Nova `logo-light.avif` slika u `assets/images/`
+  - Kreiran `BookBedLogo` widget (`lib/shared/widgets/bookbed_logo.dart`)
+  - **Dark Mode Support**: Automatska inverzija boja putem `ColorFilter.matrix`
+  - `AuthLogoIcon` ažuriran da koristi `Image.asset` umjesto `CustomPaint`
+  - Uklonjena stara `_LogoPainter` klasa
+  - Fallback na `Icons.home_work_outlined` ako asset ne učita
+- **FCM Push Notifications** (Phase 2):
+  - Integrirano u `atomicBooking.ts` za pending i confirmed bookinge
+  - `sendBookingPushNotification()` sada prima opcionalne `checkInDate`/`checkOutDate` parametre
+  - `sendPendingBookingPushNotification()` za pending bookinge
+  - In-app notifikacije putem `createBookingNotification()`
+  - Non-blocking izvršenje sa `.catch()` error handling
+- **Modified Files**:
+  - `pubspec.yaml`: Dodana `assets/images/` folder
+  - `lib/shared/widgets/bookbed_logo.dart`: Novi widget
+  - `lib/features/auth/presentation/widgets/auth_logo_icon.dart`: Image.asset + dark mode
+  - `lib/core/widgets/owner_app_loader.dart`: Koristi `AuthLogoIcon`
+  - `lib/features/widget/presentation/widgets/common/bookbed_loader.dart`: Koristi `AuthLogoIcon`
+  - `functions/src/atomicBooking.ts`: FCM integracija
+  - `functions/src/fcmService.ts`: Ažurirani parametri funkcije
 
 **Changelog 6.26**: Security Audit Complete (SF-001 through SF-017):
 - **Analizirani branchevi**: 12 AI agent brancheva (Google Jules, Sentinel, Bolt, Palette)

@@ -119,6 +119,7 @@ flutter:
   # Assets
   assets:
     - assets/translations/
+    - assets/images/
 
   # Custom Fonts
   fonts:

@@ -64,6 +64,8 @@ import '../widgets/booking/contact_pill_card_widget.dart';
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../l10n/widget_translations.dart';
+import '../providers/legacy_site_provider.dart';
+import '../widgets/zoom_hint_overlay.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
@@ -237,6 +239,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // Track last sent height to avoid redundant postMessages
   double _lastSentHeight = 0;
   bool _panEnabled = false;
+  bool _showZoomHint = true;
 
   @override
   void initState() {
@@ -370,6 +373,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // Bug #53: Load saved form data if page was refreshed
       await _loadFormData();
+
+      // Check if we're on a legacy site and update the provider.
+      if (mounted) {
+        final isLegacy = isLegacySite();
+        ref.read(isLegacySiteProvider.notifier).state = isLegacy;
+      }
     });
   }
 
@@ -2263,6 +2272,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     constraints,
                     isDarkMode,
                   ),
+                if (ref.watch(isLegacySiteProvider) && _showZoomHint)
+                  ZoomHintOverlay(onDismiss: () {
+                    setState(() {
+                      _showZoomHint = false;
+                    });
+                  }),
               ],
             );
           },

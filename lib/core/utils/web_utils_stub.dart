@@ -215,3 +215,6 @@ void Function() listenToPwaInstallability(
 ) {
   return () {};
 }
+
+/// Check if parent window is a legacy, non-responsive site (stub).
+bool isLegacySite() => false;

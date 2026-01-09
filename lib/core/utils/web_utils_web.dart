@@ -579,6 +579,43 @@ void Function() listenToVisualViewport(void Function() onResize) {
   }
 }
 
+/// Check if parent window is a legacy, non-responsive site.
+/// This is a heuristic that checks for the absence of a proper viewport meta tag.
+bool isLegacySite() {
+  if (!isInIframe) {
+    return false; // Not in an iframe, so we can't check the parent.
+  }
+
+  try {
+    final parentDocument = web.window.parent?.document;
+    if (parentDocument == null) {
+      return false; // Can't access parent document.
+    }
+
+    final viewportMeta = parentDocument.querySelector('meta[name="viewport"]');
+    if (viewportMeta == null) {
+      // No viewport meta tag is a strong indicator of a legacy site.
+      return true;
+    }
+
+    final content = viewportMeta.getAttribute('content')?.toLowerCase() ?? '';
+    if (!content.contains('width=device-width')) {
+      // Viewport is not set to the device width, likely a fixed-width legacy site.
+      return true;
+    }
+
+    if (!content.contains('initial-scale=1')) {
+      // Not scaled to 1 initially, another sign of a non-responsive design.
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    // Cross-origin access will throw an error. Assume it's not a legacy site.
+    return false;
+  }
+}
+
 /// Handle visualViewport resize event
 void _onVisualViewportResize(web.Event event) {
   final height = web.window.visualViewport?.height ?? 0;

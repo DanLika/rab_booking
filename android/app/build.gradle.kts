@@ -20,7 +20,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "io.bookbed.app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -46,8 +46,8 @@ android {
 
     defaultConfig {
         applicationId = "io.bookbed.app"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 21
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

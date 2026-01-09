@@ -45,6 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Export Compliance -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<!-- Deep linking: Custom URL scheme -->
 	<key>CFBundleURLTypes</key>
 	<array>

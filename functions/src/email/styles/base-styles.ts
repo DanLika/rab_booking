@@ -41,13 +41,6 @@ export function getBaseStyles(): string {
       a {
         text-decoration: none;
       }
-
-      /* Responsive: consistent 8px padding on all screen sizes */
-      @media only screen and (max-width: 600px) {
-        .email-wrapper {
-          padding: 8px !important;
-        }
-      }
     </style>
   `;
 }

@@ -576,7 +576,7 @@ export function wrapEmailContent(content: string): string {
   return `
     <div style="
       background-color: ${COLORS.pageBg};
-      padding: 4px;
+      padding: 12px;
       min-height: 100%;
     ">
       <div style="

@@ -53,10 +53,10 @@ export function generateEmailHtml(options: BaseEmailOptions): string {
   const footerHtml = generateFooter(footer);
 
   // Combine all content sections with inline padding
-  // Compact padding: 4px horizontal
+  // Mobile-friendly padding: 16px horizontal
   const emailContent = `
     ${header}
-    <div class="content-wrapper" style="padding: 0 4px 4px 4px;">
+    <div class="content-wrapper" style="padding: 0 16px 16px 16px;">
       ${content}
     </div>
     ${footerHtml}

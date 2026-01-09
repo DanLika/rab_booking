@@ -521,7 +521,8 @@ export const onBookingStatusChange = onDocumentUpdated(
               after.guest_name || "Guest",
               "cancelled",
               safeToDate(after.check_in, "check_in"),
-              safeToDate(after.check_out, "check_out")
+              safeToDate(after.check_out, "check_out"),
+              after.cancellation_reason || undefined
             ).catch((e) => logError("Cancellation push notification failed", e));
           }
         } catch (notificationError) {

@@ -5,6 +5,7 @@ import {
   sendBookingApprovedEmail,
   sendOwnerNotificationEmail,
 } from "./emailService";
+import { sendPaymentPushNotification } from "./fcmService";
 import { sendEmailIfAllowed } from "./emailNotificationHelper";
 import { admin, db } from "./firebase";
 import { getStripeClient, stripeSecretKey } from "./stripe";
@@ -1008,6 +1009,15 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
           depositAmount
         );
         logInfo(`In-app payment notification created for owner ${ownerId}`);
+
+        // Send push notification for payment
+        sendPaymentPushNotification(
+          ownerId,
+          result.bookingId,
+          guestName,
+          depositAmount
+        ).catch((e) => logError("Payment push notification failed", e));
+
       } catch (notificationError) {
         logError("Failed to create in-app payment notification", notificationError);
       }

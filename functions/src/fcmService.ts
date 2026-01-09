@@ -213,7 +213,9 @@ export async function sendBookingPushNotification(
   userId: string,
   bookingId: string,
   guestName: string,
-  action: "created" | "updated" | "cancelled"
+  action: "created" | "updated" | "cancelled",
+  checkInDate: Date,
+  checkOutDate: Date
 ): Promise<boolean> {
   const titles: Record<string, string> = {
     created: "New Booking",
@@ -221,10 +223,20 @@ export async function sendBookingPushNotification(
     cancelled: "Booking Cancelled",
   };
 
+  const formattedCheckIn = checkInDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+  });
+  const formattedCheckOut = checkOutDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+  });
+  const dateRange = `${formattedCheckIn} - ${formattedCheckOut}`;
+
   const bodies: Record<string, string> = {
-    created: `${guestName} made a new booking.`,
-    updated: `Booking for ${guestName} has been updated.`,
-    cancelled: `Booking for ${guestName} has been cancelled.`,
+    created: `${guestName} has booked for ${dateRange}.`,
+    updated: `Booking for ${guestName} (${dateRange}) has been updated.`,
+    cancelled: `Booking for ${guestName} (${dateRange}) has been cancelled.`,
   };
 
   return sendPushNotification({

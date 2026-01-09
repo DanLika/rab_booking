@@ -11,6 +11,8 @@ import {
   sendOwnerNotificationEmail,
   sendPendingBookingOwnerNotification,
 } from "./emailService";
+import {sendBookingPushNotification} from "./fcmService";
+import {createBookingNotification} from "./notificationService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
 import {validateEmail} from "./utils/emailValidation";
 import {
@@ -1235,6 +1237,33 @@ export const createBookingAtomic = onCall(async (request) => {
             }
           );
         }
+      }
+
+      // Send push & in-app notifications (non-blocking)
+      try {
+        if (!requireOwnerApproval) {
+          // Only send for auto-confirmed bookings, not pending
+          sendBookingPushNotification(
+            ownerId,
+            result.bookingId,
+            sanitizedGuestName,
+            "created",
+            checkInDate.toDate(),
+            checkOutDate.toDate()
+          ).catch((e) => logError("[AtomicBooking] Push notification failed", e));
+
+          createBookingNotification(
+            ownerId,
+            result.bookingId,
+            sanitizedGuestName,
+            "created"
+          ).catch((e) => logError("[AtomicBooking] In-app notification failed", e));
+        }
+      } catch (notificationError) {
+        logError(
+          "[AtomicBooking] Failed to send push/in-app notification",
+          notificationError
+        );
       }
     } catch (emailError) {
       // Log error but don't fail the booking

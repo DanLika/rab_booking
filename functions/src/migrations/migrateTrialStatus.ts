@@ -1,112 +1,182 @@
-import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
-
-const db = admin.firestore();
+import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {admin, db} from "../firebase";
+import {logInfo, logError, logSuccess} from "../logger";
 
 /**
- * A callable Cloud Function for migrating existing users to the new trial system.
+ * Migration: Trial Status
+ * 
+ * Callable Cloud Function for migrating existing users to the new trial system.
  *
  * @remarks
- * - **Security:** This function should be protected and only callable by admins.
- *   (Requires additional setup with custom claims or another auth mechanism).
- * - **Idempotency:** The script queries for users who do NOT have the `accountStatus`
- *   field, so it can be safely run multiple times without affecting already
- *   migrated users.
- * - **Efficiency:** Uses Firestore batches to update up to 500 users per batch.
- * - **Dry Run Mode:** Includes a `dryRun` parameter to simulate the migration
- *   without writing any data, allowing for safe testing.
- *
- * @param {object} data - The data passed to the function.
- * @param {boolean} [data.dryRun=true] - If true, simulates the migration. If false, executes it.
- * @param {number} [data.batchSize=500] - The number of users to process per batch.
- * @param {context} context - The context object for the callable function.
- *
- * @returns {Promise<object>} A result object with counts of users to migrate and batches processed.
+ * - **Security:** Only callable by admins (checks isAdmin custom claim)
+ * - **Idempotency:** Queries for users without `accountStatus` field
+ * - **Efficiency:** Uses Firestore batches (max 500 per batch)
+ * - **Dry Run Mode:** Simulates migration without writing data
  */
-export const migrateTrialStatus = functions.https.onCall(async (data, context) => {
-  // Security check: This function is destructive and should only be run by an admin.
-  if (!context.auth?.token.isAdmin) {
-    throw new functions.https.HttpsError("permission-denied", "Must be an admin to run this migration.");
-  }
 
-  const dryRun = data.dryRun !== false; // Defaults to true if not specified or null
-  const batchSize = data.batchSize || 500;
-  let usersToMigrateCount = 0;
-  let batchesProcessed = 0;
+const BATCH_SIZE = 500;
+const TRIAL_DURATION_DAYS = 30;
 
-  functions.logger.info(`Starting trial status migration. Dry Run: ${dryRun}, Batch Size: ${batchSize}`);
+interface MigrationRequest {
+  dryRun?: boolean;
+  batchSize?: number;
+}
 
-  try {
-    const usersSnapshot = await db.collection("users")
-      .where("accountStatus", "==", null)
-      .get();
+interface MigrationResult {
+  message: string;
+  dryRun: boolean;
+  usersFound: number;
+  usersInTrial: number;
+  usersExpired: number;
+  batchesProcessed: number;
+}
 
-    if (usersSnapshot.empty) {
-      functions.logger.info("No users to migrate.");
-      return { message: "No users found needing migration." };
+export const migrateTrialStatus = onCall(
+  {
+    region: "europe-west1",
+    timeoutSeconds: 540, // 9 minutes for large migrations
+  },
+  async (request): Promise<MigrationResult> => {
+    // Security check: Only admins can run migrations
+    if (!request.auth?.token.isAdmin) {
+      throw new HttpsError(
+        "permission-denied",
+        "Must be an admin to run this migration."
+      );
     }
 
-    usersToMigrateCount = usersSnapshot.docs.length;
-    functions.logger.info(`Found ${usersToMigrateCount} users to migrate.`);
+    const adminUid = request.auth.uid;
+    const {dryRun = true, batchSize = BATCH_SIZE} = request.data as MigrationRequest;
 
-    let batch = db.batch();
-    let commitCounter = 0;
+    logInfo("[Migration] Starting trial status migration", {
+      dryRun,
+      batchSize,
+      adminUid,
+    });
 
-    for (const [index, userDoc] of usersSnapshot.docs.entries()) {
-      const userData = userDoc.data();
-      const userId = userDoc.id;
+    try {
+      // Query users without accountStatus field
+      // Note: Firestore doesn't support "field doesn't exist" queries directly
+      // So we query all users and filter in code
+      const usersSnapshot = await db
+        .collection("users")
+        .limit(5000) // Safety limit
+        .get();
 
-      // Determine trial start date: use 'createdAt' if it exists, otherwise use now.
-      const trialStartDate = userData.createdAt || admin.firestore.Timestamp.now();
+      // Filter users that need migration (no accountStatus)
+      const usersToMigrate = usersSnapshot.docs.filter((doc) => {
+        const data = doc.data();
+        return !data.accountStatus;
+      });
 
-      const trialEndDate = new Date(trialStartDate.toDate().getTime());
-      trialEndDate.setDate(trialEndDate.getDate() + 30);
-      const trialExpiresAt = admin.firestore.Timestamp.fromDate(trialEndDate);
-
-      const isExpired = trialEndDate < new Date();
-      const accountStatus = isExpired ? "trial_expired" : "trial";
-
-      const updatePayload = {
-        accountStatus: accountStatus,
-        trialStartDate: trialStartDate,
-        trialExpiresAt: trialExpiresAt,
-        statusChangedAt: admin.firestore.Timestamp.now(),
-        statusChangedBy: "system_migration",
-        // Initialize warning flags
-        warningSent_1_days: false,
-        warningSent_3_days: false,
-        warningSent_7_days: false,
-      };
-
-      if (!dryRun) {
-        batch.set(userDoc.ref, updatePayload, { merge: true });
-        commitCounter++;
-      } else {
-        functions.logger.info(`[Dry Run] User ${userId} would be set to status: ${accountStatus}`);
+      if (usersToMigrate.length === 0) {
+        logInfo("[Migration] No users need migration");
+        return {
+          message: "No users found needing migration.",
+          dryRun,
+          usersFound: 0,
+          usersInTrial: 0,
+          usersExpired: 0,
+          batchesProcessed: 0,
+        };
       }
 
-      // Commit the batch when it's full or when it's the last user
-      if ((commitCounter > 0 && commitCounter % batchSize === 0) || index === usersToMigrateCount - 1) {
-        if (!dryRun) {
-          await batch.commit();
-          functions.logger.info(`Committed a batch of ${commitCounter} users.`);
-          batch = db.batch(); // Start a new batch
-          commitCounter = 0; // Reset counter
+      logInfo("[Migration] Found users to migrate", {
+        count: usersToMigrate.length,
+      });
+
+      let batch = db.batch();
+      let batchCount = 0;
+      let batchesProcessed = 0;
+      let usersInTrial = 0;
+      let usersExpired = 0;
+      const now = new Date();
+
+      for (const userDoc of usersToMigrate) {
+        const userData = userDoc.data();
+        const userId = userDoc.id;
+
+        // Determine trial start date: use 'createdAt' if exists, otherwise now
+        const createdAt = userData.createdAt?.toDate?.() || now;
+        const trialStartDate = admin.firestore.Timestamp.fromDate(createdAt);
+
+        // Calculate trial end date
+        const trialEndDate = new Date(createdAt);
+        trialEndDate.setDate(trialEndDate.getDate() + TRIAL_DURATION_DAYS);
+        const trialExpiresAt = admin.firestore.Timestamp.fromDate(trialEndDate);
+
+        // Determine if trial is already expired
+        const isExpired = trialEndDate < now;
+        const accountStatus = isExpired ? "trial_expired" : "trial";
+
+        if (isExpired) {
+          usersExpired++;
+        } else {
+          usersInTrial++;
         }
+
+        const updatePayload = {
+          accountStatus,
+          trialStartDate,
+          trialExpiresAt,
+          statusChangedAt: admin.firestore.Timestamp.now(),
+          statusChangedBy: "system_migration",
+          // Initialize warning flags
+          trialWarning7DaysSent: isExpired, // Mark as sent if already expired
+          trialWarning3DaysSent: isExpired,
+          trialWarning1DaySent: isExpired,
+          trialExpiredEmailSent: false, // Don't auto-send expired email for migrated users
+        };
+
+        if (dryRun) {
+          logInfo(`[Migration] [Dry Run] Would migrate user`, {
+            userId,
+            accountStatus,
+            trialExpiresAt: trialExpiresAt.toDate().toISOString(),
+          });
+        } else {
+          batch.set(userDoc.ref, updatePayload, {merge: true});
+          batchCount++;
+
+          // Commit batch when full
+          if (batchCount >= batchSize) {
+            await batch.commit();
+            logInfo(`[Migration] Committed batch`, {batchCount});
+            batch = db.batch();
+            batchCount = 0;
+            batchesProcessed++;
+          }
+        }
+      }
+
+      // Commit remaining batch
+      if (!dryRun && batchCount > 0) {
+        await batch.commit();
         batchesProcessed++;
       }
-    }
 
-    const successMessage = `${dryRun ? "[Dry Run] " : ""}Migration complete. Processed ${usersToMigrateCount} users in ${batchesProcessed} batches.`;
-    functions.logger.info(successMessage);
-    return {
-      message: successMessage,
-      dryRun: dryRun,
-      usersFound: usersToMigrateCount,
-      batchesProcessed: batchesProcessed,
-    };
-  } catch (error) {
-    functions.logger.error("Error during trial status migration:", error);
-    throw new functions.https.HttpsError("internal", "Migration failed.", error);
+      const message = `${dryRun ? "[Dry Run] " : ""}Migration complete. ` +
+        `Processed ${usersToMigrate.length} users (${usersInTrial} in trial, ${usersExpired} expired).`;
+
+      logSuccess("[Migration] Completed", {
+        dryRun,
+        usersFound: usersToMigrate.length,
+        usersInTrial,
+        usersExpired,
+        batchesProcessed,
+      });
+
+      return {
+        message,
+        dryRun,
+        usersFound: usersToMigrate.length,
+        usersInTrial,
+        usersExpired,
+        batchesProcessed,
+      };
+    } catch (error) {
+      logError("[Migration] Error during migration", error);
+      throw new HttpsError("internal", "Migration failed. Check logs for details.");
+    }
   }
-});
+);

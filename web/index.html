@@ -12,12 +12,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, interactive-widget=resizes-content">
 
   <style>
-    /* Prevent any scroll on html/body level */
+    /* Allow content to determine height for auto-resize */
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
-      overflow: hidden;
     }
 
     /* ========== NATIVE HTML SPLASH SCREEN ========== */
@@ -166,6 +165,8 @@
 
   <!-- Payment Bridge for Stripe Checkout in iframes -->
   <script src="payment_bridge.js"></script>
+  <!-- Iframe Resizer for auto-height adjustment -->
+  <script src="iframe_resizer.js"></script>
 
   <title>BookBed - Vacation Rental Management</title>
   <link rel="manifest" href="manifest.json">

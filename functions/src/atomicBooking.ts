@@ -11,7 +11,10 @@ import {
   sendOwnerNotificationEmail,
   sendPendingBookingOwnerNotification,
 } from "./emailService";
-import {sendBookingPushNotification} from "./fcmService";
+import {
+  sendBookingPushNotification,
+  sendPendingBookingPushNotification,
+} from "./fcmService";
 import {createBookingNotification} from "./notificationService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
 import {validateEmail} from "./utils/emailValidation";
@@ -1145,6 +1148,23 @@ export const createBookingAtomic = onCall(async (request) => {
             }
           );
         }
+
+        // Send push & in-app notifications for pending booking
+        sendPendingBookingPushNotification(
+          ownerId,
+          result.bookingId,
+          sanitizedGuestName,
+          checkInDate.toDate(),
+          checkOutDate.toDate()
+        ).catch((e) => logError("[AtomicBooking] Pending push notification failed", e));
+
+        createBookingNotification(
+          ownerId,
+          result.bookingId,
+          sanitizedGuestName,
+          "created" // In-app notification still uses "created" but will show pending status
+        ).catch((e) => logError("[AtomicBooking] Pending in-app notification failed", e));
+
       } else {
         // Auto-confirmed flow - send "Booking Confirmed" email to guest
         // Use retry mechanism for transient failures

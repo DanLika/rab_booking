@@ -207,6 +207,21 @@ async function cleanupInvalidTokens(
 }
 
 /**
+ * Helper function to format date range for notification body
+ */
+function _formatDateRange(checkInDate: Date, checkOutDate: Date): string {
+  const formattedCheckIn = checkInDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+  });
+  const formattedCheckOut = checkOutDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+  });
+  return `${formattedCheckIn} - ${formattedCheckOut}`;
+}
+
+/**
  * Send booking notification via push
  */
 export async function sendBookingPushNotification(
@@ -223,15 +238,7 @@ export async function sendBookingPushNotification(
     cancelled: "Booking Cancelled",
   };
 
-  const formattedCheckIn = checkInDate.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-  });
-  const formattedCheckOut = checkOutDate.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-  });
-  const dateRange = `${formattedCheckIn} - ${formattedCheckOut}`;
+  const dateRange = _formatDateRange(checkInDate, checkOutDate);
 
   const bodies: Record<string, string> = {
     created: `${guestName} has booked for ${dateRange}.`,
@@ -247,6 +254,30 @@ export async function sendBookingPushNotification(
     data: {
       bookingId,
       action,
+    },
+  });
+}
+
+/**
+ * Send pending booking notification via push
+ */
+export async function sendPendingBookingPushNotification(
+  userId: string,
+  bookingId: string,
+  guestName: string,
+  checkInDate: Date,
+  checkOutDate: Date
+): Promise<boolean> {
+  const dateRange = _formatDateRange(checkInDate, checkOutDate);
+
+  return sendPushNotification({
+    userId,
+    title: "Booking Awaiting Approval",
+    body: `${guestName} has requested a booking for ${dateRange}.`,
+    category: "bookings",
+    data: {
+      bookingId,
+      action: "pending",
     },
   });
 }

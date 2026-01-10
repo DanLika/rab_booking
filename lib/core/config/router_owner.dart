@@ -45,6 +45,7 @@ import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../../shared/widgets/loading_overlay.dart';
 import '../providers/enhanced_auth_provider.dart';
+import '../../features/subscription/screens/subscription_screen.dart';
 
 /// Helper class to convert Stream to Listenable for GoRouter
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -96,6 +97,7 @@ class OwnerRoutes {
   static const String profileChangePassword = '/owner/profile/change-password';
   static const String profileNotifications = '/owner/profile/notifications';
   static const String about = '/owner/about';
+  static const String subscription = '/owner/subscription';
   static const String widgetSettings = '/owner/widget-settings';
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
@@ -614,6 +616,13 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => PageTransitions.slideRight(
           key: state.pageKey,
           child: const AboutScreen(),
+        ),
+      ),
+      GoRoute(
+        path: OwnerRoutes.subscription,
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const SubscriptionScreen(),
         ),
       ),
 

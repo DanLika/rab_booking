@@ -564,6 +564,21 @@ class WidgetTranslations {
     }
   }
 
+  /// Pinch to zoom hint message for legacy sites
+  String get pinchToZoom {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Pritisnite s dva prsta za zumiranje';
+      case 'de':
+        return 'Zum Zoomen mit zwei Fingern drücken';
+      case 'it':
+        return 'Pizzica per ingrandire';
+      case 'en':
+      default:
+        return 'Pinch to zoom';
+    }
+  }
+
   // ============================================================================
   // PAYMENT METHOD TRANSLATIONS
   // ============================================================================

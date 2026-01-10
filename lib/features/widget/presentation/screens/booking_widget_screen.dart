@@ -47,6 +47,7 @@ import '../widgets/country_code_dropdown.dart';
 import '../widgets/email_verification_dialog.dart';
 import '../../data/services/email_verification_service.dart';
 import '../widgets/common/rotate_device_overlay.dart';
+import '../widgets/zoom_control_buttons.dart';
 // HYBRID LOADING: loading_screen.dart import removed - UI shows immediately
 import '../widgets/booking/payment/payment_option_widget.dart';
 import '../widgets/booking/guest_form/guest_count_picker.dart';
@@ -236,6 +237,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   final _contentKey = GlobalKey();
   // Track last sent height to avoid redundant postMessages
   double _lastSentHeight = 0;
+
+  // ============================================
+  // ZOOM SCALE (for zoom control buttons)
+  // ============================================
+  double _zoomScale = 1.0;
+  final TransformationController _transformationController =
+      TransformationController();
 
   @override
   void initState() {
@@ -2111,65 +2119,84 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                     ),
 
                                   // Calendar with lazy loading - shows skeleton first for faster perceived load
-                                  LazyCalendarContainer(
-                                    propertyId: _propertyId ?? '',
-                                    unitId: unitId,
-                                    forceMonthView: forceMonthView,
-                                    // Disable date selection in calendar_only mode
-                                    onRangeSelected:
-                                        widgetMode == WidgetMode.calendarOnly
-                                        ? null
-                                        : (start, end) {
-                                            // Validate minimum nights requirement
-                                            if (start != null && end != null) {
-                                              // Use unit's minStayNights (source of truth), NOT widget_settings
-                                              final minNights =
-                                                  _unit?.minStayNights ?? 1;
-                                              final selectedNights = end
-                                                  .difference(start)
-                                                  .inDays;
+                                  // Wrapped in InteractiveViewer for zoom control (mobile web)
+                                  // InteractiveViewer allows both zoom and pan/scroll
+                                  InteractiveViewer(
+                                    transformationController:
+                                        _transformationController,
+                                    boundaryMargin: const EdgeInsets.all(
+                                      double.infinity,
+                                    ),
+                                    minScale: 1.0,
+                                    maxScale: 3.0,
+                                    panEnabled:
+                                        _zoomScale >
+                                        1.0, // Pan only when zoomed
+                                    scaleEnabled:
+                                        false, // Disable pinch - use buttons only
+                                    child: LazyCalendarContainer(
+                                      propertyId: _propertyId ?? '',
+                                      unitId: unitId,
+                                      forceMonthView: forceMonthView,
+                                      // Disable date selection in calendar_only mode
+                                      onRangeSelected:
+                                          widgetMode == WidgetMode.calendarOnly
+                                          ? null
+                                          : (start, end) {
+                                              // Validate minimum nights requirement
+                                              if (start != null &&
+                                                  end != null) {
+                                                // Use unit's minStayNights (source of truth), NOT widget_settings
+                                                final minNights =
+                                                    _unit?.minStayNights ?? 1;
+                                                final selectedNights = end
+                                                    .difference(start)
+                                                    .inDays;
 
-                                              if (selectedNights < minNights) {
-                                                // Show error message
-                                                final tr =
-                                                    WidgetTranslations.of(
-                                                      context,
-                                                      ref,
-                                                    );
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      tr.minimumNightsRequired(
-                                                        minNights,
-                                                        selectedNights,
+                                                if (selectedNights <
+                                                    minNights) {
+                                                  // Show error message
+                                                  final tr =
+                                                      WidgetTranslations.of(
+                                                        context,
+                                                        ref,
+                                                      );
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        tr.minimumNightsRequired(
+                                                          minNights,
+                                                          selectedNights,
+                                                        ),
+                                                      ),
+                                                      backgroundColor:
+                                                          minimalistColors
+                                                              .error,
+                                                      duration: const Duration(
+                                                        seconds: 3,
                                                       ),
                                                     ),
-                                                    backgroundColor:
-                                                        minimalistColors.error,
-                                                    duration: const Duration(
-                                                      seconds: 3,
-                                                    ),
-                                                  ),
-                                                );
-                                                return;
+                                                  );
+                                                  return;
+                                                }
                                               }
-                                            }
 
-                                            setState(() {
-                                              _checkIn = start;
-                                              _checkOut = end;
-                                              // Bug Fix: Date selection IS interaction - show booking flow
-                                              _hasInteractedWithBookingFlow =
-                                                  true;
-                                              _pillBarDismissed =
-                                                  false; // Reset dismissed flag for new date selection
-                                            });
+                                              setState(() {
+                                                _checkIn = start;
+                                                _checkOut = end;
+                                                // Bug Fix: Date selection IS interaction - show booking flow
+                                                _hasInteractedWithBookingFlow =
+                                                    true;
+                                                _pillBarDismissed =
+                                                    false; // Reset dismissed flag for new date selection
+                                              });
 
-                                            // Bug #53: Save form data after date selection
-                                            _saveFormData();
-                                          },
+                                              // Bug #53: Save form data after date selection
+                                              _saveFormData();
+                                            },
+                                    ),
                                   ),
 
                                   // Contact pill card (calendar only mode - inline, below calendar)
@@ -2237,6 +2264,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     unitId,
                     constraints,
                     isDarkMode,
+                  ),
+
+                // Zoom control buttons (Web only)
+                if (kIsWeb)
+                  ZoomControlButtons(
+                    currentScale: _zoomScale,
+                    onScaleChanged: (newScale) {
+                      setState(() {
+                        _zoomScale = newScale;
+                        _transformationController.value = Matrix4.identity()
+                          ..scale(newScale);
+                      });
+                    },
                   ),
               ],
             );

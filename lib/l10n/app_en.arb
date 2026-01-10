@@ -577,6 +577,7 @@
   "ownerDrawerNotifications": "Notifications",
   "ownerDrawerProfile": "Profile",
   "ownerDrawerLogout": "Log out",
+  "ownerDrawerSubscription": "Subscription",
 
   "ownerCalendar": "Calendar",
   "ownerCalendarPreviousWeek": "Previous week",
@@ -3199,5 +3200,13 @@
       "platforms": {"type": "String"}
     }
   },
-  "updateBooking": "Update Booking"
+  "updateBooking": "Update Booking",
+
+  "dangerZone": "Danger Zone",
+  "deleteAccount": "Delete Account",
+  "deleteAccountTitle": "Delete Your Account",
+  "deleteAccountWarning": "This action is permanent and cannot be undone. All your data will be permanently deleted, including your properties, units, bookings, and account settings.",
+  "deleteAccountPermanent": "This action cannot be reversed. Your account will be permanently deleted.",
+  "deleteAccountSuccess": "Your account has been deleted successfully.",
+  "deleteAccountError": "Failed to delete account. Please try again or contact support."
 }

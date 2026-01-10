@@ -18,6 +18,7 @@ import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/premium_list_tile.dart';
 import '../../../../shared/widgets/logout_tile.dart';
+import '../../../../shared/widgets/delete_account_dialog.dart';
 
 /// Profile screen for owner dashboard
 class ProfileScreen extends ConsumerWidget {
@@ -500,6 +501,58 @@ class ProfileScreen extends ConsumerWidget {
                                     l10n.ownerProfileCookiesPolicySubtitle,
                                 onTap: () =>
                                     context.push(OwnerRoutes.cookiesPolicy),
+                                isLast: true,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Danger Zone - Delete Account (App Store requirement)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.gradients.cardBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.error.withAlpha(
+                                (0.3 * 255).toInt(),
+                              ),
+                            ),
+                            boxShadow: isDark
+                                ? AppShadows.elevation1Dark
+                                : AppShadows.elevation1,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  12,
+                                  16,
+                                  8,
+                                ),
+                                child: Text(
+                                  l10n.dangerZone,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              PremiumListTile(
+                                icon: Icons.delete_forever_outlined,
+                                iconColor: AppColors.error,
+                                title: l10n.deleteAccount,
+                                subtitle: l10n.deleteAccountWarning,
+                                onTap: () async {
+                                  final result = await showDeleteAccountDialog(
+                                    context,
+                                  );
+                                  if (result == true && context.mounted) {
+                                    context.go(OwnerRoutes.login);
+                                  }
+                                },
                                 isLast: true,
                               ),
                             ],

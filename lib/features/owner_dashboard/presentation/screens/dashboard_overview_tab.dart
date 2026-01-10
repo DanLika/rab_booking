@@ -24,6 +24,7 @@ import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../subscription/widgets/trial_banner.dart';
 
 /// Dashboard overview tab - UNIFIED
 /// Shows metrics, charts, and recent activity with time period selection
@@ -181,6 +182,9 @@ class DashboardOverviewTab extends ConsumerWidget {
       child: ListView(
         physics: PlatformScrollPhysics.adaptive,
         children: [
+          // Trial status banner - shows only when trial is expiring or expired
+          const TrialBanner(),
+
           // Time period selector
           _DateRangeSelector(dateRange: dateRange),
 

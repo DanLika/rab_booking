@@ -3104,6 +3104,12 @@ abstract class AppLocalizations {
   /// **'Log out'**
   String get ownerDrawerLogout;
 
+  /// No description provided for @ownerDrawerSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get ownerDrawerSubscription;
+
   /// No description provided for @ownerCalendar.
   ///
   /// In en, this message translates to:
@@ -13542,6 +13548,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update Booking'**
   String get updateBooking;
+
+  /// No description provided for @dangerZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Danger Zone'**
+  String get dangerZone;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Your Account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is permanent and cannot be undone. All your data will be permanently deleted, including your properties, units, bookings, and account settings.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @deleteAccountPermanent.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be reversed. Your account will be permanently deleted.'**
+  String get deleteAccountPermanent;
+
+  /// No description provided for @deleteAccountSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deleted successfully.'**
+  String get deleteAccountSuccess;
+
+  /// No description provided for @deleteAccountError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete account. Please try again or contact support.'**
+  String get deleteAccountError;
 }
 
 class _AppLocalizationsDelegate

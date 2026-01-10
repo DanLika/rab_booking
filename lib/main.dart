@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -51,6 +52,21 @@ String _safeErrorToString(dynamic error) {
     // If toString() itself throws, return a safe fallback
     return 'Error: Unable to display error details';
   }
+}
+
+/// FCM: Background message handler
+/// Must be a top-level function and annotated with `@pragma('vm:entry-point')`
+/// to ensure it can be found by the Flutter engine when the app is killed.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Ensure Firebase is initialized (required for background headless isolate)
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Log background message (optional: could update local database, acknowledge receipt, etc.)
+  LoggingService.log(
+    'FCM Background Message: ${message.messageId}',
+    tag: 'FCM_BACKGROUND',
+  );
 }
 
 void main() async {
@@ -381,6 +397,14 @@ Future<void> _initializeInBackground() async {
       }
       // Re-throw to be caught by outer catch block
       rethrow;
+    }
+
+    // Configure FCM background message handler (mobile only)
+    if (!kIsWeb) {
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
+      LoggingService.log('FCM background handler configured', tag: 'INIT');
     }
 
     // Initialize Sentry for web (non-blocking)

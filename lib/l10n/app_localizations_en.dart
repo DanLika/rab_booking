@@ -1606,6 +1606,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerDrawerLogout => 'Log out';
 
   @override
+  String get ownerDrawerSubscription => 'Subscription';
+
+  @override
   String get ownerCalendar => 'Calendar';
 
   @override
@@ -7474,4 +7477,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateBooking => 'Update Booking';
+
+  @override
+  String get dangerZone => 'Danger Zone';
+
+  @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get deleteAccountTitle => 'Delete Your Account';
+
+  @override
+  String get deleteAccountWarning =>
+      'This action is permanent and cannot be undone. All your data will be permanently deleted, including your properties, units, bookings, and account settings.';
+
+  @override
+  String get deleteAccountPermanent =>
+      'This action cannot be reversed. Your account will be permanently deleted.';
+
+  @override
+  String get deleteAccountSuccess =>
+      'Your account has been deleted successfully.';
+
+  @override
+  String get deleteAccountError =>
+      'Failed to delete account. Please try again or contact support.';
 }

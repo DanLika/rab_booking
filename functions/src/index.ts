@@ -8,7 +8,7 @@
  */
 
 // Initialize Sentry for error tracking (must be first)
-import {initSentry} from "./sentry";
+import { initSentry } from "./sentry";
 initSentry();
 
 // Export booking management functions
@@ -62,6 +62,9 @@ export * from "./subdomainService";
 // Export cleanup scheduled functions (Stripe pending bookings)
 export * from "./cleanupExpiredPendingBookings";
 
+// Export payment deadline checker scheduler
+export * from "./bookings/checkPaymentDeadlines";
+
 // Export auto-complete scheduled function (Checked-out bookings)
 export * from "./completeCheckedOutBookings";
 
@@ -94,6 +97,9 @@ export * from "./passwordHistory";
 
 // Export token revocation (logout from all devices)
 export * from "./revokeTokens";
+
+// Export account deletion (App Store compliance requirement)
+export * from "./deleteUserAccount";
 
 // REMOVED: migrations/migrateToSubcollections - One-time migration complete, no longer needed
 

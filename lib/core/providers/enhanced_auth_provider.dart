@@ -840,6 +840,59 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
+  /// Delete user account permanently
+  ///
+  /// This action is irreversible. All user data will be deleted:
+  /// - User profile and preferences
+  /// - All owned properties, units, and bookings
+  /// - Platform connections (Booking.com, Airbnb)
+  /// - Guest bookings made by this user will be anonymized (GDPR compliance)
+  ///
+  /// Required for Apple App Store compliance (mandatory since 2022).
+  ///
+  /// Throws [String] error message on failure.
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw 'No user is currently signed in';
+    }
+
+    try {
+      // Call Cloud Function to delete all user data
+      final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+      final callable = functions.httpsCallable('deleteUserAccount');
+      await callable.call();
+
+      LoggingService.log(
+        'User account deleted successfully',
+        tag: 'ENHANCED_AUTH',
+      );
+
+      // Clear user context for error tracking
+      LoggingService.clearUser();
+
+      // Clear saved credentials from secure storage
+      try {
+        await SecureStorageService().clearCredentials();
+      } catch (_) {
+        // Non-critical, continue
+      }
+
+      // Sign out locally (account already deleted on server)
+      await _auth.signOut();
+      state = const EnhancedAuthState(isLoading: false);
+    } on FirebaseFunctionsException catch (e) {
+      LoggingService.log(
+        'Failed to delete account: ${e.message}',
+        tag: 'ENHANCED_AUTH',
+      );
+      throw e.message ?? 'Failed to delete account';
+    } catch (e) {
+      LoggingService.log('Failed to delete account: $e', tag: 'ENHANCED_AUTH');
+      throw 'Failed to delete account. Please try again or contact support.';
+    }
+  }
+
   /// Reset password using custom email template
   Future<void> resetPassword(String email) async {
     try {

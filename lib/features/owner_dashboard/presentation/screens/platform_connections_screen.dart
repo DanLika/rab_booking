@@ -6,6 +6,7 @@ import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../domain/models/platform_connection.dart';
 import '../providers/platform_connections_provider.dart';
 import '../widgets/owner_app_drawer.dart';
@@ -172,22 +173,11 @@ class _PlatformConnectionsScreenState
         child: Padding(
           padding: const EdgeInsets.all(40),
           child: Center(
-            child: Column(
-              children: [
-                const Icon(Icons.link_off, size: 64, color: Colors.grey),
-                const SizedBox(height: 16),
-                Text(
-                  'No platform connections',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Add a connection to enable automatic date blocking',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-                ),
-              ],
+            child: AnimatedEmptyState(
+              icon: Icons.link_off,
+              title: l10n.platformConnectionsNoConnections,
+              subtitle: l10n.platformConnectionsNoConnectionsDesc,
+              iconColor: Theme.of(context).disabledColor,
             ),
           ),
         ),

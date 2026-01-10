@@ -98,58 +98,26 @@ class DashboardOverviewTab extends ConsumerWidget {
       child: SingleChildScrollView(
         physics: PlatformScrollPhysics.adaptive,
         padding: EdgeInsets.all(isMobile ? 20 : 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: isMobile ? 80 : 100,
-              height: isMobile ? 80 : 100,
-              decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
-                shape: BoxShape.circle,
+        child: AnimatedEmptyState(
+          icon: Icons.home_work_outlined,
+          title: l10n.ownerWelcomeTitle,
+          subtitle: l10n.ownerWelcomeSubtitle,
+          iconSize: isMobile ? 50 : 60,
+          iconColor: theme.colorScheme.primary,
+          actionButton: FilledButton.icon(
+            onPressed: () => context.push(OwnerRoutes.propertyNew),
+            icon: const Icon(Icons.add),
+            label: Text(l10n.ownerAddFirstProperty),
+            style: FilledButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 24 : 32,
+                vertical: isMobile ? 14 : 16,
               ),
-              child: Icon(
-                Icons.home_work_outlined,
-                size: isMobile ? 40 : 50,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: isMobile ? 20 : 28),
-            Text(
-              l10n.ownerWelcomeTitle,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: isMobile ? 22 : 26,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.ownerWelcomeSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
-                ),
-                fontSize: isMobile ? 14 : 15,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: isMobile ? 28 : 36),
-            FilledButton.icon(
-              onPressed: () => context.push(OwnerRoutes.propertyNew),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.ownerAddFirstProperty),
-              style: FilledButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 24 : 32,
-                  vertical: isMobile ? 14 : 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

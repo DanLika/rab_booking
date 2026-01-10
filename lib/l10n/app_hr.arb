@@ -577,6 +577,7 @@
   "ownerDrawerNotifications": "Obavještenja",
   "ownerDrawerProfile": "Profil",
   "ownerDrawerLogout": "Odjavi se",
+  "ownerDrawerSubscription": "Pretplata",
 
   "ownerCalendar": "Kalendar",
   "ownerCalendarPreviousWeek": "Prethodni tjedan",
@@ -3206,5 +3207,13 @@
       }
     }
   },
-  "updateBooking": "Ažuriraj rezervaciju"
+  "updateBooking": "Ažuriraj rezervaciju",
+
+  "dangerZone": "Opasna zona",
+  "deleteAccount": "Obriši račun",
+  "deleteAccountTitle": "Brisanje računa",
+  "deleteAccountWarning": "Ova radnja je trajna i ne može se poništiti. Svi vaši podaci, nekretnine i rezervacije bit će trajno obrisani.",
+  "deleteAccountPermanent": "Ova radnja se ne može poništiti. Nakon brisanja, nećete moći povratiti svoj račun ili podatke.",
+  "deleteAccountSuccess": "Vaš račun je uspješno obrisan.",
+  "deleteAccountError": "Brisanje računa nije uspjelo. Molimo pokušajte ponovno ili kontaktirajte podršku."
 }

@@ -170,6 +170,15 @@ class OwnerAppDrawer extends ConsumerWidget {
               onTap: () => context.go(OwnerRoutes.profile),
             ),
 
+            const SizedBox(height: 4),
+
+            _DrawerItem(
+              icon: Icons.card_membership_rounded,
+              title: l10n.ownerDrawerSubscription,
+              isSelected: currentRoute == 'subscription',
+              onTap: () => context.go(OwnerRoutes.subscription),
+            ),
+
             const SizedBox(height: 32),
           ],
         ),

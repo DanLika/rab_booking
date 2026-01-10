@@ -1615,6 +1615,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerDrawerLogout => 'Odjavi se';
 
   @override
+  String get ownerDrawerSubscription => 'Pretplata';
+
+  @override
   String get ownerCalendar => 'Kalendar';
 
   @override
@@ -7528,4 +7531,28 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get updateBooking => 'Ažuriraj rezervaciju';
+
+  @override
+  String get dangerZone => 'Opasna zona';
+
+  @override
+  String get deleteAccount => 'Obriši račun';
+
+  @override
+  String get deleteAccountTitle => 'Brisanje računa';
+
+  @override
+  String get deleteAccountWarning =>
+      'Ova radnja je trajna i ne može se poništiti. Svi vaši podaci, nekretnine i rezervacije bit će trajno obrisani.';
+
+  @override
+  String get deleteAccountPermanent =>
+      'Ova radnja se ne može poništiti. Nakon brisanja, nećete moći povratiti svoj račun ili podatke.';
+
+  @override
+  String get deleteAccountSuccess => 'Vaš račun je uspješno obrisan.';
+
+  @override
+  String get deleteAccountError =>
+      'Brisanje računa nije uspjelo. Molimo pokušajte ponovno ili kontaktirajte podršku.';
 }

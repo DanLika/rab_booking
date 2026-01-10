@@ -43,23 +43,23 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Initialize SharedPreferences for widget entry point
-  // This is needed for providers that use SharedPreferences (e.g., form persistence)
+  // PERFORMANCE OPTIMIZATION: Run heavy initializations in parallel
+  // This significantly reduces startup time by not waiting sequentially
   SharedPreferences? prefs;
-  try {
-    prefs = await SharedPreferences.getInstance();
-  } catch (e) {
-    // If SharedPreferences fails to initialize, continue without it
-    // Providers will handle missing SharedPreferences gracefully
-    prefs = null;
-  }
 
-  // Initialize date formatting for all locales (required by intl package)
-  // Supports: hr, en, de, it based on URL ?language= parameter
-  await initializeDateFormatting();
+  await Future.wait([
+    // Initialize Firebase
+    Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+
+    // Initialize SharedPreferences
+    SharedPreferences.getInstance().then((p) => prefs = p).catchError((e) {
+      // If SharedPreferences fails to initialize, continue without it
+      return null;
+    }),
+
+    // Initialize date formatting for all locales
+    initializeDateFormatting(),
+  ]);
 
   // Override SharedPreferences provider if initialization succeeded
   final overrides = prefs != null

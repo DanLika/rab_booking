@@ -42,7 +42,7 @@ import '../../../../core/services/booking_service.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../shared/utils/validators/form_validators.dart';
-import 'booking_confirmation_screen.dart';
+import 'booking_confirmation_screen.dart' deferred as booking_confirmation;
 import '../widgets/country_code_dropdown.dart';
 import '../widgets/email_verification_dialog.dart';
 import '../../data/services/email_verification_service.dart';
@@ -50,12 +50,9 @@ import '../widgets/common/rotate_device_overlay.dart';
 import '../widgets/zoom_control_buttons.dart';
 // HYBRID LOADING: loading_screen.dart import removed - UI shows immediately
 import '../widgets/booking/payment/payment_option_widget.dart';
-import '../widgets/booking/guest_form/guest_count_picker.dart';
+import '../widgets/booking/guest_form/guest_form_section.dart'
+    deferred as guest_form;
 import '../widgets/common/info_card_widget.dart';
-import '../widgets/booking/guest_form/email_field_with_verification.dart';
-import '../widgets/booking/guest_form/phone_field.dart';
-import '../widgets/booking/guest_form/guest_name_fields.dart';
-import '../widgets/booking/guest_form/notes_field.dart';
 import '../widgets/booking/payment/no_payment_info.dart';
 import '../widgets/booking/payment/payment_method_card.dart';
 import '../widgets/booking/pill_bar_content.dart';
@@ -1391,13 +1388,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       ref.invalidate(realtimeYearCalendarProvider);
       ref.invalidate(realtimeMonthCalendarProvider);
 
+      // Preload deferred library
+      await booking_confirmation.loadLibrary();
+
       // Navigate to confirmation screen using Navigator.push
       // booking is guaranteed non-null here due to null check above
       final confirmedBooking = booking;
       if (mounted) {
         await Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => BookingConfirmationScreen(
+            builder: (context) => booking_confirmation.BookingConfirmationScreen(
               bookingReference:
                   confirmedBooking.bookingReference ?? confirmedBooking.id,
               guestEmail: confirmedBooking.guestEmail ?? '',
@@ -2948,175 +2948,42 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     BookingPriceCalculation calculation, {
     bool showButton = true,
   }) {
-    final isDarkMode = ref.watch(themeProvider);
-    final minimalistColors = MinimalistColorSchemeAdapter(dark: isDarkMode);
-    final tr = WidgetTranslations.of(context, ref);
-
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section title
-          Text(
-            tr.guestInformation,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: minimalistColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: SpacingTokens.m),
-
-          // Name fields (First Name + Last Name in a Row)
-          GuestNameFields(
-            firstNameController: _firstNameController,
-            lastNameController: _lastNameController,
-            isDarkMode: isDarkMode,
-          ),
-          const SizedBox(height: 12),
-
-          // Email field with verification (if required)
-          EmailFieldWithVerification(
-            controller: _emailController,
-            isDarkMode: isDarkMode,
-            requireVerification:
-                _widgetSettings?.emailConfig.requireEmailVerification ?? false,
-            emailVerified: _emailVerified,
-            isLoading: _isVerifyingEmail,
-            onEmailChanged: (value) {
-              // Reset verification when email changes
+    return FutureBuilder(
+      future: guest_form.loadLibrary(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return guest_form.GuestFormSection(
+            formState: _formState,
+            widgetSettings: _widgetSettings,
+            unit: _unit,
+            calculation: calculation,
+            showButton: showButton,
+            onConfirm: () => _handleConfirmBooking(calculation),
+            onVerifyEmail: _openVerificationDialog,
+            onCountryChanged: (country) {
+              setState(() {
+                _selectedCountry = country;
+                _formKey.currentState?.validate();
+              });
+            },
+            onAdultsChanged: (value) => setState(() => _adults = value),
+            onChildrenChanged: (value) => setState(() => _children = value),
+            onEmailChanged: () {
               if (_emailVerified) {
                 setState(() {
                   _emailVerified = false;
                 });
               }
             },
-            onVerifyPressed: () {
-              final email = _emailController.text.trim();
-              final validationError = EmailValidator.validate(email);
-              if (validationError != null) {
-                SnackBarHelper.showError(
-                  context: context,
-                  message: validationError,
-                );
-                return;
-              }
-              _openVerificationDialog();
-            },
+          );
+        }
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(32.0),
+            child: CircularProgressIndicator(),
           ),
-          const SizedBox(height: 12),
-
-          // Phone field with country code dropdown
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Country code dropdown
-              CountryCodeDropdown(
-                selectedCountry: _selectedCountry,
-                onChanged: (country) {
-                  setState(() {
-                    _selectedCountry = country;
-                    // Re-validate phone number with new country
-                    _formKey.currentState?.validate();
-                  });
-                },
-                textColor: minimalistColors.textPrimary,
-                backgroundColor: minimalistColors.backgroundSecondary,
-                borderColor: minimalistColors.textSecondary.withValues(
-                  alpha: 0.3,
-                ),
-              ),
-              const SizedBox(width: SpacingTokens.s),
-              // Phone number input
-              Expanded(
-                child: PhoneField(
-                  controller: _phoneController,
-                  isDarkMode: isDarkMode,
-                  dialCode: _selectedCountry.dialCode,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: SpacingTokens.m),
-
-          // Special requests field
-          NotesField(controller: _notesController, isDarkMode: isDarkMode),
-          const SizedBox(height: SpacingTokens.m),
-
-          // Guest count picker
-          GuestCountPicker(
-            adults: _adults,
-            children: _children,
-            maxGuests: _unit?.maxGuests ?? 10,
-            isDarkMode: ref.watch(themeProvider),
-            onAdultsChanged: (value) => setState(() => _adults = value),
-            onChildrenChanged: (value) => setState(() => _children = value),
-          ),
-          const SizedBox(height: SpacingTokens.s),
-
-          // Confirm booking button (only show if showButton parameter is true)
-          if (showButton)
-            SizedBox(
-              width: double.infinity,
-              height: 54, // Increased by 10px (was 44)
-              child: ElevatedButton(
-                onPressed: _isProcessing
-                    ? () {}
-                    : () => _handleConfirmBooking(calculation),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: minimalistColors.buttonPrimary,
-                  foregroundColor: minimalistColors.buttonPrimaryText,
-                  disabledBackgroundColor: minimalistColors.buttonPrimary,
-                  disabledForegroundColor: minimalistColors.buttonPrimaryText,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: SpacingTokens.m,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderTokens.circularMedium,
-                  ),
-                ),
-                child: _isProcessing
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                minimalistColors.buttonPrimaryText,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Flexible(
-                            child: Text(
-                              _getConfirmButtonText(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: minimalistColors.buttonPrimaryText,
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        _getConfirmButtonText(),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: minimalistColors.buttonPrimaryText,
-                        ),
-                      ),
-              ),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -3427,34 +3294,39 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       paymentMethod: paymentMethod,
     );
 
-    // Navigator.push for proper back navigation and transition animation
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BookingConfirmationScreen(
-          bookingReference: bookingRef,
-          guestEmail: booking.guestEmail ?? '',
-          guestName: booking.guestName ?? 'Guest',
-          checkIn: booking.checkIn,
-          checkOut: booking.checkOut,
-          totalPrice: booking.totalPrice,
-          nights: booking.checkOut.difference(booking.checkIn).inDays,
-          guests: booking.guestCount,
-          propertyName: _unit?.name ?? 'Property',
-          unitName: _unit?.name,
-          paymentMethod: paymentMethod,
-          booking: booking,
-          emailConfig: _widgetSettings?.emailConfig,
-          widgetSettings: _widgetSettings,
-          propertyId: _propertyId,
-          unitId: _unitId,
-        ),
-      ),
-    );
+    // Preload deferred library
+    await booking_confirmation.loadLibrary();
 
-    // After Navigator.pop (user closed confirmation), reset form state
+    // Navigator.push for proper back navigation and transition animation
     if (mounted) {
-      _resetFormState();
-      BookingUrlStateService.clearBookingParams();
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => booking_confirmation.BookingConfirmationScreen(
+            bookingReference: bookingReference,
+            guestEmail: booking.guestEmail ?? '',
+            guestName: booking.guestName ?? 'Guest',
+            checkIn: booking.checkIn,
+            checkOut: booking.checkOut,
+            totalPrice: booking.totalPrice,
+            nights: booking.checkOut.difference(booking.checkIn).inDays,
+            guests: booking.guestCount,
+            propertyName: _unit?.name ?? 'Property',
+            unitName: _unit?.name,
+            paymentMethod: paymentMethod,
+            booking: booking,
+            emailConfig: _widgetSettings?.emailConfig,
+            widgetSettings: _widgetSettings,
+            propertyId: _propertyId,
+            unitId: _unitId,
+          ),
+        ),
+      );
+
+      // After Navigator.pop (user closed confirmation), reset form state
+      if (mounted) {
+        _resetFormState();
+        BookingUrlStateService.clearBookingParams();
+      }
     }
 
     LoggingService.log(
@@ -3912,12 +3784,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       final actualPaymentMethod =
           paymentMethod ?? confirmedBooking.paymentMethod ?? 'stripe';
 
+      // Preload deferred library
+      await booking_confirmation.loadLibrary();
+
       // Use Navigator.push for ALL booking confirmations
       // This provides proper back navigation and transition animation
       if (mounted) {
         await Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => BookingConfirmationScreen(
+            builder: (context) => booking_confirmation.BookingConfirmationScreen(
               bookingReference: bookingReference,
               guestEmail: confirmedBooking.guestEmail ?? '',
               guestName: confirmedBooking.guestName ?? 'Guest',

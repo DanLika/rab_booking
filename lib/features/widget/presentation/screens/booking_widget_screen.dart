@@ -489,10 +489,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         tag: 'TAB_COMM',
       );
     } catch (e) {
-      LoggingService.log(
-        '[CrossTab] Failed to initialize: $e',
-        tag: 'TAB_COMM_ERROR',
-      );
+      LoggingService.logError('[CrossTab] Failed to initialize', e);
     }
   }
 
@@ -1576,12 +1573,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         _validationError = null;
       });
     } on WidgetContextException catch (e) {
+      LoggingService.logError('Widget context error', e);
       // Handle specific context loading errors
       if (!mounted) return;
       setState(() {
         _validationError = e.message;
       });
     } catch (e) {
+      LoggingService.logError('Failed to load unit data', e);
       // HIGH: Check mounted in catch block before setState
       if (!mounted) return;
       setState(() {
@@ -1718,27 +1717,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     try {
       _firstNameController.removeListener(_saveFormDataDebounced);
     } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+      debugPrint('Failed to remove firstName listener: $e');
     }
     try {
       _lastNameController.removeListener(_saveFormDataDebounced);
     } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+      debugPrint('Failed to remove lastName listener: $e');
     }
     try {
       _emailController.removeListener(_saveFormDataDebounced);
     } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+      debugPrint('Failed to remove email listener: $e');
     }
     try {
       _phoneController.removeListener(_saveFormDataDebounced);
     } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+      debugPrint('Failed to remove phone listener: $e');
     }
     try {
       _notesController.removeListener(_saveFormDataDebounced);
     } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+      debugPrint('Failed to remove notes listener: $e');
     }
 
     // Dispose all form controllers via centralized state
@@ -3380,6 +3379,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         });
       }
     } catch (e) {
+      LoggingService.logError('Booking creation failed', e);
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
@@ -3947,6 +3947,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
       }
     } catch (e) {
+      LoggingService.logError('Failed to load booking for confirmation', e);
       if (mounted) {
         SnackBarHelper.showError(
           context: context,

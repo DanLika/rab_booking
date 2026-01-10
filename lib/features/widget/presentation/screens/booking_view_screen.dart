@@ -152,57 +152,61 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
     }
 
     // #region agent log
+    final logDataEntry = {
+      'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+      'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+      'location': 'booking_view_screen.dart:103',
+      'message': 'Booking lookup - entry',
+      'data': {
+        'bookingRef': widget.bookingRef,
+        'email': widget.email != null
+            ? '${widget.email!.substring(0, 3)}***'
+            : null,
+        'hasToken': widget.token != null,
+        'hostname': Uri.base.host,
+      },
+      'sessionId': 'debug-session',
+      'runId': 'run1',
+      'hypothesisId': 'VIEW',
+    };
     try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_view_screen.dart:103',
-        'message': 'Booking lookup - entry',
-        'data': {
-          'bookingRef': widget.bookingRef,
-          'email': widget.email != null
-              ? '${widget.email!.substring(0, 3)}***'
-              : null,
-          'hasToken': widget.token != null,
-          'hostname': Uri.base.host,
-        },
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'VIEW',
-      };
       LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+        '[DEBUG] ${logDataEntry['message']} | Hypothesis: ${logDataEntry['hypothesisId']} | Data: ${jsonEncode(logDataEntry['data'])}',
         tag: 'DEBUG_VIEW',
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to log entry: $e');
+    }
     // #endregion
 
     try {
       final service = ref.read(bookingLookupServiceProvider);
 
       // #region agent log
+      final logDataVerify = {
+        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+        'location': 'booking_view_screen.dart:118',
+        'message': 'Booking lookup - calling verifyBookingAccess',
+        'data': {
+          'bookingRef': widget.bookingRef,
+          'email': widget.email != null
+              ? '${widget.email!.substring(0, 3)}***'
+              : null,
+          'hasToken': widget.token != null,
+        },
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'VIEW',
+      };
       try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_view_screen.dart:118',
-          'message': 'Booking lookup - calling verifyBookingAccess',
-          'data': {
-            'bookingRef': widget.bookingRef,
-            'email': widget.email != null
-                ? '${widget.email!.substring(0, 3)}***'
-                : null,
-            'hasToken': widget.token != null,
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'VIEW',
-        };
         LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+          '[DEBUG] ${logDataVerify['message']} | Hypothesis: ${logDataVerify['hypothesisId']} | Data: ${jsonEncode(logDataVerify['data'])}',
           tag: 'DEBUG_VIEW',
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Failed to log verify: $e');
+      }
       // #endregion
 
       final booking = await service.verifyBookingAccess(
@@ -212,27 +216,29 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
       );
 
       // #region agent log
+      final logDataSuccess = {
+        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
+        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
+        'location': 'booking_view_screen.dart:124',
+        'message': 'Booking lookup - success',
+        'data': {
+          'bookingId': booking.bookingId,
+          'bookingRef': booking.bookingReference,
+          'propertyId': booking.propertyId,
+          'unitId': booking.unitId,
+        },
+        'sessionId': 'debug-session',
+        'runId': 'run1',
+        'hypothesisId': 'VIEW',
+      };
       try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_view_screen.dart:124',
-          'message': 'Booking lookup - success',
-          'data': {
-            'bookingId': booking.bookingId,
-            'bookingRef': booking.bookingReference,
-            'propertyId': booking.propertyId,
-            'unitId': booking.unitId,
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'VIEW',
-        };
         LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+          '[DEBUG] ${logDataSuccess['message']} | Hypothesis: ${logDataSuccess['hypothesisId']} | Data: ${jsonEncode(logDataSuccess['data'])}',
           tag: 'DEBUG_VIEW',
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Failed to log success: $e');
+      }
       // #endregion
 
       if (mounted) {
@@ -276,6 +282,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
               extra: {'booking': booking, 'widgetSettings': widgetSettings},
             );
           } catch (navError) {
+            LoggingService.logError('Navigation failed', navError);
             // If navigation fails, show error instead of crashing
             if (mounted) {
               setState(() {
@@ -286,6 +293,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
             }
           }
         } catch (e) {
+          LoggingService.logError('Failed to load widget settings', e);
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
@@ -316,6 +324,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
               extra: {'booking': booking, 'widgetSettings': null},
             );
           } catch (navError) {
+            LoggingService.logError('Navigation failed', navError);
             // If navigation fails, show error instead of crashing
             if (mounted) {
               setState(() {
@@ -421,6 +430,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
                         try {
                           context.go('/');
                         } catch (e) {
+                          LoggingService.logError('Navigation failed', e);
                           // If navigation fails, try Navigator.pop as fallback
                           if (Navigator.of(context).canPop()) {
                             Navigator.of(context).pop();

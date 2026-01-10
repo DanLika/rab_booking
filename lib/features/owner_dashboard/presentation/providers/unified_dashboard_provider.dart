@@ -88,19 +88,28 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       // Query upcoming check-ins (always next 7 days, regardless of selected period)
       final upcomingCheckIns = await _queryUpcomingCheckIns(unitIds: unitIds);
 
-      // Calculate metrics
-      final revenue = bookings.fold<double>(
+      // Filter for confirmed/completed bookings for metrics and charts
+      // Pending bookings are excluded as they represent unconfirmed revenue
+      final confirmedAndCompletedBookings = bookings
+          .where(
+            (b) => b['status'] == 'confirmed' || b['status'] == 'completed',
+          )
+          .toList();
+
+      // Calculate metrics using only confirmed/completed bookings
+      final revenue = confirmedAndCompletedBookings.fold<double>(
         0.0,
         (total, b) => total + ((b['total_price'] as num?)?.toDouble() ?? 0.0),
       );
 
-      final bookingsCount = bookings.length;
+      // Bookings count reflects only confirmed and completed bookings
+      final bookingsCount = confirmedAndCompletedBookings.length;
 
       // Calculate occupancy rate based on UNITS (not properties)
       final totalDaysInRange = dateRange.endDate
           .difference(dateRange.startDate)
           .inDays;
-      final bookedDays = bookings.fold<int>(0, (total, b) {
+      final bookedDays = confirmedAndCompletedBookings.fold<int>(0, (total, b) {
         final checkIn = _parseCheckIn(b);
         final checkOut = _parseCheckOut(b);
         if (checkIn == null || checkOut == null) return total; // Skip invalid
@@ -124,9 +133,16 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
           : 0.0;
       if (occupancyRate > 100) occupancyRate = 100;
 
-      // Generate chart data
-      final revenueHistory = _generateRevenueHistory(bookings, dateRange);
-      final bookingHistory = _generateBookingHistory(bookings, dateRange);
+      // Generate chart data using confirmed/completed bookings for consistency
+      // This ensures chart totals match summary metrics
+      final revenueHistory = _generateRevenueHistory(
+        confirmedAndCompletedBookings,
+        dateRange,
+      );
+      final bookingHistory = _generateBookingHistory(
+        confirmedAndCompletedBookings,
+        dateRange,
+      );
 
       return UnifiedDashboardData(
         revenue: revenue,

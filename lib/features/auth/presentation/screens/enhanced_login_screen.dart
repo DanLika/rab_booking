@@ -570,9 +570,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  l10n.authRememberMe,
-                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                Flexible(
+                  child: Text(
+                    l10n.authRememberMe,
+                    style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),

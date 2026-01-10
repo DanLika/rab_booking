@@ -22,6 +22,7 @@ class GlassCard extends StatelessWidget {
     final responsivePadding = padding ?? _getResponsivePadding(context);
 
     return Container(
+      width: double.infinity,
       constraints: BoxConstraints(maxWidth: maxWidth),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),

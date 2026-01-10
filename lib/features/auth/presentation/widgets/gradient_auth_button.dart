@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../../l10n/app_localizations.dart';
+
 /// Premium gradient button for auth screens with animations
 ///
 /// Uses flutter_animate for shimmer effect during loading state.
+/// Includes Semantics wrapper for screen reader accessibility (A11Y-002).
 class GradientAuthButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
@@ -97,13 +100,25 @@ class _GradientAuthButtonState extends State<GradientAuthButton> {
           );
     }
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        transform: Matrix4.translationValues(0.0, _isHovered ? -4.0 : 0.0, 0.0),
-        child: buttonContent,
+    final l10n = AppLocalizations.of(context);
+
+    // A11Y-002: Semantics wrapper for screen readers
+    return Semantics(
+      button: true,
+      label: widget.isLoading ? l10n.loading : widget.text,
+      enabled: !widget.isLoading && widget.onPressed != null,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          transform: Matrix4.translationValues(
+            0.0,
+            _isHovered ? -4.0 : 0.0,
+            0.0,
+          ),
+          child: buttonContent,
+        ),
       ),
     );
   }

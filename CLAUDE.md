@@ -597,7 +597,17 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2026-01-09 | **Version**: 6.27
+**Last Updated**: 2026-01-10 | **Version**: 6.28
+
+**Changelog 6.28**: Dashboard Metrics Fix - Exclude Pending Bookings:
+- **Problem**: Dashboard Revenue, Bookings Count, i Occupancy Rate uključivali pending bookinge
+- **Izvor**: `fix/dashboard-metrics-6709532682132730445` branch (Jules AI)
+- **Fix** (`unified_dashboard_provider.dart`):
+  - Kreiran `confirmedAndCompletedBookings` filter
+  - Revenue, bookingsCount, occupancyRate koriste samo confirmed/completed
+  - **POBOLJŠANJE**: Charts (revenueHistory, bookingHistory) također filtrirani
+- **Rezultat**: Summary metrike i chart totali sada konzistentni
+- **Napomena**: Upcoming Check-ins i dalje uključuje pending (očekivano ponašanje)
 
 **Changelog 6.27**: Logo Asset Implementation & FCM Push Notifications:
 - **Logo Asset System**:

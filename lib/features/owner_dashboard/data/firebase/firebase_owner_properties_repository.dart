@@ -395,6 +395,7 @@ class FirebaseOwnerPropertiesRepository {
   }
 
   /// Watch owner properties (real-time stream)
+  /// OPTIMIZED: Uses parallel queries and count() aggregation
   Stream<List<PropertyModel>> watchOwnerProperties(String ownerId) {
     return _firestore
         .collection('properties')
@@ -402,30 +403,31 @@ class FirebaseOwnerPropertiesRepository {
         .orderBy('created_at', descending: true)
         .snapshots()
         .asyncMap((snapshot) async {
-          final properties = <PropertyModel>[];
-          for (final doc in snapshot.docs) {
-            final propertyData = {...doc.data(), 'id': doc.id};
-
-            // Get units count for this property
-            final unitsSnapshot = await _firestore
+          // Parallelize unit counts fetching
+          final futures = snapshot.docs.map((doc) async {
+            // Use count() aggregation instead of fetching all documents
+            final unitsCountSnapshot = await _firestore
                 .collection('properties')
                 .doc(doc.id)
                 .collection('units')
+                .count()
                 .get();
 
-            propertyData['units_count'] = unitsSnapshot.docs.length;
-            properties.add(PropertyModel.fromJson(propertyData));
-          }
-          return properties;
+            final propertyData = {...doc.data(), 'id': doc.id};
+            propertyData['units_count'] = unitsCountSnapshot.count ?? 0;
+            return PropertyModel.fromJson(propertyData);
+          });
+
+          return await Future.wait(futures);
         });
   }
 
-  /// Watch all owner units (real-time stream using collection group)
+  /// Watch all owner units (real-time stream)
+  /// OPTIMIZED: Uses parallel queries
   Stream<List<UnitModel>> watchAllOwnerUnits(String ownerId) {
     // First watch properties, then for each emit, get all units
     return watchOwnerProperties(ownerId).asyncMap((properties) async {
-      final allUnits = <UnitModel>[];
-      for (final property in properties) {
+      final futures = properties.map((property) async {
         final snapshot = await _firestore
             .collection('properties')
             .doc(property.id)
@@ -433,17 +435,17 @@ class FirebaseOwnerPropertiesRepository {
             .orderBy('created_at', descending: true)
             .get();
 
-        for (final doc in snapshot.docs) {
-          allUnits.add(
-            UnitModel.fromJson({
-              ...doc.data(),
-              'id': doc.id,
-              'property_id': property.id,
-            }),
-          );
-        }
-      }
-      return allUnits;
+        return snapshot.docs.map((doc) {
+          return UnitModel.fromJson({
+            ...doc.data(),
+            'id': doc.id,
+            'property_id': property.id,
+          });
+        }).toList();
+      });
+
+      final results = await Future.wait(futures);
+      return results.expand((x) => x).toList();
     });
   }
 

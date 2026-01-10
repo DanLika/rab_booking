@@ -14,5 +14,6 @@ export 'keyboard_dismiss_fix_mixin.dart';
 
 /// Alias typedef for backward compatibility with existing code.
 /// Use [AndroidKeyboardDismissFix] directly in new code.
+@Deprecated('Use AndroidKeyboardDismissFix from keyboard_dismiss_fix_mixin.dart instead')
 typedef AndroidKeyboardDismissFixApproach1<T extends StatefulWidget> =
     AndroidKeyboardDismissFix<T>;

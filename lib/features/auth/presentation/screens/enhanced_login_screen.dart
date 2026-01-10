@@ -395,11 +395,13 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                       child: SingleChildScrollView(
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: EdgeInsets.only(
-                          left: isCompact ? 12 : 20,
-                          right: isCompact ? 12 : 20,
-                          top: isCompact ? 16 : 20,
-                          bottom: isCompact ? 16 : 20,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isCompact
+                              ? (MediaQuery.of(context).size.width < 340
+                                  ? 8
+                                  : 12)
+                              : 20,
+                          vertical: isCompact ? 16 : 20,
                         ),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(minHeight: minHeight),
@@ -639,25 +641,41 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       );
     }
 
-    // Both enabled - show side by side
-    return Row(
-      children: [
-        Expanded(
-          child: SocialLoginButton(
-            customIcon: const GoogleBrandIcon(),
-            label: 'Google',
-            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: SocialLoginButton(
-            customIcon: const AppleBrandIcon(),
-            label: 'Apple',
-            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
-          ),
-        ),
-      ],
+    // Both enabled - check available space
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final googleButton = SocialLoginButton(
+          customIcon: const GoogleBrandIcon(),
+          label: 'Google',
+          onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
+        );
+
+        final appleButton = SocialLoginButton(
+          customIcon: const AppleBrandIcon(),
+          label: 'Apple',
+          onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
+        );
+
+        // If width is very constrained (< 280px), stack them vertically
+        if (constraints.maxWidth < 280) {
+          return Column(
+            children: [
+              googleButton,
+              const SizedBox(height: 10),
+              appleButton,
+            ],
+          );
+        }
+
+        // Otherwise show side by side
+        return Row(
+          children: [
+            Expanded(child: googleButton),
+            const SizedBox(width: 10),
+            Expanded(child: appleButton),
+          ],
+        );
+      },
     );
   }
 

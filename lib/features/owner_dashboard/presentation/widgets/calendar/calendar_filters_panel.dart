@@ -322,6 +322,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
   Widget _buildPropertyFilter() {
     final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
+    final l10n = AppLocalizations.of(context);
 
     return propertiesAsync.when(
       data: (properties) {
@@ -332,7 +333,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _SectionHeader(icon: Icons.home_outlined, title: 'Objekti'),
+            _SectionHeader(
+              icon: Icons.home_outlined,
+              title: l10n.ownerFilterProperties,
+            ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -365,12 +369,13 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         );
       },
       loading: () => const CircularProgressIndicator(),
-      error: (error, stack) => Text('Greška: $error'),
+      error: (error, stack) => Text(l10n.errorWithMessage(error.toString())),
     );
   }
 
   Widget _buildUnitFilter() {
     final unitsAsync = ref.watch(allOwnerUnitsProvider);
+    final l10n = AppLocalizations.of(context);
 
     return unitsAsync.when(
       data: (units) {
@@ -379,13 +384,14 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         }
 
         // Filter units by selected properties
-        final filteredUnits = _filters.propertyIds.isEmpty
-            ? units
-            : units
-                  .where(
-                    (unit) => _filters.propertyIds.contains(unit.propertyId),
-                  )
-                  .toList();
+        final filteredUnits =
+            _filters.propertyIds.isEmpty
+                ? units
+                : units
+                    .where(
+                      (unit) => _filters.propertyIds.contains(unit.propertyId),
+                    )
+                    .toList();
 
         if (filteredUnits.isEmpty) {
           return const SizedBox.shrink();
@@ -394,9 +400,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _SectionHeader(
+            _SectionHeader(
               icon: Icons.meeting_room_outlined,
-              title: 'Jedinice',
+              title: l10n.ownerFilterUnits,
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -430,11 +436,12 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         );
       },
       loading: () => const CircularProgressIndicator(),
-      error: (error, stack) => Text('Greška: $error'),
+      error: (error, stack) => Text(l10n.errorWithMessage(error.toString())),
     );
   }
 
   Widget _buildStatusFilter() {
+    final l10n = AppLocalizations.of(context);
     // Only show active booking statuses (pending, confirmed, cancelled, completed)
     final activeStatuses = [
       BookingStatus.pending,
@@ -446,7 +453,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(icon: Icons.info_outline, title: 'Statusi'),
+        _SectionHeader(
+          icon: Icons.info_outline,
+          title: l10n.ownerFilterStatuses,
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -530,6 +540,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
   Widget _buildSourceFilter() {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     // Sources must match actual booking.source values in Firestore:
     // - 'direct' = null source (legacy bookings or direct bookings without source)
@@ -539,20 +550,25 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
     // - 'airbnb' = Airbnb iCal imports
     // - 'other' = generic iCal imports (non-recognized platforms)
     final sources = [
-      ('direct', 'Direktno', Icons.bookmark, Colors.blue),
-      ('widget', 'Widget', Icons.web, Colors.green),
-      ('admin', 'Manualno', Icons.person, Colors.grey),
-      ('booking_com', 'Booking.com', Icons.public, Colors.orange),
-      ('airbnb', 'Airbnb', Icons.home, Colors.red),
-      ('other', 'Druga platforma', Icons.sync, theme.colorScheme.secondary),
+      ('direct', l10n.ownerTableSourceDirect, Icons.bookmark, Colors.blue),
+      ('widget', l10n.ownerTableSourceWidget, Icons.web, Colors.green),
+      ('admin', l10n.ownerTableSourceManual, Icons.person, Colors.grey),
+      ('booking_com', l10n.ownerTableSourceBookingCom, Icons.public, Colors.orange),
+      ('airbnb', l10n.ownerTableSourceAirbnb, Icons.home, Colors.red),
+      (
+        'other',
+        l10n.ownerTableSourceIcal,
+        Icons.sync,
+        theme.colorScheme.secondary,
+      ),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(
+        _SectionHeader(
           icon: Icons.source_outlined,
-          title: 'Izvori rezervacija',
+          title: l10n.ownerAnalyticsBookingsBySource,
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -628,12 +644,13 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
   }
 
   Widget _buildDateRangeFilter() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(
+        _SectionHeader(
           icon: Icons.date_range_outlined,
-          title: 'Raspon datuma',
+          title: l10n.ownerFiltersDateSection,
         ),
         const SizedBox(height: 12),
         OutlinedButton.icon(
@@ -642,7 +659,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
           label: Text(
             _filters.startDate != null && _filters.endDate != null
                 ? '${_filters.startDate!.day}.${_filters.startDate!.month}.${_filters.startDate!.year}. - ${_filters.endDate!.day}.${_filters.endDate!.month}.${_filters.endDate!.year}.'
-                : 'Odaberi raspon datuma',
+                : l10n.ownerFiltersSelectDateRange,
           ),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

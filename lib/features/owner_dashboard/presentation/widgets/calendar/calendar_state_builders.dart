@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Static builder methods for calendar state UI
@@ -8,6 +9,7 @@ class CalendarStateBuilders {
 
   /// Build empty state when no units are found
   static Widget buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -18,10 +20,13 @@ class CalendarStateBuilders {
             color: Theme.of(context).disabledColor,
           ),
           const SizedBox(height: 16),
-          Text('No units found', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            l10n.ownerCalendarNoUnits,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text(
-            'Add units to your properties to see them in the calendar',
+            l10n.unitPricingNoUnitsDesc,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
@@ -61,6 +66,7 @@ class CalendarStateBuilders {
     Object error,
     VoidCallback onRetry,
   ) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -72,7 +78,7 @@ class CalendarStateBuilders {
           ),
           const SizedBox(height: 16),
           Text(
-            'Error loading calendar',
+            l10n.ownerCalendarErrorLoadingUnits,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
@@ -87,7 +93,7 @@ class CalendarStateBuilders {
           ElevatedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(l10n.retry),
           ),
         ],
       ),

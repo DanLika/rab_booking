@@ -404,7 +404,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                 ElevatedButton.icon(
                   onPressed: onCopy,
                   icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('Kopiraj'),
+                  label: Text(AppLocalizations.of(context).embedCodeCopy),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.authSecondary,
                     foregroundColor: Colors.white,

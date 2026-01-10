@@ -30,6 +30,8 @@ class QuickActionButtons extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final effectiveUnitId = conflict?.unitId ?? booking?.unitId ?? unitId;
+    final l10n = AppLocalizations.of(context);
+
     if (effectiveUnitId == null) {
       return const SizedBox.shrink();
     }
@@ -73,7 +75,7 @@ class QuickActionButtons extends ConsumerWidget {
           if (connection.platform == PlatformType.bookingCom) {
             return _buildBlockButton(
               context,
-              label: 'Block on Booking.com',
+              label: l10n.tooltipManageOn('Booking.com'),
               icon: Icons.hotel,
               onTap: () => _handleBlockBookingCom(
                 context,
@@ -85,7 +87,7 @@ class QuickActionButtons extends ConsumerWidget {
           } else if (connection.platform == PlatformType.airbnb) {
             return _buildBlockButton(
               context,
-              label: 'Block on Airbnb',
+              label: l10n.tooltipManageOn('Airbnb'),
               icon: Icons.home,
               onTap: () =>
                   _handleBlockAirbnb(context, connection, checkIn!, checkOut!),
@@ -127,6 +129,7 @@ class QuickActionButtons extends ConsumerWidget {
     final effectiveUnitId = conflict?.unitId ?? booking?.unitId ?? unitId;
     final conflictId = conflict?.id;
     final bookingId = booking?.id;
+    final l10n = AppLocalizations.of(context);
 
     return OutlinedButton.icon(
       onPressed: () {
@@ -145,7 +148,7 @@ class QuickActionButtons extends ConsumerWidget {
         }
       },
       icon: const Icon(Icons.visibility, size: 20),
-      label: const Text('View in App'),
+      label: Text(l10n.viewDetails),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),

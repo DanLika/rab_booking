@@ -71,11 +71,9 @@ class _StripeConnectSetupScreenState
     } on TimeoutException {
       // Timeout already logged by withCloudFunctionTimeout
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          'Request timed out. Please check your connection and try again.',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.errorTimeout);
       }
     } catch (e, stackTrace) {
       await LoggingService.logError(
@@ -139,10 +137,8 @@ class _StripeConnectSetupScreenState
       }
     } on TimeoutException {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          'Request timed out. Please check your connection and try again.',
-        );
+        final l10n = AppLocalizations.of(context);
+        ErrorDisplayUtils.showErrorSnackBar(context, l10n.errorTimeout);
       }
     } catch (e, stackTrace) {
       await LoggingService.logError(

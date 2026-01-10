@@ -104,6 +104,7 @@ class _EmailVerificationScreenState
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    final l10n = AppLocalizations.of(context);
 
     return showDialog(
       context: context,
@@ -112,7 +113,7 @@ class _EmailVerificationScreenState
           children: [
             Icon(Icons.email_outlined, color: Theme.of(context).primaryColor),
             const SizedBox(width: 8),
-            const Text('Change Email'),
+            Text(l10n.editProfileEmail),
           ],
         ),
         content: Form(
@@ -204,7 +205,7 @@ class _EmailVerificationScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -234,7 +235,7 @@ class _EmailVerificationScreenState
                 }
               }
             },
-            child: const Text('Change Email'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -387,7 +388,7 @@ class _EmailVerificationScreenState
                     }
                   },
                   icon: const Icon(Icons.arrow_back),
-                  label: const Text('Back to login'),
+                  label: Text(AppLocalizations.of(context).authBackToLogin),
                 ),
               ],
             ),

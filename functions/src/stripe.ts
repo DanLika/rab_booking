@@ -1,4 +1,4 @@
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import {defineSecret} from "firebase-functions/params";
 
 /**
@@ -23,9 +23,11 @@ export function getStripeClient(): Stripe {
     if (!apiKey) {
       throw new Error("STRIPE_SECRET_KEY not configured");
     }
-    stripe = new Stripe(apiKey, {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const StripeClass = require("stripe");
+    stripe = new StripeClass(apiKey, {
       apiVersion: "2025-09-30.clover",
     });
   }
-  return stripe;
+  return stripe as Stripe;
 }

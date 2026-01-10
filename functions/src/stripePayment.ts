@@ -1,5 +1,5 @@
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import { defineSecret } from "firebase-functions/params";
 import {
   sendBookingApprovedEmail,

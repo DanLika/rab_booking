@@ -25,7 +25,7 @@
  * TODO: Suspicious Activity Email (deferred for future implementation)
  */
 
-import { Resend } from "resend";
+import type { Resend } from "resend";
 import { db } from "./firebase";
 import { logError, logSuccess } from "./logger";
 
@@ -76,12 +76,14 @@ export function getResendClient(): Resend {
         "Get your API key from: https://resend.com/api-keys"
       );
     }
-    resend = new Resend(apiKey);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { Resend: ResendClass } = require("resend");
+    resend = new ResendClass(apiKey);
     logSuccess("[EmailService] Resend client initialized", {
       keyPrefix: apiKey.substring(0, 7) + "...",
     });
   }
-  return resend;
+  return resend as Resend;
 }
 
 // Email regex for validation

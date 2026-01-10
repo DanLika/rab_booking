@@ -125,7 +125,11 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                    const Icon(
+                      Icons.error_outline,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

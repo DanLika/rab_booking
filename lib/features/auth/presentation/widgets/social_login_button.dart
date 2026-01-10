@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Social login button with hover effect
+/// Social login button with hover effect and focus state
+///
+/// Includes Semantics wrapper for screen reader accessibility (A11Y-002).
 class SocialLoginButton extends StatefulWidget {
   final IconData? icon;
   final Widget? customIcon;
@@ -24,60 +26,73 @@ class SocialLoginButton extends StatefulWidget {
 
 class _SocialLoginButtonState extends State<SocialLoginButton> {
   bool _isHovered = false;
+  bool _isFocused = false;
+
+  // A11Y-002: Visual feedback indicates hover OR focus state
+  bool get _isHighlighted => _isHovered || _isFocused;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _isHovered
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline,
-            width: 1.5,
-          ),
-          color: _isHovered
-              ? theme.colorScheme.primary.withAlpha(20)
-              : theme.colorScheme.surfaceContainerHighest.withAlpha(77),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: widget.onPressed,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (widget.customIcon != null)
-                    widget.customIcon!
-                  else
-                    Icon(
-                      widget.icon,
-                      size: 22,
-                      color: _isHovered
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface,
-                    ),
-                  const SizedBox(width: 8),
-                  Text(
-                    widget.label,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: _isHovered
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface,
-                    ),
+    // A11Y-002: Semantics wrapper for screen readers
+    return Semantics(
+      button: true,
+      label: widget.label,
+      enabled: true,
+      child: Focus(
+        onFocusChange: (focused) => setState(() => _isFocused = focused),
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _isHighlighted
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outline,
+                width: 1.5,
+              ),
+              color: _isHighlighted
+                  ? theme.colorScheme.primary.withAlpha(20)
+                  : theme.colorScheme.surfaceContainerHighest.withAlpha(77),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: widget.onPressed,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (widget.customIcon != null)
+                        widget.customIcon!
+                      else
+                        Icon(
+                          widget.icon,
+                          size: 22,
+                          color: _isHighlighted
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface,
+                        ),
+                      const SizedBox(width: 8),
+                      Text(
+                        widget.label,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: _isHighlighted
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

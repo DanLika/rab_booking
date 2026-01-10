@@ -101,6 +101,9 @@ export * from "./revokeTokens";
 // Export account deletion (App Store compliance requirement)
 export * from "./deleteUserAccount";
 
+// Export unit management (cascade delete on unit deletion)
+export * from "./unitManagement";
+
 // REMOVED: migrations/migrateToSubcollections - One-time migration complete, no longer needed
 
 // Export user creation trigger for trial initialization

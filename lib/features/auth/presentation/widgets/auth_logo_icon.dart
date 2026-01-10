@@ -62,14 +62,9 @@ class AuthLogoIcon extends StatelessWidget {
     );
 
     // In dark mode, invert the logo colors so it's visible on dark backgrounds
-    if (isDarkMode) {
+    if ((isWhite || isDarkMode) && !useMinimalistic) {
       logoImage = ColorFiltered(
-        colorFilter: const ColorFilter.matrix(<double>[
-          -1, 0, 0, 0, 255, //
-          0, -1, 0, 0, 255, //
-          0, 0, -1, 0, 255, //
-          0, 0, 0, 1, 0, //
-        ]),
+        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
         child: logoImage,
       );
     }

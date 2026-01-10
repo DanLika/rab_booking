@@ -5,14 +5,14 @@
  * Replaces default Firebase Auth email with branded design
  */
 
-import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {getAuth} from "firebase-admin/auth";
-import {logError, logSuccess, logOperation} from "./logger";
-import {validateEmail} from "./utils/emailValidation";
-import {sanitizeEmail} from "./utils/inputSanitization";
-import {sendPasswordResetEmailV2} from "./email";
-import {Resend} from "resend";
-import {setUser} from "./sentry";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { getAuth } from "firebase-admin/auth";
+import { logError, logSuccess, logOperation } from "./logger";
+import { validateEmail } from "./utils/emailValidation";
+import { sanitizeEmail } from "./utils/inputSanitization";
+import { sendPasswordResetEmailV2 } from "./email";
+import { Resend } from "resend";
+import { setUser } from "./sentry";
 
 // Lazy initialization of Resend client
 let resend: Resend | null = null;
@@ -54,10 +54,10 @@ function getFromName(): string {
  * Rate limiting: Firebase Auth handles rate limiting automatically
  */
 export const sendPasswordResetEmail = onCall(
-  {cors: true},
+  { cors: true, secrets: ["RESEND_API_KEY"] },
   async (request) => {
     try {
-      const {email} = request.data;
+      const { email } = request.data;
 
       // Set user context for Sentry error tracking (unauthenticated action - use email)
       if (email) {
@@ -97,9 +97,9 @@ export const sendPasswordResetEmail = onCall(
       const actionCodeSettings = {
         // URL you want to redirect back to after password reset
         // This should be your app's password reset page
-        url: process.env.PASSWORD_RESET_REDIRECT_URL || 
-             (process.env.WEB_APP_URL ? `${process.env.WEB_APP_URL}/auth/reset-password` : 
-              "https://bookbed.app/auth/reset-password"),
+        url: process.env.PASSWORD_RESET_REDIRECT_URL ||
+          (process.env.WEB_APP_URL ? `${process.env.WEB_APP_URL}/auth/reset-password` :
+            "https://bookbed.app/auth/reset-password"),
         handleCodeInApp: false, // Open link in browser, not app
       };
 

@@ -7,6 +7,7 @@ import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../widgets/auth_logo_icon.dart';
 
 /// Email Verification Screen with resend functionality
 class EmailVerificationScreen extends ConsumerStatefulWidget {
@@ -260,11 +261,10 @@ class _EmailVerificationScreenState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Icon
-                Icon(
-                  Icons.mark_email_unread_outlined,
+                // Logo
+                AuthLogoIcon(
                   size: 100,
-                  color: Theme.of(context).primaryColor,
+                  isWhite: Theme.of(context).brightness == Brightness.dark,
                 ),
                 const SizedBox(height: 32),
 

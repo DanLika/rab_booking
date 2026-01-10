@@ -3,6 +3,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 
 /// About screen - App information, version, and credits
 class AboutScreen extends StatelessWidget {
@@ -57,10 +58,9 @@ class AboutScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.calendar_month_rounded,
+                      child: AuthLogoIcon(
                         size: isMobile ? 50 : 60,
-                        color: theme.colorScheme.primary,
+                        isWhite: false, // Inside a white card
                       ),
                     ),
                     SizedBox(height: isMobile ? 20 : 24),

@@ -14,6 +14,7 @@ import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/loading_overlay.dart';
+import '../widgets/auth_logo_icon.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_auth_button.dart';
@@ -283,6 +284,11 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   Widget _buildHeader(ThemeData theme, AppLocalizations l10n, bool isCompact) {
     return Column(
       children: [
+        AuthLogoIcon(
+          size: isCompact ? 60 : 70,
+          isWhite: theme.brightness == Brightness.dark,
+        ),
+        SizedBox(height: isCompact ? 16 : 24),
         ProfileImagePicker(
           size: isCompact ? 80 : 90,
           initials: _fullNameController.text.trim().isNotEmpty

@@ -8,7 +8,6 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../shared/providers/repository_providers.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
@@ -20,6 +19,9 @@ import '../../../../core/services/logging_service.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
+import 'shared/dialog_header.dart';
+import 'shared/dialog_footer.dart';
+import 'shared/section_header.dart';
 
 /// Dialog za kreiranje nove rezervacije
 class BookingCreateDialog extends ConsumerStatefulWidget {
@@ -87,7 +89,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
       maxWidth: 500,
     );
     final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
-    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -111,50 +112,10 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient - matches CommonAppBar height (52px)
-            Container(
-              height: ResponsiveDialogUtils.kHeaderHeight,
-              padding: EdgeInsets.symmetric(horizontal: headerPadding),
-              decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(11),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.add_circle_outline,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(context).bookingCreateTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: _isSaving
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    tooltip: AppLocalizations.of(context).bookingCreateClose,
-                  ),
-                ],
-              ),
+            DialogHeader(
+              title: AppLocalizations.of(context).bookingCreateTitle,
+              icon: Icons.add_circle_outline,
+              isActionInProgress: _isSaving,
             ),
 
             // Content
@@ -168,7 +129,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Unit Selection
-                      _SectionHeader(
+                      SectionHeader(
                         icon: Icons.bed_outlined,
                         title: AppLocalizations.of(context).bookingCreateUnit,
                       ),
@@ -234,7 +195,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 24),
 
                       // Dates
-                      _SectionHeader(
+                      SectionHeader(
                         icon: Icons.calendar_today_outlined,
                         title: AppLocalizations.of(context).bookingCreateDates,
                       ),
@@ -330,7 +291,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 24),
 
                       // Guest Information
-                      _SectionHeader(
+                      SectionHeader(
                         icon: Icons.person_outline,
                         title: AppLocalizations.of(
                           context,
@@ -408,7 +369,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 24),
 
                       // Booking Details
-                      _SectionHeader(
+                      SectionHeader(
                         icon: Icons.receipt_long_outlined,
                         title: AppLocalizations.of(
                           context,
@@ -539,7 +500,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                       const SizedBox(height: 16),
 
                       // Notes
-                      _SectionHeader(
+                      SectionHeader(
                         icon: Icons.note_outlined,
                         title: AppLocalizations.of(context).bookingCreateNotes,
                       ),
@@ -566,93 +527,12 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
               ),
             ),
 
-            // Footer buttons
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: contentPadding,
-                vertical: 12,
-              ),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.dialogFooterDark
-                    : AppColors.dialogFooterLight,
-                border: Border(
-                  top: BorderSide(
-                    color: isDark
-                        ? AppColors.sectionDividerDark
-                        : AppColors.sectionDividerLight,
-                  ),
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(11),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Flexible(
-                    child: TextButton(
-                      onPressed: _isSaving
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                        minimumSize: Size.zero,
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context).bookingCreateCancel,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: context.gradients.brandPrimary,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(8),
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _isSaving ? null : _createBooking,
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            child: _isSaving
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : Text(
-                                    AppLocalizations.of(
-                                      context,
-                                    ).bookingCreateSubmit,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            DialogFooter(
+              isLoading: _isSaving,
+              onCancel: () => Navigator.of(context).pop(),
+              onSave: _createBooking,
+              cancelLabel: AppLocalizations.of(context).bookingCreateCancel,
+              saveLabel: AppLocalizations.of(context).bookingCreateSubmit,
             ),
           ],
         ),
@@ -965,36 +845,5 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
           ),
         ) ??
         false; // Return false if dialog dismissed
-  }
-}
-
-/// Section header widget with icon and gradient accent
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.title});
-
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            gradient: context.gradients.brandPrimary,
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
-          ),
-          child: Icon(icon, color: Colors.white, size: 16),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
   }
 }

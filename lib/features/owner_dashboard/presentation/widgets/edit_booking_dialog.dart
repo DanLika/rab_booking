@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/booking_model.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
@@ -18,6 +17,8 @@ import '../providers/owner_calendar_provider.dart';
 import '../providers/platform_connections_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
 import 'dialogs/update_booking_warning_dialog.dart';
+import 'shared/dialog_header.dart';
+import 'shared/dialog_footer.dart';
 
 /// Edit Booking Dialog - Phase 2 Feature
 ///
@@ -79,7 +80,6 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
       maxWidth: 500,
     );
     final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
-    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
     final isDark = theme.brightness == Brightness.dark;
 
     // FIXED BUG #14: Prevent accidental dismiss during loading operations
@@ -119,49 +119,10 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Gradient Header - matches CommonAppBar height (52px)
-              Container(
-                height: ResponsiveDialogUtils.kHeaderHeight,
-                padding: EdgeInsets.symmetric(horizontal: headerPadding),
-                decoration: BoxDecoration(
-                  gradient: context.gradients.brandPrimary,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(11),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        l10n.editBookingTitle,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: _isLoading
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
+              DialogHeader(
+                title: l10n.editBookingTitle,
+                icon: Icons.edit,
+                isActionInProgress: _isLoading,
               ),
 
               // Content
@@ -352,86 +313,12 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
               ),
 
               // Footer
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: contentPadding,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.dialogFooterDark
-                      : AppColors.dialogFooterLight,
-                  border: Border(
-                    top: BorderSide(
-                      color: isDark
-                          ? AppColors.sectionDividerDark
-                          : AppColors.sectionDividerLight,
-                    ),
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(11),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Flexible(
-                      child: TextButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => Navigator.of(context).pop(),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
-                          ),
-                          minimumSize: Size.zero,
-                        ),
-                        child: Text(
-                          l10n.cancel,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: context.gradients.brandPrimary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _saveChanges,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  l10n.editBookingSaveChanges,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              DialogFooter(
+                isLoading: _isLoading,
+                onCancel: () => Navigator.of(context).pop(),
+                onSave: _saveChanges,
+                cancelLabel: l10n.cancel,
+                saveLabel: l10n.editBookingSaveChanges,
               ),
             ],
           ),

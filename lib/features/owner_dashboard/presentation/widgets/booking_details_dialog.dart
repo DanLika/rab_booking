@@ -19,6 +19,8 @@ import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import 'edit_booking_dialog.dart';
 import 'send_email_dialog.dart';
+import 'shared/dialog_header.dart';
+import 'shared/section_header.dart';
 
 /// Booking details dialog - displays comprehensive booking information with actions
 class BookingDetailsDialog extends ConsumerWidget {
@@ -39,7 +41,6 @@ class BookingDetailsDialog extends ConsumerWidget {
       maxWidth: 500,
     );
     final contentPadding = ResponsiveDialogUtils.getContentPadding(context);
-    final headerPadding = ResponsiveDialogUtils.getHeaderPadding(context);
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -68,53 +69,9 @@ class BookingDetailsDialog extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Gradient Header - matches CommonAppBar height (52px)
-            Container(
-              height: ResponsiveDialogUtils.kHeaderHeight,
-              padding: EdgeInsets.symmetric(horizontal: headerPadding),
-              decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(11),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                    ),
-                    child: const Icon(
-                      Icons.receipt_long,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.ownerDetailsTitle,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                  AccessibleIconButton(
-                    icon: Icons.close,
-                    color: Colors.white,
-                    onPressed: () => Navigator.of(context).pop(),
-                    semanticLabel: l10n.close,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
+            DialogHeader(
+              title: l10n.ownerDetailsTitle,
+              icon: Icons.receipt_long,
             ),
 
             // Content
@@ -139,7 +96,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     _ThemedDivider(),
 
                     // Guest Information
-                    _SectionHeader(
+                    SectionHeader(
                       icon: Icons.person_outline,
                       title: l10n.ownerDetailsGuestInfo,
                     ),
@@ -185,7 +142,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     _ThemedDivider(),
 
                     // Property Information
-                    _SectionHeader(
+                    SectionHeader(
                       icon: Icons.home_outlined,
                       title: l10n.ownerDetailsPropertyInfo,
                     ),
@@ -203,7 +160,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     _ThemedDivider(),
 
                     // Booking Details
-                    _SectionHeader(
+                    SectionHeader(
                       icon: Icons.calendar_today_outlined,
                       title: l10n.ownerDetailsStayInfo,
                     ),
@@ -230,7 +187,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     _ThemedDivider(),
 
                     // Payment Information
-                    _SectionHeader(
+                    SectionHeader(
                       icon: Icons.payment_outlined,
                       title: l10n.ownerDetailsPaymentInfo,
                     ),
@@ -276,7 +233,7 @@ class BookingDetailsDialog extends ConsumerWidget {
 
                     if (booking.notes != null && booking.notes!.isNotEmpty) ...[
                       _ThemedDivider(),
-                      _SectionHeader(
+                      SectionHeader(
                         icon: Icons.note_outlined,
                         title: l10n.ownerDetailsNotes,
                       ),
@@ -289,7 +246,7 @@ class BookingDetailsDialog extends ConsumerWidget {
 
                     if (booking.status == BookingStatus.cancelled) ...[
                       _ThemedDivider(),
-                      _SectionHeader(
+                      SectionHeader(
                         icon: Icons.cancel_outlined,
                         title: l10n.ownerDetailsCancellationInfo,
                       ),
@@ -752,37 +709,6 @@ class _ThemedDivider extends StatelessWidget {
       color: isDark
           ? AppColors.sectionDividerDark
           : AppColors.sectionDividerLight,
-    );
-  }
-}
-
-/// Section header widget with icon and gradient accent
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.title});
-
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            gradient: context.gradients.brandPrimary,
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
-          ),
-          child: Icon(icon, color: Colors.white, size: 18),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
     );
   }
 }

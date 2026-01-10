@@ -23,6 +23,8 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import {logInfo, logError, logWarn} from "./logger";
 import {setUser, captureMessage} from "./sentry";
+import {enforceRateLimit} from "./utils/rateLimit";
+import {maskEmail} from "./utils/inputSanitization";
 
 const db = admin.firestore();
 const BATCH_SIZE = 400; // Firestore limit is 500, keep margin for safety
@@ -55,6 +57,14 @@ export const deleteUserAccount = onCall(
     if (!userId) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
     }
+
+    // Rate limiting: 1 account deletion attempt per hour
+    await enforceRateLimit(userId, "delete_account", {
+      maxCalls: 1,
+      windowMs: 3600000, // 1 hour
+      errorMessage:
+        "Account deletion already in progress or failed. Please try again later.",
+    });
 
     // Set user context for Sentry error tracking
     setUser(userId);
@@ -98,13 +108,13 @@ export const deleteUserAccount = onCall(
 
       logInfo("[DeleteAccount] Account deleted successfully", {
         userId,
-        email: userEmail,
+        email: maskEmail(userEmail),
       });
 
       // Send to Sentry for monitoring
       captureMessage("User account deleted", "info", {
         userId,
-        email: userEmail,
+        email: maskEmail(userEmail),
       });
 
       return {

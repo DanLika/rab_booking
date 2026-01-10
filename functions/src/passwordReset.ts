@@ -10,6 +10,7 @@ import { getAuth } from "firebase-admin/auth";
 import { logError, logSuccess, logOperation } from "./logger";
 import { validateEmail } from "./utils/emailValidation";
 import { sanitizeEmail } from "./utils/inputSanitization";
+import { checkRateLimit } from "./utils/rateLimit";
 import { sendPasswordResetEmailV2 } from "./email";
 import { Resend } from "resend";
 import { setUser } from "./sentry";
@@ -62,6 +63,20 @@ export const sendPasswordResetEmail = onCall(
       // Set user context for Sentry error tracking (unauthenticated action - use email)
       if (email) {
         setUser(null, email);
+      }
+
+      // Rate limiting (IP-based): 5 attempts per hour
+      const rawRequest = request.rawRequest as any;
+      const clientIp =
+        rawRequest?.ip ||
+        rawRequest?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        "unknown";
+
+      if (!checkRateLimit(`password_reset:${clientIp}`, 5, 3600)) {
+        throw new HttpsError(
+          "resource-exhausted",
+          "Too many password reset attempts. Please try again later."
+        );
       }
 
       // Validate input

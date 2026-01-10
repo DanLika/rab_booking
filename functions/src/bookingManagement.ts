@@ -17,6 +17,7 @@ import {
   BookingEmailTracking,
 } from "./utils/bookingHelpers";
 import {safeToDate} from "./utils/dateValidation";
+import {maskEmail} from "./utils/inputSanitization";
 
 // ==========================================
 // EMAIL ERROR TRACKING
@@ -189,7 +190,7 @@ export const onBookingCreated = onDocumentCreated(
       bookingId: event.params.bookingId,
       reference: booking.booking_reference,
       guest: booking.guest_name,
-      email: booking.guest_email
+      email: maskEmail(booking.guest_email),
     });
 
     try {
@@ -280,7 +281,7 @@ export const onBookingStatusChange = onDocumentUpdated(
           logInfo("Approval email already sent, skipping (idempotency check)", {
             bookingId: event.params.bookingId,
             sentAt: emailTracking.approval.sent_at,
-            email: emailTracking.approval.email,
+            email: maskEmail(emailTracking.approval.email),
           });
           return;
         }
@@ -311,7 +312,7 @@ export const onBookingStatusChange = onDocumentUpdated(
             after.guest_email || ""
           );
 
-          logSuccess("Booking approval email sent to guest", {email: after.guest_email});
+          logSuccess("Booking approval email sent to guest", {email: maskEmail(after.guest_email)});
 
           // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
           await event.data?.after.ref.update({
@@ -344,7 +345,7 @@ export const onBookingStatusChange = onDocumentUpdated(
           logInfo("Rejection email already sent, skipping (idempotency check)", {
             bookingId: event.params.bookingId,
             sentAt: emailTracking.rejection.sent_at,
-            email: emailTracking.rejection.email,
+            email: maskEmail(emailTracking.rejection.email),
           });
           return;
         }
@@ -373,7 +374,7 @@ export const onBookingStatusChange = onDocumentUpdated(
             after.guest_email || ""
           );
 
-          logSuccess("Booking rejection email sent to guest", {email: after.guest_email});
+          logSuccess("Booking rejection email sent to guest", {email: maskEmail(after.guest_email)});
 
           // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
           await event.data?.after.ref.update({
@@ -406,7 +407,7 @@ export const onBookingStatusChange = onDocumentUpdated(
           logInfo("Cancellation email already sent, skipping (idempotency check)", {
             bookingId: event.params.bookingId,
             sentAt: emailTracking.cancellation.sent_at,
-            email: emailTracking.cancellation.email,
+            email: maskEmail(emailTracking.cancellation.email),
           });
           // Don't return here - we still need to create owner notification
         } else {
@@ -458,7 +459,7 @@ export const onBookingStatusChange = onDocumentUpdated(
               "Booking Cancellation",
               booking.guest_email || ""
             );
-            logSuccess("Cancellation email sent", {email: booking.guest_email});
+            logSuccess("Cancellation email sent", {email: maskEmail(booking.guest_email)});
 
             // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
             await event.data?.after.ref.update({

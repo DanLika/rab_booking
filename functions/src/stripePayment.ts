@@ -19,7 +19,12 @@ import {
   calculateBookingNights,
   safeToDate,
 } from "./utils/dateValidation";
-import { sanitizeText, sanitizeEmail, sanitizePhone } from "./utils/inputSanitization";
+import {
+  sanitizeText,
+  sanitizeEmail,
+  sanitizePhone,
+  maskEmail,
+} from "./utils/inputSanitization";
 import { logInfo, logError, logWarn } from "./logger";
 import { validateBookingPrice, calculateBookingPrice } from "./utils/priceValidation";
 import { checkRateLimit } from "./utils/rateLimit";
@@ -748,6 +753,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       errorMessage: error?.message,
       errorStack: error?.stack,
       hasBookingData: !!bookingData,
+      guestEmail: maskEmail(guestEmail),
       returnUrl: returnUrl,
     });
 
@@ -993,7 +999,11 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
             },
             false // Respect preferences: owner can opt-out of payment notifications
           );
-          logInfo(`Owner payment notification processed (sent if preferences allow): ${ownerData.email}`);
+          logInfo(
+            `Owner payment notification processed (sent if preferences allow): ${maskEmail(
+              ownerData.email
+            )}`
+          );
         }
       } catch (error) {
         logError("Failed to send notification email to owner", error);

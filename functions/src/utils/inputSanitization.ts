@@ -194,6 +194,24 @@ export function sanitizeText(
 }
 
 /**
+ * Mask email for logging (PII protection)
+ *
+ * @param email - Email to mask
+ * @returns Masked email (e.g., "j***@gmail.com")
+ */
+export function maskEmail(email: string | null | undefined): string {
+  if (!email) return "unknown";
+  const parts = email.split("@");
+  if (parts.length !== 2) return "invalid_email";
+  const [user, domain] = parts;
+  const maskedUser =
+    user.length > 2
+      ? user.substring(0, 1) + "***" + user.substring(user.length - 1)
+      : "***";
+  return `${maskedUser}@${domain}`;
+}
+
+/**
  * Sanitize email input
  *
  * SECURITY IMPROVEMENTS:

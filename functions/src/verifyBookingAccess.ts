@@ -21,99 +21,108 @@ export const verifyBookingAccess = onCall(async (request) => {
     bookingReference,
     email,
     accessToken,
+    stripeSessionId,
   } = data;
 
   // Set user context for Sentry error tracking (guest action - use email)
   setUser(null, email || null);
 
   // Validate required fields
-  if (!bookingReference || !email) {
+  // Allow access via:
+  // 1. stripeSessionId (Payment return)
+  // 2. bookingReference + email (Manual lookup)
+  // 3. bookingReference + accessToken (Magic link)
+  if (!stripeSessionId && (!bookingReference || (!email && !accessToken))) {
     throw new HttpsError(
       "invalid-argument",
-      "Booking reference and email are required"
+      "Valid credentials required (Reference+Email, Reference+Token, or SessionID)"
     );
   }
 
   try {
     logInfo("[VerifyBookingAccess] Attempting to verify access", {
       bookingReference,
-      email: email.substring(0, 3) + "***", // Log partial email for privacy
+      email: email ? email.substring(0, 3) + "***" : "none", // Log partial email for privacy
       hasToken: !!accessToken,
+      hasSessionId: !!stripeSessionId,
     });
 
-    // NEW STRUCTURE: Query booking by reference using collection group
-    const bookingsSnapshot = await db
-      .collectionGroup("bookings")
-      .where("booking_reference", "==", bookingReference)
-      .limit(1)
-      .get();
+    let bookingsSnapshot;
+
+    if (stripeSessionId) {
+      // Lookup by Stripe Session ID (Secure capability token)
+      bookingsSnapshot = await db
+        .collectionGroup("bookings")
+        .where("stripe_session_id", "==", stripeSessionId)
+        .limit(1)
+        .get();
+    } else {
+      // Lookup by Reference
+      bookingsSnapshot = await db
+        .collectionGroup("bookings")
+        .where("booking_reference", "==", bookingReference)
+        .limit(1)
+        .get();
+    }
 
     if (bookingsSnapshot.empty) {
       logWarn("[VerifyBookingAccess] Booking not found", {
         bookingReference,
+        hasSessionId: !!stripeSessionId,
       });
+      // Generic error to prevent enumeration
       throw new HttpsError(
-        "not-found",
-        "Booking not found. Please check your booking reference."
+        "permission-denied",
+        "Invalid credentials or booking not found."
       );
     }
 
     const bookingDoc = bookingsSnapshot.docs[0];
     const booking = bookingDoc.data();
+    const isSessionAuth = !!stripeSessionId;
+    let isTokenAuth = false;
 
-    // Verify email matches (case-insensitive)
-    if (booking.guest_email.toLowerCase() !== email.toLowerCase()) {
-      logWarn("[VerifyBookingAccess] Email mismatch", {
-        bookingReference,
-        attemptedEmail: email.substring(0, 3) + "***",
-      });
-      throw new HttpsError(
-        "permission-denied",
-        "Email does not match booking records."
-      );
-    }
-
-    // If access token provided, verify it
-    if (accessToken) {
-      // Check if booking has access token
+    // AUTHENTICATION CHECK
+    if (isSessionAuth) {
+      // Stripe Session ID is sufficient proof of access (Capability Token)
+      logInfo("[VerifyBookingAccess] Authenticated via Stripe Session ID");
+    } else if (accessToken) {
+      // Token Authentication (Magic Link)
       if (!booking.access_token) {
-        logWarn("[VerifyBookingAccess] Booking has no access token", {
-          bookingReference,
-        });
-        // Allow fallback to email-only verification
+        logWarn("[VerifyBookingAccess] Booking has no access token configured", {bookingReference});
+        // Fallback to email check if token system not active for this booking
       } else {
-        // Verify token matches
-        const isTokenValid = verifyAccessToken(
-          accessToken,
-          booking.access_token
-        );
-
+        const isTokenValid = verifyAccessToken(accessToken, booking.access_token);
         if (!isTokenValid) {
-          logWarn("[VerifyBookingAccess] Invalid access token", {
-            bookingReference,
-          });
-          throw new HttpsError(
-            "permission-denied",
-            "Invalid or expired access link. Please try manual lookup."
-          );
+          logWarn("[VerifyBookingAccess] Invalid access token", {bookingReference});
+          throw new HttpsError("permission-denied", "Invalid access link.");
         }
 
-        // Check token expiration
+        // Check expiration
         if (booking.token_expires_at) {
           const now = new Date();
           const expiresAt = booking.token_expires_at.toDate();
-
           if (now > expiresAt) {
-            logWarn("[VerifyBookingAccess] Token expired", {
-              bookingReference,
-              expiresAt: expiresAt.toISOString(),
-            });
-            throw new HttpsError(
-              "permission-denied",
-              "Access link has expired. Please use manual lookup."
-            );
+            logWarn("[VerifyBookingAccess] Token expired", {bookingReference});
+            throw new HttpsError("permission-denied", "Access link expired.");
           }
         }
+        isTokenAuth = true;
+      }
+    }
+
+    // If not authenticated via Session or Token, enforce Email check
+    if (!isSessionAuth && !isTokenAuth) {
+      if (!email || booking.guest_email.toLowerCase() !== email.toLowerCase()) {
+        logWarn("[VerifyBookingAccess] Email mismatch or missing", {
+          bookingReference,
+          attemptedEmail: email ? email.substring(0, 3) + "***" : "none",
+        });
+        // Generic error to prevent enumeration
+        throw new HttpsError(
+          "permission-denied",
+          "Invalid credentials or booking not found."
+        );
       }
     }
 
@@ -178,9 +187,9 @@ export const verifyBookingAccess = onCall(async (request) => {
       checkOut: checkOut.toISOString(),
       nights: nights,
       // Handle both formats: int (legacy) or object {adults, children}
-      guestCount: typeof booking.guest_count === "number"
-        ? {adults: booking.guest_count, children: 0}
-        : (booking.guest_count || {adults: 1, children: 0}),
+      guestCount: typeof booking.guest_count === "number" ?
+        {adults: booking.guest_count, children: 0} :
+        (booking.guest_count || {adults: 1, children: 0}),
       totalPrice: booking.total_price,
       depositAmount: booking.deposit_amount || booking.advance_amount || 0,
       remainingAmount: booking.remaining_amount || 0,

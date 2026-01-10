@@ -121,11 +121,7 @@ service cloud.firestore {
             // Owner can read their own bookings
             (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
             // Widget calendar availability (public for calendar display)
-            ('unit_id' in resource.data && 'status' in resource.data) ||
-            // Stripe payment polling
-            ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
-            // Guest booking view
-            ('booking_reference' in resource.data && resource.data.booking_reference != null);
+            ('unit_id' in resource.data && 'status' in resource.data);
           allow create, update, delete: if isPropertyOwner(propertyId);
         }
 
@@ -189,8 +185,6 @@ service cloud.firestore {
     //    - Works with ANY query pattern (unit_id filters, date ranges, etc.)
     //    - Realtime subscriptions, analytics, dashboard - all allowed
     // 2. Widget: Read availability ONLY (by unit_id + status) - public calendar
-    // 3. Stripe: Poll payment status (by stripe_session_id)
-    // 4. Guest: View own booking (by booking_reference)
     //
     // SECURITY NOTE: The owner_id check is the PRIMARY security boundary.
     // Even if attacker knows competitor's unit_ids and queries by them,
@@ -204,13 +198,7 @@ service cloud.firestore {
         // PUBLIC: Widget calendar availability queries (unit_id + status)
         // SECURITY: Public for availability display, app code filters PII
         // Requires collection group index: unit_id ASC, status ASC
-        ('unit_id' in resource.data && 'status' in resource.data) ||
-        // PUBLIC: Stripe polling after payment (by stripe_session_id)
-        // Requires collection group index: stripe_session_id ASC
-        ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
-        // PUBLIC: Guest booking view (by booking_reference)
-        // Requires collection group index: booking_reference ASC
-        ('booking_reference' in resource.data && resource.data.booking_reference != null);
+        ('unit_id' in resource.data && 'status' in resource.data);
       // Writes go through specific subcollection path above
     }
 

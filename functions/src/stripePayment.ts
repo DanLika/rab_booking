@@ -1,28 +1,28 @@
-import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
+import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import Stripe from "stripe";
-import { defineSecret } from "firebase-functions/params";
+import {defineSecret} from "firebase-functions/params";
 import {
   sendBookingApprovedEmail,
   sendOwnerNotificationEmail,
 } from "./emailService";
-import { sendEmailIfAllowed } from "./emailNotificationHelper";
-import { admin, db } from "./firebase";
-import { getStripeClient, stripeSecretKey } from "./stripe";
-import { createPaymentNotification } from "./notificationService";
+import {sendEmailIfAllowed} from "./emailNotificationHelper";
+import {admin, db} from "./firebase";
+import {getStripeClient, stripeSecretKey} from "./stripe";
+import {createPaymentNotification} from "./notificationService";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
 } from "./bookingAccessToken";
-import { generateBookingReference } from "./utils/bookingReferenceGenerator";
+import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {
   validateAndConvertBookingDates,
   calculateBookingNights,
   safeToDate,
 } from "./utils/dateValidation";
-import { sanitizeText, sanitizeEmail, sanitizePhone } from "./utils/inputSanitization";
-import { logInfo, logError, logWarn } from "./logger";
-import { validateBookingPrice, calculateBookingPrice } from "./utils/priceValidation";
-import { checkRateLimit } from "./utils/rateLimit";
+import {sanitizeText, sanitizeEmail, sanitizePhone} from "./utils/inputSanitization";
+import {logInfo, logError, logWarn} from "./logger";
+import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
+import {checkRateLimit} from "./utils/rateLimit";
 import {
   logSecurityEvent,
   logWebhookSignatureFailure,
@@ -40,11 +40,11 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 // - view.bookbed.io = Booking Widget (main domain)
 // - *.view.bookbed.io = Client subdomains (e.g., jasko-rab.view.bookbed.io)
 const ALLOWED_RETURN_DOMAINS = [
-  "https://bookbed.io",           // Marketing site (for future use)
-  "https://app.bookbed.io",       // Owner dashboard
-  "https://view.bookbed.io",      // Booking widget (main domain)
-  "http://localhost",             // Local development
-  "http://127.0.0.1",             // Local development
+  "https://bookbed.io", // Marketing site (for future use)
+  "https://app.bookbed.io", // Owner dashboard
+  "https://view.bookbed.io", // Booking widget (main domain)
+  "http://localhost", // Local development
+  "http://127.0.0.1", // Local development
 ];
 
 // Allowed wildcard domains for custom client subdomains
@@ -56,7 +56,7 @@ const ALLOWED_WILDCARD_DOMAINS = [
 /**
  * Validates if a return URL is allowed based on whitelist and wildcard rules
  * @param returnUrl - The full return URL to validate
- * @returns true if URL is allowed, false otherwise
+ * @return true if URL is allowed, false otherwise
  *
  * SECURITY: Uses split-based validation to prevent attacks like "evil-bookbed.io"
  * which would pass endsWith() check but should be blocked
@@ -113,7 +113,7 @@ function isAllowedReturnUrl(returnUrl: string): boolean {
  *
  * Security: Validates return URL against whitelist
  */
-export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }, async (request) => {
+export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey]}, async (request) => {
   // ========================================================================
   // SECURITY: Rate Limiting - BEFORE any business logic
   // ========================================================================
@@ -128,11 +128,11 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     // Log security event (fire-and-forget)
     logSecurityEvent(
       SecurityEventType.RATE_LIMIT_EXCEEDED,
-      { ip: clientIp, action: "stripe_checkout" },
+      {ip: clientIp, action: "stripe_checkout"},
       "medium"
     ).catch(() => {}); // Don't block on logging
 
-    logWarn("createStripeCheckoutSession: Rate limit exceeded", { ip: clientIp });
+    logWarn("createStripeCheckoutSession: Rate limit exceeded", {ip: clientIp});
     throw new HttpsError(
       "resource-exhausted",
       "Too many checkout attempts. Please wait a few minutes before trying again."
@@ -220,7 +220,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       logError(`createStripeCheckoutSession: Invalid return URL format: ${returnUrl}`, urlError);
       logSecurityEvent(
         SecurityEventType.INVALID_RETURN_URL,
-        { returnUrl, error: "Invalid format" },
+        {returnUrl, error: "Invalid format"},
         "medium"
       ).catch(() => {});
       throw new HttpsError("invalid-argument", "Invalid return URL format.");
@@ -236,7 +236,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       });
       logSecurityEvent(
         SecurityEventType.INVALID_RETURN_URL,
-        { returnUrl, error: "Not in whitelist" },
+        {returnUrl, error: "Not in whitelist"},
         "high"
       ).catch(() => {});
       throw new HttpsError(
@@ -403,7 +403,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     }
 
     // Validate and convert dates
-    const { checkInDate, checkOutDate } = validateAndConvertBookingDates(
+    const {checkInDate, checkOutDate} = validateAndConvertBookingDates(
       checkIn,
       checkOut
     );
@@ -457,7 +457,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
         });
 
         // Calculate server-side nightly price and add services total
-        const { totalPrice: serverNightlyPrice } = await calculateBookingPrice(
+        const {totalPrice: serverNightlyPrice} = await calculateBookingPrice(
           unitId,
           checkInDate,
           checkOutDate,
@@ -559,7 +559,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
       const bookingRef = generateBookingReference(placeholderBookingId);
 
       // Generate access token for future "View my reservation" link
-      const { token: accessToken, hashedToken } =
+      const {token: accessToken, hashedToken} =
         generateBookingAccessToken();
       const tokenExpiration = calculateTokenExpiration(checkOutDate);
 
@@ -728,7 +728,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
     });
 
     logInfo(`Stripe checkout session created: ${session.id}`);
-    logInfo(`Booking will be created by webhook after payment success`);
+    logInfo("Booking will be created by webhook after payment success");
 
     return {
       success: true,
@@ -768,7 +768,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
  * - Uses atomic transaction to prevent race conditions
  * - No more "ghost bookings" - only paid bookings exist
  */
-export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookSecret] }, async (req, res) => {
+export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeWebhookSecret]}, async (req, res) => {
   const sig = req.headers["stripe-signature"];
 
   if (!sig) {
@@ -798,7 +798,7 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
     logWebhookSignatureFailure(
       error.message || "Unknown error",
       !!sig,
-      { hasRawBody: !!req.rawBody }
+      {hasRawBody: !!req.rawBody}
     ).catch(() => {}); // Fire-and-forget
 
     logError("Webhook signature verification failed", error);
@@ -1025,6 +1025,6 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
   } else {
     // Unexpected event type
     logInfo(`Unhandled event type: ${event.type}`);
-    res.json({ received: true });
+    res.json({received: true});
   }
 });

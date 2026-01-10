@@ -6,23 +6,23 @@ import {setUser} from "./sentry";
 
 /**
  * Booking.com Calendar API Integration
- * 
+ *
  * ⚠️ IMPORTANT: Direct API access is currently NOT AVAILABLE
- * 
+ *
  * Status: Partner program PAUSED (as of late 2024)
  * Requirements: Business registration, PCI compliance, partner approval
  * Timeline: Indefinite (3-6 months historically when accepting applications)
- * 
+ *
  * This code is kept for reference but will not work without partner approval.
- * 
+ *
  * RECOMMENDED ALTERNATIVE: Use channel manager APIs (Beds24, Hosthub, Guesty)
  * See: docs/CHANNEL_MANAGER_SETUP.md
- * 
+ *
  * Technical Notes:
  * - Does NOT use standard OAuth 2.0 (proprietary token-based auth)
  * - Uses OTA XML format (not JSON)
  * - No reservation webhooks (must poll Reservations API)
- * 
+ *
  * Documentation: https://developers.booking.com/connectivity/docs (restricted access)
  */
 

@@ -83,6 +83,7 @@ class BookingUrlStateService {
     required String bookingRef,
     required String bookingId,
     required String paymentMethod,
+    String? token, // Access token for secure lookup
   }) {
     if (!kIsWeb) return;
 
@@ -95,6 +96,9 @@ class BookingUrlStateService {
       newParams['confirmation'] = bookingRef;
       newParams['bookingId'] = bookingId;
       newParams['payment'] = paymentMethod;
+      if (token != null) {
+        newParams['token'] = token;
+      }
 
       final newUri = uri.replace(queryParameters: newParams);
       // Use pushState to add to browser history (back button works)
@@ -179,6 +183,7 @@ class BookingUrlStateService {
         bookingRef: confirmation,
         bookingId: bookingId,
         paymentMethod: uri.queryParameters['payment'],
+        token: uri.queryParameters['token'],
       );
     } catch (e) {
       LoggingService.log(
@@ -225,9 +230,13 @@ class ConfirmationParams {
   /// Payment method used (e.g., 'stripe', 'bank_transfer')
   final String? paymentMethod;
 
+  /// Access token for secure lookup (optional)
+  final String? token;
+
   const ConfirmationParams({
     required this.bookingRef,
     this.bookingId,
     this.paymentMethod,
+    this.token,
   });
 }

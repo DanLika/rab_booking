@@ -70,15 +70,15 @@ function setCacheHeaders(
 
 /**
  * Public iCal Feed Endpoint
- * 
+ *
  * GET /api/ical/{propertyId}/{unitId}/{token}
- * 
+ *
  * Returns iCal feed for a specific unit with all bookings.
  * Secured by secret token stored in widget_settings.
- * 
+ *
  * Compatible with:
  * - Google Calendar
- * - Apple Calendar  
+ * - Apple Calendar
  * - Outlook
  * - Any RFC 5545 compatible calendar app
  */
@@ -100,7 +100,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
   try {
     // Extract parameters from URL path
     // Expected format: /getUnitIcalFeed/{propertyId}/{unitId}/{token}
-    const pathParts = request.path.split("/").filter(p => p);
+    const pathParts = request.path.split("/").filter((p) => p);
 
     if (pathParts.length < 3) {
       response.status(400).send("Invalid URL format. Expected: /{propertyId}/{unitId}/{token}");
@@ -151,9 +151,9 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     const cachedETag = widgetSettings.ical_cache_etag;
 
     const now = new Date();
-    const cacheExpiry = cachedAt
-      ? new Date(cachedAt.getTime() + ICAL_CONFIG.CACHE_TTL_SECONDS * 1000)
-      : null;
+    const cacheExpiry = cachedAt ?
+      new Date(cachedAt.getTime() + ICAL_CONFIG.CACHE_TTL_SECONDS * 1000) :
+      null;
     const cacheValid = cacheExpiry && now < cacheExpiry && cachedContent;
 
     // 3. Handle ETag/If-None-Match for bandwidth optimization
@@ -211,7 +211,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     // 8. Generate iCal content
     const icalContent = generateIcalCalendar(
       unitName,
-      bookingsSnapshot.docs.map(doc => ({
+      bookingsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))
@@ -281,48 +281,48 @@ function generateEvent(booking: any, unitName: string): string[] {
   const lines: string[] = [];
 
   lines.push("BEGIN:VEVENT");
-  
+
   // UID - Unique identifier
   lines.push(`UID:booking-${booking.id}@bookbed.io`);
-  
+
   // DTSTAMP - Creation timestamp
   const created = booking.created_at?.toDate() || new Date();
   lines.push(`DTSTAMP:${formatTimestamp(created)}`);
-  
+
   // DTSTART - Start date (all-day event)
   const checkIn = booking.check_in?.toDate() || new Date();
   lines.push(`DTSTART;VALUE=DATE:${formatDate(checkIn)}`);
-  
+
   // DTEND - End date (exclusive, day after checkout)
   const checkOut = booking.check_out?.toDate() || new Date();
   const endDate = new Date(checkOut);
   endDate.setDate(endDate.getDate() + 1);
   lines.push(`DTEND;VALUE=DATE:${formatDate(endDate)}`);
-  
+
   // SUMMARY - Event title
   const guestName = booking.guest_name || "Guest";
   lines.push(`SUMMARY:${escapeIcal(`Booking: ${guestName} - ${unitName}`)}`);
-  
+
   // DESCRIPTION - Event details
   const description = buildDescription(booking, unitName);
   lines.push(`DESCRIPTION:${escapeIcal(description)}`);
-  
+
   // STATUS - Booking status
   const status = mapBookingStatus(booking.status);
   lines.push(`STATUS:${status}`);
-  
+
   // LOCATION - Unit name
   lines.push(`LOCATION:${escapeIcal(unitName)}`);
-  
+
   // LAST-MODIFIED
   if (booking.updated_at) {
     const updated = booking.updated_at.toDate();
     lines.push(`LAST-MODIFIED:${formatTimestamp(updated)}`);
   }
-  
+
   // CREATED
   lines.push(`CREATED:${formatTimestamp(created)}`);
-  
+
   lines.push("END:VEVENT");
 
   return lines;
@@ -335,26 +335,26 @@ function buildDescription(booking: any, unitName: string): string {
   const parts: string[] = [];
 
   parts.push(`Unit: ${unitName}`);
-  
+
   if (booking.guest_name) parts.push(`Guest: ${booking.guest_name}`);
   if (booking.guest_email) parts.push(`Email: ${booking.guest_email}`);
   if (booking.guest_phone) parts.push(`Phone: ${booking.guest_phone}`);
-  
+
   parts.push(`Guests: ${booking.guest_count || 1}`);
-  
+
   if (booking.check_in_time) parts.push(`Check-in: ${booking.check_in_time}`);
   if (booking.check_out_time) parts.push(`Check-out: ${booking.check_out_time}`);
-  
+
   if (booking.total_price) {
     parts.push(`Total: €${booking.total_price.toFixed(2)}`);
   }
-  
+
   if (booking.payment_status) {
     parts.push(`Payment: ${booking.payment_status}`);
   }
-  
+
   if (booking.notes) parts.push(`Notes: ${booking.notes}`);
-  
+
   parts.push(`Booking ID: ${booking.id}`);
 
   return parts.join("\\n");
@@ -365,11 +365,11 @@ function buildDescription(booking: any, unitName: string): string {
  */
 function mapBookingStatus(status: string): string {
   switch (status) {
-    case "confirmed": return "CONFIRMED";
-    case "pending": return "TENTATIVE";
-    case "cancelled": return "CANCELLED";
-    case "completed": return "CONFIRMED";
-    default: return "TENTATIVE";
+  case "confirmed": return "CONFIRMED";
+  case "pending": return "TENTATIVE";
+  case "cancelled": return "CANCELLED";
+  case "completed": return "CONFIRMED";
+  default: return "TENTATIVE";
   }
 }
 

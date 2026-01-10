@@ -1,7 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
-import * as https from 'https';
-import * as http from 'http';
+import * as https from "https";
+import * as http from "http";
 import {admin} from "./firebase";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
 import {setUser} from "./sentry";
@@ -16,7 +16,7 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
 
     // Only allow HTTP/HTTPS protocols
     if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-      return { valid: false, error: `Invalid protocol: ${parsedUrl.protocol}. Only HTTP/HTTPS allowed.` };
+      return {valid: false, error: `Invalid protocol: ${parsedUrl.protocol}. Only HTTP/HTTPS allowed.`};
     }
 
     // Block localhost and internal IPs
@@ -41,7 +41,7 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
 
     for (const pattern of blockedPatterns) {
       if (hostname === pattern || hostname.startsWith(pattern) || hostname.endsWith(pattern)) {
-        return { valid: false, error: "Internal or localhost URLs are not allowed." };
+        return {valid: false, error: "Internal or localhost URLs are not allowed."};
       }
     }
 
@@ -73,20 +73,20 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
     ];
 
     // Check if domain is in allowed list or is a subdomain of allowed domains
-    const isAllowed = allowedDomains.some(domain =>
+    const isAllowed = allowedDomains.some((domain) =>
       hostname === domain || hostname.endsWith(`.${domain}`)
     );
 
     // SECURITY FIX SF-002: Enable whitelist validation to prevent SSRF attacks
     // Previously this was just logging a warning but allowing any domain
     if (!isAllowed) {
-      logWarn("[iCal Sync] SECURITY SF-002: URL domain not in whitelist - BLOCKED", { hostname });
-      return { valid: false, error: `Domain ${hostname} is not in the allowed list. Contact support to add your calendar provider.` };
+      logWarn("[iCal Sync] SECURITY SF-002: URL domain not in whitelist - BLOCKED", {hostname});
+      return {valid: false, error: `Domain ${hostname} is not in the allowed list. Contact support to add your calendar provider.`};
     }
 
-    return { valid: true };
+    return {valid: true};
   } catch (error) {
-    return { valid: false, error: "Invalid URL format." };
+    return {valid: false, error: "Invalid URL format."};
   }
 }
 
@@ -119,8 +119,8 @@ export const scheduledIcalSync = onSchedule(
     try {
       // Get all active feeds
       const feedsSnapshot = await db
-        .collection('ical_feeds')
-        .where('status', 'in', ['active', 'error']) // Include error feeds to retry
+        .collection("ical_feeds")
+        .where("status", "in", ["active", "error"]) // Include error feeds to retry
         .get();
 
       if (feedsSnapshot.empty) {
@@ -129,7 +129,7 @@ export const scheduledIcalSync = onSchedule(
       }
 
       logInfo("[Scheduled iCal Sync] Found feeds to sync", {
-        count: feedsSnapshot.size
+        count: feedsSnapshot.size,
       });
 
       let successCount = 0;
@@ -151,7 +151,7 @@ export const scheduledIcalSync = onSchedule(
             logInfo("[Scheduled iCal Sync] Skipping feed - sync interval not elapsed", {
               feedId,
               lastSynced: lastSynced.toISOString(),
-              nextSync: nextSyncTime.toISOString()
+              nextSync: nextSyncTime.toISOString(),
             });
             continue;
           }
@@ -165,28 +165,27 @@ export const scheduledIcalSync = onSchedule(
           logInfo("[Scheduled iCal Sync] Feed synced successfully", {
             feedId,
             platform: feedData.platform,
-            eventsImported
+            eventsImported,
           });
         } catch (error) {
           errorCount++;
           logError("[Scheduled iCal Sync] Failed to sync feed", error, {
             feedId,
-            platform: feedData.platform
+            platform: feedData.platform,
           });
           // Continue with next feed even if one fails
         }
 
         // Small delay between feeds to be nice to external APIs
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
       logSuccess("[Scheduled iCal Sync] Automatic sync completed", {
         totalFeeds: feedsSnapshot.size,
         successCount,
         errorCount,
-        totalEventsImported
+        totalEventsImported,
       });
-
     } catch (error) {
       logError("[Scheduled iCal Sync] Critical error in scheduled sync", error);
       throw error; // Rethrow to mark function as failed
@@ -201,16 +200,16 @@ export const scheduledIcalSync = onSchedule(
 export const syncIcalFeedNow = onCall(async (request) => {
   // Check authentication
   if (!request.auth) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
+    throw new HttpsError("unauthenticated", "User must be authenticated");
   }
 
   // Set user context for Sentry error tracking
   setUser(request.auth.uid);
 
-  const { feedId } = request.data;
+  const {feedId} = request.data;
 
   if (!feedId) {
-    throw new HttpsError('invalid-argument', 'feedId is required');
+    throw new HttpsError("invalid-argument", "feedId is required");
   }
 
   const db = admin.firestore();
@@ -219,18 +218,18 @@ export const syncIcalFeedNow = onCall(async (request) => {
     logInfo("[iCal Sync] Manual sync requested for feed", {feedId});
 
     // Get feed document
-    const feedDoc = await db.collection('ical_feeds').doc(feedId).get();
+    const feedDoc = await db.collection("ical_feeds").doc(feedId).get();
 
     if (!feedDoc.exists) {
-      throw new HttpsError('not-found', 'Feed not found');
+      throw new HttpsError("not-found", "Feed not found");
     }
 
     // Verify user owns this feed
     const feedData = feedDoc.data()!;
-    const propertyDoc = await db.collection('properties').doc(feedData.property_id).get();
+    const propertyDoc = await db.collection("properties").doc(feedData.property_id).get();
 
     if (!propertyDoc.exists || propertyDoc.data()?.owner_id !== request.auth.uid) {
-      throw new HttpsError('permission-denied', 'You do not own this feed');
+      throw new HttpsError("permission-denied", "You do not own this feed");
     }
 
     // Sync the feed
@@ -240,13 +239,13 @@ export const syncIcalFeedNow = onCall(async (request) => {
 
     return {
       success: true,
-      message: 'Feed synced successfully',
-      bookingsCreated: bookingsCreated
+      message: "Feed synced successfully",
+      bookingsCreated: bookingsCreated,
     };
   } catch (error) {
     logError("[iCal Sync] Error in manual sync", error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    throw new HttpsError('internal', 'Sync failed: ' + errorMessage);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    throw new HttpsError("internal", "Sync failed: " + errorMessage);
   }
 });
 
@@ -259,7 +258,7 @@ async function syncSingleFeed(
   feedId: string,
   feedData: any
 ): Promise<number> {
-  const { unit_id, ical_url, platform } = feedData;
+  const {unit_id, ical_url, platform} = feedData;
 
   logInfo("[iCal Sync] Syncing feed", {feedId, unitId: unit_id, platform});
 
@@ -278,7 +277,7 @@ async function syncSingleFeed(
     // Every valid iCal file MUST contain "BEGIN:VCALENDAR" per RFC 5545
     if (!icalData || !icalData.includes("BEGIN:VCALENDAR")) {
       throw new Error(`Fetched iCal data is empty or invalid for feed: ${feedId}. ` +
-        `Expected iCal format but received: ${icalData ? icalData.substring(0, 100) + '...' : 'empty response'}`);
+        `Expected iCal format but received: ${icalData ? icalData.substring(0, 100) + "..." : "empty response"}`);
     }
 
     // Parse iCal data
@@ -301,11 +300,11 @@ async function syncSingleFeed(
     const insertedCount = await insertNewEvents(db, feedId, unit_id, propertyId, platform, events);
 
     // Update feed metadata
-    await db.collection('ical_feeds').doc(feedId).update({
+    await db.collection("ical_feeds").doc(feedId).update({
       last_synced: admin.firestore.Timestamp.now(),
       sync_count: admin.firestore.FieldValue.increment(1),
       event_count: insertedCount,
-      status: 'active',
+      status: "active",
       last_error: null,
       updated_at: admin.firestore.Timestamp.now(),
     });
@@ -316,11 +315,11 @@ async function syncSingleFeed(
   } catch (error) {
     logError("[iCal Sync] Error syncing feed", error, {feedId});
 
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
     // Update feed with error status
-    await db.collection('ical_feeds').doc(feedId).update({
-      status: 'error',
+    await db.collection("ical_feeds").doc(feedId).update({
+      status: "error",
       last_error: errorMessage,
       updated_at: admin.firestore.Timestamp.now(),
     });
@@ -336,14 +335,14 @@ async function syncSingleFeed(
 // HTTP request timeout (30 seconds)
 const HTTP_TIMEOUT_MS = 30000;
 
-function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
+function fetchIcalData(url: string, maxRedirects = 5): Promise<string> {
   return new Promise((resolve, reject) => {
     if (maxRedirects <= 0) {
-      reject(new Error('Too many redirects'));
+      reject(new Error("Too many redirects"));
       return;
     }
 
-    const protocol = url.startsWith('https') ? https : http;
+    const protocol = url.startsWith("https") ? https : http;
 
     const request = protocol
       .get(url, (response) => {
@@ -356,15 +355,15 @@ function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
           }
 
           // Handle relative URLs by constructing absolute URL
-          if (redirectUrl.startsWith('/')) {
+          if (redirectUrl.startsWith("/")) {
             const urlObj = new URL(url);
             redirectUrl = `${urlObj.protocol}//${urlObj.host}${redirectUrl}`;
           }
 
           logInfo("[iCal Sync] Following redirect", {
-            from: url.substring(0, 50) + '...',
-            to: redirectUrl.substring(0, 50) + '...',
-            statusCode: response.statusCode
+            from: url.substring(0, 50) + "...",
+            to: redirectUrl.substring(0, 50) + "...",
+            statusCode: response.statusCode,
           });
 
           // Follow the redirect
@@ -379,17 +378,17 @@ function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
           return;
         }
 
-        let data = '';
+        let data = "";
 
-        response.on('data', (chunk) => {
+        response.on("data", (chunk) => {
           data += chunk;
         });
 
-        response.on('end', () => {
+        response.on("end", () => {
           resolve(data);
         });
       })
-      .on('error', (error) => {
+      .on("error", (error) => {
         reject(error);
       });
 
@@ -408,12 +407,12 @@ async function parseIcalData(icalData: string): Promise<any[]> {
   return new Promise((resolve, reject) => {
     try {
       // Lazy load node-ical only when function is called (not at module load time)
-      const ical = require('node-ical');
+      const ical = require("node-ical");
       const parsed = ical.parseICS(icalData);
       const events: any[] = [];
 
       for (const [uid, event] of Object.entries(parsed)) {
-        if ((event as any).type === 'VEVENT') {
+        if ((event as any).type === "VEVENT") {
           const vevent = event as any;
 
           // Extract start and end dates
@@ -438,7 +437,7 @@ async function parseIcalData(icalData: string): Promise<any[]> {
             externalId: uid,
             startDate: startDate,
             endDate: endDate,
-            summary: vevent.summary || 'Rezervacija',
+            summary: vevent.summary || "Rezervacija",
             description: vevent.description || null,
           });
         }
@@ -462,10 +461,10 @@ async function deleteOldEvents(
 ): Promise<void> {
   // NEW STRUCTURE: Query from property-level subcollection
   const eventsSnapshot = await db
-    .collection('properties')
+    .collection("properties")
     .doc(propertyId)
-    .collection('ical_events')
-    .where('feed_id', '==', feedId)
+    .collection("ical_events")
+    .where("feed_id", "==", feedId)
     .get();
 
   // Handle case where there are more than 500 events (batch limit)
@@ -514,9 +513,9 @@ async function insertNewEvents(
     batchEvents.forEach((event) => {
       // NEW STRUCTURE: Write to property-level subcollection
       const docRef = db
-        .collection('properties')
+        .collection("properties")
         .doc(propertyId)
-        .collection('ical_events')
+        .collection("ical_events")
         .doc();
 
       batch.set(docRef, {
@@ -550,8 +549,8 @@ function capitalizeFirstLetter(str: string): string {
   if (!str) return str;
 
   // Handle special cases
-  if (str === 'booking_com') return 'Booking.com';
-  if (str === 'airbnb') return 'Airbnb';
+  if (str === "booking_com") return "Booking.com";
+  if (str === "airbnb") return "Airbnb";
 
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

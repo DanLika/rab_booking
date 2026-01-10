@@ -21,7 +21,7 @@ function createStripeClient(secretKey: string): Stripe {
 /**
  * Validates email configuration to ensure all required fields are present
  * @param emailConfig - Email configuration from widget settings
- * @returns Validation result with isValid flag and optional reason
+ * @return Validation result with isValid flag and optional reason
  */
 function validateEmailConfig(emailConfig: any): {
   isValid: boolean;
@@ -211,7 +211,7 @@ export const guestCancelBooking = onCall(async (request) => {
       if (hoursUntilCheckIn < cancellationDeadlineHours) {
         throw new HttpsError(
           "failed-precondition",
-          `Cancellation deadline has passed during processing.`
+          "Cancellation deadline has passed during processing."
         );
       }
 

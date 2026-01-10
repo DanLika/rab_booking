@@ -28,20 +28,23 @@ class BookingLookupService {
   /// - [bookingReference]: The booking reference (e.g., "BK-123456")
   /// - [email]: Guest email address
   /// - [accessToken]: Optional access token from email link
+  /// - [stripeSessionId]: Optional Stripe session ID (for payment return)
   ///
   /// Returns: BookingDetailsModel with booking information
   /// Throws: Exception if verification fails
   Future<BookingDetailsModel> verifyBookingAccess({
-    required String bookingReference,
-    required String email,
+    String? bookingReference,
+    String? email,
     String? accessToken,
+    String? stripeSessionId,
   }) async {
     try {
       final callable = _functions.httpsCallable('verifyBookingAccess');
       final result = await callable.call<Map<String, dynamic>>({
-        'bookingReference': bookingReference,
-        'email': email,
+        if (bookingReference != null) 'bookingReference': bookingReference,
+        if (email != null) 'email': email,
         if (accessToken != null) 'accessToken': accessToken,
+        if (stripeSessionId != null) 'stripeSessionId': stripeSessionId,
       });
 
       // Parse the response

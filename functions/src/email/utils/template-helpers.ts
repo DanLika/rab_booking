@@ -64,7 +64,7 @@ export function escapeHtml(text: string | null | undefined): string {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
-    '"': "&quot;",
+    "\"": "&quot;",
     "'": "&#39;",
   };
   return String(text).replace(/[&<>"']/g, (char) => map[char]);
@@ -124,7 +124,7 @@ export function generateHeader(options: HeaderOptions): string {
   // Use emoji if provided, otherwise use icon HTML, or default to clipboard emoji
   const iconContent = emoji ?
     `<div style="font-size: 48px; margin-bottom: 16px;">${emoji}</div>` :
-    (icon || `<div style="font-size: 48px; margin-bottom: 16px;">📋</div>`);
+    (icon || "<div style=\"font-size: 48px; margin-bottom: 16px;\">📋</div>");
 
   let refHtml = "";
   if (bookingReference) {
@@ -560,8 +560,8 @@ export function generatePaymentDetailsCard(details: PaymentDetails): string {
 
   if (details.paymentMethod) {
     const methodText = details.paymentMethod === "stripe" ? "Kartica" :
-                       details.paymentMethod === "bank_transfer" ? "Bankovni prijenos" :
-                       "Plaćanje na mjestu";
+      details.paymentMethod === "bank_transfer" ? "Bankovni prijenos" :
+        "Plaćanje na mjestu";
     rows.push({label: "Način plaćanja", value: methodText});
   }
 

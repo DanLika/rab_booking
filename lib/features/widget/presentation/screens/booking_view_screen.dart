@@ -276,6 +276,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
               extra: {'booking': booking, 'widgetSettings': widgetSettings},
             );
           } catch (navError) {
+            LoggingService.logError('Navigation failed', navError);
             // If navigation fails, show error instead of crashing
             if (mounted) {
               setState(() {
@@ -286,6 +287,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
             }
           }
         } catch (e) {
+          LoggingService.logError('Failed to load widget settings', e);
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
@@ -316,6 +318,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
               extra: {'booking': booking, 'widgetSettings': null},
             );
           } catch (navError) {
+            LoggingService.logError('Navigation failed', navError);
             // If navigation fails, show error instead of crashing
             if (mounted) {
               setState(() {
@@ -421,6 +424,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
                         try {
                           context.go('/');
                         } catch (e) {
+                          LoggingService.logError('Navigation failed', e);
                           // If navigation fails, try Navigator.pop as fallback
                           if (Navigator.of(context).canPop()) {
                             Navigator.of(context).pop();

@@ -1,545 +1,152 @@
-# Jules AI Audit Prompts - Authentication Flow
+# Jules AI Audit Prompts - V2 (10.01.2026)
 
-Fokusirani promptovi za analizu authentication sistema.
+Kompaktni promptovi za nove audit provjere. Osnovni auth sistem je implementiran.
 
 **Kako koristiti:**
-1. Kopiraj jedan prompt u Jules AI
+1. Kopiraj prompt u Jules AI
 2. Pričekaj analizu i kreiranje brancha
-3. Pregledaj rezultate
-4. Ponovi za sljedeći prompt
-
-**Platforme za testiranje:**
-- Web: Chrome, Safari, Firefox, Edge
-- iOS: Safari, Chrome
-- Android: Chrome, Samsung Internet
-- Desktop: Windows, macOS, Linux
+3. Pregledaj PR
 
 ---
 
-# 1. REGISTRATION FLOW
+# 1. PERFORMANCE AUDIT
 
-## REG-001: Registration Form Validation - Name Fields
+## PERF-001: Firestore Query Optimization
 ```
-Analyze name field validation in:
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
+Analyze Firestore queries for optimization in:
+- lib/features/owner_dashboard/presentation/providers/
 
 Check for:
-1. First name empty validation
-2. First name minimum length (2 chars)
-3. First name maximum length
-4. First name special characters handling
-5. Last name empty validation
-6. Last name minimum length (2 chars)
-7. Last name maximum length
-8. Last name special characters handling
-9. Real-time validation feedback
-10. Error message clarity
+1. Missing composite indexes
+2. Unnecessary document reads
+3. Missing pagination
+4. Queries without proper limits
+5. N+1 query patterns
+6. Opportunities to use subcollections
+7. Expensive orderBy operations without index
 
 Create fixes for any issues found.
 Run: dart format . before committing.
 ```
 
-## REG-002: Registration Form Validation - Email Field
+## PERF-002: Widget Rebuild Optimization
 ```
-Analyze email field validation in:
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- lib/shared/utils/validators/input_validators.dart
+Analyze widget rebuilds in:
+- lib/features/owner_dashboard/presentation/screens/
+- lib/features/calendar/presentation/screens/
 
 Check for:
-1. Empty email validation
-2. Invalid email format validation
-3. Email with spaces handling
-4. Email case sensitivity
-5. Duplicate email check (Firebase)
-6. Real-time validation feedback
-7. Error message clarity
-8. Autofill support (autocomplete attribute)
+1. Missing const constructors
+2. Expensive builds without caching
+3. Missing RepaintBoundary for complex widgets
+4. State management causing unnecessary rebuilds
+5. Large widget trees that should be broken up
+6. Missing ValueListenableBuilder/Selector for granular rebuilds
 
 Create fixes for any issues found.
 Run: dart format . before committing.
 ```
 
-## REG-003: Registration Form Validation - Phone Field
+## PERF-003: Image and Asset Optimization
 ```
-Analyze phone field validation in:
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- lib/core/utils/profile_validators.dart
-
-Check for:
-1. Empty phone validation (if required)
-2. Invalid phone format validation
-3. Country code handling
-4. Phone number length validation
-5. Special characters handling (+, -, spaces)
-6. Real-time validation feedback
-7. Error message clarity
-8. International format support
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## REG-004: Registration Form Validation - Password Field
-```
-Analyze password field validation in:
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- lib/core/utils/password_validator.dart
-
-Check for:
-1. Empty password validation
-2. Minimum length (8 chars)
-3. Uppercase requirement
-4. Lowercase requirement
-5. Number requirement
-6. Special character requirement
-7. Sequential characters detection (abc, 123)
-8. Common password blacklist
-9. Password strength indicator accuracy
-10. Real-time validation feedback
-11. Error message clarity
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## REG-005: Registration Form Validation - Confirm Password
-```
-Analyze confirm password validation in:
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-
-Check for:
-1. Empty confirm password validation
-2. Password match validation
-3. Real-time match checking
-4. Error message when passwords don't match
-5. Clear feedback when passwords match
-6. Validation timing (on blur vs on change)
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## REG-006: Registration Submit Button State
-```
-Analyze submit button behavior in:
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-
-Check for:
-1. Button disabled when form invalid
-2. Button disabled during submission
-3. Loading indicator during submission
-4. Button enabled only when all fields valid
-5. Prevent double submission
-6. Clear visual state changes
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## REG-007: Registration Error Handling
-```
-Analyze error handling in:
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- lib/core/providers/enhanced_auth_provider.dart
-
-Check for:
-1. Email already in use error
-2. Weak password error
-3. Network error handling
-4. Firebase error mapping to user messages
-5. Error message display (snackbar/inline)
-6. Error state clearing on retry
-7. No sensitive data in error messages
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## REG-008: Registration Success Flow
-```
-Analyze success flow in:
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- lib/core/providers/enhanced_auth_provider.dart
-- lib/core/config/router_owner.dart
-
-Check for:
-1. Success message display
-2. Email verification email sent
-3. Redirect destination after registration
-4. User state after registration (logged in or not)
-5. Email verification required before dashboard access
-6. Clear success feedback to user
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
----
-
-# 2. EMAIL VERIFICATION FLOW
-
-## VERIFY-001: Email Verification Screen UI
-```
-Analyze email verification screen in:
-- lib/features/auth/presentation/screens/email_verification_screen.dart
-
-Check for:
-1. Clear instructions displayed
-2. Email address shown to user
-3. Resend button available
-4. Resend cooldown timer
-5. Check verification status button
-6. Loading states
-7. Error handling
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## VERIFY-002: Email Verification Backend
-```
-Analyze email verification backend in:
-- functions/src/emailVerification.ts
-- functions/src/emailService.ts
-
-Check for:
-1. Verification email sent on registration
-2. Verification link expiration
-3. Verification link security (token)
-4. Resend rate limiting
-5. Verification status check
-6. Error handling
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## VERIFY-003: Email Verification State Management
-```
-Analyze verification state in:
-- lib/core/providers/enhanced_auth_provider.dart
-
-Check for:
-1. Email verified state tracking
-2. Real-time verification status update
-3. Redirect after verification
-4. Unverified user restrictions
-5. State persistence across app restart
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## VERIFY-004: Unverified User Access Control
-```
-Analyze access control in:
-- lib/core/config/router_owner.dart
-- lib/core/providers/enhanced_auth_provider.dart
-
-Check for:
-1. Unverified user blocked from dashboard
-2. Redirect to verification screen
-3. Clear message about verification required
-4. Allow logout for unverified users
-5. Allow resend verification email
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
----
-
-# 3. LOGIN FLOW
-
-## LOGIN-001: Login Form Validation - Email
-```
-Analyze email validation in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-
-Check for:
-1. Empty email validation
-2. Invalid email format validation
-3. Real-time validation feedback
-4. Error message clarity
-5. Autofill support
-6. Remember email option
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## LOGIN-002: Login Form Validation - Password
-```
-Analyze password validation in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-
-Check for:
-1. Empty password validation
-2. Password visibility toggle
-3. Password visibility toggle tooltip
-4. Real-time validation feedback
-5. Error message clarity
-6. Autofill support
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## LOGIN-003: Login Submit Button State
-```
-Analyze submit button in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-
-Check for:
-1. Button disabled when form invalid
-2. Button disabled during submission
-3. Loading indicator during submission
-4. Prevent double submission
-5. Clear visual state changes
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## LOGIN-004: Login Error Handling
-```
-Analyze error handling in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- lib/core/providers/enhanced_auth_provider.dart
-
-Check for:
-1. Wrong email error
-2. Wrong password error
-3. User not found error
-4. Too many attempts error (rate limiting)
-5. Network error handling
-6. Error message display
-7. No sensitive data in errors
-8. Error state clearing on retry
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## LOGIN-005: Login Success Flow
-```
-Analyze success flow in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- lib/core/providers/enhanced_auth_provider.dart
-- lib/core/config/router_owner.dart
-
-Check for:
-1. Success message display
-2. Redirect to dashboard
-3. Email verification check before dashboard
-4. Remember me functionality
-5. Session persistence
-6. Clear success feedback
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## LOGIN-006: Login Rate Limiting
-```
-Analyze rate limiting in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- functions/src/authRateLimit.ts
-- lib/core/services/rate_limit_service.dart
-
-Check for:
-1. Rate limit after failed attempts
-2. Clear message about rate limit
-3. Cooldown timer display
-4. Rate limit bypass prevention
-5. IP-based rate limiting
-6. Account lockout handling
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
----
-
-# 4. FORGOT PASSWORD FLOW
-
-## FORGOT-001: Forgot Password Form Validation
-```
-Analyze form validation in:
-- lib/features/auth/presentation/screens/forgot_password_screen.dart
-
-Check for:
-1. Empty email validation
-2. Invalid email format validation
-3. Real-time validation feedback
-4. Error message clarity
-5. Submit button state management
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## FORGOT-002: Forgot Password Submit Flow
-```
-Analyze submit flow in:
-- lib/features/auth/presentation/screens/forgot_password_screen.dart
-- lib/core/providers/enhanced_auth_provider.dart
-
-Check for:
-1. Loading state during submission
-2. Success message display
-3. Email sent confirmation
-4. Non-existent email handling
-5. Rate limiting for reset requests
-6. Clear instructions after submit
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## FORGOT-003: Password Reset Email Backend
-```
-Analyze reset email in:
-- functions/src/passwordReset.ts
-- functions/src/emailService.ts
-
-Check for:
-1. Reset email sent correctly
-2. Reset link expiration (1 hour)
-3. Reset link security (token)
-4. Rate limiting on reset requests
-5. Email template clarity
-6. Reset link URL correctness
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## FORGOT-004: Password Reset Link Handling
-```
-Analyze reset link handling in:
-- lib/core/config/router_owner.dart
-- lib/features/auth/presentation/screens/forgot_password_screen.dart
-
-Check for:
-1. Deep link handling for reset URL
-2. Token validation
-3. Expired token handling
-4. Invalid token handling
-5. Redirect after successful reset
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
----
-
-# 5. CHANGE PASSWORD FLOW
-
-## CHANGE-001: Change Password Form Validation
-```
-Analyze form validation in:
-- lib/features/owner_dashboard/presentation/screens/change_password_screen.dart
-
-Check for:
-1. Current password validation
-2. New password validation (same as registration)
-3. Confirm new password validation
-4. New password different from current
-5. Real-time validation feedback
-6. Error message clarity
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## CHANGE-002: Change Password Submit Flow
-```
-Analyze submit flow in:
-- lib/features/owner_dashboard/presentation/screens/change_password_screen.dart
-- lib/core/providers/enhanced_auth_provider.dart
-
-Check for:
-1. Current password verification
-2. Loading state during submission
-3. Success message display
-4. Error handling (wrong current password)
-5. Redirect after success
-6. Session handling after password change
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## CHANGE-003: Password History Check
-```
-Analyze password history in:
-- functions/src/passwordHistory.ts
-- lib/features/owner_dashboard/presentation/screens/change_password_screen.dart
-
-Check for:
-1. Password history enforcement
-2. Number of previous passwords checked
-3. Clear error message for reused password
-4. Password history storage security
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
----
-
-# 6. EDIT PROFILE FLOW
-
-## PROFILE-001: Edit Profile Form Validation
-```
-Analyze form validation in:
-- lib/features/owner_dashboard/presentation/screens/profile_screen.dart
-- lib/core/utils/profile_validators.dart
-
-Check for:
-1. First name validation
-2. Last name validation
-3. Phone number validation
-4. Profile image validation (size, format)
-5. Real-time validation feedback
-6. Error message clarity
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## PROFILE-002: Edit Profile Submit Flow
-```
-Analyze submit flow in:
-- lib/features/owner_dashboard/presentation/screens/profile_screen.dart
-- lib/features/owner_dashboard/presentation/providers/user_profile_provider.dart
-
-Check for:
-1. Loading state during submission
-2. Success message display
-3. Error handling
-4. Optimistic update with rollback
-5. Image upload handling
-6. Unsaved changes warning
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## PROFILE-003: Profile Image Upload
-```
-Analyze image upload in:
+Analyze image loading in:
+- lib/shared/widgets/
 - lib/features/auth/presentation/widgets/profile_image_picker.dart
-- lib/shared/repositories/firebase/firebase_storage_repository.dart
 
 Check for:
-1. Image size limit
-2. Image format validation
-3. Upload progress indicator
-4. Upload error handling
-5. Image compression
-6. Old image cleanup
+1. Missing image caching
+2. Images not resized before upload
+3. Missing placeholder/error widgets
+4. Large images loaded without compression
+5. Missing precacheImage for critical images
+
+Create fixes for any issues found.
+Run: dart format . before committing.
+```
+
+## PERF-004: Cloud Functions Cold Start
+```
+Analyze Cloud Functions for cold start issues in:
+- functions/src/
+
+Check for:
+1. Heavy imports at module level
+2. Unnecessary global initializations
+3. Functions that should be lazy-loaded
+4. Opportunity to split large function files
+5. Missing connection pooling for external services
+
+Create fixes for any issues found.
+```
+
+---
+
+# 2. SECURITY AUDIT
+
+## SEC-001: Input Sanitization Coverage
+```
+Analyze input sanitization in:
+- lib/features/auth/presentation/screens/
+- lib/features/owner_dashboard/presentation/screens/
+- functions/src/utils/inputSanitization.ts
+
+Check for:
+1. User inputs not sanitized before Firestore writes
+2. Missing XSS prevention on text fields
+3. SQL/NoSQL injection vectors
+4. Missing sanitization on URL parameters
+5. File upload validation gaps
+
+Create fixes for any issues found.
+Run: dart format . before committing.
+```
+
+## SEC-002: API Security
+```
+Analyze API security in:
+- functions/src/
+
+Check for:
+1. Missing authentication checks on callable functions
+2. Insufficient authorization (user can access others' data)
+3. Missing rate limiting on sensitive endpoints
+4. Sensitive data in logs (passwords, tokens)
+5. Missing CORS configuration issues
+6. Unvalidated external API responses
+
+Create fixes for any issues found.
+```
+
+## SEC-003: Deep Link Security
+```
+Analyze deep link handling in:
+- lib/core/config/router_owner.dart
+- lib/core/services/deep_link_service.dart
+
+Check for:
+1. Deep links without authentication validation
+2. Redirect URL manipulation vulnerabilities
+3. Missing token validation on magic links
+4. Unvalidated parameters from deep links
+5. Open redirect vulnerabilities
+
+Create fixes for any issues found.
+Run: dart format . before committing.
+```
+
+## SEC-004: Sensitive Data Handling
+```
+Analyze sensitive data in:
+- lib/core/providers/
+- lib/shared/repositories/
+
+Check for:
+1. Passwords or tokens in memory longer than needed
+2. Sensitive data in SharedPreferences (should use SecureStorage)
+3. API keys hardcoded in source
+4. Debug prints leaking sensitive data
+5. Screenshots not disabled on sensitive screens
+6. Missing ProGuard rules for Android
 
 Create fixes for any issues found.
 Run: dart format . before committing.
@@ -547,117 +154,74 @@ Run: dart format . before committing.
 
 ---
 
-# 7. SOCIAL LOGIN FLOW
+# 3. UI/UX AUDIT
 
-## SOCIAL-001: Google Sign-In Flow
+## UX-001: Accessibility Audit
 ```
-Analyze Google Sign-In in:
-- lib/core/providers/enhanced_auth_provider.dart
-- lib/features/auth/presentation/widgets/social_login_button.dart
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
+Analyze accessibility in:
+- lib/features/auth/presentation/
+- lib/features/owner_dashboard/presentation/
 
 Check for:
-1. Google Sign-In button visibility
-2. Loading state during sign-in
-3. Error handling (cancelled, failed)
-4. Account linking if email exists
-5. New user creation flow
-6. Success redirect
-7. Works on iOS Safari
-8. Works on Android Chrome
+1. Missing Semantics labels on interactive elements
+2. Poor color contrast (WCAG AA)
+3. Touch targets smaller than 48x48
+4. Missing excludeFromSemantics on decorative elements
+5. Form error announcements for screen readers
+6. Missing focus trap in modals
 
 Create fixes for any issues found.
 Run: dart format . before committing.
 ```
 
-## SOCIAL-002: Apple Sign-In Flow
+## UX-002: Error State Handling
 ```
-Analyze Apple Sign-In in:
-- lib/core/providers/enhanced_auth_provider.dart
-- lib/features/auth/presentation/widgets/social_login_button.dart
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
+Analyze error handling UX in:
+- lib/features/owner_dashboard/presentation/screens/
+- lib/shared/widgets/
 
 Check for:
-1. Apple Sign-In button visibility (iOS/macOS only)
-2. Loading state during sign-in
-3. Error handling (cancelled, failed)
-4. Account linking if email exists
-5. New user creation flow
-6. Success redirect
-7. Hide email option handling
-8. Works on iOS Safari
+1. Missing error states for failed API calls
+2. Generic "Something went wrong" messages without actionable guidance
+3. Missing retry functionality on transient errors
+4. Errors not properly localized
+5. Missing offline state handling
+6. Long loading states without skeleton screens
 
 Create fixes for any issues found.
 Run: dart format . before committing.
 ```
 
-## SOCIAL-003: Social Login Account Linking
+## UX-003: Empty States
 ```
-Analyze account linking in:
-- lib/core/providers/enhanced_auth_provider.dart
+Analyze empty states in:
+- lib/features/owner_dashboard/presentation/screens/
+- lib/features/calendar/presentation/
 
 Check for:
-1. Email already exists handling
-2. Link social account to existing email
-3. Multiple social accounts per user
-4. Unlink social account option
-5. Clear error messages
+1. Missing empty state illustrations/text
+2. No clear call-to-action in empty states
+3. Inconsistent empty state designs
+4. Empty state not localized
+5. First-time user guidance missing
 
 Create fixes for any issues found.
 Run: dart format . before committing.
 ```
 
----
-
-# 8. SESSION MANAGEMENT
-
-## SESSION-001: Session Persistence
+## UX-004: Responsive Design
 ```
-Analyze session persistence in:
-- lib/core/providers/enhanced_auth_provider.dart
-- lib/core/services/secure_storage_service.dart
+Analyze responsive design in:
+- lib/features/owner_dashboard/presentation/screens/
+- lib/features/auth/presentation/screens/
 
 Check for:
-1. Session persists across app restart
-2. Session persists across browser refresh
-3. Remember me functionality
-4. Session timeout handling
-5. Token refresh logic
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## SESSION-002: Logout Flow
-```
-Analyze logout in:
-- lib/core/providers/enhanced_auth_provider.dart
-- lib/features/owner_dashboard/presentation/widgets/owner_app_drawer.dart
-
-Check for:
-1. Clear all session data
-2. Clear cached credentials
-3. Redirect to login screen
-4. Logout from all devices option
-5. Confirmation dialog before logout
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## SESSION-003: Token Revocation
-```
-Analyze token revocation in:
-- functions/src/revokeTokens.ts
-- lib/core/providers/enhanced_auth_provider.dart
-
-Check for:
-1. Revoke all refresh tokens
-2. Force re-authentication
-3. Clear local tokens
-4. Handle revoked token errors
+1. UI broken on small screens (<360px width)
+2. UI broken on large screens/tablets
+3. Missing landscape orientation support
+4. Text overflow issues
+5. Images not responsive
+6. Navigation drawer vs bottom nav inconsistency
 
 Create fixes for any issues found.
 Run: dart format . before committing.
@@ -665,97 +229,72 @@ Run: dart format . before committing.
 
 ---
 
-# 9. REMEMBER ME & CREDENTIALS
+# 4. CODE QUALITY AUDIT
 
-## CRED-001: Remember Me Functionality
+## CODE-001: Dead Code Analysis
 ```
-Analyze remember me in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- lib/core/services/secure_storage_service.dart
-- lib/features/auth/models/saved_credentials.dart
+Analyze for dead code in:
+- lib/
 
 Check for:
-1. Remember me checkbox
-2. Email saved securely
-3. Password NOT saved (security)
-4. Auto-fill on next login
-5. Clear saved credentials on logout
-6. Secure storage encryption
+1. Unused imports
+2. Unused variables and methods
+3. Unreachable code
+4. Deprecated code that should be removed
+5. Unused widget files
+6. Test files without tests
+
+Remove dead code found.
+Run: dart format . before committing.
+```
+
+## CODE-002: Duplicate Code
+```
+Analyze for code duplication in:
+- lib/features/
+
+Check for:
+1. Duplicated widget code that should be extracted
+2. Copy-paste code between screens
+3. Similar providers that could be consolidated
+4. Repeated validation logic
+5. Duplicated API call patterns
+
+Create refactoring for issues found.
+Run: dart format . before committing.
+```
+
+## CODE-003: Error Handling Patterns
+```
+Analyze error handling consistency in:
+- lib/features/
+- lib/shared/repositories/
+
+Check for:
+1. Inconsistent try-catch patterns
+2. Swallowed exceptions (catch with no handling)
+3. Missing error logging
+4. Errors that should be rethrown
+5. Missing typed exceptions
+6. Inconsistent error display (SnackBar vs Dialog)
 
 Create fixes for any issues found.
 Run: dart format . before committing.
 ```
 
-## CRED-002: Secure Storage
+## CODE-004: Naming and Documentation
 ```
-Analyze secure storage in:
-- lib/core/services/secure_storage_service.dart
+Analyze naming conventions and docs in:
+- lib/core/
+- lib/shared/
 
 Check for:
-1. Platform-specific encryption
-2. iOS Keychain usage
-3. Android EncryptedSharedPreferences
-4. Web secure storage
-5. No plaintext passwords
-6. Clear on uninstall
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
----
-
-# 10. CROSS-BROWSER COMPATIBILITY
-
-## BROWSER-001: Safari Compatibility
-```
-Analyze Safari compatibility in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- lib/core/providers/enhanced_auth_provider.dart
-
-Check for:
-1. Form autofill works
-2. Password manager integration
-3. Social login popups work
-4. Keyboard handling
-5. Input focus behavior
-6. Touch events on iOS Safari
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## BROWSER-002: Chrome Compatibility
-```
-Analyze Chrome compatibility in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-
-Check for:
-1. Form autofill works
-2. Password manager integration
-3. Social login popups work
-4. Android Chrome keyboard handling
-5. Input focus behavior
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## BROWSER-003: Mobile Browser Compatibility
-```
-Analyze mobile compatibility in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- lib/core/utils/keyboard_dismiss_fix_mixin.dart
-
-Check for:
-1. Keyboard dismiss on tap outside
-2. Keyboard doesn't cover inputs
-3. Scroll when keyboard appears
-4. Touch targets size (44x44 minimum)
-5. Responsive layout on small screens
+1. Inconsistent naming conventions
+2. Missing documentation on public APIs
+3. Outdated documentation
+4. Magic numbers without constants
+5. Unclear variable names
+6. Missing README files for feature modules
 
 Create fixes for any issues found.
 Run: dart format . before committing.
@@ -763,39 +302,37 @@ Run: dart format . before committing.
 
 ---
 
-# 11. ACCESSIBILITY
+# 5. BOOKING WIDGET AUDIT
 
-## A11Y-001: Form Accessibility
+## WIDGET-001: Embed Widget Security
 ```
-Analyze form accessibility in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- lib/features/auth/presentation/widgets/premium_input_field.dart
+Analyze widget security in:
+- lib/features/widget/
+- functions/src/bookingAccessToken.ts
 
 Check for:
-1. Semantic labels on all inputs
-2. Error messages announced by screen reader
-3. Focus order logical
-4. Color contrast WCAG AA
-5. Touch targets 44x44 minimum
-6. Keyboard navigation works
+1. Widget accessible without valid token
+2. Token validation bypass possibilities
+3. CORS issues on embedded widget
+4. XSS vulnerabilities in widget
+5. Cross-origin communication security
+6. Rate limiting on widget API calls
 
 Create fixes for any issues found.
 Run: dart format . before committing.
 ```
 
-## A11Y-002: Button Accessibility
+## WIDGET-002: Widget Performance
 ```
-Analyze button accessibility in:
-- lib/features/auth/presentation/widgets/gradient_auth_button.dart
-- lib/features/auth/presentation/widgets/social_login_button.dart
+Analyze widget performance in:
+- lib/features/widget/presentation/
 
 Check for:
-1. Semantic labels
-2. Disabled state announced
-3. Loading state announced
-4. Focus indicator visible
-5. Touch target size
+1. Widget bundle size optimization
+2. Lazy loading of non-critical components
+3. Animation performance (60fps target)
+4. Initial load time optimization
+5. Missing tree-shaking opportunities
 
 Create fixes for any issues found.
 Run: dart format . before committing.
@@ -803,41 +340,62 @@ Run: dart format . before committing.
 
 ---
 
-# 12. ERROR MESSAGES
+# 6. PAYMENT AUDIT
 
-## ERROR-001: Login Error Messages
+## PAY-001: Stripe Payment Security
 ```
-Analyze login error messages in:
-- lib/features/auth/presentation/screens/enhanced_login_screen.dart
+Analyze Stripe integration in:
+- functions/src/stripePayment.ts
+- functions/src/stripeConnect.ts
+- lib/features/payments/
+
+Check for:
+1. Payment amounts validated server-side
+2. Webhook signature validation
+3. Idempotency keys for payment operations
+4. Refund authorization checks
+5. Payment status synced with booking status
+6. Error handling for failed payments
+
+Create fixes for any issues found.
+```
+
+## PAY-002: Payment UX
+```
+Analyze payment UX in:
+- lib/features/booking/presentation/
+- lib/features/widget/presentation/
+
+Check for:
+1. Clear price breakdown display
+2. Loading states during payment processing
+3. Error messages for declined cards
+4. Retry mechanism for failed payments
+5. Confirmation before payment
+6. Receipt/confirmation display after payment
+
+Create fixes for any issues found.
+Run: dart format . before committing.
+```
+
+---
+
+# 7. LOCALIZATION AUDIT
+
+## L10N-001: Missing Translations
+```
+Analyze localization coverage in:
 - lib/l10n/app_en.arb
 - lib/l10n/app_hr.arb
+- lib/features/
 
 Check for:
-1. "Wrong password" message clear
-2. "User not found" message clear
-3. "Too many attempts" message clear
-4. "Network error" message clear
-5. Messages in both languages
-6. No technical jargon
-
-Create fixes for any issues found.
-Run: dart format . before committing.
-```
-
-## ERROR-002: Registration Error Messages
-```
-Analyze registration error messages in:
-- lib/features/auth/presentation/screens/enhanced_register_screen.dart
-- lib/l10n/app_en.arb
-- lib/l10n/app_hr.arb
-
-Check for:
-1. "Email already in use" message clear
-2. "Weak password" message clear
-3. "Invalid email" message clear
-4. "Passwords don't match" message clear
-5. Messages in both languages
-6. No technical jargon
+1. Hardcoded strings in Dart files
+2. Keys in app_en.arb missing from app_hr.arb
+3. Inconsistent placeholder usage
+4. Missing pluralization rules
+5. Date/time format inconsistencies
+6. Currency format issues
 
 Create fixes for any issues found.
 Run: dart format . before committing.
@@ -845,77 +403,38 @@ Run: dart format . before committing.
 
 ---
 
-# USAGE INSTRUCTIONS
+# 8. TESTING AUDIT
 
-## Recommended Order
-1. REG-001 through REG-008 (Registration)
-2. VERIFY-001 through VERIFY-004 (Email Verification)
-3. LOGIN-001 through LOGIN-006 (Login)
-4. FORGOT-001 through FORGOT-004 (Forgot Password)
-5. CHANGE-001 through CHANGE-003 (Change Password)
-6. PROFILE-001 through PROFILE-003 (Edit Profile)
-7. SOCIAL-001 through SOCIAL-003 (Social Login)
-8. SESSION-001 through SESSION-003 (Session)
-9. CRED-001 through CRED-002 (Credentials)
-10. BROWSER-001 through BROWSER-003 (Browser)
-11. A11Y-001 through A11Y-002 (Accessibility)
-12. ERROR-001 through ERROR-002 (Error Messages)
+## TEST-001: Test Coverage Gaps
+```
+Analyze test coverage in:
+- test/
+- functions/test/
 
-## Key Files Summary
-**Flutter Auth Screens:**
-- `lib/features/auth/presentation/screens/enhanced_login_screen.dart`
-- `lib/features/auth/presentation/screens/enhanced_register_screen.dart`
-- `lib/features/auth/presentation/screens/forgot_password_screen.dart`
-- `lib/features/auth/presentation/screens/email_verification_screen.dart`
+Check for:
+1. Critical auth flows without tests
+2. Payment logic without tests
+3. Booking state machine without tests
+4. Missing edge case tests
+5. Integration tests for Cloud Functions
+6. Widget tests for key screens
 
-**Flutter Auth Widgets:**
-- `lib/features/auth/presentation/widgets/premium_input_field.dart`
-- `lib/features/auth/presentation/widgets/gradient_auth_button.dart`
-- `lib/features/auth/presentation/widgets/social_login_button.dart`
-
-**Flutter Auth Provider:**
-- `lib/core/providers/enhanced_auth_provider.dart`
-
-**Flutter Validators:**
-- `lib/core/utils/password_validator.dart`
-- `lib/core/utils/profile_validators.dart`
-- `lib/shared/utils/validators/input_validators.dart`
-
-**Flutter Services:**
-- `lib/core/services/secure_storage_service.dart`
-- `lib/core/services/rate_limit_service.dart`
-
-**Flutter Profile:**
-- `lib/features/owner_dashboard/presentation/screens/profile_screen.dart`
-- `lib/features/owner_dashboard/presentation/screens/change_password_screen.dart`
-
-**Cloud Functions:**
-- `functions/src/authRateLimit.ts`
-- `functions/src/emailVerification.ts`
-- `functions/src/passwordReset.ts`
-- `functions/src/passwordHistory.ts`
-- `functions/src/revokeTokens.ts`
-
-**Localization:**
-- `lib/l10n/app_en.arb`
-- `lib/l10n/app_hr.arb`
+Create tests for gaps found.
+Run: flutter test before committing.
+```
 
 ---
 
-**Total Prompts: 42**
-- Registration: 8
-- Email Verification: 4
-- Login: 6
-- Forgot Password: 4
-- Change Password: 3
-- Edit Profile: 3
-- Social Login: 3
-- Session Management: 3
-- Credentials: 2
-- Browser Compatibility: 3
-- Accessibility: 2
-- Error Messages: 2
+**Total Prompts: 20**
+- Performance: 4
+- Security: 4
+- UI/UX: 4
+- Code Quality: 4
+- Booking Widget: 2
+- Payment: 2
+- Localization: 1
+- Testing: 1
 
-**Created**: 2026-01-07
+**Created**: 2026-01-10
 **For**: Jules AI (Google Labs)
-**Project**: BookBed (rab_booking)
+**Project**: BookBed MVP SaaS Booking

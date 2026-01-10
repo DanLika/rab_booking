@@ -17,6 +17,7 @@ import '../../../auth/presentation/widgets/auth_background.dart';
 import '../../../auth/presentation/widgets/glass_card.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../../../auth/presentation/widgets/profile_image_picker.dart';
+import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../providers/user_profile_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -196,20 +197,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       // Create updated profile
       final updatedProfile = UserProfile(
         userId: userId,
-        displayName: _displayNameController.text.trim(),
-        emailContact: _emailContactController.text.trim(),
-        phoneE164: _phoneController.text.trim(),
+        displayName:
+            InputSanitizer.sanitizeName(_displayNameController.text) ?? '',
+        emailContact:
+            InputSanitizer.sanitizeEmail(_emailContactController.text) ?? '',
+        phoneE164: InputSanitizer.sanitizePhone(_phoneController.text) ?? '',
         address: Address(
-          country: _countryController.text.trim(),
-          city: _cityController.text.trim(),
-          street: _streetController.text.trim(),
-          postalCode: _postalCodeController.text.trim(),
+          country: InputSanitizer.sanitizeText(_countryController.text) ?? '',
+          city: InputSanitizer.sanitizeText(_cityController.text) ?? '',
+          street: InputSanitizer.sanitizeText(_streetController.text) ?? '',
+          postalCode:
+              InputSanitizer.sanitizeText(_postalCodeController.text) ?? '',
         ),
         social: SocialLinks(
-          website: _websiteController.text.trim(),
-          facebook: _facebookController.text.trim(),
+          website: InputSanitizer.sanitizeUrl(_websiteController.text) ?? '',
+          facebook: InputSanitizer.sanitizeUrl(_facebookController.text) ?? '',
         ),
-        propertyType: _propertyTypeController.text.trim(),
+        propertyType:
+            InputSanitizer.sanitizeText(_propertyTypeController.text) ?? '',
         logoUrl: _originalProfile?.logoUrl ?? '',
       );
 
@@ -217,18 +222,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       final userData = ref.read(userDataProvider).value;
       final existingCompany = userData?.company;
       final updatedCompany = CompanyDetails(
-        companyName: _companyNameController.text.trim(),
-        taxId: _taxIdController.text.trim(),
-        vatId: _vatIdController.text.trim(),
+        companyName:
+            InputSanitizer.sanitizeText(_companyNameController.text) ?? '',
+        taxId: InputSanitizer.sanitizeText(_taxIdController.text) ?? '',
+        vatId: InputSanitizer.sanitizeText(_vatIdController.text) ?? '',
         bankAccountIban: existingCompany?.bankAccountIban ?? '',
         swift: existingCompany?.swift ?? '',
         bankName: existingCompany?.bankName ?? '',
         accountHolder: existingCompany?.accountHolder ?? '',
         address: Address(
-          country: _companyCountryController.text.trim(),
-          city: _companyCityController.text.trim(),
-          street: _companyStreetController.text.trim(),
-          postalCode: _companyPostalCodeController.text.trim(),
+          country:
+              InputSanitizer.sanitizeText(_companyCountryController.text) ?? '',
+          city: InputSanitizer.sanitizeText(_companyCityController.text) ?? '',
+          street:
+              InputSanitizer.sanitizeText(_companyStreetController.text) ?? '',
+          postalCode:
+              InputSanitizer.sanitizeText(_companyPostalCodeController.text) ??
+              '',
         ),
       );
 
@@ -239,7 +249,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
 
       // Also update first_name/last_name in root users document
       // (enhancedAuthProvider reads from there for dashboard display)
-      final displayName = _displayNameController.text.trim();
+      final displayName =
+          InputSanitizer.sanitizeName(_displayNameController.text) ?? '';
       final nameParts = displayName.split(' ');
       final firstName = nameParts.isNotEmpty ? nameParts.first : '';
       final lastName = nameParts.length > 1
@@ -249,9 +260,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'first_name': firstName,
         'last_name': lastName,
-        'phone': _phoneController.text.trim().isNotEmpty
-            ? _phoneController.text.trim()
-            : null,
+        'phone': InputSanitizer.sanitizePhone(_phoneController.text),
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 

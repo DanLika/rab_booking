@@ -13,6 +13,7 @@ import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../shared/widgets/loading_overlay.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_logo_icon.dart';
@@ -126,7 +127,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     }
 
     // Store credentials before async operation (in case fields get cleared)
-    final email = _emailController.text.trim();
+    final email =
+        InputSanitizer.sanitizeEmail(_emailController.text.trim()) ?? '';
     final password = _passwordController.text;
 
     setState(() => _isLoading = true);

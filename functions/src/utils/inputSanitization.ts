@@ -194,6 +194,42 @@ export function sanitizeText(
 }
 
 /**
+ * Sanitize URL input
+ *
+ * SECURITY IMPROVEMENTS:
+ * - Prevents javascript: protocol (XSS)
+ * - Removes control characters
+ * - Normalizes confusables
+ *
+ * @param input - URL to sanitize
+ * @returns Sanitized URL or null if invalid/dangerous
+ */
+export function sanitizeUrl(
+  input: string | null | undefined
+): string | null {
+  if (!input || typeof input !== "string") return null;
+
+  let sanitized = input.trim();
+
+  // Normalize confusables
+  sanitized = normalizeConfusables(sanitized);
+
+  // Remove control characters
+  sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, "");
+
+  // Remove whitespace
+  sanitized = sanitized.replace(/\s/g, "");
+
+  // BLOCK dangerous protocols
+  // javascript: vbscript: data:
+  if (/^(javascript|vbscript|data):/i.test(sanitized)) {
+    return null;
+  }
+
+  return sanitized.length > 0 ? sanitized : null;
+}
+
+/**
  * Sanitize email input
  *
  * SECURITY IMPROVEMENTS:

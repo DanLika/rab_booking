@@ -13,6 +13,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/theme/theme_extensions.dart';
+import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
@@ -919,11 +920,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         await repository.updateUnit(
           propertyId: widget.propertyId,
           unitId: widget.unit!.id,
-          name: _nameController.text,
-          slug: _slugController.text,
-          description: _descriptionController.text.isEmpty
-              ? null
-              : _descriptionController.text,
+          name: InputSanitizer.sanitizeText(_nameController.text) ?? '',
+          slug: InputSanitizer.sanitizeText(_slugController.text) ?? '',
+          description: InputSanitizer.sanitizeText(_descriptionController.text),
           basePrice: double.parse(_priceController.text),
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
@@ -944,11 +943,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         await repository.createUnit(
           propertyId: widget.propertyId,
           ownerId: currentUser.uid,
-          name: _nameController.text,
-          slug: _slugController.text,
-          description: _descriptionController.text.isEmpty
-              ? null
-              : _descriptionController.text,
+          name: InputSanitizer.sanitizeText(_nameController.text) ?? '',
+          slug: InputSanitizer.sanitizeText(_slugController.text) ?? '',
+          description: InputSanitizer.sanitizeText(_descriptionController.text),
           basePrice: double.parse(_priceController.text),
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),

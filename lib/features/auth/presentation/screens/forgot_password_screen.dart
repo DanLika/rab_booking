@@ -9,6 +9,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_logo_icon.dart';
 import '../widgets/glass_card.dart';
@@ -53,9 +54,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     setState(() => _isLoading = true);
 
     try {
-      await ref
-          .read(enhancedAuthProvider.notifier)
-          .resetPassword(_emailController.text.trim());
+      await ref.read(enhancedAuthProvider.notifier).resetPassword(
+        InputSanitizer.sanitizeEmail(_emailController.text.trim()) ?? '',
+      );
 
       // SECURITY: Firebase sendPasswordResetEmail already returns success
       // regardless of whether email exists (prevents user enumeration)

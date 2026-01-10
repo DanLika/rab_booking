@@ -138,8 +138,33 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
             tag: 'ENHANCED_AUTH_ERROR',
           );
           data.forEach((key, value) {
+            // SECURITY: Redact sensitive PII fields in logs
+            final lowerKey = key.toLowerCase();
+            final isSensitive =
+                lowerKey.contains('email') ||
+                lowerKey.contains('phone') ||
+                lowerKey.contains('password') ||
+                lowerKey.contains('token') ||
+                lowerKey.contains('secret') ||
+                lowerKey.contains('iban') ||
+                lowerKey.contains('swift') ||
+                lowerKey.contains('credit') ||
+                // Exact matches for short words to avoid false positives
+                lowerKey == 'vat' ||
+                lowerKey == 'tax' ||
+                lowerKey == 'vatid' ||
+                lowerKey == 'taxid' ||
+                lowerKey.endsWith('_vat') ||
+                lowerKey.endsWith('_tax');
+
+            final valStr = isSensitive
+                ? '[REDACTED]'
+                : (value.toString().length > 50
+                      ? '${value.toString().substring(0, 50)}...'
+                      : value);
+
             LoggingService.log(
-              '  $key: ${value.runtimeType} = ${value.toString().length > 50 ? '${value.toString().substring(0, 50)}...' : value}',
+              '  $key: ${value.runtimeType} = $valStr',
               tag: 'ENHANCED_AUTH_ERROR',
             );
           });
@@ -253,7 +278,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     bool rememberMe = false,
   }) async {
     LoggingService.log(
-      'signInWithEmail called for $email, rememberMe=$rememberMe',
+      'signInWithEmail called, rememberMe=$rememberMe',
       tag: 'ENHANCED_AUTH',
     );
     try {

@@ -13,6 +13,33 @@ class DeepLinkService {
   factory DeepLinkService() => _instance;
   DeepLinkService._internal();
 
+  /// Whitelist of allowed external domains
+  /// SECURITY: Only these domains can be opened via deep links
+  static const List<String> _allowedExternalDomains = [
+    'booking.com',
+    'www.booking.com',
+    'admin.booking.com',
+    'airbnb.com',
+    'www.airbnb.com',
+    'stripe.com',
+    'connect.stripe.com',
+    'bookbed.io',
+    'app.bookbed.io',
+    'help.bookbed.io',
+    'view.bookbed.io',
+  ];
+
+  /// Check if the URL is allowed to be opened externally
+  /// SECURITY: Prevents open redirect attacks
+  bool _isAllowedExternalUrl(Uri uri) {
+    if (uri.scheme != 'http' && uri.scheme != 'https') return false;
+    final host = uri.host.toLowerCase();
+    // Check against whitelist (exact match or subdomain)
+    return _allowedExternalDomains.any(
+      (domain) => host == domain || host.endsWith('.$domain'),
+    );
+  }
+
   /// Parse and handle deep link
   /// Returns true if link was handled, false otherwise
   Future<bool> handleDeepLink(String url, BuildContext context) async {
@@ -24,14 +51,16 @@ class DeepLinkService {
         return _handleAppDeepLink(uri, context);
       }
 
-      // Handle external platform links
-      if (uri.host.contains('booking.com') || uri.host.contains('airbnb.com')) {
-        return _handleExternalPlatformLink(uri);
-      }
-
-      // Handle web URLs
+      // Handle web URLs (strictly validated against whitelist)
       if (uri.scheme == 'https' || uri.scheme == 'http') {
-        return _handleWebUrl(uri);
+        if (_isAllowedExternalUrl(uri)) {
+          return _handleWebUrl(uri);
+        } else {
+          debugPrint(
+            '[DeepLinkService] Blocked unauthorized external URL: $url',
+          );
+          return false;
+        }
       }
 
       return false;
@@ -42,6 +71,7 @@ class DeepLinkService {
   }
 
   /// Handle app deep links (bookbed://)
+  /// SECURITY: Uses Uri class to safely construct URLs and prevent parameter injection
   bool _handleAppDeepLink(Uri uri, BuildContext context) {
     final path = uri.path;
     final queryParams = uri.queryParameters;
@@ -53,9 +83,16 @@ class DeepLinkService {
         final conflictId = queryParams['conflict'];
 
         if (unitId != null) {
-          context.go(
-            '/owner/calendar?unit=$unitId${date != null ? '&date=$date' : ''}${conflictId != null ? '&conflict=$conflictId' : ''}',
+          // SECURITY FIX: Use Uri to safely construct URL and prevent parameter injection
+          final safeUri = Uri(
+            path: '/owner/calendar',
+            queryParameters: {
+              'unit': unitId,
+              if (date != null) 'date': date,
+              if (conflictId != null) 'conflict': conflictId,
+            },
           );
+          context.go(safeUri.toString());
           return true;
         }
         break;
@@ -65,10 +102,18 @@ class DeepLinkService {
         final conflictId = queryParams['conflict'];
 
         if (bookingId != null) {
-          context.go('/owner/bookings?booking=$bookingId');
+          final safeUri = Uri(
+            path: '/owner/bookings',
+            queryParameters: {'booking': bookingId},
+          );
+          context.go(safeUri.toString());
           return true;
         } else if (conflictId != null) {
-          context.go('/owner/bookings?conflict=$conflictId');
+          final safeUri = Uri(
+            path: '/owner/bookings',
+            queryParameters: {'conflict': conflictId},
+          );
+          context.go(safeUri.toString());
           return true;
         } else {
           context.go('/owner/bookings');
@@ -79,7 +124,11 @@ class DeepLinkService {
         final unitId = queryParams['unit'];
 
         if (unitId != null) {
-          context.go('/owner/platform-connections?unit=$unitId');
+          final safeUri = Uri(
+            path: '/owner/platform-connections',
+            queryParameters: {'unit': unitId},
+          );
+          context.go(safeUri.toString());
           return true;
         } else {
           context.go('/owner/platform-connections');
@@ -94,17 +143,9 @@ class DeepLinkService {
   }
 
   /// Handle external platform links (Booking.com, Airbnb)
+  /// @deprecated Use _handleWebUrl with _isAllowedExternalUrl check instead
   Future<bool> _handleExternalPlatformLink(Uri uri) async {
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        return true;
-      }
-      return false;
-    } catch (e) {
-      debugPrint('[DeepLinkService] Error launching external link: $e');
-      return false;
-    }
+    return _handleWebUrl(uri);
   }
 
   /// Handle web URLs
@@ -130,6 +171,8 @@ class DeepLinkService {
   }) {
     final checkInStr = checkIn.toIso8601String().split('T')[0];
     final checkOutStr = checkOut.toIso8601String().split('T')[0];
+    // URLs to whitelisted domains are safe to construct like this
+    // The base domain is hardcoded and safe
     return 'https://admin.booking.com/hotels/$hotelId/room-types/$roomTypeId/calendar?checkin=$checkInStr&checkout=$checkOutStr';
   }
 

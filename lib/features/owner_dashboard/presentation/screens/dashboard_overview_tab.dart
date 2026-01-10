@@ -14,6 +14,7 @@ import '../widgets/owner_app_drawer.dart';
 import '../widgets/booking_details_dialog.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
+import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/app_filter_chip.dart';
 import '../providers/owner_properties_provider.dart';
@@ -167,17 +168,28 @@ class DashboardOverviewTab extends ConsumerWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
 
+    Future<void> refreshData() async {
+      ref.invalidate(ownerPropertiesProvider);
+      ref.invalidate(recentOwnerBookingsProvider);
+      ref.invalidate(unifiedDashboardNotifierProvider);
+      await Future.wait([
+        ref.read(ownerPropertiesProvider.future),
+        ref.read(recentOwnerBookingsProvider.future),
+        ref.read(unifiedDashboardNotifierProvider.future),
+      ]);
+    }
+
+    // Full screen error if dashboard data fails completely
+    if (dashboardAsync.hasError && !dashboardAsync.isLoading && !dashboardAsync.hasValue) {
+      return ErrorStateWidget(
+        message: l10n.ownerErrorLoadingData,
+        description: LoggingService.safeErrorToString(dashboardAsync.error),
+        onRetry: refreshData,
+      );
+    }
+
     return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(ownerPropertiesProvider);
-        ref.invalidate(recentOwnerBookingsProvider);
-        ref.invalidate(unifiedDashboardNotifierProvider);
-        await Future.wait([
-          ref.read(ownerPropertiesProvider.future),
-          ref.read(recentOwnerBookingsProvider.future),
-          ref.read(unifiedDashboardNotifierProvider.future),
-        ]);
-      },
+      onRefresh: refreshData,
       color: theme.colorScheme.primary,
       child: ListView(
         physics: PlatformScrollPhysics.adaptive,
@@ -199,7 +211,13 @@ class DashboardOverviewTab extends ConsumerWidget {
             child: dashboardAsync.when(
               data: (data) => _buildStatsCards(context: context, data: data),
               loading: SkeletonLoader.analyticsMetricCards,
-              error: (e, s) => _buildErrorState(context, l10n, theme, e),
+              // Fallback for partial error (shouldn't happen due to above check, but safe to have)
+              error: (e, s) => ErrorStateWidget(
+                message: l10n.ownerErrorLoadingData,
+                description: LoggingService.safeErrorToString(e),
+                compact: true,
+                onRetry: refreshData,
+              ),
             ),
           ),
 
@@ -235,62 +253,6 @@ class DashboardOverviewTab extends ConsumerWidget {
 
           const SizedBox(height: 24),
         ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(
-    BuildContext context,
-    AppLocalizations l10n,
-    ThemeData theme,
-    Object e,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
-                    theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
-                  ],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.error_outline_rounded,
-                size: 40,
-                color: theme.colorScheme.error,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.ownerErrorLoadingData,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              LoggingService.safeErrorToString(e),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
-                ),
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
       ),
     );
   }

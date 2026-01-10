@@ -19,6 +19,7 @@ import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
+import '../../../../shared/widgets/error_state_widget.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -564,35 +565,19 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   // Show error state
                   else if (windowedState.error != null && bookings.isEmpty)
                     SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(context.horizontalPadding),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: AppDimensions.iconSizeXL,
-                                color: theme.colorScheme.error,
-                              ),
-                              const SizedBox(height: AppDimensions.spaceS),
-                              Text(
-                                l10n.ownerBookingsErrorLoading,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: AppDimensions.spaceXS),
-                              Text(
-                                windowedState.error!,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: context.textColorSecondary,
-                                    ),
-                                textAlign: TextAlign.center,
-                                maxLines: 5,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 40,
+                          horizontal: context.horizontalPadding,
+                        ),
+                        child: ErrorStateWidget(
+                          message: l10n.ownerBookingsErrorLoading,
+                          description: windowedState.error,
+                          onRetry: () {
+                            ref
+                                .read(windowedBookingsNotifierProvider.notifier)
+                                .refresh();
+                          },
                         ),
                       ),
                     )

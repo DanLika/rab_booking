@@ -243,6 +243,7 @@ class AnalyticsService {
     }
   }
 
+  /// Authentication Events
   Future<void> logLogin(String method) async {
     try {
       await _analytics.logLogin(loginMethod: method);

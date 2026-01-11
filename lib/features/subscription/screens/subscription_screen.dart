@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../l10n/app_localizations.dart';
 
+import '../../../core/services/analytics_service.dart';
+import '../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
 import '../../../shared/widgets/common_app_bar.dart';
 import '../models/trial_status.dart';
 import '../providers/trial_status_provider.dart';
@@ -15,14 +17,46 @@ const String _webDashboardUrl = 'https://app.bookbed.io';
 ///
 /// For App Store compliance, subscription payments are handled via web dashboard.
 /// Users are redirected to app.bookbed.io for billing management.
-class SubscriptionScreen extends ConsumerWidget {
+class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
+}
+
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Use addPostFrameCallback to ensure providers are ready and avoid build-phase side effects
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _logSubscriptionView();
+    });
+  }
+
+  void _logSubscriptionView() {
+    // Only log if we have data, otherwise the watcher in build will handle it via listener if needed
+    // But since this is initState, we just try our best.
+    // Actually, reading provider in initState is fine for one-off if we don't watch.
+    // But better to use ref.read inside the callback.
+    final properties = ref.read(ownerPropertiesProvider).valueOrNull;
+    if (properties != null) {
+      final unitCount = properties.fold<int>(0, (sum, p) => sum + p.unitsCount);
+      AnalyticsService.instance.logViewSubscription(
+        currentUnitCount: unitCount,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final trialStatusAsync = ref.watch(trialStatusProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+
+    // Ensure properties are loaded so we can log correctly if not already (optional optimization)
+    // We don't necessarily need to watch it for the UI, but we do for the analytics context.
+    // However, to keep it clean, we rely on the provider being alive from dashboard.
 
     return Scaffold(
       appBar: CommonAppBar(
@@ -128,6 +162,12 @@ class SubscriptionScreen extends ConsumerWidget {
   }
 
   void _handleUpgrade(BuildContext context, AppLocalizations l10n) {
+    // ANALYTICS: Log begin checkout
+    AnalyticsService.instance.logBeginCheckout(
+      planId: 'pro_monthly',
+      price: 19.99,
+    );
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(

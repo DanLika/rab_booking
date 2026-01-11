@@ -13800,6 +13800,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage your plan'**
   String get profileSubscriptionSubtitle;
+
+  /// No description provided for @subscriptionDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Today} =1{1 day left} other{{count} days left}}'**
+  String subscriptionDaysLeft(int count);
+
+  /// No description provided for @subscriptionStatusTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial Period'**
+  String get subscriptionStatusTrial;
+
+  /// No description provided for @subscriptionStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Subscription'**
+  String get subscriptionStatusActive;
+
+  /// No description provided for @subscriptionStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial Expired'**
+  String get subscriptionStatusExpired;
+
+  /// No description provided for @subscriptionStatusSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Suspended'**
+  String get subscriptionStatusSuspended;
 }
 
 class _AppLocalizationsDelegate

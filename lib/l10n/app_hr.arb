@@ -3261,5 +3261,15 @@
   "subscriptionFaqDataSafeAnswer": "Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.",
   "subscriptionComingSoon": "Uskoro",
   "subscriptionComingSoonMessage": "Integracija plaćanja uskoro stiže! Za sada, molimo kontaktirajte nas za nadogradnju računa.",
-  "profileSubscriptionSubtitle": "Upravljajte svojim planom"
+  "profileSubscriptionSubtitle": "Upravljajte svojim planom",
+  "subscriptionDaysLeft": "{count, plural, =0{Danas} one{Još {count} dan} few{Još {count} dana} other{Još {count} dana}}",
+  "@subscriptionDaysLeft": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "subscriptionStatusTrial": "Probni Period",
+  "subscriptionStatusActive": "Aktivna Pretplata",
+  "subscriptionStatusExpired": "Istekao Probni Period",
+  "subscriptionStatusSuspended": "Račun Suspendiran"
 }

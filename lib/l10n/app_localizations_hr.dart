@@ -7673,4 +7673,29 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get profileSubscriptionSubtitle => 'Upravljajte svojim planom';
+
+  @override
+  String subscriptionDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Još $count dana',
+      few: 'Još $count dana',
+      one: 'Još 1 dan',
+      zero: 'Danas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionStatusTrial => 'Probni Period';
+
+  @override
+  String get subscriptionStatusActive => 'Aktivna Pretplata';
+
+  @override
+  String get subscriptionStatusExpired => 'Istekao Probni Period';
+
+  @override
+  String get subscriptionStatusSuspended => 'Račun Suspendiran';
 }

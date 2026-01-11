@@ -7616,4 +7616,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileSubscriptionSubtitle => 'Manage your plan';
+
+  @override
+  String subscriptionDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+      zero: 'Today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionStatusTrial => 'Trial Period';
+
+  @override
+  String get subscriptionStatusActive => 'Active Subscription';
+
+  @override
+  String get subscriptionStatusExpired => 'Trial Expired';
+
+  @override
+  String get subscriptionStatusSuspended => 'Account Suspended';
 }

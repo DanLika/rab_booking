@@ -213,18 +213,15 @@ class _StatusCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  trialStatus.statusText,
+                  _getStatusText(trialStatus.accountStatus, l10n),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (trialStatus.isInTrial &&
-                    trialStatus.trialExpiresAt != null) ...[
+                if (trialStatus.isInTrial) ...[
                   const SizedBox(height: 4),
                   Text(
-                    l10n.subscriptionExpires(
-                      _formatDate(trialStatus.trialExpiresAt!),
-                    ),
+                    l10n.subscriptionDaysLeft(trialStatus.daysRemaining),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.grey.shade600,
                     ),
@@ -240,6 +237,19 @@ class _StatusCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  String _getStatusText(AccountStatus status, AppLocalizations l10n) {
+    switch (status) {
+      case AccountStatus.trial:
+        return l10n.subscriptionStatusTrial;
+      case AccountStatus.active:
+        return l10n.subscriptionStatusActive;
+      case AccountStatus.trialExpired:
+        return l10n.subscriptionStatusExpired;
+      case AccountStatus.suspended:
+        return l10n.subscriptionStatusSuspended;
+    }
   }
 }
 

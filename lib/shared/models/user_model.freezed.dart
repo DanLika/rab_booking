@@ -813,6 +813,9 @@ mixin _$UserModel {
   AccountType? get adminOverrideAccountType =>
       throw _privateConstructorUsedError;
 
+  /// Feature discovery flags (track which features the user has seen)
+  Map<String, bool> get featureFlags => throw _privateConstructorUsedError;
+
   /// Serializes this UserModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -859,6 +862,7 @@ abstract class $UserModelCopyWith<$Res> {
     @JsonKey(name: 'hide_subscription') bool hideSubscription,
     @JsonKey(name: 'admin_override_account_type')
     AccountType? adminOverrideAccountType,
+    Map<String, bool> featureFlags,
   });
 
   $EmployeePermissionsCopyWith<$Res>? get permissions;
@@ -902,6 +906,7 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? recentSecurityEvents = null,
     Object? hideSubscription = null,
     Object? adminOverrideAccountType = freezed,
+    Object? featureFlags = null,
   }) {
     return _then(
       _value.copyWith(
@@ -997,6 +1002,10 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
                 ? _value.adminOverrideAccountType
                 : adminOverrideAccountType // ignore: cast_nullable_to_non_nullable
                       as AccountType?,
+            featureFlags: null == featureFlags
+                ? _value.featureFlags
+                : featureFlags // ignore: cast_nullable_to_non_nullable
+                      as Map<String, bool>,
           )
           as $Val,
     );
@@ -1057,6 +1066,7 @@ abstract class _$$UserModelImplCopyWith<$Res>
     @JsonKey(name: 'hide_subscription') bool hideSubscription,
     @JsonKey(name: 'admin_override_account_type')
     AccountType? adminOverrideAccountType,
+    Map<String, bool> featureFlags,
   });
 
   @override
@@ -1100,6 +1110,7 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? recentSecurityEvents = null,
     Object? hideSubscription = null,
     Object? adminOverrideAccountType = freezed,
+    Object? featureFlags = null,
   }) {
     return _then(
       _$UserModelImpl(
@@ -1195,6 +1206,10 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value.adminOverrideAccountType
             : adminOverrideAccountType // ignore: cast_nullable_to_non_nullable
                   as AccountType?,
+        featureFlags: null == featureFlags
+            ? _value._featureFlags
+            : featureFlags // ignore: cast_nullable_to_non_nullable
+                  as Map<String, bool>,
       ),
     );
   }
@@ -1231,8 +1246,10 @@ class _$UserModelImpl extends _UserModel {
     final List<SecurityEvent> recentSecurityEvents = const [],
     @JsonKey(name: 'hide_subscription') this.hideSubscription = false,
     @JsonKey(name: 'admin_override_account_type') this.adminOverrideAccountType,
+    final Map<String, bool> featureFlags = const {},
   }) : _devices = devices,
        _recentSecurityEvents = recentSecurityEvents,
+       _featureFlags = featureFlags,
        super._();
 
   factory _$UserModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -1366,9 +1383,21 @@ class _$UserModelImpl extends _UserModel {
   @JsonKey(name: 'admin_override_account_type')
   final AccountType? adminOverrideAccountType;
 
+  /// Feature discovery flags (track which features the user has seen)
+  final Map<String, bool> _featureFlags;
+
+  /// Feature discovery flags (track which features the user has seen)
+  @override
+  @JsonKey()
+  Map<String, bool> get featureFlags {
+    if (_featureFlags is EqualUnmodifiableMapView) return _featureFlags;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_featureFlags);
+  }
+
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType)';
+    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType, featureFlags: $featureFlags)';
   }
 
   @override
@@ -1421,7 +1450,11 @@ class _$UserModelImpl extends _UserModel {
                   other.adminOverrideAccountType,
                   adminOverrideAccountType,
                 ) ||
-                other.adminOverrideAccountType == adminOverrideAccountType));
+                other.adminOverrideAccountType == adminOverrideAccountType) &&
+            const DeepCollectionEquality().equals(
+              other._featureFlags,
+              _featureFlags,
+            ));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1451,6 +1484,7 @@ class _$UserModelImpl extends _UserModel {
     const DeepCollectionEquality().hash(_recentSecurityEvents),
     hideSubscription,
     adminOverrideAccountType,
+    const DeepCollectionEquality().hash(_featureFlags),
   ]);
 
   /// Create a copy of UserModel
@@ -1501,6 +1535,7 @@ abstract class _UserModel extends UserModel {
     @JsonKey(name: 'hide_subscription') final bool hideSubscription,
     @JsonKey(name: 'admin_override_account_type')
     final AccountType? adminOverrideAccountType,
+    final Map<String, bool> featureFlags,
   }) = _$UserModelImpl;
   const _UserModel._() : super._();
 
@@ -1614,6 +1649,10 @@ abstract class _UserModel extends UserModel {
   @override
   @JsonKey(name: 'admin_override_account_type')
   AccountType? get adminOverrideAccountType;
+
+  /// Feature discovery flags (track which features the user has seen)
+  @override
+  Map<String, bool> get featureFlags;
 
   /// Create a copy of UserModel
   /// with the given fields replaced by the non-null parameter values.

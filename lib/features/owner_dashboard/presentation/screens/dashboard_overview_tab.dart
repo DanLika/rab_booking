@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphic/graphic.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -16,6 +17,7 @@ import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/app_filter_chip.dart';
+import '../../../../shared/widgets/feature_highlight_widget.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/unified_dashboard_provider.dart';
@@ -135,18 +137,34 @@ class DashboardOverviewTab extends ConsumerWidget {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: isMobile ? 28 : 36),
-            FilledButton.icon(
-              onPressed: () => context.push(OwnerRoutes.propertyNew),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.ownerAddFirstProperty),
-              style: FilledButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 24 : 32,
-                  vertical: isMobile ? 14 : 16,
+            FeatureHighlightWidget(
+              featureId: 'first_property_add',
+              tooltipMessage: l10n.ownerAddFirstProperty,
+              child: FilledButton.icon(
+                onPressed: () => context.push(OwnerRoutes.propertyNew),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.ownerAddFirstProperty),
+                style: FilledButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 24 : 32,
+                    vertical: isMobile ? 14 : 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: () {
+                // TODO: Replace with actual demo video URL
+                launchUrl(Uri.parse('https://bookbed.io/#demo'));
+              },
+              icon: const Icon(Icons.play_circle_outline),
+              label: Text(l10n.ownerWatchDemo),
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.secondary,
               ),
             ),
           ],

@@ -523,6 +523,7 @@
 
   "ownerWelcomeTitle": "Welcome to BookBed!",
   "ownerWelcomeSubtitle": "Get started by adding your first property to start receiving bookings.",
+  "ownerWatchDemo": "Watch 2-min Demo",
   "ownerAddFirstProperty": "Add Property",
 
   "ownerNewBookingReceived": "New booking received",

@@ -2888,6 +2888,12 @@ abstract class AppLocalizations {
   /// **'Get started by adding your first property to start receiving bookings.'**
   String get ownerWelcomeSubtitle;
 
+  /// No description provided for @ownerWatchDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch 2-min Demo'**
+  String get ownerWatchDemo;
+
   /// No description provided for @ownerAddFirstProperty.
   ///
   /// In en, this message translates to:

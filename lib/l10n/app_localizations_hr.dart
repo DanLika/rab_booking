@@ -1500,6 +1500,9 @@ class AppLocalizationsHr extends AppLocalizations {
       'Započnite dodavanjem vaše prve nekretnine kako biste mogli primati rezervacije.';
 
   @override
+  String get ownerWatchDemo => 'Watch 2-min Demo';
+
+  @override
   String get ownerAddFirstProperty => 'Dodaj nekretninu';
 
   @override

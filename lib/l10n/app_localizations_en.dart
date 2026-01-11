@@ -1491,6 +1491,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Get started by adding your first property to start receiving bookings.';
 
   @override
+  String get ownerWatchDemo => 'Watch 2-min Demo';
+
+  @override
   String get ownerAddFirstProperty => 'Add Property';
 
   @override

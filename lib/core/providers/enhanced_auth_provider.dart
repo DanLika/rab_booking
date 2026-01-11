@@ -11,6 +11,7 @@ import '../../core/services/secure_storage_service.dart';
 import '../../core/services/security_events_service.dart';
 import '../../core/services/ip_geolocation_service.dart';
 import '../../core/services/logging_service.dart';
+import '../../core/services/analytics_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/utils/password_validator.dart';
 import '../../shared/models/user_model.dart';
@@ -218,6 +219,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         // Set user context for Sentry/Crashlytics error tracking
         LoggingService.setUser(firebaseUser.uid, email: userModel.email);
 
+        // ANALYTICS: Set user ID for session tracking
+        unawaited(AnalyticsService.instance.setUserId(firebaseUser.uid));
+        unawaited(AnalyticsService.instance.setUserProperty('role', userModel.role.name));
+
         LoggingService.log(
           'State updated: isAuthenticated=${state.isAuthenticated}, requiresVerification=$requiresVerification, requiresOnboarding=$requiresOnboarding',
           tag: 'ENHANCED_AUTH',
@@ -355,6 +360,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         'User profile loaded, isLoading should be false now',
         tag: 'ENHANCED_AUTH',
       );
+
+      // ANALYTICS: Log successful login
+      unawaited(AnalyticsService.instance.logLogin('email'));
 
       // Save or clear credentials based on Remember Me setting (non-blocking)
       // SECURITY FIX SF-007: Only save email, never password
@@ -577,6 +585,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       // Update display name in Firebase Auth
       await user.updateDisplayName('$firstName $lastName');
+
+      // ANALYTICS: Log successful sign up
+      unawaited(AnalyticsService.instance.logSignUp('email'));
 
       // Reset rate limit on success
       await _rateLimit.resetAttempts(email);
@@ -978,9 +989,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       if (isNewUser) {
         // Create user profile in Firestore for new users
         await _createUserProfile(userCredential.user!);
+        unawaited(AnalyticsService.instance.logSignUp('google'));
       } else {
         // Update last login for existing users
         await _updateLastLogin(userCredential.user!.uid);
+        unawaited(AnalyticsService.instance.logLogin('google'));
       }
 
       // Log security event (non-blocking)
@@ -1056,9 +1069,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         // Create user profile in Firestore for new users
         // Note: Apple may not provide display name on subsequent logins
         await _createUserProfile(userCredential.user!);
+        unawaited(AnalyticsService.instance.logSignUp('apple'));
       } else {
         // Update last login for existing users
         await _updateLastLogin(userCredential.user!.uid);
+        unawaited(AnalyticsService.instance.logLogin('apple'));
       }
 
       // Log security event (non-blocking)

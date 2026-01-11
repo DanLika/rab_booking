@@ -23,6 +23,7 @@ import '../providers/owner_properties_provider.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../../core/services/analytics_service.dart';
 
 /// Modern Property form screen for add/edit with enhanced UI
 class PropertyFormScreen extends ConsumerStatefulWidget {
@@ -65,6 +66,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
     super.initState();
     if (_isEditing) {
       _loadPropertyData();
+    } else {
+      // ANALYTICS: Log start of property addition
+      AnalyticsService.instance.logAddPropertyStart();
     }
   }
 
@@ -1176,6 +1180,12 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
               : _addressController.text,
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           isActive: _isPublished,
+        );
+
+        // ANALYTICS: Log property creation success
+        await AnalyticsService.instance.logPropertyCreated(
+          propertyId: 'new_property', // Placeholder until repo update
+          propertyName: _nameController.text.trim(),
         );
       }
 

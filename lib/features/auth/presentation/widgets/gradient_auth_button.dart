@@ -32,25 +32,35 @@ class _GradientAuthButtonState extends State<GradientAuthButton> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final isDisabled = widget.onPressed == null && !widget.isLoading;
+
     Widget buttonContent = Container(
       height: 48,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.75),
-          ],
-        ),
+        color: isDisabled
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+            : null,
+        gradient: isDisabled
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withValues(alpha: 0.75),
+                ],
+              ),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withAlpha((0.25 * 255).toInt()),
-            blurRadius: _isHovered ? 16 : 10,
-            offset: Offset(0, _isHovered ? 6 : 3),
-          ),
-        ],
+        boxShadow: isDisabled
+            ? null
+            : [
+                BoxShadow(
+                  color:
+                      theme.colorScheme.primary.withAlpha((0.25 * 255).toInt()),
+                  blurRadius: _isHovered ? 16 : 10,
+                  offset: Offset(0, _isHovered ? 6 : 3),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,

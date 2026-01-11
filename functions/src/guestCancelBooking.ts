@@ -7,6 +7,8 @@ import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
 import {safeToDate} from "./utils/dateValidation";
 import Stripe from "stripe";
+import {checkRateLimit, enforceRateLimit} from "./utils/rateLimit";
+import {logRateLimitExceeded} from "./utils/securityMonitoring";
 
 /**
  * Create Stripe client instance with secret key
@@ -65,6 +67,32 @@ export const guestCancelBooking = onCall(async (request) => {
 
   // Set user context for Sentry error tracking (guest action - use email)
   setUser(null, guestEmail || null);
+
+  // ========================================================================
+  // SECURITY: Rate limiting to prevent brute-force attacks
+  // ========================================================================
+  const clientIp = (request as any).rawRequest?.ip ||
+    (request as any).rawRequest?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    "unknown";
+
+  // In-memory check first (fast, per-instance)
+  const ipHash = Buffer.from(clientIp).toString("base64").substring(0, 16);
+  if (!checkRateLimit(`guest_cancel:${clientIp}`, 10, 60)) { // 10 attempts per minute
+    logRateLimitExceeded(ipHash, "guest_cancel_in_memory").catch(() => {});
+
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many cancellation attempts. Please wait a minute and try again."
+    );
+  }
+
+  // Firestore-backed check for persistence across instances
+  await enforceRateLimit(`ip_${ipHash}`, "guest_cancel_firestore", {
+    maxCalls: 30,
+    windowMs: 600000, // 30 attempts per 10 minutes per IP
+    errorMessage: "Too many cancellation attempts. Please wait a few minutes and try again.",
+  });
+
 
   // Validate required fields
   if (!bookingId || !bookingReference || !guestEmail) {

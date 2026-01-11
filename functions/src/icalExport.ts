@@ -336,9 +336,8 @@ function buildDescription(booking: any, unitName: string): string {
 
   parts.push(`Unit: ${unitName}`);
   
+  // SECURITY: Only include guest name (not email/phone) in public iCal feed
   if (booking.guest_name) parts.push(`Guest: ${booking.guest_name}`);
-  if (booking.guest_email) parts.push(`Email: ${booking.guest_email}`);
-  if (booking.guest_phone) parts.push(`Phone: ${booking.guest_phone}`);
   
   parts.push(`Guests: ${booking.guest_count || 1}`);
   

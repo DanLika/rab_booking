@@ -224,11 +224,32 @@ export const guestCancelBooking = onCall(async (request) => {
 
       if (paymentStatus === "paid" && paidAmount > 0) {
         // User has paid - eligible for refund
-        // TODO: Add cancellation policy logic (full_refund/50_percent/no_refund)
-        refundAmount = paidAmount; // Full refund for now
-        refundStatus = paymentMethod === "stripe" ?
-          "pending_stripe" :
-          "pending_manual";
+
+        // Determine refund amount based on cancellation policy
+        // Default to 'full_refund' if not specified for backward compatibility
+        const cancellationPolicy = widgetSettings.cancellation_policy || "full_refund";
+
+        switch (cancellationPolicy) {
+          case "50_percent":
+            refundAmount = paidAmount * 0.5;
+            break;
+          case "no_refund":
+            refundAmount = 0;
+            break;
+          case "full_refund":
+          default:
+            refundAmount = paidAmount;
+            break;
+        }
+
+        if (refundAmount > 0) {
+          refundStatus = paymentMethod === "stripe" ?
+            "pending_stripe" :
+            "pending_manual";
+        } else {
+          // If policy results in 0 refund (e.g., no_refund), mark as not applicable
+          refundStatus = "no_refund_due";
+        }
       }
 
       // Step 8: Update booking atomically

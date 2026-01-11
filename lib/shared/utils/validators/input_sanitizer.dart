@@ -168,6 +168,34 @@ class InputSanitizer {
     return sanitized.isEmpty ? null : sanitized;
   }
 
+  /// Sanitizes URL input
+  ///
+  /// - Removes javascript: protocol
+  /// - Removes control characters
+  /// - Removes whitespace
+  ///
+  /// Returns sanitized URL or null if invalid
+  static String? sanitizeUrl(String? input) {
+    if (input == null || input.trim().isEmpty) {
+      return null;
+    }
+
+    var sanitized = input.trim();
+
+    // Remove control characters
+    sanitized = sanitized.replaceAll(_controlCharPattern, '');
+
+    // Remove whitespace
+    sanitized = sanitized.replaceAll(RegExp(r'\s'), '');
+
+    // Check for dangerous protocols (javascript:)
+    if (sanitized.toLowerCase().startsWith('javascript:')) {
+      return null;
+    }
+
+    return sanitized.isEmpty ? null : sanitized;
+  }
+
   /// Checks if text contains potentially dangerous patterns
   ///
   /// Returns true if input appears to contain malicious content

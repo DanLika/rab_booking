@@ -15,6 +15,7 @@ import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/constants/app_dimensions.dart';
+import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/gradient_button.dart';
@@ -1147,17 +1148,17 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
         // Update other fields (subdomain already updated by Cloud Function if changed)
         await repository.updateProperty(
           propertyId: widget.property!.id,
-          name: _nameController.text,
-          slug: _slugController.text,
+          name: InputSanitizer.sanitizeText(_nameController.text) ?? '',
+          slug: InputSanitizer.sanitizeText(_slugController.text) ?? '',
           subdomain: subdomainChanged
               ? null
               : subdomainValue, // Skip if already set by Cloud Function
-          description: _descriptionController.text,
+          description:
+              InputSanitizer.sanitizeText(_descriptionController.text) ?? '',
           propertyType: _selectedType.value,
-          location: _locationController.text,
-          address: _addressController.text.isEmpty
-              ? null
-              : _addressController.text,
+          location:
+              InputSanitizer.sanitizeText(_locationController.text) ?? '',
+          address: InputSanitizer.sanitizeText(_addressController.text),
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           isActive: _isPublished,
         );
@@ -1165,15 +1166,15 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
         // Create mode - subdomain validation already done above
         await repository.createProperty(
           ownerId: ownerId,
-          name: _nameController.text,
-          slug: _slugController.text,
+          name: InputSanitizer.sanitizeText(_nameController.text) ?? '',
+          slug: InputSanitizer.sanitizeText(_slugController.text) ?? '',
           subdomain: subdomainValue,
-          description: _descriptionController.text,
+          description:
+              InputSanitizer.sanitizeText(_descriptionController.text) ?? '',
           propertyType: _selectedType.value,
-          location: _locationController.text,
-          address: _addressController.text.isEmpty
-              ? null
-              : _addressController.text,
+          location:
+              InputSanitizer.sanitizeText(_locationController.text) ?? '',
+          address: InputSanitizer.sanitizeText(_addressController.text),
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           isActive: _isPublished,
         );

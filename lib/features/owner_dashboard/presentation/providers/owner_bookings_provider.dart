@@ -174,9 +174,9 @@ class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
 
 /// Owner unit IDs provider - cached list of unit IDs for pagination
 /// This is small data (just IDs) so OK to cache
-/// keepAlive: Prevents re-fetching on every navigation (used by 5+ providers)
-@Riverpod(keepAlive: true)
+@riverpod
 Future<List<String>> ownerUnitIds(Ref ref) async {
+  // MEMORY FIX: Removed keepAlive: true to ensure cache is cleared when not in use
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final auth = FirebaseAuth.instance;
   final userId = auth.currentUser?.uid;
@@ -196,6 +196,7 @@ Future<List<String>> ownerUnitIds(Ref ref) async {
 @riverpod
 class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
   static const int pageSize = 20;
+  static const int maxTotalBookings = 500; // MEMORY FIX: Limit total list size
 
   @override
   PaginatedBookingsState build() {
@@ -279,6 +280,16 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
       );
 
       // Append new bookings to existing list
+      // MEMORY FIX: Prevent infinite growth by capping the list size
+      final currentBookings = state.bookings;
+      if (currentBookings.length >= maxTotalBookings) {
+        state = state.copyWith(
+          hasMore: false,
+          isLoadingMore: false,
+        );
+        return;
+      }
+
       state = state.copyWith(
         bookings: [...state.bookings, ...result.bookings],
         lastDocument: result.lastDocument,
@@ -672,9 +683,9 @@ Future<int> pendingBookingsCount(Ref ref) async {
 
 /// Recent owner bookings provider (for dashboard activity)
 /// Small dataset (10 items), OK to use simple query
-/// keepAlive: Dashboard is frequently visited, avoid re-fetching
-@Riverpod(keepAlive: true)
+@riverpod
 Future<List<OwnerBooking>> recentOwnerBookings(Ref ref) async {
+  // MEMORY FIX: Removed keepAlive: true to free memory when dashboard is not visible
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final auth = FirebaseAuth.instance;
   final userId = auth.currentUser?.uid;

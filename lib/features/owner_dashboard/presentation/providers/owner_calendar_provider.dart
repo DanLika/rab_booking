@@ -15,12 +15,10 @@ import '../../../../core/constants/enums.dart';
 part 'owner_calendar_provider.g.dart';
 
 /// Owner properties provider - returns ALL properties for owner
-/// keepAlive: Prevents re-fetching when filters dialog opens
 /// SECURITY: Watches enhancedAuthProvider to invalidate cache on user change
-@Riverpod(keepAlive: true)
+@riverpod
 Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
-  // SECURITY FIX: Watch auth state to invalidate cache when user changes
-  // This ensures a new user doesn't see the previous user's data
+  // MEMORY FIX: Removed keepAlive: true to ensure cache is cleared when not in use
   final authState = ref.watch(enhancedAuthProvider);
   final userId = authState.firebaseUser?.uid;
 
@@ -37,9 +35,9 @@ Future<List<PropertyModel>> ownerPropertiesCalendar(Ref ref) async {
 
 /// All units provider - returns ALL ACTIVE units for ALL properties
 /// Filters out soft-deleted units (deletedAt != null) and unavailable units
-/// keepAlive: Prevents re-fetching when filters dialog opens/closes
-@Riverpod(keepAlive: true)
+@riverpod
 Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
+  // MEMORY FIX: Removed keepAlive: true to ensure cache is cleared when not in use
   final properties = await ref.watch(ownerPropertiesCalendarProvider.future);
   final repository = ref.watch(ownerPropertiesRepositoryProvider);
 

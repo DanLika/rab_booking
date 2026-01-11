@@ -68,6 +68,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   final RateLimitService _rateLimit;
   final SecurityEventsService _security;
   final IpGeolocationService _geolocation;
+  StreamSubscription<User?>? _authSubscription;
 
   EnhancedAuthNotifier(
     this._auth,
@@ -77,7 +78,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     this._geolocation,
   ) : super(const EnhancedAuthState()) {
     // Listen to auth state changes
-    _auth.authStateChanges().listen((User? user) {
+    _authSubscription = _auth.authStateChanges().listen((User? user) {
       LoggingService.log(
         'authStateChanges: user=${user?.uid}',
         tag: 'ENHANCED_AUTH',
@@ -95,6 +96,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         state = const EnhancedAuthState(isLoading: false);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   /// Load user profile from Firestore

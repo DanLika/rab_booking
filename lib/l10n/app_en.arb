@@ -3208,5 +3208,8 @@
   "deleteAccountWarning": "This action is permanent and cannot be undone. All your data will be permanently deleted, including your properties, units, bookings, and account settings.",
   "deleteAccountPermanent": "This action cannot be reversed. Your account will be permanently deleted.",
   "deleteAccountSuccess": "Your account has been deleted successfully.",
-  "deleteAccountError": "Failed to delete account. Please try again or contact support."
+  "deleteAccountError": "Failed to delete account. Please try again or contact support.",
+
+  "platformConnectionsNoConnections": "No platform connections",
+  "platformConnectionsNoConnectionsDesc": "Add a connection to enable automatic date blocking"
 }

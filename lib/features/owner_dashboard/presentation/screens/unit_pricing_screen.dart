@@ -15,6 +15,7 @@ import '../../../../core/utils/input_decoration_helper.dart';
 import '../widgets/price_list_calendar_widget.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../providers/owner_properties_provider.dart';
 
@@ -345,43 +346,21 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
         },
       ),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.spaceL),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withAlpha(
-                    (0.1 * 255).toInt(),
-                  ),
-                ),
-                child: Icon(
-                  Icons.meeting_room_outlined,
-                  size: 70,
-                  color: theme.colorScheme.primary,
-                ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.spaceL),
+            child: AnimatedEmptyState(
+              icon: Icons.meeting_room_outlined,
+              title: l10n.unitPricingNoUnits,
+              subtitle: l10n.unitPricingNoUnitsDesc,
+              iconSize: 70,
+              iconColor: theme.colorScheme.primary,
+              actionButton: FilledButton.icon(
+                onPressed: () => context.push(OwnerRoutes.unitWizard),
+                icon: const Icon(Icons.add),
+                label: Text(l10n.unitHubAddUnit),
               ),
-              const SizedBox(height: AppDimensions.spaceL),
-              Text(
-                l10n.unitPricingNoUnits,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: AppDimensions.spaceS),
-              Text(
-                l10n.unitPricingNoUnitsDesc,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: context.textColorSecondary,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-              ),
-            ],
+            ),
           ),
         ),
       ),

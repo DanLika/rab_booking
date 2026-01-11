@@ -18,6 +18,7 @@ import 'booking_actions/booking_reject_dialog.dart';
 import 'booking_actions/booking_cancel_dialog.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import 'calendar/calendar_skeleton_loader.dart';
 import 'calendar/calendar_error_state.dart';
 import 'calendar/booking_action_menu.dart';
@@ -1332,7 +1333,6 @@ class _TimelineCalendarWidgetState
   Widget _buildEmptyUnitsState(WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     // Check if owner has ANY units (not just filtered)
     final allUnitsAsync = ref.watch(allOwnerUnitsProvider);
@@ -1342,44 +1342,16 @@ class _TimelineCalendarWidgetState
     // If owner has no units at all, redirect to Units page
     if (!hasAnyUnits && !allUnitsAsync.isLoading) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.spaceL),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.meeting_room_outlined,
-                  size: 50,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: AppDimensions.spaceM),
-              Text(
-                l10n.ownerCalendarNoUnits,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppDimensions.spaceS),
-              Text(
-                l10n.unitHubNoUnitsInProperty,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.7)
-                      : Colors.black.withValues(alpha: 0.6),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppDimensions.spaceL),
-              FilledButton.icon(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.spaceL),
+            child: AnimatedEmptyState(
+              icon: Icons.meeting_room_outlined,
+              title: l10n.ownerCalendarNoUnits,
+              subtitle: l10n.unitHubNoUnitsInProperty,
+              iconSize: 50,
+              iconColor: theme.colorScheme.primary,
+              actionButton: FilledButton.icon(
                 onPressed: () => context.go(OwnerRoutes.units),
                 icon: const Icon(Icons.add, size: 20),
                 label: Text(l10n.unitHubAddUnit),
@@ -1393,7 +1365,7 @@ class _TimelineCalendarWidgetState
                   ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       );
@@ -1403,34 +1375,33 @@ class _TimelineCalendarWidgetState
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.spaceM),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.ownerCalendarNoUnits, textAlign: TextAlign.center),
-            const SizedBox(height: AppDimensions.spaceS),
-            Wrap(
-              spacing: AppDimensions.spaceS,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    ref.read(calendarFiltersProvider.notifier).clearFilters();
-                    ref.invalidate(allOwnerUnitsProvider);
-                    ref.invalidate(calendarBookingsProvider);
-                  },
-                  icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
-                  label: Text(l10n.calendarFiltersClear),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    ref.invalidate(allOwnerUnitsProvider);
-                    ref.invalidate(calendarBookingsProvider);
-                  },
-                  icon: const Icon(Icons.refresh, size: 18),
-                  label: Text(l10n.calendarErrorRetry),
-                ),
-              ],
-            ),
-          ],
+        child: AnimatedEmptyState(
+          icon: Icons.filter_alt_off_outlined,
+          title: l10n.ownerCalendarNoUnits,
+          iconSize: 50,
+          iconColor: theme.colorScheme.primary,
+          actionButton: Wrap(
+            spacing: AppDimensions.spaceS,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  ref.read(calendarFiltersProvider.notifier).clearFilters();
+                  ref.invalidate(allOwnerUnitsProvider);
+                  ref.invalidate(calendarBookingsProvider);
+                },
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                label: Text(l10n.calendarFiltersClear),
+              ),
+              OutlinedButton.icon(
+                onPressed: () {
+                  ref.invalidate(allOwnerUnitsProvider);
+                  ref.invalidate(calendarBookingsProvider);
+                },
+                icon: const Icon(Icons.refresh, size: 18),
+                label: Text(l10n.calendarErrorRetry),
+              ),
+            ],
+          ),
         ),
       ),
     );

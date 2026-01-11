@@ -7502,4 +7502,118 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Failed to delete account. Please try again or contact support.';
+
+  @override
+  String get subscriptionTitle => 'Subscription';
+
+  @override
+  String subscriptionErrorLoading(String error) {
+    return 'Error loading subscription status: $error';
+  }
+
+  @override
+  String get subscriptionLoginRequired => 'Please log in to view subscription';
+
+  @override
+  String get subscriptionAvailablePlans => 'Available Plans';
+
+  @override
+  String get subscriptionCurrentStatus => 'Current Status';
+
+  @override
+  String subscriptionExpires(String date) {
+    return 'Expires: $date';
+  }
+
+  @override
+  String get subscriptionFreeTrial => 'Free Trial';
+
+  @override
+  String get subscriptionFreeTrialPrice => '€0';
+
+  @override
+  String get subscriptionFreeTrialPeriod => '30 days';
+
+  @override
+  String get subscriptionFeatureProperties2 => 'Up to 2 properties';
+
+  @override
+  String get subscriptionFeatureBasicBooking => 'Basic booking management';
+
+  @override
+  String get subscriptionFeatureEmailNotifications => 'Email notifications';
+
+  @override
+  String get subscriptionFeatureCalendarSync => 'Calendar sync';
+
+  @override
+  String get subscriptionPlanPro => 'Pro';
+
+  @override
+  String get subscriptionProPrice => '€19';
+
+  @override
+  String get subscriptionProPeriod => 'per month';
+
+  @override
+  String get subscriptionFeatureUnlimitedProperties => 'Unlimited properties';
+
+  @override
+  String get subscriptionFeatureAdvancedAnalytics => 'Advanced analytics';
+
+  @override
+  String get subscriptionFeaturePrioritySupport => 'Priority support';
+
+  @override
+  String get subscriptionFeatureCustomBranding => 'Custom branding';
+
+  @override
+  String get subscriptionFeatureApiAccess => 'API access';
+
+  @override
+  String get subscriptionFeatureMultiUser => 'Multi-user access';
+
+  @override
+  String get subscriptionCurrent => 'Current';
+
+  @override
+  String get subscriptionRecommended => 'RECOMMENDED';
+
+  @override
+  String get subscriptionUpgradeNow => 'Upgrade Now';
+
+  @override
+  String get subscriptionFaq => 'Frequently Asked Questions';
+
+  @override
+  String get subscriptionFaqTrialEndQuestion =>
+      'What happens when my trial ends?';
+
+  @override
+  String get subscriptionFaqTrialEndAnswer =>
+      'Your account will switch to read-only mode. You can still view your data, but you won\'t be able to create new bookings or access premium features until you upgrade.';
+
+  @override
+  String get subscriptionFaqCancelQuestion => 'Can I cancel anytime?';
+
+  @override
+  String get subscriptionFaqCancelAnswer =>
+      'Yes! You can cancel your subscription at any time. Your access will continue until the end of your billing period.';
+
+  @override
+  String get subscriptionFaqDataSafeQuestion => 'Is my data safe?';
+
+  @override
+  String get subscriptionFaqDataSafeAnswer =>
+      'Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.';
+
+  @override
+  String get subscriptionComingSoon => 'Coming Soon';
+
+  @override
+  String get subscriptionComingSoonMessage =>
+      'Payment integration is coming soon! For now, please contact us to upgrade your account.';
+
+  @override
+  String get profileSubscriptionSubtitle => 'Manage your plan';
 }

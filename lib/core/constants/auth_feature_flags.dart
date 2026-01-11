@@ -25,5 +25,5 @@ abstract final class AuthFeatureFlags {
   /// or if email verification is not critical for your use case.
   ///
   /// IMPORTANT: Set to true in production for security!
-  static const bool requireEmailVerification = false;
+  static const bool requireEmailVerification = true;
 }

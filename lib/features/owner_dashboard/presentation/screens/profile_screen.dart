@@ -329,8 +329,27 @@ class ProfileScreen extends ConsumerWidget {
                                       context,
                                       ref,
                                     ),
-                                isLast: true,
                               ),
+                              // Subscription tile - conditionally hidden by admin
+                              if (authState.userModel?.hideSubscription !=
+                                  true) ...[
+                                Divider(
+                                  height: 1,
+                                  indent: 72,
+                                  color: theme.dividerColor,
+                                ),
+                                PremiumListTile(
+                                  icon: Icons.workspace_premium,
+                                  title: l10n.ownerDrawerSubscription,
+                                  subtitle: l10n.profileSubscriptionSubtitle,
+                                  onTap: () =>
+                                      context.push(OwnerRoutes.subscription),
+                                  isLast: true,
+                                ),
+                              ] else ...[
+                                // Close the container without subscription
+                                const SizedBox.shrink(),
+                              ],
                             ],
                           ),
                         ),

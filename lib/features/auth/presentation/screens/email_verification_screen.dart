@@ -248,10 +248,9 @@ class _EmailVerificationScreenState
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: CommonAppBar(
+      appBar: const CommonAppBar(
         title: 'Verify Email',
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        // No back button - user must verify email or use "Back to login" to sign out
       ),
       body: Center(
         child: SingleChildScrollView(

@@ -10,11 +10,13 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
   /// Leading icon (menu, back arrow, etc.)
-  final IconData leadingIcon;
+  /// If null, no leading icon is shown
+  final IconData? leadingIcon;
 
   /// Action to perform when leading icon is tapped
   /// Receives BuildContext to allow actions like opening drawer
-  final void Function(BuildContext) onLeadingIconTap;
+  /// Required if leadingIcon is provided
+  final void Function(BuildContext)? onLeadingIconTap;
 
   /// Custom gradient colors (optional - defaults to brand gradient)
   /// If null, uses GradientTokens.brandPrimary (Purple 100% → 70%)
@@ -35,8 +37,8 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CommonAppBar({
     super.key,
     required this.title,
-    required this.leadingIcon,
-    required this.onLeadingIconTap,
+    this.leadingIcon,
+    this.onLeadingIconTap,
     this.gradientColors,
     this.titleColor = Colors.white,
     this.iconColor = Colors.white,
@@ -84,11 +86,14 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(leadingIcon, color: iconColor),
-          onPressed: () => onLeadingIconTap(context),
-          tooltip: 'Menu',
-        ),
+        leading: leadingIcon != null && onLeadingIconTap != null
+            ? IconButton(
+                icon: Icon(leadingIcon, color: iconColor),
+                onPressed: () => onLeadingIconTap!(context),
+                tooltip: 'Menu',
+              )
+            : null,
+        automaticallyImplyLeading: false,
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/widgets/common_app_bar.dart';
 import '../models/trial_status.dart';
 import '../providers/trial_status_provider.dart';
 
@@ -18,14 +20,20 @@ class SubscriptionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final trialStatusAsync = ref.watch(trialStatusProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Subscription')),
+      appBar: CommonAppBar(
+        title: l10n.subscriptionTitle,
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (ctx) => Navigator.of(ctx).pop(),
+      ),
       body: trialStatusAsync.when(
-        data: (trialStatus) => _buildContent(context, theme, trialStatus),
+        data: (trialStatus) => _buildContent(context, theme, trialStatus, l10n),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) =>
-            Center(child: Text('Error loading subscription status: $error')),
+        error: (error, _) => Center(
+          child: Text(l10n.subscriptionErrorLoading(error.toString())),
+        ),
       ),
     );
   }
@@ -34,9 +42,10 @@ class SubscriptionScreen extends ConsumerWidget {
     BuildContext context,
     ThemeData theme,
     TrialStatus? trialStatus,
+    AppLocalizations l10n,
   ) {
     if (trialStatus == null) {
-      return const Center(child: Text('Please log in to view subscription'));
+      return Center(child: Text(l10n.subscriptionLoginRequired));
     }
 
     return SingleChildScrollView(
@@ -50,7 +59,7 @@ class SubscriptionScreen extends ConsumerWidget {
 
           // Plans Section
           Text(
-            'Available Plans',
+            l10n.subscriptionAvailablePlans,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -59,14 +68,14 @@ class SubscriptionScreen extends ConsumerWidget {
 
           // Free Plan
           _PlanCard(
-            title: 'Free Trial',
-            price: '€0',
-            period: '30 days',
-            features: const [
-              'Up to 2 properties',
-              'Basic booking management',
-              'Email notifications',
-              'Calendar sync',
+            title: l10n.subscriptionFreeTrial,
+            price: l10n.subscriptionFreeTrialPrice,
+            period: l10n.subscriptionFreeTrialPeriod,
+            features: [
+              l10n.subscriptionFeatureProperties2,
+              l10n.subscriptionFeatureBasicBooking,
+              l10n.subscriptionFeatureEmailNotifications,
+              l10n.subscriptionFeatureCalendarSync,
             ],
             isCurrentPlan: trialStatus.isInTrial,
             onSelect: null, // Can't select free plan
@@ -75,65 +84,59 @@ class SubscriptionScreen extends ConsumerWidget {
 
           // Pro Plan
           _PlanCard(
-            title: 'Pro',
-            price: '€19',
-            period: 'per month',
-            features: const [
-              'Unlimited properties',
-              'Advanced analytics',
-              'Priority support',
-              'Custom branding',
-              'API access',
-              'Multi-user access',
+            title: l10n.subscriptionPlanPro,
+            price: l10n.subscriptionProPrice,
+            period: l10n.subscriptionProPeriod,
+            features: [
+              l10n.subscriptionFeatureUnlimitedProperties,
+              l10n.subscriptionFeatureAdvancedAnalytics,
+              l10n.subscriptionFeaturePrioritySupport,
+              l10n.subscriptionFeatureCustomBranding,
+              l10n.subscriptionFeatureApiAccess,
+              l10n.subscriptionFeatureMultiUser,
             ],
-            isCurrentPlan: trialStatus.isActive,
+            isCurrentPlan: !trialStatus.isInTrial && trialStatus.isActive,
             isRecommended: true,
-            onSelect: () => _handleUpgrade(context),
+            onSelect: () => _handleUpgrade(context, l10n),
           ),
           const SizedBox(height: 32),
 
           // FAQ Section
           Text(
-            'Frequently Asked Questions',
+            l10n.subscriptionFaq,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 16),
           _FaqItem(
-            question: 'What happens when my trial ends?',
-            answer:
-                'Your account will switch to read-only mode. You can still view your data, but you won\'t be able to create new bookings or access premium features until you upgrade.',
+            question: l10n.subscriptionFaqTrialEndQuestion,
+            answer: l10n.subscriptionFaqTrialEndAnswer,
           ),
           _FaqItem(
-            question: 'Can I cancel anytime?',
-            answer:
-                'Yes! You can cancel your subscription at any time. Your access will continue until the end of your billing period.',
+            question: l10n.subscriptionFaqCancelQuestion,
+            answer: l10n.subscriptionFaqCancelAnswer,
           ),
           _FaqItem(
-            question: 'Is my data safe?',
-            answer:
-                'Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.',
+            question: l10n.subscriptionFaqDataSafeQuestion,
+            answer: l10n.subscriptionFaqDataSafeAnswer,
           ),
         ],
       ),
     );
   }
 
-  void _handleUpgrade(BuildContext context) {
+  void _handleUpgrade(BuildContext context, AppLocalizations l10n) {
     // TODO: Implement Stripe checkout
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Coming Soon'),
-        content: const Text(
-          'Payment integration is coming soon! '
-          'For now, please contact us to upgrade your account.',
-        ),
+        title: Text(l10n.subscriptionComingSoon),
+        content: Text(l10n.subscriptionComingSoonMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -150,6 +153,7 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     Color backgroundColor;
     Color borderColor;
@@ -202,7 +206,7 @@ class _StatusCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Current Status',
+                  l10n.subscriptionCurrentStatus,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.grey.shade600,
                   ),
@@ -218,7 +222,9 @@ class _StatusCard extends StatelessWidget {
                     trialStatus.trialExpiresAt != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    'Expires: ${_formatDate(trialStatus.trialExpiresAt!)}',
+                    l10n.subscriptionExpires(
+                      _formatDate(trialStatus.trialExpiresAt!),
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.grey.shade600,
                     ),
@@ -260,6 +266,7 @@ class _PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       width: double.infinity,
@@ -293,10 +300,10 @@ class _PlanCard extends StatelessWidget {
                   top: Radius.circular(14),
                 ),
               ),
-              child: const Text(
-                'RECOMMENDED',
+              child: Text(
+                l10n.subscriptionRecommended,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
@@ -329,7 +336,7 @@ class _PlanCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'Current',
+                          l10n.subscriptionCurrent,
                           style: TextStyle(
                             color: Colors.green.shade700,
                             fontWeight: FontWeight.w600,
@@ -392,7 +399,7 @@ class _PlanCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Upgrade Now'),
+                      child: Text(l10n.subscriptionUpgradeNow),
                     ),
                   ),
                 ],

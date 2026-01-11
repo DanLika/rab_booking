@@ -803,6 +803,16 @@ mixin _$UserModel {
   List<SecurityEvent> get recentSecurityEvents =>
       throw _privateConstructorUsedError;
 
+  /// Admin-controlled: Hide subscription page from this user
+  @JsonKey(name: 'hide_subscription')
+  bool get hideSubscription => throw _privateConstructorUsedError;
+
+  /// Admin-controlled: Override account type
+  /// null = use calculated status, otherwise use this value
+  @JsonKey(name: 'admin_override_account_type')
+  AccountType? get adminOverrideAccountType =>
+      throw _privateConstructorUsedError;
+
   /// Serializes this UserModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -846,6 +856,9 @@ abstract class $UserModelCopyWith<$Res> {
     DateTime? updatedAt,
     List<DeviceInfo> devices,
     List<SecurityEvent> recentSecurityEvents,
+    @JsonKey(name: 'hide_subscription') bool hideSubscription,
+    @JsonKey(name: 'admin_override_account_type')
+    AccountType? adminOverrideAccountType,
   });
 
   $EmployeePermissionsCopyWith<$Res>? get permissions;
@@ -887,6 +900,8 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? updatedAt = freezed,
     Object? devices = null,
     Object? recentSecurityEvents = null,
+    Object? hideSubscription = null,
+    Object? adminOverrideAccountType = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -974,6 +989,14 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
                 ? _value.recentSecurityEvents
                 : recentSecurityEvents // ignore: cast_nullable_to_non_nullable
                       as List<SecurityEvent>,
+            hideSubscription: null == hideSubscription
+                ? _value.hideSubscription
+                : hideSubscription // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            adminOverrideAccountType: freezed == adminOverrideAccountType
+                ? _value.adminOverrideAccountType
+                : adminOverrideAccountType // ignore: cast_nullable_to_non_nullable
+                      as AccountType?,
           )
           as $Val,
     );
@@ -1031,6 +1054,9 @@ abstract class _$$UserModelImplCopyWith<$Res>
     DateTime? updatedAt,
     List<DeviceInfo> devices,
     List<SecurityEvent> recentSecurityEvents,
+    @JsonKey(name: 'hide_subscription') bool hideSubscription,
+    @JsonKey(name: 'admin_override_account_type')
+    AccountType? adminOverrideAccountType,
   });
 
   @override
@@ -1072,6 +1098,8 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? updatedAt = freezed,
     Object? devices = null,
     Object? recentSecurityEvents = null,
+    Object? hideSubscription = null,
+    Object? adminOverrideAccountType = freezed,
   }) {
     return _then(
       _$UserModelImpl(
@@ -1159,6 +1187,14 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value._recentSecurityEvents
             : recentSecurityEvents // ignore: cast_nullable_to_non_nullable
                   as List<SecurityEvent>,
+        hideSubscription: null == hideSubscription
+            ? _value.hideSubscription
+            : hideSubscription // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        adminOverrideAccountType: freezed == adminOverrideAccountType
+            ? _value.adminOverrideAccountType
+            : adminOverrideAccountType // ignore: cast_nullable_to_non_nullable
+                  as AccountType?,
       ),
     );
   }
@@ -1193,6 +1229,8 @@ class _$UserModelImpl extends _UserModel {
     @NullableTimestampConverter() @JsonKey(name: 'updated_at') this.updatedAt,
     final List<DeviceInfo> devices = const [],
     final List<SecurityEvent> recentSecurityEvents = const [],
+    @JsonKey(name: 'hide_subscription') this.hideSubscription = false,
+    @JsonKey(name: 'admin_override_account_type') this.adminOverrideAccountType,
   }) : _devices = devices,
        _recentSecurityEvents = recentSecurityEvents,
        super._();
@@ -1317,9 +1355,20 @@ class _$UserModelImpl extends _UserModel {
     return EqualUnmodifiableListView(_recentSecurityEvents);
   }
 
+  /// Admin-controlled: Hide subscription page from this user
+  @override
+  @JsonKey(name: 'hide_subscription')
+  final bool hideSubscription;
+
+  /// Admin-controlled: Override account type
+  /// null = use calculated status, otherwise use this value
+  @override
+  @JsonKey(name: 'admin_override_account_type')
+  final AccountType? adminOverrideAccountType;
+
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents)';
+    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType)';
   }
 
   @override
@@ -1365,7 +1414,14 @@ class _$UserModelImpl extends _UserModel {
             const DeepCollectionEquality().equals(
               other._recentSecurityEvents,
               _recentSecurityEvents,
-            ));
+            ) &&
+            (identical(other.hideSubscription, hideSubscription) ||
+                other.hideSubscription == hideSubscription) &&
+            (identical(
+                  other.adminOverrideAccountType,
+                  adminOverrideAccountType,
+                ) ||
+                other.adminOverrideAccountType == adminOverrideAccountType));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1393,6 +1449,8 @@ class _$UserModelImpl extends _UserModel {
     updatedAt,
     const DeepCollectionEquality().hash(_devices),
     const DeepCollectionEquality().hash(_recentSecurityEvents),
+    hideSubscription,
+    adminOverrideAccountType,
   ]);
 
   /// Create a copy of UserModel
@@ -1440,6 +1498,9 @@ abstract class _UserModel extends UserModel {
     final DateTime? updatedAt,
     final List<DeviceInfo> devices,
     final List<SecurityEvent> recentSecurityEvents,
+    @JsonKey(name: 'hide_subscription') final bool hideSubscription,
+    @JsonKey(name: 'admin_override_account_type')
+    final AccountType? adminOverrideAccountType,
   }) = _$UserModelImpl;
   const _UserModel._() : super._();
 
@@ -1542,6 +1603,17 @@ abstract class _UserModel extends UserModel {
   /// Security events (recent only, full history in subcollection)
   @override
   List<SecurityEvent> get recentSecurityEvents;
+
+  /// Admin-controlled: Hide subscription page from this user
+  @override
+  @JsonKey(name: 'hide_subscription')
+  bool get hideSubscription;
+
+  /// Admin-controlled: Override account type
+  /// null = use calculated status, otherwise use this value
+  @override
+  @JsonKey(name: 'admin_override_account_type')
+  AccountType? get adminOverrideAccountType;
 
   /// Create a copy of UserModel
   /// with the given fields replaced by the non-null parameter values.

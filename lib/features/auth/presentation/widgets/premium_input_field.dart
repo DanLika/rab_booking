@@ -113,6 +113,8 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
               borderRadius: _borderRadius,
               borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
             ),
+            // Allow multi-line error messages (e.g., password validation rules)
+            errorMaxLines: 3,
           ),
         ),
       ),

@@ -118,6 +118,11 @@ _$UserModelImpl _$$UserModelImplFromJson(
           ?.map((e) => SecurityEvent.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  hideSubscription: json['hide_subscription'] as bool? ?? false,
+  adminOverrideAccountType: $enumDecodeNullable(
+    _$AccountTypeEnumMap,
+    json['admin_override_account_type'],
+  ),
 );
 
 Map<String, dynamic> _$$UserModelImplToJson(
@@ -150,6 +155,9 @@ Map<String, dynamic> _$$UserModelImplToJson(
   'updated_at': const NullableTimestampConverter().toJson(instance.updatedAt),
   'devices': instance.devices,
   'recentSecurityEvents': instance.recentSecurityEvents,
+  'hide_subscription': instance.hideSubscription,
+  'admin_override_account_type':
+      _$AccountTypeEnumMap[instance.adminOverrideAccountType],
 };
 
 const _$UserRoleEnumMap = {

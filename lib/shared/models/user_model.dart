@@ -159,6 +159,14 @@ class UserModel with _$UserModel {
 
     /// Security events (recent only, full history in subcollection)
     @Default([]) List<SecurityEvent> recentSecurityEvents,
+
+    /// Admin-controlled: Hide subscription page from this user
+    @JsonKey(name: 'hide_subscription') @Default(false) bool hideSubscription,
+
+    /// Admin-controlled: Override account type
+    /// null = use calculated status, otherwise use this value
+    @JsonKey(name: 'admin_override_account_type')
+    AccountType? adminOverrideAccountType,
   }) = _UserModel;
 
   const UserModel._();

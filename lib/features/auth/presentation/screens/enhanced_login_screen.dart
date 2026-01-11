@@ -207,15 +207,25 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       debugPrint('[LOGIN_SCREEN] Caught exception: ${e.runtimeType} = $e');
       if (!mounted) return;
 
-      // Give auth state a moment to update after error
-      await Future.delayed(const Duration(milliseconds: 100));
-
       // Get error message from exception (prefer thrown message over state)
       // When a string is thrown directly, toString() returns the string itself
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
       debugPrint(
         '[LOGIN_SCREEN] Error message after processing: $errorMessage',
       );
+
+      // IMMEDIATELY show snackbar BEFORE any state changes or delays
+      // This ensures snackbar displays before router can trigger redirects
+      final localizedError = _getLocalizedError(errorMessage, l10n);
+      ErrorDisplayUtils.showErrorSnackBar(
+        context,
+        localizedError,
+        duration: const Duration(seconds: 10),
+      );
+
+      // Give auth state a moment to update after error
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
 
       final isPassError = _isPasswordError(errorMessage);
       final isEmailErr = _isEmailError(errorMessage);
@@ -228,9 +238,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         _isLoading = false;
         _autovalidateMode = AutovalidateMode.onUserInteraction;
         if (isPassError) {
-          _passwordErrorFromServer = _getLocalizedError(errorMessage, l10n);
+          _passwordErrorFromServer = localizedError;
         } else if (isEmailErr) {
-          _emailErrorFromServer = _getLocalizedError(errorMessage, l10n);
+          _emailErrorFromServer = localizedError;
         }
       });
 
@@ -246,16 +256,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           }
         });
       });
-
-      // ALWAYS show snackbar for visibility - this is the primary user feedback
-      // Use longer duration (10 seconds) so user has time to read
-      if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          _getLocalizedError(errorMessage, l10n),
-          duration: const Duration(seconds: 10),
-        );
-      }
     }
   }
 

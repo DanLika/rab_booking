@@ -13590,6 +13590,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to delete account. Please try again or contact support.'**
   String get deleteAccountError;
+
+  /// No description provided for @subscriptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get subscriptionTitle;
+
+  /// No description provided for @subscriptionErrorLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading subscription status: {error}'**
+  String subscriptionErrorLoading(String error);
+
+  /// No description provided for @subscriptionLoginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log in to view subscription'**
+  String get subscriptionLoginRequired;
+
+  /// No description provided for @subscriptionAvailablePlans.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Plans'**
+  String get subscriptionAvailablePlans;
+
+  /// No description provided for @subscriptionCurrentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Status'**
+  String get subscriptionCurrentStatus;
+
+  /// No description provided for @subscriptionExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires: {date}'**
+  String subscriptionExpires(String date);
+
+  /// No description provided for @subscriptionFreeTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Trial'**
+  String get subscriptionFreeTrial;
+
+  /// No description provided for @subscriptionFreeTrialPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'€0'**
+  String get subscriptionFreeTrialPrice;
+
+  /// No description provided for @subscriptionFreeTrialPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
+  String get subscriptionFreeTrialPeriod;
+
+  /// No description provided for @subscriptionFeatureProperties2.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 2 properties'**
+  String get subscriptionFeatureProperties2;
+
+  /// No description provided for @subscriptionFeatureBasicBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic booking management'**
+  String get subscriptionFeatureBasicBooking;
+
+  /// No description provided for @subscriptionFeatureEmailNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Email notifications'**
+  String get subscriptionFeatureEmailNotifications;
+
+  /// No description provided for @subscriptionFeatureCalendarSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar sync'**
+  String get subscriptionFeatureCalendarSync;
+
+  /// No description provided for @subscriptionPlanPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro'**
+  String get subscriptionPlanPro;
+
+  /// No description provided for @subscriptionProPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'€19'**
+  String get subscriptionProPrice;
+
+  /// No description provided for @subscriptionProPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'per month'**
+  String get subscriptionProPeriod;
+
+  /// No description provided for @subscriptionFeatureUnlimitedProperties.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited properties'**
+  String get subscriptionFeatureUnlimitedProperties;
+
+  /// No description provided for @subscriptionFeatureAdvancedAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced analytics'**
+  String get subscriptionFeatureAdvancedAnalytics;
+
+  /// No description provided for @subscriptionFeaturePrioritySupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority support'**
+  String get subscriptionFeaturePrioritySupport;
+
+  /// No description provided for @subscriptionFeatureCustomBranding.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom branding'**
+  String get subscriptionFeatureCustomBranding;
+
+  /// No description provided for @subscriptionFeatureApiAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'API access'**
+  String get subscriptionFeatureApiAccess;
+
+  /// No description provided for @subscriptionFeatureMultiUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-user access'**
+  String get subscriptionFeatureMultiUser;
+
+  /// No description provided for @subscriptionCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get subscriptionCurrent;
+
+  /// No description provided for @subscriptionRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'RECOMMENDED'**
+  String get subscriptionRecommended;
+
+  /// No description provided for @subscriptionUpgradeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade Now'**
+  String get subscriptionUpgradeNow;
+
+  /// No description provided for @subscriptionFaq.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently Asked Questions'**
+  String get subscriptionFaq;
+
+  /// No description provided for @subscriptionFaqTrialEndQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'What happens when my trial ends?'**
+  String get subscriptionFaqTrialEndQuestion;
+
+  /// No description provided for @subscriptionFaqTrialEndAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will switch to read-only mode. You can still view your data, but you won\'t be able to create new bookings or access premium features until you upgrade.'**
+  String get subscriptionFaqTrialEndAnswer;
+
+  /// No description provided for @subscriptionFaqCancelQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I cancel anytime?'**
+  String get subscriptionFaqCancelQuestion;
+
+  /// No description provided for @subscriptionFaqCancelAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes! You can cancel your subscription at any time. Your access will continue until the end of your billing period.'**
+  String get subscriptionFaqCancelAnswer;
+
+  /// No description provided for @subscriptionFaqDataSafeQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Is my data safe?'**
+  String get subscriptionFaqDataSafeQuestion;
+
+  /// No description provided for @subscriptionFaqDataSafeAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.'**
+  String get subscriptionFaqDataSafeAnswer;
+
+  /// No description provided for @subscriptionComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming Soon'**
+  String get subscriptionComingSoon;
+
+  /// No description provided for @subscriptionComingSoonMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment integration is coming soon! For now, please contact us to upgrade your account.'**
+  String get subscriptionComingSoonMessage;
+
+  /// No description provided for @profileSubscriptionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your plan'**
+  String get profileSubscriptionSubtitle;
 }
 
 class _AppLocalizationsDelegate

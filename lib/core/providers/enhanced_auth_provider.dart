@@ -197,10 +197,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         }
 
         // Check email verification status (respects feature flag)
+        // SECURITY FIX: Use ONLY Firebase Auth's emailVerified status
+        // Do NOT trust Firestore userModel.emailVerified as it can be stale or manipulated
         final requiresVerification =
             AuthFeatureFlags.requireEmailVerification &&
-            !firebaseUser.emailVerified &&
-            !userModel.emailVerified;
+            !firebaseUser.emailVerified;
 
         // Check onboarding status
         final requiresOnboarding = userModel.needsOnboarding;
@@ -631,9 +632,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         );
       }
 
+      // SECURITY: Set state with requiresEmailVerification flag
+      // This ensures newly registered users are redirected to email verification screen
       state = EnhancedAuthState(
         firebaseUser: credential.user,
         userModel: userModel,
+        requiresEmailVerification: AuthFeatureFlags.requireEmailVerification,
       );
     } on FirebaseAuthException catch (e) {
       // Determine error message, with rate limit check wrapped in try-catch

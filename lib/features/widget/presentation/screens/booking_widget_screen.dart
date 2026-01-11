@@ -3361,6 +3361,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           await _navigateToConfirmationAndCleanup(
             booking: booking,
             paymentMethod: paymentMethod,
+            roomPrice: finalCalculation.roomPrice,
+            additionalServicesTotal: finalCalculation.additionalServicesTotal,
           );
       }
     } on BookingConflictException catch (e) {
@@ -3404,6 +3406,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Future<void> _navigateToConfirmationAndCleanup({
     required BookingModel booking,
     required String paymentMethod,
+    double? roomPrice,
+    double? additionalServicesTotal,
   }) async {
     if (!mounted) return;
 
@@ -3437,6 +3441,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           checkIn: booking.checkIn,
           checkOut: booking.checkOut,
           totalPrice: booking.totalPrice,
+          roomPrice: roomPrice,
+          additionalServicesTotal: additionalServicesTotal,
           nights: booking.checkOut.difference(booking.checkIn).inDays,
           guests: booking.guestCount,
           propertyName: _unit?.name ?? 'Property',

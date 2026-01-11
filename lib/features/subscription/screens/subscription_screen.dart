@@ -318,15 +318,19 @@ class _PlanCard extends StatelessWidget {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     if (isCurrentPlan)
                       Container(
+                        margin: const EdgeInsets.only(left: 8),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 4,
@@ -347,8 +351,10 @@ class _PlanCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  spacing: 4,
+                  runSpacing: 4,
                   children: [
                     Text(
                       price,
@@ -356,7 +362,6 @@ class _PlanCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 4),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(

@@ -36,6 +36,7 @@ import '../../features/widget/data/repositories/firebase_widget_settings_reposit
 import '../../core/services/booking_service.dart';
 import '../../core/services/stripe_service.dart';
 import '../../core/services/tab_communication_service.dart';
+import '../../core/services/secure_storage_service.dart';
 import '../../features/widget/domain/services/calendar_data_service.dart';
 
 // iCal Repository (widget needs for calendar sync status display)
@@ -117,6 +118,11 @@ final bookingServiceProvider = Provider<BookingService>((ref) {
 final stripeServiceProvider = Provider<StripeService>((ref) {
   final functions = ref.watch(firebaseFunctionsProvider);
   return StripeService(functions: functions);
+});
+
+/// Secure Storage Service provider
+final secureStorageServiceProvider = Provider<SecureStorageService>((ref) {
+  return SecureStorageService();
 });
 
 /// Calendar Data Service provider

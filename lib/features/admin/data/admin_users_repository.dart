@@ -2,10 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/user_model.dart';
+import '../../../shared/providers/widget_repository_providers.dart';
 
 /// Repository for admin user management operations
 class AdminUsersRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+
+  AdminUsersRepository(this._firestore);
 
   /// Get all users with owner role (paginated)
   Future<List<UserModel>> getOwners({
@@ -146,7 +149,7 @@ class AdminUsersRepository {
 
 /// Provider for admin users repository
 final adminUsersRepositoryProvider = Provider<AdminUsersRepository>((ref) {
-  return AdminUsersRepository();
+  return AdminUsersRepository(ref.watch(firestoreProvider));
 });
 
 /// Provider for owners list

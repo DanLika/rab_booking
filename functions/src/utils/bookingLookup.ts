@@ -27,7 +27,7 @@ export interface BookingLookupResult {
  *
  * @param bookingId - The booking document ID
  * @param ownerId - Optional owner ID to speed up lookup
- * @returns BookingLookupResult or null if not found
+ * @return BookingLookupResult or null if not found
  */
 export async function findBookingById(
   bookingId: string,
@@ -155,7 +155,7 @@ export async function findBookingById(
  * Find a booking by booking_reference field
  *
  * @param bookingReference - The booking reference string (e.g., "BB-XXXX")
- * @returns BookingLookupResult or null if not found
+ * @return BookingLookupResult or null if not found
  */
 export async function findBookingByReference(
   bookingReference: string

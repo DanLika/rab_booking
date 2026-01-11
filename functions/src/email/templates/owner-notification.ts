@@ -130,8 +130,8 @@ export function generateOwnerNotificationEmailV2(
 
   if (paymentMethod) {
     const methodText = paymentMethod === "stripe" ? "Kartica" :
-                       paymentMethod === "bank_transfer" ? "Bankovni prijenos" :
-                       "Plaćanje na mjestu";
+      paymentMethod === "bank_transfer" ? "Bankovni prijenos" :
+        "Plaćanje na mjestu";
     paymentDetailsRows.push({label: "Način plaćanja", value: methodText});
   }
 

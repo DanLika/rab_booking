@@ -42,10 +42,10 @@ export function getBaseStyles(): string {
         text-decoration: none;
       }
 
-      /* Responsive: consistent 8px padding on all screen sizes */
+      /* Responsive: consistent 12px padding on all screen sizes */
       @media only screen and (max-width: 600px) {
         .email-wrapper {
-          padding: 8px !important;
+          padding: 12px !important;
         }
       }
     </style>

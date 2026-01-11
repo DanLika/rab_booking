@@ -83,7 +83,7 @@ export async function createBookingNotification(
     title: titles[action] || "Obavještenje",
     message: messages[action] || "Nova aktivnost na rezervaciji.",
     bookingId: bookingId,
-    metadata: {guestName, action},  // BUG-011 FIX: Include action in metadata for idempotency
+    metadata: {guestName, action}, // BUG-011 FIX: Include action in metadata for idempotency
   });
 }
 

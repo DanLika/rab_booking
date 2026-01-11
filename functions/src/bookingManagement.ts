@@ -179,7 +179,7 @@ export const onBookingCreated = onDocumentCreated(
       logInfo("Booking uses Stripe or other instant method, skipping initial email", {
         bookingId: event.params.bookingId,
         paymentMethod: booking.payment_method,
-        requiresApproval
+        requiresApproval,
       });
       return;
     }
@@ -189,7 +189,7 @@ export const onBookingCreated = onDocumentCreated(
       bookingId: event.params.bookingId,
       reference: booking.booking_reference,
       guest: booking.guest_name,
-      email: booking.guest_email
+      email: booking.guest_email,
     });
 
     try {
@@ -267,7 +267,7 @@ export const onBookingStatusChange = onDocumentUpdated(
       logInfo("Booking status changed", {
         bookingId: event.params.bookingId,
         from: before.status,
-        to: after.status
+        to: after.status,
       });
 
       // If booking was approved (pending -> confirmed with approved_at timestamp)

@@ -29,7 +29,7 @@ const PASSWORD_HISTORY_SIZE = 5;
  * Hash a password using SHA-256
  *
  * @param password - Plain text password
- * @returns SHA-256 hash as hex string
+ * @return SHA-256 hash as hex string
  */
 function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");

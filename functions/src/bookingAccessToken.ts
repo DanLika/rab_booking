@@ -32,12 +32,12 @@ const HASH_REGEX = /^[0-9a-f]{64}$/i; // 64 hex chars
  * - base64url encoding = URL-safe, no padding
  * - SHA-256 hashing for storage (prevents token leakage from DB)
  *
- * @returns Object with plaintext token (for email) and hashed token (for DB)
+ * @return Object with plaintext token (for email) and hashed token (for DB)
  */
 export function generateBookingAccessToken(): {
   token: string;
   hashedToken: string;
-} {
+  } {
   // Generate random token using configured entropy
   // base64url encoding produces 43 characters (32 bytes → 43 chars)
   const token = crypto
@@ -107,7 +107,7 @@ export function calculateTokenExpiration(
  * @param providedToken - Token from user (plaintext from URL/email)
  * @param storedHash - SHA-256 hash from database
  * @param clientIp - Client IP address for rate limiting (optional)
- * @returns true if token matches hash, false otherwise
+ * @return true if token matches hash, false otherwise
  */
 export function verifyAccessToken(
   providedToken: string | null | undefined,

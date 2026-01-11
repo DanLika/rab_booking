@@ -9,7 +9,7 @@ import {getResendClient} from "./emailService";
 
 /**
  * Overbooking Notifications Service
- * 
+ *
  * Sends notifications (email, SMS, push, Firestore) when overbooking is detected
  */
 
@@ -80,12 +80,12 @@ export async function sendOverbookingNotifications(
         viewInAppUrl,
       }),
       createOverbookingFirestoreNotification(conflict),
-      ownerPhone
-        ? sendOverbookingSmsNotification(conflict, {
-            ownerPhone,
-            viewInAppUrl,
-          })
-        : Promise.resolve(),
+      ownerPhone ?
+        sendOverbookingSmsNotification(conflict, {
+          ownerPhone,
+          viewInAppUrl,
+        }) :
+        Promise.resolve(),
     ]);
 
     logSuccess("[Overbooking Notifications] All notifications sent", {
@@ -139,7 +139,7 @@ async function sendOverbookingEmailNotification(
         const resendClient = getResendClient();
         const fromEmail = process.env.FROM_EMAIL || "";
         const fromName = process.env.FROM_NAME || "BookBed";
-        
+
         await sendOverbookingDetectedEmailV2(
           resendClient,
           emailParams,
@@ -240,9 +240,9 @@ async function sendOverbookingSmsNotification(
 ): Promise<void> {
   try {
     const conflictDateRange =
-      conflict.conflictDates.length > 0
-        ? `${conflict.conflictDates[0].toLocaleDateString()} - ${conflict.conflictDates[conflict.conflictDates.length - 1].toLocaleDateString()}`
-        : "Unknown dates";
+      conflict.conflictDates.length > 0 ?
+        `${conflict.conflictDates[0].toLocaleDateString()} - ${conflict.conflictDates[conflict.conflictDates.length - 1].toLocaleDateString()}` :
+        "Unknown dates";
 
     const message = `⚠️ Overbooking: ${conflict.unitName}, ${conflictDateRange}\n` +
       `Conflict: ${conflict.booking1.guestName} vs ${conflict.booking2.guestName}\n` +

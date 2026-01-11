@@ -1,6 +1,5 @@
-import {db} from "../firebase";
+import {db, admin} from "../firebase";
 import {logError} from "../logger";
-import {admin} from "../firebase";
 
 /**
  * Email tracking record for idempotency
@@ -59,7 +58,7 @@ export interface PropertyUnitNames {
  * @param unitId - Unit document ID (optional)
  * @param context - Context for error logging (e.g., 'autoCancelExpired', 'onStatusChange')
  * @param fetchFullData - If true, returns full propertyData/unitData objects
- * @returns PropertyUnitNames with safe fallback values
+ * @return PropertyUnitNames with safe fallback values
  *
  * @example
  * // Just names (for emails)
@@ -81,8 +80,8 @@ export interface PropertyUnitNames {
 export async function fetchPropertyAndUnitDetails(
   propertyId: string,
   unitId?: string,
-  context: string = "unknown",
-  fetchFullData: boolean = false
+  context = "unknown",
+  fetchFullData = false
 ): Promise<PropertyUnitNames> {
   let propertyName = "Property"; // Safe fallback
   let propertyData: any = null;

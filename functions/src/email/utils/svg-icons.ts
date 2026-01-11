@@ -128,19 +128,19 @@ export function getIcon(
   _color?: string
 ): string {
   switch (name) {
-    case "success": return getSuccessIcon(size);
-    case "info": return getInfoIcon(size);
-    case "warning": return getWarningIcon(size);
-    case "error": return getErrorIcon(size);
-    case "calendar": return getCalendarIcon(size);
-    case "money": return getMoneyIcon(size);
-    case "home": return getHomeIcon(size);
-    case "user": return getUserIcon(size);
-    case "email": return getEmailIcon(size);
-    case "clock": return getClockIcon(size);
-    case "bell": return getBellIcon(size);
-    case "approved": return getApprovedIcon(size);
-    case "refund": return getRefundIcon(size);
-    default: return "";
+  case "success": return getSuccessIcon(size);
+  case "info": return getInfoIcon(size);
+  case "warning": return getWarningIcon(size);
+  case "error": return getErrorIcon(size);
+  case "calendar": return getCalendarIcon(size);
+  case "money": return getMoneyIcon(size);
+  case "home": return getHomeIcon(size);
+  case "user": return getUserIcon(size);
+  case "email": return getEmailIcon(size);
+  case "clock": return getClockIcon(size);
+  case "bell": return getBellIcon(size);
+  case "approved": return getApprovedIcon(size);
+  case "refund": return getRefundIcon(size);
+  default: return "";
   }
 }

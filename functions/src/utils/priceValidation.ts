@@ -43,7 +43,7 @@ interface PriceCalculationResult {
  * @param checkOutDate - Check-out date (Firestore Timestamp)
  * @param propertyId - The property ID (REQUIRED for subcollection path)
  * @param transaction - Optional Firestore transaction for atomic reads
- * @returns Price calculation result with total and breakdown
+ * @return Price calculation result with total and breakdown
  * @throws HttpsError if pricing not configured or invalid
  */
 export async function calculateBookingPrice(
@@ -137,7 +137,7 @@ export async function calculateBookingPrice(
   let totalPrice = 0;
 
   // Iterate through each night in the booking range
-  let currentDate = new Date(checkInDate.toDate());
+  const currentDate = new Date(checkInDate.toDate());
   currentDate.setUTCHours(0, 0, 0, 0);
 
   for (let i = 0; i < expectedNights; i++) {
@@ -242,7 +242,7 @@ export async function validateBookingPrice(
   checkOutDate: admin.firestore.Timestamp,
   clientTotalPrice: number,
   propertyId: string,
-  servicesTotal: number = 0,
+  servicesTotal = 0,
   transaction?: admin.firestore.Transaction
 ): Promise<void> {
   // Validate clientTotalPrice is a valid number
@@ -327,7 +327,7 @@ export async function validateBookingPrice(
     throw new HttpsError(
       "invalid-argument",
       `Price mismatch. Expected €${serverExpectedTotal.toFixed(2)}, received €${clientTotalPrice.toFixed(2)}. ` +
-      `Please refresh the page to see current pricing.`
+      "Please refresh the page to see current pricing."
     );
   }
 

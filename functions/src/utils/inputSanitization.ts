@@ -15,9 +15,9 @@
 /**
  * Maximum input lengths (DoS protection)
  */
-const MAX_TEXT_LENGTH = 10000;        // Booking notes, property descriptions
-const MAX_EMAIL_LENGTH = 254;         // RFC 5321 standard
-const MAX_PHONE_INPUT_LENGTH = 100;   // Raw input before sanitization (final max = 20)
+const MAX_TEXT_LENGTH = 10000; // Booking notes, property descriptions
+const MAX_EMAIL_LENGTH = 254; // RFC 5321 standard
+const MAX_PHONE_INPUT_LENGTH = 100; // Raw input before sanitization (final max = 20)
 
 /**
  * HTML entity map for safe encoding
@@ -27,7 +27,7 @@ const HTML_ENTITY_MAP: Record<string, string> = {
   "&": "&amp;",
   "<": "&lt;",
   ">": "&gt;",
-  '"': "&quot;",
+  "\"": "&quot;",
   "'": "&#x27;",
   "/": "&#x2F;",
   "`": "&#x60;",
@@ -148,7 +148,7 @@ function normalizeUnicodeDigits(input: string): string {
  * - Zero-width characters removed - prevents invisible attacks
  *
  * @param input - Text to sanitize (can be null/undefined)
- * @returns Sanitized text or null if empty after sanitization
+ * @return Sanitized text or null if empty after sanitization
  *
  * @example
  * sanitizeText('<script>alert("XSS")</script>')
@@ -202,7 +202,7 @@ export function sanitizeText(
  * - Confusables normalization
  *
  * @param input - Email to sanitize (can be null/undefined)
- * @returns Sanitized lowercase email or null if empty
+ * @return Sanitized lowercase email or null if empty
  */
 export function sanitizeEmail(
   input: string | null | undefined
@@ -251,7 +251,7 @@ export function sanitizeEmail(
  * - Strict validation rules
  *
  * @param input - Phone number to sanitize (can be null/undefined)
- * @returns Sanitized phone number or null if invalid
+ * @return Sanitized phone number or null if invalid
  *
  * @example
  * sanitizePhone('+1 (555) 123-4567') // Returns: '+1 (555) 123-4567'

@@ -14,10 +14,10 @@ import {findBookingById} from "./utils/bookingLookup";
 
 /**
  * Two-Way Sync Engine
- * 
+ *
  * Automatically syncs bookings between BookBed and external platforms
  * (Booking.com, Airbnb) to prevent overbooking.
- * 
+ *
  * Features:
  * - Automatic date blocking when booking is created
  * - Automatic date unblocking when booking is cancelled
@@ -83,7 +83,7 @@ export const syncBookingToPlatforms = onDocumentWritten(
       // - If booking was cancelled, dates become available on external platforms
       // - This could lead to double-booking if not handled carefully
       // - Consider requiring manual confirmation before unblocking
-      // 
+      //
       // For now, we only unblock on completion (not cancellation) to be safer
       // Cancellation unblocking should be a manual action with warnings
       if (status === "completed") {

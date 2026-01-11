@@ -21,7 +21,7 @@ import {logInfo, logWarn} from "./logger";
  * @param sendEmailFn - Async function that sends the email
  * @param forceIfCritical - If true, sends email even if owner opted out
  *                          (use for critical events that require immediate attention)
- * @returns Promise<boolean> - true if email was sent, false if skipped due to preferences
+ * @return Promise<boolean> - true if email was sent, false if skipped due to preferences
  *
  * @example
  * // Respect preferences for instant bookings

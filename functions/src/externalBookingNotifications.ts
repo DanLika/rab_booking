@@ -8,7 +8,7 @@ import {getResendClient} from "./emailService";
 
 /**
  * External Booking Notifications Service
- * 
+ *
  * Sends notifications when new bookings are synced from external platforms (iCal)
  * Reminds owners to block dates on other platforms
  */
@@ -91,13 +91,13 @@ export async function sendExternalBookingNotifications(
       createExternalBookingFirestoreNotification(booking, {
         otherPlatforms,
       }),
-      ownerPhone
-        ? sendExternalBookingSmsNotification(booking, {
-            ownerPhone,
-            otherPlatforms,
-            viewInAppUrl,
-          })
-        : Promise.resolve(),
+      ownerPhone ?
+        sendExternalBookingSmsNotification(booking, {
+          ownerPhone,
+          otherPlatforms,
+          viewInAppUrl,
+        }) :
+        Promise.resolve(),
     ]);
 
     logSuccess("[External Booking Notifications] All notifications sent", {
@@ -164,9 +164,9 @@ async function sendExternalBookingEmailNotification(
             </div>
             <div style="text-align: center; margin: 20px 0;">
               <a href="${options.viewInAppUrl}" class="button">View in App</a>
-              ${Object.entries(options.blockUrls).map(([platform, url]) => 
-                `<a href="${url}" class="button">Block on ${platform === "booking_com" ? "Booking.com" : "Airbnb"}</a>`
-              ).join("")}
+              ${Object.entries(options.blockUrls).map(([platform, url]) =>
+    `<a href="${url}" class="button">Block on ${platform === "booking_com" ? "Booking.com" : "Airbnb"}</a>`
+  ).join("")}
             </div>
           </div>
         </div>

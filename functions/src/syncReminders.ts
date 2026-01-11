@@ -9,10 +9,10 @@ import {getResendClient} from "./emailService";
 
 /**
  * Sync Reminders Service
- * 
+ *
  * Sends reminders to owners to manually block dates on external platforms
  * when bookings are created but API sync is not available
- * 
+ *
  * Runs every hour to check for recent bookings that need blocking
  */
 
@@ -56,7 +56,7 @@ export const scheduledSyncReminders = onSchedule(
       // PERFORMANCE: Solve N+1 query problem by batching fetches
       const unitIds = [...new Set(
         bookingsSnapshot.docs
-          .map(doc => doc.data().unit_id)
+          .map((doc) => doc.data().unit_id)
           .filter(Boolean)
       )];
 
@@ -69,7 +69,7 @@ export const scheduledSyncReminders = onSchedule(
           .where("status", "==", "active")
           .get();
 
-        connectionsSnapshot.docs.forEach(doc => {
+        connectionsSnapshot.docs.forEach((doc) => {
           const data = doc.data();
           if (!connectionsByUnit.has(data.unit_id)) {
             connectionsByUnit.set(data.unit_id, []);
@@ -89,7 +89,7 @@ export const scheduledSyncReminders = onSchedule(
             .where(admin.firestore.FieldPath.documentId(), "in", chunk)
             .get();
 
-          unitsSnapshot.docs.forEach(doc => {
+          unitsSnapshot.docs.forEach((doc) => {
             unitNames.set(doc.id, doc.data()?.name || "Unknown Unit");
           });
         }
@@ -196,7 +196,7 @@ async function sendSyncReminder(
         .where("status", "==", "active")
         .get();
 
-      connectionsSnapshot.docs.forEach(connDoc => {
+      connectionsSnapshot.docs.forEach((connDoc) => {
         const connData = connDoc.data();
         allConnections.push({
           unitId: connData.unit_id,
@@ -214,16 +214,16 @@ async function sendSyncReminder(
       .map((p) => (p === "booking_com" ? "Booking.com" : "Airbnb"))
       .join(", ");
 
-    const viewInAppUrl = `https://app.bookbed.io/owner/bookings`;
+    const viewInAppUrl = "https://app.bookbed.io/owner/bookings";
 
     // Send all notification types
     await Promise.allSettled([
       sendSyncReminderEmail(ownerId, ownerEmail, ownerName, bookings, platformsText, viewInAppUrl),
       sendSyncReminderPush(ownerId, bookings.length, platformsText, viewInAppUrl),
       createSyncReminderFirestoreNotification(ownerId, bookings.length, platformsText),
-      ownerPhone
-        ? sendSyncReminderSms(ownerId, ownerPhone, bookings.length, platformsText, viewInAppUrl)
-        : Promise.resolve(),
+      ownerPhone ?
+        sendSyncReminderSms(ownerId, ownerPhone, bookings.length, platformsText, viewInAppUrl) :
+        Promise.resolve(),
     ]);
   } catch (error) {
     logError("[Sync Reminders] Error sending reminder", error, {

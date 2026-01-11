@@ -14,29 +14,6 @@ import '../../features/auth/presentation/screens/enhanced_register_screen.dart';
 import '../../features/auth/presentation/screens/email_verification_screen.dart';
 import '../../features/auth/presentation/screens/privacy_policy_screen.dart';
 import '../../features/auth/presentation/screens/terms_conditions_screen.dart';
-import '../../features/owner_dashboard/presentation/providers/owner_properties_provider.dart';
-import '../../features/owner_dashboard/presentation/screens/dashboard_overview_tab.dart';
-import '../../features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/owner_bookings_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/unit_form_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/unit_pricing_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/widget_settings_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/notifications_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/profile_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/edit_profile_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/bank_account_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/change_password_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/notification_settings_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/about_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/platform_connections_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
 import '../../features/widget/presentation/screens/booking_widget_screen.dart';
 import '../../features/widget/presentation/screens/booking_view_screen.dart';
@@ -44,8 +21,68 @@ import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../../shared/widgets/loading_overlay.dart';
+import '../../shared/widgets/deferred_loader.dart';
 import '../providers/enhanced_auth_provider.dart';
-import '../../features/subscription/screens/subscription_screen.dart';
+
+// DEFERRED IMPORTS FOR CODE SPLITTING
+// -----------------------------------------------------------------------------
+import '../../features/owner_dashboard/presentation/screens/dashboard_overview_tab.dart'
+    deferred as dashboard_overview;
+import '../../features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart'
+    deferred as calendar;
+import '../../features/owner_dashboard/presentation/screens/owner_bookings_screen.dart'
+    deferred as bookings;
+
+// Property & Unit Management (Grouped)
+import '../../features/owner_dashboard/presentation/screens/property_form_screen.dart'
+    deferred as property_mgmt;
+import '../../features/owner_dashboard/presentation/screens/unit_form_screen.dart'
+    deferred as property_mgmt;
+import '../../features/owner_dashboard/presentation/screens/unit_pricing_screen.dart'
+    deferred as property_mgmt;
+import '../../features/owner_dashboard/presentation/screens/widget_settings_screen.dart'
+    deferred as property_mgmt;
+import '../../features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart'
+    deferred as property_mgmt;
+import '../../features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart'
+    deferred as property_mgmt;
+
+// Notifications & Profile
+import '../../features/owner_dashboard/presentation/screens/notifications_screen.dart'
+    deferred as profile_mgmt;
+import '../../features/owner_dashboard/presentation/screens/profile_screen.dart'
+    deferred as profile_mgmt;
+import '../../features/owner_dashboard/presentation/screens/edit_profile_screen.dart'
+    deferred as profile_mgmt;
+import '../../features/owner_dashboard/presentation/screens/bank_account_screen.dart'
+    deferred as profile_mgmt;
+import '../../features/owner_dashboard/presentation/screens/change_password_screen.dart'
+    deferred as profile_mgmt;
+import '../../features/owner_dashboard/presentation/screens/notification_settings_screen.dart'
+    deferred as profile_mgmt;
+import '../../features/owner_dashboard/presentation/screens/about_screen.dart'
+    deferred as profile_mgmt;
+import '../../features/subscription/screens/subscription_screen.dart'
+    deferred as profile_mgmt;
+
+// Integrations (Stripe, iCal, API)
+import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart'
+    deferred as integrations;
+import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart'
+    deferred as integrations;
+import '../../features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart'
+    deferred as integrations;
+import '../../features/owner_dashboard/presentation/screens/platform_connections_screen.dart'
+    deferred as integrations;
+
+// Guides
+import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart'
+    deferred as guides;
+import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart'
+    deferred as guides;
+
+// Providers needed for Loaders (must be imported normally)
+import '../../features/owner_dashboard/presentation/providers/owner_properties_provider.dart';
 
 /// Helper class to convert Stream to Listenable for GoRouter
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -168,12 +205,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
 
       // Allow public access to embed, booking, calendar, and view routes (no auth required)
       // Also allow root path OR /login with widget query params (property, unit, confirmation)
-      // This handles Stripe return URLs which may have #/login hash but widget params in query string
-      //
-      // IMPORTANT: With hash-based routing, query params BEFORE the # are NOT in state.uri.queryParameters
-      // URL: http://localhost:8181/?property=xxx#/login
-      //      ^^^^^^^^^^^^^^^^^^^^^^^^ Uri.base  ^^^^^^ state.uri (GoRouter)
-      // So we must check Uri.base for widget params from Stripe return URLs
       final browserUri = Uri.base;
       final hasWidgetParams =
           browserUri.queryParameters.containsKey('property') ||
@@ -200,9 +231,8 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // Redirect root to appropriate page (ALWAYS, even during loading)
-      // This ensures app.bookbed.io always redirects correctly
       if (state.matchedLocation == '/') {
-        // Authenticated → overview (even if still loading, we know user is authenticated)
+        // Authenticated → overview
         if (isAuthenticated) {
           if (kDebugMode) {
             LoggingService.log(
@@ -213,8 +243,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           return OwnerRoutes.overview;
         }
 
-        // Not authenticated → login (ALWAYS redirect, even during initial loading)
-        // This fixes the issue where app.bookbed.io shows "page unavailable"
+        // Not authenticated → login
         if (kDebugMode) {
           LoggingService.log(
             '  → Redirecting / to login (not authenticated, isLoading=$isLoading)',
@@ -224,9 +253,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return OwnerRoutes.login;
       }
 
-      // FIX Q4: Don't redirect while auth operation is in progress
-      // (prevents Register → Login flash during async registration)
-      // BUT: Only apply this to non-root routes (root is handled above)
+      // Prevent auth flash during loading
       if (isLoading) {
         if (kDebugMode) {
           LoggingService.log(
@@ -259,8 +286,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return OwnerRoutes.overview;
       }
 
-      // SECURITY: Email verification enforcement for authenticated users
-      // Block access to protected routes if email is not verified
+      // SECURITY: Email verification enforcement
       final requiresEmailVerification = authState.requiresEmailVerification;
       final isEmailVerificationRoute =
           state.matchedLocation == OwnerRoutes.emailVerification;
@@ -282,18 +308,13 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return OwnerRoutes.emailVerification;
       }
 
-      if (kDebugMode) {
-        LoggingService.log('  → No redirect needed', tag: 'ROUTER');
-      }
       return null;
     },
     routes: [
-      // ROOT ROUTE - Shows widget if has params, otherwise loader for redirect
+      // ROOT ROUTE
       GoRoute(
         path: '/',
         builder: (context, state) {
-          // Check if this is a widget URL (has property/unit/confirmation params)
-          // IMPORTANT: With hash routing, query params are BEFORE the #, so use Uri.base
           final browserUri = Uri.base;
           final hasWidgetParams =
               browserUri.queryParameters.containsKey('property') ||
@@ -304,26 +325,19 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
               state.uri.queryParameters.containsKey('confirmation');
 
           if (hasWidgetParams) {
-            // Show booking widget for embed URLs and Stripe return URLs
             return const BookingWidgetScreen();
           }
 
-          // Show loading overlay while redirect determines where to go
-          // (prevents 404 flash during Login → Dashboard transition)
           return const Scaffold(body: LoadingOverlay(message: 'Loading...'));
         },
       ),
 
       // PUBLIC ROUTES (No authentication required)
-      // Public booking widget (for iframe embedding)
-      // URL: /?property=PROPERTY_ID&unit=UNIT_ID#/calendar
       GoRoute(
         path: '/calendar',
         builder: (context, state) => const BookingWidgetScreen(),
       ),
 
-      // Public booking lookup (from email link)
-      // URL: /view?ref=BOOKING_REF&email=EMAIL&token=TOKEN
       GoRoute(
         path: '/view',
         builder: (context, state) {
@@ -333,7 +347,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           return BookingViewScreen(bookingRef: ref, email: email, token: token);
         },
         routes: [
-          // Booking details sub-route
           GoRoute(
             path: 'details',
             builder: (context, state) {
@@ -342,9 +355,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
                 return const NotFoundScreen();
               }
 
-              // Support both old and new format for backwards compatibility
               if (extra is Map<String, dynamic>) {
-                // New format: {booking: BookingDetailsModel, widgetSettings: WidgetSettings?}
                 final booking = extra['booking'];
                 final widgetSettings = extra['widgetSettings'];
                 if (booking == null) {
@@ -355,7 +366,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
                   widgetSettings: widgetSettings as dynamic,
                 );
               } else {
-                // Old format: BookingDetailsModel directly
                 return BookingDetailsScreen(booking: extra as dynamic);
               }
             },
@@ -363,15 +373,10 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Auth routes - Fade transition for smooth auth flow
+      // Auth routes (NOT deferred, needed fast)
       GoRoute(
         path: OwnerRoutes.login,
         pageBuilder: (context, state) {
-          // Check if this is a Stripe return URL with widget params
-          // URL: /?property=...&confirmation=...#/login
-          // In this case, show the booking widget instead of login
-          //
-          // IMPORTANT: With hash routing, query params are BEFORE the #, so use Uri.base
           final browserUri = Uri.base;
           final hasWidgetParams =
               browserUri.queryParameters.containsKey('property') ||
@@ -382,7 +387,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
               state.uri.queryParameters.containsKey('confirmation');
 
           if (hasWidgetParams) {
-            // Show booking widget for Stripe return URLs
             return PageTransitions.none(
               key: state.pageKey,
               child: const BookingWidgetScreen(),
@@ -431,45 +435,55 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // Owner main screens - Fade transition for drawer navigation
+      // Owner main screens - DEFERRED LOADING APPLIED
       GoRoute(
         path: OwnerRoutes.overview,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
-          child: const DashboardOverviewTab(),
+          child: DeferredLoader(
+            loadLibrary: dashboard_overview.loadLibrary,
+            builder: () => dashboard_overview.DashboardOverviewTab(),
+          ),
         ),
       ),
-      // Properties route redirects to unit-hub (property management is now in unit-hub)
       GoRoute(
         path: OwnerRoutes.properties,
         redirect: (context, state) => OwnerRoutes.unitHub,
       ),
-      // Calendar route
       GoRoute(
         path: OwnerRoutes.calendarTimeline,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
-          child: const OwnerTimelineCalendarScreen(),
+          child: DeferredLoader(
+            loadLibrary: calendar.loadLibrary,
+            builder: () => calendar.OwnerTimelineCalendarScreen(),
+          ),
         ),
       ),
       GoRoute(
         path: OwnerRoutes.bookings,
         pageBuilder: (context, state) {
           final bookingId = state.uri.queryParameters['bookingId'];
-          // FIXED BUG #7: Use unique key based on bookingId to prevent widget state reuse
           return PageTransitions.fade(
             key: ValueKey('bookings_${bookingId ?? "none"}'),
-            child: OwnerBookingsScreen(initialBookingId: bookingId),
+            child: DeferredLoader(
+              loadLibrary: bookings.loadLibrary,
+              builder: () =>
+                  bookings.OwnerBookingsScreen(initialBookingId: bookingId),
+            ),
           );
         },
       ),
 
-      // Property management routes - SlideUp for new, SlideRight for edit
+      // Property management routes - DEFERRED
       GoRoute(
         path: OwnerRoutes.propertyNew,
         pageBuilder: (context, state) => PageTransitions.slideUp(
           key: state.pageKey,
-          child: const PropertyFormScreen(),
+          child: DeferredLoader(
+            loadLibrary: property_mgmt.loadLibrary,
+            builder: () => property_mgmt.PropertyFormScreen(),
+          ),
         ),
       ),
       GoRoute(
@@ -483,14 +497,18 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Unit management routes
+      // Unit management routes - DEFERRED
       GoRoute(
         path: OwnerRoutes.units,
         pageBuilder: (context, state) {
           final propertyId = state.uri.queryParameters['propertyId'];
           return PageTransitions.fade(
             key: state.pageKey,
-            child: UnifiedUnitHubScreen(initialPropertyFilter: propertyId),
+            child: DeferredLoader(
+              loadLibrary: property_mgmt.loadLibrary,
+              builder: () => property_mgmt.UnifiedUnitHubScreen(
+                  initialPropertyFilter: propertyId),
+            ),
           );
         },
       ),
@@ -500,7 +518,11 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           final propertyId = state.uri.queryParameters['propertyId'] ?? '';
           return PageTransitions.slideUp(
             key: state.pageKey,
-            child: UnitFormScreen(propertyId: propertyId),
+            child: DeferredLoader(
+              loadLibrary: property_mgmt.loadLibrary,
+              builder: () =>
+                  property_mgmt.UnitFormScreen(propertyId: propertyId),
+            ),
           );
         },
       ),
@@ -535,19 +557,23 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Unified Unit Hub route - Fade for drawer navigation
+      // Unified Unit Hub route - DEFERRED
       GoRoute(
         path: OwnerRoutes.unitHub,
         pageBuilder: (context, state) {
           final propertyId = state.uri.queryParameters['propertyId'];
           return PageTransitions.fade(
             key: state.pageKey,
-            child: UnifiedUnitHubScreen(initialPropertyFilter: propertyId),
+            child: DeferredLoader(
+              loadLibrary: property_mgmt.loadLibrary,
+              builder: () => property_mgmt.UnifiedUnitHubScreen(
+                  initialPropertyFilter: propertyId),
+            ),
           );
         },
       ),
 
-      // Unit Wizard routes - SlideUp for modal-like wizard experience
+      // Unit Wizard routes - DEFERRED
       GoRoute(
         path: OwnerRoutes.unitWizard,
         pageBuilder: (context, state) {
@@ -555,9 +581,12 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           final duplicateFromId = state.uri.queryParameters['duplicateFromId'];
           return PageTransitions.slideUp(
             key: state.pageKey,
-            child: UnitWizardScreen(
-              propertyId: propertyId,
-              duplicateFromId: duplicateFromId,
+            child: DeferredLoader(
+              loadLibrary: property_mgmt.loadLibrary,
+              builder: () => property_mgmt.UnitWizardScreen(
+                propertyId: propertyId,
+                duplicateFromId: duplicateFromId,
+              ),
             ),
           );
         },
@@ -568,74 +597,99 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           final unitId = state.pathParameters['id'];
           return PageTransitions.slideUp(
             key: state.pageKey,
-            child: UnitWizardScreen(unitId: unitId),
+            child: DeferredLoader(
+              loadLibrary: property_mgmt.loadLibrary,
+              builder: () => property_mgmt.UnitWizardScreen(unitId: unitId),
+            ),
           );
         },
       ),
 
-      // Notifications route - ScaleFade for emphasis
+      // Notifications route - DEFERRED
       GoRoute(
         path: OwnerRoutes.notifications,
         pageBuilder: (context, state) => PageTransitions.scaleFade(
           key: state.pageKey,
-          child: const NotificationsScreen(),
+          child: DeferredLoader(
+            loadLibrary: profile_mgmt.loadLibrary,
+            builder: () => profile_mgmt.NotificationsScreen(),
+          ),
         ),
       ),
 
-      // Profile routes - Fade for main, SlideRight for sub-pages
+      // Profile routes - DEFERRED
       GoRoute(
         path: OwnerRoutes.profile,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
-          child: const ProfileScreen(),
+          child: DeferredLoader(
+            loadLibrary: profile_mgmt.loadLibrary,
+            builder: () => profile_mgmt.ProfileScreen(),
+          ),
         ),
       ),
       GoRoute(
         path: OwnerRoutes.profileEdit,
         pageBuilder: (context, state) => PageTransitions.slideRight(
           key: state.pageKey,
-          child: const EditProfileScreen(),
+          child: DeferredLoader(
+            loadLibrary: profile_mgmt.loadLibrary,
+            builder: () => profile_mgmt.EditProfileScreen(),
+          ),
         ),
       ),
       GoRoute(
         path: OwnerRoutes.profileChangePassword,
         pageBuilder: (context, state) => PageTransitions.slideRight(
           key: state.pageKey,
-          child: const ChangePasswordScreen(),
+          child: DeferredLoader(
+            loadLibrary: profile_mgmt.loadLibrary,
+            builder: () => profile_mgmt.ChangePasswordScreen(),
+          ),
         ),
       ),
       GoRoute(
         path: OwnerRoutes.profileNotifications,
         pageBuilder: (context, state) => PageTransitions.slideRight(
           key: state.pageKey,
-          child: const NotificationSettingsScreen(),
+          child: DeferredLoader(
+            loadLibrary: profile_mgmt.loadLibrary,
+            builder: () => profile_mgmt.NotificationSettingsScreen(),
+          ),
         ),
       ),
       GoRoute(
         path: OwnerRoutes.about,
         pageBuilder: (context, state) => PageTransitions.slideRight(
           key: state.pageKey,
-          child: const AboutScreen(),
+          child: DeferredLoader(
+            loadLibrary: profile_mgmt.loadLibrary,
+            builder: () => profile_mgmt.AboutScreen(),
+          ),
         ),
       ),
       GoRoute(
         path: OwnerRoutes.subscription,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
-          child: const SubscriptionScreen(),
+          child: DeferredLoader(
+            loadLibrary: profile_mgmt.loadLibrary,
+            builder: () => profile_mgmt.SubscriptionScreen(),
+          ),
         ),
       ),
 
-      // Integrations routes - Fade for drawer navigation
+      // Integrations routes - DEFERRED
       GoRoute(
         path: OwnerRoutes.stripeIntegration,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
-          child: const StripeConnectSetupScreen(),
+          child: DeferredLoader(
+            loadLibrary: integrations.loadLibrary,
+            builder: () => integrations.StripeConnectSetupScreen(),
+          ),
         ),
       ),
-      // Stripe Connect return/refresh URLs - redirect to Stripe Integration page
-      // These URLs are used by Stripe after onboarding completes or needs refresh
       GoRoute(
         path: OwnerRoutes.stripeReturn,
         redirect: (context, state) => OwnerRoutes.stripeIntegration,
@@ -644,57 +698,73 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.stripeRefresh,
         redirect: (context, state) => OwnerRoutes.stripeIntegration,
       ),
-      // Bank Account (for bank transfer payments)
       GoRoute(
         path: OwnerRoutes.bankAccount,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
-          child: const BankAccountScreen(),
+          child: DeferredLoader(
+            loadLibrary: profile_mgmt.loadLibrary,
+            builder: () => profile_mgmt.BankAccountScreen(),
+          ),
         ),
       ),
-      // iCal Sync Settings (Import)
       GoRoute(
         path: OwnerRoutes.icalImport,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
-          child: const IcalSyncSettingsScreen(),
+          child: DeferredLoader(
+            loadLibrary: integrations.loadLibrary,
+            builder: () => integrations.IcalSyncSettingsScreen(),
+          ),
         ),
       ),
-      // iCal Export List (for owners to export all bookings)
       GoRoute(
         path: OwnerRoutes.icalExportList,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
-          child: const IcalExportListScreen(),
+          child: DeferredLoader(
+            loadLibrary: integrations.loadLibrary,
+            builder: () => integrations.IcalExportListScreen(),
+          ),
         ),
       ),
-      // Platform Connections (API integrations)
       GoRoute(
         path: OwnerRoutes.platformConnections,
         pageBuilder: (context, state) {
           final unitId = state.uri.queryParameters['unit'];
           return PageTransitions.fade(
             key: state.pageKey,
-            child: PlatformConnectionsScreen(initialUnitId: unitId),
+            child: DeferredLoader(
+              loadLibrary: integrations.loadLibrary,
+              builder: () =>
+                  integrations.PlatformConnectionsScreen(initialUnitId: unitId),
+            ),
           );
         },
       ),
 
-      // Guide routes - Fade for drawer navigation
+      // Guide routes - DEFERRED
       GoRoute(
         path: OwnerRoutes.guideEmbedWidget,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
-          child: const EmbedWidgetGuideScreen(),
+          child: DeferredLoader(
+            loadLibrary: guides.loadLibrary,
+            builder: () => guides.EmbedWidgetGuideScreen(),
+          ),
         ),
       ),
       GoRoute(
         path: OwnerRoutes.guideFaq,
-        pageBuilder: (context, state) =>
-            PageTransitions.fade(key: state.pageKey, child: const FAQScreen()),
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: DeferredLoader(
+            loadLibrary: guides.loadLibrary,
+            builder: () => guides.FAQScreen(),
+          ),
+        ),
       ),
 
-      // Cookies Policy route - SlideRight (linked from auth screens)
       GoRoute(
         path: OwnerRoutes.cookiesPolicy,
         pageBuilder: (context, state) => PageTransitions.slideRight(
@@ -703,7 +773,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // 404 - No transition
       GoRoute(
         path: OwnerRoutes.notFound,
         pageBuilder: (context, state) => PageTransitions.none(
@@ -716,6 +785,9 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
     errorBuilder: (context, state) => const NotFoundScreen(),
   );
 });
+
+// LOADERS FOR EDIT ROUTES (Handling deferred loading internally)
+// -----------------------------------------------------------------------------
 
 /// Property Edit Loader - Fetches property and loads edit form
 class PropertyEditLoader extends ConsumerWidget {
@@ -733,7 +805,10 @@ class PropertyEditLoader extends ConsumerWidget {
           if (property == null) {
             return const NotFoundScreen();
           }
-          return PropertyFormScreen(property: property);
+          return DeferredLoader(
+            loadLibrary: property_mgmt.loadLibrary,
+            builder: () => property_mgmt.PropertyFormScreen(property: property),
+          );
         },
         loading: () => const Scaffold(
           body: LoadingOverlay(message: 'Loading property...'),
@@ -762,7 +837,11 @@ class UnitEditLoader extends ConsumerWidget {
           if (unit == null) {
             return const NotFoundScreen();
           }
-          return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
+          return DeferredLoader(
+            loadLibrary: property_mgmt.loadLibrary,
+            builder: () =>
+                property_mgmt.UnitFormScreen(propertyId: unit.propertyId, unit: unit),
+          );
         },
         loading: () =>
             const Scaffold(body: LoadingOverlay(message: 'Loading unit...')),
@@ -789,7 +868,10 @@ class UnitPricingLoader extends ConsumerWidget {
           if (unit == null) {
             return const NotFoundScreen();
           }
-          return UnitPricingScreen(unit: unit);
+          return DeferredLoader(
+            loadLibrary: property_mgmt.loadLibrary,
+            builder: () => property_mgmt.UnitPricingScreen(unit: unit),
+          );
         },
         loading: () =>
             const Scaffold(body: LoadingOverlay(message: 'Loading pricing...')),
@@ -816,9 +898,12 @@ class WidgetSettingsLoader extends ConsumerWidget {
           if (unit == null) {
             return const NotFoundScreen();
           }
-          return WidgetSettingsScreen(
-            propertyId: unit.propertyId,
-            unitId: unitId,
+          return DeferredLoader(
+            loadLibrary: property_mgmt.loadLibrary,
+            builder: () => property_mgmt.WidgetSettingsScreen(
+              propertyId: unit.propertyId,
+              unitId: unitId,
+            ),
           );
         },
         loading: () => const Scaffold(

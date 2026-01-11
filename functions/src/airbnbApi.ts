@@ -79,8 +79,8 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
     });
 
     // TODO: Update with actual OAuth authorization URL after getting API access
-    // Placeholder - replace with actual Airbnb OAuth endpoint
-    const authUrl = new URL("https://www.airbnb.com/oauth2/authorize");
+    // Standard Airbnb OAuth endpoint (access restricted)
+    const authUrl = new URL("https://www.airbnb.com/oauth2/auth");
     authUrl.searchParams.set("client_id", AIRBNB_CLIENT_ID);
     authUrl.searchParams.set("redirect_uri", AIRBNB_REDIRECT_URI);
     authUrl.searchParams.set("response_type", "code");

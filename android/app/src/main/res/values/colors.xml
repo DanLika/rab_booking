@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Adaptive Icon Background Color -->
+    <!-- White background for BookBed app icon -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+</resources>

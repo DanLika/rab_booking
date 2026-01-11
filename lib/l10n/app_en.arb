@@ -3254,5 +3254,18 @@
   "subscriptionFaqDataSafeAnswer": "Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.",
   "subscriptionComingSoon": "Coming Soon",
   "subscriptionComingSoonMessage": "Payment integration is coming soon! For now, please contact us to upgrade your account.",
-  "profileSubscriptionSubtitle": "Manage your plan"
+  "profileSubscriptionSubtitle": "Manage your plan",
+
+  "revenueGuideTitle": "Your Path to First Booking",
+  "revenueGuideSubtitle": "Getting started is the hardest part. Here's how to speed up the process:",
+  "revenueGuideActionIcal": "Connect Booking.com / Airbnb",
+  "revenueGuideActionIcalDesc": "Synchronizing your calendar increases visibility.",
+  "revenueGuideActionWidget": "Add Widget to Website",
+  "revenueGuideActionWidgetDesc": "Enable direct bookings without commission.",
+  "revenueGuideActionShare": "Share Direct Link",
+  "revenueGuideActionShareDesc": "Send link to guests via WhatsApp or email.",
+  "bookingsTabAll": "All",
+  "bookingsTabPending": "Pending",
+  "bookingsTabConfirmed": "Approved",
+  "bookingsTabCancelled": "Cancelled"
 }

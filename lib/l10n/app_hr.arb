@@ -3261,5 +3261,18 @@
   "subscriptionFaqDataSafeAnswer": "Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.",
   "subscriptionComingSoon": "Uskoro",
   "subscriptionComingSoonMessage": "Integracija plaćanja uskoro stiže! Za sada, molimo kontaktirajte nas za nadogradnju računa.",
-  "profileSubscriptionSubtitle": "Upravljajte svojim planom"
+  "profileSubscriptionSubtitle": "Upravljajte svojim planom",
+
+  "revenueGuideTitle": "Vaš put do prve rezervacije",
+  "revenueGuideSubtitle": "Prve rezervacije su najteže. Evo kako da ubrzate proces:",
+  "revenueGuideActionIcal": "Poveži Booking.com / Airbnb",
+  "revenueGuideActionIcalDesc": "Sinkronizacija kalendara povećava vidljivost.",
+  "revenueGuideActionWidget": "Dodaj Widget na sajt",
+  "revenueGuideActionWidgetDesc": "Omogući direktne rezervacije bez provizije.",
+  "revenueGuideActionShare": "Podijeli direktni link",
+  "revenueGuideActionShareDesc": "Pošalji link gostima putem WhatsApp-a ili emaila.",
+  "bookingsTabAll": "Sve",
+  "bookingsTabPending": "Na čekanju",
+  "bookingsTabConfirmed": "Odobrene",
+  "bookingsTabCancelled": "Otkazane"
 }

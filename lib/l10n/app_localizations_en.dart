@@ -7616,4 +7616,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileSubscriptionSubtitle => 'Manage your plan';
+
+  @override
+  String get revenueGuideTitle => 'Your Path to First Booking';
+
+  @override
+  String get revenueGuideSubtitle =>
+      'Getting started is the hardest part. Here\'s how to speed up the process:';
+
+  @override
+  String get revenueGuideActionIcal => 'Connect Booking.com / Airbnb';
+
+  @override
+  String get revenueGuideActionIcalDesc =>
+      'Synchronizing your calendar increases visibility.';
+
+  @override
+  String get revenueGuideActionWidget => 'Add Widget to Website';
+
+  @override
+  String get revenueGuideActionWidgetDesc =>
+      'Enable direct bookings without commission.';
+
+  @override
+  String get revenueGuideActionShare => 'Share Direct Link';
+
+  @override
+  String get revenueGuideActionShareDesc =>
+      'Send link to guests via WhatsApp or email.';
+
+  @override
+  String get bookingsTabAll => 'All';
+
+  @override
+  String get bookingsTabPending => 'Pending';
+
+  @override
+  String get bookingsTabConfirmed => 'Approved';
+
+  @override
+  String get bookingsTabCancelled => 'Cancelled';
 }

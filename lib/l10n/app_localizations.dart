@@ -13800,6 +13800,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage your plan'**
   String get profileSubscriptionSubtitle;
+
+  /// No description provided for @revenueGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Path to First Booking'**
+  String get revenueGuideTitle;
+
+  /// No description provided for @revenueGuideSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting started is the hardest part. Here\'s how to speed up the process:'**
+  String get revenueGuideSubtitle;
+
+  /// No description provided for @revenueGuideActionIcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Booking.com / Airbnb'**
+  String get revenueGuideActionIcal;
+
+  /// No description provided for @revenueGuideActionIcalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronizing your calendar increases visibility.'**
+  String get revenueGuideActionIcalDesc;
+
+  /// No description provided for @revenueGuideActionWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Widget to Website'**
+  String get revenueGuideActionWidget;
+
+  /// No description provided for @revenueGuideActionWidgetDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable direct bookings without commission.'**
+  String get revenueGuideActionWidgetDesc;
+
+  /// No description provided for @revenueGuideActionShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Direct Link'**
+  String get revenueGuideActionShare;
+
+  /// No description provided for @revenueGuideActionShareDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Send link to guests via WhatsApp or email.'**
+  String get revenueGuideActionShareDesc;
+
+  /// No description provided for @bookingsTabAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get bookingsTabAll;
+
+  /// No description provided for @bookingsTabPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get bookingsTabPending;
+
+  /// No description provided for @bookingsTabConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get bookingsTabConfirmed;
+
+  /// No description provided for @bookingsTabCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get bookingsTabCancelled;
 }
 
 class _AppLocalizationsDelegate

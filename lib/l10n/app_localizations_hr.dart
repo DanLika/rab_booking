@@ -7673,4 +7673,44 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get profileSubscriptionSubtitle => 'Upravljajte svojim planom';
+
+  @override
+  String get revenueGuideTitle => 'Vaš put do prve rezervacije';
+
+  @override
+  String get revenueGuideSubtitle =>
+      'Prve rezervacije su najteže. Evo kako da ubrzate proces:';
+
+  @override
+  String get revenueGuideActionIcal => 'Poveži Booking.com / Airbnb';
+
+  @override
+  String get revenueGuideActionIcalDesc =>
+      'Sinkronizacija kalendara povećava vidljivost.';
+
+  @override
+  String get revenueGuideActionWidget => 'Dodaj Widget na sajt';
+
+  @override
+  String get revenueGuideActionWidgetDesc =>
+      'Omogući direktne rezervacije bez provizije.';
+
+  @override
+  String get revenueGuideActionShare => 'Podijeli direktni link';
+
+  @override
+  String get revenueGuideActionShareDesc =>
+      'Pošalji link gostima putem WhatsApp-a ili emaila.';
+
+  @override
+  String get bookingsTabAll => 'Sve';
+
+  @override
+  String get bookingsTabPending => 'Na čekanju';
+
+  @override
+  String get bookingsTabConfirmed => 'Odobrene';
+
+  @override
+  String get bookingsTabCancelled => 'Otkazane';
 }

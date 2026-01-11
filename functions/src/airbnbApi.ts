@@ -178,8 +178,8 @@ export const handleAirbnbOAuthCallback = onRequest(
         unit_id: stateData.unitId,
         external_property_id: stateData.listingId,
         external_unit_id: stateData.listingId, // Airbnb uses listing ID for both
-        access_token: encryptToken(access_token),
-        refresh_token: refresh_token ? encryptToken(refresh_token) : null,
+        access_token: await encryptToken(access_token),
+        refresh_token: refresh_token ? await encryptToken(refresh_token) : null,
         expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
         status: "active",
         created_at: admin.firestore.Timestamp.now(),
@@ -222,7 +222,7 @@ async function refreshAirbnbToken(
       },
       body: new URLSearchParams({
         grant_type: "refresh_token",
-        refresh_token: decryptToken(refreshToken),
+        refresh_token: await decryptToken(refreshToken),
         client_id: AIRBNB_CLIENT_ID,
         client_secret: AIRBNB_CLIENT_SECRET,
       }),
@@ -238,7 +238,7 @@ async function refreshAirbnbToken(
     // Update connection with new token
     const expiresAtTime = new Date(Date.now() + expires_in * 1000);
     await db.collection("platform_connections").doc(connectionId).update({
-      access_token: encryptToken(access_token),
+      access_token: await encryptToken(access_token),
       expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
       updated_at: admin.firestore.Timestamp.now(),
     });
@@ -267,7 +267,7 @@ async function getValidAccessToken(connectionId: string): Promise<string> {
 
   const connectionData = connectionDoc.data()!;
   const expiresAt = connectionData.expires_at.toDate();
-  const accessToken = decryptToken(connectionData.access_token);
+  const accessToken = await decryptToken(connectionData.access_token);
   const refreshToken = connectionData.refresh_token;
 
   // Check if token is expired or will expire in next 5 minutes

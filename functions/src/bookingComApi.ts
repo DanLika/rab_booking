@@ -3,6 +3,7 @@ import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import * as crypto from "crypto";
 import {setUser} from "./sentry";
+import {KeyManagementServiceClient} from "@google-cloud/kms";
 
 /**
  * Booking.com Calendar API Integration
@@ -34,13 +35,32 @@ const BOOKING_COM_REDIRECT_URI = process.env.BOOKING_COM_REDIRECT_URI || "";
 // Placeholder - replace with actual Booking.com API endpoint
 const BOOKING_COM_API_BASE_URL = "https://distribution-xml.booking.com/2.3/json";
 
+// Initialize KMS client
+const kmsClient = new KeyManagementServiceClient();
+
 /**
  * Encrypt sensitive data (tokens) before storing in Firestore
  */
-export function encryptToken(token: string): string {
-  // In production, use proper encryption (e.g., Google Cloud KMS)
-  // For now, we'll use a simple base64 encoding (NOT secure for production)
-  // TODO: Implement proper encryption with KMS
+export async function encryptToken(token: string): Promise<string> {
+  const keyName = process.env.KMS_KEY_NAME;
+
+  if (keyName) {
+    try {
+      const [result] = await kmsClient.encrypt({
+        name: keyName,
+        plaintext: Buffer.from(token),
+      });
+
+      if (result.ciphertext) {
+        return Buffer.from(result.ciphertext).toString("base64");
+      }
+    } catch (error) {
+      logError("KMS encryption failed", error);
+      throw error;
+    }
+  }
+
+  // Fallback to legacy encryption if KMS_KEY_NAME is not set
   const encryptionKey = process.env.ENCRYPTION_KEY || "default-key-change-in-production";
   // Generate a consistent IV from the key (not secure, but matches deprecated createCipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
@@ -54,9 +74,28 @@ export function encryptToken(token: string): string {
 /**
  * Decrypt sensitive data (tokens) from Firestore
  */
-export function decryptToken(encryptedToken: string): string {
-  // In production, use proper decryption (e.g., Google Cloud KMS)
-  // TODO: Implement proper decryption with KMS
+export async function decryptToken(encryptedToken: string): Promise<string> {
+  const keyName = process.env.KMS_KEY_NAME;
+
+  if (keyName) {
+    try {
+      // Try KMS decryption first
+      const [result] = await kmsClient.decrypt({
+        name: keyName,
+        ciphertext: Buffer.from(encryptedToken, "base64"),
+      });
+
+      if (result.plaintext) {
+        return result.plaintext.toString();
+      }
+    } catch (error) {
+      // If KMS fails, log warning and try legacy decryption (migration path)
+      // This handles cases where we have old tokens but KMS is now enabled
+      logError("KMS decryption failed, attempting legacy decryption", error);
+    }
+  }
+
+  // Legacy decryption
   const encryptionKey = process.env.ENCRYPTION_KEY || "default-key-change-in-production";
   // Generate a consistent IV from the key (not secure, but matches deprecated createDecipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
@@ -212,8 +251,8 @@ export const handleBookingComOAuthCallback = onRequest(
         unit_id: stateData.unitId,
         external_property_id: stateData.hotelId,
         external_unit_id: stateData.roomTypeId,
-        access_token: encryptToken(access_token),
-        refresh_token: refresh_token ? encryptToken(refresh_token) : null,
+        access_token: await encryptToken(access_token),
+        refresh_token: refresh_token ? await encryptToken(refresh_token) : null,
         expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
         status: "active",
         created_at: admin.firestore.Timestamp.now(),
@@ -256,7 +295,7 @@ async function refreshBookingComToken(
       },
       body: new URLSearchParams({
         grant_type: "refresh_token",
-        refresh_token: decryptToken(refreshToken),
+        refresh_token: await decryptToken(refreshToken),
         client_id: BOOKING_COM_CLIENT_ID,
         client_secret: BOOKING_COM_CLIENT_SECRET,
       }),
@@ -272,7 +311,7 @@ async function refreshBookingComToken(
     // Update connection with new token
     const expiresAtTime = new Date(Date.now() + expires_in * 1000);
     await db.collection("platform_connections").doc(connectionId).update({
-      access_token: encryptToken(access_token),
+      access_token: await encryptToken(access_token),
       expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
       updated_at: admin.firestore.Timestamp.now(),
     });
@@ -301,7 +340,7 @@ async function getValidAccessToken(connectionId: string): Promise<string> {
 
   const connectionData = connectionDoc.data()!;
   const expiresAt = connectionData.expires_at.toDate();
-  const accessToken = decryptToken(connectionData.access_token);
+  const accessToken = await decryptToken(connectionData.access_token);
   const refreshToken = connectionData.refresh_token;
 
   // Check if token is expired or will expire in next 5 minutes

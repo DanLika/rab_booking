@@ -569,6 +569,10 @@ class ProfileScreen extends ConsumerWidget {
                                     context,
                                   );
                                   if (result == true && context.mounted) {
+                                    ErrorDisplayUtils.showInfoSnackBar(
+                                      context,
+                                      l10n.deleteAccountSuccess,
+                                    );
                                     context.go(OwnerRoutes.login);
                                   }
                                 },

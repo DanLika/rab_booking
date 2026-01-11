@@ -880,10 +880,26 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   /// Required for Apple App Store compliance (mandatory since 2022).
   ///
   /// Throws [String] error message on failure.
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({String? password}) async {
     final user = _auth.currentUser;
     if (user == null) {
       throw 'No user is currently signed in';
+    }
+
+    // Re-authenticate if password is provided
+    if (password != null) {
+      try {
+        if (user.email == null) {
+          throw 'User email is missing';
+        }
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        throw _getAuthErrorMessage(e);
+      }
     }
 
     try {

@@ -3,6 +3,7 @@ import '../../../domain/models/date_range_selection.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../shared/widgets/smart_tooltip.dart';
+import '../../../../../core/design_tokens/spacing_tokens.dart';
 
 /// Calendar top toolbar widget
 /// Shows date range picker, search, refresh, today button, add room, summary toggle, and notifications
@@ -85,7 +86,9 @@ class CalendarTopToolbar extends StatelessWidget {
         color: Colors.transparent, // Transparent to show parent gradient
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
-      padding: EdgeInsets.symmetric(horizontal: isCompact ? 4 : 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? SpacingTokens.xs : SpacingTokens.m,
+      ),
       // Problem #18 fix: Use MainAxisAlignment.spaceBetween for proper left/right alignment
       // Left group: navigation arrows + date picker
       // Right group: action buttons
@@ -111,8 +114,7 @@ class CalendarTopToolbar extends StatelessWidget {
                 padding: EdgeInsets.zero,
               ),
 
-              // Problem #18 fix: Add 4px padding between arrow and date picker
-              const SizedBox(width: 4),
+              SizedBox(width: SpacingTokens.xs),
 
               // Date range display (centered) - styled badge
               Material(
@@ -122,46 +124,41 @@ class CalendarTopToolbar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: isCompact ? 8 : 14,
-                      vertical: isCompact ? 6 : 8,
+                      horizontal: isCompact ? SpacingTokens.s : SpacingTokens.m,
+                      vertical: isCompact ? SpacingTokens.xs : SpacingTokens.s,
                     ),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary.withAlpha(
-                            (0.15 * 255).toInt(),
-                          ),
-                          theme.colorScheme.primary.withAlpha(
-                            (0.08 * 255).toInt(),
-                          ),
-                        ],
-                      ),
+                      color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: theme.colorScheme.primary.withAlpha(
-                          (0.3 * 255).toInt(),
-                        ),
+                        color: theme.colorScheme.primary.withOpacity(0.2),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.calendar_month,
-                          size: isCompact ? 14 : 18,
+                          Icons.calendar_today_rounded,
+                          size: isCompact ? 14 : 16,
                           color: theme.colorScheme.primary,
                         ),
                         SizedBox(width: isCompact ? 4 : 8),
                         Text(
                           dateRange.toDisplayString(isWeek: isWeekView),
-                          style:
-                              (isCompact
-                                      ? theme.textTheme.labelSmall
-                                      : theme.textTheme.titleSmall)
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.primary,
-                                  ),
+                          style: (isCompact
+                                  ? theme.textTheme.labelSmall
+                                  : theme.textTheme.titleSmall)
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.clip,
                         ),
@@ -169,7 +166,7 @@ class CalendarTopToolbar extends StatelessWidget {
                         Icon(
                           Icons.arrow_drop_down,
                           size: isCompact ? 14 : 20,
-                          color: theme.colorScheme.primary,
+                          color: theme.colorScheme.onSurface.withOpacity(0.5),
                         ),
                       ],
                     ),
@@ -177,8 +174,7 @@ class CalendarTopToolbar extends StatelessWidget {
                 ),
               ),
 
-              // Problem #18 fix: Add 4px padding between date picker and arrow
-              const SizedBox(width: 4),
+              SizedBox(width: SpacingTokens.xs),
 
               // Next period - RIGHT of month selector
               IconButton(

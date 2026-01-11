@@ -107,6 +107,42 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
     // Build semantic label for accessibility
     final semanticLabel = _buildSemanticLabel(booking, hasConflict);
 
+    // GHOST DATA LOGIC
+    final isGhost = booking.id.startsWith('ghost_');
+    if (isGhost) {
+      return RepaintBoundary(
+        child: IgnorePointer(
+          child: Container(
+            width: width - (kTimelineBookingBlockHorizontalMargin * 2),
+            height: blockHeight,
+            margin: const EdgeInsets.symmetric(
+              horizontal: kTimelineBookingBlockHorizontalMargin,
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                style: BorderStyle.solid,
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                'Example Booking',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return RepaintBoundary(
       child: Semantics(
         label: semanticLabel,

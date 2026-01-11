@@ -55,6 +55,13 @@ class TimelineGridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if entire calendar is empty to trigger ghost mode
+    final totalBookings = bookingsByUnit.values.fold<int>(
+      0,
+      (sum, list) => sum + list.length,
+    );
+    final isCalendarEmpty = totalBookings == 0;
+
     // Container with transparent color wrapping Column
     // Column uses mainAxisSize.min to size to its children
     return Container(
@@ -62,7 +69,14 @@ class TimelineGridWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: units.map((unit) {
-          final bookings = bookingsByUnit[unit.id] ?? [];
+          var bookings = bookingsByUnit[unit.id] ?? [];
+
+          // GHOST DATA INJECTION
+          // If calendar is completely empty, inject ghost bookings into the first unit
+          if (isCalendarEmpty && units.indexOf(unit) == 0) {
+             bookings = _generateGhostBookings(unit.id);
+          }
+
           // RepaintBoundary: Each unit row can repaint independently
           // when bookings change, without affecting other rows
           return RepaintBoundary(
@@ -81,6 +95,39 @@ class TimelineGridWidget extends StatelessWidget {
         }).toList(),
       ),
     );
+  }
+
+  List<BookingModel> _generateGhostBookings(String unitId) {
+    final now = DateTime.now();
+    // Create 3 example bookings
+    return [
+      BookingModel(
+        id: 'ghost_1',
+        unitId: unitId,
+        propertyId: 'ghost_prop',
+        guestName: 'Example Guest',
+        checkIn: now.add(const Duration(days: 2)),
+        checkOut: now.add(const Duration(days: 5)),
+        status: BookingStatus.confirmed, // Visuals handled by ID check in block
+        source: BookingSource.manual,
+        createdAt: now,
+        updatedAt: now,
+        totalPrice: 100,
+      ),
+       BookingModel(
+        id: 'ghost_2',
+        unitId: unitId,
+        propertyId: 'ghost_prop',
+        guestName: 'Example Guest',
+        checkIn: now.add(const Duration(days: 8)),
+        checkOut: now.add(const Duration(days: 12)),
+        status: BookingStatus.confirmed,
+        source: BookingSource.bookingCom,
+        createdAt: now,
+        updatedAt: now,
+        totalPrice: 100,
+      ),
+    ];
   }
 }
 

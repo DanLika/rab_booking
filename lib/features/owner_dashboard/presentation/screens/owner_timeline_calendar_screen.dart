@@ -24,6 +24,7 @@ import '../../domain/models/calendar_filter_options.dart';
 import '../../utils/calendar_grid_calculator.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../widgets/calendar/tutorial/calendar_tutorial_overlay.dart';
 
 /// Owner Timeline Calendar Screen
 /// Shows BedBooking-style Gantt chart with booking blocks spanning dates
@@ -58,6 +59,9 @@ class _OwnerTimelineCalendarScreenState
   // Incremented each time Today is clicked to ensure widget scrolls to today
   int _forceScrollKey = 0;
 
+  // Track if tutorial has been dismissed in this session
+  bool _showTutorialDismissed = false;
+
   @override
   void initState() {
     super.initState();
@@ -85,6 +89,21 @@ class _OwnerTimelineCalendarScreenState
     }
   }
 
+  // Helper to check if we should show tutorial
+  bool _shouldShowTutorial(bool hasUnits, bool isCalendarEmpty) {
+    // Only show if:
+    // 1. User has units (so calendar grid is visible)
+    // 2. Calendar is empty (new user scenario)
+    // 3. Not already showing or dismissed (handled by _showTutorial flag logic ideally)
+    // Since we can't easily modify state during build, we rely on a manual trigger or just
+    // simple condition here.
+    // Let's use a "one-shot" approach: if calendar IS empty and we haven't dismissed it manually.
+    // We initialize _showTutorial = true in initState? No, we don't know data there.
+
+    // Simplification: logic moved to build method's Stack
+    return hasUnits && isCalendarEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Activate real-time listener for calendar updates
@@ -102,6 +121,16 @@ class _OwnerTimelineCalendarScreenState
       loading: () => true, // Show toolbar while loading to avoid flicker
       error: (_, _) => false, // Hide toolbar on error
     );
+
+    // Check if calendar is empty to trigger tutorial
+    // If we have units but no bookings, show tutorial
+    final bookingsAsync = ref.watch(timelineCalendarBookingsProvider);
+    final isCalendarEmpty = bookingsAsync.when(
+      data: (bookings) => bookings.values.fold<int>(0, (sum, list) => sum + list.length) == 0,
+      loading: () => false,
+      error: (_, __) => false,
+    );
+
 
     // Safely get localizations - use try-catch to prevent errors if context is not ready
     String calendarTitle;
@@ -132,7 +161,9 @@ class _OwnerTimelineCalendarScreenState
         },
         child: Focus(
           autofocus: true,
-          child: Scaffold(
+          child: Stack(
+            children: [
+            Scaffold(
             backgroundColor:
                 Colors.transparent, // Transparent to show gradient background
             appBar: CommonAppBar(
@@ -316,8 +347,19 @@ class _OwnerTimelineCalendarScreenState
             ),
             floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           ),
-        ),
-      ),
+          // Tutorial Overlay
+          if (_shouldShowTutorial(hasUnits, isCalendarEmpty) && !_showTutorialDismissed)
+            CalendarTutorialOverlay(
+              onDismiss: () {
+                setState(() {
+                  _showTutorialDismissed = true;
+                });
+              },
+            ),
+        ],
+      ), // Stack wrapping Scaffold to allow overlay
+      ), // Focus
+      ), // Actions
     );
   }
 

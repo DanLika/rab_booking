@@ -33,6 +33,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.token.isAdmin == true;
     }
 
+    // Check if user is an admin via Firestore document (fallback for web admin dashboard)
+    function isAdminFromFirestore() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // Check if user owns the parent property
     // STRICT: No legacy support - property must have valid owner_id
     function isPropertyOwner(propertyId) {
@@ -44,14 +50,15 @@ service cloud.firestore {
     // USERS COLLECTION
     // ========================================================================
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      // Admin dashboard needs to read all users for management
+      allow read: if isOwner(userId) || isAdmin() || isAdminFromFirestore();
 
       // Users can update their own data, but NOT protected status fields.
       // Admins can update anything.
       allow write: if (isOwner(userId) && !request.resource.data.keys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy'
-        ])) || isAdmin();
+        ])) || isAdmin() || isAdminFromFirestore();
 
       // User data subcollection (profile, company, preferences)
       match /data/{document} {

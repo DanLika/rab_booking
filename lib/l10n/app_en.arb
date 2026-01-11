@@ -3254,5 +3254,18 @@
   "subscriptionFaqDataSafeAnswer": "Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.",
   "subscriptionComingSoon": "Coming Soon",
   "subscriptionComingSoonMessage": "Payment integration is coming soon! For now, please contact us to upgrade your account.",
-  "profileSubscriptionSubtitle": "Manage your plan"
+  "profileSubscriptionSubtitle": "Manage your plan",
+
+  "ownerProfileCompletionStatus": "Your profile is {percentage}% complete",
+  "@ownerProfileCompletionStatus": {
+    "placeholders": {
+      "percentage": {"type": "int"}
+    }
+  },
+  "ownerProfileSuggestionPhone": "Add phone number for bonus trust",
+  "ownerProfileSuggestionComplete": "Complete your profile for more guest trust",
+  "ownerProfileSuggestionAddress": "Add address for a professional look",
+  "subscriptionUpgradeToPro": "Upgrade to Pro",
+  "subscriptionUnlockPotential": "Unlock full potential",
+  "subscriptionViewPlans": "View Plans"
 }

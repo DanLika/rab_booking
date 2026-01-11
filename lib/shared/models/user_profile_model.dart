@@ -116,6 +116,33 @@ class UserProfile with _$UserProfile {
     );
   }
 
+  /// Calculate profile completion percentage (0-100)
+  int get completionPercentage {
+    int percentage = 0;
+
+    // 1. Basic Info (20%)
+    if (displayName.isNotEmpty) percentage += 20;
+
+    // 2. Email (20%)
+    if (emailContact.isNotEmpty) percentage += 20;
+
+    // 3. Phone (20%)
+    if (phoneE164.isNotEmpty) percentage += 20;
+
+    // 4. Location (20%)
+    if (address.country.isNotEmpty) percentage += 20;
+
+    // 5. Business Details (20%)
+    // Either property type or at least one social link
+    if (propertyType.isNotEmpty ||
+        social.website.isNotEmpty ||
+        social.facebook.isNotEmpty) {
+      percentage += 20;
+    }
+
+    return percentage;
+  }
+
   /// Convert to Firestore data (exclude userId)
   Map<String, dynamic> toFirestore() {
     return {

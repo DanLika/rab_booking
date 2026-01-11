@@ -13800,6 +13800,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage your plan'**
   String get profileSubscriptionSubtitle;
+
+  /// No description provided for @ownerProfileCompletionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile is {percentage}% complete'**
+  String ownerProfileCompletionStatus(int percentage);
+
+  /// No description provided for @ownerProfileSuggestionPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Add phone number for bonus trust'**
+  String get ownerProfileSuggestionPhone;
+
+  /// No description provided for @ownerProfileSuggestionComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile for more guest trust'**
+  String get ownerProfileSuggestionComplete;
+
+  /// No description provided for @ownerProfileSuggestionAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Add address for a professional look'**
+  String get ownerProfileSuggestionAddress;
+
+  /// No description provided for @subscriptionUpgradeToPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Pro'**
+  String get subscriptionUpgradeToPro;
+
+  /// No description provided for @subscriptionUnlockPotential.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock full potential'**
+  String get subscriptionUnlockPotential;
+
+  /// No description provided for @subscriptionViewPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'View Plans'**
+  String get subscriptionViewPlans;
 }
 
 class _AppLocalizationsDelegate

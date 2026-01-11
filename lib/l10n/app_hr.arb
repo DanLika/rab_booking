@@ -3261,5 +3261,18 @@
   "subscriptionFaqDataSafeAnswer": "Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.",
   "subscriptionComingSoon": "Uskoro",
   "subscriptionComingSoonMessage": "Integracija plaćanja uskoro stiže! Za sada, molimo kontaktirajte nas za nadogradnju računa.",
-  "profileSubscriptionSubtitle": "Upravljajte svojim planom"
+  "profileSubscriptionSubtitle": "Upravljajte svojim planom",
+
+  "ownerProfileCompletionStatus": "Tvoj profil je {percentage}% završen",
+  "@ownerProfileCompletionStatus": {
+    "placeholders": {
+      "percentage": {"type": "int"}
+    }
+  },
+  "ownerProfileSuggestionPhone": "Dodaj broj telefona za bonus povjerenje",
+  "ownerProfileSuggestionComplete": "Popuni profil za veće povjerenje gostiju",
+  "ownerProfileSuggestionAddress": "Dodaj adresu za profesionalni dojam",
+  "subscriptionUpgradeToPro": "Nadogradi na Pro",
+  "subscriptionUnlockPotential": "Otključaj puni potencijal",
+  "subscriptionViewPlans": "Vidi Planove"
 }

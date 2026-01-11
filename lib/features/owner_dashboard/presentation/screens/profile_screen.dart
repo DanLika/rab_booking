@@ -19,6 +19,7 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/premium_list_tile.dart';
 import '../../../../shared/widgets/logout_tile.dart';
 import '../../../../shared/widgets/delete_account_dialog.dart';
+import '../providers/user_profile_provider.dart';
 
 /// Profile screen for owner dashboard
 class ProfileScreen extends ConsumerWidget {
@@ -28,8 +29,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final user = FirebaseAuth.instance.currentUser;
-    // OPTIMIZED: Removed watchUserProfileProvider - displayName already available in authState.userModel
-    // This eliminates 1 Firestore read (profiles/{userId}) per page load
+    final userDataAsync = ref.watch(userDataProvider);
     final authState = ref.watch(enhancedAuthProvider);
     final currentLocale = ref.watch(currentLocaleProvider);
     final currentThemeMode = ref.watch(currentThemeModeProvider);
@@ -47,6 +47,10 @@ class ProfileScreen extends ConsumerWidget {
         : currentThemeMode == ThemeMode.dark
         ? l10n.ownerProfileThemeDark
         : l10n.ownerProfileThemeSystem;
+
+    // Calculate profile completion safely
+    final completionPercentage =
+        userDataAsync.value?.profile.completionPercentage ?? 0;
 
     return Scaffold(
       drawer: const OwnerAppDrawer(currentRoute: 'profile'),
@@ -263,6 +267,13 @@ class ProfileScreen extends ConsumerWidget {
                                         ),
                                       ),
                                     ),
+                                    if (!isAnonymous) ...[
+                                      const SizedBox(height: 16),
+                                      _ProfileCompletionWidget(
+                                        percentage: completionPercentage,
+                                        isDark: isDark,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -270,6 +281,12 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 16),
+
+                        // Subscription Banner (Moved to top of content for visibility)
+                        if (authState.userModel?.hideSubscription != true) ...[
+                          _SubscriptionBanner(isDark: isDark),
+                          const SizedBox(height: 16),
+                        ],
 
                         // Account settings
                         Container(
@@ -329,27 +346,8 @@ class ProfileScreen extends ConsumerWidget {
                                       context,
                                       ref,
                                     ),
+                                isLast: true,
                               ),
-                              // Subscription tile - conditionally hidden by admin
-                              if (authState.userModel?.hideSubscription !=
-                                  true) ...[
-                                Divider(
-                                  height: 1,
-                                  indent: 72,
-                                  color: theme.dividerColor,
-                                ),
-                                PremiumListTile(
-                                  icon: Icons.workspace_premium,
-                                  title: l10n.ownerDrawerSubscription,
-                                  subtitle: l10n.profileSubscriptionSubtitle,
-                                  onTap: () =>
-                                      context.push(OwnerRoutes.subscription),
-                                  isLast: true,
-                                ),
-                              ] else ...[
-                                // Close the container without subscription
-                                const SizedBox.shrink(),
-                              ],
                             ],
                           ),
                         ),
@@ -583,6 +581,210 @@ class ProfileScreen extends ConsumerWidget {
                   );
                 },
               ),
+      ),
+    );
+  }
+}
+
+class _ProfileCompletionWidget extends StatelessWidget {
+  final int percentage;
+  final bool isDark;
+
+  const _ProfileCompletionWidget({
+    required this.percentage,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (percentage >= 100) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
+
+    // Determine suggestion based on missing data (simplified logic)
+    String suggestion = l10n.ownerProfileSuggestionPhone;
+    if (percentage < 40) {
+      suggestion = l10n.ownerProfileSuggestionComplete;
+    } else if (percentage < 60) {
+      suggestion = l10n.ownerProfileSuggestionAddress;
+    }
+
+    return GestureDetector(
+      onTap: () => context.push(OwnerRoutes.profileEdit),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: isDark ? 0.2 : 0.3),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.ownerProfileCompletionStatus(percentage),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  size: 14,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: percentage / 100,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Colors.white.withValues(alpha: 0.9),
+                ),
+                minHeight: 6,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  size: 14,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    suggestion,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SubscriptionBanner extends StatelessWidget {
+  final bool isDark;
+
+  const _SubscriptionBanner({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push(OwnerRoutes.subscription),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: context.gradients.premium,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+        ),
+        child: Stack(
+          children: [
+            // Decorative circles
+            Positioned(
+              right: -20,
+              top: -20,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 40,
+              bottom: -40,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.workspace_premium_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context).subscriptionUpgradeToPro,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          AppLocalizations.of(context).subscriptionUnlockPotential,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      AppLocalizations.of(context).subscriptionViewPlans,
+                      style: TextStyle(
+                        color: context.gradients.premiumEnd,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

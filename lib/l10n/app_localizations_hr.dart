@@ -7673,4 +7673,30 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get profileSubscriptionSubtitle => 'Upravljajte svojim planom';
+
+  @override
+  String ownerProfileCompletionStatus(int percentage) {
+    return 'Tvoj profil je $percentage% završen';
+  }
+
+  @override
+  String get ownerProfileSuggestionPhone =>
+      'Dodaj broj telefona za bonus povjerenje';
+
+  @override
+  String get ownerProfileSuggestionComplete =>
+      'Popuni profil za veće povjerenje gostiju';
+
+  @override
+  String get ownerProfileSuggestionAddress =>
+      'Dodaj adresu za profesionalni dojam';
+
+  @override
+  String get subscriptionUpgradeToPro => 'Nadogradi na Pro';
+
+  @override
+  String get subscriptionUnlockPotential => 'Otključaj puni potencijal';
+
+  @override
+  String get subscriptionViewPlans => 'Vidi Planove';
 }

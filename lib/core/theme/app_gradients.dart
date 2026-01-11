@@ -22,6 +22,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
     required this.sectionBorder,
     required this.cardBackground,
     required this.inputFillColor,
+    required this.premium,
   });
 
   /// Screen body gradient (left → right, horizontal)
@@ -35,6 +36,10 @@ class AppGradients extends ThemeExtension<AppGradients> {
   /// Brand purple gradient (topLeft → bottomRight)
   /// Used for: AppBar, drawer header, primary buttons
   final LinearGradient brandPrimary;
+
+  /// Premium/Gold gradient (topLeft → bottomRight)
+  /// Used for: Subscription badges, Pro plan cards
+  final LinearGradient premium;
 
   /// Section border color (theme-aware)
   /// Light: cool gray (#E0DCE8), Dark: dark cool gray (#35323D)
@@ -63,6 +68,10 @@ class AppGradients extends ThemeExtension<AppGradients> {
   // Brand purple (same for light & dark)
   static const Color _brandStart = Color(0xFF6B4CE6); // Purple
   static const Color _brandEnd = Color(0xFF7E5FEE); // Lighter purple
+
+  // Premium Gold/Orange
+  static const Color _premiumStart = Color(0xFFFF9966); // Orange
+  static const Color _premiumEnd = Color(0xFFFF5E62); // Red-Orange (Sunset)
 
   // Section border colors (cool tones to match backgrounds)
   static const Color _lightBorder = Color(0xFFE0DCE8); // Cool gray
@@ -97,6 +106,11 @@ class AppGradients extends ThemeExtension<AppGradients> {
       end: Alignment.bottomRight,
       colors: [_brandStart, _brandEnd],
     ),
+    premium: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [_premiumStart, _premiumEnd],
+    ),
     sectionBorder: _lightBorder,
     cardBackground: _lightCard,
     inputFillColor: _lightInputFill,
@@ -119,6 +133,11 @@ class AppGradients extends ThemeExtension<AppGradients> {
       end: Alignment.bottomRight,
       colors: [_brandStart, _brandEnd],
     ),
+    premium: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [_premiumStart, _premiumEnd],
+    ),
     sectionBorder: _darkBorder,
     cardBackground: _darkCard,
     inputFillColor: _darkInputFill,
@@ -133,6 +152,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
     LinearGradient? pageBackground,
     LinearGradient? sectionBackground,
     LinearGradient? brandPrimary,
+    LinearGradient? premium,
     Color? sectionBorder,
     Color? cardBackground,
     Color? inputFillColor,
@@ -141,6 +161,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
       pageBackground: pageBackground ?? this.pageBackground,
       sectionBackground: sectionBackground ?? this.sectionBackground,
       brandPrimary: brandPrimary ?? this.brandPrimary,
+      premium: premium ?? this.premium,
       sectionBorder: sectionBorder ?? this.sectionBorder,
       cardBackground: cardBackground ?? this.cardBackground,
       inputFillColor: inputFillColor ?? this.inputFillColor,
@@ -163,6 +184,7 @@ class AppGradients extends ThemeExtension<AppGradients> {
         t,
       )!,
       brandPrimary: LinearGradient.lerp(brandPrimary, other.brandPrimary, t)!,
+      premium: LinearGradient.lerp(premium, other.premium, t)!,
       sectionBorder: Color.lerp(sectionBorder, other.sectionBorder, t)!,
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
       inputFillColor: Color.lerp(inputFillColor, other.inputFillColor, t)!,
@@ -184,6 +206,12 @@ class AppGradients extends ThemeExtension<AppGradients> {
 
   /// Get the end color of brand gradient
   Color get brandEnd => brandPrimary.colors.last;
+
+  /// Get the start color of premium gradient
+  Color get premiumStart => premium.colors.first;
+
+  /// Get the end color of premium gradient
+  Color get premiumEnd => premium.colors.last;
 
   // ============================================================================
   // STATIC COLOR ACCESS (for card backgrounds)

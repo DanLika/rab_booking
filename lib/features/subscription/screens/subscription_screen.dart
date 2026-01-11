@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../l10n/app_localizations.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import '../../../core/theme/gradient_extensions.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/common_app_bar.dart';
 import '../models/trial_status.dart';
 import '../providers/trial_status_provider.dart';
@@ -97,6 +98,7 @@ class SubscriptionScreen extends ConsumerWidget {
             ],
             isCurrentPlan: !trialStatus.isInTrial && trialStatus.isActive,
             isRecommended: true,
+            useGradient: true,
             onSelect: () => _handleUpgrade(context, l10n),
           ),
           const SizedBox(height: 32),
@@ -251,6 +253,7 @@ class _PlanCard extends StatelessWidget {
   final List<String> features;
   final bool isCurrentPlan;
   final bool isRecommended;
+  final bool useGradient;
   final VoidCallback? onSelect;
 
   const _PlanCard({
@@ -260,6 +263,7 @@ class _PlanCard extends StatelessWidget {
     required this.features,
     this.isCurrentPlan = false,
     this.isRecommended = false,
+    this.useGradient = false,
     this.onSelect,
   });
 
@@ -268,143 +272,227 @@ class _PlanCard extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
+    // Dynamic styling based on useGradient
+    final cardDecoration = useGradient
+        ? BoxDecoration(
+            gradient: context.gradients.premium,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: context.gradients.premiumEnd.withValues(alpha: 0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          )
+        : BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+          );
+
+    final textColor = useGradient ? Colors.white : Colors.black87;
+    final subTextColor = useGradient
+        ? Colors.white.withValues(alpha: 0.9)
+        : Colors.grey.shade600;
+    final checkColor = useGradient ? Colors.white : Colors.green.shade600;
+
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isRecommended ? theme.primaryColor : Colors.grey.shade200,
-          width: isRecommended ? 2 : 1,
-        ),
-        boxShadow: isRecommended
-            ? [
-                BoxShadow(
-                  color: theme.primaryColor.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      decoration: cardDecoration,
+      child: Stack(
         children: [
-          if (isRecommended)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.primaryColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(14),
-                ),
-              ),
-              child: Text(
-                l10n.subscriptionRecommended,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  letterSpacing: 1,
+          // Background decoration for gradient card
+          if (useGradient)
+            Positioned(
+              right: -30,
+              top: -30,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isRecommended && !useGradient)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: theme.primaryColor,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(14),
                     ),
-                    if (isCurrentPlan)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
+                  ),
+                  child: Text(
+                    l10n.subscriptionRecommended,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              if (isRecommended && useGradient)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.subscriptionRecommended,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          title,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(12),
+                        if (isCurrentPlan)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: useGradient
+                                  ? Colors.white
+                                  : Colors.green.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              l10n.subscriptionCurrent,
+                              style: TextStyle(
+                                color: useGradient
+                                    ? context.gradients.premiumEnd
+                                    : Colors.green.shade700,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          price,
+                          style: theme.textTheme.headlineLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
                         ),
-                        child: Text(
-                          l10n.subscriptionCurrent,
-                          style: TextStyle(
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                        const SizedBox(width: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(
+                            period,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: subTextColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Divider(
+                      color: useGradient
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : Colors.grey.shade200,
+                    ),
+                    const SizedBox(height: 24),
+                    ...features.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final feature = entry.value;
+                      return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  size: 20,
+                                  color: checkColor,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  feature,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          .animate(delay: (100 * index).ms)
+                          .fadeIn()
+                          .slideX(begin: 0.2, end: 0);
+                    }),
+                    if (onSelect != null && !isCurrentPlan) ...[
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: onSelect,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                useGradient ? Colors.white : theme.primaryColor,
+                            foregroundColor:
+                                useGradient
+                                    ? context.gradients.premiumEnd
+                                    : Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            elevation: useGradient ? 4 : 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            l10n.subscriptionUpgradeNow,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      price,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        period,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 16),
-                ...features.map(
-                  (feature) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.check_circle_rounded,
-                          size: 18,
-                          color: Colors.green.shade600,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(feature),
-                      ],
-                    ),
-                  ),
-                ),
-                if (onSelect != null && !isCurrentPlan) ...[
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: onSelect,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(l10n.subscriptionUpgradeNow),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

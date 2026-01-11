@@ -7616,4 +7616,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileSubscriptionSubtitle => 'Manage your plan';
+
+  @override
+  String ownerProfileCompletionStatus(int percentage) {
+    return 'Your profile is $percentage% complete';
+  }
+
+  @override
+  String get ownerProfileSuggestionPhone => 'Add phone number for bonus trust';
+
+  @override
+  String get ownerProfileSuggestionComplete =>
+      'Complete your profile for more guest trust';
+
+  @override
+  String get ownerProfileSuggestionAddress =>
+      'Add address for a professional look';
+
+  @override
+  String get subscriptionUpgradeToPro => 'Upgrade to Pro';
+
+  @override
+  String get subscriptionUnlockPotential => 'Unlock full potential';
+
+  @override
+  String get subscriptionViewPlans => 'View Plans';
 }

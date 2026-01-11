@@ -63,12 +63,12 @@
 	<key>FlutterDeepLinkingEnabled</key>
 	<true/>
 
-	<!-- Image Picker Permissions -->
+	<!-- Image Picker Permissions - Localized in en.lproj/hr.lproj InfoPlist.strings -->
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Potreban je pristup galeriji kako bi mogli dodati fotografije vaših objekata</string>
+	<string>Access to photo library is required to add photos of your properties</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Potreban je pristup kameri kako bi mogli fotografirati vaše objekte</string>
+	<string>Access to camera is required to photograph your properties</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Potreban je pristup galeriji kako bi mogli spremiti fotografije</string>
+	<string>Access to photo library is required to save photos</string>
 </dict>
 </plist>

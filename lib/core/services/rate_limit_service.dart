@@ -74,6 +74,10 @@ class LoginAttempt {
 class RateLimitService {
   final FirebaseFirestore _firestore;
 
+  // In-memory cache for locked accounts to prevent redundant Firestore reads
+  // Key: sanitized email, Value: LoginAttempt
+  final Map<String, LoginAttempt> _memoryCache = {};
+
   static const int maxAttempts = 5;
   static const Duration lockoutDuration = Duration(minutes: 15);
   static const Duration attemptResetDuration = Duration(hours: 1);
@@ -87,10 +91,20 @@ class RateLimitService {
 
   /// Check if email is currently locked
   Future<LoginAttempt?> checkRateLimit(String email) async {
+    final sanitizedEmail = _sanitizeEmail(email);
+
+    // OPTIMIZATION: Check memory cache first
+    // If we know the user is locked locally, we don't need to check Firestore
+    final cachedAttempt = _memoryCache[sanitizedEmail];
+    if (cachedAttempt != null && cachedAttempt.isLocked) {
+      return cachedAttempt;
+    }
+
     try {
-      final doc = await _attemptsCollection.doc(_sanitizeEmail(email)).get();
+      final doc = await _attemptsCollection.doc(sanitizedEmail).get();
 
       if (!doc.exists || doc.data() == null) {
+        _memoryCache.remove(sanitizedEmail); // Ensure clean state
         return null; // No attempts recorded
       }
 
@@ -103,6 +117,14 @@ class RateLimitService {
           attemptResetDuration) {
         await _resetAttempts(email);
         return null;
+      }
+
+      // Update cache if locked
+      if (attempt.isLocked) {
+        _memoryCache[sanitizedEmail] = attempt;
+      } else {
+        // Ensure we don't hold stale locked state if now unlocked
+        _memoryCache.remove(sanitizedEmail);
       }
 
       return attempt;
@@ -161,6 +183,11 @@ class RateLimitService {
       // Save to Firestore
       await docRef.set(attempt.toFirestore());
 
+      // Update cache if locked
+      if (attempt.isLocked) {
+        _memoryCache[sanitizedEmail] = attempt;
+      }
+
       return attempt;
     } catch (e) {
       rethrow;
@@ -173,8 +200,10 @@ class RateLimitService {
   }
 
   Future<void> _resetAttempts(String email) async {
+    final sanitizedEmail = _sanitizeEmail(email);
     try {
-      await _attemptsCollection.doc(_sanitizeEmail(email)).delete();
+      await _attemptsCollection.doc(sanitizedEmail).delete();
+      _memoryCache.remove(sanitizedEmail); // Clear cache
     } catch (e) {
       // Ignore deletion errors
     }

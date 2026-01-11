@@ -98,7 +98,22 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   }
 
   /// Load user profile from Firestore
-  Future<void> _loadUserProfile(User firebaseUser) async {
+  Future<void> _loadUserProfile(
+    User firebaseUser, {
+    bool forceRefresh = false,
+  }) async {
+    // OPTIMIZATION: Avoid redundant fetches if profile is already loaded
+    // This prevents double-fetches during login (explicit call + listener)
+    if (!forceRefresh &&
+        state.userModel?.id == firebaseUser.uid &&
+        !state.isLoading) {
+      LoggingService.log(
+        'User profile already loaded for ${firebaseUser.uid}, skipping fetch',
+        tag: 'ENHANCED_AUTH',
+      );
+      return;
+    }
+
     LoggingService.log(
       'Loading user profile for ${firebaseUser.uid}...',
       tag: 'ENHANCED_AUTH',
@@ -707,7 +722,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       await _security.logEmailVerification(user.uid);
 
       // Reload profile
-      await _loadUserProfile(refreshedUser);
+      await _loadUserProfile(refreshedUser, forceRefresh: true);
     }
   }
 

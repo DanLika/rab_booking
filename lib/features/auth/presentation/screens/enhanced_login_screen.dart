@@ -553,28 +553,35 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     return Row(
       children: [
         Expanded(
-          child: InkWell(
-            onTap: () => setState(() => _rememberMe = !_rememberMe),
-            child: Row(
-              children: [
-                SizedBox(
-                  height: 22,
-                  width: 22,
-                  child: Checkbox(
-                    value: _rememberMe,
-                    onChanged: (value) => setState(() => _rememberMe = value!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+          child: MergeSemantics(
+            child: InkWell(
+              onTap: () => setState(() => _rememberMe = !_rememberMe),
+              borderRadius: BorderRadius.circular(4),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) =>
+                            setState(() => _rememberMe = value!),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        activeColor: theme.colorScheme.primary,
+                      ),
                     ),
-                    activeColor: theme.colorScheme.primary,
-                  ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.authRememberMe,
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.authRememberMe,
-                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
-                ),
-              ],
+              ),
             ),
           ),
         ),

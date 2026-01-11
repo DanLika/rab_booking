@@ -1,4 +1,4 @@
-import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import * as crypto from "crypto";
@@ -7,29 +7,17 @@ import {setUser} from "./sentry";
 /**
  * Booking.com Calendar API Integration
  * 
- * ⚠️ IMPORTANT: Direct API access is currently NOT AVAILABLE
+ * Implements Booking.com Connectivity API using Machine Account Authentication.
  * 
- * Status: Partner program PAUSED (as of late 2024)
- * Requirements: Business registration, PCI compliance, partner approval
- * Timeline: Indefinite (3-6 months historically when accepting applications)
- * 
- * This code is kept for reference but will not work without partner approval.
- * 
- * RECOMMENDED ALTERNATIVE: Use channel manager APIs (Beds24, Hosthub, Guesty)
- * See: docs/CHANNEL_MANAGER_SETUP.md
- * 
- * Technical Notes:
- * - Does NOT use standard OAuth 2.0 (proprietary token-based auth)
- * - Uses OTA XML format (not JSON)
- * - No reservation webhooks (must poll Reservations API)
- * 
- * Documentation: https://developers.booking.com/connectivity/docs (restricted access)
+ * Documentation: https://developers.booking.com/connectivity/docs/token-based-authentication
  */
 
 // Configuration
 const BOOKING_COM_CLIENT_ID = process.env.BOOKING_COM_CLIENT_ID || "";
 const BOOKING_COM_CLIENT_SECRET = process.env.BOOKING_COM_CLIENT_SECRET || "";
-const BOOKING_COM_REDIRECT_URI = process.env.BOOKING_COM_REDIRECT_URI || "";
+
+// API Base URLs
+const BOOKING_COM_AUTH_URL = "https://connectivity-authentication.booking.com/token-based-authentication/exchange";
 // TODO: Update with actual API base URL after getting API access
 // Placeholder - replace with actual Booking.com API endpoint
 const BOOKING_COM_API_BASE_URL = "https://distribution-xml.booking.com/2.3/json";
@@ -68,8 +56,74 @@ export function decryptToken(encryptedToken: string): string {
 }
 
 /**
- * Initiate OAuth 2.0 flow for Booking.com
- * Returns authorization URL for user to visit
+ * Get or create the global Machine Account Token.
+ * Handles caching in Firestore to respect the 30 requests/hour rate limit.
+ */
+async function getGlobalMachineAccountToken(): Promise<string> {
+  const tokenDocRef = db.collection("system_configs").doc("booking_com_token");
+
+  try {
+    // 1. Try to get cached token
+    const doc = await tokenDocRef.get();
+    if (doc.exists) {
+      const data = doc.data()!;
+      const expiresAt = data.expiresAt.toDate();
+      // Add buffer of 5 minutes to ensure token is valid when used
+      if (expiresAt > new Date(Date.now() + 5 * 60 * 1000)) {
+        return decryptToken(data.accessToken);
+      }
+    }
+
+    // 2. If missing or expired, fetch new one
+    logInfo("[Booking.com Auth] Global token missing or expired, fetching new one");
+
+    const response = await fetch(BOOKING_COM_AUTH_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        client_id: BOOKING_COM_CLIENT_ID,
+        client_secret: BOOKING_COM_CLIENT_SECRET,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logError("[Booking.com Auth] Token exchange failed", null, {
+        status: response.status,
+        error: errorText,
+      });
+      throw new Error(`Token exchange failed: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const accessToken = data.jwt || data.access_token;
+    // Default to 1 hour (3600s) if not provided
+    const expiresIn = data.expires_in || 3600;
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
+
+    // 3. Store in Firestore
+    await tokenDocRef.set({
+      accessToken: encryptToken(accessToken),
+      expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+      updatedAt: admin.firestore.Timestamp.now(),
+    });
+
+    return accessToken;
+
+  } catch (error) {
+    logError("[Booking.com Auth] Error getting global machine token", error);
+    throw error;
+  }
+}
+
+/**
+ * Initiate/Create Booking.com Connection
+ *
+ * Uses Machine Account Authentication. Since there is no user redirect flow,
+ * this function directly verifies credentials (by ensuring we have a valid global token)
+ * and creates the connection record.
  */
 export const initiateBookingComOAuth = onCall(async (request) => {
   if (!request.auth) {
@@ -89,207 +143,71 @@ export const initiateBookingComOAuth = onCall(async (request) => {
   }
 
   try {
-    logInfo("[Booking.com OAuth] Initiating OAuth flow", {
+    logInfo("[Booking.com Connection] Creating connection", {
       userId: request.auth.uid,
       unitId,
       hotelId,
       roomTypeId,
     });
 
-    // Generate state parameter for CSRF protection
-    const state = crypto.randomBytes(32).toString("hex");
+    // 1. Ensure we have a valid global token (validates app credentials indirectly)
+    // We don't store the token in the connection document anymore to avoid duplication
+    // and rate limit issues.
+    await getGlobalMachineAccountToken();
 
-    // Store state in Firestore for verification
-    await db.collection("oauth_states").doc(state).set({
-      userId: request.auth.uid,
-      unitId,
-      hotelId,
-      roomTypeId,
+    // 2. Create/Update platform connection document
+    // We check if one exists for this unit to avoid duplicates or update existing
+    const connectionsQuery = await db.collection("platform_connections")
+      .where("owner_id", "==", request.auth.uid)
+      .where("unit_id", "==", unitId)
+      .where("platform", "==", "booking_com")
+      .get();
+
+    let connectionRef;
+    if (!connectionsQuery.empty) {
+      connectionRef = connectionsQuery.docs[0].ref;
+    } else {
+      connectionRef = db.collection("platform_connections").doc();
+    }
+
+    await connectionRef.set({
+      owner_id: request.auth.uid,
       platform: "booking_com",
-      createdAt: admin.firestore.Timestamp.now(),
-      expiresAt: admin.firestore.Timestamp.fromDate(
-        new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
-      ),
+      unit_id: unitId,
+      external_property_id: hotelId,
+      external_unit_id: roomTypeId,
+      // We do NOT store access_token here anymore. It's managed globally.
+      status: "active",
+      created_at: admin.firestore.Timestamp.now(),
+      updated_at: admin.firestore.Timestamp.now(),
+    }, { merge: true });
+
+    logSuccess("[Booking.com Connection] Connection created successfully", {
+      connectionId: connectionRef.id,
+      userId: request.auth.uid,
     });
 
-    // TODO: Update with actual OAuth authorization URL after getting API access
-    // Placeholder - replace with actual Booking.com OAuth endpoint
-    const authUrl = new URL("https://secure.booking.com/oauth/authorize");
-    authUrl.searchParams.set("client_id", BOOKING_COM_CLIENT_ID);
-    authUrl.searchParams.set("redirect_uri", BOOKING_COM_REDIRECT_URI);
-    authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("state", state);
-    authUrl.searchParams.set("scope", "read write");
-
-    logSuccess("[Booking.com OAuth] Authorization URL generated", {
-      state,
-    });
-
+    // Return success. Frontend expects a Map but handles missing 'authorizationUrl'.
     return {
-      authorizationUrl: authUrl.toString(),
-      state,
+      success: true,
+      connectionId: connectionRef.id,
+      status: "connected"
     };
+
   } catch (error) {
-    logError("[Booking.com OAuth] Failed to initiate OAuth flow", error);
-    throw new HttpsError("internal", "Failed to initiate OAuth flow");
+    logError("[Booking.com Connection] Failed to create connection", error);
+    throw new HttpsError("internal", "Failed to create Booking.com connection. Please check configuration.");
   }
 });
 
 /**
- * Handle OAuth callback from Booking.com
- * Exchanges authorization code for access token
- */
-export const handleBookingComOAuthCallback = onRequest(
-  {cors: true},
-  async (req, res) => {
-    try {
-      const {code, state, error} = req.query;
-
-      if (error) {
-        logError("[Booking.com OAuth] OAuth error", null, {error});
-        res.status(400).send(`OAuth error: ${error}`);
-        return;
-      }
-
-      if (!code || !state) {
-        res.status(400).send("Missing code or state parameter");
-        return;
-      }
-
-      // Verify state
-      const stateDoc = await db.collection("oauth_states").doc(state as string).get();
-
-      if (!stateDoc.exists) {
-        res.status(400).send("Invalid state parameter");
-        return;
-      }
-
-      const stateData = stateDoc.data()!;
-      const expiresAt = stateData.expiresAt.toDate();
-
-      if (expiresAt < new Date()) {
-        res.status(400).send("State expired");
-        return;
-      }
-
-      // TODO: Update with actual OAuth token URL after getting API access
-      // Placeholder - replace with actual Booking.com OAuth token endpoint
-      const tokenResponse = await fetch("https://secure.booking.com/oauth/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          grant_type: "authorization_code",
-          code: code as string,
-          redirect_uri: BOOKING_COM_REDIRECT_URI,
-          client_id: BOOKING_COM_CLIENT_ID,
-          client_secret: BOOKING_COM_CLIENT_SECRET,
-        }),
-      });
-
-      if (!tokenResponse.ok) {
-        const errorText = await tokenResponse.text();
-        logError("[Booking.com OAuth] Token exchange failed", null, {
-          status: tokenResponse.status,
-          error: errorText,
-        });
-        res.status(400).send("Failed to exchange code for token");
-        return;
-      }
-
-      const tokenData = await tokenResponse.json();
-      const {access_token, refresh_token, expires_in} = tokenData;
-
-      // Calculate expiration time
-      const expiresAtTime = new Date(Date.now() + expires_in * 1000);
-
-      // Create platform connection document
-      const connectionRef = db.collection("platform_connections").doc();
-      await connectionRef.set({
-        owner_id: stateData.userId,
-        platform: "booking_com",
-        unit_id: stateData.unitId,
-        external_property_id: stateData.hotelId,
-        external_unit_id: stateData.roomTypeId,
-        access_token: encryptToken(access_token),
-        refresh_token: refresh_token ? encryptToken(refresh_token) : null,
-        expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
-        status: "active",
-        created_at: admin.firestore.Timestamp.now(),
-        updated_at: admin.firestore.Timestamp.now(),
-      });
-
-      // Delete state document
-      await stateDoc.ref.delete();
-
-      logSuccess("[Booking.com OAuth] Connection created", {
-        connectionId: connectionRef.id,
-        userId: stateData.userId,
-      });
-
-      // Redirect to success page
-      res.redirect(
-        `https://app.bookbed.io/owner/platform-connections?success=true&connectionId=${connectionRef.id}`
-      );
-    } catch (error) {
-      logError("[Booking.com OAuth] Callback error", error);
-      res.status(500).send("Internal server error");
-    }
-  }
-);
-
-/**
- * Refresh access token using refresh token
- */
-async function refreshBookingComToken(
-  connectionId: string,
-  refreshToken: string
-): Promise<string> {
-  try {
-    logInfo("[Booking.com API] Refreshing access token", {connectionId});
-
-    const response = await fetch("https://secure.booking.com/oauth/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: decryptToken(refreshToken),
-        client_id: BOOKING_COM_CLIENT_ID,
-        client_secret: BOOKING_COM_CLIENT_SECRET,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Token refresh failed: ${response.status}`);
-    }
-
-    const tokenData = await response.json();
-    const {access_token, expires_in} = tokenData;
-
-    // Update connection with new token
-    const expiresAtTime = new Date(Date.now() + expires_in * 1000);
-    await db.collection("platform_connections").doc(connectionId).update({
-      access_token: encryptToken(access_token),
-      expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
-      updated_at: admin.firestore.Timestamp.now(),
-    });
-
-    logSuccess("[Booking.com API] Token refreshed", {connectionId});
-
-    return access_token;
-  } catch (error) {
-    logError("[Booking.com API] Token refresh failed", error, {connectionId});
-    throw error;
-  }
-}
-
-/**
- * Get valid access token (refresh if needed)
+ * Get valid access token for a connection.
+ *
+ * For Machine Accounts, this now retrieves the Shared/Global token
+ * instead of a connection-specific one.
  */
 async function getValidAccessToken(connectionId: string): Promise<string> {
+  // We still verify the connection exists and is active
   const connectionDoc = await db
     .collection("platform_connections")
     .doc(connectionId)
@@ -299,21 +217,10 @@ async function getValidAccessToken(connectionId: string): Promise<string> {
     throw new Error("Connection not found");
   }
 
-  const connectionData = connectionDoc.data()!;
-  const expiresAt = connectionData.expires_at.toDate();
-  const accessToken = decryptToken(connectionData.access_token);
-  const refreshToken = connectionData.refresh_token;
+  // Future: Check if connection.status === 'active'
 
-  // Check if token is expired or will expire in next 5 minutes
-  if (expiresAt < new Date(Date.now() + 5 * 60 * 1000)) {
-    if (refreshToken) {
-      return await refreshBookingComToken(connectionId, refreshToken);
-    } else {
-      throw new Error("Token expired and no refresh token available");
-    }
-  }
-
-  return accessToken;
+  // Return the global token
+  return await getGlobalMachineAccountToken();
 }
 
 /**
@@ -486,4 +393,3 @@ export async function getBookingComReservations(
     throw error;
   }
 }
-

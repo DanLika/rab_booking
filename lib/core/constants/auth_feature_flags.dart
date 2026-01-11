@@ -15,8 +15,7 @@ abstract final class AuthFeatureFlags {
   /// 1. Apple Sign-In is enabled in Firebase Console
   /// 2. Service ID is configured in Apple Developer Portal
   /// 3. OAuth redirect URLs are configured
-  // TODO: Enable when Apple Developer Portal is configured
-  static const bool isAppleSignInEnabled = false;
+  static const bool isAppleSignInEnabled = true;
 
   /// Whether email verification is required after registration/login.
   ///

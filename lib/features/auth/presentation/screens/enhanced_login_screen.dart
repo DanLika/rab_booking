@@ -12,6 +12,8 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/errors/error_handler.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/loading_overlay.dart';
 import '../widgets/auth_background.dart';
@@ -151,41 +153,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         '[LOGIN_SCREEN] After signIn - isAuthenticated: ${authState.isAuthenticated}, error: ${authState.error}, requiresEmailVerification: ${authState.requiresEmailVerification}',
       );
 
-      if (authState.error != null) {
-        if (!mounted) return;
-        debugPrint('[LOGIN_SCREEN] Auth state has error, showing snackbar');
-
-        final errorMsg = authState.error!;
-        final isPassError = _isPasswordError(errorMsg);
-        final isEmailErr = _isEmailError(errorMsg);
-
-        setState(() {
-          _isLoading = false;
-          _autovalidateMode = AutovalidateMode.onUserInteraction;
-          if (isPassError) {
-            _passwordErrorFromServer = _getLocalizedError(errorMsg, l10n);
-          } else if (isEmailErr) {
-            _emailErrorFromServer = _getLocalizedError(errorMsg, l10n);
-          }
-        });
-
-        _shakeForm();
-
-        // Force form validation to show inline errors
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _formKey.currentState != null) {
-            _formKey.currentState!.validate();
-          }
-        });
-
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          _getLocalizedError(errorMsg, l10n),
-          duration: const Duration(seconds: 10),
-        );
-        return;
-      }
-
       if (authState.requiresEmailVerification) {
         if (!mounted) return;
         debugPrint('[LOGIN_SCREEN] Email verification required, redirecting');
@@ -193,6 +160,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         context.go(OwnerRoutes.emailVerification);
         return;
       }
+
+      // Note: If authState.error != null here, it means something went wrong *after* a seemingly successful login,
+      // or the provider didn't throw but set an error. But our provider throws now.
+      // So we can assume success if we reach here.
 
       // User is authenticated - redirect immediately to dashboard
       if (!mounted) return;
@@ -207,19 +178,18 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       debugPrint('[LOGIN_SCREEN] Caught exception: ${e.runtimeType} = $e');
       if (!mounted) return;
 
-      // Get error message from exception (prefer thrown message over state)
-      // When a string is thrown directly, toString() returns the string itself
-      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      // Use centralized ErrorHandler to get localized message
+      final errorMessage = ErrorHandler.getUserFriendlyMessage(e, l10n);
+
       debugPrint(
         '[LOGIN_SCREEN] Error message after processing: $errorMessage',
       );
 
       // IMMEDIATELY show snackbar BEFORE any state changes or delays
-      // This ensures snackbar displays before router can trigger redirects
-      final localizedError = _getLocalizedError(errorMessage, l10n);
       ErrorDisplayUtils.showErrorSnackBar(
         context,
-        localizedError,
+        e, // Pass the original error to let Utils use ErrorHandler internally too, or just pass message
+        userMessage: errorMessage,
         duration: const Duration(seconds: 10),
       );
 
@@ -227,8 +197,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       await Future.delayed(const Duration(milliseconds: 100));
       if (!mounted) return;
 
-      final isPassError = _isPasswordError(errorMessage);
-      final isEmailErr = _isEmailError(errorMessage);
+      final isPassError = _isPasswordError(e);
+      final isEmailErr = _isEmailError(e);
       debugPrint(
         '[LOGIN_SCREEN] Is password error: $isPassError, Is email error: $isEmailErr',
       );
@@ -238,9 +208,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         _isLoading = false;
         _autovalidateMode = AutovalidateMode.onUserInteraction;
         if (isPassError) {
-          _passwordErrorFromServer = localizedError;
+          _passwordErrorFromServer = errorMessage;
         } else if (isEmailErr) {
-          _emailErrorFromServer = localizedError;
+          _emailErrorFromServer = errorMessage;
         }
       });
 
@@ -259,72 +229,25 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     }
   }
 
-  /// Map error messages to localized strings
-  String _getLocalizedError(String error, AppLocalizations l10n) {
-    final errorLower = error.toLowerCase();
-
-    // Authentication errors - use new auth-specific keys
-    if (errorLower.contains('user-not-found') ||
-        errorLower.contains('no account found')) {
-      return l10n.authErrorUserNotFound;
+  bool _isPasswordError(dynamic error) {
+    if (error is AuthException) {
+      return error.code == 'auth/wrong-password' ||
+             error.code == 'auth/invalid-credential';
     }
-    if (errorLower.contains('wrong-password') ||
-        errorLower.contains('invalid-credential') ||
-        errorLower.contains('incorrect password')) {
-      return l10n.authErrorWrongPassword;
-    }
-    if (errorLower.contains('invalid-email') ||
-        errorLower.contains('invalid email')) {
-      return l10n.authErrorInvalidEmail;
-    }
-    if (errorLower.contains('user-disabled') ||
-        errorLower.contains('account has been disabled')) {
-      return l10n.authErrorUserDisabled;
-    }
-    if (errorLower.contains('too-many-requests') ||
-        errorLower.contains('too many')) {
-      return l10n.authErrorTooManyRequests;
-    }
-    if (errorLower.contains('network') || errorLower.contains('connection')) {
-      return l10n.errorNetworkFailed;
-    }
-    if (errorLower.contains('permission-denied') ||
-        errorLower.contains('permission denied')) {
-      return l10n.errorPermissionDenied;
-    }
-    if (errorLower.contains('not-found') || errorLower.contains('not found')) {
-      return l10n.errorNotFound;
-    }
-    if (errorLower.contains('timeout')) {
-      return l10n.errorTimeout;
-    }
-    if (errorLower.contains('already exists') ||
-        errorLower.contains('email-already-in-use')) {
-      return l10n.errorEmailInUse;
-    }
-
-    // Fallback to generic auth error for unmapped errors
-    return l10n.authErrorGeneric;
+    // Fallback for string checks if any
+    final msg = error.toString().toLowerCase();
+    return msg.contains('password') || msg.contains('credential');
   }
 
-  bool _isPasswordError(String message) {
-    const passwordErrorPatterns = [
-      'Incorrect password',
-      'Invalid password',
-      'wrong-password',
-      'invalid-credential',
-    ];
-    return passwordErrorPatterns.any(message.contains);
-  }
-
-  bool _isEmailError(String message) {
-    const emailErrorPatterns = [
-      'user-not-found',
-      'No account found',
-      'invalid-email',
-      'Invalid email',
-    ];
-    return emailErrorPatterns.any(message.contains);
+  bool _isEmailError(dynamic error) {
+    if (error is AuthException) {
+      return error.code == 'auth/user-not-found' ||
+             error.code == 'auth/invalid-email' ||
+             error.code == 'auth/user-disabled' ||
+             error.code == 'auth/too-many-requests';
+    }
+    final msg = error.toString().toLowerCase();
+    return msg.contains('user') || msg.contains('email') || msg.contains('account');
   }
 
   Future<void> _handleOAuthSignIn(Future<void> Function() signInMethod) async {
@@ -334,10 +257,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       await signInMethod();
     } catch (e) {
       if (!mounted) return;
-      final authState = ref.read(enhancedAuthProvider);
       ErrorDisplayUtils.showErrorSnackBar(
         context,
-        authState.error ?? e.toString(),
+        e,
       );
     } finally {
       if (mounted) {

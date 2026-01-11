@@ -18,7 +18,7 @@
 abstract class AppException implements Exception {
   final String message;
   final String? code;
-  final String? userMessage; // User-friendly message for UI display
+  final String? userMessage; // User-friendly message for UI display (fallback)
   final dynamic originalError;
   final StackTrace? stackTrace;
 
@@ -396,7 +396,7 @@ class NetworkException extends AppException {
     return NetworkException(
       'Network connection failed',
       code: 'network/connection-failed',
-      userMessage: 'Provjerite internet konekciju i pokušajte ponovo.',
+      userMessage: 'Please check your internet connection and try again.',
       originalError: error,
     );
   }
@@ -421,7 +421,7 @@ class ServerException extends AppException {
       'Server error: $statusCode',
       statusCode: statusCode,
       code: 'server/error-$statusCode',
-      userMessage: 'Greška na serveru. Pokušajte ponovo.',
+      userMessage: 'Server error. Please try again.',
       originalError: error,
     );
   }
@@ -442,7 +442,7 @@ class TimeoutException extends AppException {
     return TimeoutException(
       'Request timed out',
       code: 'timeout/request',
-      userMessage: 'Operacija je istekla. Pokušajte ponovo.',
+      userMessage: 'Operation timed out. Please try again.',
       originalError: error,
     );
   }
@@ -499,7 +499,7 @@ class NotFoundException extends AppException {
     return NotFoundException(
       '$resourceType not found',
       code: 'not-found/$resourceType',
-      userMessage: 'Traženi resurs nije pronađen.',
+      userMessage: 'Requested resource not found.',
       originalError: error,
     );
   }
@@ -520,7 +520,7 @@ class DatabaseException extends AppException {
     return DatabaseException(
       'Database operation failed: $operation',
       code: 'database/operation-failed',
-      userMessage: 'Greška u bazi podataka. Pokušajte ponovo.',
+      userMessage: 'Database error. Please try again.',
       originalError: error,
     );
   }
@@ -545,7 +545,7 @@ class PermissionException extends AppException {
     return PermissionException(
       'Permission denied for: $action',
       code: 'permission/denied',
-      userMessage: 'Nemate dozvolu za ovu akciju.',
+      userMessage: 'You do not have permission for this action.',
       originalError: error,
     );
   }
@@ -566,7 +566,7 @@ class AuthorizationException extends AppException {
     return AuthorizationException(
       'Unauthorized access',
       code: 'authorization/unauthorized',
-      userMessage: 'Nemate dozvolu za pristup ovom resursu.',
+      userMessage: 'You do not have permission to access this resource.',
       originalError: error,
     );
   }
@@ -594,7 +594,7 @@ class ConflictException extends AppException {
     return ConflictException(
       'Conflict occurred for $resourceType',
       code: 'conflict/$resourceType',
-      userMessage: 'Konflikt podataka. Pokušajte ponovo.',
+      userMessage: 'Data conflict. Please try again.',
       originalError: error,
     );
   }
@@ -687,7 +687,7 @@ class UnknownException extends AppException {
     return UnknownException(
       'An unexpected error occurred',
       code: 'unknown/unexpected',
-      userMessage: 'Došlo je do neočekivane greške. Pokušajte ponovo.',
+      userMessage: 'An unexpected error occurred. Please try again.',
       originalError: error,
     );
   }

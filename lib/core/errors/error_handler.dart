@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import '../../l10n/app_localizations.dart';
 import '../exceptions/app_exceptions.dart';
 import '../services/logging_service.dart';
 
@@ -19,56 +20,78 @@ class ErrorHandler {
   // Prevent instantiation
   ErrorHandler._();
 
-  /// Convert technical errors to user-friendly messages in Croatian/Serbian
-  /// Uses getUserMessage() from AppException when available
-  static String getUserFriendlyMessage(dynamic error) {
-    // If it's an AppException, use its getUserMessage() method
-    if (error is AppException) {
-      final userMsg = error.getUserMessage();
-      // If userMessage is set, use it; otherwise fall back to type-specific defaults
-      if (error.userMessage != null) {
-        return userMsg;
+  /// Convert technical errors to user-friendly messages
+  /// Uses [AppLocalizations] if provided, otherwise falls back to English or hardcoded defaults.
+  static String getUserFriendlyMessage(dynamic error, [AppLocalizations? l10n]) {
+    // Helper to return localized string or fallback
+    String loc(String Function(AppLocalizations) selector, String fallback) {
+      if (l10n != null) {
+        return selector(l10n);
       }
+      return fallback;
     }
 
-    // Type-specific fallback messages
+    // If it's an AppException with a specific userMessage, prioritize it?
+    // Ideally, we want localized messages. If userMessage is hardcoded in Croatian,
+    // we should prefer the localized version based on type/code if available.
+    // However, if the exception carries a dynamic message from backend, we might need to use it.
+    // Strategy: Check type/code first for standard errors.
+
     if (error is NetworkException) {
-      return 'Provjerite internet konekciju i pokušajte ponovo.';
-    } else if (error is AuthException) {
-      return 'Greška prilikom autentifikacije. Molimo prijavite se ponovo.';
-    } else if (error is DatabaseException) {
-      return 'Greška u bazi podataka. Pokušajte ponovo.';
-    } else if (error is ValidationException) {
-      return error.getUserMessage();
-    } else if (error is PaymentException) {
-      return 'Greška prilikom plaćanja: ${error.message}';
-    } else if (error is BookingException) {
-      return error.getUserMessage();
-    } else if (error is NotFoundException) {
-      return 'Traženi resurs nije pronađen.';
-    } else if (error is ConflictException) {
-      return 'Konflikt podataka. ${error.message}';
+      return loc((l) => l.errorNetworkFailed, 'Network error. Please check your internet connection');
     } else if (error is TimeoutException) {
-      // UX-020: Improved timeout message with actionable advice
-      return 'Operacija je istekla. Molimo provjerite vašu internet konekciju i pokušajte ponovo.';
-    } else if (error is AuthorizationException) {
-      return 'Nemate dozvolu za ovu akciju.';
+      return loc((l) => l.errorTimeout, 'Operation timed out. Please try again');
+    } else if (error is AuthException) {
+       // Check for specific auth codes if available, otherwise generic
+       if (error.code == 'auth/user-not-found') return loc((l) => l.authErrorUserNotFound, 'No account found with this email');
+       if (error.code == 'auth/wrong-password') return loc((l) => l.authErrorWrongPassword, 'Incorrect password');
+       if (error.code == 'auth/email-already-in-use') return loc((l) => l.errorEmailInUse, 'Email already in use');
+       if (error.code == 'auth/invalid-email') return loc((l) => l.authErrorInvalidEmail, 'Invalid email address');
+       if (error.code == 'auth/user-disabled') return loc((l) => l.authErrorUserDisabled, 'Account disabled');
+       if (error.code == 'auth/too-many-requests') return loc((l) => l.authErrorTooManyRequests, 'Too many attempts');
+
+       return loc((l) => l.authErrorGeneric, 'Authentication failed. Please login again.');
+    } else if (error is DatabaseException) {
+      return loc((l) => l.errorGeneric, 'Database error. Please try again.');
+    } else if (error is ValidationException) {
+      return error.getUserMessage(); // Validation messages are often specific fields
+    } else if (error is NotFoundException) {
+      return loc((l) => l.errorNotFound, 'Requested resource not found.');
+    } else if (error is ConflictException) {
+      return loc((l) => l.errorAlreadyExists, 'Conflict occurred.');
+    } else if (error is AuthorizationException || error is PermissionException) {
+      return loc((l) => l.errorPermissionDenied, 'Permission denied.');
     } else if (error is DatesNotAvailableException) {
-      return error.getUserMessage();
-    } else {
-      return 'Došlo je do neočekivane greške. Pokušajte ponovo.';
+       return loc((l) => l.widgetDatesNotAvailable, 'Selected dates are not available');
     }
+
+    // Check for string errors that might be thrown directly (legacy)
+    final errorStr = error.toString().toLowerCase();
+    if (errorStr.contains('network') || errorStr.contains('connection')) {
+      return loc((l) => l.errorNetworkFailed, 'Network error.');
+    }
+    if (errorStr.contains('timeout')) {
+      return loc((l) => l.errorTimeout, 'Timeout.');
+    }
+
+    // Default fallback
+    if (error is AppException && error.userMessage != null) {
+      return error.userMessage!;
+    }
+
+    return loc((l) => l.errorGeneric, 'An unexpected error occurred. Please try again.');
   }
 
   /// Show error message in a SnackBar
   static void showErrorSnackBar(BuildContext context, dynamic error) {
-    final message = getUserFriendlyMessage(error);
+    final l10n = AppLocalizations.of(context);
+    final message = getUserFriendlyMessage(error, l10n);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
         action: SnackBarAction(
-          label: 'OK',
+          label: l10n.ok,
           textColor: Colors.white,
           onPressed: () {},
         ),
@@ -95,6 +118,7 @@ class ErrorHandler {
         reason: 'ErrorHandler caught error',
         information: [
           'source: ErrorHandler',
+          // We don't have context here, so we get english/default message
           'user_friendly_message: ${getUserFriendlyMessage(error)}',
         ],
         printDetails: false,
@@ -104,15 +128,16 @@ class ErrorHandler {
 
   /// Show error dialog to user
   static void showErrorDialog(BuildContext context, dynamic error) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Greška'),
-        content: Text(getUserFriendlyMessage(error)),
+        title: Text(l10n.error),
+        content: Text(getUserFriendlyMessage(error, l10n)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),

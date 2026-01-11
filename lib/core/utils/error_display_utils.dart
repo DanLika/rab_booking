@@ -1,22 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../../l10n/app_localizations.dart';
+import '../errors/error_handler.dart';
 
 /// Utility for displaying user-friendly error messages
 /// Hides technical details (stack traces) from users in production
-///
-/// Snackbar color palette (Mediterranean theme):
-/// - Success: Emerald (#10B981) - White text + check_circle icon
-/// - Error: Red (#EF4444) - White text + error_outline icon
-/// - Warning: Orange (#F97316) - Dark text + warning_amber icon
-/// - Info: Blue (#3B82F6) - White text + info_outline icon
-///
-/// All snackbars use:
-/// - SnackBarBehavior.floating for proper z-index
-/// - Constrained width on desktop (max 400px) for cleaner appearance
-/// - Auto-dismiss previous snackbar before showing new one
-/// - Consistent 12px border radius
 class ErrorDisplayUtils {
   ErrorDisplayUtils._(); // Private constructor
 
@@ -30,7 +19,6 @@ class ErrorDisplayUtils {
   static const double _desktopBreakpoint = 600.0;
 
   /// Build a styled snackbar with consistent appearance
-  /// Uses margin-based positioning to prevent full-width on desktop
   static SnackBar _buildSnackBar({
     required BuildContext context,
     required Widget content,
@@ -42,16 +30,13 @@ class ErrorDisplayUtils {
     final isDesktop = screenWidth >= _desktopBreakpoint;
 
     // Calculate horizontal margin to achieve max width effect on desktop
-    // This allows content to expand naturally while capping max width
     final double horizontalMargin;
     if (isDesktop && screenWidth > _preferredMaxWidth) {
-      // Center snackbar with calculated margins to cap max width
       horizontalMargin = ((screenWidth - _preferredMaxWidth) / 2).clamp(
         16.0,
         double.infinity,
       );
     } else {
-      // Mobile or small desktop: standard margins
       horizontalMargin = 16.0;
     }
 
@@ -103,8 +88,10 @@ class ErrorDisplayUtils {
     final messenger = ScaffoldMessenger.of(context);
     messenger.clearSnackBars();
 
-    // Extract user-friendly message
-    final displayMessage = _getUserFriendlyMessage(error, userMessage);
+    final l10n = AppLocalizations.of(context);
+
+    // Extract user-friendly message using ErrorHandler and localization
+    final displayMessage = userMessage ?? ErrorHandler.getUserFriendlyMessage(error, l10n);
 
     messenger.showSnackBar(
       _buildSnackBar(
@@ -119,7 +106,7 @@ class ErrorDisplayUtils {
         duration: duration,
         action: onRetry != null
             ? SnackBarAction(
-                label: 'Pokušaj ponovo',
+                label: l10n.retry,
                 textColor: Colors.white,
                 onPressed: onRetry,
               )
@@ -129,7 +116,6 @@ class ErrorDisplayUtils {
   }
 
   /// Show success snackbar
-  /// Optional [actionLabel] and [onAction] for undo-style actions
   static void showSuccessSnackBar(
     BuildContext context,
     String message, {
@@ -250,39 +236,6 @@ class ErrorDisplayUtils {
     );
   }
 
-  /// Extract user-friendly error message
-  /// In release mode, hides technical details
-  /// Uses localization if context is available (passed via BuildContext in calling method)
-  static String _getUserFriendlyMessage(dynamic error, String? userMessage) {
-    // If custom user message provided, use it
-    if (userMessage != null && userMessage.isNotEmpty) {
-      return userMessage;
-    }
-
-    // Handle null error case - return error string directly
-    // (In production, caller should provide userMessage)
-    if (error == null) {
-      return 'An error occurred. Please try again';
-    }
-
-    // In debug mode, show full error for developers
-    if (kDebugMode) {
-      try {
-        return error.toString();
-      } catch (e) {
-        return 'Error: Unable to display error details';
-      }
-    }
-
-    // In release mode, return the error message as-is
-    // The error messages are already user-friendly (from provider or cloud functions)
-    try {
-      return error.toString();
-    } catch (e) {
-      return 'An error occurred. Please try again';
-    }
-  }
-
   /// Show error dialog for critical errors
   static Future<void> showErrorDialog(
     BuildContext context, {
@@ -291,6 +244,8 @@ class ErrorDisplayUtils {
     VoidCallback? onRetry,
   }) async {
     if (!context.mounted) return;
+
+    final l10n = AppLocalizations.of(context);
 
     return showDialog(
       context: context,
@@ -309,7 +264,7 @@ class ErrorDisplayUtils {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Zatvori'),
+            child: Text(l10n.close),
           ),
           if (onRetry != null)
             FilledButton(
@@ -317,7 +272,7 @@ class ErrorDisplayUtils {
                 Navigator.of(context).pop();
                 onRetry();
               },
-              child: const Text('Pokušaj ponovo'),
+              child: Text(l10n.retry),
             ),
         ],
       ),

@@ -11,6 +11,8 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/errors/error_handler.dart';
 import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/loading_overlay.dart';
@@ -128,6 +130,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
       final authState = ref.read(enhancedAuthProvider);
 
+      // Note: If authState.error != null, provider would have thrown exception now.
+      // But we keep this check just in case.
       if (authState.error != null) {
         setState(() => _isLoading = false);
         ErrorDisplayUtils.showErrorSnackBar(context, authState.error);
@@ -146,22 +150,21 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     } catch (e) {
       if (!mounted) return;
 
-      final authState = ref.read(enhancedAuthProvider);
-      final errorMessage = authState.error ?? e.toString();
+      final errorMessage = ErrorHandler.getUserFriendlyMessage(e, l10n);
 
-      if (_isEmailError(errorMessage)) {
+      if (_isEmailError(e)) {
         setState(() {
-          _emailErrorFromServer =
-              errorMessage.contains('already exists') ||
-                  errorMessage.contains('email-already-in-use')
-              ? l10n.errorEmailInUse
-              : l10n.authErrorInvalidEmail;
+          _emailErrorFromServer = errorMessage;
           _isLoading = false;
         });
         _formKey.currentState!.validate();
       } else {
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: errorMessage,
+        );
       }
     }
   }
@@ -177,13 +180,15 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     return (firstName, lastName);
   }
 
-  bool _isEmailError(String message) {
-    const emailErrorPatterns = [
-      'already exists',
-      'email-already-in-use',
-      'Invalid email',
-    ];
-    return emailErrorPatterns.any(message.contains);
+  bool _isEmailError(dynamic error) {
+    if (error is AuthException) {
+      return error.code == 'auth/email-already-in-use' ||
+             error.code == 'auth/invalid-email';
+    }
+    final msg = error.toString().toLowerCase();
+    return msg.contains('already exists') ||
+           msg.contains('email-already-in-use') ||
+           msg.contains('invalid email');
   }
 
   @override

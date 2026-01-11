@@ -31,7 +31,7 @@ class BookBedLogo extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     Widget logoImage = Image.asset(
-      'assets/images/logo-light.avif',
+      'assets/images/logo-light.png',
       width: size,
       height: size,
       fit: BoxFit.contain,

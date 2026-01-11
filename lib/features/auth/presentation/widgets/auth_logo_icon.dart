@@ -47,7 +47,7 @@ class AuthLogoIcon extends StatelessWidget {
 
     // Build the logo image with optional color inversion for dark mode
     Widget logoImage = Image.asset(
-      'assets/images/logo-light.avif',
+      'assets/images/logo-light.png',
       width: size,
       height: size,
       fit: BoxFit.contain,

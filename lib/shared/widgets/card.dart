@@ -242,28 +242,30 @@ class _PremiumCardState extends State<PremiumCard> {
             setState(() => _isHovered = false);
           }
         },
-        child: AnimatedContainer(
-          duration: AppAnimations.hover.duration,
-          curve: AppAnimations.hover.curve,
-          decoration: _buildDecoration(context, effectiveRadius),
-          transform: widget.enableHover && _isHovered
-              ? Matrix4.translationValues(0, -4, 0)
-              : Matrix4.identity(),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(effectiveRadius),
-            child: widget.onTap != null
-                ? InkWell(
-                    onTap: widget.onTap,
-                    borderRadius: BorderRadius.circular(effectiveRadius),
-                    child: SingleChildScrollView(
+        child: RepaintBoundary(
+          child: AnimatedContainer(
+            duration: AppAnimations.hover.duration,
+            curve: AppAnimations.hover.curve,
+            decoration: _buildDecoration(context, effectiveRadius),
+            transform: widget.enableHover && _isHovered
+                ? Matrix4.translationValues(0, -4, 0)
+                : Matrix4.identity(),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(effectiveRadius),
+              child: widget.onTap != null
+                  ? InkWell(
+                      onTap: widget.onTap,
+                      borderRadius: BorderRadius.circular(effectiveRadius),
+                      child: SingleChildScrollView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: cardContent,
+                      ),
+                    )
+                  : SingleChildScrollView(
                       physics: const NeverScrollableScrollPhysics(),
                       child: cardContent,
                     ),
-                  )
-                : SingleChildScrollView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    child: cardContent,
-                  ),
+            ),
           ),
         ),
       ),

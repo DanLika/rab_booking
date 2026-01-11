@@ -1015,206 +1015,208 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     required bool isSelected,
     VoidCallback? onUnitSelected,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
-            : context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
+    return RepaintBoundary(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        decoration: BoxDecoration(
           color: isSelected
-              ? theme.colorScheme.primary
-              : context.gradients.sectionBorder,
-          width: isSelected ? 2 : 1.5,
+              ? theme.colorScheme.primary.withAlpha((0.2 * 255).toInt())
+              : context.gradients.cardBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : context.gradients.sectionBorder,
+            width: isSelected ? 2 : 1.5,
+          ),
+          boxShadow: AppShadows.getElevation(1, isDark: isDark),
         ),
-        boxShadow: AppShadows.getElevation(1, isDark: isDark),
-      ),
-      child: InkWell(
-        onTap: () {
-          // OPTIMIZED: Use passed property directly - eliminates N+1 query pattern
-          setState(() {
-            _selectedUnit = unit;
-            _selectedProperty = property;
-          });
-          onUnitSelected?.call();
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Unit name + status + actions
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      unit.name,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface,
+        child: InkWell(
+          onTap: () {
+            // OPTIMIZED: Use passed property directly - eliminates N+1 query pattern
+            setState(() {
+              _selectedUnit = unit;
+              _selectedProperty = property;
+            });
+            onUnitSelected?.call();
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Unit name + status + actions
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        unit.name,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: unit.isAvailable
+                            ? _kAvailableColor.withAlpha((0.2 * 255).toInt())
+                            : _kUnavailableColor.withAlpha((0.2 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return Text(
+                            unit.isAvailable
+                                ? l10n.unitHubAvailable
+                                : l10n.unitHubUnavailable,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: unit.isAvailable
+                                  ? _kAvailableColor
+                                  : _kUnavailableColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    // Duplicate button
+                    SizedBox(
+                      width: 26,
+                      height: 26,
+                      child: Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return IconButton(
+                            onPressed: () {
+                              context.push(
+                                '${OwnerRoutes.unitWizard}?propertyId=${unit.propertyId}&duplicateFromId=${unit.id}',
+                              );
+                            },
+                            icon: Icon(
+                              Icons.copy_outlined,
+                              size: 15,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.primary.withAlpha(
+                                      (0.7 * 255).toInt(),
+                                    ),
+                            ),
+                            tooltip: l10n.unitHubEditUnit,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    // Delete button
+                    SizedBox(
+                      width: 26,
+                      height: 26,
+                      child: Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return IconButton(
+                            onPressed: () => _confirmDeleteUnit(context, unit),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              size: 15,
+                              color: theme.colorScheme.error.withAlpha(
+                                (0.8 * 255).toInt(),
+                              ),
+                            ),
+                            tooltip: l10n.unitHubDeleteUnit,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                // Property name
+                Text(
+                  property.name,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isSelected
+                        ? theme.colorScheme.onSurface.withAlpha(
+                            (0.7 * 255).toInt(),
+                          )
+                        : theme.colorScheme.onSurfaceVariant,
+                    fontSize: 12,
                   ),
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
+                ),
+                const SizedBox(height: 6),
+                // Max guests + price
+                Row(
+                  children: [
+                    Icon(
+                      Icons.people_rounded,
+                      size: 18,
+                      color: isSelected
+                          ? theme.colorScheme.primary.withAlpha(
+                              (0.8 * 255).toInt(),
+                            )
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
-                    decoration: BoxDecoration(
-                      color: unit.isAvailable
-                          ? _kAvailableColor.withAlpha((0.2 * 255).toInt())
-                          : _kUnavailableColor.withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(6),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${unit.maxGuests}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isSelected
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                      ),
                     ),
-                    child: Builder(
+                    const SizedBox(width: 14),
+                    Icon(
+                      Icons.euro_rounded,
+                      size: 18,
+                      color: isSelected
+                          ? theme.colorScheme.primary.withAlpha(
+                              (0.8 * 255).toInt(),
+                            )
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Builder(
                       builder: (context) {
                         final l10n = AppLocalizations.of(context);
                         return Text(
-                          unit.isAvailable
-                              ? l10n.unitHubAvailable
-                              : l10n.unitHubUnavailable,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: unit.isAvailable
-                                ? _kAvailableColor
-                                : _kUnavailableColor,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  // Duplicate button
-                  SizedBox(
-                    width: 26,
-                    height: 26,
-                    child: Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context);
-                        return IconButton(
-                          onPressed: () {
-                            context.push(
-                              '${OwnerRoutes.unitWizard}?propertyId=${unit.propertyId}&duplicateFromId=${unit.id}',
-                            );
-                          },
-                          icon: Icon(
-                            Icons.copy_outlined,
-                            size: 15,
+                          '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
+                          style: theme.textTheme.bodySmall?.copyWith(
                             color: isSelected
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.primary.withAlpha(
-                                    (0.7 * 255).toInt(),
-                                  ),
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                           ),
-                          tooltip: l10n.unitHubEditUnit,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
                         );
                       },
                     ),
-                  ),
-                  const SizedBox(width: 2),
-                  // Delete button
-                  SizedBox(
-                    width: 26,
-                    height: 26,
-                    child: Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context);
-                        return IconButton(
-                          onPressed: () => _confirmDeleteUnit(context, unit),
-                          icon: Icon(
-                            Icons.delete_outline,
-                            size: 15,
-                            color: theme.colorScheme.error.withAlpha(
-                              (0.8 * 255).toInt(),
-                            ),
-                          ),
-                          tooltip: l10n.unitHubDeleteUnit,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 3),
-              // Property name
-              Text(
-                property.name,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isSelected
-                      ? theme.colorScheme.onSurface.withAlpha(
-                          (0.7 * 255).toInt(),
-                        )
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontSize: 12,
+                  ],
                 ),
-              ),
-              const SizedBox(height: 6),
-              // Max guests + price
-              Row(
-                children: [
-                  Icon(
-                    Icons.people_rounded,
-                    size: 18,
-                    color: isSelected
-                        ? theme.colorScheme.primary.withAlpha(
-                            (0.8 * 255).toInt(),
-                          )
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${unit.maxGuests}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isSelected
-                          ? theme.colorScheme.onSurface
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Icon(
-                    Icons.euro_rounded,
-                    size: 18,
-                    color: isSelected
-                        ? theme.colorScheme.primary.withAlpha(
-                            (0.8 * 255).toInt(),
-                          )
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Builder(
-                    builder: (context) {
-                      final l10n = AppLocalizations.of(context);
-                      return Text(
-                        '${unit.pricePerNight.toStringAsFixed(0)}${l10n.unitHubPerNight}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isSelected
-                              ? theme.colorScheme.onSurface
-                              : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

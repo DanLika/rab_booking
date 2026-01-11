@@ -603,14 +603,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   else if (viewMode == BookingsViewMode.card)
                     _buildBookingsSliverList(bookings, isMobile)
                   else
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.horizontalPadding,
-                        ),
-                        child: BookingsTableView(bookings: bookings),
-                      ),
-                    ),
+                    BookingsTableView(bookings: bookings),
 
                   // Load more indicators (top and bottom)
                   SliverToBoxAdapter(

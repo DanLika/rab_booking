@@ -1626,14 +1626,16 @@ class _TimelineCalendarWidgetState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Fixed unit names column
-                TimelineUnitColumnWidget(
-                  units: units,
-                  bookingsByUnit: bookingsByUnit,
-                  scrollController: _unitNamesScrollController,
-                  dimensions: dimensions,
-                  onUnitNameTap: widget.onUnitNameTap,
-                  onScrollNotification: _handleUnitColumnScroll,
-                  showSummarySpacing: widget.showSummary,
+                  RepaintBoundary(
+                    child: TimelineUnitColumnWidget(
+                      units: units,
+                      bookingsByUnit: bookingsByUnit,
+                      scrollController: _unitNamesScrollController,
+                      dimensions: dimensions,
+                      onUnitNameTap: widget.onUnitNameTap,
+                      onScrollNotification: _handleUnitColumnScroll,
+                      showSummarySpacing: widget.showSummary,
+                    ),
                 ),
 
                 // Scrollable timeline grid with direction lock
@@ -1643,7 +1645,7 @@ class _TimelineCalendarWidgetState
                     // - Enables mouse/trackpad drag on desktop
                     // - Removes Android overscroll glow
                     // - Normalizes behavior across all platforms
-                    behavior: CalendarScrollBehavior(),
+                      behavior: const CalendarScrollBehavior(),
                     child: SingleChildScrollView(
                       controller: _horizontalScrollController,
                       scrollDirection: Axis.horizontal,
@@ -1663,23 +1665,25 @@ class _TimelineCalendarWidgetState
                           // This was removed during performance optimization, causing grid to disappear
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            TimelineGridWidget(
-                              units: units,
-                              bookingsByUnit: bookingsByUnit,
-                              dates: dates,
-                              offsetWidth: offsetWidth,
-                              fixedStartDate: _fixedStartDate,
-                              dimensions: dimensions,
-                              onBookingTap: _showBookingActionMenu,
-                              onBookingLongPress: _showMoveToUnitMenu,
-                              dropZoneBuilder: (unit, date, index) =>
-                                  _buildDropZone(
-                                    unit,
-                                    date,
-                                    offsetWidth,
-                                    index,
-                                    bookingsByUnit,
-                                  ),
+                              RepaintBoundary(
+                                child: TimelineGridWidget(
+                                  units: units,
+                                  bookingsByUnit: bookingsByUnit,
+                                  dates: dates,
+                                  offsetWidth: offsetWidth,
+                                  fixedStartDate: _fixedStartDate,
+                                  dimensions: dimensions,
+                                  onBookingTap: _showBookingActionMenu,
+                                  onBookingLongPress: _showMoveToUnitMenu,
+                                  dropZoneBuilder: (unit, date, index) =>
+                                      _buildDropZone(
+                                        unit,
+                                        date,
+                                        offsetWidth,
+                                        index,
+                                        bookingsByUnit,
+                                      ),
+                                ),
                             ),
                             // AnimatedSize ensures smooth appearance/disappearance of summary bar
                             // This prevents the delay issue where summary wouldn't appear

@@ -1,8 +1,10 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
 import {getStripeClient, stripeSecretKey} from "./stripe";
-import {logInfo, logError} from "./logger";
+import {logInfo, logError, logWarn} from "./logger";
 import {setUser} from "./sentry";
+import {checkRateLimit} from "./utils/rateLimit";
+import {logSecurityEvent, SecurityEventType} from "./utils/securityMonitoring";
 
 /**
  * Cloud Function: Create or Get Stripe Connect Account
@@ -13,6 +15,21 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // Rate Limiting: Prevent abuse of Stripe Account Link generation
+  // 5 calls per 5 minutes per user
+  const rawRequest = request.rawRequest as { ip?: string; headers?: Record<string, string> } | undefined;
+  const clientIp = rawRequest?.ip || "unknown";
+
+  if (!checkRateLimit(`stripe_connect:${request.auth.uid}`, 5, 300)) {
+    logSecurityEvent(
+      SecurityEventType.RATE_LIMIT_EXCEEDED,
+      { userId: request.auth.uid, action: "stripe_connect", ip: clientIp },
+      "medium"
+    ).catch(() => {});
+    logWarn("createStripeConnectAccount: Rate limit exceeded", { userId: request.auth.uid });
+    throw new HttpsError("resource-exhausted", "Too many attempts. Please try again later.");
   }
 
   const ownerId = request.auth.uid;

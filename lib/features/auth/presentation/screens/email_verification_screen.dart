@@ -19,7 +19,7 @@ class EmailVerificationScreen extends ConsumerStatefulWidget {
 }
 
 class _EmailVerificationScreenState
-    extends ConsumerState<EmailVerificationScreen> {
+    extends ConsumerState<EmailVerificationScreen> with WidgetsBindingObserver {
   Timer? _refreshTimer;
   bool _isResending = false;
   int _resendCooldown = 0;
@@ -28,6 +28,7 @@ class _EmailVerificationScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Auto-check verification status every 3 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       _checkVerificationStatus();
@@ -36,9 +37,17 @@ class _EmailVerificationScreenState
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _refreshTimer?.cancel();
     _cooldownTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkVerificationStatus();
+    }
   }
 
   Future<void> _checkVerificationStatus() async {

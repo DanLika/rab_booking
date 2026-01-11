@@ -172,17 +172,16 @@ export const handleBookingComOAuthCallback = onRequest(
         return;
       }
 
-      // TODO: Update with actual OAuth token URL after getting API access
-      // Placeholder - replace with actual Booking.com OAuth token endpoint
-      const tokenResponse = await fetch("https://secure.booking.com/oauth/token", {
+      // Use the Machine Account 'exchange' endpoint as per Connectivity API docs
+      // Note: This uses Client Credentials flow (Machine Account), effectively ignoring the 'code'
+      // received from the redirect, as Booking.com Connectivity API uses pure machine-to-machine auth.
+      // The 'code' flow is kept in the structure in case of future API changes supporting 3-legged OAuth.
+      const tokenResponse = await fetch("https://connectivity-authentication.booking.com/token-based-authentication/exchange", {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/json",
         },
-        body: new URLSearchParams({
-          grant_type: "authorization_code",
-          code: code as string,
-          redirect_uri: BOOKING_COM_REDIRECT_URI,
+        body: JSON.stringify({
           client_id: BOOKING_COM_CLIENT_ID,
           client_secret: BOOKING_COM_CLIENT_SECRET,
         }),
@@ -199,7 +198,12 @@ export const handleBookingComOAuthCallback = onRequest(
       }
 
       const tokenData = await tokenResponse.json();
-      const {access_token, refresh_token, expires_in} = tokenData;
+      // Booking.com returns 'jwt' (access token) and 'ruid'.
+      // Token expires in 1 hour (3600 seconds). No refresh token is returned;
+      // one simply requests a new token using credentials.
+      const access_token = tokenData.jwt;
+      const refresh_token = null; // No refresh token in this flow
+      const expires_in = 3600; // Standard expiry for Booking.com tokens
 
       // Calculate expiration time
       const expiresAtTime = new Date(Date.now() + expires_in * 1000);
@@ -240,23 +244,22 @@ export const handleBookingComOAuthCallback = onRequest(
 );
 
 /**
- * Refresh access token using refresh token
+ * Refresh access token (Re-authenticate with Client Credentials)
+ * Note: Booking.com Machine Accounts don't use refresh tokens; we just get a new token.
  */
 async function refreshBookingComToken(
   connectionId: string,
-  refreshToken: string
+  _refreshToken: string | null // Unused in Client Credentials flow
 ): Promise<string> {
   try {
-    logInfo("[Booking.com API] Refreshing access token", {connectionId});
+    logInfo("[Booking.com API] Refreshing access token (re-authenticating)", {connectionId});
 
-    const response = await fetch("https://secure.booking.com/oauth/token", {
+    const response = await fetch("https://connectivity-authentication.booking.com/token-based-authentication/exchange", {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
       },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: decryptToken(refreshToken),
+      body: JSON.stringify({
         client_id: BOOKING_COM_CLIENT_ID,
         client_secret: BOOKING_COM_CLIENT_SECRET,
       }),
@@ -267,7 +270,8 @@ async function refreshBookingComToken(
     }
 
     const tokenData = await response.json();
-    const {access_token, expires_in} = tokenData;
+    const access_token = tokenData.jwt;
+    const expires_in = 3600;
 
     // Update connection with new token
     const expiresAtTime = new Date(Date.now() + expires_in * 1000);
@@ -306,11 +310,9 @@ async function getValidAccessToken(connectionId: string): Promise<string> {
 
   // Check if token is expired or will expire in next 5 minutes
   if (expiresAt < new Date(Date.now() + 5 * 60 * 1000)) {
-    if (refreshToken) {
-      return await refreshBookingComToken(connectionId, refreshToken);
-    } else {
-      throw new Error("Token expired and no refresh token available");
-    }
+    // For Machine Account flow, we can always get a new token using credentials,
+    // so we call refresh even if refreshToken is null (it's ignored anyway).
+    return await refreshBookingComToken(connectionId, refreshToken || "");
   }
 
   return accessToken;

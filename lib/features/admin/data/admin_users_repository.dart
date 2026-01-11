@@ -118,6 +118,30 @@ class AdminUsersRepository {
     }
     return totalBookings;
   }
+
+  /// Update admin-controlled flags for a user
+  Future<void> updateAdminFlags(
+    String userId, {
+    bool? hideSubscription,
+    AccountType? adminOverrideAccountType,
+    bool clearOverride = false,
+  }) async {
+    final Map<String, dynamic> updates = {
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+
+    if (hideSubscription != null) {
+      updates['hide_subscription'] = hideSubscription;
+    }
+
+    if (clearOverride) {
+      updates['admin_override_account_type'] = FieldValue.delete();
+    } else if (adminOverrideAccountType != null) {
+      updates['admin_override_account_type'] = adminOverrideAccountType.name;
+    }
+
+    await _firestore.collection('users').doc(userId).update(updates);
+  }
 }
 
 /// Provider for admin users repository

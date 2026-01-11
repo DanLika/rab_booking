@@ -3208,5 +3208,51 @@
   "deleteAccountWarning": "This action is permanent and cannot be undone. All your data will be permanently deleted, including your properties, units, bookings, and account settings.",
   "deleteAccountPermanent": "This action cannot be reversed. Your account will be permanently deleted.",
   "deleteAccountSuccess": "Your account has been deleted successfully.",
-  "deleteAccountError": "Failed to delete account. Please try again or contact support."
+  "deleteAccountError": "Failed to delete account. Please try again or contact support.",
+
+  "subscriptionTitle": "Subscription",
+  "subscriptionErrorLoading": "Error loading subscription status: {error}",
+  "@subscriptionErrorLoading": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "subscriptionLoginRequired": "Please log in to view subscription",
+  "subscriptionAvailablePlans": "Available Plans",
+  "subscriptionCurrentStatus": "Current Status",
+  "subscriptionExpires": "Expires: {date}",
+  "@subscriptionExpires": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "subscriptionFreeTrial": "Free Trial",
+  "subscriptionFreeTrialPrice": "€0",
+  "subscriptionFreeTrialPeriod": "30 days",
+  "subscriptionFeatureProperties2": "Up to 2 properties",
+  "subscriptionFeatureBasicBooking": "Basic booking management",
+  "subscriptionFeatureEmailNotifications": "Email notifications",
+  "subscriptionFeatureCalendarSync": "Calendar sync",
+  "subscriptionPlanPro": "Pro",
+  "subscriptionProPrice": "€19",
+  "subscriptionProPeriod": "per month",
+  "subscriptionFeatureUnlimitedProperties": "Unlimited properties",
+  "subscriptionFeatureAdvancedAnalytics": "Advanced analytics",
+  "subscriptionFeaturePrioritySupport": "Priority support",
+  "subscriptionFeatureCustomBranding": "Custom branding",
+  "subscriptionFeatureApiAccess": "API access",
+  "subscriptionFeatureMultiUser": "Multi-user access",
+  "subscriptionCurrent": "Current",
+  "subscriptionRecommended": "RECOMMENDED",
+  "subscriptionUpgradeNow": "Upgrade Now",
+  "subscriptionFaq": "Frequently Asked Questions",
+  "subscriptionFaqTrialEndQuestion": "What happens when my trial ends?",
+  "subscriptionFaqTrialEndAnswer": "Your account will switch to read-only mode. You can still view your data, but you won't be able to create new bookings or access premium features until you upgrade.",
+  "subscriptionFaqCancelQuestion": "Can I cancel anytime?",
+  "subscriptionFaqCancelAnswer": "Yes! You can cancel your subscription at any time. Your access will continue until the end of your billing period.",
+  "subscriptionFaqDataSafeQuestion": "Is my data safe?",
+  "subscriptionFaqDataSafeAnswer": "Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.",
+  "subscriptionComingSoon": "Coming Soon",
+  "subscriptionComingSoonMessage": "Payment integration is coming soon! For now, please contact us to upgrade your account.",
+  "profileSubscriptionSubtitle": "Manage your plan"
 }

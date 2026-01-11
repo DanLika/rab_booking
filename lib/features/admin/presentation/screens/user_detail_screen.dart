@@ -20,6 +20,12 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
   bool _isSaving = false;
   String? _successMessage;
 
+  // Admin control states
+  bool? _hideSubscription;
+  AccountType? _selectedOverrideType;
+  bool _isSavingAdminFlags = false;
+  String? _adminFlagsSuccessMessage;
+
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(userDetailProvider(widget.userId));
@@ -50,6 +56,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
 
   Widget _buildUserDetails(BuildContext context, UserModel user) {
     _selectedAccountType ??= user.accountType;
+    _hideSubscription ??= user.hideSubscription;
+    _selectedOverrideType ??= user.adminOverrideAccountType;
 
     return SingleChildScrollView(
       child: Column(
@@ -185,9 +193,141 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+
+          // Admin Controls Card
+          Card(
+            color: Colors.orange.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.admin_panel_settings,
+                        color: Colors.orange.shade700,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Admin Controls',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.orange.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Hide Subscription Checkbox
+                  CheckboxListTile(
+                    value: _hideSubscription ?? false,
+                    onChanged: (value) {
+                      setState(() {
+                        _hideSubscription = value;
+                        _adminFlagsSuccessMessage = null;
+                      });
+                    },
+                    title: const Text('Hide Subscription'),
+                    subtitle: const Text(
+                      'Hide subscription page from this user',
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  const Divider(),
+
+                  // Override Account Type Dropdown
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Override Account Status',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Force a specific account type for this user (overrides calculated status)',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<AccountType?>(
+                    value: _selectedOverrideType,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Override Account Type',
+                    ),
+                    items: [
+                      const DropdownMenuItem<AccountType?>(
+                        value: null,
+                        child: Text('No Override (use calculated)'),
+                      ),
+                      ...AccountType.values.map((type) {
+                        return DropdownMenuItem<AccountType?>(
+                          value: type,
+                          child: Text(type.name.toUpperCase()),
+                        );
+                      }),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedOverrideType = value;
+                        _adminFlagsSuccessMessage = null;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (_adminFlagsSuccessMessage != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: Colors.green.shade700,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _adminFlagsSuccessMessage!,
+                              style: TextStyle(color: Colors.green.shade700),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  FilledButton.tonal(
+                    onPressed:
+                        _hasAdminFlagsChanged(user) && !_isSavingAdminFlags
+                        ? () => _saveAdminFlags(user)
+                        : null,
+                    child: _isSavingAdminFlags
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Save Admin Controls'),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  bool _hasAdminFlagsChanged(UserModel user) {
+    return _hideSubscription != user.hideSubscription ||
+        _selectedOverrideType != user.adminOverrideAccountType;
   }
 
   Widget _buildInfoRow(String label, String value) {
@@ -236,6 +376,43 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
     } catch (e) {
       setState(() {
         _isSaving = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  Future<void> _saveAdminFlags(UserModel user) async {
+    setState(() {
+      _isSavingAdminFlags = true;
+      _adminFlagsSuccessMessage = null;
+    });
+
+    try {
+      final repo = ref.read(adminUsersRepositoryProvider);
+      await repo.updateAdminFlags(
+        user.id,
+        hideSubscription: _hideSubscription,
+        adminOverrideAccountType: _selectedOverrideType,
+        clearOverride:
+            _selectedOverrideType == null &&
+            user.adminOverrideAccountType != null,
+      );
+
+      // Refresh user data
+      ref.invalidate(userDetailProvider(widget.userId));
+      ref.invalidate(ownersListProvider);
+
+      setState(() {
+        _adminFlagsSuccessMessage = 'Admin controls updated successfully';
+        _isSavingAdminFlags = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isSavingAdminFlags = false;
       });
       if (mounted) {
         ScaffoldMessenger.of(

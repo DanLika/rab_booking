@@ -3215,5 +3215,51 @@
   "deleteAccountWarning": "Ova radnja je trajna i ne može se poništiti. Svi vaši podaci, nekretnine i rezervacije bit će trajno obrisani.",
   "deleteAccountPermanent": "Ova radnja se ne može poništiti. Nakon brisanja, nećete moći povratiti svoj račun ili podatke.",
   "deleteAccountSuccess": "Vaš račun je uspješno obrisan.",
-  "deleteAccountError": "Brisanje računa nije uspjelo. Molimo pokušajte ponovno ili kontaktirajte podršku."
+  "deleteAccountError": "Brisanje računa nije uspjelo. Molimo pokušajte ponovno ili kontaktirajte podršku.",
+
+  "subscriptionTitle": "Pretplata",
+  "subscriptionErrorLoading": "Greška pri učitavanju statusa pretplate: {error}",
+  "@subscriptionErrorLoading": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "subscriptionLoginRequired": "Molimo prijavite se za pregled pretplate",
+  "subscriptionAvailablePlans": "Dostupni planovi",
+  "subscriptionCurrentStatus": "Trenutni status",
+  "subscriptionExpires": "Ističe: {date}",
+  "@subscriptionExpires": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "subscriptionFreeTrial": "Besplatan probni period",
+  "subscriptionFreeTrialPrice": "€0",
+  "subscriptionFreeTrialPeriod": "30 dana",
+  "subscriptionFeatureProperties2": "Do 2 nekretnine",
+  "subscriptionFeatureBasicBooking": "Osnovno upravljanje rezervacijama",
+  "subscriptionFeatureEmailNotifications": "Email obavijesti",
+  "subscriptionFeatureCalendarSync": "Sinkronizacija kalendara",
+  "subscriptionPlanPro": "Pro",
+  "subscriptionProPrice": "€19",
+  "subscriptionProPeriod": "mjesečno",
+  "subscriptionFeatureUnlimitedProperties": "Neograničen broj nekretnina",
+  "subscriptionFeatureAdvancedAnalytics": "Napredna analitika",
+  "subscriptionFeaturePrioritySupport": "Prioritetna podrška",
+  "subscriptionFeatureCustomBranding": "Prilagođeni branding",
+  "subscriptionFeatureApiAccess": "API pristup",
+  "subscriptionFeatureMultiUser": "Višekorisnički pristup",
+  "subscriptionCurrent": "Trenutno",
+  "subscriptionRecommended": "PREPORUČENO",
+  "subscriptionUpgradeNow": "Nadogradi sada",
+  "subscriptionFaq": "Često postavljana pitanja",
+  "subscriptionFaqTrialEndQuestion": "Što se događa kada probni period istekne?",
+  "subscriptionFaqTrialEndAnswer": "Vaš račun će prijeći u način samo za čitanje. I dalje možete pregledavati svoje podatke, ali nećete moći kreirati nove rezervacije ili pristupiti premium značajkama dok ne nadogradite.",
+  "subscriptionFaqCancelQuestion": "Mogu li otkazati u bilo kojem trenutku?",
+  "subscriptionFaqCancelAnswer": "Da! Možete otkazati svoju pretplatu u bilo kojem trenutku. Vaš pristup će nastaviti do kraja obračunskog razdoblja.",
+  "subscriptionFaqDataSafeQuestion": "Jesu li moji podaci sigurni?",
+  "subscriptionFaqDataSafeAnswer": "Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.",
+  "subscriptionComingSoon": "Uskoro",
+  "subscriptionComingSoonMessage": "Integracija plaćanja uskoro stiže! Za sada, molimo kontaktirajte nas za nadogradnju računa.",
+  "profileSubscriptionSubtitle": "Upravljajte svojim planom"
 }

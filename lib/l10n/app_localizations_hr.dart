@@ -7555,4 +7555,122 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get deleteAccountError =>
       'Brisanje računa nije uspjelo. Molimo pokušajte ponovno ili kontaktirajte podršku.';
+
+  @override
+  String get subscriptionTitle => 'Pretplata';
+
+  @override
+  String subscriptionErrorLoading(String error) {
+    return 'Greška pri učitavanju statusa pretplate: $error';
+  }
+
+  @override
+  String get subscriptionLoginRequired =>
+      'Molimo prijavite se za pregled pretplate';
+
+  @override
+  String get subscriptionAvailablePlans => 'Dostupni planovi';
+
+  @override
+  String get subscriptionCurrentStatus => 'Trenutni status';
+
+  @override
+  String subscriptionExpires(String date) {
+    return 'Ističe: $date';
+  }
+
+  @override
+  String get subscriptionFreeTrial => 'Besplatan probni period';
+
+  @override
+  String get subscriptionFreeTrialPrice => '€0';
+
+  @override
+  String get subscriptionFreeTrialPeriod => '30 dana';
+
+  @override
+  String get subscriptionFeatureProperties2 => 'Do 2 nekretnine';
+
+  @override
+  String get subscriptionFeatureBasicBooking =>
+      'Osnovno upravljanje rezervacijama';
+
+  @override
+  String get subscriptionFeatureEmailNotifications => 'Email obavijesti';
+
+  @override
+  String get subscriptionFeatureCalendarSync => 'Sinkronizacija kalendara';
+
+  @override
+  String get subscriptionPlanPro => 'Pro';
+
+  @override
+  String get subscriptionProPrice => '€19';
+
+  @override
+  String get subscriptionProPeriod => 'mjesečno';
+
+  @override
+  String get subscriptionFeatureUnlimitedProperties =>
+      'Neograničen broj nekretnina';
+
+  @override
+  String get subscriptionFeatureAdvancedAnalytics => 'Napredna analitika';
+
+  @override
+  String get subscriptionFeaturePrioritySupport => 'Prioritetna podrška';
+
+  @override
+  String get subscriptionFeatureCustomBranding => 'Prilagođeni branding';
+
+  @override
+  String get subscriptionFeatureApiAccess => 'API pristup';
+
+  @override
+  String get subscriptionFeatureMultiUser => 'Višekorisnički pristup';
+
+  @override
+  String get subscriptionCurrent => 'Trenutno';
+
+  @override
+  String get subscriptionRecommended => 'PREPORUČENO';
+
+  @override
+  String get subscriptionUpgradeNow => 'Nadogradi sada';
+
+  @override
+  String get subscriptionFaq => 'Često postavljana pitanja';
+
+  @override
+  String get subscriptionFaqTrialEndQuestion =>
+      'Što se događa kada probni period istekne?';
+
+  @override
+  String get subscriptionFaqTrialEndAnswer =>
+      'Vaš račun će prijeći u način samo za čitanje. I dalje možete pregledavati svoje podatke, ali nećete moći kreirati nove rezervacije ili pristupiti premium značajkama dok ne nadogradite.';
+
+  @override
+  String get subscriptionFaqCancelQuestion =>
+      'Mogu li otkazati u bilo kojem trenutku?';
+
+  @override
+  String get subscriptionFaqCancelAnswer =>
+      'Da! Možete otkazati svoju pretplatu u bilo kojem trenutku. Vaš pristup će nastaviti do kraja obračunskog razdoblja.';
+
+  @override
+  String get subscriptionFaqDataSafeQuestion => 'Jesu li moji podaci sigurni?';
+
+  @override
+  String get subscriptionFaqDataSafeAnswer =>
+      'Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.';
+
+  @override
+  String get subscriptionComingSoon => 'Uskoro';
+
+  @override
+  String get subscriptionComingSoonMessage =>
+      'Integracija plaćanja uskoro stiže! Za sada, molimo kontaktirajte nas za nadogradnju računa.';
+
+  @override
+  String get profileSubscriptionSubtitle => 'Upravljajte svojim planom';
 }

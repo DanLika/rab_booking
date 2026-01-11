@@ -18,6 +18,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
+import '../widgets/units/unit_hub_empty_state.dart';
 import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
@@ -423,84 +424,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   /// Empty state when no properties exist
   Widget _buildEmptyPropertiesState(ThemeData theme, bool isDark) {
-    final l10n = AppLocalizations.of(context);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 32.0),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.add_business,
-                size: 64,
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.3,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.unitHubNoProperties,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.unitHubNoPropertiesDesc,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(
-                    alpha: 0.7,
-                  ),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: GradientTokens.brandPrimary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      context.push(OwnerRoutes.propertyNew);
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.add_business,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            l10n.unitHubCreateProperty,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    return const UnitHubEmptyState();
   }
 
   /// Properties with their units - hierarchical view

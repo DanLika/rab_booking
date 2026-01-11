@@ -868,6 +868,15 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
   } else if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
     const metadata = session.metadata;
+
+    // SUBSCRIPTION CHECKOUT EXPIRED
+    if (session.mode === "subscription") {
+      logInfo("Subscription checkout session expired (no action needed)");
+      res.json({received: true});
+      return;
+    }
+
+    // BOOKING CHECKOUT EXPIRED
     const placeholderBookingId = metadata?.placeholder_booking_id;
 
     if (!placeholderBookingId) {
@@ -906,9 +915,147 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
     }
 
     res.json({received: true, status: "placeholder_cleaned"});
+
+  } else if (event.type === "customer.subscription.deleted") {
+    // ========================================================================
+    // SUBSCRIPTION CANCELLATION
+    // ========================================================================
+    const subscription = event.data.object as Stripe.Subscription;
+    const subscriptionId = subscription.id;
+
+    logInfo(`Processing customer.subscription.deleted for subscription: ${subscriptionId}`);
+
+    try {
+      // Find user by stripeSubscriptionId
+      // NOTE: Requires composite index if we were ordering, but simple where is fine
+      const usersSnapshot = await db
+        .collection("users")
+        .where("stripeSubscriptionId", "==", subscriptionId)
+        .limit(1)
+        .get();
+
+      if (usersSnapshot.empty) {
+        logError(`No user found with subscription ID: ${subscriptionId}`);
+        res.status(404).send("User not found");
+        return;
+      }
+
+      const userDoc = usersSnapshot.docs[0];
+      const userId = userDoc.id;
+
+      // Downgrade user to trial_expired (effectively revokes Pro access)
+      await userDoc.ref.update({
+        accountStatus: "trial_expired",
+        stripeSubscriptionStatus: "canceled",
+        statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+        statusChangedBy: "system_webhook",
+        statusChangeReason: "subscription_canceled_by_stripe",
+      });
+
+      logSuccess(`User ${userId} downgraded to trial_expired due to subscription cancellation`);
+      res.json({received: true, status: "subscription_canceled"});
+    } catch (error: any) {
+      logError("Error processing customer.subscription.deleted", error);
+      res.status(500).send(`Error: ${error.message}`);
+    }
+
+  } else if (event.type === "invoice.paid") {
+    // ========================================================================
+    // SUBSCRIPTION RENEWAL / PAYMENT SUCCESS
+    // ========================================================================
+    const invoice = event.data.object as Stripe.Invoice;
+    // Cast to any to handle potential type definition mismatches
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subscription = (invoice as any).subscription;
+    const subscriptionId = typeof subscription === 'string'
+      ? subscription
+      : subscription?.id;
+
+    // Only care if it's a subscription invoice
+    if (!subscriptionId) {
+      res.json({received: true});
+      return;
+    }
+
+    logInfo(`Processing invoice.paid for subscription: ${subscriptionId}`);
+
+    try {
+      const usersSnapshot = await db
+        .collection("users")
+        .where("stripeSubscriptionId", "==", subscriptionId)
+        .limit(1)
+        .get();
+
+      if (usersSnapshot.empty) {
+        // Might be a new subscription where checkout.session.completed hasn't fired yet?
+        // Or user not found. We'll rely on checkout.session.completed for initial activation.
+        logWarn(`No user found for invoice.paid (sub: ${subscriptionId}) - skipping`);
+        res.json({received: true, status: "user_not_found"});
+        return;
+      }
+
+      const userDoc = usersSnapshot.docs[0];
+      const userId = userDoc.id;
+
+      // Ensure account is active (idempotent)
+      await userDoc.ref.update({
+        accountStatus: "active",
+        stripeSubscriptionStatus: "active",
+        lastPaymentAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      logSuccess(`User ${userId} subscription confirmed active via invoice.paid`);
+      res.json({received: true, status: "subscription_renewed"});
+    } catch (error: any) {
+      logError("Error processing invoice.paid", error);
+      res.status(500).send(`Error: ${error.message}`);
+    }
+
   } else if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const metadata = session.metadata;
+
+    // ========================================================================
+    // HANDLE SUBSCRIPTION CHECKOUT
+    // ========================================================================
+    if (session.mode === "subscription") {
+      logInfo(`Processing subscription checkout for session: ${session.id}`);
+
+      const userId = session.client_reference_id || metadata?.userId;
+      const customerId = session.customer as string;
+      const subscriptionId = session.subscription as string;
+
+      if (!userId) {
+        logError("Missing client_reference_id or metadata.userId in subscription session");
+        res.status(400).send("Missing user ID");
+        return;
+      }
+
+      try {
+        // Activate user subscription
+        await db.collection("users").doc(userId).update({
+          accountStatus: "active",
+          stripeCustomerId: customerId,
+          stripeSubscriptionId: subscriptionId,
+          stripeSubscriptionStatus: "active",
+          statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+          statusChangedBy: "system_webhook",
+          statusChangeReason: "subscription_purchased",
+        });
+
+        logSuccess(`User ${userId} upgraded to active subscription`);
+        res.json({received: true, status: "subscription_activated"});
+        return;
+      } catch (error: any) {
+        logError("Error activating subscription", error);
+        res.status(500).send(`Error: ${error.message}`);
+        return;
+      }
+    }
+
+    // ========================================================================
+    // HANDLE BOOKING WIDGET CHECKOUT (mode="payment")
+    // ========================================================================
 
     // Validate required metadata
     if (!metadata?.unit_id || !metadata?.property_id || !metadata?.owner_id) {

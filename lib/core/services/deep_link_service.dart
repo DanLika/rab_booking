@@ -35,7 +35,9 @@ class DeepLinkService {
     if (uri.scheme != 'http' && uri.scheme != 'https') return false;
     final host = uri.host.toLowerCase();
     // Check against whitelist (exact match or subdomain)
-    return _allowedExternalDomains.any((domain) => host == domain || host.endsWith('.$domain'));
+    return _allowedExternalDomains.any(
+      (domain) => host == domain || host.endsWith('.$domain'),
+    );
   }
 
   /// Parse and handle deep link
@@ -54,7 +56,9 @@ class DeepLinkService {
         if (_isAllowedExternalUrl(uri)) {
           return _handleWebUrl(uri);
         } else {
-          debugPrint('[DeepLinkService] Blocked unauthorized external URL: $url');
+          debugPrint(
+            '[DeepLinkService] Blocked unauthorized external URL: $url',
+          );
           return false;
         }
       }
@@ -98,11 +102,17 @@ class DeepLinkService {
         final conflictId = queryParams['conflict'];
 
         if (bookingId != null) {
-          final safeUri = Uri(path: '/owner/bookings', queryParameters: {'booking': bookingId});
+          final safeUri = Uri(
+            path: '/owner/bookings',
+            queryParameters: {'booking': bookingId},
+          );
           context.go(safeUri.toString());
           return true;
         } else if (conflictId != null) {
-          final safeUri = Uri(path: '/owner/bookings', queryParameters: {'conflict': conflictId});
+          final safeUri = Uri(
+            path: '/owner/bookings',
+            queryParameters: {'conflict': conflictId},
+          );
           context.go(safeUri.toString());
           return true;
         } else {
@@ -114,7 +124,10 @@ class DeepLinkService {
         final unitId = queryParams['unit'];
 
         if (unitId != null) {
-          final safeUri = Uri(path: '/owner/platform-connections', queryParameters: {'unit': unitId});
+          final safeUri = Uri(
+            path: '/owner/platform-connections',
+            queryParameters: {'unit': unitId},
+          );
           context.go(safeUri.toString());
           return true;
         } else {
@@ -169,8 +182,15 @@ class DeepLinkService {
   }
 
   /// Generate app deep link URL
-  static String generateAppDeepLink({required String path, Map<String, String>? queryParams}) {
-    final uri = Uri(scheme: 'bookbed', path: path, queryParameters: queryParams);
+  static String generateAppDeepLink({
+    required String path,
+    Map<String, String>? queryParams,
+  }) {
+    final uri = Uri(
+      scheme: 'bookbed',
+      path: path,
+      queryParameters: queryParams,
+    );
     return uri.toString();
   }
 }

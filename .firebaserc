@@ -8,23 +8,41 @@
   "targets": {
     "rab-booking-248fc": {
       "hosting": {
-        "widget": ["bookbed-widget"],
-        "owner": ["bookbed-owner"],
-        "admin": ["bookbed-admin"]
+        "widget": [
+          "bookbed-widget"
+        ],
+        "owner": [
+          "bookbed-owner"
+        ],
+        "admin": [
+          "bookbed-admin"
+        ]
       }
     },
     "bookbed-dev": {
       "hosting": {
-        "widget": ["bookbed-widget-dev"],
-        "owner": ["bookbed-owner-dev"],
-        "admin": ["bookbed-admin-dev"]
+        "widget": [
+          "bookbed-widget-dev"
+        ],
+        "owner": [
+          "bookbed-owner-dev"
+        ],
+        "admin": [
+          "bookbed-admin-dev"
+        ]
       }
     },
     "bookbed-staging": {
       "hosting": {
-        "widget": ["bookbed-widget-staging"],
-        "owner": ["bookbed-owner-staging"],
-        "admin": ["bookbed-admin-staging"]
+        "widget": [
+          "bookbed-widget-staging"
+        ],
+        "owner": [
+          "bookbed-owner-staging"
+        ],
+        "admin": [
+          "bookbed-admin-staging"
+        ]
       }
     }
   },

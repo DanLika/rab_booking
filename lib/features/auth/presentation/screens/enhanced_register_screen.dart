@@ -161,7 +161,17 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         _formKey.currentState!.validate();
       } else {
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
+        // Handle coded rate limit message with seconds
+        if (errorMessage.startsWith('RATE_LIMIT_LOCKOUT:')) {
+          final secondsStr = errorMessage.split(':')[1];
+          final seconds = int.tryParse(secondsStr) ?? 60;
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            l10n.authErrorRateLimitWait(seconds),
+          );
+        } else {
+          ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
+        }
       }
     }
   }

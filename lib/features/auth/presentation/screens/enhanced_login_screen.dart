@@ -281,6 +281,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         errorLower.contains('account has been disabled')) {
       return l10n.authErrorUserDisabled;
     }
+    // Handle coded rate limit message with seconds
+    if (error.startsWith('RATE_LIMIT_LOCKOUT:')) {
+      final secondsStr = error.split(':')[1];
+      final seconds = int.tryParse(secondsStr) ?? 60;
+      return l10n.authErrorRateLimitWait(seconds);
+    }
     if (errorLower.contains('too-many-requests') ||
         errorLower.contains('too many')) {
       return l10n.authErrorTooManyRequests;

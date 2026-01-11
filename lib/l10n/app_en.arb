@@ -57,11 +57,19 @@
   "authRememberMe": "Remember me",
   "authRememberMeHint": "Keep me logged in on this device",
 
-  "authErrorWrongPassword": "Incorrect password. Please try again.",
+  "authErrorWrongPassword": "Incorrect password. Try again or reset your password",
   "authErrorUserNotFound": "No account found with this email.",
   "authErrorInvalidEmail": "Invalid email address.",
   "authErrorUserDisabled": "This account has been disabled.",
   "authErrorTooManyRequests": "Too many failed attempts. Please try again later.",
+  "authErrorRateLimitWait": "{seconds, plural, =1{Too many failed attempts. Try again in 1 second.} other{Too many failed attempts. Try again in {seconds} seconds.}}",
+  "@authErrorRateLimitWait": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "authErrorGeneric": "Login failed. Please check your credentials and try again.",
   "authForgotPassword": "Forgot password?",
   "authOrContinueWith": "or continue with",

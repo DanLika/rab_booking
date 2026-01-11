@@ -57,11 +57,19 @@
   "authRememberMe": "Zapamti me",
   "authRememberMeHint": "Drži me prijavljenim na ovom uređaju",
 
-  "authErrorWrongPassword": "Pogrešna lozinka. Molimo pokušajte ponovo.",
+  "authErrorWrongPassword": "Pogrešna lozinka. Pokušajte ponovo ili resetirajte lozinku",
   "authErrorUserNotFound": "Nije pronađen račun sa ovim emailom.",
   "authErrorInvalidEmail": "Nevažeća email adresa.",
   "authErrorUserDisabled": "Ovaj račun je onemogućen.",
   "authErrorTooManyRequests": "Previše neuspješnih pokušaja. Pokušajte kasnije.",
+  "authErrorRateLimitWait": "{seconds, plural, one{Previše neuspješnih pokušaja. Pokušajte ponovo za {seconds} sekundu.} few{Previše neuspješnih pokušaja. Pokušajte ponovo za {seconds} sekunde.} other{Previše neuspješnih pokušaja. Pokušajte ponovo za {seconds} sekundi.}}",
+  "@authErrorRateLimitWait": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "authErrorGeneric": "Prijava nije uspjela. Provjerite podatke i pokušajte ponovo.",
   "authForgotPassword": "Zaboravili lozinku?",
   "authOrContinueWith": "ili nastavite s",

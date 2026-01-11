@@ -22,6 +22,7 @@ import {
   sanitizeText,
   sanitizeEmail,
   sanitizePhone,
+  maskEmail,
 } from "./utils/inputSanitization";
 import {
   validateAndConvertBookingDates,
@@ -1111,7 +1112,7 @@ export const createBookingAtomic = onCall(async (request) => {
         logSuccess(
           "[AtomicBooking] Pending booking request email sent to guest",
           {
-            email: sanitizedGuestEmail,
+            email: maskEmail(sanitizedGuestEmail),
           }
         );
 
@@ -1144,7 +1145,7 @@ export const createBookingAtomic = onCall(async (request) => {
           logSuccess(
             "[AtomicBooking] Pending booking owner notification sent",
             {
-              email: ownerData.email,
+              email: maskEmail(ownerData.email),
             }
           );
         }
@@ -1192,7 +1193,7 @@ export const createBookingAtomic = onCall(async (request) => {
         logSuccess(
           "[AtomicBooking] Booking confirmation email sent to guest",
           {
-            email: sanitizedGuestEmail,
+            email: maskEmail(sanitizedGuestEmail),
           }
         );
 
@@ -1218,7 +1219,7 @@ export const createBookingAtomic = onCall(async (request) => {
           // Bug Archive #2: Owner email ALWAYS sent (forceIfCritical=true)
           logInfo("[AtomicBooking] Sending owner notification (critical - always sent)", {
             ownerId,
-            email: ownerData.email,
+            email: maskEmail(ownerData.email),
           });
 
           await sendEmailIfAllowed(
@@ -1253,7 +1254,7 @@ export const createBookingAtomic = onCall(async (request) => {
           logSuccess(
             "[AtomicBooking] Owner notification email sent (critical notification)",
             {
-              email: ownerData.email,
+              email: maskEmail(ownerData.email),
             }
           );
         }

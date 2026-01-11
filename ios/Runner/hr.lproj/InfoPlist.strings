@@ -1,0 +1,4 @@
+/* Croatian permission strings */
+NSPhotoLibraryUsageDescription = "Potreban je pristup galeriji kako bi mogli dodati fotografije vaših objekata";
+NSCameraUsageDescription = "Potreban je pristup kameri kako bi mogli fotografirati vaše objekte";
+NSPhotoLibraryAddUsageDescription = "Potreban je pristup galeriji kako bi mogli spremiti fotografije";

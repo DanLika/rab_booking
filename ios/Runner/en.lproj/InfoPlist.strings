@@ -1,0 +1,4 @@
+/* English permission strings for App Store */
+NSPhotoLibraryUsageDescription = "Access to photo library is required to add photos of your properties";
+NSCameraUsageDescription = "Access to camera is required to photograph your properties";
+NSPhotoLibraryAddUsageDescription = "Access to photo library is required to save photos";

@@ -120,7 +120,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       ErrorDisplayUtils.showErrorSnackBar(
         context,
         l10n.pleaseFixErrors,
-        duration: const Duration(seconds: 10),
       );
       return;
     }
@@ -142,121 +141,70 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       if (!mounted) return;
 
-      // Give auth state a moment to fully update after sign in
-      await Future.delayed(const Duration(milliseconds: 100));
-
+      // Check state directly after await
       final authState = ref.read(enhancedAuthProvider);
 
-      debugPrint(
-        '[LOGIN_SCREEN] After signIn - isAuthenticated: ${authState.isAuthenticated}, error: ${authState.error}, requiresEmailVerification: ${authState.requiresEmailVerification}',
-      );
-
+      // Handle specific error from state if present
+      // Note: signInWithEmail usually throws, so we mostly catch exceptions below
       if (authState.error != null) {
-        if (!mounted) return;
-        debugPrint('[LOGIN_SCREEN] Auth state has error, showing snackbar');
-
-        final errorMsg = authState.error!;
-        final isPassError = _isPasswordError(errorMsg);
-        final isEmailErr = _isEmailError(errorMsg);
-
-        setState(() {
-          _isLoading = false;
-          _autovalidateMode = AutovalidateMode.onUserInteraction;
-          if (isPassError) {
-            _passwordErrorFromServer = _getLocalizedError(errorMsg, l10n);
-          } else if (isEmailErr) {
-            _emailErrorFromServer = _getLocalizedError(errorMsg, l10n);
-          }
-        });
-
-        _shakeForm();
-
-        // Force form validation to show inline errors
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _formKey.currentState != null) {
-            _formKey.currentState!.validate();
-          }
-        });
-
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          _getLocalizedError(errorMsg, l10n),
-          duration: const Duration(seconds: 10),
-        );
+        _handleError(authState.error!, l10n);
         return;
       }
 
+      // Handle email verification redirect logic
       if (authState.requiresEmailVerification) {
-        if (!mounted) return;
-        debugPrint('[LOGIN_SCREEN] Email verification required, redirecting');
-        // Keep loader visible during navigation (widget will dispose naturally)
-        context.go(OwnerRoutes.emailVerification);
+        if (mounted) {
+          debugPrint('[LOGIN_SCREEN] Email verification required, redirecting');
+          context.go(OwnerRoutes.emailVerification);
+        }
         return;
       }
 
-      // User is authenticated - redirect immediately to dashboard
-      if (!mounted) return;
+      // Success path - Router should handle redirect to dashboard automatically
+      // based on authentication state, but we can call it explicitly too
+      // just to be safe.
+      debugPrint('[LOGIN_SCREEN] Login successful');
 
-      // Keep loader visible during navigation to dashboard
-      // (will be disposed when widget unmounts)
-      debugPrint('[LOGIN_SCREEN] Login successful, navigating to dashboard');
-      if (mounted) {
-        context.go(OwnerRoutes.overview);
-      }
     } catch (e) {
-      debugPrint('[LOGIN_SCREEN] Caught exception: ${e.runtimeType} = $e');
       if (!mounted) return;
-
-      // Get error message from exception (prefer thrown message over state)
-      // When a string is thrown directly, toString() returns the string itself
-      final errorMessage = e.toString().replaceFirst('Exception: ', '');
-      debugPrint(
-        '[LOGIN_SCREEN] Error message after processing: $errorMessage',
-      );
-
-      // IMMEDIATELY show snackbar BEFORE any state changes or delays
-      // This ensures snackbar displays before router can trigger redirects
-      final localizedError = _getLocalizedError(errorMessage, l10n);
-      ErrorDisplayUtils.showErrorSnackBar(
-        context,
-        localizedError,
-        duration: const Duration(seconds: 10),
-      );
-
-      // Give auth state a moment to update after error
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (!mounted) return;
-
-      final isPassError = _isPasswordError(errorMessage);
-      final isEmailErr = _isEmailError(errorMessage);
-      debugPrint(
-        '[LOGIN_SCREEN] Is password error: $isPassError, Is email error: $isEmailErr',
-      );
-
-      // Set appropriate field error and enable autovalidate mode
-      setState(() {
-        _isLoading = false;
-        _autovalidateMode = AutovalidateMode.onUserInteraction;
-        if (isPassError) {
-          _passwordErrorFromServer = localizedError;
-        } else if (isEmailErr) {
-          _emailErrorFromServer = localizedError;
-        }
-      });
-
-      // Shake animation on error
-      _shakeForm();
-
-      // Force form validation to show inline errors
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _formKey.currentState != null) {
-            _formKey.currentState!.validate();
-          }
-        });
-      });
+      _handleError(e, l10n);
     }
+  }
+
+  void _handleError(dynamic error, AppLocalizations l10n) {
+    debugPrint('[LOGIN_SCREEN] Handling error: $error');
+
+    // Get error message from exception (prefer thrown message over state)
+    final errorMessage = error.toString().replaceFirst('Exception: ', '');
+
+    final localizedError = _getLocalizedError(errorMessage, l10n);
+    final isPassError = _isPasswordError(errorMessage);
+    final isEmailErr = _isEmailError(errorMessage);
+
+    setState(() {
+      _isLoading = false;
+      _autovalidateMode = AutovalidateMode.onUserInteraction;
+      if (isPassError) {
+        _passwordErrorFromServer = localizedError;
+      } else if (isEmailErr) {
+        _emailErrorFromServer = localizedError;
+      }
+    });
+
+    _shakeForm();
+
+    // Force form validation to show inline errors
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _formKey.currentState != null) {
+        _formKey.currentState!.validate();
+      }
+    });
+
+    // Show Snackbar BEFORE any navigation/redirect risk
+    ErrorDisplayUtils.showErrorSnackBar(
+      context,
+      localizedError,
+    );
   }
 
   /// Map error messages to localized strings
@@ -332,18 +280,20 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
     try {
       await signInMethod();
+      // Success is handled by auth state listener/router
     } catch (e) {
       if (!mounted) return;
+      // Reset loading state immediately on error
+      setState(() => _isLoading = false);
+
       final authState = ref.read(enhancedAuthProvider);
       ErrorDisplayUtils.showErrorSnackBar(
         context,
         authState.error ?? e.toString(),
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
+    // We don't blindly reset _isLoading in finally block because
+    // on success we want to keep it true until redirect happens
   }
 
   @override
@@ -434,7 +384,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                       },
                                       child: GradientAuthButton(
                                         text: l10n.login,
-                                        onPressed: _handleLogin,
+                                        onPressed: _isLoading ? () {} : _handleLogin,
                                         isLoading: _isLoading,
                                         icon: Icons.login_rounded,
                                       ),
@@ -627,6 +577,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return SocialLoginButton(
         customIcon: const GoogleBrandIcon(),
         label: 'Google',
+        enabled: !_isLoading,
         onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
       );
     }
@@ -635,6 +586,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return SocialLoginButton(
         customIcon: const AppleBrandIcon(),
         label: 'Apple',
+        enabled: !_isLoading,
         onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
       );
     }
@@ -646,6 +598,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           child: SocialLoginButton(
             customIcon: const GoogleBrandIcon(),
             label: 'Google',
+            enabled: !_isLoading,
             onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
           ),
         ),
@@ -654,6 +607,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           child: SocialLoginButton(
             customIcon: const AppleBrandIcon(),
             label: 'Apple',
+            enabled: !_isLoading,
             onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
           ),
         ),
@@ -664,19 +618,24 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   Widget _buildRegisterLink(ThemeData theme, AppLocalizations l10n) {
     return Center(
       child: TextButton(
-        onPressed: () => context.go(OwnerRoutes.register),
+        onPressed: _isLoading ? null : () => context.go(OwnerRoutes.register),
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
         ),
         child: RichText(
           text: TextSpan(
-            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 13,
+              color: _isLoading ? theme.colorScheme.onSurface.withAlpha(100) : null,
+            ),
             children: [
               TextSpan(text: '${l10n.authNoAccount} '),
               TextSpan(
                 text: l10n.authCreateAccount,
                 style: TextStyle(
-                  color: theme.colorScheme.primary,
+                  color: _isLoading
+                      ? theme.colorScheme.primary.withAlpha(100)
+                      : theme.colorScheme.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),

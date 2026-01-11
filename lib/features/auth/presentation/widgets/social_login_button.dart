@@ -7,7 +7,8 @@ class SocialLoginButton extends StatefulWidget {
   final IconData? icon;
   final Widget? customIcon;
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
+  final bool enabled;
 
   const SocialLoginButton({
     super.key,
@@ -15,6 +16,7 @@ class SocialLoginButton extends StatefulWidget {
     this.customIcon,
     required this.label,
     required this.onPressed,
+    this.enabled = true,
   }) : assert(
          icon != null || customIcon != null,
          'Either icon or customIcon must be provided',
@@ -29,68 +31,73 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
   bool _isFocused = false;
 
   // A11Y-002: Visual feedback indicates hover OR focus state
-  bool get _isHighlighted => _isHovered || _isFocused;
+  bool get _isHighlighted => (_isHovered || _isFocused) && widget.enabled;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDisabled = !widget.enabled;
 
     // A11Y-002: Semantics wrapper for screen readers
     return Semantics(
       button: true,
       label: widget.label,
-      enabled: true,
-      child: Focus(
-        onFocusChange: (focused) => setState(() => _isFocused = focused),
-        child: MouseRegion(
-          onEnter: (_) => setState(() => _isHovered = true),
-          onExit: (_) => setState(() => _isHovered = false),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _isHighlighted
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.outline,
-                width: 1.5,
-              ),
-              color: _isHighlighted
-                  ? theme.colorScheme.primary.withAlpha(20)
-                  : theme.colorScheme.surfaceContainerHighest.withAlpha(77),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: widget.onPressed,
+      enabled: widget.enabled,
+      child: Opacity(
+        opacity: isDisabled ? 0.6 : 1.0,
+        child: Focus(
+          canRequestFocus: widget.enabled,
+          onFocusChange: (focused) => setState(() => _isFocused = focused),
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _isHovered = true),
+            onExit: (_) => setState(() => _isHovered = false),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (widget.customIcon != null)
-                        widget.customIcon!
-                      else
-                        Icon(
-                          widget.icon,
-                          size: 22,
-                          color: _isHighlighted
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface,
+                border: Border.all(
+                  color: _isHighlighted
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outline,
+                  width: 1.5,
+                ),
+                color: _isHighlighted
+                    ? theme.colorScheme.primary.withAlpha(20)
+                    : theme.colorScheme.surfaceContainerHighest.withAlpha(77),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: widget.enabled ? widget.onPressed : null,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (widget.customIcon != null)
+                          widget.customIcon!
+                        else
+                          Icon(
+                            widget.icon,
+                            size: 22,
+                            color: _isHighlighted
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface,
+                          ),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: _isHighlighted
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface,
+                          ),
                         ),
-                      const SizedBox(width: 8),
-                      Text(
-                        widget.label,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: _isHighlighted
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

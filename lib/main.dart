@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -371,6 +372,28 @@ Future<void> _initializeInBackground() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    // Enable Firestore Persistence (must be done before other Firestore usage)
+    try {
+      if (kIsWeb) {
+        await FirebaseFirestore.instance.enablePersistence(
+          const PersistenceSettings(synchronizeTabs: true),
+        );
+      } else {
+        // Mobile/Desktop usually enabled by default, but ensuring settings
+        FirebaseFirestore.instance.settings = const Settings(
+          persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        );
+      }
+      LoggingService.log('Firestore persistence enabled', tag: 'INIT');
+    } catch (e) {
+      LoggingService.log(
+        'Firestore persistence failed: $e',
+        tag: 'INIT_WARNING',
+      );
+    }
+
     AppInitState.firebaseReady.complete();
     LoggingService.log(
       'Firebase ready (${stopwatch.elapsedMilliseconds}ms)',

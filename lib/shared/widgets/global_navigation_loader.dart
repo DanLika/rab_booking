@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'offline_indicator.dart';
 
 /// Loading state provider for global navigation overlay
 /// Tracks whether a navigation/async operation is in progress
@@ -52,6 +53,7 @@ final loadingStateProvider = StateNotifierProvider<LoadingStateNotifier, bool>((
 /// - Black spinner (minimalistic style)
 /// - No text
 /// - 300ms delay before showing (prevents flicker)
+/// - Offline Indicator at the bottom
 ///
 /// Usage:
 /// ```dart
@@ -74,6 +76,9 @@ class GlobalNavigationOverlay extends ConsumerWidget {
       children: [
         // Main app content
         child,
+
+        // Offline Indicator (always visible if offline)
+        const OfflineIndicator(),
 
         // Loading overlay (shown only when isLoading = true)
         if (isLoading) Positioned.fill(child: _LoadingOverlay()),

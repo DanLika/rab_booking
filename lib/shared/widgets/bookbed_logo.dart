@@ -30,10 +30,15 @@ class BookBedLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    // Calculate cache size based on widget size and pixel ratio for memory optimization
+    final cacheSize = (size * MediaQuery.of(context).devicePixelRatio).toInt();
+
     Widget logoImage = Image.asset(
       'assets/images/logo-light.avif',
       width: size,
       height: size,
+      cacheWidth: cacheSize,
+      // Removed cacheHeight to preserve aspect ratio
       fit: BoxFit.contain,
       // Provide error handling for asset loading
       errorBuilder: (context, error, stackTrace) {

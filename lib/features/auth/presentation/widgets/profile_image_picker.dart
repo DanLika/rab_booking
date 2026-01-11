@@ -67,13 +67,21 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
   }
 
   Widget _buildImageContent() {
+    // Calculate cache size based on widget size and pixel ratio for memory optimization
+    final cacheSize = (widget.size * MediaQuery.of(context).devicePixelRatio)
+        .toInt();
+
     // Show picked image
+    // Note: ImagePicker already handles resizing to max 512x512 (see _pickImage),
+    // so _imageBytes are already optimized for upload.
     if (_imageBytes != null) {
       return ClipOval(
         child: Image.memory(
           _imageBytes!,
           width: widget.size,
           height: widget.size,
+          cacheWidth: cacheSize,
+          // Removed cacheHeight to preserve aspect ratio and avoid distortion
           fit: BoxFit.cover,
         ),
       );
@@ -86,6 +94,8 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
           widget.imageUrl!,
           width: widget.size,
           height: widget.size,
+          cacheWidth: cacheSize,
+          // Removed cacheHeight to preserve aspect ratio and avoid distortion
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return _buildPlaceholder();

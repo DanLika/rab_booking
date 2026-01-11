@@ -14,7 +14,21 @@
     "lang": "en",
     "categories": [
         "travel",
-        "lifestyle"
+        "lifestyle",
+        "productivity"
+    ],
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "url": "/",
+            "icons": [
+                {
+                    "src": "icons/Icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
     ],
     "icons": [
         {

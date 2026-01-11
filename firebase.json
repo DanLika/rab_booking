@@ -30,6 +30,10 @@
             ],
             "rewrites": [
                 {
+                    "source": "/s/**",
+                    "function": "shareProperty"
+                },
+                {
                     "source": "**",
                     "destination": "/index.html"
                 }

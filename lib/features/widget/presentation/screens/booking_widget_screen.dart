@@ -76,11 +76,19 @@ import '../l10n/widget_translations.dart';
 /// When [urlSlug] is provided, the screen resolves property from subdomain
 /// and unit from slug. Otherwise, it uses query parameters.
 class BookingWidgetScreen extends ConsumerStatefulWidget {
-  const BookingWidgetScreen({super.key, this.urlSlug});
+  const BookingWidgetScreen({
+    super.key,
+    this.urlSlug,
+    this.initialUnitId,
+  });
 
   /// Optional URL slug for clean URL resolution.
   /// When provided, property is resolved from subdomain and unit from this slug.
   final String? urlSlug;
+
+  /// Optional unit ID for direct linking (e.g. from social sharing /s/:unitId)
+  /// When provided, the screen resolves this unit and its property automatically.
+  final String? initialUnitId;
 
   @override
   ConsumerState<BookingWidgetScreen> createState() =>
@@ -289,6 +297,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // IDs will be set after async resolution in _validateUnitAndProperty
       _propertyId = null;
       _unitId = '';
+    } else if (widget.initialUnitId != null &&
+        widget.initialUnitId!.isNotEmpty) {
+      // Direct Unit ID (Social Share): Unit provided, property resolved async
+      _propertyId = null;
+      _unitId = widget.initialUnitId!;
     } else {
       // Query params URL: direct IDs from URL
       _propertyId = _sanitizeId(uri.queryParameters['property']);
@@ -1516,7 +1529,30 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         return; // Exit early - slug URL fully handled
       }
 
-      // MODE 2: Query param validation (iframe embeds)
+      // MODE 2: Direct Unit ID Resolution (Social Share /s/:unitId)
+      if (widget.initialUnitId != null && widget.initialUnitId!.isNotEmpty) {
+        // Resolve property from unit ID
+        final repo = ref.read(ownerPropertiesRepositoryProvider);
+        final unit = await repo.getUnitByIdAcrossProperties(
+          widget.initialUnitId!,
+        );
+
+        if (!mounted) return;
+
+        if (unit == null) {
+          setState(() {
+            _validationError =
+                'Unit not found or no longer available.\n\nPlease check the link and try again.';
+          });
+          return;
+        }
+
+        _propertyId = unit.propertyId;
+        _unitId = unit.id;
+        // Proceed to load context below using the resolved IDs...
+      }
+
+      // MODE 3: Query param validation (iframe embeds)
       // Check if both property and unit IDs are provided
       if (_propertyId == null || _propertyId!.isEmpty) {
         setState(() {

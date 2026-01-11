@@ -106,6 +106,17 @@ final widgetRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
+      // SOCIAL SHARE ROUTE - Short links for sharing
+      // URL: /s/:unitId
+      // Resolves: unitId -> property automatically
+      GoRoute(
+        path: '/s/:unitId',
+        builder: (context, state) {
+          final unitId = state.pathParameters['unitId'];
+          return BookingWidgetScreen(initialUnitId: unitId);
+        },
+      ),
+
       // SLUG ROUTE - Clean URL for standalone pages (MUST BE LAST - catch-all)
       // URL: /apartman-6 (subdomain parsed from hostname)
       // Resolves: subdomain -> property, slug -> unit

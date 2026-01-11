@@ -92,6 +92,9 @@ export * from "./syncReminders";
 // Export authentication rate limiting (IP-based)
 export * from "./authRateLimit";
 
+// Export dynamic meta tags for social sharing
+export * from "./shareProperty";
+
 // Export password history management
 export * from "./passwordHistory";
 

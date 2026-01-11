@@ -1054,14 +1054,40 @@ class FirebaseOwnerBookingsRepository {
       // NEW STRUCTURE: Single collection group query (no batching!)
       Query<Map<String, dynamic>> query = _firestore
           .collectionGroup('bookings')
-          .where('owner_id', isEqualTo: ownerId)
-          .orderBy('created_at', descending: true)
-          .limit(limit + 1); // Fetch limit + 1 to check if there are more
+          .where('owner_id', isEqualTo: ownerId);
 
-      // Apply filters
+      // OPTIMIZATION: Server-side property filter (prevents reading other properties)
+      if (propertyId != null) {
+        query = query.where('property_id', isEqualTo: propertyId);
+      }
+
+      // Apply status filter
       if (status != null) {
         query = query.where('status', isEqualTo: status.value);
       }
+
+      // OPTIMIZATION: Server-side date filter & dynamic ordering
+      // If filtering by date, we must order by check_in to satisfy Firestore inequality rules
+      if (startDate != null || endDate != null) {
+        if (startDate != null) {
+          query = query.where(
+            'check_in',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+          );
+        }
+        if (endDate != null) {
+          query = query.where(
+            'check_in',
+            isLessThanOrEqualTo: Timestamp.fromDate(endDate),
+          );
+        }
+        query = query.orderBy('check_in', descending: true);
+      } else {
+        // Default ordering by created_at
+        query = query.orderBy('created_at', descending: true);
+      }
+
+      query = query.limit(limit + 1); // Fetch limit + 1 to check if there are more
 
       // Apply cursor
       if (startAfterDocument != null) {
@@ -1175,14 +1201,40 @@ class FirebaseOwnerBookingsRepository {
       // NEW STRUCTURE: Use collection group query with endBeforeDocument cursor
       Query<Map<String, dynamic>> query = _firestore
           .collectionGroup('bookings')
-          .where('owner_id', isEqualTo: ownerId)
-          .orderBy('created_at', descending: true)
-          .endBeforeDocument(endBeforeDocument)
-          .limitToLast(limit + 1); // Fetch limit + 1 to check if there are more
+          .where('owner_id', isEqualTo: ownerId);
 
+      // OPTIMIZATION: Server-side property filter
+      if (propertyId != null) {
+        query = query.where('property_id', isEqualTo: propertyId);
+      }
+
+      // Apply status filter
       if (status != null) {
         query = query.where('status', isEqualTo: status.value);
       }
+
+      // OPTIMIZATION: Server-side date filter & dynamic ordering
+      if (startDate != null || endDate != null) {
+        if (startDate != null) {
+          query = query.where(
+            'check_in',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+          );
+        }
+        if (endDate != null) {
+          query = query.where(
+            'check_in',
+            isLessThanOrEqualTo: Timestamp.fromDate(endDate),
+          );
+        }
+        query = query.orderBy('check_in', descending: true);
+      } else {
+        query = query.orderBy('created_at', descending: true);
+      }
+
+      query = query
+          .endBeforeDocument(endBeforeDocument)
+          .limitToLast(limit + 1); // Fetch limit + 1 to check if there are more
 
       final snapshot = await query.get();
 

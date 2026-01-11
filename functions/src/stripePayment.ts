@@ -20,7 +20,7 @@ import {
   safeToDate,
 } from "./utils/dateValidation";
 import { sanitizeText, sanitizeEmail, sanitizePhone } from "./utils/inputSanitization";
-import { logInfo, logError, logWarn } from "./logger";
+import { logInfo, logError, logWarn, logSuccess } from "./logger";
 import { validateBookingPrice, calculateBookingPrice } from "./utils/priceValidation";
 import { checkRateLimit } from "./utils/rateLimit";
 import {
@@ -807,7 +807,106 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
   }
 
   // Handle the event
-  if (event.type === "checkout.session.completed") {
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    const paymentIntentId = charge.payment_intent as string;
+    const amountRefunded = charge.amount_refunded; // In cents
+
+    logInfo(`Processing charge.refunded: ${charge.id}`, {
+      paymentIntentId,
+      amountRefunded,
+      refunded: charge.refunded,
+    });
+
+    if (!paymentIntentId) {
+      logError("Missing payment_intent_id in charge.refunded event");
+      res.status(400).send("Missing payment intent ID");
+      return;
+    }
+
+    try {
+      // Find booking by payment_intent_id
+      // NOTE: This requires payment_intent_id to be indexed for collectionGroup queries
+      const bookingsSnapshot = await db
+        .collectionGroup("bookings")
+        .where("payment_intent_id", "==", paymentIntentId)
+        .limit(1)
+        .get();
+
+      if (bookingsSnapshot.empty) {
+        logWarn(`No booking found for payment intent: ${paymentIntentId}`);
+        // This is not necessarily an error - might be a payment that wasn't linked to a booking
+        res.json({received: true, status: "no_booking_found"});
+        return;
+      }
+
+      const bookingDoc = bookingsSnapshot.docs[0];
+      const bookingId = bookingDoc.id;
+
+      // Update booking with refund info
+      // NOTE: charge.amount_refunded is the TOTAL amount refunded for the charge
+      const refundAmountEur = amountRefunded / 100;
+
+      await bookingDoc.ref.update({
+        refund_status: "processed",
+        refund_amount: refundAmountEur,
+        // If full refund, consider updating status to cancelled if not already?
+        // But let's stick to syncing refund data for now to avoid side effects.
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      logSuccess(`Booking ${bookingId} updated with refund info`, {
+        refundAmount: refundAmountEur,
+        chargeId: charge.id,
+      });
+
+      res.json({received: true, booking_id: bookingId, status: "refund_synced"});
+    } catch (error: any) {
+      logError("Error processing charge.refunded", error);
+      res.status(500).send(`Error: ${error.message}`);
+    }
+  } else if (event.type === "checkout.session.expired") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const metadata = session.metadata;
+    const placeholderBookingId = metadata?.placeholder_booking_id;
+
+    if (!placeholderBookingId) {
+      logInfo("Session expired but no placeholder_booking_id in metadata");
+      res.json({received: true});
+      return;
+    }
+
+    logInfo(`Processing checkout.session.expired for placeholder: ${placeholderBookingId}`);
+
+    const propertyId = metadata?.property_id;
+    const unitId = metadata?.unit_id;
+
+    if (propertyId && unitId) {
+      try {
+        // Direct delete using path
+        const placeholderRef = db
+          .collection("properties")
+          .doc(propertyId)
+          .collection("units")
+          .doc(unitId)
+          .collection("bookings")
+          .doc(placeholderBookingId);
+
+        // Check if it's still pending before deleting
+        const doc = await placeholderRef.get();
+        if (doc.exists && doc.data()?.status === "pending") {
+          await placeholderRef.delete();
+          logSuccess(`Expired placeholder booking ${placeholderBookingId} deleted`);
+        } else {
+          logInfo(`Placeholder ${placeholderBookingId} not pending or not found, skipping delete`);
+        }
+      } catch (error) {
+        logError(`Failed to delete expired placeholder ${placeholderBookingId}`, error);
+      }
+    }
+
+    res.json({received: true, status: "placeholder_cleaned"});
+  } else if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const metadata = session.metadata;
 

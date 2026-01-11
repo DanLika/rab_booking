@@ -9,6 +9,7 @@ import {logInfo, logError, logSuccess} from "./logger";
  * Full features (rate limiting, delivery tracking, webhooks) can be added later if needed.
  */
 
+import { HttpsError } from "firebase-functions/v1/https";
 // Configuration
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || "";
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || "";
@@ -29,12 +30,15 @@ interface SendSmsParams {
 export async function sendSms(params: SendSmsParams): Promise<boolean> {
   const {to, message, ownerId} = params;
 
-  // Skip if Twilio is not configured
+  // Ensure Twilio is configured
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
-    logInfo("[SMS Service] Twilio not configured, skipping SMS", {
-      ownerId,
-    });
-    return false;
+    logError(
+      "[SMS Service] Twilio credentials not configured.",
+      new Error("TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_PHONE_NUMBER is not set in environment variables."),
+      { ownerId }
+    );
+    // Throwing an error is safer to make the misconfiguration obvious
+    throw new HttpsError("internal", "SMS service is not configured.");
   }
 
   try {

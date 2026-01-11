@@ -15,6 +15,7 @@ import 'core/error_handling/error_boundary.dart';
 import 'core/providers/enhanced_auth_provider.dart';
 import 'core/providers/language_provider.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/services/fcm_service.dart';
 import 'core/services/logging_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/web_utils.dart';
@@ -603,6 +604,82 @@ class _InitializedApp extends ConsumerStatefulWidget {
 class _InitializedAppState extends ConsumerState<_InitializedApp> {
   final Completer<void> _authReadyCompleter = Completer<void>();
   bool _authChecked = false;
+
+  // Stream subscriptions for FCM events
+  StreamSubscription? _navigationSubscription;
+  StreamSubscription? _foregroundMessageSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupFcmListeners();
+  }
+
+  @override
+  void dispose() {
+    _navigationSubscription?.cancel();
+    _foregroundMessageSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _setupFcmListeners() {
+    // Listen for navigation events (Deep Linking)
+    _navigationSubscription = fcmService.navigationStream.listen((bookingId) {
+      if (!mounted) return;
+
+      final router = ref.read(ownerRouterProvider);
+      LoggingService.log('FCM Navigation: Go to booking $bookingId', tag: 'FCM');
+
+      // Use router to navigate to booking details
+      router.go(
+        Uri(
+          path: OwnerRoutes.bookings,
+          queryParameters: {'bookingId': bookingId},
+        ).toString(),
+      );
+    });
+
+    // Listen for foreground messages (In-App Alerts)
+    _foregroundMessageSubscription = fcmService.foregroundMessageStream.listen((message) {
+      if (!mounted) return;
+
+      final title = message.notification?.title ?? 'New Notification';
+      final body = message.notification?.body ?? '';
+      final bookingId = message.data['bookingId'];
+
+      LoggingService.log('FCM Alert: $title - $body', tag: 'FCM');
+
+      // Show SnackBar using global context via ScaffoldMessenger
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              if (body.isNotEmpty) Text(body),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          action: bookingId != null
+              ? SnackBarAction(
+                  label: 'View',
+                  onPressed: () {
+                    final router = ref.read(ownerRouterProvider);
+                    router.go(
+                      Uri(
+                        path: OwnerRoutes.bookings,
+                        queryParameters: {'bookingId': bookingId},
+                      ).toString(),
+                    );
+                  },
+                )
+              : null,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -11,6 +11,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/owner_bookings_provider.dart';
+import '../providers/notifications_provider.dart';
 
 /// Premium Owner App Navigation Drawer
 class OwnerAppDrawer extends ConsumerWidget {
@@ -154,11 +155,12 @@ class OwnerAppDrawer extends ConsumerWidget {
             ),
 
             // Settings & Profile
-            _DrawerItem(
+            _DrawerItemWithBadge(
               icon: Icons.notifications_outlined,
               title: l10n.ownerDrawerNotifications,
               isSelected: currentRoute == 'notifications',
               onTap: () => context.go(OwnerRoutes.notifications),
+              badgeCountProvider: unreadNotificationsCountProvider,
             ),
 
             const SizedBox(height: 4),
@@ -388,12 +390,14 @@ class _DrawerItemWithBadge extends ConsumerStatefulWidget {
   final String title;
   final bool isSelected;
   final VoidCallback onTap;
+  final StreamProvider<int>? badgeCountProvider;
 
   const _DrawerItemWithBadge({
     required this.icon,
     required this.title,
     required this.isSelected,
     required this.onTap,
+    this.badgeCountProvider,
   });
 
   @override
@@ -412,9 +416,10 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Get pending bookings count using optimized provider (dedicated query)
-    final pendingCountAsync = ref.watch(pendingBookingsCountProvider);
-    final pendingCount = pendingCountAsync.maybeWhen(
+    // Get badge count using provider (defaults to pendingBookingsCountProvider if null)
+    final provider = widget.badgeCountProvider ?? pendingBookingsCountProvider;
+    final countAsync = ref.watch(provider);
+    final count = countAsync.maybeWhen(
       data: (count) => count,
       orElse: () => 0,
     );
@@ -467,18 +472,18 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
                     ),
                   ),
                 ),
-                if (pendingCount > 0)
+                if (count > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.danger,
+                      color: theme.colorScheme.error,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      pendingCount.toString(),
+                      count.toString(),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,

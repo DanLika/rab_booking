@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,8 +8,6 @@ import 'package:flutter/foundation.dart';
 /// FCM Push Notification Service
 ///
 /// Handles Firebase Cloud Messaging for push notifications.
-/// Currently hidden from UI - will be activated with mobile app release.
-///
 /// Token storage: users/{userId}/data/fcmTokens
 class FcmService {
   static final FcmService _instance = FcmService._internal();
@@ -24,6 +23,16 @@ class FcmService {
   }
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Stream controllers for UI integration
+  final _navigationController = StreamController<String>.broadcast();
+  final _foregroundMessageController = StreamController<RemoteMessage>.broadcast();
+
+  /// Stream of booking IDs to navigate to
+  Stream<String> get navigationStream => _navigationController.stream;
+
+  /// Stream of foreground messages to show alerts for
+  Stream<RemoteMessage> get foregroundMessageStream => _foregroundMessageController.stream;
 
   bool _initialized = false;
   String? _currentToken;
@@ -41,7 +50,11 @@ class FcmService {
 
     try {
       // Request permission (iOS requires this)
-      final settings = await _messagingInstance.requestPermission();
+      final settings = await _messagingInstance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
       debugPrint('[FCM] Permission status: ${settings.authorizationStatus}');
 
@@ -192,10 +205,10 @@ class FcmService {
 
   /// Handle incoming message (foreground)
   void _handleMessage(RemoteMessage message) {
-    // For now, just log - can show in-app notification later
     debugPrint('[FCM] Message: ${message.notification?.title}');
-    debugPrint('[FCM] Body: ${message.notification?.body}');
-    debugPrint('[FCM] Data: ${message.data}');
+
+    // Emit to stream for UI to handle (e.g. show SnackBar)
+    _foregroundMessageController.add(message);
   }
 
   /// Handle notification tap
@@ -208,8 +221,10 @@ class FcmService {
       '[FCM] Tapped notification - category: $category, bookingId: $bookingId',
     );
 
-    // Navigation will be handled by the app based on the data
-    // Can emit events or use a callback here
+    if (bookingId != null) {
+      // Emit to navigation stream for Router to handle
+      _navigationController.add(bookingId);
+    }
   }
 
   /// Get platform string
@@ -242,6 +257,12 @@ class FcmService {
     final settings = await _messagingInstance.getNotificationSettings();
     return settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional;
+  }
+
+  /// Dispose streams
+  void dispose() {
+    _navigationController.close();
+    _foregroundMessageController.close();
   }
 }
 

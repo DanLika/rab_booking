@@ -525,31 +525,30 @@ class _NotificationSettingsScreenState
                   icon: Icons.email_outlined,
                   iconColor: theme.colorScheme.primary,
                   enabled: enabled,
-                  isLast:
-                      true, // Push notifications hidden until mobile app release
+                  isLast: false,
                 );
               },
             ),
-            // Push notifications - hidden until mobile app release (FCM implemented but not exposed)
-            // Builder(
-            //   builder: (context) {
-            //     final l10n = AppLocalizations.of(context);
-            //     return _buildChannelOption(
-            //       context: context,
-            //       theme: theme,
-            //       value: enabled && channels.push,
-            //       onChanged: enabled && !_isSaving
-            //           ? (value) => onChanged(channels.copyWith(push: value))
-            //           : null,
-            //       title: l10n.notificationSettingsPushChannel,
-            //       subtitle: l10n.notificationSettingsPushChannelDesc,
-            //       icon: Icons.notifications_outlined,
-            //       iconColor: theme.colorScheme.tertiary,
-            //       enabled: enabled,
-            //       isLast: true,
-            //     );
-            //   },
-            // ),
+            // Push notifications
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return _buildChannelOption(
+                  context: context,
+                  theme: theme,
+                  value: enabled && channels.push,
+                  onChanged: enabled && !_isSaving
+                      ? (value) => onChanged(channels.copyWith(push: value))
+                      : null,
+                  title: l10n.notificationSettingsPushChannel,
+                  subtitle: l10n.notificationSettingsPushChannelDesc,
+                  icon: Icons.notifications_outlined,
+                  iconColor: theme.colorScheme.tertiary,
+                  enabled: enabled,
+                  isLast: true,
+                );
+              },
+            ),
           ],
         ),
       ),

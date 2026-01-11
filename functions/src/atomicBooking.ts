@@ -1,6 +1,6 @@
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { admin, db } from "./firebase";
-import { logInfo, logError, logSuccess } from "./logger";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {admin, db} from "./firebase";
+import {logInfo, logError, logSuccess} from "./logger";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
@@ -132,16 +132,16 @@ export const createBookingAtomic = onCall(async (request) => {
   // Check for null, undefined, or empty string
   // NOTE: ownerId is NOT validated here - it will be fetched from property document (SF-001)
   const missingFields: string[] = [];
-  if (!unitId || (typeof unitId === 'string' && unitId.trim() === '')) missingFields.push('unitId');
-  if (!propertyId || (typeof propertyId === 'string' && propertyId.trim() === '')) missingFields.push('propertyId');
+  if (!unitId || (typeof unitId === "string" && unitId.trim() === "")) missingFields.push("unitId");
+  if (!propertyId || (typeof propertyId === "string" && propertyId.trim() === "")) missingFields.push("propertyId");
   // SECURITY SF-001: ownerId validation removed - we fetch it from property document
-  if (!checkIn || (typeof checkIn === 'string' && checkIn.trim() === '')) missingFields.push('checkIn');
-  if (!checkOut || (typeof checkOut === 'string' && checkOut.trim() === '')) missingFields.push('checkOut');
-  if (!guestName || (typeof guestName === 'string' && guestName.trim() === '')) missingFields.push('guestName');
-  if (!guestEmail || (typeof guestEmail === 'string' && guestEmail.trim() === '')) missingFields.push('guestEmail');
-  if (totalPrice === null || totalPrice === undefined || (typeof totalPrice === 'string' && totalPrice.trim() === '')) missingFields.push('totalPrice');
-  if (guestCount === null || guestCount === undefined || (typeof guestCount === 'string' && guestCount.trim() === '')) missingFields.push('guestCount');
-  if (!paymentMethod || (typeof paymentMethod === 'string' && paymentMethod.trim() === '')) missingFields.push('paymentMethod');
+  if (!checkIn || (typeof checkIn === "string" && checkIn.trim() === "")) missingFields.push("checkIn");
+  if (!checkOut || (typeof checkOut === "string" && checkOut.trim() === "")) missingFields.push("checkOut");
+  if (!guestName || (typeof guestName === "string" && guestName.trim() === "")) missingFields.push("guestName");
+  if (!guestEmail || (typeof guestEmail === "string" && guestEmail.trim() === "")) missingFields.push("guestEmail");
+  if (totalPrice === null || totalPrice === undefined || (typeof totalPrice === "string" && totalPrice.trim() === "")) missingFields.push("totalPrice");
+  if (guestCount === null || guestCount === undefined || (typeof guestCount === "string" && guestCount.trim() === "")) missingFields.push("guestCount");
+  if (!paymentMethod || (typeof paymentMethod === "string" && paymentMethod.trim() === "")) missingFields.push("paymentMethod");
 
   if (missingFields.length > 0) {
     logError("Missing required booking fields", null, {
@@ -1164,7 +1164,6 @@ export const createBookingAtomic = onCall(async (request) => {
           sanitizedGuestName,
           "created" // In-app notification still uses "created" but will show pending status
         ).catch((e) => logError("[AtomicBooking] Pending in-app notification failed", e));
-
       } else {
         // Auto-confirmed flow - send "Booking Confirmed" email to guest
         // Use retry mechanism for transient failures
@@ -1205,7 +1204,7 @@ export const createBookingAtomic = onCall(async (request) => {
         const ownerData = ownerDoc.data();
 
         if (!ownerDoc.exists) {
-          logError("[AtomicBooking] Owner document not found", { ownerId });
+          logError("[AtomicBooking] Owner document not found", {ownerId});
         } else if (!ownerData?.email) {
           logError("[AtomicBooking] Owner email not found in document", {
             ownerId,

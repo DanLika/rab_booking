@@ -7,23 +7,23 @@ import {setUser} from "./sentry";
 
 /**
  * Airbnb Calendar API Integration
- * 
+ *
  * ⚠️ IMPORTANT: Direct API access is currently NOT AVAILABLE
- * 
+ *
  * Status: Invitation-only (no public API)
  * Requirements: Business entity, security review, NDA, invitation from Airbnb
  * Timeline: Indefinite (months to potentially never)
- * 
+ *
  * This code is kept for reference but will not work without partnership invitation.
- * 
+ *
  * RECOMMENDED ALTERNATIVE: Use channel manager APIs (Beds24, Hosthub, Guesty)
  * See: docs/CHANNEL_MANAGER_SETUP.md
- * 
+ *
  * Technical Notes:
  * - Uses standard OAuth 2.0 (for approved partners)
  * - RESTful JSON API
  * - Webhook support available (must respond within 8 seconds)
- * 
+ *
  * Documentation: https://developer.airbnb.com/ (restricted access)
  */
 

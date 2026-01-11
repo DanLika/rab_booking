@@ -55,7 +55,7 @@ export interface DesignTokens {
   // Layout
   layout: {
     maxWidth: string;
-    cardStyle: 'separated' | 'bordered' | 'flat';
+    cardStyle: "separated" | "bordered" | "flat";
   };
 }
 
@@ -69,48 +69,48 @@ export interface DesignTokens {
  */
 export const DESIGN_TOKENS_PREMIUM: DesignTokens = {
   spacing: {
-    cardPadding: '32px',
-    sectionGap: '16px',
-    buttonPadding: '16px 32px',
+    cardPadding: "32px",
+    sectionGap: "16px",
+    buttonPadding: "16px 32px",
   },
 
   radius: {
-    card: '14px',
-    button: '8px',
+    card: "14px",
+    button: "8px",
   },
 
   typography: {
     heading: {
-      fontSize: '24px',
-      fontWeight: '700',
-      lineHeight: '1.3',
+      fontSize: "24px",
+      fontWeight: "700",
+      lineHeight: "1.3",
     },
     body: {
-      fontSize: '16px',
-      fontWeight: '400',
-      lineHeight: '1.6',
+      fontSize: "16px",
+      fontWeight: "400",
+      lineHeight: "1.6",
     },
     price: {
-      fontSize: '18px',
-      fontWeight: '700',
-      lineHeight: '1.4',
+      fontSize: "18px",
+      fontWeight: "700",
+      lineHeight: "1.4",
     },
     small: {
-      fontSize: '14px',
-      fontWeight: '400',
-      lineHeight: '1.5',
+      fontSize: "14px",
+      fontWeight: "400",
+      lineHeight: "1.5",
     },
   },
 
   shadows: {
-    card: '0 2px 4px rgba(0, 0, 0, 0.08)',
-    button: '0 3px 6px rgba(0, 0, 0, 0.12)',
-    buttonHover: '0 6px 12px rgba(0, 0, 0, 0.18)',
+    card: "0 2px 4px rgba(0, 0, 0, 0.08)",
+    button: "0 3px 6px rgba(0, 0, 0, 0.12)",
+    buttonHover: "0 6px 12px rgba(0, 0, 0, 0.18)",
   },
 
   layout: {
-    maxWidth: '600px',
-    cardStyle: 'separated',
+    maxWidth: "600px",
+    cardStyle: "separated",
   },
 };
 
@@ -125,62 +125,62 @@ export const DESIGN_TOKENS_PREMIUM: DesignTokens = {
  */
 export const DESIGN_TOKENS_REFINED: DesignTokens = {
   spacing: {
-    cardPadding: '28px',
-    sectionGap: '16px',
-    buttonPadding: '14px 28px',
+    cardPadding: "28px",
+    sectionGap: "16px",
+    buttonPadding: "14px 28px",
   },
 
   radius: {
-    card: '12px',
-    button: '8px',
+    card: "12px",
+    button: "8px",
   },
 
   typography: {
     heading: {
-      fontSize: '22px',
-      fontWeight: '600',
-      lineHeight: '1.3',
+      fontSize: "22px",
+      fontWeight: "600",
+      lineHeight: "1.3",
     },
     body: {
-      fontSize: '15px',
-      fontWeight: '400',
-      lineHeight: '1.6',
+      fontSize: "15px",
+      fontWeight: "400",
+      lineHeight: "1.6",
     },
     price: {
-      fontSize: '16px',
-      fontWeight: '600',
-      lineHeight: '1.4',
+      fontSize: "16px",
+      fontWeight: "600",
+      lineHeight: "1.4",
     },
     small: {
-      fontSize: '14px',
-      fontWeight: '400',
-      lineHeight: '1.5',
+      fontSize: "14px",
+      fontWeight: "400",
+      lineHeight: "1.5",
     },
   },
 
   shadows: {
-    card: '0 1px 2px rgba(0, 0, 0, 0.06)',
-    button: '0 2px 4px rgba(0, 0, 0, 0.08)',
-    buttonHover: '0 4px 8px rgba(0, 0, 0, 0.12)',
+    card: "0 1px 2px rgba(0, 0, 0, 0.06)",
+    button: "0 2px 4px rgba(0, 0, 0, 0.08)",
+    buttonHover: "0 4px 8px rgba(0, 0, 0, 0.12)",
   },
 
   layout: {
-    maxWidth: '600px',
-    cardStyle: 'separated',
+    maxWidth: "600px",
+    cardStyle: "separated",
   },
 };
 
 /**
  * Get design tokens by variant
  */
-export function getDesignTokens(variant: 'premium' | 'refined' = 'refined'): DesignTokens {
-  return variant === 'premium' ? DESIGN_TOKENS_PREMIUM : DESIGN_TOKENS_REFINED;
+export function getDesignTokens(variant: "premium" | "refined" = "refined"): DesignTokens {
+  return variant === "premium" ? DESIGN_TOKENS_PREMIUM : DESIGN_TOKENS_REFINED;
 }
 
 /**
  * Generate inline styles for card
  */
-export function getCardStyles(tokens: DesignTokens, backgroundColor = '#FFFFFF'): string {
+export function getCardStyles(tokens: DesignTokens, backgroundColor = "#FFFFFF"): string {
   return `
     background-color: ${backgroundColor};
     border-radius: ${tokens.radius.card};
@@ -195,8 +195,8 @@ export function getCardStyles(tokens: DesignTokens, backgroundColor = '#FFFFFF')
  */
 export function getButtonStyles(
   tokens: DesignTokens,
-  backgroundColor = '#374151',
-  textColor = '#FFFFFF'
+  backgroundColor = "#374151",
+  textColor = "#FFFFFF"
 ): string {
   return `
     display: inline-block;
@@ -217,8 +217,8 @@ export function getButtonStyles(
  */
 export function getTypographyStyles(
   tokens: DesignTokens,
-  type: 'heading' | 'body' | 'price' | 'small',
-  color = '#111827'
+  type: "heading" | "body" | "price" | "small",
+  color = "#111827"
 ): string {
   const styles = tokens.typography[type];
   return `

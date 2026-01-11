@@ -169,7 +169,7 @@ interface BatchDeleteResult {
  * a committed batch can't accept new operations.
  *
  * @param docs - Array of document snapshots to delete
- * @returns Results with success/failure counts
+ * @return Results with success/failure counts
  */
 async function deleteInBatches(
   docs: FirebaseFirestore.QueryDocumentSnapshot[]
@@ -202,7 +202,7 @@ async function deleteInBatches(
       logInfo(`[Cleanup] Batch committed successfully (total: ${results.successCount})`);
     } catch (batchError) {
       // Batch failed - fall back to individual deletes
-      logWarn(`[Cleanup] Batch commit failed, trying individual deletes`, {
+      logWarn("[Cleanup] Batch commit failed, trying individual deletes", {
         error: batchError instanceof Error ? batchError.message : String(batchError),
       });
 

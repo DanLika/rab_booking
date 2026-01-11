@@ -97,7 +97,7 @@ export const resendBookingEmail = onCall(async (request) => {
         "Unit not found"
       );
     }
-    const unitData = unitDoc.data()!
+    const unitData = unitDoc.data()!;
 
     // Verify ownership - check owner_id from booking instead of unit
     if (booking.owner_id !== request.auth.uid) {

@@ -40,16 +40,16 @@ const REGISTER_RATE_LIMIT = {
  * 2. rawRequest.ip (direct connection)
  *
  * @param request - Cloud Function request
- * @returns Client IP address or "unknown"
+ * @return Client IP address or "unknown"
  */
 function getClientIp(request: {rawRequest?: {ip?: string; headers?: Record<string, string | string[] | undefined>}}): string {
   // Try x-forwarded-for first (most common in production)
   const forwardedFor = request.rawRequest?.headers?.["x-forwarded-for"];
   if (forwardedFor) {
     // x-forwarded-for can be comma-separated list, take first IP
-    const firstIp = Array.isArray(forwardedFor)
-      ? forwardedFor[0]
-      : forwardedFor.split(",")[0]?.trim();
+    const firstIp = Array.isArray(forwardedFor) ?
+      forwardedFor[0] :
+      forwardedFor.split(",")[0]?.trim();
     if (firstIp) return firstIp;
   }
 
@@ -68,7 +68,7 @@ function getClientIp(request: {rawRequest?: {ip?: string; headers?: Record<strin
  * sufficient for rate limiting key generation.
  *
  * @param ip - Client IP address
- * @returns Hashed IP string
+ * @return Hashed IP string
  */
 function hashIp(ip: string): string {
   return Buffer.from(ip).toString("base64").substring(0, 16);

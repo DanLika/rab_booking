@@ -35,26 +35,26 @@ export interface EmailColorScheme {
  */
 export const EMAIL_COLORS_LIGHT: EmailColorScheme = {
   // Primary - Purple gradient
-  primary: "#6B4CE6",           // Main purple (matches widget)
-  primaryLight: "#F5F3FF",      // Light purple background
-  primaryDark: "#5B3CD6",       // Darker purple for hover
+  primary: "#6B4CE6", // Main purple (matches widget)
+  primaryLight: "#F5F3FF", // Light purple background
+  primaryDark: "#5B3CD6", // Darker purple for hover
 
   // Neutral palette
   background: "#FFFFFF",
-  backgroundSecondary: "#F8F9FA",  // Matches widget light theme
-  text: "#111827",              // Near black for high contrast
-  textSecondary: "#6B7280",     // Medium gray
-  border: "#E5E7EB",            // Light gray border
+  backgroundSecondary: "#F8F9FA", // Matches widget light theme
+  text: "#111827", // Near black for high contrast
+  textSecondary: "#6B7280", // Medium gray
+  border: "#E5E7EB", // Light gray border
 
   // Status colors
-  success: "#10B981",           // Green
-  warning: "#F59E0B",           // Amber
-  error: "#EF4444",             // Red
-  info: "#3B82F6",              // Blue
+  success: "#10B981", // Green
+  warning: "#F59E0B", // Amber
+  error: "#EF4444", // Red
+  info: "#3B82F6", // Blue
 
   // Shadows
-  shadowColor: "0, 0, 0",       // RGB for rgba()
-  shadowOpacity: "0.1",         // 10% opacity
+  shadowColor: "0, 0, 0", // RGB for rgba()
+  shadowOpacity: "0.1", // 10% opacity
 };
 
 /**
@@ -64,26 +64,26 @@ export const EMAIL_COLORS_LIGHT: EmailColorScheme = {
  */
 export const EMAIL_COLORS_DARK: EmailColorScheme = {
   // Primary - Lighter purple for dark backgrounds
-  primary: "#8B5CF6",           // Lighter purple
-  primaryLight: "#2D1B4E",      // Dark purple background
-  primaryDark: "#A78BFA",       // Even lighter for hover
+  primary: "#8B5CF6", // Lighter purple
+  primaryLight: "#2D1B4E", // Dark purple background
+  primaryDark: "#A78BFA", // Even lighter for hover
 
   // Neutral palette - matches widget dark theme
-  background: "#1A1A1A",        // Very dark gray (matches widget)
+  background: "#1A1A1A", // Very dark gray (matches widget)
   backgroundSecondary: "#2D2D2D", // Medium dark gray (matches widget)
-  text: "#F1F5F9",              // slate100 (matches widget)
-  textSecondary: "#94A3B8",     // slate400
-  border: "#374151",            // Dark border
+  text: "#F1F5F9", // slate100 (matches widget)
+  textSecondary: "#94A3B8", // slate400
+  border: "#374151", // Dark border
 
   // Status colors - brighter for dark background
-  success: "#34D399",           // Lighter green
-  warning: "#FBBF24",           // Lighter amber
-  error: "#F87171",             // Lighter red
-  info: "#60A5FA",              // Lighter blue
+  success: "#34D399", // Lighter green
+  warning: "#FBBF24", // Lighter amber
+  error: "#F87171", // Lighter red
+  info: "#60A5FA", // Lighter blue
 
   // Shadows
   shadowColor: "255, 255, 255", // White shadow for dark mode
-  shadowOpacity: "0.05",        // 5% opacity (subtler)
+  shadowOpacity: "0.05", // 5% opacity (subtler)
 };
 
 /**
@@ -93,33 +93,33 @@ export const EMAIL_COLORS_DARK: EmailColorScheme = {
  */
 export const EMAIL_COLORS_NEUTRAL: EmailColorScheme = {
   // Primary - Dark gray (no brand purple)
-  primary: "#374151",           // Medium dark gray
-  primaryLight: "#F9FAFB",      // Very light gray
-  primaryDark: "#1F2937",       // Darker gray
+  primary: "#374151", // Medium dark gray
+  primaryLight: "#F9FAFB", // Very light gray
+  primaryDark: "#1F2937", // Darker gray
 
   // Neutral palette
   background: "#FFFFFF",
   backgroundSecondary: "#F9FAFB",
-  text: "#1F2937",              // Soft black (not pure black)
-  textSecondary: "#6B7280",     // Medium gray
-  border: "#E5E7EB",            // Light gray border
+  text: "#1F2937", // Soft black (not pure black)
+  textSecondary: "#6B7280", // Medium gray
+  border: "#E5E7EB", // Light gray border
 
   // Status colors - professional tones
-  success: "#059669",           // Professional green
-  warning: "#D97706",           // Amber/orange
-  error: "#DC2626",             // Professional red
-  info: "#2563EB",              // Professional blue
+  success: "#059669", // Professional green
+  warning: "#D97706", // Amber/orange
+  error: "#DC2626", // Professional red
+  info: "#2563EB", // Professional blue
 
   // Shadows
-  shadowColor: "0, 0, 0",       // RGB for rgba()
-  shadowOpacity: "0.08",        // Subtle 8% opacity
+  shadowColor: "0, 0, 0", // RGB for rgba()
+  shadowOpacity: "0.08", // Subtle 8% opacity
 };
 
 /**
  * Get color scheme by recipient type
  */
-export function getEmailColors(recipient: 'guest' | 'owner'): EmailColorScheme {
-  return recipient === 'guest' ? EMAIL_COLORS_NEUTRAL : EMAIL_COLORS_LIGHT;
+export function getEmailColors(recipient: "guest" | "owner"): EmailColorScheme {
+  return recipient === "guest" ? EMAIL_COLORS_NEUTRAL : EMAIL_COLORS_LIGHT;
 }
 
 /**

@@ -12,7 +12,7 @@
  *
  * @param totalPrice - Total booking price in dollars (e.g., 100.50)
  * @param depositPercentage - Deposit percentage (e.g., 20 for 20%)
- * @returns Deposit amount in dollars, rounded to 2 decimal places
+ * @return Deposit amount in dollars, rounded to 2 decimal places
  */
 export function calculateDepositAmount(
   totalPrice: number,
@@ -63,7 +63,7 @@ export function calculateDepositAmount(
  *
  * @param totalPrice - Total booking price in dollars
  * @param depositAmount - Deposit amount in dollars (from calculateDepositAmount)
- * @returns Remaining amount in dollars, rounded to 2 decimal places
+ * @return Remaining amount in dollars, rounded to 2 decimal places
  */
 export function calculateRemainingAmount(
   totalPrice: number,

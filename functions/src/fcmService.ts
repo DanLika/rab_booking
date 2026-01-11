@@ -264,9 +264,9 @@ export async function sendBookingPushNotification(
   };
 
   // If dates provided, include date range in message
-  const dateRange = (checkInDate && checkOutDate)
-    ? ` (${formatDateRange(checkInDate, checkOutDate)})`
-    : "";
+  const dateRange = (checkInDate && checkOutDate) ?
+    ` (${formatDateRange(checkInDate, checkOutDate)})` :
+    "";
 
   const bodies: Record<string, string> = {
     created: `${guestName} made a new booking${dateRange}.`,
@@ -335,7 +335,7 @@ export async function sendPaymentPushNotification(
   bookingId: string,
   guestName: string,
   amount: number,
-  currency: string = "EUR"
+  currency = "EUR"
 ): Promise<boolean> {
   const formattedAmount = new Intl.NumberFormat("en-EU", {
     style: "currency",

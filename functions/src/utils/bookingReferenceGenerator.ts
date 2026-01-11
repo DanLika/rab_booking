@@ -19,7 +19,7 @@
  * - Already available (no extra generation cost)
  *
  * @param firestoreDocumentId - Firestore auto-generated document ID
- * @returns Unique booking reference in format BK-XXXXXXXXXXXX
+ * @return Unique booking reference in format BK-XXXXXXXXXXXX
  */
 export function generateBookingReference(firestoreDocumentId: string): string {
   // Validation: Ensure document ID is valid
@@ -47,7 +47,7 @@ export function generateBookingReference(firestoreDocumentId: string): string {
  * - RAB-123 (wrong prefix) ❌
  *
  * @param bookingRef - Booking reference to validate
- * @returns true if valid, false otherwise
+ * @return true if valid, false otherwise
  */
 export function isValidBookingReference(bookingRef: string): boolean {
   if (!bookingRef || typeof bookingRef !== "string") {

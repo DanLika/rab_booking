@@ -13795,6 +13795,18 @@ abstract class AppLocalizations {
   /// **'Payment integration is coming soon! For now, please contact us to upgrade your account.'**
   String get subscriptionComingSoonMessage;
 
+  /// No description provided for @subscriptionSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription updated successfully'**
+  String get subscriptionSuccess;
+
+  /// No description provided for @subscriptionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment was cancelled'**
+  String get subscriptionCancelled;
+
   /// No description provided for @profileSubscriptionSubtitle.
   ///
   /// In en, this message translates to:

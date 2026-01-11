@@ -776,6 +776,10 @@ mixin _$UserModel {
   @JsonKey(name: 'stripe_account_id')
   String? get stripeAccountId => throw _privateConstructorUsedError;
 
+  /// Stripe Customer ID (for paying subscriptions)
+  @JsonKey(name: 'stripe_customer_id')
+  String? get stripeCustomerId => throw _privateConstructorUsedError;
+
   /// Stripe Connect onboarding completion timestamp
   @NullableTimestampConverter()
   @JsonKey(name: 'stripe_connected_at')
@@ -844,6 +848,7 @@ abstract class $UserModelCopyWith<$Res> {
     String? employeeOf,
     EmployeePermissions? permissions,
     @JsonKey(name: 'stripe_account_id') String? stripeAccountId,
+    @JsonKey(name: 'stripe_customer_id') String? stripeCustomerId,
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_connected_at')
     DateTime? stripeConnectedAt,
@@ -894,6 +899,7 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? employeeOf = freezed,
     Object? permissions = freezed,
     Object? stripeAccountId = freezed,
+    Object? stripeCustomerId = freezed,
     Object? stripeConnectedAt = freezed,
     Object? stripeDisconnectedAt = freezed,
     Object? createdAt = null,
@@ -964,6 +970,10 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
             stripeAccountId: freezed == stripeAccountId
                 ? _value.stripeAccountId
                 : stripeAccountId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            stripeCustomerId: freezed == stripeCustomerId
+                ? _value.stripeCustomerId
+                : stripeCustomerId // ignore: cast_nullable_to_non_nullable
                       as String?,
             stripeConnectedAt: freezed == stripeConnectedAt
                 ? _value.stripeConnectedAt
@@ -1042,6 +1052,7 @@ abstract class _$$UserModelImplCopyWith<$Res>
     String? employeeOf,
     EmployeePermissions? permissions,
     @JsonKey(name: 'stripe_account_id') String? stripeAccountId,
+    @JsonKey(name: 'stripe_customer_id') String? stripeCustomerId,
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_connected_at')
     DateTime? stripeConnectedAt,
@@ -1092,6 +1103,7 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? employeeOf = freezed,
     Object? permissions = freezed,
     Object? stripeAccountId = freezed,
+    Object? stripeCustomerId = freezed,
     Object? stripeConnectedAt = freezed,
     Object? stripeDisconnectedAt = freezed,
     Object? createdAt = null,
@@ -1163,6 +1175,10 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value.stripeAccountId
             : stripeAccountId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        stripeCustomerId: freezed == stripeCustomerId
+            ? _value.stripeCustomerId
+            : stripeCustomerId // ignore: cast_nullable_to_non_nullable
+                  as String?,
         stripeConnectedAt: freezed == stripeConnectedAt
             ? _value.stripeConnectedAt
             : stripeConnectedAt // ignore: cast_nullable_to_non_nullable
@@ -1219,6 +1235,7 @@ class _$UserModelImpl extends _UserModel {
     this.employeeOf,
     this.permissions,
     @JsonKey(name: 'stripe_account_id') this.stripeAccountId,
+    @JsonKey(name: 'stripe_customer_id') this.stripeCustomerId,
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_connected_at')
     this.stripeConnectedAt,
@@ -1306,6 +1323,11 @@ class _$UserModelImpl extends _UserModel {
   @JsonKey(name: 'stripe_account_id')
   final String? stripeAccountId;
 
+  /// Stripe Customer ID (for paying subscriptions)
+  @override
+  @JsonKey(name: 'stripe_customer_id')
+  final String? stripeCustomerId;
+
   /// Stripe Connect onboarding completion timestamp
   @override
   @NullableTimestampConverter()
@@ -1368,7 +1390,7 @@ class _$UserModelImpl extends _UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType)';
+    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeCustomerId: $stripeCustomerId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType)';
   }
 
   @override
@@ -1402,6 +1424,8 @@ class _$UserModelImpl extends _UserModel {
                 other.permissions == permissions) &&
             (identical(other.stripeAccountId, stripeAccountId) ||
                 other.stripeAccountId == stripeAccountId) &&
+            (identical(other.stripeCustomerId, stripeCustomerId) ||
+                other.stripeCustomerId == stripeCustomerId) &&
             (identical(other.stripeConnectedAt, stripeConnectedAt) ||
                 other.stripeConnectedAt == stripeConnectedAt) &&
             (identical(other.stripeDisconnectedAt, stripeDisconnectedAt) ||
@@ -1443,6 +1467,7 @@ class _$UserModelImpl extends _UserModel {
     employeeOf,
     permissions,
     stripeAccountId,
+    stripeCustomerId,
     stripeConnectedAt,
     stripeDisconnectedAt,
     createdAt,
@@ -1484,6 +1509,7 @@ abstract class _UserModel extends UserModel {
     final String? employeeOf,
     final EmployeePermissions? permissions,
     @JsonKey(name: 'stripe_account_id') final String? stripeAccountId,
+    @JsonKey(name: 'stripe_customer_id') final String? stripeCustomerId,
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_connected_at')
     final DateTime? stripeConnectedAt,
@@ -1571,6 +1597,11 @@ abstract class _UserModel extends UserModel {
   @override
   @JsonKey(name: 'stripe_account_id')
   String? get stripeAccountId;
+
+  /// Stripe Customer ID (for paying subscriptions)
+  @override
+  @JsonKey(name: 'stripe_customer_id')
+  String? get stripeCustomerId;
 
   /// Stripe Connect onboarding completion timestamp
   @override

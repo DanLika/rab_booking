@@ -3254,5 +3254,7 @@
   "subscriptionFaqDataSafeAnswer": "Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.",
   "subscriptionComingSoon": "Coming Soon",
   "subscriptionComingSoonMessage": "Payment integration is coming soon! For now, please contact us to upgrade your account.",
+  "subscriptionSuccess": "Subscription updated successfully",
+  "subscriptionCancelled": "Payment was cancelled",
   "profileSubscriptionSubtitle": "Manage your plan"
 }

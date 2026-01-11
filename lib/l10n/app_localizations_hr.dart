@@ -7672,5 +7672,11 @@ class AppLocalizationsHr extends AppLocalizations {
       'Integracija plaćanja uskoro stiže! Za sada, molimo kontaktirajte nas za nadogradnju računa.';
 
   @override
+  String get subscriptionSuccess => 'Subscription updated successfully';
+
+  @override
+  String get subscriptionCancelled => 'Payment was cancelled';
+
+  @override
   String get profileSubscriptionSubtitle => 'Upravljajte svojim planom';
 }

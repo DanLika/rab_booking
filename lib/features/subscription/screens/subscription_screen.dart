@@ -1,23 +1,94 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/utils/web_utils.dart';
 import '../../../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/router_owner.dart';
 import '../../../shared/widgets/common_app_bar.dart';
+import '../data/subscription_repository.dart';
 import '../models/trial_status.dart';
 import '../providers/trial_status_provider.dart';
 
 /// Subscription management screen
 ///
-/// TODO: Implement full subscription flow when payment integration is ready
-/// - Display current subscription status
-/// - Show available plans
-/// - Handle Stripe checkout
-/// - Manage billing
-class SubscriptionScreen extends ConsumerWidget {
+/// Handles subscription plan display, checkout flow, and status management.
+class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
+}
+
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check for success/cancel query params
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPaymentStatus();
+    });
+  }
+
+  void _checkPaymentStatus() {
+    final uri = GoRouterState.of(context).uri;
+    final status = uri.queryParameters['status'];
+    final l10n = AppLocalizations.of(context);
+
+    if (status == 'success') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.subscriptionSuccess), // "Subscription updated successfully"
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      // Refresh trial status
+      ref.invalidate(trialStatusProvider);
+    } else if (status == 'cancelled') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.subscriptionCancelled), // "Payment was cancelled"
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleUpgrade(BuildContext context, AppLocalizations l10n) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final repo = ref.read(subscriptionRepositoryProvider);
+      // Use return URL that hits the router's success/cancel logic
+      // Note: Cloud function will append ?session_id=... or ?status=cancelled
+      const returnUrl = 'https://app.bookbed.io/owner/subscription/success';
+
+      // TODO: Use real price ID from config/env
+      final url = await repo.createCheckoutSession(
+        priceId: 'price_monthly_pro', // Placeholder
+        returnUrl: returnUrl,
+      );
+
+      // Redirect to Stripe
+      navigateToUrl(url);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${l10n.error}: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final trialStatusAsync = ref.watch(trialStatusProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
@@ -28,12 +99,23 @@ class SubscriptionScreen extends ConsumerWidget {
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (ctx) => Navigator.of(ctx).pop(),
       ),
-      body: trialStatusAsync.when(
-        data: (trialStatus) => _buildContent(context, theme, trialStatus, l10n),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Text(l10n.subscriptionErrorLoading(error.toString())),
-        ),
+      body: Stack(
+        children: [
+          trialStatusAsync.when(
+            data: (trialStatus) => _buildContent(context, theme, trialStatus, l10n),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => Center(
+              child: Text(l10n.subscriptionErrorLoading(error.toString())),
+            ),
+          ),
+          if (_isLoading)
+            Container(
+              color: Colors.black.withValues(alpha: 0.3),
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -126,22 +208,6 @@ class SubscriptionScreen extends ConsumerWidget {
     );
   }
 
-  void _handleUpgrade(BuildContext context, AppLocalizations l10n) {
-    // TODO: Implement Stripe checkout
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.subscriptionComingSoon),
-        content: Text(l10n.subscriptionComingSoonMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.ok),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Card showing current subscription status
@@ -280,7 +346,7 @@ class _PlanCard extends StatelessWidget {
         boxShadow: isRecommended
             ? [
                 BoxShadow(
-                  color: theme.primaryColor.withOpacity(0.1),
+                  color: theme.primaryColor.withValues(alpha: 0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

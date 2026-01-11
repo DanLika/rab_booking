@@ -98,6 +98,8 @@ class OwnerRoutes {
   static const String profileNotifications = '/owner/profile/notifications';
   static const String about = '/owner/about';
   static const String subscription = '/owner/subscription';
+  static const String subscriptionSuccess = '/owner/subscription/success';
+  static const String subscriptionCancel = '/owner/subscription/cancel';
   static const String widgetSettings = '/owner/widget-settings';
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
@@ -624,6 +626,21 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: const SubscriptionScreen(),
         ),
+      ),
+      // Subscription Success/Cancel - Redirect back to subscription with status
+      GoRoute(
+        path: OwnerRoutes.subscriptionSuccess,
+        redirect: (context, state) {
+          // Pass success flag to show success message
+          return '${OwnerRoutes.subscription}?status=success';
+        },
+      ),
+      GoRoute(
+        path: OwnerRoutes.subscriptionCancel,
+        redirect: (context, state) {
+          // Pass cancel flag to show error/cancel message
+          return '${OwnerRoutes.subscription}?status=cancelled';
+        },
       ),
 
       // Integrations routes - Fade for drawer navigation

@@ -20,6 +20,9 @@ export * from "./atomicBooking";
 // Export Stripe payment functions
 export * from "./stripePayment";
 
+// Export Stripe Subscription functions
+export * from "./stripeSubscription";
+
 // Export Stripe Connect functions
 export * from "./stripeConnect";
 

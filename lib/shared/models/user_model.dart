@@ -134,6 +134,9 @@ class UserModel with _$UserModel {
     /// Stripe Connect account ID
     @JsonKey(name: 'stripe_account_id') String? stripeAccountId,
 
+    /// Stripe Customer ID (for paying subscriptions)
+    @JsonKey(name: 'stripe_customer_id') String? stripeCustomerId,
+
     /// Stripe Connect onboarding completion timestamp
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_connected_at')

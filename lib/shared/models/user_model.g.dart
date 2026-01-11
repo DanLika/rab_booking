@@ -100,6 +100,7 @@ _$UserModelImpl _$$UserModelImplFromJson(
           json['permissions'] as Map<String, dynamic>,
         ),
   stripeAccountId: json['stripe_account_id'] as String?,
+  stripeCustomerId: json['stripe_customer_id'] as String?,
   stripeConnectedAt: const NullableTimestampConverter().fromJson(
     json['stripe_connected_at'],
   ),
@@ -145,6 +146,7 @@ Map<String, dynamic> _$$UserModelImplToJson(
   'employeeOf': instance.employeeOf,
   'permissions': instance.permissions,
   'stripe_account_id': instance.stripeAccountId,
+  'stripe_customer_id': instance.stripeCustomerId,
   'stripe_connected_at': const NullableTimestampConverter().toJson(
     instance.stripeConnectedAt,
   ),

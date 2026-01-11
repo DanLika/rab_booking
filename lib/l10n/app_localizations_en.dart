@@ -7615,5 +7615,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Payment integration is coming soon! For now, please contact us to upgrade your account.';
 
   @override
+  String get subscriptionSuccess => 'Subscription updated successfully';
+
+  @override
+  String get subscriptionCancelled => 'Payment was cancelled';
+
+  @override
   String get profileSubscriptionSubtitle => 'Manage your plan';
 }

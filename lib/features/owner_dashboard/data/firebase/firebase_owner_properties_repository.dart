@@ -454,6 +454,7 @@ class FirebaseOwnerPropertiesRepository {
     required String propertyId,
     required String ownerId,
     required String name,
+    String? unitId,
     String? slug,
     String? description,
     required double basePrice,
@@ -468,54 +469,66 @@ class FirebaseOwnerPropertiesRepository {
     int minStayNights = 1,
   }) async {
     try {
-      final docRef = await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .collection('units')
-          .add({
-            'property_id': propertyId, // Keep for reference
-            'owner_id': ownerId, // Required for Firestore security rules
-            'name': name,
-            'slug': slug,
-            'description': description,
-            'base_price': basePrice,
-            'max_guests': maxGuests,
-            'bedrooms': bedrooms,
-            'bathrooms': bathrooms,
-            'area_sqm': area,
-            'amenities': amenities ?? [],
-            'images': images ?? [],
-            'cover_image': coverImage,
-            'quantity': quantity,
-            'min_stay_nights': minStayNights,
-            'is_available': true,
-            'created_at': FieldValue.serverTimestamp(),
-            'updated_at': FieldValue.serverTimestamp(),
-          });
+      final data = {
+        'property_id': propertyId, // Keep for reference
+        'owner_id': ownerId, // Required for Firestore security rules
+        'name': name,
+        'slug': slug,
+        'description': description,
+        'base_price': basePrice,
+        'max_guests': maxGuests,
+        'bedrooms': bedrooms,
+        'bathrooms': bathrooms,
+        'area_sqm': area,
+        'amenities': amenities ?? [],
+        'images': images ?? [],
+        'cover_image': coverImage,
+        'quantity': quantity,
+        'min_stay_nights': minStayNights,
+        'is_available': true,
+        'created_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
+      };
+
+      DocumentReference docRef;
+      if (unitId != null) {
+        docRef = _firestore
+            .collection('properties')
+            .doc(propertyId)
+            .collection('units')
+            .doc(unitId);
+        await docRef.set(data);
+      } else {
+        docRef = await _firestore
+            .collection('properties')
+            .doc(propertyId)
+            .collection('units')
+            .add(data);
+      }
 
       final doc = await docRef.get();
-      final unitId = doc.id;
+      final finalUnitId = doc.id;
 
       // Auto-create default widget settings for this unit
       try {
         await _widgetSettingsRepository.createDefaultSettings(
           propertyId: propertyId,
-          unitId: unitId,
+          unitId: finalUnitId,
           ownerId: ownerId,
         );
         LoggingService.log(
-          'Widget settings auto-created for unit: $unitId',
+          'Widget settings auto-created for unit: $finalUnitId',
           tag: 'OwnerPropertiesRepository',
         );
       } catch (e) {
         // Log error but don't fail unit creation
         LoggingService.log(
-          'Warning: Failed to create widget settings for unit $unitId: $e',
+          'Warning: Failed to create widget settings for unit $finalUnitId: $e',
           tag: 'OwnerPropertiesRepository',
         );
       }
 
-      return UnitModel.fromJson({...doc.data()!, 'id': unitId});
+      return UnitModel.fromJson({...doc.data()!, 'id': finalUnitId});
     } catch (e) {
       throw PropertyException.creationFailed(e);
     }

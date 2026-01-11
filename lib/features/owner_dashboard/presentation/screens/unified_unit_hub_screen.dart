@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/image_utils.dart';
 import '../../../../core/design_tokens/gradient_tokens.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
@@ -1773,22 +1775,27 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         children: images.take(6).map((imageUrl) {
           return ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              imageUrl,
+            child: CachedNetworkImage(
+              imageUrl: imageUrl,
               width: imageSize,
               height: imageSize,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: imageSize,
-                  height: imageSize,
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                );
-              },
+              memCacheWidth: ImageUtils.cacheSize(context, imageSize),
+              fadeInDuration: const Duration(milliseconds: 200),
+              placeholder: (context, url) => Container(
+                width: imageSize,
+                height: imageSize,
+                color: theme.colorScheme.surfaceContainerHighest,
+              ),
+              errorWidget: (context, url, error) => Container(
+                width: imageSize,
+                height: imageSize,
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  Icons.broken_image,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
           );
         }).toList(),

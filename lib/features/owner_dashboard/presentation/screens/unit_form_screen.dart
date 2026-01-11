@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -17,6 +19,8 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/slug_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
+import '../../../../core/utils/image_utils.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../widgets/embed_code_generator_dialog.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -797,20 +801,25 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
+            child: CachedNetworkImage(
+              imageUrl: imageUrl,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurface.withAlpha(
-                      (0.3 * 255).toInt(),
-                    ),
+              memCacheWidth: ImageUtils.cacheSize(context, 100),
+              placeholder: (context, url) => Container(
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+              errorWidget: (context, url, error) => Container(
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  Icons.broken_image,
+                  color: theme.colorScheme.onSurface.withAlpha(
+                    (0.3 * 255).toInt(),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
         ),
@@ -886,7 +895,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
 
   Future<void> _pickImages() async {
     final ImagePicker picker = ImagePicker();
-    final List<XFile> images = await picker.pickMultiImage();
+    final List<XFile> images = await picker.pickMultiImage(
+      maxWidth: ImageUtils.kMaxUploadWidth.toDouble(),
+      maxHeight: ImageUtils.kMaxUploadWidth.toDouble(), // Allow square max
+      imageQuality: 85,
+    );
 
     if (images.isNotEmpty) {
       setState(() {
@@ -904,12 +917,39 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
 
     try {
       final repository = ref.read(ownerPropertiesRepositoryProvider);
+      final storageService = StorageService();
+      final currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final unitId = widget.unit?.id ?? const Uuid().v4();
 
       // Upload new images
-      List<String> uploadedImageUrls = [];
+      final List<String> uploadedImageUrls = [];
       if (_selectedImages.isNotEmpty) {
-        // Image upload implementation pending - currently skipped
-        uploadedImageUrls = [];
+        for (final xFile in _selectedImages) {
+          final bytes = await xFile.readAsBytes();
+
+          // Double check resizing (in case picker didn't work as expected or for uniformity)
+          // We only resize if larger than constraints to avoid upscaling/distortion
+          // But since we rely on picker parameters mostly, we use ImageUtils
+          // just to be safe if we want custom logic, but here let's trust the picker
+          // or use the helper if we want to force format.
+          // For now, upload directly as picker handled the heavy lifting.
+
+          final fileName = '${const Uuid().v4()}.jpg';
+
+          final url = await storageService.uploadUnitImage(
+            userId: currentUser.uid,
+            propertyId: widget.propertyId,
+            unitId: unitId,
+            imageBytes: bytes,
+            fileName: fileName,
+          );
+          uploadedImageUrls.add(url);
+        }
       }
 
       final allImages = [..._existingImages, ...uploadedImageUrls];
@@ -937,11 +977,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         );
       } else {
         // Create new unit
-        final currentUser = FirebaseAuth.instance.currentUser;
-        if (currentUser == null) {
-          throw Exception('User not authenticated');
-        }
+        // We already checked currentUser above
         await repository.createUnit(
+          unitId: unitId, // Pass the ID we generated for images
           propertyId: widget.propertyId,
           ownerId: currentUser.uid,
           name: _nameController.text,

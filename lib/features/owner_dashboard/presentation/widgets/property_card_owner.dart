@@ -4,6 +4,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../../core/theme/theme_extensions.dart';
 import '../../../../../core/design_tokens/border_tokens.dart';
+import '../../../../../core/utils/image_utils.dart';
 
 /// Property card for owner dashboard
 class PropertyCardOwner extends StatefulWidget {
@@ -477,6 +478,8 @@ class _PropertyCardOwnerState extends State<PropertyCardOwner> {
             ? CachedNetworkImage(
                 imageUrl: widget.property.primaryImage!,
                 fit: BoxFit.cover,
+                memCacheWidth: ImageUtils.cacheSize(context, 400),
+                fadeInDuration: const Duration(milliseconds: 300),
                 placeholder: (context, url) => _buildPlaceholder(isSmallMobile),
                 errorWidget: (context, url, error) =>
                     _buildPlaceholder(isSmallMobile),

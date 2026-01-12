@@ -3302,5 +3302,18 @@
   "bookingsTabAll": "All",
   "bookingsTabPending": "Pending",
   "bookingsTabConfirmed": "Confirmed",
-  "bookingsTabCancelled": "Cancelled"
+  "bookingsTabCancelled": "Cancelled",
+  "ownerProfileCompletionStatus": "Profile {percentage}% complete",
+  "@ownerProfileCompletionStatus": {
+    "placeholders": {
+      "percentage": {
+        "type": "int"
+      }
+    }
+  },
+  "ownerProfileSuggestionComplete": "Complete your profile to build trust",
+  "ownerProfileSuggestionAddress": "Add your address for invoices",
+  "ownerProfileSuggestionPhone": "Add phone number for bookings",
+  "subscriptionBannerTitle": "Upgrade to Pro",
+  "subscriptionBannerSubtitle": "Unlock unlimited properties and premium features"
 }

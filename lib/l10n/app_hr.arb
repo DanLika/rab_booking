@@ -3309,5 +3309,18 @@
   "bookingsTabAll": "Sve",
   "bookingsTabPending": "Na čekanju",
   "bookingsTabConfirmed": "Potvrđene",
-  "bookingsTabCancelled": "Otkazane"
+  "bookingsTabCancelled": "Otkazane",
+  "ownerProfileCompletionStatus": "Profil {percentage}% ispunjen",
+  "@ownerProfileCompletionStatus": {
+    "placeholders": {
+      "percentage": {
+        "type": "int"
+      }
+    }
+  },
+  "ownerProfileSuggestionComplete": "Ispunite profil kako biste izgradili povjerenje",
+  "ownerProfileSuggestionAddress": "Dodajte adresu za račune",
+  "ownerProfileSuggestionPhone": "Dodajte telefonski broj za rezervacije",
+  "subscriptionBannerTitle": "Nadogradite na Pro",
+  "subscriptionBannerSubtitle": "Otključajte neograničen broj objekata i premium značajke"
 }

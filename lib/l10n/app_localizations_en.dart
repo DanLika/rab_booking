@@ -7750,4 +7750,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingsTabCancelled => 'Cancelled';
+
+  @override
+  String ownerProfileCompletionStatus(int percentage) {
+    return 'Profile $percentage% complete';
+  }
+
+  @override
+  String get ownerProfileSuggestionComplete =>
+      'Complete your profile to build trust';
+
+  @override
+  String get ownerProfileSuggestionAddress => 'Add your address for invoices';
+
+  @override
+  String get ownerProfileSuggestionPhone => 'Add phone number for bookings';
+
+  @override
+  String get subscriptionBannerTitle => 'Upgrade to Pro';
+
+  @override
+  String get subscriptionBannerSubtitle =>
+      'Unlock unlimited properties and premium features';
 }

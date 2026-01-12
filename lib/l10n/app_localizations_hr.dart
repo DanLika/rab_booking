@@ -7814,4 +7814,27 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get bookingsTabCancelled => 'Otkazane';
+
+  @override
+  String ownerProfileCompletionStatus(int percentage) {
+    return 'Profil $percentage% ispunjen';
+  }
+
+  @override
+  String get ownerProfileSuggestionComplete =>
+      'Ispunite profil kako biste izgradili povjerenje';
+
+  @override
+  String get ownerProfileSuggestionAddress => 'Dodajte adresu za račune';
+
+  @override
+  String get ownerProfileSuggestionPhone =>
+      'Dodajte telefonski broj za rezervacije';
+
+  @override
+  String get subscriptionBannerTitle => 'Nadogradite na Pro';
+
+  @override
+  String get subscriptionBannerSubtitle =>
+      'Otključajte neograničen broj objekata i premium značajke';
 }

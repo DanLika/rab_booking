@@ -14016,6 +14016,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get bookingsTabCancelled;
+
+  /// No description provided for @ownerProfileCompletionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile {percentage}% complete'**
+  String ownerProfileCompletionStatus(int percentage);
+
+  /// No description provided for @ownerProfileSuggestionComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile to build trust'**
+  String get ownerProfileSuggestionComplete;
+
+  /// No description provided for @ownerProfileSuggestionAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your address for invoices'**
+  String get ownerProfileSuggestionAddress;
+
+  /// No description provided for @ownerProfileSuggestionPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Add phone number for bookings'**
+  String get ownerProfileSuggestionPhone;
+
+  /// No description provided for @subscriptionBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Pro'**
+  String get subscriptionBannerTitle;
+
+  /// No description provided for @subscriptionBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock unlimited properties and premium features'**
+  String get subscriptionBannerSubtitle;
 }
 
 class _AppLocalizationsDelegate

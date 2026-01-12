@@ -7,6 +7,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../shared/utils/validators/input_sanitizer.dart';
 
 /// Owner bookings model with extended property/unit info
 class OwnerBooking {
@@ -823,6 +824,10 @@ class FirebaseOwnerBookingsRepository {
     try {
       debugPrint('[rejectBooking] Starting rejection for booking: $bookingId');
 
+      // Sanitize input reason to prevent XSS/Injection
+      final sanitizedReason =
+          InputSanitizer.sanitizeText(reason) ?? 'Rejected by owner';
+
       // Find booking using helper method (avoids FieldPath.documentId bug)
       final bookingDoc = await _findBookingById(bookingId);
       debugPrint(
@@ -844,7 +849,7 @@ class FirebaseOwnerBookingsRepository {
       debugPrint('[rejectBooking] Attempting update...');
       await bookingDoc.reference.update({
         'status': BookingStatus.cancelled.value,
-        'rejection_reason': reason ?? 'Rejected by owner',
+        'rejection_reason': sanitizedReason,
         'rejected_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
@@ -893,6 +898,16 @@ class FirebaseOwnerBookingsRepository {
     bool sendEmail = true,
   }) async {
     try {
+      // Sanitize input reason to prevent XSS/Injection
+      final sanitizedReason = InputSanitizer.sanitizeText(reason);
+
+      if (sanitizedReason == null) {
+        throw BookingException(
+          'Cancellation reason is required',
+          code: 'booking/reason-required',
+        );
+      }
+
       // Find booking using helper method (avoids FieldPath.documentId bug)
       final bookingDoc = await _findBookingById(bookingId);
 
@@ -903,7 +918,7 @@ class FirebaseOwnerBookingsRepository {
       // Update using the found document reference
       await bookingDoc.reference.update({
         'status': BookingStatus.cancelled.value,
-        'cancellation_reason': reason,
+        'cancellation_reason': sanitizedReason,
         'cancelled_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });

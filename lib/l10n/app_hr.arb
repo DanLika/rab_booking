@@ -3297,5 +3297,17 @@
   "dashboardActionImportSubtitle": "Sinkronizirajte s Airbnb i Booking.com",
   "dashboardActionPaymentsSubtitle": "Automatizirajte isplate",
   "dashboardFuturePreview": "Vaš budući dashboard",
-  "dashboardGetStarted": "Započni"
+  "dashboardGetStarted": "Započni",
+  "revenueGuideTitle": "Počnite zarađivati",
+  "revenueGuideSubtitle": "Slijedite ove korake za prvu rezervaciju",
+  "revenueGuideActionIcal": "Uvezi postojeće rezervacije",
+  "revenueGuideActionIcalDesc": "Sinkronizirajte Airbnb, Booking.com ili druge platforme",
+  "revenueGuideActionWidget": "Dodaj widget za rezervacije",
+  "revenueGuideActionWidgetDesc": "Ugradite obrazac za rezervacije na svoju web stranicu",
+  "revenueGuideActionShare": "Podijelite stranicu",
+  "revenueGuideActionShareDesc": "Dobijte direktni link za dijeljenje s gostima",
+  "bookingsTabAll": "Sve",
+  "bookingsTabPending": "Na čekanju",
+  "bookingsTabConfirmed": "Potvrđene",
+  "bookingsTabCancelled": "Otkazane"
 }

@@ -3290,5 +3290,17 @@
   "dashboardActionImportSubtitle": "Sync with Airbnb & Booking.com",
   "dashboardActionPaymentsSubtitle": "Automate your payouts",
   "dashboardFuturePreview": "Your Future Dashboard",
-  "dashboardGetStarted": "Get Started"
+  "dashboardGetStarted": "Get Started",
+  "revenueGuideTitle": "Start Earning Revenue",
+  "revenueGuideSubtitle": "Follow these steps to get your first booking",
+  "revenueGuideActionIcal": "Import Existing Bookings",
+  "revenueGuideActionIcalDesc": "Sync your Airbnb, Booking.com or other platform calendars",
+  "revenueGuideActionWidget": "Add Booking Widget",
+  "revenueGuideActionWidgetDesc": "Embed a booking form on your website",
+  "revenueGuideActionShare": "Share Your Page",
+  "revenueGuideActionShareDesc": "Get a direct link to share with guests",
+  "bookingsTabAll": "All",
+  "bookingsTabPending": "Pending",
+  "bookingsTabConfirmed": "Confirmed",
+  "bookingsTabCancelled": "Cancelled"
 }

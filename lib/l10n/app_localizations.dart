@@ -13944,6 +13944,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get Started'**
   String get dashboardGetStarted;
+
+  /// No description provided for @revenueGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Earning Revenue'**
+  String get revenueGuideTitle;
+
+  /// No description provided for @revenueGuideSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow these steps to get your first booking'**
+  String get revenueGuideSubtitle;
+
+  /// No description provided for @revenueGuideActionIcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Existing Bookings'**
+  String get revenueGuideActionIcal;
+
+  /// No description provided for @revenueGuideActionIcalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync your Airbnb, Booking.com or other platform calendars'**
+  String get revenueGuideActionIcalDesc;
+
+  /// No description provided for @revenueGuideActionWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Booking Widget'**
+  String get revenueGuideActionWidget;
+
+  /// No description provided for @revenueGuideActionWidgetDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Embed a booking form on your website'**
+  String get revenueGuideActionWidgetDesc;
+
+  /// No description provided for @revenueGuideActionShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Your Page'**
+  String get revenueGuideActionShare;
+
+  /// No description provided for @revenueGuideActionShareDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a direct link to share with guests'**
+  String get revenueGuideActionShareDesc;
+
+  /// No description provided for @bookingsTabAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get bookingsTabAll;
+
+  /// No description provided for @bookingsTabPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get bookingsTabPending;
+
+  /// No description provided for @bookingsTabConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get bookingsTabConfirmed;
+
+  /// No description provided for @bookingsTabCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get bookingsTabCancelled;
 }
 
 class _AppLocalizationsDelegate

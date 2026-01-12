@@ -18,7 +18,6 @@ import '../../domain/models/overbooking_conflict.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
-import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -29,6 +28,9 @@ import '../widgets/booking_details_dialog.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/bookings/bookings_filters_dialog.dart';
+import '../widgets/bookings/bookings_tab_bar.dart';
+import '../widgets/bookings/revenue_guide_empty_state.dart';
+import '../widgets/bookings/premium_loading_indicator.dart';
 // Booking card components
 import '../widgets/bookings/booking_card/booking_card_header.dart';
 import '../widgets/bookings/booking_card/booking_card_guest_info.dart';
@@ -526,11 +528,18 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         context.horizontalPadding,
                         isMobile ? 8 : 12,
                       ),
-                      child: _buildFiltersSection(
-                        filters,
-                        isMobile,
-                        theme,
-                        viewMode,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildFiltersSection(
+                            filters,
+                            isMobile,
+                            theme,
+                            viewMode,
+                          ),
+                          const SizedBox(height: 16),
+                          const BookingsTabBar(),
+                        ],
                       ),
                     ),
                   ),
@@ -598,7 +607,14 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     )
                   // Show empty state
                   else if (windowedState.isEmpty)
-                    SliverToBoxAdapter(child: _buildEmptyState())
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.horizontalPadding,
+                        ),
+                        child: const RevenueGuideEmptyState(),
+                      ),
+                    )
                   // Show bookings list
                   else if (viewMode == BookingsViewMode.card)
                     _buildBookingsSliverList(bookings, isMobile)
@@ -630,14 +646,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                             child: windowedState.isLoadingBottom
                                 ? Column(
                                     children: [
-                                      // Minimalistic: Use black in light mode, white in dark mode
-                                      CircularProgressIndicator(
-                                        color:
-                                            localTheme.brightness ==
-                                                Brightness.dark
-                                            ? Colors.white
-                                            : Colors.black,
-                                      ),
+                                      const PremiumLoadingIndicator(),
                                       const SizedBox(height: 12),
                                       Text(
                                         localL10n.ownerBookingsLoadingMore,
@@ -710,12 +719,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Minimalistic: Use black in light mode, white in dark mode
-                      CircularProgressIndicator(
-                        color: theme.brightness == Brightness.dark
-                            ? Colors.white
-                            : Colors.black,
-                      ),
+                      const PremiumLoadingIndicator(),
                       const SizedBox(height: 16),
                       Text(
                         l10n.loading,
@@ -1204,24 +1208,6 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         ),
       );
     }
-  }
-
-  Widget _buildEmptyState() {
-    final l10n = AppLocalizations.of(context);
-    return Center(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.spaceL),
-          child: AnimatedEmptyState(
-            icon: Icons.event_available_outlined,
-            title: l10n.ownerBookingsNoBookings,
-            subtitle: l10n.ownerBookingsNoBookingsDescription,
-            iconSize: 70,
-            iconColor: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildSynchronizationSection(

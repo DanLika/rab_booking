@@ -7710,4 +7710,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardGetStarted => 'Get Started';
+
+  @override
+  String get revenueGuideTitle => 'Start Earning Revenue';
+
+  @override
+  String get revenueGuideSubtitle =>
+      'Follow these steps to get your first booking';
+
+  @override
+  String get revenueGuideActionIcal => 'Import Existing Bookings';
+
+  @override
+  String get revenueGuideActionIcalDesc =>
+      'Sync your Airbnb, Booking.com or other platform calendars';
+
+  @override
+  String get revenueGuideActionWidget => 'Add Booking Widget';
+
+  @override
+  String get revenueGuideActionWidgetDesc =>
+      'Embed a booking form on your website';
+
+  @override
+  String get revenueGuideActionShare => 'Share Your Page';
+
+  @override
+  String get revenueGuideActionShareDesc =>
+      'Get a direct link to share with guests';
+
+  @override
+  String get bookingsTabAll => 'All';
+
+  @override
+  String get bookingsTabPending => 'Pending';
+
+  @override
+  String get bookingsTabConfirmed => 'Confirmed';
+
+  @override
+  String get bookingsTabCancelled => 'Cancelled';
 }

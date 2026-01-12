@@ -211,13 +211,17 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
   }
 
   /// Get total revenue for owner
+  /// OPTIMIZED: Uses server-side aggregation (sum) instead of fetching docs
   Future<double> getTotalRevenue(String ownerId) async {
     try {
-      final unitIds = await _getOwnerUnitIds(ownerId);
-      if (unitIds.isEmpty) return 0.0;
+      final result = await _firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: ownerId)
+          .where('status', whereIn: FirestoreRepositoryMixin.confirmedStatuses)
+          .aggregate(sum('total_price'))
+          .get();
 
-      final bookings = await _fetchConfirmedBookings(unitIds);
-      return bookings.fold<double>(0.0, (total, b) => total + b.totalPrice);
+      return result.getSum('total_price') ?? 0.0;
     } catch (e) {
       throw AnalyticsException(
         'Failed to get total revenue',
@@ -228,10 +232,15 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
   }
 
   /// Get revenue for current month
+  /// OPTIMIZED: Uses server-side aggregation with date filters
   Future<double> getRevenueThisMonth(String ownerId) async {
     try {
       final range = getCurrentMonthRange();
-      return await _getRevenueInRange(ownerId, range.start, range.end);
+      return await _getRevenueInRangeAggregated(
+        ownerId,
+        range.start,
+        range.end,
+      );
     } catch (e) {
       throw AnalyticsException(
         'Failed to get revenue this month',
@@ -242,10 +251,15 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
   }
 
   /// Get revenue for last month
+  /// OPTIMIZED: Uses server-side aggregation with date filters
   Future<double> getRevenueLastMonth(String ownerId) async {
     try {
       final range = getLastMonthRange();
-      return await _getRevenueInRange(ownerId, range.start, range.end);
+      return await _getRevenueInRangeAggregated(
+        ownerId,
+        range.start,
+        range.end,
+      );
     } catch (e) {
       throw AnalyticsException(
         'Failed to get revenue last month',
@@ -418,6 +432,25 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
     );
 
     return bookings.fold<double>(0.0, (total, b) => total + b.totalPrice);
+  }
+
+  /// Get revenue in a date range using server-side aggregation
+  /// OPTIMIZED: Uses Firestore sum() instead of fetching all docs
+  Future<double> _getRevenueInRangeAggregated(
+    String ownerId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    final result = await _firestore
+        .collectionGroup('bookings')
+        .where('owner_id', isEqualTo: ownerId)
+        .where('status', whereIn: FirestoreRepositoryMixin.confirmedStatuses)
+        .where('created_at', isGreaterThanOrEqualTo: startDate)
+        .where('created_at', isLessThanOrEqualTo: endDate)
+        .aggregate(sum('total_price'))
+        .get();
+
+    return result.getSum('total_price') ?? 0.0;
   }
 
   /// Generate date key for grouping (YYYY-MM-DD)

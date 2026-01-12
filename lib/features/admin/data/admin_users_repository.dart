@@ -99,24 +99,15 @@ class AdminUsersRepository {
   }
 
   /// Get user's bookings count
+  /// OPTIMIZED: Uses collectionGroup to count all bookings for owner in one query
   Future<int> getUserBookingsCount(String userId) async {
-    // Need to get all properties first, then count bookings
-    final propsSnapshot = await _firestore
-        .collection('properties')
-        .where('ownerId', isEqualTo: userId)
+    final bookingsCount = await _firestore
+        .collectionGroup('bookings')
+        .where('owner_id', isEqualTo: userId)
+        .count()
         .get();
 
-    int totalBookings = 0;
-    for (final prop in propsSnapshot.docs) {
-      final bookingsCount = await _firestore
-          .collection('properties')
-          .doc(prop.id)
-          .collection('bookings')
-          .count()
-          .get();
-      totalBookings += bookingsCount.count ?? 0;
-    }
-    return totalBookings;
+    return bookingsCount.count ?? 0;
   }
 
   /// Update admin-controlled flags for a user

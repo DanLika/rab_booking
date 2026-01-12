@@ -3283,5 +3283,13 @@
   "calendarTutorialScrollHint": "Povucite horizontalno za pregled datuma",
   "calendarTutorialLongPressHint": "Dugi pritisak na mrežu za dodavanje rezervacije",
   "calendarTutorialGotIt": "Razumijem!",
-  "calendarTutorialExampleBooking": "Primjer rezervacije"
+  "calendarTutorialExampleBooking": "Primjer rezervacije",
+  "unitHubEmptyWelcome": "Dobrodošli u Unit Hub",
+  "unitHubEmptyDescription": "Centralno mjesto za upravljanje vašim smještajnim jedinicama.\nZapočnite dodavanjem svog prvog objekta.",
+  "unitHubBenefitVisibilityTitle": "Povećaj vidljivost",
+  "unitHubBenefitVisibilityDesc": "Dosegnite više gostiju prikazivanjem svog objekta na globalnoj razini.",
+  "unitHubBenefitAutomationTitle": "Automatiziraj rezervacije",
+  "unitHubBenefitAutomationDesc": "Uštedite vrijeme uz automatiziranu sinkronizaciju kalendara i cijena.",
+  "unitHubAddFirstProperty": "Dodaj prvi objekt",
+  "unitHubNeedHelp": "Potrebna vam je pomoć? Pogledajte vodič za početnike."
 }

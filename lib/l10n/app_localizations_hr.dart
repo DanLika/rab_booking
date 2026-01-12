@@ -7727,4 +7727,32 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get calendarTutorialExampleBooking => 'Primjer rezervacije';
+
+  @override
+  String get unitHubEmptyWelcome => 'Dobrodošli u Unit Hub';
+
+  @override
+  String get unitHubEmptyDescription =>
+      'Centralno mjesto za upravljanje vašim smještajnim jedinicama.\nZapočnite dodavanjem svog prvog objekta.';
+
+  @override
+  String get unitHubBenefitVisibilityTitle => 'Povećaj vidljivost';
+
+  @override
+  String get unitHubBenefitVisibilityDesc =>
+      'Dosegnite više gostiju prikazivanjem svog objekta na globalnoj razini.';
+
+  @override
+  String get unitHubBenefitAutomationTitle => 'Automatiziraj rezervacije';
+
+  @override
+  String get unitHubBenefitAutomationDesc =>
+      'Uštedite vrijeme uz automatiziranu sinkronizaciju kalendara i cijena.';
+
+  @override
+  String get unitHubAddFirstProperty => 'Dodaj prvi objekt';
+
+  @override
+  String get unitHubNeedHelp =>
+      'Potrebna vam je pomoć? Pogledajte vodič za početnike.';
 }

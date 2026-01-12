@@ -7665,4 +7665,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarTutorialExampleBooking => 'Example Booking';
+
+  @override
+  String get unitHubEmptyWelcome => 'Welcome to Unit Hub';
+
+  @override
+  String get unitHubEmptyDescription =>
+      'Central place for managing your accommodation units.\nStart by adding your first property.';
+
+  @override
+  String get unitHubBenefitVisibilityTitle => 'Increase Visibility';
+
+  @override
+  String get unitHubBenefitVisibilityDesc =>
+      'Reach more guests by showcasing your property globally.';
+
+  @override
+  String get unitHubBenefitAutomationTitle => 'Automate Bookings';
+
+  @override
+  String get unitHubBenefitAutomationDesc =>
+      'Save time with automated calendar and pricing synchronization.';
+
+  @override
+  String get unitHubAddFirstProperty => 'Add First Property';
+
+  @override
+  String get unitHubNeedHelp => 'Need help? Check our beginner\'s guide.';
 }

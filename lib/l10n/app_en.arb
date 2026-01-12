@@ -3276,5 +3276,13 @@
   "calendarTutorialScrollHint": "Swipe horizontally to view more dates",
   "calendarTutorialLongPressHint": "Long press on the grid to add a booking",
   "calendarTutorialGotIt": "Got it!",
-  "calendarTutorialExampleBooking": "Example Booking"
+  "calendarTutorialExampleBooking": "Example Booking",
+  "unitHubEmptyWelcome": "Welcome to Unit Hub",
+  "unitHubEmptyDescription": "Central place for managing your accommodation units.\nStart by adding your first property.",
+  "unitHubBenefitVisibilityTitle": "Increase Visibility",
+  "unitHubBenefitVisibilityDesc": "Reach more guests by showcasing your property globally.",
+  "unitHubBenefitAutomationTitle": "Automate Bookings",
+  "unitHubBenefitAutomationDesc": "Save time with automated calendar and pricing synchronization.",
+  "unitHubAddFirstProperty": "Add First Property",
+  "unitHubNeedHelp": "Need help? Check our beginner's guide."
 }

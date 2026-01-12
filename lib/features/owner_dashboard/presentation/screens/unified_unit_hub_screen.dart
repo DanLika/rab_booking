@@ -21,6 +21,7 @@ import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
+import '../widgets/units/unit_hub_empty_state.dart';
 
 // ============================================================================
 // CONSTANTS
@@ -423,55 +424,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
   /// Empty state when no properties exist
   Widget _buildEmptyPropertiesState(ThemeData theme, bool isDark) {
-    final l10n = AppLocalizations.of(context);
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 24.0),
-        child: AnimatedEmptyState(
-          icon: Icons.add_business,
-          title: l10n.unitHubNoProperties,
-          subtitle: l10n.unitHubNoPropertiesDesc,
-          iconColor: theme.colorScheme.primary.withValues(alpha: 0.5),
-          actionButton: Container(
-            decoration: BoxDecoration(
-              gradient: GradientTokens.brandPrimary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => context.push(OwnerRoutes.propertyNew),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.add_business,
-                        size: 20,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.unitHubCreateProperty,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    return const UnitHubEmptyState();
   }
 
   /// Properties with their units - hierarchical view

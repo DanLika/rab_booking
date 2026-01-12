@@ -13860,6 +13860,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Example Booking'**
   String get calendarTutorialExampleBooking;
+
+  /// No description provided for @unitHubEmptyWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Unit Hub'**
+  String get unitHubEmptyWelcome;
+
+  /// No description provided for @unitHubEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Central place for managing your accommodation units.\nStart by adding your first property.'**
+  String get unitHubEmptyDescription;
+
+  /// No description provided for @unitHubBenefitVisibilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase Visibility'**
+  String get unitHubBenefitVisibilityTitle;
+
+  /// No description provided for @unitHubBenefitVisibilityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach more guests by showcasing your property globally.'**
+  String get unitHubBenefitVisibilityDesc;
+
+  /// No description provided for @unitHubBenefitAutomationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automate Bookings'**
+  String get unitHubBenefitAutomationTitle;
+
+  /// No description provided for @unitHubBenefitAutomationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Save time with automated calendar and pricing synchronization.'**
+  String get unitHubBenefitAutomationDesc;
+
+  /// No description provided for @unitHubAddFirstProperty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add First Property'**
+  String get unitHubAddFirstProperty;
+
+  /// No description provided for @unitHubNeedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help? Check our beginner\'s guide.'**
+  String get unitHubNeedHelp;
 }
 
 class _AppLocalizationsDelegate

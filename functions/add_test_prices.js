@@ -2,28 +2,20 @@
  * Script to add test daily prices to Firestore
  *
  * Setup:
- * 1. Download service account key from Firebase Console:
- *    Project Settings → Service Accounts → Generate new private key
- * 2. Save as: functions/service-account-key.json
+ * 1. Authenticate with Google Cloud CLI:
+ *    `gcloud auth application-default login`
+ * 2. This will allow the script to use your user credentials
+ *    to securely connect to Firestore.
  *
  * Run with: node add_test_prices.js
  */
 
 const admin = require('firebase-admin');
 
-// Try to load service account, fallback to application default credentials
-let credential;
-try {
-  const serviceAccount = require('./service-account-key.json');
-  credential = admin.credential.cert(serviceAccount);
-  console.log('Using service account credentials');
-} catch (error) {
-  credential = admin.credential.applicationDefault();
-  console.log('Using application default credentials');
-}
-
+// Initialize Firebase Admin with Application Default Credentials
+// This is the recommended secure way for local development and server environments.
 admin.initializeApp({
-  credential: credential,
+  credential: admin.credential.applicationDefault(),
   projectId: 'rab-booking-248fc'
 });
 

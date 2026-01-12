@@ -129,6 +129,22 @@ class UserProfile with _$UserProfile {
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
+
+  /// Calculate profile completion percentage based on filled fields
+  int get completionPercentage {
+    int filled = 0;
+    const total = 7; // Total fields to track
+
+    if (displayName.isNotEmpty) filled++;
+    if (emailContact.isNotEmpty) filled++;
+    if (phoneE164.isNotEmpty) filled++;
+    if (address.city.isNotEmpty) filled++;
+    if (address.country.isNotEmpty) filled++;
+    if (propertyType.isNotEmpty) filled++;
+    if (logoUrl.isNotEmpty) filled++;
+
+    return ((filled / total) * 100).round();
+  }
 }
 
 /// Complete user data (combines profile + company)

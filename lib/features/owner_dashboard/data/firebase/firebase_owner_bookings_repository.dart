@@ -442,11 +442,13 @@ class FirebaseOwnerBookingsRepository {
   /// Use this when unitIds are already cached (e.g., from allOwnerUnitsProvider)
   ///
   /// Query savings: Eliminates 1 + N queries (1 properties + N units)
+  /// If unitToPropertyMap is provided, eliminates another N queries for iCal events
   Future<Map<String, List<BookingModel>>> getCalendarBookingsWithUnitIds({
     required List<String> unitIds,
     required DateTime startDate,
     required DateTime endDate,
     bool includeIcalEvents = true,
+    Map<String, String>? unitToPropertyMap,
   }) async {
     try {
       if (unitIds.isEmpty) return {};
@@ -483,29 +485,36 @@ class FirebaseOwnerBookingsRepository {
       if (includeIcalEvents) {
         try {
           // Get property IDs and unit-to-property mapping for iCal events
+          // If map is provided, skip the expensive Firestore lookups
+          final effectiveUnitToPropertyMap = <String, String>{};
           final propertyIds = <String>[];
-          final unitToPropertyMap = <String, String>{};
 
-          for (final unitId in unitIds) {
-            // Find which property this unit belongs to
-            final propertiesSnapshot = await _firestore
-                .collection('properties')
-                .where('owner_id', isEqualTo: userId)
-                .get();
-
-            for (final propDoc in propertiesSnapshot.docs) {
-              final unitDoc = await _firestore
+          if (unitToPropertyMap != null && unitToPropertyMap.isNotEmpty) {
+            effectiveUnitToPropertyMap.addAll(unitToPropertyMap);
+            propertyIds.addAll(unitToPropertyMap.values.toSet());
+          } else {
+            // Fallback: Expensive lookup (only if map not provided)
+            for (final unitId in unitIds) {
+              // Find which property this unit belongs to
+              final propertiesSnapshot = await _firestore
                   .collection('properties')
-                  .doc(propDoc.id)
-                  .collection('units')
-                  .doc(unitId)
+                  .where('owner_id', isEqualTo: userId)
                   .get();
-              if (unitDoc.exists) {
-                if (!propertyIds.contains(propDoc.id)) {
-                  propertyIds.add(propDoc.id);
+
+              for (final propDoc in propertiesSnapshot.docs) {
+                final unitDoc = await _firestore
+                    .collection('properties')
+                    .doc(propDoc.id)
+                    .collection('units')
+                    .doc(unitId)
+                    .get();
+                if (unitDoc.exists) {
+                  if (!propertyIds.contains(propDoc.id)) {
+                    propertyIds.add(propDoc.id);
+                  }
+                  effectiveUnitToPropertyMap[unitId] = propDoc.id;
+                  break;
                 }
-                unitToPropertyMap[unitId] = propDoc.id;
-                break;
               }
             }
           }
@@ -514,7 +523,7 @@ class FirebaseOwnerBookingsRepository {
             bookingsByUnit: bookingsByUnit,
             unitIds: unitIds,
             propertyIds: propertyIds,
-            unitToPropertyMap: unitToPropertyMap,
+            unitToPropertyMap: effectiveUnitToPropertyMap,
             startDate: startDate,
             endDate: endDate,
           );

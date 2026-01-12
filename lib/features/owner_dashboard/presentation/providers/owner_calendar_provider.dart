@@ -62,7 +62,8 @@ Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
 ///
 /// OPTIMIZED: Uses pre-cached unitIds from allOwnerUnitsProvider
 /// Saves 1 + N queries (properties + units) per invocation
-@riverpod
+/// keepAlive: Prevents re-fetching when navigating away and back
+@Riverpod(keepAlive: true)
 Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final auth = FirebaseAuth.instance;
@@ -81,17 +82,25 @@ Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
 
   if (unitIds.isEmpty) return {};
 
+  // OPTIMIZED: Create unit->property map to avoid N+1 queries in repository
+  final unitToPropertyMap = <String, String>{};
+  for (final unit in units) {
+    unitToPropertyMap[unit.id] = unit.propertyId;
+  }
+
   // Date range aligned with widget's max scroll limits (_kMaxDaysLimit = 365)
-  // 1 year back for historical visibility, 1 year forward for future planning
+  // OPTIMIZATION: Reduced from 12m back to 3m back to reduce query size
+  // 3 months back covers recent history, 9 months forward covers most future bookings
   final now = DateTime.now();
-  final startDate = DateTime(now.year, now.month - 12, now.day); // 1 year back
-  final endDate = DateTime(now.year + 1, now.month, now.day); // 1 year forward
+  final startDate = DateTime(now.year, now.month - 3, now.day);
+  final endDate = DateTime(now.year, now.month + 9, now.day);
 
   // OPTIMIZED: Use method that accepts unitIds directly (skips properties/units fetch)
   final allBookings = await repository.getCalendarBookingsWithUnitIds(
     unitIds: unitIds,
     startDate: startDate,
     endDate: endDate,
+    unitToPropertyMap: unitToPropertyMap,
   );
 
   // FILTER: Show active bookings + completed on timeline (exclude only cancelled)
@@ -163,11 +172,8 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
     // Only listen for bookings that could affect the visible calendar
     // Must match the date range used by calendarBookingsProvider
     final now = DateTime.now();
-    final endDate = DateTime(
-      now.year + 1,
-      now.month,
-      now.day,
-    ); // 1 year forward
+    // OPTIMIZATION: Synced with calendarBookings provider (9 months forward)
+    final endDate = DateTime(now.year, now.month + 9, now.day);
 
     try {
       // OPTIMIZED: Get unitIds from cached provider instead of re-fetching

@@ -24,6 +24,8 @@ import '../../domain/models/calendar_filter_options.dart';
 import '../../utils/calendar_grid_calculator.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/calendar/tutorial/calendar_tutorial_overlay.dart';
 
 /// Owner Timeline Calendar Screen
 /// Shows BedBooking-style Gantt chart with booking blocks spanning dates
@@ -58,12 +60,43 @@ class _OwnerTimelineCalendarScreenState
   // Incremented each time Today is clicked to ensure widget scrolls to today
   int _forceScrollKey = 0;
 
+  // Track if tutorial has been dismissed in current session or persisted
+  bool _tutorialDismissed = true; // Default to true to hide until check is done
+
+  static const String _kTutorialDismissedKey = 'calendar_onboarding_dismissed';
+
   @override
   void initState() {
     super.initState();
     // Initialize with today as start date
     // Number of days will be calculated in didChangeDependencies based on screen size
     _currentRange = DateRangeSelection.days(DateTime.now(), _visibleDays);
+    _loadTutorialState();
+  }
+
+  Future<void> _loadTutorialState() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _tutorialDismissed = prefs.getBool(_kTutorialDismissedKey) ?? false;
+      });
+    }
+  }
+
+  Future<void> _dismissTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kTutorialDismissedKey, true);
+    if (mounted) {
+      setState(() {
+        _tutorialDismissed = true;
+      });
+    }
+  }
+
+  // Helper to check if we should show tutorial
+  bool _shouldShowTutorial(bool hasUnits, bool isCalendarEmpty) {
+    // Show only if user has units, calendar is empty, and tutorial hasn't been dismissed
+    return hasUnits && isCalendarEmpty && !_tutorialDismissed;
   }
 
   @override
@@ -103,6 +136,15 @@ class _OwnerTimelineCalendarScreenState
       error: (_, _) => false, // Hide toolbar on error
     );
 
+    // Check if calendar is empty to trigger tutorial (using filtered provider for accuracy)
+    final bookingsAsync = ref.watch(timelineCalendarBookingsProvider);
+    final isCalendarEmpty = bookingsAsync.when(
+      data: (bookings) =>
+          bookings.values.fold<int>(0, (sum, list) => sum + list.length) == 0,
+      loading: () => false,
+      error: (_, __) => false,
+    );
+
     // Safely get localizations - use try-catch to prevent errors if context is not ready
     String calendarTitle;
     try {
@@ -132,189 +174,208 @@ class _OwnerTimelineCalendarScreenState
         },
         child: Focus(
           autofocus: true,
-          child: Scaffold(
-            backgroundColor:
-                Colors.transparent, // Transparent to show gradient background
-            appBar: CommonAppBar(
-              title: calendarTitle,
-              leadingIcon: Icons.menu,
-              onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-            ),
-            drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
-            body: Container(
-              decoration: BoxDecoration(
-                gradient: context.gradients.pageBackground,
-              ),
-              child: Column(
-                children: [
-                  // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
-                  // CONDITIONAL: Hide toolbar when owner has no units
-                  if (hasUnits)
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final unreadCountAsync = ref.watch(
-                          unreadNotificationsCountProvider,
-                        );
-                        final multiSelectState = ref.watch(multiSelectProvider);
-                        final conflictCount = ref.watch(
-                          overbookingConflictCountProvider,
-                        );
-                        final showEmptyUnits = ref.watch(
-                          showEmptyUnitsProvider,
-                        );
-                        final filters = ref.watch(calendarFiltersProvider);
-                        final activeFilterCount = filters.activeFilterCount;
-
-                        return CalendarTopToolbar(
-                          dateRange: _currentRange,
-                          isWeekView: false,
-                          onPreviousPeriod: _goToPreviousPeriod,
-                          onNextPeriod: _goToNextPeriod,
-                          onToday: _goToToday,
-                          onDatePickerTap: _showDatePicker,
-                          onSearchTap: showSearchDialog,
-                          onRefresh: refreshCalendarData,
-                          onFilterTap: _showFiltersAndNavigateToToday,
-                          notificationCount: unreadCountAsync.when(
-                            data: (count) => count,
-                            loading: () => 0,
-                            error: (error, stackTrace) => 0,
-                          ),
-                          onNotificationsTap: showNotificationsPanel,
-                          // Show all icons on screens >= 600px
-                          isCompact: MediaQuery.of(context).size.width < 600,
-                          // ENHANCED: Analytics toggle integrated in single row
-                          showSummaryToggle: true,
-                          isSummaryVisible: _showSummary,
-                          onSummaryToggleChanged: (value) {
-                            setState(() {
-                              _showSummary = value;
-                            });
-                            // Force immediate rebuild to prevent delay
-                            // Without this, summary bar wouldn't appear until user scrolled
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) {
-                                setState(() {
-                                  // Trigger second rebuild to ensure AnimatedSize processes
-                                });
-                              }
-                            });
-                          },
-                          // Show empty units toggle (persisted via provider)
-                          showEmptyUnitsToggle: true,
-                          isEmptyUnitsVisible: showEmptyUnits,
-                          onEmptyUnitsToggleChanged: (value) {
-                            ref
-                                .read(showEmptyUnitsProvider.notifier)
-                                .setValue(value);
-                          },
-                          // ENHANCED: Multi-select mode toggle
-                          showMultiSelectToggle: true,
-                          isMultiSelectActive: multiSelectState.isEnabled,
-                          onMultiSelectToggle: () {
-                            if (multiSelectState.isEnabled) {
-                              ref
-                                  .read(multiSelectProvider.notifier)
-                                  .disableMultiSelect();
-                            } else {
-                              ref
-                                  .read(multiSelectProvider.notifier)
-                                  .enableMultiSelect();
-                            }
-                          },
-                          // Overbooking conflict badge
-                          overbookingConflictCount: conflictCount,
-                          onOverbookingBadgeTap: () {
-                            _handleOverbookingBadgeTap(ref);
-                          },
-                          // Active filters inline display
-                          activeFilterCount: activeFilterCount > 0
-                              ? activeFilterCount
-                              : null,
-                          onClearFilters: () {
-                            ref
-                                .read(calendarFiltersProvider.notifier)
-                                .clearFilters();
-                            // Force refresh of calendar data after clearing filters
-                            ref.invalidate(filteredUnitsProvider);
-                            ref.invalidate(filteredCalendarBookingsProvider);
-                            ref.invalidate(timelineCalendarBookingsProvider);
-                          },
-                        );
-                      },
-                    ),
-
-                  // Timeline calendar widget (it fetches its own data via providers)
-                  Expanded(
-                    child: Consumer(
-                      builder: (context, ref, child) {
-                        final showEmptyUnits = ref.watch(
-                          showEmptyUnitsProvider,
-                        );
-                        return TimelineCalendarWidget(
-                          // FIXED: Only use counter in key, NOT startDate
-                          // Including startDate caused infinite rebuild loop:
-                          // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
-                          key: timelineKey,
-                          initialScrollToDate: _currentRange
-                              .startDate, // Scroll to selected date
-                          showSummary: _showSummary,
-                          showEmptyUnits: showEmptyUnits,
-                          // Problem #19 fix: Pass forceScrollKey to ensure Today button scrolls
-                          forceScrollKey: _forceScrollKey,
-                          // FIXED: Preserve vertical scroll position during toolbar navigation
-                          // When user clicks left/right arrows, widget rebuilds but we restore scroll position
-                          initialVerticalOffset: _verticalScrollOffset,
-                          onVerticalOffsetChanged: (offset) {
-                            // Track vertical scroll position (don't call setState to avoid rebuild)
-                            _verticalScrollOffset = offset;
-                          },
-                          onCellLongPress: (date, unit) =>
-                              _showCreateBookingDialog(
-                                initialCheckIn: date,
-                                unitId: unit.id,
-                              ),
-                          onUnitNameTap: _showUnitFutureBookings,
-                          onVisibleDateRangeChanged: (startDate) {
-                            // FIXED: Only update toolbar when user scrolls MANUALLY
-                            // Skip update during programmatic navigation (Today, arrows, date picker)
-                            // to prevent overwriting the intended navigation target
-                            if (_isProgrammaticNavigation) return;
-
-                            // Update toolbar date range when user scrolls manually
-                            setState(() {
-                              _currentRange = DateRangeSelection.days(
-                                startDate,
-                                _visibleDays,
-                              );
-                            });
-                          },
-                        );
-                      },
-                    ),
+          child: Stack(
+            children: [
+              Scaffold(
+                backgroundColor: Colors
+                    .transparent, // Transparent to show gradient background
+                appBar: CommonAppBar(
+                  title: calendarTitle,
+                  leadingIcon: Icons.menu,
+                  onLeadingIconTap: (context) =>
+                      Scaffold.of(context).openDrawer(),
+                ),
+                drawer: const OwnerAppDrawer(currentRoute: 'calendar/timeline'),
+                body: Container(
+                  decoration: BoxDecoration(
+                    gradient: context.gradients.pageBackground,
                   ),
+                  child: Column(
+                    children: [
+                      // Top toolbar with integrated analytics toggle - OPTIMIZED: Single row
+                      // CONDITIONAL: Hide toolbar when owner has no units
+                      if (hasUnits)
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final unreadCountAsync = ref.watch(
+                              unreadNotificationsCountProvider,
+                            );
+                            final multiSelectState = ref.watch(
+                              multiSelectProvider,
+                            );
+                            final conflictCount = ref.watch(
+                              overbookingConflictCountProvider,
+                            );
+                            final showEmptyUnits = ref.watch(
+                              showEmptyUnitsProvider,
+                            );
+                            final filters = ref.watch(calendarFiltersProvider);
+                            final activeFilterCount = filters.activeFilterCount;
 
-                  // Multi-select action bar (bottom)
-                  const MultiSelectActionBar(),
-                ],
-              ), // Column
-            ), // Container with gradient background
-            floatingActionButton: Consumer(
-              builder: (context, ref, child) {
-                final multiSelectState = ref.watch(multiSelectProvider);
+                            return CalendarTopToolbar(
+                              dateRange: _currentRange,
+                              isWeekView: false,
+                              onPreviousPeriod: _goToPreviousPeriod,
+                              onNextPeriod: _goToNextPeriod,
+                              onToday: _goToToday,
+                              onDatePickerTap: _showDatePicker,
+                              onSearchTap: showSearchDialog,
+                              onRefresh: refreshCalendarData,
+                              onFilterTap: _showFiltersAndNavigateToToday,
+                              notificationCount: unreadCountAsync.when(
+                                data: (count) => count,
+                                loading: () => 0,
+                                error: (error, stackTrace) => 0,
+                              ),
+                              onNotificationsTap: showNotificationsPanel,
+                              // Show all icons on screens >= 600px
+                              isCompact:
+                                  MediaQuery.of(context).size.width < 600,
+                              // ENHANCED: Analytics toggle integrated in single row
+                              showSummaryToggle: true,
+                              isSummaryVisible: _showSummary,
+                              onSummaryToggleChanged: (value) {
+                                setState(() {
+                                  _showSummary = value;
+                                });
+                                // Force immediate rebuild to prevent delay
+                                // Without this, summary bar wouldn't appear until user scrolled
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  if (mounted) {
+                                    setState(() {
+                                      // Trigger second rebuild to ensure AnimatedSize processes
+                                    });
+                                  }
+                                });
+                              },
+                              // Show empty units toggle (persisted via provider)
+                              showEmptyUnitsToggle: true,
+                              isEmptyUnitsVisible: showEmptyUnits,
+                              onEmptyUnitsToggleChanged: (value) {
+                                ref
+                                    .read(showEmptyUnitsProvider.notifier)
+                                    .setValue(value);
+                              },
+                              // ENHANCED: Multi-select mode toggle
+                              showMultiSelectToggle: true,
+                              isMultiSelectActive: multiSelectState.isEnabled,
+                              onMultiSelectToggle: () {
+                                if (multiSelectState.isEnabled) {
+                                  ref
+                                      .read(multiSelectProvider.notifier)
+                                      .disableMultiSelect();
+                                } else {
+                                  ref
+                                      .read(multiSelectProvider.notifier)
+                                      .enableMultiSelect();
+                                }
+                              },
+                              // Overbooking conflict badge
+                              overbookingConflictCount: conflictCount,
+                              onOverbookingBadgeTap: () {
+                                _handleOverbookingBadgeTap(ref);
+                              },
+                              // Active filters inline display
+                              activeFilterCount: activeFilterCount > 0
+                                  ? activeFilterCount
+                                  : null,
+                              onClearFilters: () {
+                                ref
+                                    .read(calendarFiltersProvider.notifier)
+                                    .clearFilters();
+                                // Force refresh of calendar data after clearing filters
+                                ref.invalidate(filteredUnitsProvider);
+                                ref.invalidate(
+                                  filteredCalendarBookingsProvider,
+                                );
+                                ref.invalidate(
+                                  timelineCalendarBookingsProvider,
+                                );
+                              },
+                            );
+                          },
+                        ),
 
-                // Hide FAB when multi-select is active OR when owner has no units
-                if (multiSelectState.isEnabled || !hasUnits) {
-                  return const SizedBox.shrink();
-                }
+                      // Timeline calendar widget (it fetches its own data via providers)
+                      Expanded(
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final showEmptyUnits = ref.watch(
+                              showEmptyUnitsProvider,
+                            );
+                            return TimelineCalendarWidget(
+                              // FIXED: Only use counter in key, NOT startDate
+                              // Including startDate caused infinite rebuild loop:
+                              // scroll → onVisibleDateRangeChanged → setState → key changes → rebuild → scroll...
+                              key: timelineKey,
+                              initialScrollToDate: _currentRange
+                                  .startDate, // Scroll to selected date
+                              showSummary: _showSummary,
+                              showEmptyUnits: showEmptyUnits,
+                              // Problem #19 fix: Pass forceScrollKey to ensure Today button scrolls
+                              forceScrollKey: _forceScrollKey,
+                              // FIXED: Preserve vertical scroll position during toolbar navigation
+                              // When user clicks left/right arrows, widget rebuilds but we restore scroll position
+                              initialVerticalOffset: _verticalScrollOffset,
+                              onVerticalOffsetChanged: (offset) {
+                                // Track vertical scroll position (don't call setState to avoid rebuild)
+                                _verticalScrollOffset = offset;
+                              },
+                              onCellLongPress: (date, unit) =>
+                                  _showCreateBookingDialog(
+                                    initialCheckIn: date,
+                                    unitId: unit.id,
+                                  ),
+                              onUnitNameTap: _showUnitFutureBookings,
+                              onVisibleDateRangeChanged: (startDate) {
+                                // FIXED: Only update toolbar when user scrolls MANUALLY
+                                // Skip update during programmatic navigation (Today, arrows, date picker)
+                                // to prevent overwriting the intended navigation target
+                                if (_isProgrammaticNavigation) return;
 
-                return _AnimatedGradientFAB(
-                  onPressed: _showCreateBookingDialog,
-                  gradient: context.gradients.brandPrimary,
-                );
-              },
-            ),
-            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+                                // Update toolbar date range when user scrolls manually
+                                setState(() {
+                                  _currentRange = DateRangeSelection.days(
+                                    startDate,
+                                    _visibleDays,
+                                  );
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+
+                      // Multi-select action bar (bottom)
+                      const MultiSelectActionBar(),
+                    ],
+                  ), // Column
+                ), // Container with gradient background
+                floatingActionButton: Consumer(
+                  builder: (context, ref, child) {
+                    final multiSelectState = ref.watch(multiSelectProvider);
+
+                    // Hide FAB when multi-select is active OR when owner has no units
+                    if (multiSelectState.isEnabled || !hasUnits) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return _AnimatedGradientFAB(
+                      onPressed: _showCreateBookingDialog,
+                      gradient: context.gradients.brandPrimary,
+                    );
+                  },
+                ),
+                floatingActionButtonLocation:
+                    FloatingActionButtonLocation.endFloat,
+              ),
+
+              // Tutorial Overlay
+              if (_shouldShowTutorial(hasUnits, isCalendarEmpty))
+                CalendarTutorialOverlay(onDismiss: _dismissTutorial),
+            ],
           ),
         ),
       ),

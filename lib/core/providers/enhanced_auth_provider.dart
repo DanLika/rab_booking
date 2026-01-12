@@ -796,21 +796,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     // Clear user context for Sentry/Crashlytics error tracking
     LoggingService.clearUser();
 
-    // Clear saved credentials from secure storage (non-blocking)
-    unawaited(() async {
-      try {
-        await SecureStorageService().clearCredentials();
-        LoggingService.log(
-          'Credentials cleared on sign out',
-          tag: 'ENHANCED_AUTH',
-        );
-      } catch (e) {
-        LoggingService.log(
-          'Failed to clear credentials: $e',
-          tag: 'AUTH_WARNING',
-        );
-      }
-    }());
+    // NOTE: We do NOT clear secure storage (Remember Me email) on sign out.
+    // The email should persist after logout so it's pre-filled on next login.
+    // Credentials are only cleared when user:
+    // 1. Unchecks "Remember Me" checkbox during login
+    // 2. Deletes their account
 
     await _auth.signOut();
     // Keep isLoading false after sign out (not an initial check)
@@ -879,11 +869,27 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   ///
   /// Required for Apple App Store compliance (mandatory since 2022).
   ///
+  /// [password] - Required for re-authentication before deletion (security measure)
+  ///
   /// Throws [String] error message on failure.
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({required String password}) async {
     final user = _auth.currentUser;
     if (user == null) {
       throw 'No user is currently signed in';
+    }
+
+    // Re-authenticate user before deletion (security measure)
+    try {
+      if (user.email == null) {
+        throw 'User email is missing';
+      }
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      throw _getAuthErrorMessage(e);
     }
 
     try {

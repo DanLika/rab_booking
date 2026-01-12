@@ -35,7 +35,8 @@ class ImportantNotesSection extends StatelessWidget {
         translations.includeReferenceInPayment,
         translations.emailConfirmationAfterPayment,
         translations.remainingAmountOnArrival(remainingAmount),
-        translations.cancellationPolicy7Days,
+        // Note: Cancellation policy is shown separately in CancellationPolicyCard
+        // with actual owner settings - no hardcoded refund promises here
       ]);
     }
 

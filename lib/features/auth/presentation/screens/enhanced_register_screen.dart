@@ -50,6 +50,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   bool _acceptedTerms = false;
   bool _acceptedPrivacy = false;
   bool _newsletterOptIn = false;
+  bool _isFormValid = false;
   String? _emailErrorFromServer;
 
   Uint8List? _profileImageBytes;
@@ -59,6 +60,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   void initState() {
     super.initState();
     _emailController.addListener(_clearServerError);
+
+    // Listen to all fields to update form validity for button state
+    _fullNameController.addListener(_updateFormValidity);
+    _emailController.addListener(_updateFormValidity);
+    _passwordController.addListener(_updateFormValidity);
+    _confirmPasswordController.addListener(_updateFormValidity);
   }
 
   @override
@@ -74,6 +81,35 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   void _clearServerError() {
     if (_emailErrorFromServer != null) {
       setState(() => _emailErrorFromServer = null);
+    }
+  }
+
+  void _updateFormValidity() {
+    // Check if all fields are valid (without showing errors to user)
+    final nameValid =
+        ProfileValidators.validateName(_fullNameController.text) == null;
+    final emailValid =
+        ProfileValidators.validateEmail(_emailController.text) == null;
+    final passwordValid =
+        PasswordValidator.validateMinimumLength(_passwordController.text) ==
+        null;
+    final confirmValid =
+        PasswordValidator.validateConfirmPassword(
+          _passwordController.text,
+          _confirmPasswordController.text,
+        ) ==
+        null;
+
+    final newState =
+        nameValid &&
+        emailValid &&
+        passwordValid &&
+        confirmValid &&
+        _acceptedTerms &&
+        _acceptedPrivacy;
+
+    if (_isFormValid != newState) {
+      setState(() => _isFormValid = newState);
     }
   }
 
@@ -161,7 +197,17 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         _formKey.currentState!.validate();
       } else {
         setState(() => _isLoading = false);
-        ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
+        // Handle coded rate limit message with seconds (from RateLimitService)
+        if (errorMessage.startsWith('RATE_LIMIT_LOCKOUT:')) {
+          final secondsStr = errorMessage.split(':')[1];
+          final seconds = int.tryParse(secondsStr) ?? 60;
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            l10n.authErrorRateLimitWait(seconds),
+          );
+        } else {
+          ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
+        }
       }
     }
   }
@@ -256,7 +302,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                   SizedBox(height: isCompact ? 20 : 24),
                                   GradientAuthButton(
                                     text: l10n.authCreateAccount,
-                                    onPressed: _handleRegister,
+                                    onPressed: _isFormValid
+                                        ? _handleRegister
+                                        : null,
                                     isLoading: _isLoading,
                                     icon: Icons.person_add_rounded,
                                   ),
@@ -441,7 +489,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
       children: [
         _buildLegalCheckbox(
           value: _acceptedTerms,
-          onChanged: (value) => setState(() => _acceptedTerms = value!),
+          onChanged: (value) {
+            setState(() => _acceptedTerms = value!);
+            _updateFormValidity();
+          },
           linkText: l10n.authTermsConditions,
           prefixText: l10n.authAcceptTerms,
           onLinkTap: () => Navigator.of(context).push(
@@ -452,7 +503,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         const SizedBox(height: 6),
         _buildLegalCheckbox(
           value: _acceptedPrivacy,
-          onChanged: (value) => setState(() => _acceptedPrivacy = value!),
+          onChanged: (value) {
+            setState(() => _acceptedPrivacy = value!);
+            _updateFormValidity();
+          },
           linkText: l10n.authPrivacyPolicy,
           prefixText: l10n.authAcceptTerms,
           onLinkTap: () => Navigator.of(context).push(

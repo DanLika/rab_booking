@@ -494,16 +494,24 @@ class DashboardOverviewTab extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
-    final spacing = isMobile ? 12.0 : 16.0;
+    final wrapSpacing = isMobile ? 10.0 : 12.0;
+    final horizontalPadding = context.horizontalPadding;
 
     double cardWidth;
     if (isMobile) {
-      cardWidth = (screenWidth - (spacing * 3 + 32)) / 2;
+      // Calculate width for 2 columns: (Screen - Padding*2 - Gap) / 2
+      final availableWidth = screenWidth - (horizontalPadding * 2);
+      cardWidth = (availableWidth - wrapSpacing) / 2;
     } else if (isTablet) {
-      cardWidth = (screenWidth - (spacing * 4 + 48)) / 3;
+      // Calculate width for 3 columns: (Screen - Padding*2 - Gap*2) / 3
+      final availableWidth = screenWidth - (horizontalPadding * 2);
+      cardWidth = (availableWidth - (wrapSpacing * 2)) / 3;
     } else {
       cardWidth = 280.0;
     }
+
+    // RESPONSIVE: Ensure minimum width for very small screens (<320px)
+    if (cardWidth < 130) cardWidth = 130;
 
     final accentColor = gradient.colors.isNotEmpty
         ? gradient.colors.first
@@ -698,11 +706,19 @@ class _RevenueChart extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final chartHeight = screenWidth > 900
-            ? 300.0
-            : screenWidth > 600
-            ? 260.0
-            : 220.0;
+        final isLandscape =
+            MediaQuery.of(context).orientation == Orientation.landscape;
+
+        // RESPONSIVE: Adjust height for landscape mobile to avoid taking up full screen
+        final double chartHeight;
+        if (screenWidth > 900) {
+          chartHeight = 300.0;
+        } else if (screenWidth > 600) {
+          chartHeight = 260.0;
+        } else {
+          // Mobile - use smaller height in landscape
+          chartHeight = isLandscape ? 180.0 : 220.0;
+        }
 
         return SizedBox(
           height: chartHeight,
@@ -869,11 +885,19 @@ class _BookingsChart extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final chartHeight = screenWidth > 900
-            ? 300.0
-            : screenWidth > 600
-            ? 260.0
-            : 220.0;
+        final isLandscape =
+            MediaQuery.of(context).orientation == Orientation.landscape;
+
+        // RESPONSIVE: Adjust height for landscape mobile
+        final double chartHeight;
+        if (screenWidth > 900) {
+          chartHeight = 300.0;
+        } else if (screenWidth > 600) {
+          chartHeight = 260.0;
+        } else {
+          // Mobile - use smaller height in landscape
+          chartHeight = isLandscape ? 180.0 : 220.0;
+        }
 
         return SizedBox(
           height: chartHeight,

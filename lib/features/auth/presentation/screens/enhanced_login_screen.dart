@@ -281,6 +281,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         errorLower.contains('account has been disabled')) {
       return l10n.authErrorUserDisabled;
     }
+    // Handle coded rate limit message with seconds (from RateLimitService)
+    if (error.startsWith('RATE_LIMIT_LOCKOUT:')) {
+      final secondsStr = error.split(':')[1];
+      final seconds = int.tryParse(secondsStr) ?? 60;
+      return l10n.authErrorRateLimitWait(seconds);
+    }
     if (errorLower.contains('too-many-requests') ||
         errorLower.contains('too many')) {
       return l10n.authErrorTooManyRequests;
@@ -395,11 +401,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                       child: SingleChildScrollView(
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: EdgeInsets.only(
-                          left: isCompact ? 12 : 20,
-                          right: isCompact ? 12 : 20,
-                          top: isCompact ? 16 : 20,
-                          bottom: isCompact ? 16 : 20,
+                        padding: EdgeInsets.symmetric(
+                          // RESPONSIVE: Use smaller padding on very small screens (<340px)
+                          horizontal: isCompact
+                              ? (MediaQuery.of(context).size.width < 340
+                                    ? 8
+                                    : 12)
+                              : 20,
+                          vertical: isCompact ? 16 : 20,
                         ),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(minHeight: minHeight),
@@ -553,28 +562,35 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     return Row(
       children: [
         Expanded(
-          child: InkWell(
-            onTap: () => setState(() => _rememberMe = !_rememberMe),
-            child: Row(
-              children: [
-                SizedBox(
-                  height: 22,
-                  width: 22,
-                  child: Checkbox(
-                    value: _rememberMe,
-                    onChanged: (value) => setState(() => _rememberMe = value!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+          child: MergeSemantics(
+            child: InkWell(
+              onTap: () => setState(() => _rememberMe = !_rememberMe),
+              borderRadius: BorderRadius.circular(4),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) =>
+                            setState(() => _rememberMe = value!),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        activeColor: theme.colorScheme.primary,
+                      ),
                     ),
-                    activeColor: theme.colorScheme.primary,
-                  ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.authRememberMe,
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.authRememberMe,
-                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -627,6 +643,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return SocialLoginButton(
         customIcon: const GoogleBrandIcon(),
         label: 'Google',
+        enabled: !_isLoading,
         onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
       );
     }
@@ -635,48 +652,70 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return SocialLoginButton(
         customIcon: const AppleBrandIcon(),
         label: 'Apple',
+        enabled: !_isLoading,
         onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
       );
     }
 
-    // Both enabled - show side by side
-    return Row(
-      children: [
-        Expanded(
-          child: SocialLoginButton(
-            customIcon: const GoogleBrandIcon(),
-            label: 'Google',
-            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: SocialLoginButton(
-            customIcon: const AppleBrandIcon(),
-            label: 'Apple',
-            onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
-          ),
-        ),
-      ],
+    // Both enabled - check available space
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final googleButton = SocialLoginButton(
+          customIcon: const GoogleBrandIcon(),
+          label: 'Google',
+          enabled: !_isLoading,
+          onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
+        );
+
+        final appleButton = SocialLoginButton(
+          customIcon: const AppleBrandIcon(),
+          label: 'Apple',
+          enabled: !_isLoading,
+          onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
+        );
+
+        // RESPONSIVE: If width is very constrained (<280px), stack vertically
+        if (constraints.maxWidth < 280) {
+          return Column(
+            children: [googleButton, const SizedBox(height: 10), appleButton],
+          );
+        }
+
+        // Otherwise show side by side
+        return Row(
+          children: [
+            Expanded(child: googleButton),
+            const SizedBox(width: 10),
+            Expanded(child: appleButton),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildRegisterLink(ThemeData theme, AppLocalizations l10n) {
     return Center(
       child: TextButton(
-        onPressed: () => context.go(OwnerRoutes.register),
+        onPressed: _isLoading ? null : () => context.go(OwnerRoutes.register),
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
         ),
         child: RichText(
           text: TextSpan(
-            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 13,
+              color: _isLoading
+                  ? theme.colorScheme.onSurface.withAlpha(100)
+                  : null,
+            ),
             children: [
               TextSpan(text: '${l10n.authNoAccount} '),
               TextSpan(
                 text: l10n.authCreateAccount,
                 style: TextStyle(
-                  color: theme.colorScheme.primary,
+                  color: _isLoading
+                      ? theme.colorScheme.primary.withAlpha(100)
+                      : theme.colorScheme.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),

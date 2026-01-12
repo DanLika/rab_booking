@@ -83,11 +83,49 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final booking = widget.booking;
     final width = widget.width;
     final unitRowHeight = widget.unitRowHeight;
     final dayWidth = widget.dayWidth;
     final blockHeight = unitRowHeight - kTimelineBookingBlockHeightPadding;
+
+    // GHOST DATA LOGIC
+    final isGhost = booking.id.startsWith('ghost_');
+    if (isGhost) {
+      return RepaintBoundary(
+        child: IgnorePointer(
+          child: Container(
+            width: width - (kTimelineBookingBlockHorizontalMargin * 2),
+            height: blockHeight,
+            margin: const EdgeInsets.symmetric(
+              horizontal: kTimelineBookingBlockHorizontalMargin,
+            ),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.3),
+                style: BorderStyle.solid,
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                l10n.calendarTutorialExampleBooking,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: theme.colorScheme.primary.withOpacity(0.6),
+                  fontWeight: FontWeight.bold,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     // Use centralized overbooking detection provider for consistent conflict detection
     // across all calendar views (Timeline, Month, Year, Bookings page)

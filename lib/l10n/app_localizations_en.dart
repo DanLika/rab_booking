@@ -181,6 +181,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Too many failed attempts. Please try again later.';
 
   @override
+  String authErrorRateLimitWait(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Too many failed attempts. Try again in $seconds seconds.',
+      one: 'Too many failed attempts. Try again in 1 second.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get authErrorGeneric =>
       'Login failed. Please check your credentials and try again.';
 
@@ -7616,4 +7627,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileSubscriptionSubtitle => 'Manage your plan';
+
+  @override
+  String subscriptionDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+      zero: 'Today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionStatusTrial => 'Trial Period';
+
+  @override
+  String get subscriptionStatusActive => 'Active Subscription';
+
+  @override
+  String get subscriptionStatusExpired => 'Trial Expired';
+
+  @override
+  String get subscriptionStatusSuspended => 'Account Suspended';
+
+  @override
+  String get calendarTutorialScrollHint =>
+      'Swipe horizontally to view more dates';
+
+  @override
+  String get calendarTutorialLongPressHint =>
+      'Long press on the grid to add a booking';
+
+  @override
+  String get calendarTutorialGotIt => 'Got it!';
+
+  @override
+  String get calendarTutorialExampleBooking => 'Example Booking';
 }

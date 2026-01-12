@@ -32,6 +32,39 @@ import '../exceptions/app_exceptions.dart';
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  /// Maximum file size: 10MB (matches storage.rules SEC-002)
+  static const int _maxFileSizeBytes = 10 * 1024 * 1024;
+
+  /// Allowed image extensions
+  static const List<String> _allowedExtensions = [
+    'jpg',
+    'jpeg',
+    'png',
+    'webp',
+    'gif',
+  ];
+
+  /// Validate file before upload (client-side check for better UX)
+  /// Throws StorageException if validation fails
+  void _validateImageFile(Uint8List bytes, String fileName) {
+    // Check file size
+    if (bytes.length > _maxFileSizeBytes) {
+      throw StorageException.uploadFailed(
+        'image',
+        Exception('File too large. Maximum size is 10MB.'),
+      );
+    }
+
+    // Check file extension
+    final ext = fileName.split('.').last.toLowerCase();
+    if (!_allowedExtensions.contains(ext)) {
+      throw StorageException.uploadFailed(
+        'image',
+        Exception('Invalid file type. Allowed: JPG, PNG, WebP, GIF.'),
+      );
+    }
+  }
+
   /// Upload profile image for a user
   /// Returns the download URL of the uploaded image
   Future<String> uploadProfileImage({
@@ -40,6 +73,8 @@ class StorageService {
     required String fileName,
   }) async {
     try {
+      // SEC-002: Validate file before upload
+      _validateImageFile(imageBytes, fileName);
       // Create a reference to the file location
       final String path = 'users/$userId/profile/$fileName';
       final Reference ref = _storage.ref().child(path);
@@ -87,6 +122,9 @@ class StorageService {
     required String fileName,
   }) async {
     try {
+      // SEC-002: Validate file before upload
+      _validateImageFile(imageBytes, fileName);
+
       final String path = 'users/$userId/properties/$propertyId/$fileName';
       final Reference ref = _storage.ref().child(path);
 
@@ -118,6 +156,9 @@ class StorageService {
     required String fileName,
   }) async {
     try {
+      // SEC-002: Validate file before upload
+      _validateImageFile(imageBytes, fileName);
+
       final String path =
           'users/$userId/properties/$propertyId/units/$unitId/$fileName';
       final Reference ref = _storage.ref().child(path);

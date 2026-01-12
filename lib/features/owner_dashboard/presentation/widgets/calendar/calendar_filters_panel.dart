@@ -322,6 +322,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
 
   Widget _buildPropertyFilter() {
     final propertiesAsync = ref.watch(ownerPropertiesCalendarProvider);
+    final l10n = AppLocalizations.of(context);
 
     return propertiesAsync.when(
       data: (properties) {
@@ -332,7 +333,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _SectionHeader(icon: Icons.home_outlined, title: 'Objekti'),
+            _SectionHeader(
+              icon: Icons.home_outlined,
+              title: l10n.ownerFilterProperties,
+            ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -365,12 +369,13 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         );
       },
       loading: () => const CircularProgressIndicator(),
-      error: (error, stack) => Text('Greška: $error'),
+      error: (error, stack) => Text(l10n.errorWithMessage(error.toString())),
     );
   }
 
   Widget _buildUnitFilter() {
     final unitsAsync = ref.watch(allOwnerUnitsProvider);
+    final l10n = AppLocalizations.of(context);
 
     return unitsAsync.when(
       data: (units) {
@@ -394,9 +399,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _SectionHeader(
+            _SectionHeader(
               icon: Icons.meeting_room_outlined,
-              title: 'Jedinice',
+              title: l10n.ownerFilterUnits,
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -430,7 +435,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         );
       },
       loading: () => const CircularProgressIndicator(),
-      error: (error, stack) => Text('Greška: $error'),
+      error: (error, stack) => Text(l10n.errorWithMessage(error.toString())),
     );
   }
 

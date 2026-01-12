@@ -25,6 +25,8 @@ import '../../../../core/constants/enums.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../subscription/widgets/trial_banner.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Dashboard overview tab - UNIFIED
 /// Shows metrics, charts, and recent activity with time period selection
@@ -40,6 +42,12 @@ class DashboardOverviewTab extends ConsumerWidget {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+
+    // Get user name for personalized welcome
+    final authState = ref.watch(enhancedAuthProvider);
+    final user = FirebaseAuth.instance.currentUser;
+    final userName =
+        authState.userModel?.firstName ?? user?.displayName?.split(' ').first;
 
     return Scaffold(
       appBar: CommonAppBar(
@@ -69,7 +77,13 @@ class DashboardOverviewTab extends ConsumerWidget {
 
             // If no properties, show welcome screen for new users
             if (properties.isEmpty && !propertiesAsync.hasError) {
-              return _buildWelcomeScreen(context, ref, l10n, theme, isMobile);
+              return _buildWelcomeScreen(
+                context,
+                l10n,
+                theme,
+                isMobile,
+                userName,
+              );
             }
 
             return _buildDashboardContent(
@@ -89,69 +103,208 @@ class DashboardOverviewTab extends ConsumerWidget {
 
   Widget _buildWelcomeScreen(
     BuildContext context,
-    WidgetRef ref,
     AppLocalizations l10n,
     ThemeData theme,
     bool isMobile,
+    String? userName,
   ) {
-    return Center(
-      child: SingleChildScrollView(
-        physics: PlatformScrollPhysics.adaptive,
-        padding: EdgeInsets.all(isMobile ? 20 : 32),
-        child: Column(
+    return SingleChildScrollView(
+      physics: PlatformScrollPhysics.adaptive,
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? 20 : 32,
+        isMobile ? 20 : 32,
+        isMobile ? 20 : 32,
+        40,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. Welcome Header with personalized greeting
+          _WelcomeHeader(userName: userName, l10n: l10n, theme: theme),
+          SizedBox(height: isMobile ? 32 : 48),
+
+          // 2. Quick Start Action Cards
+          Text(
+            l10n.dashboardQuickStart,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // On desktop, show in a row. On mobile, stack.
+              if (!isMobile) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _ActionStepCard(
+                        title: l10n.ownerAddFirstProperty,
+                        subtitle: l10n.dashboardActionPropertySubtitle,
+                        icon: Icons.add_home_work_rounded,
+                        gradient: context.gradients.brandPrimary,
+                        onTap: () => context.push(OwnerRoutes.propertyNew),
+                        isPrimary: true,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _ActionStepCard(
+                        title: l10n.ownerDrawerImportBookings,
+                        subtitle: l10n.dashboardActionImportSubtitle,
+                        icon: Icons.sync_rounded,
+                        gradient: context.gradients.sectionBackground,
+                        onTap: () => context.push(OwnerRoutes.icalImport),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _ActionStepCard(
+                        title: l10n.ownerDrawerStripePayments,
+                        subtitle: l10n.dashboardActionPaymentsSubtitle,
+                        icon: Icons.payments_rounded,
+                        gradient: context.gradients.brandPrimary,
+                        onTap: () =>
+                            context.push(OwnerRoutes.stripeIntegration),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
+                children: [
+                  _ActionStepCard(
+                    title: l10n.ownerAddFirstProperty,
+                    subtitle: l10n.dashboardActionPropertySubtitle,
+                    icon: Icons.add_home_work_rounded,
+                    gradient: context.gradients.brandPrimary,
+                    onTap: () => context.push(OwnerRoutes.propertyNew),
+                    isPrimary: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _ActionStepCard(
+                    title: l10n.ownerDrawerImportBookings,
+                    subtitle: l10n.dashboardActionImportSubtitle,
+                    icon: Icons.sync_rounded,
+                    gradient: context.gradients.sectionBackground,
+                    onTap: () => context.push(OwnerRoutes.icalImport),
+                  ),
+                  const SizedBox(height: 12),
+                  _ActionStepCard(
+                    title: l10n.ownerDrawerStripePayments,
+                    subtitle: l10n.dashboardActionPaymentsSubtitle,
+                    icon: Icons.payments_rounded,
+                    gradient: context.gradients.brandPrimary,
+                    onTap: () => context.push(OwnerRoutes.stripeIntegration),
+                  ),
+                ],
+              );
+            },
+          ),
+
+          SizedBox(height: isMobile ? 40 : 60),
+
+          // 3. Mock Dashboard Preview
+          _buildDashboardPreview(context, l10n, theme),
+        ],
+      ),
+    );
+  }
+
+  /// Build mock dashboard preview for new users
+  Widget _buildDashboardPreview(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
+    final mockData = _getMockDashboardData();
+
+    return Column(
+      children: [
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: isMobile ? 80 : 100,
-              height: isMobile ? 80 : 100,
-              decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.home_work_outlined,
-                size: isMobile ? 40 : 50,
-                color: Colors.white,
-              ),
+            Icon(
+              Icons.auto_awesome,
+              size: 20,
+              color: theme.colorScheme.primary,
             ),
-            SizedBox(height: isMobile ? 20 : 28),
+            const SizedBox(width: 8),
             Text(
-              l10n.ownerWelcomeTitle,
-              style: theme.textTheme.headlineSmall?.copyWith(
+              l10n.dashboardFuturePreview,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
-                fontSize: isMobile ? 22 : 26,
+                letterSpacing: 1.0,
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.ownerWelcomeSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Stack(
+          children: [
+            // The blurred dashboard content
+            Opacity(
+              opacity: 0.5,
+              child: IgnorePointer(
+                child: Column(
+                  children: [
+                    _buildStatsCards(context: context, data: mockData),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      height: 300,
+                      child: _RevenueChart(data: mockData.revenueHistory),
+                    ),
+                  ],
                 ),
-                fontSize: isMobile ? 14 : 15,
               ),
-              textAlign: TextAlign.center,
             ),
-            SizedBox(height: isMobile ? 28 : 36),
-            FilledButton.icon(
-              onPressed: () => context.push(OwnerRoutes.propertyNew),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.ownerAddFirstProperty),
-              style: FilledButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 24 : 32,
-                  vertical: isMobile ? 14 : 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            // Gradient Fade Overlay
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      theme.scaffoldBackgroundColor.withOpacity(0.0),
+                      theme.scaffoldBackgroundColor.withOpacity(0.8),
+                    ],
+                    stops: const [0.0, 0.8],
+                  ),
                 ),
               ),
             ),
           ],
         ),
-      ),
+      ],
+    );
+  }
+
+  /// Generate mock data for dashboard preview
+  UnifiedDashboardData _getMockDashboardData() {
+    final now = DateTime.now();
+    return UnifiedDashboardData(
+      revenue: 12500,
+      bookings: 45,
+      upcomingCheckIns: 3,
+      occupancyRate: 85.5,
+      revenueHistory: List.generate(7, (i) {
+        return RevenueDataPoint(
+          date: now.subtract(Duration(days: 6 - i)),
+          amount: [800.0, 1200.0, 950.0, 1500.0, 1800.0, 2200.0, 2500.0][i],
+          label: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
+        );
+      }),
+      bookingHistory: List.generate(7, (i) {
+        return BookingDataPoint(
+          date: now.subtract(Duration(days: 6 - i)),
+          count: [2, 3, 2, 5, 4, 6, 8][i],
+          label: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
+        );
+      }),
     );
   }
 
@@ -1096,4 +1249,162 @@ Widget _buildEmptyState(
       ),
     ),
   );
+}
+
+/// Welcome header with personalized greeting
+class _WelcomeHeader extends StatelessWidget {
+  final String? userName;
+  final AppLocalizations l10n;
+  final ThemeData theme;
+
+  const _WelcomeHeader({
+    required this.userName,
+    required this.l10n,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.waving_hand_rounded,
+                color: theme.colorScheme.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Flexible(
+              child: Text(
+                userName != null
+                    ? 'Welcome, $userName!'
+                    : l10n.ownerWelcomeTitle,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.ownerWelcomeSubtitle,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Action step card for quick start actions
+class _ActionStepCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final LinearGradient gradient;
+  final VoidCallback onTap;
+  final bool isPrimary;
+
+  const _ActionStepCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.gradient,
+    required this.onTap,
+    this.isPrimary = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    return Card(
+      elevation: isPrimary ? 4 : 0,
+      color: isPrimary ? null : theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: isPrimary
+            ? BorderSide.none
+            : BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: isPrimary ? BoxDecoration(gradient: gradient) : null,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isPrimary
+                      ? Colors.white.withOpacity(0.2)
+                      : theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: isPrimary ? Colors.white : gradient.colors.first,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isPrimary ? Colors.white : theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isPrimary
+                      ? Colors.white.withOpacity(0.9)
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    l10n.dashboardGetStarted,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isPrimary
+                          ? Colors.white
+                          : theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: isPrimary ? Colors.white : theme.colorScheme.primary,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

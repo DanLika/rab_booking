@@ -3291,5 +3291,11 @@
   "unitHubBenefitAutomationTitle": "Automatiziraj rezervacije",
   "unitHubBenefitAutomationDesc": "Uštedite vrijeme uz automatiziranu sinkronizaciju kalendara i cijena.",
   "unitHubAddFirstProperty": "Dodaj prvi objekt",
-  "unitHubNeedHelp": "Potrebna vam je pomoć? Pogledajte vodič za početnike."
+  "unitHubNeedHelp": "Potrebna vam je pomoć? Pogledajte vodič za početnike.",
+  "dashboardQuickStart": "Brzi početak",
+  "dashboardActionPropertySubtitle": "Počnite primati rezervacije danas",
+  "dashboardActionImportSubtitle": "Sinkronizirajte s Airbnb i Booking.com",
+  "dashboardActionPaymentsSubtitle": "Automatizirajte isplate",
+  "dashboardFuturePreview": "Vaš budući dashboard",
+  "dashboardGetStarted": "Započni"
 }

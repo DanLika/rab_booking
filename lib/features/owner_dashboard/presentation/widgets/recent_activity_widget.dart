@@ -5,6 +5,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/animations/animated_empty_state.dart';
 
 /// Activity type enum
 enum ActivityType {
@@ -155,49 +156,15 @@ class RecentActivityWidget extends StatelessWidget {
           if (activities.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(
-                vertical: 32,
+                vertical: 24,
                 horizontal: AppDimensions.spaceL,
               ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Kompaktnija ikona
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.notifications_none_rounded,
-                        size: 32,
-                        color: theme.colorScheme.primary.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Title
-                    Text(
-                      l10n.ownerNoRecentActivities,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 4),
-                    // Subtitle
-                    Text(
-                      l10n.ownerRecentActivitiesDescription,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                    ),
-                  ],
-                ),
+              child: AnimatedEmptyState(
+                icon: Icons.notifications_none_rounded,
+                title: l10n.ownerNoRecentActivities,
+                subtitle: l10n.ownerRecentActivitiesDescription,
+                iconSize: 48,
+                iconColor: theme.colorScheme.primary.withValues(alpha: 0.5),
               ),
             )
           else

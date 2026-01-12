@@ -5,8 +5,8 @@
  * All styling is done via inline styles for Gmail compatibility.
  */
 
-import {getBaseHtmlWrapper} from "../styles/base-styles";
-import {wrapEmailContent, generateFooter, FooterOptions} from "../utils/template-helpers";
+import { getBaseHtmlWrapper } from "../styles/base-styles";
+import { wrapEmailContent, generateFooter, FooterOptions } from "../utils/template-helpers";
 
 /**
  * Base email template options
@@ -47,16 +47,16 @@ export interface BaseEmailOptions {
  * ```
  */
 export function generateEmailHtml(options: BaseEmailOptions): string {
-  const {header, content, footer} = options;
+  const { header, content, footer } = options;
 
   // Generate footer HTML
   const footerHtml = generateFooter(footer);
 
   // Combine all content sections with inline padding
-  // Compact padding: 4px horizontal
+  // Mobile-friendly padding: 16px horizontal, 20px bottom
   const emailContent = `
     ${header}
-    <div class="content-wrapper" style="padding: 0 4px 4px 4px;">
+    <div class="content-wrapper" style="padding: 0 16px 20px 16px;">
       ${content}
     </div>
     ${footerHtml}

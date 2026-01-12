@@ -424,79 +424,50 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   /// Empty state when no properties exist
   Widget _buildEmptyPropertiesState(ThemeData theme, bool isDark) {
     final l10n = AppLocalizations.of(context);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 32.0),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.add_business,
-                size: 64,
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.3,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.unitHubNoProperties,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.unitHubNoPropertiesDesc,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(
-                    alpha: 0.7,
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 24.0),
+        child: AnimatedEmptyState(
+          icon: Icons.add_business,
+          title: l10n.unitHubNoProperties,
+          subtitle: l10n.unitHubNoPropertiesDesc,
+          iconColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+          actionButton: Container(
+            decoration: BoxDecoration(
+              gradient: GradientTokens.brandPrimary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => context.push(OwnerRoutes.propertyNew),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
                   ),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: GradientTokens.brandPrimary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      context.push(OwnerRoutes.propertyNew);
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.add_business,
+                        size: 20,
+                        color: Colors.white,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.add_business,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            l10n.unitHubCreateProperty,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.unitHubCreateProperty,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -551,29 +522,17 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
         if (filteredProperties.isEmpty) {
           final l10n = AppLocalizations.of(context);
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: 32.0),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.search_off,
-                      size: 64,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.unitHubNoResults,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+          return Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                vertical: 32.0,
+                horizontal: 24.0,
+              ),
+              child: AnimatedEmptyState(
+                icon: Icons.search_off,
+                title: l10n.unitHubNoResults,
+                iconColor: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
                 ),
               ),
             ),

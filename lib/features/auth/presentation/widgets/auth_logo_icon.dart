@@ -45,11 +45,15 @@ class AuthLogoIcon extends StatelessWidget {
           : (isDarkMode ? AppColors.primaryLight : AppColors.primary);
     }
 
+    // Calculate cache size based on widget size and pixel ratio for memory optimization
+    final cacheSize = (size * MediaQuery.of(context).devicePixelRatio).toInt();
+
     // Build the logo image with optional color inversion for dark mode
     Widget logoImage = Image.asset(
       'assets/images/logo-light.png',
       width: size,
       height: size,
+      cacheWidth: cacheSize,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
         // Fallback to icon if image fails to load

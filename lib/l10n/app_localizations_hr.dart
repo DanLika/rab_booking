@@ -182,6 +182,21 @@ class AppLocalizationsHr extends AppLocalizations {
       'Previše neuspješnih pokušaja. Pokušajte kasnije.';
 
   @override
+  String authErrorRateLimitWait(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other:
+          'Previše neuspješnih pokušaja. Pokušajte ponovo za $seconds sekundi.',
+      few:
+          'Previše neuspješnih pokušaja. Pokušajte ponovo za $seconds sekunde.',
+      one:
+          'Previše neuspješnih pokušaja. Pokušajte ponovo za $seconds sekundu.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get authErrorGeneric =>
       'Prijava nije uspjela. Provjerite podatke i pokušajte ponovo.';
 
@@ -7673,4 +7688,43 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get profileSubscriptionSubtitle => 'Upravljajte svojim planom';
+
+  @override
+  String subscriptionDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Još $count dana',
+      few: 'Još $count dana',
+      one: 'Još $count dan',
+      zero: 'Danas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get subscriptionStatusTrial => 'Probni period';
+
+  @override
+  String get subscriptionStatusActive => 'Aktivna pretplata';
+
+  @override
+  String get subscriptionStatusExpired => 'Istekao probni period';
+
+  @override
+  String get subscriptionStatusSuspended => 'Račun suspendiran';
+
+  @override
+  String get calendarTutorialScrollHint =>
+      'Povucite horizontalno za pregled datuma';
+
+  @override
+  String get calendarTutorialLongPressHint =>
+      'Dugi pritisak na mrežu za dodavanje rezervacije';
+
+  @override
+  String get calendarTutorialGotIt => 'Razumijem!';
+
+  @override
+  String get calendarTutorialExampleBooking => 'Primjer rezervacije';
 }

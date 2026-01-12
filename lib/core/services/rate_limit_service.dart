@@ -186,12 +186,14 @@ class RateLimitService {
   }
 
   /// Get user-friendly error message for locked account
+  /// Returns a coded message for rate limit lockout that can be parsed and localized by UI
   String getRateLimitMessage(LoginAttempt attempt) {
     if (!attempt.isLocked) {
       return 'Invalid email or password. ${maxAttempts - attempt.attemptCount} attempts remaining.';
     }
 
-    final remainingMinutes = (attempt.remainingLockTime!.inSeconds / 60).ceil();
-    return 'Too many failed attempts. Try again in $remainingMinutes minutes.';
+    final remainingSeconds = attempt.remainingLockTime!.inSeconds;
+    // Return a coded message that the UI can parse and localize
+    return 'RATE_LIMIT_LOCKOUT:$remainingSeconds';
   }
 }

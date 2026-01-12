@@ -493,6 +493,13 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
     _waitForInitialization();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Precache critical logo asset for splash screen and auth screens
+    precacheImage(const AssetImage('assets/images/logo-light.png'), context);
+  }
+
   /// Wait for all initialization to complete
   Future<void> _waitForInitialization() async {
     LoggingService.log('Waiting for initialization...', tag: 'APP');

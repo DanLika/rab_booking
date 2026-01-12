@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../core/theme/calendar_cell_colors.dart';
+import '../../../../../core/constants/enums.dart';
 import 'timeline_booking_block.dart';
 import 'timeline_booking_stacker.dart';
 import 'timeline_constants.dart';
@@ -55,14 +56,30 @@ class TimelineGridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if entire calendar is empty to trigger ghost mode
+    final totalBookings = bookingsByUnit.values.fold<int>(
+      0,
+      (sum, list) => sum + list.length,
+    );
+    final isCalendarEmpty = totalBookings == 0;
+
     // Container with transparent color wrapping Column
     // Column uses mainAxisSize.min to size to its children
     return Container(
       color: Colors.transparent,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: units.map((unit) {
-          final bookings = bookingsByUnit[unit.id] ?? [];
+        children: units.asMap().entries.map((entry) {
+          final index = entry.key;
+          final unit = entry.value;
+          var bookings = bookingsByUnit[unit.id] ?? [];
+
+          // GHOST DATA INJECTION
+          // If calendar is completely empty, inject ghost bookings into first unit only
+          if (isCalendarEmpty && index == 0) {
+            bookings = _generateGhostBookings(unit.id);
+          }
+
           // RepaintBoundary: Each unit row can repaint independently
           // when bookings change, without affecting other rows
           return RepaintBoundary(
@@ -81,6 +98,40 @@ class TimelineGridWidget extends StatelessWidget {
         }).toList(),
       ),
     );
+  }
+
+  /// Generate ghost (example) bookings for onboarding display
+  List<BookingModel> _generateGhostBookings(String unitId) {
+    final now = DateTime.now();
+    // Create 2 example bookings spread across upcoming days
+    return [
+      BookingModel(
+        id: 'ghost_1',
+        unitId: unitId,
+        propertyId: 'ghost_prop',
+        guestName: 'Example Guest',
+        checkIn: DateTime(now.year, now.month, now.day + 2),
+        checkOut: DateTime(now.year, now.month, now.day + 5),
+        status: BookingStatus.confirmed,
+        source: 'manual',
+        createdAt: now,
+        updatedAt: now,
+        totalPrice: 100,
+      ),
+      BookingModel(
+        id: 'ghost_2',
+        unitId: unitId,
+        propertyId: 'ghost_prop',
+        guestName: 'Example Guest',
+        checkIn: DateTime(now.year, now.month, now.day + 8),
+        checkOut: DateTime(now.year, now.month, now.day + 11),
+        status: BookingStatus.confirmed,
+        source: 'booking_com',
+        createdAt: now,
+        updatedAt: now,
+        totalPrice: 200,
+      ),
+    ];
   }
 }
 

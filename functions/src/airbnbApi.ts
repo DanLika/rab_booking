@@ -1,9 +1,9 @@
-import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
-import {admin, db} from "./firebase";
-import {logInfo, logError, logSuccess} from "./logger";
+import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
+import { admin, db } from "./firebase";
+import { logInfo, logError, logSuccess } from "./logger";
 import * as crypto from "crypto";
-import {encryptToken, decryptToken} from "./bookingComApi"; // Reuse encryption functions
-import {setUser} from "./sentry";
+import { encryptToken, decryptToken } from "./bookingComApi"; // Reuse encryption functions
+import { setUser } from "./sentry";
 
 /**
  * Airbnb Calendar API Integration
@@ -47,7 +47,7 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
   // Set user context for Sentry error tracking
   setUser(request.auth.uid);
 
-  const {unitId, listingId} = request.data;
+  const { unitId, listingId } = request.data;
 
   if (!unitId || !listingId) {
     throw new HttpsError(
@@ -79,8 +79,8 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
     });
 
     // TODO: Update with actual OAuth authorization URL after getting API access
-    // Placeholder - replace with actual Airbnb OAuth endpoint
-    const authUrl = new URL("https://www.airbnb.com/oauth2/authorize");
+    // Standard Airbnb OAuth endpoint (access restricted)
+    const authUrl = new URL("https://www.airbnb.com/oauth2/auth");
     authUrl.searchParams.set("client_id", AIRBNB_CLIENT_ID);
     authUrl.searchParams.set("redirect_uri", AIRBNB_REDIRECT_URI);
     authUrl.searchParams.set("response_type", "code");
@@ -106,13 +106,13 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
  * Exchanges authorization code for access token
  */
 export const handleAirbnbOAuthCallback = onRequest(
-  {cors: true},
+  { cors: true },
   async (req, res) => {
     try {
-      const {code, state, error} = req.query;
+      const { code, state, error } = req.query;
 
       if (error) {
-        logError("[Airbnb OAuth] OAuth error", null, {error});
+        logError("[Airbnb OAuth] OAuth error", null, { error });
         res.status(400).send(`OAuth error: ${error}`);
         return;
       }
@@ -165,7 +165,7 @@ export const handleAirbnbOAuthCallback = onRequest(
       }
 
       const tokenData = await tokenResponse.json();
-      const {access_token, refresh_token, expires_in} = tokenData;
+      const { access_token, refresh_token, expires_in } = tokenData;
 
       // Calculate expiration time
       const expiresAtTime = new Date(Date.now() + expires_in * 1000);
@@ -213,7 +213,7 @@ async function refreshAirbnbToken(
   refreshToken: string
 ): Promise<string> {
   try {
-    logInfo("[Airbnb API] Refreshing access token", {connectionId});
+    logInfo("[Airbnb API] Refreshing access token", { connectionId });
 
     const response = await fetch("https://www.airbnb.com/oauth2/token", {
       method: "POST",
@@ -233,7 +233,7 @@ async function refreshAirbnbToken(
     }
 
     const tokenData = await response.json();
-    const {access_token, expires_in} = tokenData;
+    const { access_token, expires_in } = tokenData;
 
     // Update connection with new token
     const expiresAtTime = new Date(Date.now() + expires_in * 1000);
@@ -243,11 +243,11 @@ async function refreshAirbnbToken(
       updated_at: admin.firestore.Timestamp.now(),
     });
 
-    logSuccess("[Airbnb API] Token refreshed", {connectionId});
+    logSuccess("[Airbnb API] Token refreshed", { connectionId });
 
     return access_token;
   } catch (error) {
-    logError("[Airbnb API] Token refresh failed", error, {connectionId});
+    logError("[Airbnb API] Token refresh failed", error, { connectionId });
     throw error;
   }
 }
@@ -288,7 +288,7 @@ async function getValidAccessToken(connectionId: string): Promise<string> {
 export async function blockDatesOnAirbnb(
   connectionId: string,
   listingId: string,
-  dates: Array<{start: Date; end: Date}>
+  dates: Array<{ start: Date; end: Date }>
 ): Promise<void> {
   try {
     logInfo("[Airbnb API] Blocking dates", {
@@ -346,7 +346,7 @@ export async function blockDatesOnAirbnb(
 export async function unblockDatesOnAirbnb(
   connectionId: string,
   listingId: string,
-  dates: Array<{start: Date; end: Date}>
+  dates: Array<{ start: Date; end: Date }>
 ): Promise<void> {
   try {
     logInfo("[Airbnb API] Unblocking dates", {

@@ -31,26 +31,38 @@ class _GradientAuthButtonState extends State<GradientAuthButton> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDisabled = widget.onPressed == null && !widget.isLoading;
 
     Widget buttonContent = Container(
       height: 48,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.75),
-          ],
-        ),
+        // Disabled state: gray background, no gradient
+        color: isDisabled
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+            : null,
+        gradient: isDisabled
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withValues(alpha: 0.75),
+                ],
+              ),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withAlpha((0.25 * 255).toInt()),
-            blurRadius: _isHovered ? 16 : 10,
-            offset: Offset(0, _isHovered ? 6 : 3),
-          ),
-        ],
+        // Disabled state: no shadow
+        boxShadow: isDisabled
+            ? null
+            : [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withAlpha(
+                    (0.25 * 255).toInt(),
+                  ),
+                  blurRadius: _isHovered ? 16 : 10,
+                  offset: Offset(0, _isHovered ? 6 : 3),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -71,13 +83,25 @@ class _GradientAuthButtonState extends State<GradientAuthButton> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (widget.icon != null) ...[
-                        Icon(widget.icon, color: Colors.white, size: 20),
+                        Icon(
+                          widget.icon,
+                          color: isDisabled
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.38,
+                                )
+                              : Colors.white,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                       ],
                       Text(
                         widget.text,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: isDisabled
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.38,
+                                )
+                              : Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,

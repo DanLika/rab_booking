@@ -440,6 +440,12 @@ abstract class AppLocalizations {
   /// **'Too many failed attempts. Please try again later.'**
   String get authErrorTooManyRequests;
 
+  /// No description provided for @authErrorRateLimitWait.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds, plural, =1{Too many failed attempts. Try again in 1 second.} other{Too many failed attempts. Try again in {seconds} seconds.}}'**
+  String authErrorRateLimitWait(int seconds);
+
   /// No description provided for @authErrorGeneric.
   ///
   /// In en, this message translates to:
@@ -13800,6 +13806,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage your plan'**
   String get profileSubscriptionSubtitle;
+
+  /// No description provided for @subscriptionDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Today} =1{1 day left} other{{count} days left}}'**
+  String subscriptionDaysLeft(int count);
+
+  /// No description provided for @subscriptionStatusTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial Period'**
+  String get subscriptionStatusTrial;
+
+  /// No description provided for @subscriptionStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Subscription'**
+  String get subscriptionStatusActive;
+
+  /// No description provided for @subscriptionStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial Expired'**
+  String get subscriptionStatusExpired;
+
+  /// No description provided for @subscriptionStatusSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Suspended'**
+  String get subscriptionStatusSuspended;
+
+  /// No description provided for @calendarTutorialScrollHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe horizontally to view more dates'**
+  String get calendarTutorialScrollHint;
+
+  /// No description provided for @calendarTutorialLongPressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long press on the grid to add a booking'**
+  String get calendarTutorialLongPressHint;
+
+  /// No description provided for @calendarTutorialGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it!'**
+  String get calendarTutorialGotIt;
+
+  /// No description provided for @calendarTutorialExampleBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Example Booking'**
+  String get calendarTutorialExampleBooking;
 }
 
 class _AppLocalizationsDelegate

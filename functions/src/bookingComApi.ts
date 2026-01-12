@@ -1,8 +1,8 @@
-import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
-import {admin, db} from "./firebase";
-import {logInfo, logError, logSuccess} from "./logger";
+import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
+import { admin, db } from "./firebase";
+import { logInfo, logError, logSuccess } from "./logger";
 import * as crypto from "crypto";
-import {setUser} from "./sentry";
+import { setUser } from "./sentry";
 
 /**
  * Booking.com Calendar API Integration
@@ -79,7 +79,7 @@ export const initiateBookingComOAuth = onCall(async (request) => {
   // Set user context for Sentry error tracking
   setUser(request.auth.uid);
 
-  const {unitId, hotelId, roomTypeId} = request.data;
+  const { unitId, hotelId, roomTypeId } = request.data;
 
   if (!unitId || !hotelId || !roomTypeId) {
     throw new HttpsError(
@@ -140,13 +140,13 @@ export const initiateBookingComOAuth = onCall(async (request) => {
  * Exchanges authorization code for access token
  */
 export const handleBookingComOAuthCallback = onRequest(
-  {cors: true},
+  { cors: true },
   async (req, res) => {
     try {
-      const {code, state, error} = req.query;
+      const { code, state, error } = req.query;
 
       if (error) {
-        logError("[Booking.com OAuth] OAuth error", null, {error});
+        logError("[Booking.com OAuth] OAuth error", null, { error });
         res.status(400).send(`OAuth error: ${error}`);
         return;
       }
@@ -172,17 +172,16 @@ export const handleBookingComOAuthCallback = onRequest(
         return;
       }
 
-      // TODO: Update with actual OAuth token URL after getting API access
-      // Placeholder - replace with actual Booking.com OAuth token endpoint
-      const tokenResponse = await fetch("https://secure.booking.com/oauth/token", {
+      // Use the Machine Account 'exchange' endpoint as per Connectivity API docs
+      // Note: This uses Client Credentials flow (Machine Account), effectively ignoring the 'code'
+      // received from the redirect, as Booking.com Connectivity API uses pure machine-to-machine auth.
+      // The 'code' flow is kept in the structure in case of future API changes supporting 3-legged OAuth.
+      const tokenResponse = await fetch("https://connectivity-authentication.booking.com/token-based-authentication/exchange", {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+          "Content-Type": "application/json",
         },
-        body: new URLSearchParams({
-          grant_type: "authorization_code",
-          code: code as string,
-          redirect_uri: BOOKING_COM_REDIRECT_URI,
+        body: JSON.stringify({
           client_id: BOOKING_COM_CLIENT_ID,
           client_secret: BOOKING_COM_CLIENT_SECRET,
         }),
@@ -199,7 +198,12 @@ export const handleBookingComOAuthCallback = onRequest(
       }
 
       const tokenData = await tokenResponse.json();
-      const {access_token, refresh_token, expires_in} = tokenData;
+      // Booking.com returns 'jwt' (access token) and 'ruid'.
+      // Token expires in 1 hour (3600 seconds). No refresh token is returned;
+      // one simply requests a new token using credentials.
+      const access_token = tokenData.jwt;
+      const refresh_token = null; // No refresh token in this flow
+      const expires_in = 3600; // Standard expiry for Booking.com tokens
 
       // Calculate expiration time
       const expiresAtTime = new Date(Date.now() + expires_in * 1000);
@@ -247,7 +251,7 @@ async function refreshBookingComToken(
   refreshToken: string
 ): Promise<string> {
   try {
-    logInfo("[Booking.com API] Refreshing access token", {connectionId});
+    logInfo("[Booking.com API] Refreshing access token", { connectionId });
 
     const response = await fetch("https://secure.booking.com/oauth/token", {
       method: "POST",
@@ -267,7 +271,7 @@ async function refreshBookingComToken(
     }
 
     const tokenData = await response.json();
-    const {access_token, expires_in} = tokenData;
+    const { access_token, expires_in } = tokenData;
 
     // Update connection with new token
     const expiresAtTime = new Date(Date.now() + expires_in * 1000);
@@ -277,11 +281,11 @@ async function refreshBookingComToken(
       updated_at: admin.firestore.Timestamp.now(),
     });
 
-    logSuccess("[Booking.com API] Token refreshed", {connectionId});
+    logSuccess("[Booking.com API] Token refreshed", { connectionId });
 
     return access_token;
   } catch (error) {
-    logError("[Booking.com API] Token refresh failed", error, {connectionId});
+    logError("[Booking.com API] Token refresh failed", error, { connectionId });
     throw error;
   }
 }
@@ -323,7 +327,7 @@ export async function blockDatesOnBookingCom(
   connectionId: string,
   hotelId: string,
   roomTypeId: string,
-  dates: Array<{start: Date; end: Date}>
+  dates: Array<{ start: Date; end: Date }>
 ): Promise<void> {
   try {
     logInfo("[Booking.com API] Blocking dates", {
@@ -383,7 +387,7 @@ export async function unblockDatesOnBookingCom(
   connectionId: string,
   hotelId: string,
   roomTypeId: string,
-  dates: Array<{start: Date; end: Date}>
+  dates: Array<{ start: Date; end: Date }>
 ): Promise<void> {
   try {
     logInfo("[Booking.com API] Unblocking dates", {

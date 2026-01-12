@@ -666,17 +666,22 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
     required VoidCallback onTap,
   }) {
     return Builder(
-      builder: (ctx) => InkWell(
-        onTap: onTap,
-        child: InputDecorator(
-          decoration: InputDecorationHelper.buildDecoration(
-            labelText: label,
-            prefixIcon: const Icon(Icons.calendar_today),
-            context: ctx,
-          ),
-          child: Text(
-            DateFormat('d.M.yyyy').format(date),
-            style: const TextStyle(fontSize: 16),
+      builder: (ctx) => Semantics(
+        button: true,
+        label: '$label: ${DateFormat('d.M.yyyy').format(date)}',
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: InputDecorator(
+            decoration: InputDecorationHelper.buildDecoration(
+              labelText: label,
+              prefixIcon: const Icon(Icons.calendar_today),
+              context: ctx,
+            ),
+            child: Text(
+              DateFormat('d.M.yyyy').format(date),
+              style: const TextStyle(fontSize: 16),
+            ),
           ),
         ),
       ),

@@ -3284,5 +3284,11 @@
   "unitHubBenefitAutomationTitle": "Automate Bookings",
   "unitHubBenefitAutomationDesc": "Save time with automated calendar and pricing synchronization.",
   "unitHubAddFirstProperty": "Add First Property",
-  "unitHubNeedHelp": "Need help? Check our beginner's guide."
+  "unitHubNeedHelp": "Need help? Check our beginner's guide.",
+  "dashboardQuickStart": "Quick Start",
+  "dashboardActionPropertySubtitle": "Start getting bookings today",
+  "dashboardActionImportSubtitle": "Sync with Airbnb & Booking.com",
+  "dashboardActionPaymentsSubtitle": "Automate your payouts",
+  "dashboardFuturePreview": "Your Future Dashboard",
+  "dashboardGetStarted": "Get Started"
 }

@@ -13908,6 +13908,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Need help? Check our beginner\'s guide.'**
   String get unitHubNeedHelp;
+
+  /// No description provided for @dashboardQuickStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Start'**
+  String get dashboardQuickStart;
+
+  /// No description provided for @dashboardActionPropertySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start getting bookings today'**
+  String get dashboardActionPropertySubtitle;
+
+  /// No description provided for @dashboardActionImportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync with Airbnb & Booking.com'**
+  String get dashboardActionImportSubtitle;
+
+  /// No description provided for @dashboardActionPaymentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automate your payouts'**
+  String get dashboardActionPaymentsSubtitle;
+
+  /// No description provided for @dashboardFuturePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Future Dashboard'**
+  String get dashboardFuturePreview;
+
+  /// No description provided for @dashboardGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get dashboardGetStarted;
 }
 
 class _AppLocalizationsDelegate

@@ -7692,4 +7692,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unitHubNeedHelp => 'Need help? Check our beginner\'s guide.';
+
+  @override
+  String get dashboardQuickStart => 'Quick Start';
+
+  @override
+  String get dashboardActionPropertySubtitle => 'Start getting bookings today';
+
+  @override
+  String get dashboardActionImportSubtitle => 'Sync with Airbnb & Booking.com';
+
+  @override
+  String get dashboardActionPaymentsSubtitle => 'Automate your payouts';
+
+  @override
+  String get dashboardFuturePreview => 'Your Future Dashboard';
+
+  @override
+  String get dashboardGetStarted => 'Get Started';
 }

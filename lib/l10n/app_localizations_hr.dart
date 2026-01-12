@@ -7755,4 +7755,24 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get unitHubNeedHelp =>
       'Potrebna vam je pomoć? Pogledajte vodič za početnike.';
+
+  @override
+  String get dashboardQuickStart => 'Brzi početak';
+
+  @override
+  String get dashboardActionPropertySubtitle =>
+      'Počnite primati rezervacije danas';
+
+  @override
+  String get dashboardActionImportSubtitle =>
+      'Sinkronizirajte s Airbnb i Booking.com';
+
+  @override
+  String get dashboardActionPaymentsSubtitle => 'Automatizirajte isplate';
+
+  @override
+  String get dashboardFuturePreview => 'Vaš budući dashboard';
+
+  @override
+  String get dashboardGetStarted => 'Započni';
 }

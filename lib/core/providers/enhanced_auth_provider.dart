@@ -69,6 +69,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   final SecurityEventsService _security;
   final IpGeolocationService _geolocation;
   StreamSubscription<User?>? _authSubscription;
+  String? _loadingUserId;
 
   EnhancedAuthNotifier(
     this._auth,
@@ -121,6 +122,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       return;
     }
 
+    // Prevent concurrent loads for the same user
+    if (_loadingUserId == firebaseUser.uid) {
+      LoggingService.log(
+        'User profile load already in progress for ${firebaseUser.uid}, skipping duplicate request',
+        tag: 'ENHANCED_AUTH',
+      );
+      return;
+    }
+
+    _loadingUserId = firebaseUser.uid;
     LoggingService.log(
       'Loading user profile for ${firebaseUser.uid}...',
       tag: 'ENHANCED_AUTH',
@@ -263,6 +274,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         isLoading: false,
         error: 'Failed to load user profile: $e',
       );
+    } finally {
+      _loadingUserId = null;
     }
   }
 
@@ -307,48 +320,55 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     try {
       state = state.copyWith(isLoading: true);
 
-      // SECURITY: IP-based rate limiting for login (Cloud Function)
-      try {
-        final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
-        final callable = functions.httpsCallable('checkLoginRateLimit');
-        await callable.call({'email': email});
-      } on FirebaseFunctionsException catch (e) {
-        if (e.code == 'resource-exhausted') {
-          LoggingService.log(
-            'IP-based rate limit exceeded for login',
-            tag: 'ENHANCED_AUTH',
-          );
-          state = state.copyWith(isLoading: false, error: e.message);
-          throw e.message ??
-              'Too many login attempts. Please wait before trying again.';
-        }
-        // Continue with login if rate limit check fails (fail-open for availability)
-        LoggingService.log(
-          'IP rate limit check failed, continuing: ${e.message}',
-          tag: 'AUTH_WARNING',
-        );
-      }
+      // PERFORMANCE: Parallelize initial checks (IP Rate Limit, Email Rate Limit, Persistence)
+      // Run Cloud Functions (rate limit) and Firebase Auth in parallel
+      final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
 
-      // PERFORMANCE: Run rate limit check and persistence setup in PARALLEL
-      // Both are independent operations, no need to wait sequentially
-      final rateLimitFuture = _rateLimit.checkRateLimit(email);
+      // 1. IP Rate Limit (Cloud Function)
+      final ipRateLimitFuture = functions
+          .httpsCallable('checkLoginRateLimit')
+          .call({'email': email})
+          .catchError((e) {
+            // Fail-open for IP rate limit
+            if (e is FirebaseFunctionsException && e.code == 'resource-exhausted') {
+              throw e; // Rethrow actual limits
+            }
+            LoggingService.log(
+              'IP rate limit check failed, continuing: $e',
+              tag: 'AUTH_WARNING',
+            );
+            // Return dummy result to satisfy Future.wait
+            return HttpsCallableResult<dynamic>({'result': 'skipped'});
+          });
+
+      // 2. Email Rate Limit (Firestore)
+      final emailRateLimitFuture = _rateLimit.checkRateLimit(email);
+
+      // 3. Persistence (Auth SDK)
       final persistenceFuture = kIsWeb
           ? _auth.setPersistence(
               rememberMe ? Persistence.LOCAL : Persistence.SESSION,
             )
           : Future<void>.value();
 
-      // Wait for both to complete
-      final results = await Future.wait([rateLimitFuture, persistenceFuture]);
-      final rateLimit = results[0] as LoginAttempt?;
+      // Wait for all checks
+      final results = await Future.wait([
+        ipRateLimitFuture,
+        emailRateLimitFuture,
+        persistenceFuture,
+      ]);
 
-      // Check rate limit result
-      if (rateLimit != null && rateLimit.isLocked) {
+      // Process results
+      // IP check result is index 0 (handled via catchError/throw above)
+      final emailRateLimit = results[1] as LoginAttempt?;
+
+      // Check email rate limit result
+      if (emailRateLimit != null && emailRateLimit.isLocked) {
         LoggingService.log(
           'Email-based rate limit exceeded for $email',
           tag: 'ENHANCED_AUTH',
         );
-        throw _rateLimit.getRateLimitMessage(rateLimit);
+        throw _rateLimit.getRateLimitMessage(emailRateLimit);
       }
 
       // Attempt sign in
@@ -534,11 +554,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           throw e.message ??
               'Too many registration attempts. Please wait before trying again.';
         }
-        // Continue with registration if rate limit check fails (fail-open for availability)
-        LoggingService.log(
-          'IP rate limit check failed, continuing: ${e.message}',
-          tag: 'AUTH_WARNING',
-        );
+        rethrow;
       }
 
       // Check email-based rate limit (Dart-side, Firestore-backed)

@@ -20,6 +20,7 @@ import '../widgets/glass_card.dart';
 import '../widgets/gradient_auth_button.dart';
 import '../widgets/premium_input_field.dart';
 import '../widgets/social_login_button.dart';
+import '../widgets/auth_login_widgets.dart';
 
 /// Enhanced Login Screen with Premium Design
 ///
@@ -129,8 +130,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       if (!mounted) return;
 
-      // Give auth state a moment to fully update after sign in
-      await Future.delayed(const Duration(milliseconds: 100));
+      // REMOVED HACK: No longer waiting 100ms. Trusting provider state.
+      // The provider handles state updates properly now.
 
       final authState = ref.read(enhancedAuthProvider);
 
@@ -138,6 +139,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         '[LOGIN_SCREEN] After signIn - isAuthenticated: ${authState.isAuthenticated}, error: ${authState.error}, requiresEmailVerification: ${authState.requiresEmailVerification}',
       );
 
+      // Check if there was an error during sign in
       if (authState.error != null) {
         if (!mounted) return;
         debugPrint('[LOGIN_SCREEN] Auth state has error, showing snackbar');
@@ -204,8 +206,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       final localizedError = _getLocalizedError(errorMessage, l10n);
       ErrorDisplayUtils.showErrorSnackBar(context, localizedError, duration: const Duration(seconds: 10));
 
-      // Give auth state a moment to update after error
-      await Future.delayed(const Duration(milliseconds: 100));
       if (!mounted) return;
 
       final isPassError = _isPasswordError(errorMessage);
@@ -366,7 +366,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    _buildHeader(theme, l10n, isCompact),
+                                    AuthHeader(isCompact: isCompact),
                                     SizedBox(height: isCompact ? 24 : 32),
                                     _buildEmailField(l10n),
                                     SizedBox(height: isCompact ? 12 : 14),
@@ -389,15 +389,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                         icon: Icons.login_rounded,
                                       ),
                                     ),
-                                    if (AuthFeatureFlags.isGoogleSignInEnabled ||
-                                        AuthFeatureFlags.isAppleSignInEnabled) ...[
-                                      SizedBox(height: isCompact ? 16 : 20),
-                                      _buildDivider(theme, l10n),
-                                      SizedBox(height: isCompact ? 16 : 20),
-                                      _buildSocialButtons(l10n),
-                                    ],
+                                    SocialLoginSection(
+                                      isCompact: isCompact,
+                                      isLoading: _isLoading,
+                                    ),
                                     SizedBox(height: isCompact ? 20 : 24),
-                                    _buildRegisterLink(theme, l10n),
+                                    RegisterLink(isLoading: _isLoading),
                                   ],
                                 ),
                               ),
@@ -414,31 +411,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader(ThemeData theme, AppLocalizations l10n, bool isCompact) {
-    return Column(
-      children: [
-        Center(
-          child: AuthLogoIcon(size: isCompact ? 70 : 80, isWhite: theme.brightness == Brightness.dark),
-        ),
-        SizedBox(height: isCompact ? 16 : 20),
-        Text(
-          l10n.authOwnerLogin,
-          style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: isCompact ? 22 : 26),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          l10n.authManageProperties,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontSize: isCompact ? 13 : 14,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
 
@@ -546,109 +518,4 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     );
   }
 
-  Widget _buildDivider(ThemeData theme, AppLocalizations l10n) {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: theme.colorScheme.outline)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            l10n.authOrContinueWith,
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
-          ),
-        ),
-        Expanded(child: Divider(color: theme.colorScheme.outline)),
-      ],
-    );
-  }
-
-  Widget _buildSocialButtons(AppLocalizations l10n) {
-    final authNotifier = ref.read(enhancedAuthProvider.notifier);
-    final isAppleEnabled = AuthFeatureFlags.isAppleSignInEnabled;
-    final isGoogleEnabled = AuthFeatureFlags.isGoogleSignInEnabled;
-
-    // Hide entire section if no social logins are enabled
-    if (!isGoogleEnabled && !isAppleEnabled) {
-      return const SizedBox.shrink();
-    }
-
-    // If only one provider is enabled, show it full width
-    if (isGoogleEnabled && !isAppleEnabled) {
-      return SocialLoginButton(
-        customIcon: const GoogleBrandIcon(),
-        label: l10n.continueWithGoogle,
-        enabled: !_isLoading,
-        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
-      );
-    }
-
-    if (!isGoogleEnabled && isAppleEnabled) {
-      return SocialLoginButton(
-        customIcon: const AppleBrandIcon(),
-        label: l10n.continueWithApple,
-        enabled: !_isLoading,
-        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
-      );
-    }
-
-    // Both enabled - check available space
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final googleButton = SocialLoginButton(
-          customIcon: const GoogleBrandIcon(),
-          label: l10n.continueWithGoogle,
-          enabled: !_isLoading,
-          onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
-        );
-
-        final appleButton = SocialLoginButton(
-          customIcon: const AppleBrandIcon(),
-          label: l10n.continueWithApple,
-          enabled: !_isLoading,
-          onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
-        );
-
-        // RESPONSIVE: If width is very constrained (<280px), stack vertically
-        if (constraints.maxWidth < 280) {
-          return Column(children: [googleButton, const SizedBox(height: 10), appleButton]);
-        }
-
-        // Otherwise show side by side
-        return Row(
-          children: [
-            Expanded(child: googleButton),
-            const SizedBox(width: 10),
-            Expanded(child: appleButton),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildRegisterLink(ThemeData theme, AppLocalizations l10n) {
-    return Center(
-      child: TextButton(
-        onPressed: _isLoading ? null : () => context.go(OwnerRoutes.register),
-        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12)),
-        child: RichText(
-          text: TextSpan(
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: 13,
-              color: _isLoading ? theme.colorScheme.onSurface.withAlpha(100) : null,
-            ),
-            children: [
-              TextSpan(text: '${l10n.authNoAccount} '),
-              TextSpan(
-                text: l10n.authCreateAccount,
-                style: TextStyle(
-                  color: _isLoading ? theme.colorScheme.primary.withAlpha(100) : theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

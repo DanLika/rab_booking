@@ -126,8 +126,19 @@ class OwnerRoutes {
 
 /// Owner app GoRouter
 final ownerRouterProvider = Provider<GoRouter>((ref) {
-  // Watch enhancedAuthProvider so router rebuilds when auth state changes
-  final authState = ref.watch(enhancedAuthProvider);
+  // OPTIMIZATION: Use select to only watch fields that affect redirection
+  // This reduces unnecessary router rebuilds on unrelated state changes (e.g. error messages)
+  final authState = ref.watch(
+    enhancedAuthProvider.select(
+      (s) => (
+        isAuthenticated: s.isAuthenticated,
+        isLoading: s.isLoading,
+        requiresEmailVerification: s.requiresEmailVerification,
+        firebaseUserUid: s.firebaseUser?.uid,
+        userModelId: s.userModel?.id,
+      ),
+    ),
+  );
 
   return GoRouter(
     // No initialLocation - let GoRouter read from URL (important for /calendar widget)
@@ -157,11 +168,11 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         );
         LoggingService.log('  - isLoading: $isLoading', tag: 'ROUTER');
         LoggingService.log(
-          '  - firebaseUser: ${authState.firebaseUser?.uid}',
+          '  - firebaseUser: ${authState.firebaseUserUid}',
           tag: 'ROUTER',
         );
         LoggingService.log(
-          '  - userModel: ${authState.userModel?.id}',
+          '  - userModel: ${authState.userModelId}',
           tag: 'ROUTER',
         );
       }

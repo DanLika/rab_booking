@@ -50,7 +50,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   bool _acceptedTerms = false;
   bool _acceptedPrivacy = false;
   bool _newsletterOptIn = false;
-  bool _isFormValid = false;
+  // Use ValueNotifier for form validity to prevent full screen rebuilds
+  final _isFormValid = ValueNotifier<bool>(false);
   String? _emailErrorFromServer;
 
   Uint8List? _profileImageBytes;
@@ -108,8 +109,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         _acceptedTerms &&
         _acceptedPrivacy;
 
-    if (_isFormValid != newState) {
-      setState(() => _isFormValid = newState);
+    if (_isFormValid.value != newState) {
+      _isFormValid.value = newState;
     }
   }
 
@@ -300,13 +301,18 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                   SizedBox(height: isCompact ? 12 : 14),
                                   _buildCheckboxes(theme, l10n),
                                   SizedBox(height: isCompact ? 20 : 24),
-                                  GradientAuthButton(
-                                    text: l10n.authCreateAccount,
-                                    onPressed: _isFormValid
-                                        ? _handleRegister
-                                        : null,
-                                    isLoading: _isLoading,
-                                    icon: Icons.person_add_rounded,
+                                  ValueListenableBuilder<bool>(
+                                    valueListenable: _isFormValid,
+                                    builder: (context, isValid, child) {
+                                      return GradientAuthButton(
+                                        text: l10n.authCreateAccount,
+                                        onPressed: isValid
+                                            ? _handleRegister
+                                            : null,
+                                        isLoading: _isLoading,
+                                        icon: Icons.person_add_rounded,
+                                      );
+                                    },
                                   ),
                                   SizedBox(height: isCompact ? 16 : 20),
                                   _buildLoginLink(theme, l10n),

@@ -377,17 +377,11 @@ Future<void> _initializeInBackground() async {
 
     // Enable Firestore Persistence (must be done before other Firestore usage)
     try {
-      if (kIsWeb) {
-        await FirebaseFirestore.instance.enablePersistence(
-          const PersistenceSettings(synchronizeTabs: true),
-        );
-      } else {
-        // Mobile/Desktop usually enabled by default, but ensuring settings
-        FirebaseFirestore.instance.settings = const Settings(
-          persistenceEnabled: true,
-          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-        );
-      }
+      // Use settings for all platforms
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
       LoggingService.log('Firestore persistence enabled', tag: 'INIT');
     } catch (e) {
       LoggingService.log(
@@ -665,7 +659,10 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
       themeMode: themeMode,
       routerConfig: router,
       builder: (context, child) {
-        return ErrorBoundary(child: GlobalNavigationOverlay(child: child!));
+        final wrappedChild = ErrorBoundary(
+          child: GlobalNavigationOverlay(child: child!),
+        );
+        return Stack(children: [wrappedChild, const OfflineIndicator()]);
       },
       locale: locale,
       localizationsDelegates: const [
@@ -675,11 +672,6 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [Locale('en'), Locale('hr')],
-      builder: (context, child) {
-        return Stack(
-          children: [if (child != null) child, const OfflineIndicator()],
-        );
-      },
     );
 
     // Show splash overlay while waiting for auth

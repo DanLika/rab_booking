@@ -30,38 +30,48 @@ class OfflineIndicator extends ConsumerWidget {
       left: 0,
       right: 0,
       child: Material(
-        color: Colors.transparent,
-        child:
-            Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 16,
-                  ),
-                  color: const Color(0xFF333333), // Dark grey
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.wifi_off, color: Colors.white, size: 16),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Nema interneta - Prikazujem spremljene podatke',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
+        color: Colors.red.shade700,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            child:
+                Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 16,
                       ),
-                    ],
-                  ),
-                )
-                .animate()
-                .slideY(
-                  begin: 1.0,
-                  end: 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                )
-                .fadeIn(),
+                      color: const Color(0xFF333333), // Dark grey
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.wifi_off,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Nema interneta - Prikazujem spremljene podatke',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    .animate()
+                    .slideY(
+                      begin: 1.0,
+                      end: 0.0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                    )
+                    .fadeIn(),
+          ),
+        ),
       ),
     );
   }

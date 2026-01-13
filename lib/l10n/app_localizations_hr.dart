@@ -1518,6 +1518,11 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerAddFirstProperty => 'Dodaj nekretninu';
 
   @override
+  String dashboardWelcomeUser(String name) {
+    return 'Dobrodošli, $name!';
+  }
+
+  @override
   String get ownerNewBookingReceived => 'Nova rezervacija primljena';
 
   @override

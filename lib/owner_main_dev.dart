@@ -12,7 +12,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase with DEV config (bookbed-dev)
-  await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
+    }
+  } catch (e) {
+    if (!e.toString().contains('duplicate-app')) {
+      rethrow;
+    }
+  }
 
   // Run the main app (Firebase already initialized)
   runMainApp();

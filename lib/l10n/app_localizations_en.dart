@@ -1505,6 +1505,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerAddFirstProperty => 'Add Property';
 
   @override
+  String dashboardWelcomeUser(String name) {
+    return 'Welcome, $name!';
+  }
+
+  @override
   String get ownerNewBookingReceived => 'New booking received';
 
   @override

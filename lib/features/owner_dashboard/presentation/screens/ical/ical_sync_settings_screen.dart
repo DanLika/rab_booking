@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../../core/utils/async_utils.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
@@ -1526,68 +1527,75 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        side: BorderSide(
-                          color: isDark
-                              ? AppColors.sectionDividerDark
-                              : AppColors.sectionDividerLight,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Text(l10n.cancel),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: _isSaving
-                            ? null
-                            : context.gradients.brandPrimary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: ElevatedButton.icon(
-                        onPressed: _isSaving ? null : _saveFeed,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isSaving
-                              ? theme.colorScheme.surfaceContainerHighest
-                              : Colors.transparent,
-                          foregroundColor: _isSaving
-                              ? theme.colorScheme.onSurface
-                              : Colors.white,
-                          shadowColor: Colors.transparent,
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
+                            horizontal: 12,
                             vertical: 12,
+                          ),
+                          side: BorderSide(
+                            color: isDark
+                                ? AppColors.sectionDividerDark
+                                : AppColors.sectionDividerLight,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        icon: _isSaving
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                        child: AutoSizeText(l10n.cancel, maxLines: 1),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: _isSaving
+                              ? null
+                              : context.gradients.brandPrimary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: _isSaving ? null : _saveFeed,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _isSaving
+                                ? theme.colorScheme.surfaceContainerHighest
+                                : Colors.transparent,
+                            foregroundColor: _isSaving
+                                ? theme.colorScheme.onSurface
+                                : Colors.white,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          icon: _isSaving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  widget.existingFeed == null
+                                      ? Icons.add
+                                      : Icons.save,
+                                  size: 18,
                                 ),
-                              )
-                            : Icon(
-                                widget.existingFeed == null
-                                    ? Icons.add
-                                    : Icons.save,
-                                size: 18,
-                              ),
-                        label: Text(
-                          widget.existingFeed == null
-                              ? l10n.icalAddFeedButton
-                              : l10n.save,
+                          label: AutoSizeText(
+                            widget.existingFeed == null
+                                ? l10n.icalAddFeedButton
+                                : l10n.save,
+                            maxLines: 1,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),

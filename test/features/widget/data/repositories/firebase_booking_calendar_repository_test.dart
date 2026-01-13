@@ -333,7 +333,11 @@ void main() {
           'created_at': Timestamp.now(),
         });
 
-        final stream = repository.watchYearCalendarData(propertyId: 'property123', unitId: 'unit123', year: testYear);
+        final stream = repository.watchYearCalendarData(
+          propertyId: 'property123',
+          unitId: 'unit123',
+          year: testYear,
+        );
 
         final calendarData = await stream.first;
 
@@ -354,7 +358,9 @@ void main() {
     group('gap blocking', () {
       test('blocks gaps smaller than minNights', () async {
         // Add widget settings with minNights = 3
-        await fakeFirestore.collection('widget_settings').doc('unit123').set({'min_nights': 3});
+        await fakeFirestore.collection('widget_settings').doc('unit123').set({
+          'min_nights': 3,
+        });
 
         // Add two bookings with 2-day gap
         await fakeFirestore.collection('bookings').add({

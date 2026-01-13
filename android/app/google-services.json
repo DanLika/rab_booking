@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "584902480248",
-    "project_id": "bookbed-staging",
-    "storage_bucket": "bookbed-staging.firebasestorage.app"
+    "project_number": "733027606474",
+    "project_id": "bookbed-dev",
+    "storage_bucket": "bookbed-dev.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:584902480248:android:a53609e3e6dc177d94f88d",
+        "mobilesdk_app_id": "1:733027606474:android:90cb9dbd5e2e4adbebf933",
         "android_client_info": {
           "package_name": "io.bookbed.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyALJXlleVlYF4xtBbumGiOO8nObxzn5r2M"
+          "current_key": "AIzaSyCokYMO3Q0Q8cM5f_y4Ne8C3GaP7cwR-bE"
         }
       ],
       "services": {

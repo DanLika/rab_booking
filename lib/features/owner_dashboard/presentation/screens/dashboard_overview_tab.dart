@@ -1273,12 +1273,12 @@ class _WelcomeHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
+                color: theme.colorScheme.primary,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.waving_hand_rounded,
-                color: theme.colorScheme.primary,
+                color: Colors.white,
                 size: 24,
               ),
             ),
@@ -1286,7 +1286,7 @@ class _WelcomeHeader extends StatelessWidget {
             Flexible(
               child: Text(
                 userName != null
-                    ? 'Welcome, $userName!'
+                    ? l10n.dashboardWelcomeUser(userName!)
                     : l10n.ownerWelcomeTitle,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,

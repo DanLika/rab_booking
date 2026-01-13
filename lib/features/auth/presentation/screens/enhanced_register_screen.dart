@@ -13,7 +13,7 @@ import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../shared/widgets/loading_overlay.dart';
+import '../../../../shared/widgets/login_loading_overlay.dart';
 import '../widgets/auth_logo_icon.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/glass_card.dart';
@@ -322,7 +322,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
               ),
             ),
             if (_isLoading)
-              const LoadingOverlay(message: 'Creating your account...'),
+              const LoginLoadingOverlay(message: 'Creating your account...'),
           ],
         ),
       ),

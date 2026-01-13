@@ -2900,6 +2900,12 @@ abstract class AppLocalizations {
   /// **'Add Property'**
   String get ownerAddFirstProperty;
 
+  /// No description provided for @dashboardWelcomeUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome, {name}!'**
+  String dashboardWelcomeUser(String name);
+
   /// No description provided for @ownerNewBookingReceived.
   ///
   /// In en, this message translates to:

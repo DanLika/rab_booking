@@ -1354,7 +1354,7 @@ class _ActionStepCard extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isPrimary
-                      ? Colors.white.withOpacity(0.2)
+                      ? Colors.white.withValues(alpha: 0.2)
                       : theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1377,7 +1377,7 @@ class _ActionStepCard extends StatelessWidget {
                 subtitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: isPrimary
-                      ? Colors.white.withOpacity(0.9)
+                      ? Colors.white.withValues(alpha: 0.9)
                       : theme.colorScheme.onSurfaceVariant,
                 ),
               ),

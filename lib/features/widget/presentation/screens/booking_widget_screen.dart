@@ -2272,8 +2272,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     onScaleChanged: (newScale) {
                       setState(() {
                         _zoomScale = newScale;
-                        _transformationController.value = Matrix4.identity()
-                          ..scale(newScale);
+                        _transformationController.value =
+                            Matrix4.diagonal3Values(
+                              newScale,
+                              newScale,
+                              newScale,
+                            );
                       });
                     },
                   ),

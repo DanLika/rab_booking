@@ -78,7 +78,7 @@ class _CalendarTutorialOverlayState extends State<CalendarTutorialOverlay>
           Positioned.fill(
             child: GestureDetector(
               onTap: widget.onDismiss,
-              child: Container(color: Colors.black.withOpacity(0.5)),
+              child: Container(color: Colors.black.withValues(alpha: 0.5)),
             ),
           ),
 
@@ -111,7 +111,7 @@ class _CalendarTutorialOverlayState extends State<CalendarTutorialOverlay>
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
+                      color: Colors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -140,7 +140,7 @@ class _CalendarTutorialOverlayState extends State<CalendarTutorialOverlay>
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
+                      color: Colors.black.withValues(alpha: 0.25),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -155,7 +155,7 @@ class _CalendarTutorialOverlayState extends State<CalendarTutorialOverlay>
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(

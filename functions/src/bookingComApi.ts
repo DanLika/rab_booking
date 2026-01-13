@@ -1,35 +1,38 @@
 import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
+import {defineSecret} from "firebase-functions/params";
 import {logInfo, logError, logSuccess} from "./logger";
 import * as crypto from "crypto";
 import {setUser} from "./sentry";
 
 /**
  * Booking.com Calendar API Integration
- * 
+ *
  * ⚠️ IMPORTANT: Direct API access is currently NOT AVAILABLE
- * 
+ *
  * Status: Partner program PAUSED (as of late 2024)
  * Requirements: Business registration, PCI compliance, partner approval
  * Timeline: Indefinite (3-6 months historically when accepting applications)
- * 
+ *
  * This code is kept for reference but will not work without partner approval.
- * 
+ *
  * RECOMMENDED ALTERNATIVE: Use channel manager APIs (Beds24, Hosthub, Guesty)
  * See: docs/CHANNEL_MANAGER_SETUP.md
- * 
+ *
  * Technical Notes:
  * - Does NOT use standard OAuth 2.0 (proprietary token-based auth)
  * - Uses OTA XML format (not JSON)
  * - No reservation webhooks (must poll Reservations API)
- * 
+ *
  * Documentation: https://developers.booking.com/connectivity/docs (restricted access)
  */
 
 // Configuration
-const BOOKING_COM_CLIENT_ID = process.env.BOOKING_COM_CLIENT_ID || "";
-const BOOKING_COM_CLIENT_SECRET = process.env.BOOKING_COM_CLIENT_SECRET || "";
-const BOOKING_COM_REDIRECT_URI = process.env.BOOKING_COM_REDIRECT_URI || "";
+const bookingComClientId = defineSecret("BOOKING_COM_CLIENT_ID");
+const bookingComClientSecret = defineSecret("BOOKING_COM_CLIENT_SECRET");
+const bookingComRedirectUri = defineSecret("BOOKING_COM_REDIRECT_URI");
+const encryptionKeySecret = defineSecret("ENCRYPTION_KEY");
+
 // TODO: Update with actual API base URL after getting API access
 // Placeholder - replace with actual Booking.com API endpoint
 const BOOKING_COM_API_BASE_URL = "https://distribution-xml.booking.com/2.3/json";
@@ -37,11 +40,10 @@ const BOOKING_COM_API_BASE_URL = "https://distribution-xml.booking.com/2.3/json"
 /**
  * Encrypt sensitive data (tokens) before storing in Firestore
  */
-export function encryptToken(token: string): string {
+export function encryptToken(token: string, encryptionKey: string): string {
   // In production, use proper encryption (e.g., Google Cloud KMS)
   // For now, we'll use a simple base64 encoding (NOT secure for production)
   // TODO: Implement proper encryption with KMS
-  const encryptionKey = process.env.ENCRYPTION_KEY || "default-key-change-in-production";
   // Generate a consistent IV from the key (not secure, but matches deprecated createCipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
   const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
@@ -54,10 +56,9 @@ export function encryptToken(token: string): string {
 /**
  * Decrypt sensitive data (tokens) from Firestore
  */
-export function decryptToken(encryptedToken: string): string {
+export function decryptToken(encryptedToken: string, encryptionKey: string): string {
   // In production, use proper decryption (e.g., Google Cloud KMS)
   // TODO: Implement proper decryption with KMS
-  const encryptionKey = process.env.ENCRYPTION_KEY || "default-key-change-in-production";
   // Generate a consistent IV from the key (not secure, but matches deprecated createDecipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
   const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
@@ -71,7 +72,7 @@ export function decryptToken(encryptedToken: string): string {
  * Initiate OAuth 2.0 flow for Booking.com
  * Returns authorization URL for user to visit
  */
-export const initiateBookingComOAuth = onCall(async (request) => {
+export const initiateBookingComOAuth = onCall({secrets: [bookingComClientId, bookingComRedirectUri]}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
   }
@@ -115,8 +116,8 @@ export const initiateBookingComOAuth = onCall(async (request) => {
     // TODO: Update with actual OAuth authorization URL after getting API access
     // Placeholder - replace with actual Booking.com OAuth endpoint
     const authUrl = new URL("https://secure.booking.com/oauth/authorize");
-    authUrl.searchParams.set("client_id", BOOKING_COM_CLIENT_ID);
-    authUrl.searchParams.set("redirect_uri", BOOKING_COM_REDIRECT_URI);
+    authUrl.searchParams.set("client_id", bookingComClientId.value());
+    authUrl.searchParams.set("redirect_uri", bookingComRedirectUri.value());
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("state", state);
     authUrl.searchParams.set("scope", "read write");
@@ -140,7 +141,7 @@ export const initiateBookingComOAuth = onCall(async (request) => {
  * Exchanges authorization code for access token
  */
 export const handleBookingComOAuthCallback = onRequest(
-  {cors: true},
+  {cors: true, secrets: [bookingComClientId, bookingComClientSecret, bookingComRedirectUri, encryptionKeySecret]},
   async (req, res) => {
     try {
       const {code, state, error} = req.query;
@@ -182,9 +183,9 @@ export const handleBookingComOAuthCallback = onRequest(
         body: new URLSearchParams({
           grant_type: "authorization_code",
           code: code as string,
-          redirect_uri: BOOKING_COM_REDIRECT_URI,
-          client_id: BOOKING_COM_CLIENT_ID,
-          client_secret: BOOKING_COM_CLIENT_SECRET,
+          redirect_uri: bookingComRedirectUri.value(),
+          client_id: bookingComClientId.value(),
+          client_secret: bookingComClientSecret.value(),
         }),
       });
 
@@ -212,8 +213,8 @@ export const handleBookingComOAuthCallback = onRequest(
         unit_id: stateData.unitId,
         external_property_id: stateData.hotelId,
         external_unit_id: stateData.roomTypeId,
-        access_token: encryptToken(access_token),
-        refresh_token: refresh_token ? encryptToken(refresh_token) : null,
+        access_token: encryptToken(access_token, encryptionKeySecret.value()),
+        refresh_token: refresh_token ? encryptToken(refresh_token, encryptionKeySecret.value()) : null,
         expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
         status: "active",
         created_at: admin.firestore.Timestamp.now(),
@@ -244,7 +245,8 @@ export const handleBookingComOAuthCallback = onRequest(
  */
 async function refreshBookingComToken(
   connectionId: string,
-  refreshToken: string
+  refreshToken: string,
+  encryptionKey: string
 ): Promise<string> {
   try {
     logInfo("[Booking.com API] Refreshing access token", {connectionId});
@@ -256,9 +258,9 @@ async function refreshBookingComToken(
       },
       body: new URLSearchParams({
         grant_type: "refresh_token",
-        refresh_token: decryptToken(refreshToken),
-        client_id: BOOKING_COM_CLIENT_ID,
-        client_secret: BOOKING_COM_CLIENT_SECRET,
+        refresh_token: decryptToken(refreshToken, encryptionKey),
+        client_id: bookingComClientId.value(),
+        client_secret: bookingComClientSecret.value(),
       }),
     });
 
@@ -272,7 +274,7 @@ async function refreshBookingComToken(
     // Update connection with new token
     const expiresAtTime = new Date(Date.now() + expires_in * 1000);
     await db.collection("platform_connections").doc(connectionId).update({
-      access_token: encryptToken(access_token),
+      access_token: encryptToken(access_token, encryptionKey),
       expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
       updated_at: admin.firestore.Timestamp.now(),
     });
@@ -289,7 +291,7 @@ async function refreshBookingComToken(
 /**
  * Get valid access token (refresh if needed)
  */
-async function getValidAccessToken(connectionId: string): Promise<string> {
+async function getValidAccessToken(connectionId: string, encryptionKey: string): Promise<string> {
   const connectionDoc = await db
     .collection("platform_connections")
     .doc(connectionId)
@@ -301,13 +303,13 @@ async function getValidAccessToken(connectionId: string): Promise<string> {
 
   const connectionData = connectionDoc.data()!;
   const expiresAt = connectionData.expires_at.toDate();
-  const accessToken = decryptToken(connectionData.access_token);
+  const accessToken = decryptToken(connectionData.access_token, encryptionKey);
   const refreshToken = connectionData.refresh_token;
 
   // Check if token is expired or will expire in next 5 minutes
   if (expiresAt < new Date(Date.now() + 5 * 60 * 1000)) {
     if (refreshToken) {
-      return await refreshBookingComToken(connectionId, refreshToken);
+      return await refreshBookingComToken(connectionId, refreshToken, encryptionKey);
     } else {
       throw new Error("Token expired and no refresh token available");
     }
@@ -323,7 +325,8 @@ export async function blockDatesOnBookingCom(
   connectionId: string,
   hotelId: string,
   roomTypeId: string,
-  dates: Array<{start: Date; end: Date}>
+  dates: Array<{start: Date; end: Date}>,
+  encryptionKey: string
 ): Promise<void> {
   try {
     logInfo("[Booking.com API] Blocking dates", {
@@ -333,7 +336,7 @@ export async function blockDatesOnBookingCom(
       dateCount: dates.length,
     });
 
-    const accessToken = await getValidAccessToken(connectionId);
+    const accessToken = await getValidAccessToken(connectionId, encryptionKey);
 
     // Booking.com API endpoint for blocking dates
     // Note: This is a placeholder - actual API endpoint may differ
@@ -383,7 +386,8 @@ export async function unblockDatesOnBookingCom(
   connectionId: string,
   hotelId: string,
   roomTypeId: string,
-  dates: Array<{start: Date; end: Date}>
+  dates: Array<{start: Date; end: Date}>,
+  encryptionKey: string
 ): Promise<void> {
   try {
     logInfo("[Booking.com API] Unblocking dates", {
@@ -393,7 +397,7 @@ export async function unblockDatesOnBookingCom(
       dateCount: dates.length,
     });
 
-    const accessToken = await getValidAccessToken(connectionId);
+    const accessToken = await getValidAccessToken(connectionId, encryptionKey);
 
     const apiUrl = `${BOOKING_COM_API_BASE_URL}/hotels/${hotelId}/room-types/${roomTypeId}/availability`;
 
@@ -439,7 +443,8 @@ export async function unblockDatesOnBookingCom(
 export async function getBookingComReservations(
   connectionId: string,
   hotelId: string,
-  roomTypeId: string
+  roomTypeId: string,
+  encryptionKey: string
 ): Promise<any[]> {
   try {
     logInfo("[Booking.com API] Fetching reservations", {
@@ -448,7 +453,7 @@ export async function getBookingComReservations(
       roomTypeId,
     });
 
-    const accessToken = await getValidAccessToken(connectionId);
+    const accessToken = await getValidAccessToken(connectionId, encryptionKey);
 
     // Booking.com API endpoint for getting reservations
     const apiUrl = `${BOOKING_COM_API_BASE_URL}/hotels/${hotelId}/reservations`;

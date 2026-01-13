@@ -1,5 +1,6 @@
 import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
+import {defineSecret} from "firebase-functions/params";
 import {logInfo, logError, logSuccess} from "./logger";
 import * as crypto from "crypto";
 import {encryptToken, decryptToken} from "./bookingComApi"; // Reuse encryption functions
@@ -7,30 +8,32 @@ import {setUser} from "./sentry";
 
 /**
  * Airbnb Calendar API Integration
- * 
+ *
  * ⚠️ IMPORTANT: Direct API access is currently NOT AVAILABLE
- * 
+ *
  * Status: Invitation-only (no public API)
  * Requirements: Business entity, security review, NDA, invitation from Airbnb
  * Timeline: Indefinite (months to potentially never)
- * 
+ *
  * This code is kept for reference but will not work without partnership invitation.
- * 
+ *
  * RECOMMENDED ALTERNATIVE: Use channel manager APIs (Beds24, Hosthub, Guesty)
  * See: docs/CHANNEL_MANAGER_SETUP.md
- * 
+ *
  * Technical Notes:
  * - Uses standard OAuth 2.0 (for approved partners)
  * - RESTful JSON API
  * - Webhook support available (must respond within 8 seconds)
- * 
+ *
  * Documentation: https://developer.airbnb.com/ (restricted access)
  */
 
 // Configuration
-const AIRBNB_CLIENT_ID = process.env.AIRBNB_CLIENT_ID || "";
-const AIRBNB_CLIENT_SECRET = process.env.AIRBNB_CLIENT_SECRET || "";
-const AIRBNB_REDIRECT_URI = process.env.AIRBNB_REDIRECT_URI || "";
+const airbnbClientId = defineSecret("AIRBNB_CLIENT_ID");
+const airbnbClientSecret = defineSecret("AIRBNB_CLIENT_SECRET");
+const airbnbRedirectUri = defineSecret("AIRBNB_REDIRECT_URI");
+const encryptionKeySecret = defineSecret("ENCRYPTION_KEY");
+
 // TODO: Update with actual API base URL after getting API access
 // Placeholder - replace with actual Airbnb API endpoint
 const AIRBNB_API_BASE_URL = "https://api.airbnb.com/v2";
@@ -39,7 +42,7 @@ const AIRBNB_API_BASE_URL = "https://api.airbnb.com/v2";
  * Initiate OAuth 2.0 flow for Airbnb
  * Returns authorization URL for user to visit
  */
-export const initiateAirbnbOAuth = onCall(async (request) => {
+export const initiateAirbnbOAuth = onCall({secrets: [airbnbClientId, airbnbRedirectUri]}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
   }
@@ -81,8 +84,8 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
     // TODO: Update with actual OAuth authorization URL after getting API access
     // Placeholder - replace with actual Airbnb OAuth endpoint
     const authUrl = new URL("https://www.airbnb.com/oauth2/authorize");
-    authUrl.searchParams.set("client_id", AIRBNB_CLIENT_ID);
-    authUrl.searchParams.set("redirect_uri", AIRBNB_REDIRECT_URI);
+    authUrl.searchParams.set("client_id", airbnbClientId.value());
+    authUrl.searchParams.set("redirect_uri", airbnbRedirectUri.value());
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("state", state);
     authUrl.searchParams.set("scope", "read write");
@@ -106,7 +109,7 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
  * Exchanges authorization code for access token
  */
 export const handleAirbnbOAuthCallback = onRequest(
-  {cors: true},
+  {cors: true, secrets: [airbnbClientId, airbnbClientSecret, airbnbRedirectUri, encryptionKeySecret]},
   async (req, res) => {
     try {
       const {code, state, error} = req.query;
@@ -148,9 +151,9 @@ export const handleAirbnbOAuthCallback = onRequest(
         body: new URLSearchParams({
           grant_type: "authorization_code",
           code: code as string,
-          redirect_uri: AIRBNB_REDIRECT_URI,
-          client_id: AIRBNB_CLIENT_ID,
-          client_secret: AIRBNB_CLIENT_SECRET,
+          redirect_uri: airbnbRedirectUri.value(),
+          client_id: airbnbClientId.value(),
+          client_secret: airbnbClientSecret.value(),
         }),
       });
 
@@ -178,8 +181,8 @@ export const handleAirbnbOAuthCallback = onRequest(
         unit_id: stateData.unitId,
         external_property_id: stateData.listingId,
         external_unit_id: stateData.listingId, // Airbnb uses listing ID for both
-        access_token: encryptToken(access_token),
-        refresh_token: refresh_token ? encryptToken(refresh_token) : null,
+        access_token: encryptToken(access_token, encryptionKeySecret.value()),
+        refresh_token: refresh_token ? encryptToken(refresh_token, encryptionKeySecret.value()) : null,
         expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
         status: "active",
         created_at: admin.firestore.Timestamp.now(),
@@ -210,7 +213,8 @@ export const handleAirbnbOAuthCallback = onRequest(
  */
 async function refreshAirbnbToken(
   connectionId: string,
-  refreshToken: string
+  refreshToken: string,
+  encryptionKey: string
 ): Promise<string> {
   try {
     logInfo("[Airbnb API] Refreshing access token", {connectionId});
@@ -222,9 +226,9 @@ async function refreshAirbnbToken(
       },
       body: new URLSearchParams({
         grant_type: "refresh_token",
-        refresh_token: decryptToken(refreshToken),
-        client_id: AIRBNB_CLIENT_ID,
-        client_secret: AIRBNB_CLIENT_SECRET,
+        refresh_token: decryptToken(refreshToken, encryptionKey),
+        client_id: airbnbClientId.value(),
+        client_secret: airbnbClientSecret.value(),
       }),
     });
 
@@ -238,7 +242,7 @@ async function refreshAirbnbToken(
     // Update connection with new token
     const expiresAtTime = new Date(Date.now() + expires_in * 1000);
     await db.collection("platform_connections").doc(connectionId).update({
-      access_token: encryptToken(access_token),
+      access_token: encryptToken(access_token, encryptionKey),
       expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
       updated_at: admin.firestore.Timestamp.now(),
     });
@@ -255,7 +259,7 @@ async function refreshAirbnbToken(
 /**
  * Get valid access token (refresh if needed)
  */
-async function getValidAccessToken(connectionId: string): Promise<string> {
+async function getValidAccessToken(connectionId: string, encryptionKey: string): Promise<string> {
   const connectionDoc = await db
     .collection("platform_connections")
     .doc(connectionId)
@@ -267,13 +271,13 @@ async function getValidAccessToken(connectionId: string): Promise<string> {
 
   const connectionData = connectionDoc.data()!;
   const expiresAt = connectionData.expires_at.toDate();
-  const accessToken = decryptToken(connectionData.access_token);
+  const accessToken = decryptToken(connectionData.access_token, encryptionKey);
   const refreshToken = connectionData.refresh_token;
 
   // Check if token is expired or will expire in next 5 minutes
   if (expiresAt < new Date(Date.now() + 5 * 60 * 1000)) {
     if (refreshToken) {
-      return await refreshAirbnbToken(connectionId, refreshToken);
+      return await refreshAirbnbToken(connectionId, refreshToken, encryptionKey);
     } else {
       throw new Error("Token expired and no refresh token available");
     }
@@ -288,7 +292,8 @@ async function getValidAccessToken(connectionId: string): Promise<string> {
 export async function blockDatesOnAirbnb(
   connectionId: string,
   listingId: string,
-  dates: Array<{start: Date; end: Date}>
+  dates: Array<{start: Date; end: Date}>,
+  encryptionKey: string
 ): Promise<void> {
   try {
     logInfo("[Airbnb API] Blocking dates", {
@@ -297,7 +302,7 @@ export async function blockDatesOnAirbnb(
       dateCount: dates.length,
     });
 
-    const accessToken = await getValidAccessToken(connectionId);
+    const accessToken = await getValidAccessToken(connectionId, encryptionKey);
 
     // Airbnb API endpoint for blocking dates
     const apiUrl = `${AIRBNB_API_BASE_URL}/listings/${listingId}/calendar_availability`;
@@ -308,7 +313,7 @@ export async function blockDatesOnAirbnb(
         headers: {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json",
-          "X-Airbnb-API-Key": AIRBNB_CLIENT_ID,
+          "X-Airbnb-API-Key": airbnbClientId.value(),
         },
         body: JSON.stringify({
           start_date: dateRange.start.toISOString().split("T")[0],
@@ -346,7 +351,8 @@ export async function blockDatesOnAirbnb(
 export async function unblockDatesOnAirbnb(
   connectionId: string,
   listingId: string,
-  dates: Array<{start: Date; end: Date}>
+  dates: Array<{start: Date; end: Date}>,
+  encryptionKey: string
 ): Promise<void> {
   try {
     logInfo("[Airbnb API] Unblocking dates", {
@@ -355,7 +361,7 @@ export async function unblockDatesOnAirbnb(
       dateCount: dates.length,
     });
 
-    const accessToken = await getValidAccessToken(connectionId);
+    const accessToken = await getValidAccessToken(connectionId, encryptionKey);
 
     const apiUrl = `${AIRBNB_API_BASE_URL}/listings/${listingId}/calendar_availability`;
 
@@ -365,7 +371,7 @@ export async function unblockDatesOnAirbnb(
         headers: {
           "Authorization": `Bearer ${accessToken}`,
           "Content-Type": "application/json",
-          "X-Airbnb-API-Key": AIRBNB_CLIENT_ID,
+          "X-Airbnb-API-Key": airbnbClientId.value(),
         },
         body: JSON.stringify({
           start_date: dateRange.start.toISOString().split("T")[0],
@@ -401,7 +407,8 @@ export async function unblockDatesOnAirbnb(
  */
 export async function getAirbnbReservations(
   connectionId: string,
-  listingId: string
+  listingId: string,
+  encryptionKey: string
 ): Promise<any[]> {
   try {
     logInfo("[Airbnb API] Fetching reservations", {
@@ -409,7 +416,7 @@ export async function getAirbnbReservations(
       listingId,
     });
 
-    const accessToken = await getValidAccessToken(connectionId);
+    const accessToken = await getValidAccessToken(connectionId, encryptionKey);
 
     // Airbnb API endpoint for getting reservations
     const apiUrl = `${AIRBNB_API_BASE_URL}/listings/${listingId}/reservations`;
@@ -419,7 +426,7 @@ export async function getAirbnbReservations(
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
-        "X-Airbnb-API-Key": AIRBNB_CLIENT_ID,
+        "X-Airbnb-API-Key": airbnbClientId.value(),
       },
     });
 

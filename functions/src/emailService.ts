@@ -1164,6 +1164,29 @@ export async function sendEmailVerificationCode(
 
 
 // ============================================================================
+// HTML ESCAPING HELPER
+// ============================================================================
+
+/**
+ * Escape HTML special characters to prevent XSS
+ *
+ * This is a critical security function for any user-provided data
+ * that will be rendered in an HTML email template.
+ *
+ * @param unsafe - The raw string to escape
+ * @returns The escaped string, safe for HTML rendering
+ */
+function escapeHtml(unsafe: string): string {
+  if (!unsafe) return "";
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// ============================================================================
 // TRIAL EMAIL FUNCTIONS
 // ============================================================================
 
@@ -1214,7 +1237,7 @@ export async function sendTrialExpiringEmail(
       <!-- Content -->
       <div style="padding: 24px;">
         <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
-          Hi ${name},
+          Hi ${escapeHtml(name)},
         </p>
         
         <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">
@@ -1329,7 +1352,7 @@ export async function sendTrialExpiredEmail(
       <!-- Content -->
       <div style="padding: 24px;">
         <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
-          Hi ${name},
+          Hi ${escapeHtml(name)},
         </p>
         
         <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">

@@ -1,5 +1,6 @@
 import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {onSchedule} from "firebase-functions/v2/scheduler";
+import {defineSecret} from "firebase-functions/params";
 import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess, logWarn} from "./logger";
 import {
@@ -11,6 +12,8 @@ import {
   unblockDatesOnAirbnb,
 } from "./airbnbApi";
 import {findBookingById} from "./utils/bookingLookup";
+
+const encryptionKeySecret = defineSecret("ENCRYPTION_KEY");
 
 /**
  * Two-Way Sync Engine
@@ -59,7 +62,10 @@ function getDateRanges(checkIn: Date, checkOut: Date): Array<{start: Date; end: 
  * Called when booking is created, updated, or cancelled
  */
 export const syncBookingToPlatforms = onDocumentWritten(
-  "bookings/{bookingId}",
+  {
+    document: "bookings/{bookingId}",
+    secrets: [encryptionKeySecret],
+  },
   async (event) => {
     const afterData = event.data?.after?.data();
 
@@ -136,13 +142,15 @@ export const syncBookingToPlatforms = onDocumentWritten(
               connection.id,
               connection.external_property_id,
               connection.external_unit_id,
-              dateRanges
+              dateRanges,
+              encryptionKeySecret.value()
             );
           } else if (connection.platform === "airbnb") {
             await blockDatesOnAirbnb(
               connection.id,
               connection.external_property_id,
-              dateRanges
+              dateRanges,
+              encryptionKeySecret.value()
             );
           }
 
@@ -214,13 +222,15 @@ async function unblockBookingDates(
             connection.id,
             connection.external_property_id,
             connection.external_unit_id,
-            dateRanges
+            dateRanges,
+            encryptionKeySecret.value()
           );
         } else if (connection.platform === "airbnb") {
           await unblockDatesOnAirbnb(
             connection.id,
             connection.external_property_id,
-            dateRanges
+            dateRanges,
+            encryptionKeySecret.value()
           );
         }
 
@@ -282,6 +292,7 @@ export const scheduledTwoWaySync = onSchedule(
     timeoutSeconds: 540,
     memory: "512MiB",
     region: "europe-west1",
+    secrets: [encryptionKeySecret],
   },
   async () => {
     try {
@@ -363,13 +374,15 @@ export const scheduledTwoWaySync = onSchedule(
               connection.id,
               connectionData.external_property_id,
               connectionData.external_unit_id,
-              dateRanges
+              dateRanges,
+              encryptionKeySecret.value()
             );
           } else if (failure.platform === "airbnb") {
             await blockDatesOnAirbnb(
               connection.id,
               connectionData.external_property_id,
-              dateRanges
+              dateRanges,
+              encryptionKeySecret.value()
             );
           }
 

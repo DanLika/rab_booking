@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../shared/models/unit_model.dart';
+import '../../../../core/utils/image_utils.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
@@ -145,14 +147,8 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                     Form(
                       key: _formKey,
                       child: ListView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: EdgeInsets.fromLTRB(
-                          isMobile ? 16 : 24,
-                          isMobile ? 16 : 24,
-                          isMobile ? 16 : 24,
-                          24,
-                        ),
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.fromLTRB(isMobile ? 16 : 24, isMobile ? 16 : 24, isMobile ? 16 : 24, 24),
                         children: [
                           // Basic Info Section
                           _buildSection(
@@ -162,16 +158,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                             children: [
                               TextFormField(
                                 controller: _nameController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormUnitName,
-                                      hintText: l10n.unitFormUnitNameHint,
-                                      prefixIcon: const Icon(
-                                        Icons.meeting_room,
-                                      ),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  labelText: l10n.unitFormUnitName,
+                                  hintText: l10n.unitFormUnitNameHint,
+                                  prefixIcon: const Icon(Icons.meeting_room),
+                                  isMobile: isMobile,
+                                  context: context,
+                                ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return l10n.unitFormUnitNameRequired;
@@ -183,25 +176,24 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                               const SizedBox(height: AppDimensions.spaceM),
                               TextFormField(
                                 controller: _slugController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormUrlSlug,
-                                      hintText: l10n.unitFormUrlSlugHint,
-                                      helperText: l10n.unitFormUrlSlugHelper,
-                                      prefixIcon: const Icon(Icons.link),
-                                      suffixIcon: IconButton(
-                                        icon: const Icon(Icons.refresh),
-                                        tooltip: l10n.unitFormRegenerateSlug,
-                                        onPressed: () {
-                                          setState(() {
-                                            _isManualSlugEdit = false;
-                                            _autoGenerateSlug();
-                                          });
-                                        },
-                                      ),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  labelText: l10n.unitFormUrlSlug,
+                                  hintText: l10n.unitFormUrlSlugHint,
+                                  helperText: l10n.unitFormUrlSlugHelper,
+                                  prefixIcon: const Icon(Icons.link),
+                                  suffixIcon: IconButton(
+                                    icon: const Icon(Icons.refresh),
+                                    tooltip: l10n.unitFormRegenerateSlug,
+                                    onPressed: () {
+                                      setState(() {
+                                        _isManualSlugEdit = false;
+                                        _autoGenerateSlug();
+                                      });
+                                    },
+                                  ),
+                                  isMobile: isMobile,
+                                  context: context,
+                                ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return l10n.unitFormSlugRequired;
@@ -220,14 +212,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                               const SizedBox(height: AppDimensions.spaceM),
                               TextFormField(
                                 controller: _descriptionController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormDescription,
-                                      hintText: l10n.unitFormDescriptionHint,
-                                      prefixIcon: const Icon(Icons.description),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  labelText: l10n.unitFormDescription,
+                                  hintText: l10n.unitFormDescriptionHint,
+                                  prefixIcon: const Icon(Icons.description),
+                                  isMobile: isMobile,
+                                  context: context,
+                                ),
                                 maxLines: 3,
                               ),
                             ],
@@ -242,17 +233,14 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                             children: [
                               TextFormField(
                                 controller: _bedroomsController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormBedrooms,
-                                      prefixIcon: const Icon(Icons.bed),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  labelText: l10n.unitFormBedrooms,
+                                  prefixIcon: const Icon(Icons.bed),
+                                  isMobile: isMobile,
+                                  context: context,
+                                ),
                                 keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return l10n.unitFormRequired;
@@ -267,17 +255,14 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
                                 controller: _bathroomsController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormBathrooms,
-                                      prefixIcon: const Icon(Icons.bathroom),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  labelText: l10n.unitFormBathrooms,
+                                  prefixIcon: const Icon(Icons.bathroom),
+                                  isMobile: isMobile,
+                                  context: context,
+                                ),
                                 keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return l10n.unitFormRequired;
@@ -292,17 +277,14 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
                                 controller: _maxGuestsController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormMaxGuests,
-                                      prefixIcon: const Icon(Icons.person),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  labelText: l10n.unitFormMaxGuests,
+                                  prefixIcon: const Icon(Icons.person),
+                                  isMobile: isMobile,
+                                  context: context,
+                                ),
                                 keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return l10n.unitFormRequired;
@@ -317,19 +299,14 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
                                 controller: _areaController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormArea,
-                                      prefixIcon: const Icon(
-                                        Icons.aspect_ratio,
-                                      ),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  labelText: l10n.unitFormArea,
+                                  prefixIcon: const Icon(Icons.aspect_ratio),
+                                  isMobile: isMobile,
+                                  context: context,
+                                ),
                                 keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                               ),
                             ],
                           ),
@@ -343,17 +320,14 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                             children: [
                               TextFormField(
                                 controller: _priceController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormPricePerNight,
-                                      prefixIcon: const Icon(Icons.payments),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  labelText: l10n.unitFormPricePerNight,
+                                  prefixIcon: const Icon(Icons.payments),
+                                  isMobile: isMobile,
+                                  context: context,
+                                ),
                                 keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return l10n.unitFormRequired;
@@ -368,17 +342,14 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                               const SizedBox(height: AppDimensions.spaceS),
                               TextFormField(
                                 controller: _minStayController,
-                                decoration:
-                                    InputDecorationHelper.buildDecoration(
-                                      labelText: l10n.unitFormMinNights,
-                                      prefixIcon: const Icon(Icons.nights_stay),
-                                      isMobile: isMobile,
-                                      context: context,
-                                    ),
+                                decoration: InputDecorationHelper.buildDecoration(
+                                  labelText: l10n.unitFormMinNights,
+                                  prefixIcon: const Icon(Icons.nights_stay),
+                                  isMobile: isMobile,
+                                  context: context,
+                                ),
                                 keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return l10n.unitFormRequired;
@@ -422,20 +393,13 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                 contentPadding: EdgeInsets.zero,
                                 title: Text(l10n.unitFormAvailableForBooking),
                                 subtitle: Text(
-                                  _isAvailable
-                                      ? l10n.unitFormAvailableDesc
-                                      : l10n.unitFormUnavailableDesc,
+                                  _isAvailable ? l10n.unitFormAvailableDesc : l10n.unitFormUnavailableDesc,
                                 ),
                                 trailing: Switch(
                                   value: _isAvailable,
-                                  onChanged: (value) =>
-                                      setState(() => _isAvailable = value),
-                                  activeThumbColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
-                                  activeTrackColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.5),
+                                  onChanged: (value) => setState(() => _isAvailable = value),
+                                  activeThumbColor: Theme.of(context).colorScheme.primary,
+                                  activeTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                                 ),
                               ),
                             ],
@@ -444,9 +408,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
 
                           // Modern Gradient Save Button
                           GradientButton(
-                            text: _isEditing
-                                ? l10n.unitFormSaveChanges
-                                : l10n.unitFormAddUnit,
+                            text: _isEditing ? l10n.unitFormSaveChanges : l10n.unitFormAddUnit,
                             onPressed: _handleSave,
                             isLoading: _isLoading,
                             icon: _isEditing ? Icons.save : Icons.add,
@@ -464,65 +426,43 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                 Text(
                                   l10n.unitFormEmbedDesc,
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withAlpha((0.7 * 255).toInt()),
+                                    color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
                                   ),
                                 ),
                                 const SizedBox(height: AppDimensions.spaceM),
                                 OutlinedButton.icon(
                                   onPressed: () {
-                                    context.push(
-                                      OwnerRoutes.unitWidgetSettings.replaceAll(
-                                        ':id',
-                                        widget.unit!.id,
-                                      ),
-                                    );
+                                    context.push(OwnerRoutes.unitWidgetSettings.replaceAll(':id', widget.unit!.id));
                                   },
                                   icon: const Icon(Icons.settings),
                                   label: Text(l10n.unitFormWidgetSettings),
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                      horizontal: 24,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
                                 ),
                                 const SizedBox(height: AppDimensions.spaceS),
                                 OutlinedButton.icon(
                                   onPressed: () async {
                                     // Fetch property to get subdomain
-                                    final property = await ref.read(
-                                      propertyByIdProvider(
-                                        widget.propertyId,
-                                      ).future,
-                                    );
+                                    final property = await ref.read(propertyByIdProvider(widget.propertyId).future);
                                     if (!context.mounted) return;
                                     await showDialog(
                                       context: context,
-                                      builder: (context) =>
-                                          EmbedCodeGeneratorDialog(
-                                            unitId: widget.unit!.id,
-                                            propertyId: widget.propertyId,
-                                            unitName: widget.unit!.name,
-                                            propertySubdomain:
-                                                property?.subdomain,
-                                            unitSlug: widget.unit!.slug,
-                                          ),
+                                      builder: (context) => EmbedCodeGeneratorDialog(
+                                        unitId: widget.unit!.id,
+                                        propertyId: widget.propertyId,
+                                        unitName: widget.unit!.name,
+                                        propertySubdomain: property?.subdomain,
+                                        unitSlug: widget.unit!.slug,
+                                      ),
                                     );
                                   },
                                   icon: const Icon(Icons.code),
                                   label: Text(l10n.unitFormGenerateEmbed),
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
-                                      horizontal: 24,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
                                 ),
                               ],
@@ -541,9 +481,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                         child: Center(
                           child: Card(
                             elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                             child: Padding(
                               padding: const EdgeInsets.all(32),
                               child: Column(
@@ -552,28 +490,18 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                                   Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.primary,
-                                          AppColors.authSecondary,
-                                        ],
-                                      ),
+                                      gradient: LinearGradient(colors: [AppColors.primary, AppColors.authSecondary]),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const CircularProgressIndicator(
                                       strokeWidth: 3,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                     ),
                                   ),
                                   const SizedBox(height: 20),
                                   Text(
                                     l10n.unitFormSaving,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                                   ),
                                 ],
                               ),
@@ -602,11 +530,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outline.withAlpha((0.2 * 255).toInt()),
-        ),
+        side: BorderSide(color: Theme.of(context).colorScheme.outline.withAlpha((0.2 * 255).toInt())),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -623,9 +547,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                       end: Alignment.bottomRight,
                       colors: [
                         Theme.of(context).colorScheme.primary,
-                        Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.7),
+                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                       ],
                     ),
                     borderRadius: const BorderRadius.all(Radius.circular(10)),
@@ -633,12 +555,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                   child: Icon(icon, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 16),
@@ -677,11 +594,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           child: FilterChip(
             label: Text(
               amenity.displayName,
-              style: TextStyle(
-                color: isSelected
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface,
-              ),
+              style: TextStyle(color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface),
             ),
             selected: isSelected,
             onSelected: (selected) {
@@ -744,19 +657,10 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
             return OutlinedButton.icon(
               onPressed: _pickImages,
               icon: const Icon(Icons.add_photo_alternate),
-              label: Text(
-                totalImages == 0
-                    ? l10n.unitFormAddPhotos
-                    : l10n.unitFormAddMore,
-              ),
+              label: Text(totalImages == 0 ? l10n.unitFormAddPhotos : l10n.unitFormAddMore),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 24,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             );
           },
@@ -770,9 +674,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                 final l10n = AppLocalizations.of(context);
                 return Text(
                   l10n.unitFormTotalPhotos(totalImages),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.textColorSecondary),
                 );
               },
             ),
@@ -791,26 +693,25 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt())),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                memCacheWidth: ImageUtils.cacheSize(context, 100),
+                placeholder: (context, url) => Container(
                   color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurface.withAlpha(
-                      (0.3 * 255).toInt(),
-                    ),
-                  ),
-                );
-              },
+                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Icon(Icons.broken_image, color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt())),
+                ),
+              ),
             ),
           ),
         ),
@@ -843,9 +744,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           height: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt()),
-            ),
+            border: Border.all(color: theme.colorScheme.outline.withAlpha((0.5 * 255).toInt())),
             color: theme.colorScheme.surfaceContainerHighest,
           ),
           child: ClipRRect(
@@ -857,9 +756,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                 return Icon(
                   Icons.broken_image,
                   size: 40,
-                  color: theme.colorScheme.onSurface.withAlpha(
-                    (0.3 * 255).toInt(),
-                  ),
+                  color: theme.colorScheme.onSurface.withAlpha((0.3 * 255).toInt()),
                 );
               },
             ),
@@ -886,7 +783,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
 
   Future<void> _pickImages() async {
     final ImagePicker picker = ImagePicker();
-    final List<XFile> images = await picker.pickMultiImage();
+    final List<XFile> images = await picker.pickMultiImage(
+      maxWidth: ImageUtils.kMaxUploadWidth.toDouble(),
+      maxHeight: ImageUtils.kMaxUploadWidth.toDouble(), // Allow square max
+      imageQuality: 85,
+    );
 
     if (images.isNotEmpty) {
       setState(() {
@@ -921,9 +822,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           unitId: widget.unit!.id,
           name: _nameController.text,
           slug: _slugController.text,
-          description: _descriptionController.text.isEmpty
-              ? null
-              : _descriptionController.text,
+          description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
           basePrice: double.parse(_priceController.text),
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
@@ -946,9 +845,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           ownerId: currentUser.uid,
           name: _nameController.text,
           slug: _slugController.text,
-          description: _descriptionController.text.isEmpty
-              ? null
-              : _descriptionController.text,
+          description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
           basePrice: double.parse(_priceController.text),
           bedrooms: int.parse(_bedroomsController.text),
           bathrooms: int.parse(_bathroomsController.text),
@@ -966,9 +863,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         Navigator.of(context).pop();
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          _isEditing
-              ? l10nSuccess.unitFormSuccessUpdate
-              : l10nSuccess.unitFormSuccessAdd,
+          _isEditing ? l10nSuccess.unitFormSuccessUpdate : l10nSuccess.unitFormSuccessAdd,
         );
       }
     } catch (e) {
@@ -978,9 +873,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: _isEditing
-              ? l10nError.unitFormErrorUpdate
-              : l10nError.unitFormErrorAdd,
+          userMessage: _isEditing ? l10nError.unitFormErrorUpdate : l10nError.unitFormErrorAdd,
         );
       }
     } finally {

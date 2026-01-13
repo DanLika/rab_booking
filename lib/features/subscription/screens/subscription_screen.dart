@@ -31,19 +31,12 @@ class SubscriptionScreen extends ConsumerWidget {
       body: trialStatusAsync.when(
         data: (trialStatus) => _buildContent(context, theme, trialStatus, l10n),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Text(l10n.subscriptionErrorLoading(error.toString())),
-        ),
+        error: (error, _) => Center(child: Text(l10n.subscriptionErrorLoading(error.toString()))),
       ),
     );
   }
 
-  Widget _buildContent(
-    BuildContext context,
-    ThemeData theme,
-    TrialStatus? trialStatus,
-    AppLocalizations l10n,
-  ) {
+  Widget _buildContent(BuildContext context, ThemeData theme, TrialStatus? trialStatus, AppLocalizations l10n) {
     if (trialStatus == null) {
       return Center(child: Text(l10n.subscriptionLoginRequired));
     }
@@ -60,9 +53,7 @@ class SubscriptionScreen extends ConsumerWidget {
           // Plans Section
           Text(
             l10n.subscriptionAvailablePlans,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
 
@@ -102,25 +93,11 @@ class SubscriptionScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // FAQ Section
-          Text(
-            l10n.subscriptionFaq,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(l10n.subscriptionFaq, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          _FaqItem(
-            question: l10n.subscriptionFaqTrialEndQuestion,
-            answer: l10n.subscriptionFaqTrialEndAnswer,
-          ),
-          _FaqItem(
-            question: l10n.subscriptionFaqCancelQuestion,
-            answer: l10n.subscriptionFaqCancelAnswer,
-          ),
-          _FaqItem(
-            question: l10n.subscriptionFaqDataSafeQuestion,
-            answer: l10n.subscriptionFaqDataSafeAnswer,
-          ),
+          _FaqItem(question: l10n.subscriptionFaqTrialEndQuestion, answer: l10n.subscriptionFaqTrialEndAnswer),
+          _FaqItem(question: l10n.subscriptionFaqCancelQuestion, answer: l10n.subscriptionFaqCancelAnswer),
+          _FaqItem(question: l10n.subscriptionFaqDataSafeQuestion, answer: l10n.subscriptionFaqDataSafeAnswer),
         ],
       ),
     );
@@ -133,12 +110,7 @@ class SubscriptionScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: Text(l10n.subscriptionComingSoon),
         content: Text(l10n.subscriptionComingSoonMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.ok),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.ok))],
       ),
     );
   }
@@ -194,10 +166,7 @@ class _StatusCard extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
             child: Icon(icon, size: 32, color: borderColor),
           ),
           const SizedBox(width: 16),
@@ -207,24 +176,18 @@ class _StatusCard extends StatelessWidget {
               children: [
                 Text(
                   l10n.subscriptionCurrentStatus,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _getStatusText(trialStatus.accountStatus, l10n),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 if (trialStatus.isInTrial) ...[
                   const SizedBox(height: 4),
                   Text(
                     l10n.subscriptionDaysLeft(trialStatus.daysRemaining),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                   ),
                 ],
               ],
@@ -284,13 +247,7 @@ class _PlanCard extends StatelessWidget {
           width: isRecommended ? 2 : 1,
         ),
         boxShadow: isRecommended
-            ? [
-                BoxShadow(
-                  color: theme.primaryColor.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
+            ? [BoxShadow(color: theme.primaryColor.withOpacity(0.1), blurRadius: 12, offset: const Offset(0, 4))]
             : null,
       ),
       child: Column(
@@ -302,9 +259,7 @@ class _PlanCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 color: theme.primaryColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(14),
-                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
               ),
               child: Text(
                 l10n.subscriptionRecommended,
@@ -324,53 +279,36 @@ class _PlanCard extends StatelessWidget {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Expanded(
+                      child: Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                     ),
                     if (isCurrentPlan)
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
+                        margin: const EdgeInsets.only(left: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.green.shade100,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           l10n.subscriptionCurrent,
-                          style: TextStyle(
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600, fontSize: 12),
                         ),
                       ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  spacing: 4,
+                  runSpacing: 4,
                   children: [
-                    Text(
-                      price,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
+                    Text(price, style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        period,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
+                      child: Text(period, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600)),
                     ),
                   ],
                 ),
@@ -382,11 +320,7 @@ class _PlanCard extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.check_circle_rounded,
-                          size: 18,
-                          color: Colors.green.shade600,
-                        ),
+                        Icon(Icons.check_circle_rounded, size: 18, color: Colors.green.shade600),
                         const SizedBox(width: 8),
                         Text(feature),
                       ],
@@ -401,9 +335,7 @@ class _PlanCard extends StatelessWidget {
                       onPressed: onSelect,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(l10n.subscriptionUpgradeNow),
                     ),
@@ -455,15 +387,11 @@ class _FaqItemState extends State<_FaqItem> {
                   Expanded(
                     child: Text(
                       widget.question,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                   Icon(
-                    _isExpanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
+                    _isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
                     color: Colors.grey.shade600,
                   ),
                 ],
@@ -475,10 +403,7 @@ class _FaqItemState extends State<_FaqItem> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Text(
                 widget.answer,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade700,
-                  height: 1.5,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700, height: 1.5),
               ),
             ),
         ],

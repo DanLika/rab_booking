@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_shadows.dart';
@@ -320,13 +321,14 @@ class _PremiumButtonState extends State<PremiumButton> {
     }
 
     // Button with label (and optional icon)
-    final textWidget = Text(
+    final textWidget = AutoSizeText(
       widget.label!,
       style: config.textStyle.copyWith(
         color: _isDisabled ? AppColors.textDisabled : config.textColor,
       ),
       overflow: TextOverflow.ellipsis,
       maxLines: 1,
+      minFontSize: 10,
     );
 
     if (widget.icon == null) {

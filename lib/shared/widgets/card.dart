@@ -205,8 +205,19 @@ class _PremiumCardState extends State<PremiumCard> {
   @override
   Widget build(BuildContext context) {
     final effectiveRadius = widget.borderRadius ?? AppDimensions.radiusL;
-    final effectivePadding =
-        widget.padding ?? const EdgeInsets.all(AppDimensions.spaceM);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    EdgeInsets effectivePadding;
+    if (widget.padding != null) {
+      effectivePadding = widget.padding!;
+    } else {
+      // 12px or 16px when <= 340px (as per request)
+      if (screenWidth <= 340) {
+        effectivePadding = const EdgeInsets.all(AppDimensions.spaceS); // 16px
+      } else {
+        effectivePadding = const EdgeInsets.all(AppDimensions.spaceM); // 24px
+      }
+    }
 
     final Widget cardContent = Column(
       mainAxisSize: MainAxisSize.min,

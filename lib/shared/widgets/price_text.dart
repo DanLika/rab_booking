@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import '../../core/services/currency_service.dart';
 
 /// Widget that displays a price with automatic currency conversion
@@ -36,7 +37,12 @@ class PriceText extends ConsumerWidget {
         final formattedPrice = service.formatPrice(priceInEur, currency);
         final text = showPerNight ? '$formattedPrice / night' : formattedPrice;
 
-        return Text(text, style: style);
+        return AutoSizeText(
+          text,
+          style: style,
+          maxLines: 1,
+          minFontSize: 10,
+        );
       },
       loading: () => const SizedBox(
         width: 20,
@@ -45,11 +51,13 @@ class PriceText extends ConsumerWidget {
       ),
       error: (error, stackTrace) {
         // Fallback to EUR
-        return Text(
+        return AutoSizeText(
           showPerNight
               ? '€${priceInEur.toStringAsFixed(2)} / night'
               : '€${priceInEur.toStringAsFixed(2)}',
           style: style,
+          maxLines: 1,
+          minFontSize: 10,
         );
       },
     );
@@ -80,8 +88,8 @@ class PriceRichText extends ConsumerWidget {
         final service = ref.watch(currencyServiceProvider);
         final formattedPrice = service.formatPrice(priceInEur, currency);
 
-        return RichText(
-          text: TextSpan(
+        return AutoSizeText.rich(
+          TextSpan(
             text: formattedPrice,
             style: priceStyle ?? DefaultTextStyle.of(context).style,
             children: suffix != null
@@ -95,6 +103,8 @@ class PriceRichText extends ConsumerWidget {
                   ]
                 : [],
           ),
+          maxLines: 1,
+          minFontSize: 10,
         );
       },
       loading: () => const SizedBox(
@@ -104,8 +114,8 @@ class PriceRichText extends ConsumerWidget {
       ),
       error: (error, stackTrace) {
         final fallbackText = '€${priceInEur.toStringAsFixed(2)}';
-        return RichText(
-          text: TextSpan(
+        return AutoSizeText.rich(
+          TextSpan(
             text: fallbackText,
             style: priceStyle ?? DefaultTextStyle.of(context).style,
             children: suffix != null
@@ -119,6 +129,8 @@ class PriceRichText extends ConsumerWidget {
                   ]
                 : [],
           ),
+          maxLines: 1,
+          minFontSize: 10,
         );
       },
     );

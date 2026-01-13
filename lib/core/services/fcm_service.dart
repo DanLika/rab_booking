@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,9 +8,7 @@ import 'package:flutter/foundation.dart';
 /// FCM Push Notification Service
 ///
 /// Handles Firebase Cloud Messaging for push notifications.
-/// Currently hidden from UI - will be activated with mobile app release.
-///
-/// Token storage: users/{userId}/data/fcmTokens
+/// Token storage: users/{userId}/data/fcmTokens (Map format)
 class FcmService {
   static final FcmService _instance = FcmService._internal();
   factory FcmService() => _instance;
@@ -24,6 +23,16 @@ class FcmService {
   }
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Stream controllers for UI integration
+  final _navigationController = StreamController<String>.broadcast();
+  final _foregroundMessageController = StreamController<RemoteMessage>.broadcast();
+
+  /// Stream of booking IDs to navigate to
+  Stream<String> get navigationStream => _navigationController.stream;
+
+  /// Stream of foreground messages to show alerts for
+  Stream<RemoteMessage> get foregroundMessageStream => _foregroundMessageController.stream;
 
   bool _initialized = false;
   String? _currentToken;
@@ -41,20 +50,26 @@ class FcmService {
 
     try {
       // Request permission (iOS requires this)
-      final settings = await _messagingInstance.requestPermission();
+      final settings = await _messagingInstance.requestPermission(alert: true, badge: true, sound: true);
 
       debugPrint('[FCM] Permission status: ${settings.authorizationStatus}');
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
+        // Get APNS token first on iOS
+        if (defaultTargetPlatform == TargetPlatform.iOS) {
+          final apnsToken = await _messagingInstance.getAPNSToken();
+          debugPrint('[FCM] APNS Token: $apnsToken');
+        }
+
         // Get and save FCM token
         await _getAndSaveToken();
 
         // Listen for token refresh
         _messagingInstance.onTokenRefresh.listen(_onTokenRefresh);
 
-        // Configure foreground message handling
-        await _configureMessageHandling();
+        // Configure message handling
+        _configureMessageHandling();
 
         _initialized = true;
         debugPrint('[FCM] Service initialized successfully');
@@ -64,6 +79,29 @@ class FcmService {
     } catch (e) {
       debugPrint('[FCM] Error initializing: $e');
     }
+  }
+
+  /// Configure message handling
+  void _configureMessageHandling() {
+    // Handle foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint('[FCM] Foreground message received: ${message.messageId}');
+      _handleMessage(message);
+    });
+
+    // Handle background message tap (app was in background)
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint('[FCM] Message opened app: ${message.messageId}');
+      _handleNotificationTap(message);
+    });
+
+    // Check if app was opened from terminated state via notification
+    _messagingInstance.getInitialMessage().then((initialMessage) {
+      if (initialMessage != null) {
+        debugPrint('[FCM] App opened from notification');
+        _handleNotificationTap(initialMessage);
+      }
+    });
   }
 
   /// Get current FCM token
@@ -94,46 +132,25 @@ class FcmService {
     await _saveTokenToFirestore(token);
   }
 
-  /// Save token to Firestore
+  /// Save token to Firestore (Map structure)
   Future<void> _saveTokenToFirestore(String token) async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
       debugPrint('[FCM] No user logged in, skipping token save');
       return;
     }
 
     try {
       final platform = _getPlatform();
-      final tokenData = {
-        'token': token,
-        'platform': platform,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
 
-      final tokensRef = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('data')
-          .doc('fcmTokens');
-
-      // Get existing tokens
-      final doc = await tokensRef.get();
-      List<Map<String, dynamic>> tokens = [];
-
-      if (doc.exists && doc.data()?['tokens'] != null) {
-        tokens = List<Map<String, dynamic>>.from(doc.data()!['tokens'] as List);
-        // Remove existing token for this platform
-        tokens.removeWhere((t) => t['platform'] == platform);
-      }
-
-      // Add new token
-      tokens.add(tokenData);
-
-      // Save
-      await tokensRef.set({
-        'tokens': tokens,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await _firestore.collection('users').doc(user.uid).collection('data').doc('fcmTokens').set({
+        token: {
+          'token': token,
+          'platform': platform,
+          'createdAt': FieldValue.serverTimestamp(),
+          'lastSeen': FieldValue.serverTimestamp(),
+        },
+      }, SetOptions(merge: true));
 
       debugPrint('[FCM] Token saved for platform: $platform');
     } catch (e) {
@@ -147,101 +164,59 @@ class FcmService {
     if (userId == null || _currentToken == null) return;
 
     try {
-      final tokensRef = _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('data')
-          .doc('fcmTokens');
+      final tokensRef = _firestore.collection('users').doc(userId).collection('data').doc('fcmTokens');
 
-      final doc = await tokensRef.get();
-      if (!doc.exists) return;
+      // Remove the specific token entry using FieldValue.delete()
+      await tokensRef.update({'$_currentToken': FieldValue.delete()});
 
-      final tokens = List<Map<String, dynamic>>.from(
-        doc.data()?['tokens'] as List? ?? [],
-      );
-      tokens.removeWhere((t) => t['token'] == _currentToken);
-
-      await tokensRef.update({'tokens': tokens});
       debugPrint('[FCM] Token removed on logout');
+      _currentToken = null; // Clear current token after removal
     } catch (e) {
       debugPrint('[FCM] Error removing token: $e');
     }
   }
 
-  /// Configure message handling
-  Future<void> _configureMessageHandling() async {
-    // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('[FCM] Foreground message received: ${message.messageId}');
-      _handleMessage(message);
-    });
-
-    // Handle background message tap (app was in background)
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('[FCM] Message opened app: ${message.messageId}');
-      _handleMessageTap(message);
-    });
-
-    // Check if app was opened from terminated state via notification
-    final initialMessage = await _messagingInstance.getInitialMessage();
-    if (initialMessage != null) {
-      debugPrint('[FCM] App opened from notification');
-      _handleMessageTap(initialMessage);
-    }
-  }
-
   /// Handle incoming message (foreground)
   void _handleMessage(RemoteMessage message) {
-    // For now, just log - can show in-app notification later
     debugPrint('[FCM] Message: ${message.notification?.title}');
-    debugPrint('[FCM] Body: ${message.notification?.body}');
-    debugPrint('[FCM] Data: ${message.data}');
+
+    // Emit to stream for UI to handle (e.g. show SnackBar)
+    _foregroundMessageController.add(message);
   }
 
   /// Handle notification tap
-  void _handleMessageTap(RemoteMessage message) {
+  void _handleNotificationTap(RemoteMessage message) {
     final data = message.data;
-    final category = data['category'];
-    final bookingId = data['bookingId'];
+    final bookingId = data['bookingId'] as String?;
+    final category = data['category'] as String?;
 
-    debugPrint(
-      '[FCM] Tapped notification - category: $category, bookingId: $bookingId',
-    );
+    debugPrint('[FCM] Tapped notification - category: $category, bookingId: $bookingId');
 
-    // Navigation will be handled by the app based on the data
-    // Can emit events or use a callback here
+    if (bookingId != null) {
+      // Emit to navigation stream for Router to handle
+      _navigationController.add(bookingId);
+    }
   }
 
   /// Get platform string
-  /// Returns platform identifier, safe for web (checks kIsWeb before accessing Platform)
   String _getPlatform() {
-    // CRITICAL: Check kIsWeb FIRST before any Platform access
-    // Platform class from dart:io uses platform channels internally
-    // which are not available on web and will cause errors
     if (kIsWeb) return 'web';
-
-    // Only access Platform on non-web platforms
-    try {
-      if (Platform.isIOS) return 'ios';
-      if (Platform.isAndroid) return 'android';
-      if (Platform.isMacOS) return 'macos';
-      if (Platform.isWindows) return 'windows';
-      if (Platform.isLinux) return 'linux';
-    } catch (e) {
-      // Fallback if Platform access fails (shouldn't happen, but be safe)
-      debugPrint('[FCM] Error detecting platform: $e');
-      return 'unknown';
-    }
+    if (Platform.isAndroid) return 'android';
+    if (Platform.isIOS) return 'ios';
     return 'unknown';
   }
 
-  /// Check if notifications are enabled
-  Future<bool> areNotificationsEnabled() async {
-    if (kIsWeb) return false;
-
+  /// Check if permissions granted
+  Future<bool> isPermissionGranted() async {
     final settings = await _messagingInstance.getNotificationSettings();
     return settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional;
+  }
+
+  /// Dispose streams
+  void dispose() {
+    _navigationController.close();
+    _foregroundMessageController.close();
   }
 }
 

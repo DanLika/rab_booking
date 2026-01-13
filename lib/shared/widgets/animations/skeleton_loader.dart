@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -27,7 +28,7 @@ class SkeletonColors {
 }
 
 /// Skeleton loader placeholder
-/// Simple static gradient - no shimmer animation for snappier feel
+/// Uses shimmer effect for loading indication
 class SkeletonLoader extends StatelessWidget {
   const SkeletonLoader({
     this.width,
@@ -78,22 +79,22 @@ class SkeletonLoader extends StatelessWidget {
   static Widget notificationsList({int itemCount = 6}) =>
       NotificationsListSkeleton(itemCount: itemCount);
 
+  /// Unit Hub Master Panel skeleton
+  static Widget unitHubMasterPanel() => const UnitHubMasterPanelSkeleton();
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(borderRadius),
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: isDark
-              ? [SkeletonColors.darkPrimary, SkeletonColors.darkSecondary]
-              : [SkeletonColors.lightPrimary, SkeletonColors.lightSecondary],
-          stops: const [0.0, 0.3],
+    return Shimmer.fromColors(
+      baseColor: isDark ? SkeletonColors.darkPrimary : SkeletonColors.lightPrimary,
+      highlightColor: isDark ? SkeletonColors.darkSecondary : SkeletonColors.lightSecondary,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: Colors.white, // Color doesn't matter for mask, but must be opaque
+          borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
     );
@@ -198,22 +199,10 @@ class CircleSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
+    return SkeletonLoader(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: isDark
-              ? [SkeletonColors.darkPrimary, SkeletonColors.darkSecondary]
-              : [SkeletonColors.lightPrimary, SkeletonColors.lightSecondary],
-          stops: const [0.0, 0.3],
-        ),
-      ),
+      borderRadius: size / 2,
     );
   }
 }
@@ -1552,6 +1541,126 @@ class BookingsTableSkeleton extends StatelessWidget {
 
           // Actions menu
           const SkeletonLoader(width: 32, height: 32, borderRadius: 16),
+        ],
+      ),
+    );
+  }
+}
+
+/// Unit List Skeleton (single unit tile)
+class UnitListTileSkeleton extends StatelessWidget {
+  const UnitListTileSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+           // Top row: Name + Badge + Actions
+           Row(
+             children: [
+               Expanded(child: SkeletonLoader(height: 16, borderRadius: 4)),
+               SizedBox(width: 8),
+               SkeletonLoader(width: 60, height: 20, borderRadius: 6), // Badge
+               SizedBox(width: 8),
+               SkeletonLoader(width: 24, height: 24, borderRadius: 4), // Icon
+               SizedBox(width: 4),
+               SkeletonLoader(width: 24, height: 24, borderRadius: 4), // Icon
+             ],
+           ),
+           SizedBox(height: 8),
+           // Property name
+           SkeletonLoader(width: 100, height: 12, borderRadius: 4),
+           SizedBox(height: 8),
+           // Details
+           Row(
+             children: [
+               SkeletonLoader(width: 16, height: 16, borderRadius: 8),
+               SizedBox(width: 4),
+               SkeletonLoader(width: 20, height: 12, borderRadius: 4),
+               SizedBox(width: 16),
+               SkeletonLoader(width: 16, height: 16, borderRadius: 8),
+               SizedBox(width: 4),
+               SkeletonLoader(width: 40, height: 12, borderRadius: 4),
+             ]
+           )
+        ]
+      )
+    );
+  }
+}
+
+/// Unit Hub Master Panel Skeleton (Properties list with Units)
+class UnitHubMasterPanelSkeleton extends StatelessWidget {
+  const UnitHubMasterPanelSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: 3, // Show 3 property sections
+      itemBuilder: (context, index) => const Padding(
+        padding: EdgeInsets.only(bottom: 12),
+        child: PropertySectionSkeleton(),
+      ),
+    );
+  }
+}
+
+/// Property Section Skeleton (Property Header + List of Units)
+class PropertySectionSkeleton extends StatelessWidget {
+  const PropertySectionSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? SkeletonColors.darkCardBackground : SkeletonColors.lightCardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? SkeletonColors.darkBorder : SkeletonColors.lightBorder,
+          width: 1.5,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        children: [
+          // Property Header
+          const Row(
+            children: [
+              SkeletonLoader(width: 36, height: 36, borderRadius: 8),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonLoader(width: 120, height: 16),
+                    SizedBox(height: 4),
+                    SkeletonLoader(width: 80, height: 12),
+                  ],
+                ),
+              ),
+              SizedBox(width: 12),
+              SkeletonLoader(width: 80, height: 28, borderRadius: 6),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Units List
+          ...List.generate(2, (_) => const UnitListTileSkeleton()),
         ],
       ),
     );

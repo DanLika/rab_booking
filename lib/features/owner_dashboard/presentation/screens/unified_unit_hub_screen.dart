@@ -19,6 +19,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
+import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
@@ -321,11 +322,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
         // Properties and Units list (hierarchical)
         Expanded(
           child: propertiesAsync.when(
-            loading: () => Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(isDark ? Colors.white : Colors.black),
-              ),
-            ),
+            loading: () => SkeletonLoader.unitHubMasterPanel(),
             error: (error, stack) => Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -366,11 +363,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
     final unitsAsync = ref.watch(ownerUnitsProvider);
 
     return unitsAsync.when(
-      loading: () => Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(isDark ? Colors.white : Colors.black),
-        ),
-      ),
+      loading: () => SkeletonLoader.unitHubMasterPanel(),
       error: (error, stack) {
         final l10n = AppLocalizations.of(context);
         return Center(child: Text(l10n.unitHubError(error.toString())));

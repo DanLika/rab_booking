@@ -1237,3 +1237,29 @@ dart format .
 ```
 
 **Za AI agente (Jules, Sentinel, Bolt):** UVIJEK pokreni `dart format .` prije kreiranja commita. CI workflow provjerava formatiranje i odbija neformatirani kod.
+
+---
+
+## 🚀 Changelog 5.9: Performance & Security Optimizations (2026-01-13)
+
+**Portirane optimizacije iz feature brancheva:**
+
+### Performance
+| Optimizacija | Datoteke | Korist |
+|--------------|----------|--------|
+| `keepAlive: true` calendar provider | `owner_calendar_provider.dart` | Nema re-fetch pri navigaciji |
+| 3m/9m date range (umjesto 12m/12m) | `owner_calendar_provider.dart` | ~75% manje Firestore reads |
+| `unitToPropertyMap` passthrough | `firebase_owner_bookings_repository.dart` | Eliminira N+1 queries za iCal |
+| `aggregate(sum())` za revenue | `firebase_revenue_analytics_repository.dart` | 1 query umjesto 100+ reads |
+| `collectionGroup.count()` | `admin_users_repository.dart` | N+1 → 1 query |
+| Skip redundant profile fetch | `enhanced_auth_provider.dart` | Nema double-fetch na login |
+| Memory cache za rate limit | `rate_limit_service.dart` | Manje Firestore reads za locked accounts |
+
+### Security
+| Fix | Datoteke | Opis |
+|-----|----------|------|
+| owner_id integrity check | `firestore.rules` | Sprječava fake owner_id injection |
+| Log redaction (GDPR) | `logging_service.dart` | Redaktira passworde, tokene, API keys |
+| Token masking | `ical_export_service.dart` | Maskira Firebase Storage tokene |
+
+**Preskočene grane:** `bolt-optimize-booking-retrieval` (pagination rizik), `bolt-property-global-store` (veliko refaktoriranje), `jules/security-audit-fixes` (XSS već riješen), `chore/weekly-dependency-updates` (ručno updatati).

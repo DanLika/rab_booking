@@ -27,9 +27,7 @@ import 'shared/widgets/offline_indicator.dart';
 
 import 'shared/widgets/global_navigation_loader.dart';
 
-// Sentry DSN for web error tracking (Crashlytics doesn't support web)
-const String _sentryDsn =
-    'https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144';
+import 'core/config/environment.dart';
 
 /// Global initialization state - tracks what has been initialized
 class AppInitState {
@@ -226,7 +224,7 @@ Future<void> _initializeRemainingServices() async {
     }
 
     // Initialize Sentry for web (non-blocking)
-    if (kReleaseMode && kIsWeb && _sentryDsn.isNotEmpty) {
+    if (kReleaseMode && kIsWeb && EnvironmentConfig.sentryDsn != null) {
       unawaited(_initSentry());
     }
 
@@ -456,11 +454,14 @@ Future<void> _initializeInBackground() async {
 
 /// Initialize Sentry (web only, non-blocking)
 Future<void> _initSentry() async {
+  final dsn = EnvironmentConfig.sentryDsn;
+  if (dsn == null) return;
+
   try {
     await SentryFlutter.init((options) {
-      options.dsn = _sentryDsn;
+      options.dsn = dsn;
       options.tracesSampleRate = 0.2;
-      options.environment = 'production';
+      options.environment = EnvironmentConfig.current.name;
 
       // Filter non-critical errors before sending to Sentry
       options.beforeSend = (event, hint) {

@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'core/config/environment.dart';
 import 'firebase_options_dev.dart';
 import 'main.dart' show runMainApp;
 
@@ -10,6 +11,9 @@ import 'main.dart' show runMainApp;
 /// Build: flutter run -d chrome --web-port=8080 --target lib/owner_main_dev.dart
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Set environment
+  EnvironmentConfig.setEnvironment(Environment.development);
 
   // Initialize Firebase with DEV config (bookbed-dev)
   try {

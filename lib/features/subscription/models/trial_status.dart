@@ -106,23 +106,36 @@ class TrialStatus {
   bool get isActive => accountStatus == AccountStatus.active;
 
   /// Get days remaining in trial (0 if not in trial or expired)
-  int get daysRemaining {
+  /// Optional [now] parameter for testing
+  int getDaysRemaining({DateTime? now}) {
     if (!isInTrial || trialExpiresAt == null) return 0;
-    final remaining = trialExpiresAt!.difference(DateTime.now()).inDays;
+    final referenceDate = now ?? DateTime.now();
+    final remaining = trialExpiresAt!.difference(referenceDate).inDays;
     return remaining > 0 ? remaining : 0;
   }
 
+  /// Helper getter for days remaining (uses DateTime.now())
+  int get daysRemaining => getDaysRemaining();
+
   /// Check if trial is expiring soon (within 7 days)
-  bool get isExpiringSoon =>
-      isInTrial && daysRemaining <= 7 && daysRemaining > 0;
+  /// Optional [now] parameter for testing
+  bool isExpiringSoonInternal({DateTime? now}) {
+    final days = getDaysRemaining(now: now);
+    return isInTrial && days <= 7 && days > 0;
+  }
+
+  /// Helper getter for expiring soon (uses DateTime.now())
+  bool get isExpiringSoon => isExpiringSoonInternal();
 
   /// Get human-readable status text
-  String get statusText {
+  /// Optional [now] parameter for testing
+  String getStatusText({DateTime? now}) {
     switch (accountStatus) {
       case AccountStatus.trial:
-        if (daysRemaining <= 0) return 'Trial ending today';
-        if (daysRemaining == 1) return '1 day left in trial';
-        return '$daysRemaining days left in trial';
+        final days = getDaysRemaining(now: now);
+        if (days <= 0) return 'Trial ending today';
+        if (days == 1) return '1 day left in trial';
+        return '$days days left in trial';
       case AccountStatus.active:
         return 'Active subscription';
       case AccountStatus.trialExpired:
@@ -131,6 +144,9 @@ class TrialStatus {
         return 'Account suspended';
     }
   }
+
+  /// Helper getter for status text (uses DateTime.now())
+  String get statusText => getStatusText();
 
   @override
   String toString() =>

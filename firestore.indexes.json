@@ -463,6 +463,20 @@
       ]
     },
     {
+      "collectionGroup": "securityEvents",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
+          "fieldPath": "type",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "platform_connections",
       "queryScope": "COLLECTION",
       "fields": [

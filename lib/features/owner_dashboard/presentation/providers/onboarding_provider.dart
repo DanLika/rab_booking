@@ -139,21 +139,29 @@ class OnboardingNotifier extends _$OnboardingNotifier {
       );
     }
 
-    final data = state.propertyData!;
-    final propertyRepository = ref.read(ownerPropertiesRepositoryProvider);
+    state = state.copyWith(isLoading: true);
 
-    // Create property using repository method with named parameters
-    final property = await propertyRepository.createProperty(
-      ownerId: userId,
-      name: data.name,
-      description: 'Property created via onboarding wizard',
-      propertyType: data.propertyType,
-      location: '${data.address}, ${data.city}, ${data.country}',
-      amenities: [],
-    );
+    try {
+      final data = state.propertyData!;
+      final propertyRepository = ref.read(ownerPropertiesRepositoryProvider);
 
-    LoggingService.log('Property created: ${property.id}', tag: 'ONBOARDING');
-    return property.id;
+      // Create property using repository method with named parameters
+      final property = await propertyRepository.createProperty(
+        ownerId: userId,
+        name: data.name,
+        description: 'Property created via onboarding wizard',
+        propertyType: data.propertyType,
+        location: '${data.address}, ${data.city}, ${data.country}',
+        amenities: [],
+      );
+
+      LoggingService.log('Property created: ${property.id}', tag: 'ONBOARDING');
+      state = state.copyWith(isLoading: false);
+      return property.id;
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
   }
 
   /// Create unit in Firebase (from Step 2 data)
@@ -162,31 +170,41 @@ class OnboardingNotifier extends _$OnboardingNotifier {
       return null; // Optional step
     }
 
-    final data = state.unitData!;
-    final unitRepository = ref.read(unitRepositoryProvider);
+    state = state.copyWith(isLoading: true);
 
-    final unit = UnitModel(
-      id: '', // Will be set by repository
-      propertyId: propertyId,
-      ownerId: ownerId,
-      name: data.name,
-      maxGuests: data.maxGuests,
-      bedrooms: data.numBeds ?? 1,
-      bathrooms: data.numBathrooms ?? 1,
-      description: data.description,
-      pricePerNight: state.pricingData?.basePrice ?? 0.0,
-      images: [],
-      createdAt: DateTime.now(),
-    );
+    try {
+      final data = state.unitData!;
+      final unitRepository = ref.read(unitRepositoryProvider);
 
-    final createdUnit = await unitRepository.createUnit(unit);
-    LoggingService.log('Unit created: ${createdUnit.id}', tag: 'ONBOARDING');
-    return createdUnit.id;
+      final unit = UnitModel(
+        id: '', // Will be set by repository
+        propertyId: propertyId,
+        ownerId: ownerId,
+        name: data.name,
+        maxGuests: data.maxGuests,
+        bedrooms: data.numBeds ?? 1,
+        bathrooms: data.numBathrooms ?? 1,
+        description: data.description,
+        pricePerNight: state.pricingData?.basePrice ?? 0.0,
+        images: [],
+        createdAt: DateTime.now(),
+      );
+
+      final createdUnit = await unitRepository.createUnit(unit);
+      LoggingService.log('Unit created: ${createdUnit.id}', tag: 'ONBOARDING');
+      state = state.copyWith(isLoading: false);
+      return createdUnit.id;
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
   }
 
   /// Complete onboarding wizard
   Future<void> complete() async {
     try {
+      state = state.copyWith(isLoading: true);
+
       // Mark as completed
       state = state.copyWith(isCompleted: true);
 
@@ -197,7 +215,9 @@ class OnboardingNotifier extends _$OnboardingNotifier {
       await _deleteProgress();
 
       LoggingService.log('Wizard completed successfully', tag: 'ONBOARDING');
+      state = state.copyWith(isLoading: false);
     } catch (e) {
+      state = state.copyWith(isLoading: false);
       unawaited(
         LoggingService.logError('Failed to complete onboarding wizard', e),
       );
@@ -208,6 +228,7 @@ class OnboardingNotifier extends _$OnboardingNotifier {
   /// Skip onboarding wizard
   Future<void> skip() async {
     try {
+      state = state.copyWith(isLoading: true);
       state = state.copyWith(isSkipped: true);
 
       // Mark onboarding as completed (even though skipped)
@@ -217,7 +238,9 @@ class OnboardingNotifier extends _$OnboardingNotifier {
       await _deleteProgress();
 
       LoggingService.log('Wizard skipped', tag: 'ONBOARDING');
+      state = state.copyWith(isLoading: false);
     } catch (e) {
+      state = state.copyWith(isLoading: false);
       unawaited(LoggingService.logError('Failed to skip onboarding wizard', e));
       rethrow;
     }

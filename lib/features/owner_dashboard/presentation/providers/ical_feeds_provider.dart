@@ -67,29 +67,44 @@ class IcalFeedsNotifier extends AsyncNotifier<List<IcalFeed>> {
 
   /// Create new iCal feed
   Future<void> createFeed(IcalFeed feed) async {
-    final repository = ref.read(icalRepositoryProvider);
-    await repository.createIcalFeed(feed);
-
-    // Refresh the list
-    ref.invalidateSelf();
+    state = const AsyncLoading();
+    try {
+      final repository = ref.read(icalRepositoryProvider);
+      await repository.createIcalFeed(feed);
+      // Refresh the list
+      ref.invalidateSelf();
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   /// Update iCal feed
   Future<void> updateFeed(IcalFeed feed) async {
-    final repository = ref.read(icalRepositoryProvider);
-    await repository.updateIcalFeed(feed);
-
-    // Refresh the list
-    ref.invalidateSelf();
+    state = const AsyncLoading();
+    try {
+      final repository = ref.read(icalRepositoryProvider);
+      await repository.updateIcalFeed(feed);
+      // Refresh the list
+      ref.invalidateSelf();
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   /// Delete iCal feed
   Future<void> deleteFeed(String feedId) async {
-    final repository = ref.read(icalRepositoryProvider);
-    await repository.deleteIcalFeed(feedId);
-
-    // Refresh the list
-    ref.invalidateSelf();
+    state = const AsyncLoading();
+    try {
+      final repository = ref.read(icalRepositoryProvider);
+      await repository.deleteIcalFeed(feedId);
+      // Refresh the list
+      ref.invalidateSelf();
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   /// Update feed status
@@ -98,15 +113,20 @@ class IcalFeedsNotifier extends AsyncNotifier<List<IcalFeed>> {
     IcalStatus status, {
     String? errorMessage,
   }) async {
-    final repository = ref.read(icalRepositoryProvider);
-    await repository.updateFeedStatus(
-      feedId,
-      status,
-      errorMessage: errorMessage,
-    );
-
-    // Refresh the list
-    ref.invalidateSelf();
+    state = const AsyncLoading();
+    try {
+      final repository = ref.read(icalRepositoryProvider);
+      await repository.updateFeedStatus(
+        feedId,
+        status,
+        errorMessage: errorMessage,
+      );
+      // Refresh the list
+      ref.invalidateSelf();
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }
 

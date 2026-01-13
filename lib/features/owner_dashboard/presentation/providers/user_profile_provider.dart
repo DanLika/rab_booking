@@ -82,33 +82,43 @@ class UserProfileNotifier extends _$UserProfileNotifier {
 
   /// Update user profile
   Future<void> updateProfile(UserProfile profile) async {
-    final repository = ref.read(userProfileRepositoryProvider);
-    await repository.updateUserProfile(profile);
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repository = ref.read(userProfileRepositoryProvider);
+      await repository.updateUserProfile(profile);
+    });
   }
 
   /// Update company details
   Future<void> updateCompany(String userId, CompanyDetails company) async {
-    final repository = ref.read(userProfileRepositoryProvider);
-    await repository.updateCompanyDetails(userId, company);
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repository = ref.read(userProfileRepositoryProvider);
+      await repository.updateCompanyDetails(userId, company);
+    });
   }
 
   /// Update both profile and company in one call
-  /// Note: Simplified to avoid AsyncValue.guard() race condition that
-  /// caused "Future already completed" errors
   Future<void> updateProfileAndCompany(
     UserProfile profile,
     CompanyDetails company,
   ) async {
-    final repository = ref.read(userProfileRepositoryProvider);
-    await repository.updateUserProfile(profile);
-    await repository.updateCompanyDetails(profile.userId, company);
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repository = ref.read(userProfileRepositoryProvider);
+      await repository.updateUserProfile(profile);
+      await repository.updateCompanyDetails(profile.userId, company);
+    });
   }
 
   /// Update notification preferences
   Future<void> updateNotificationPreferences(
     NotificationPreferences preferences,
   ) async {
-    final repository = ref.read(userProfileRepositoryProvider);
-    await repository.updateNotificationPreferences(preferences);
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repository = ref.read(userProfileRepositoryProvider);
+      await repository.updateNotificationPreferences(preferences);
+    });
   }
 }

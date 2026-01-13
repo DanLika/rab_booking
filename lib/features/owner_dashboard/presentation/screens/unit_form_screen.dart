@@ -22,6 +22,7 @@ import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../widgets/embed_code_generator_dialog.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/loading_overlay.dart';
 import '../providers/owner_properties_provider.dart';
 
 /// Unit form screen for add/edit
@@ -538,51 +539,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
 
                     // Loading Overlay
                     if (_isLoading)
-                      Container(
-                        color: Colors.black.withAlpha((0.5 * 255).toInt()),
-                        child: Center(
-                          child: Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.primary,
-                                          AppColors.authSecondary,
-                                        ],
-                                      ),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const CircularProgressIndicator(
-                                      strokeWidth: 3,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Text(
-                                    l10n.unitFormSaving,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      LoadingOverlay(message: l10n.unitFormSaving),
                   ],
                 );
               },

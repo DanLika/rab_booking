@@ -14,6 +14,7 @@ class OnboardingState with _$OnboardingState {
     PricingFormData? pricingData,
     @Default(false) bool isSkipped,
     @Default(false) bool isCompleted,
+    @Default(false) bool isLoading,
   }) = _OnboardingState;
 
   factory OnboardingState.fromJson(Map<String, dynamic> json) =>

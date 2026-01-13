@@ -11,6 +11,7 @@ import '../../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../../core/utils/error_display_utils.dart';
 import '../../../../../../shared/models/unit_model.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
+import '../../../../../../shared/widgets/loading_overlay.dart';
 import '../../providers/owner_properties_provider.dart';
 import 'state/unit_wizard_provider.dart';
 import 'widgets/wizard_progress_bar.dart';
@@ -48,6 +49,7 @@ class UnitWizardScreen extends ConsumerStatefulWidget {
 class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
     with AndroidKeyboardDismissFixApproach1<UnitWizardScreen> {
   final PageController _pageController = PageController();
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -262,6 +264,9 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
   Future<void> _publishUnit() async {
     if (!mounted) return;
 
+    // Show loading overlay
+    setState(() => _isSaving = true);
+
     try {
       // Get current draft
       final draft = ref.read(unitWizardNotifierProvider(widget.unitId)).value;
@@ -381,6 +386,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isSaving = false);
         ErrorDisplayUtils.showErrorSnackBar(context, e);
       }
     }
@@ -482,6 +488,8 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
                             draft.currentStep ==
                             4, // Only Photos step is optional
                       ),
+                      if (_isSaving)
+                        const LoadingOverlay(message: 'Saving unit...'),
                     ],
                   ),
                   loading: () =>

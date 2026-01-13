@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /owner/
+Disallow: /admin/
+Allow: /
+Allow: /calendar
+Allow: /s/
+Allow: /view
+Allow: /embed/
+
+Sitemap: https://bookbed.io/sitemap.xml

@@ -23,6 +23,9 @@ export * from "./stripePayment";
 // Export Stripe Connect functions
 export * from "./stripeConnect";
 
+// Export Stripe Subscription functions
+export * from "./stripeSubscription";
+
 // Export custom email functions (Phase 2)
 export * from "./customEmail";
 

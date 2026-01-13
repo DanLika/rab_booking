@@ -184,6 +184,7 @@ class UnitHubEmptyState extends StatelessWidget {
   Widget _buildCtaSection(BuildContext context, AppLocalizations l10n) {
     return Center(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
                 decoration: BoxDecoration(
@@ -235,7 +236,7 @@ class UnitHubEmptyState extends StatelessWidget {
               ),
           const SizedBox(height: 16),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 48), // Increased padding
             child: Text(
               l10n.unitHubNeedHelp,
               style: Theme.of(

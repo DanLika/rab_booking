@@ -257,10 +257,18 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       }
     } catch (e) {
       unawaited(LoggingService.logError('ERROR loading user profile', e));
+
+      // Calculate verification requirement even on error
+      // This prevents the "Flash" bug where router redirects to dashboard because default is false
+      final requiresVerification =
+          AuthFeatureFlags.requireEmailVerification &&
+          !firebaseUser.emailVerified;
+
       // Set isLoading to false even on error (initial check complete)
       state = EnhancedAuthState(
         firebaseUser: firebaseUser,
         isLoading: false,
+        requiresEmailVerification: requiresVerification,
         error: 'Failed to load user profile: $e',
       );
     }

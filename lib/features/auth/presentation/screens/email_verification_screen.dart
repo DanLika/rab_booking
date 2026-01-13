@@ -58,7 +58,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
       // Router will redirect to:
       // - /onboarding/wizard if requiresOnboarding is true
       // - /owner/overview if requiresOnboarding is false
-      context.go('/');
+      context.go(OwnerRoutes.overview);
     }
   }
 
@@ -234,7 +234,11 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
         title: AppLocalizations.of(context)!.authEmailVerificationTitle,
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) async {
-          await ref.read(enhancedAuthProvider.notifier).signOut();
+          try {
+            await ref.read(enhancedAuthProvider.notifier).signOut();
+          } catch (e) {
+            // Ignore sign out errors, just navigate
+          }
           if (context.mounted) {
             context.go(OwnerRoutes.login);
           }
@@ -328,29 +332,45 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                 ),
                 const SizedBox(height: 32),
 
-                // Action Buttons Wrap (prevents overflow on small screens)
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 12,
-                  runSpacing: 8,
+                // Action Buttons Row (Single line as requested)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Change Email
-                    TextButton(
-                      onPressed: _showChangeEmailDialog,
-                      child: Text(AppLocalizations.of(context)!.authWrongEmail),
+                    Flexible(
+                      child: TextButton(
+                        onPressed: _showChangeEmailDialog,
+                        child: Text(
+                          AppLocalizations.of(context)!.authWrongEmail,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
-                    Container(width: 1, height: 16, color: theme.dividerColor.withAlpha((0.5 * 255).toInt())),
+                    Container(
+                      width: 1,
+                      height: 16,
+                      color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
+                    ),
                     // Back to Login
-                    TextButton.icon(
-                      onPressed: () async {
-                        await ref.read(enhancedAuthProvider.notifier).signOut();
-                        if (context.mounted) {
-                          context.go(OwnerRoutes.login);
-                        }
-                      },
-                      icon: const Icon(Icons.logout_rounded, size: 16),
-                      label: Text(AppLocalizations.of(context)!.authBackToLogin),
+                    Flexible(
+                      child: TextButton.icon(
+                        onPressed: () async {
+                          // Force sign out and redirect
+                          await ref.read(enhancedAuthProvider.notifier).signOut();
+                          if (context.mounted) {
+                            context.go(OwnerRoutes.login);
+                          }
+                        },
+                        icon: const Icon(Icons.logout_rounded, size: 16),
+                        label: Text(
+                          AppLocalizations.of(context)!.authBackToLogin,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
                   ],
                 ),

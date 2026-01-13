@@ -181,7 +181,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
                 stepGranularity: 1,
               ),
               centerTitle: false,
-              leadingWidth: 40, // Reduced from 56 to move icon closer to left
+              leadingWidth: 32, // Reduced from 40 for tighter spacing
               leading: IconButton(
                 padding: EdgeInsets.zero, // Remove internal padding
                 icon: const Icon(Icons.menu, color: Colors.white),

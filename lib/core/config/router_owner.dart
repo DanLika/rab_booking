@@ -199,10 +199,21 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return null; // Allow access
       }
 
-      // Redirect root to appropriate page (ALWAYS, even during loading)
-      // This ensures app.bookbed.io always redirects correctly
+      // Redirect root to appropriate page
       if (state.matchedLocation == '/') {
-        // Authenticated → overview (even if still loading, we know user is authenticated)
+        // Wait for auth to initialize before redirecting from root
+        // This allows the LoadingOverlay to show instead of flashing Login/404
+        if (isLoading) {
+          if (kDebugMode) {
+            LoggingService.log(
+              '  → Waiting for auth init at root (isLoading=true)',
+              tag: 'ROUTER',
+            );
+          }
+          return null; // Stay on root (shows LoadingOverlay)
+        }
+
+        // Authenticated → overview
         if (isAuthenticated) {
           if (kDebugMode) {
             LoggingService.log(
@@ -213,20 +224,18 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           return OwnerRoutes.overview;
         }
 
-        // Not authenticated → login (ALWAYS redirect, even during initial loading)
-        // This fixes the issue where app.bookbed.io shows "page unavailable"
+        // Not authenticated → login
         if (kDebugMode) {
           LoggingService.log(
-            '  → Redirecting / to login (not authenticated, isLoading=$isLoading)',
+            '  → Redirecting / to login (not authenticated)',
             tag: 'ROUTER',
           );
         }
         return OwnerRoutes.login;
       }
 
-      // FIX Q4: Don't redirect while auth operation is in progress
+      // Don't redirect while auth operation is in progress
       // (prevents Register → Login flash during async registration)
-      // BUT: Only apply this to non-root routes (root is handled above)
       if (isLoading) {
         if (kDebugMode) {
           LoggingService.log(
@@ -291,7 +300,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
       // ROOT ROUTE - Shows widget if has params, otherwise loader for redirect
       GoRoute(
         path: '/',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           // Check if this is a widget URL (has property/unit/confirmation params)
           // IMPORTANT: With hash routing, query params are BEFORE the #, so use Uri.base
           final browserUri = Uri.base;
@@ -305,12 +314,20 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
 
           if (hasWidgetParams) {
             // Show booking widget for embed URLs and Stripe return URLs
-            return const BookingWidgetScreen();
+            return PageTransitions.none(
+              key: state.pageKey,
+              child: const BookingWidgetScreen(),
+            );
           }
 
           // Show loading overlay while redirect determines where to go
           // (prevents 404 flash during Login → Dashboard transition)
-          return const Scaffold(body: LoadingOverlay(message: 'Loading...'));
+          // Using PageTransitions.fade to ensure smooth entry if this is the first route,
+          // though for root usually it's just shown.
+          return PageTransitions.fade(
+            key: state.pageKey,
+            child: const Scaffold(body: LoadingOverlay(message: 'Loading...')),
+          );
         },
       ),
 

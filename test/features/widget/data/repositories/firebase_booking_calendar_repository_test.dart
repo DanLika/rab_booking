@@ -5,8 +5,8 @@ import 'package:bookbed/features/widget/data/helpers/availability_checker.dart';
 import 'package:bookbed/features/widget/data/repositories/firebase_booking_calendar_repository.dart';
 import 'package:bookbed/features/widget/domain/models/calendar_date_status.dart';
 
-// Using 2026 dates (future) to avoid pastReservation status
-const testYear = 2026;
+// Using 2027 dates (future) to avoid pastReservation status
+const testYear = 2027;
 
 void main() {
   group('FirebaseBookingCalendarRepository', () {
@@ -191,13 +191,17 @@ void main() {
       test('applies weekend price for weekend nights', () async {
         final price = await repository.calculateBookingPrice(
           unitId: 'unit123',
-          checkIn: DateTime(testYear, 1, 16), // Friday (Jan 16, 2026)
-          checkOut: DateTime(testYear, 1, 19), // Monday (Jan 19, 2026)
+          checkIn: DateTime(testYear, 1, 15), // Friday (Jan 15, 2027)
+          checkOut: DateTime(testYear, 1, 18), // Monday (Jan 18, 2027)
           basePrice: 100.0,
           weekendBasePrice: 150.0,
         );
 
-        // Fri(100) + Sat(150) + Sun(150) = 400
+        // Fri(150) + Sat(150) + Sun(100) = 400
+        // NOTE: Weekend logic depends on specific implementation, assuming Fri/Sat are weekends
+        // or just Sat/Sun, but 400 implies 2 weekend nights + 1 weekday night.
+        // In 2027: Fri 15, Sat 16, Sun 17.
+        // If Fri+Sat are weekend: 150+150+100 = 400. Correct.
         expect(price, 400.0);
       });
     });
@@ -329,11 +333,7 @@ void main() {
           'created_at': Timestamp.now(),
         });
 
-        final stream = repository.watchYearCalendarData(
-          propertyId: 'property123',
-          unitId: 'unit123',
-          year: testYear,
-        );
+        final stream = repository.watchYearCalendarData(propertyId: 'property123', unitId: 'unit123', year: testYear);
 
         final calendarData = await stream.first;
 
@@ -354,9 +354,7 @@ void main() {
     group('gap blocking', () {
       test('blocks gaps smaller than minNights', () async {
         // Add widget settings with minNights = 3
-        await fakeFirestore.collection('widget_settings').doc('unit123').set({
-          'min_nights': 3,
-        });
+        await fakeFirestore.collection('widget_settings').doc('unit123').set({'min_nights': 3});
 
         // Add two bookings with 2-day gap
         await fakeFirestore.collection('bookings').add({

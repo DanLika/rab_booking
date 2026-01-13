@@ -34,7 +34,8 @@ const String _sentryDsn =
 /// Global initialization state - tracks what has been initialized
 class AppInitState {
   static final Completer<void> firebaseReady = Completer<void>();
-  static final Completer<SharedPreferences> prefsReady = Completer<SharedPreferences>();
+  static final Completer<SharedPreferences> prefsReady =
+      Completer<SharedPreferences>();
   static final Completer<void> allReady = Completer<void>();
 
   static bool get isFirebaseReady => firebaseReady.isCompleted;
@@ -65,7 +66,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Log background message (optional: could update local database, acknowledge receipt, etc.)
-  LoggingService.log('FCM Background Message: ${message.messageId}', tag: 'FCM_BACKGROUND');
+  LoggingService.log(
+    'FCM Background Message: ${message.messageId}',
+    tag: 'FCM_BACKGROUND',
+  );
 }
 
 void main() async {
@@ -116,17 +120,26 @@ void _setupErrorHandling() {
         if (errorString.contains('getParameter') ||
             errorString.contains('WebGL') ||
             errorString.contains('CanvasKit')) {
-          LoggingService.log('WebGL/CanvasKit error (non-fatal): ${_safeErrorToString(exception)}', tag: 'WEBGL_ERROR');
+          LoggingService.log(
+            'WebGL/CanvasKit error (non-fatal): ${_safeErrorToString(exception)}',
+            tag: 'WEBGL_ERROR',
+          );
           return;
         }
-        LoggingService.log('Flutter error: ${_safeErrorToString(exception)}', tag: 'FLUTTER_ERROR');
+        LoggingService.log(
+          'Flutter error: ${_safeErrorToString(exception)}',
+          tag: 'FLUTTER_ERROR',
+        );
       };
       PlatformDispatcher.instance.onError = (error, stack) {
         final errorString = _safeErrorToString(error);
         if (errorString.contains('getParameter') ||
             errorString.contains('WebGL') ||
             errorString.contains('CanvasKit')) {
-          LoggingService.log('WebGL/CanvasKit error (non-fatal): $error', tag: 'WEBGL_ERROR');
+          LoggingService.log(
+            'WebGL/CanvasKit error (non-fatal): $error',
+            tag: 'WEBGL_ERROR',
+          );
           return true;
         }
         LoggingService.log('Platform error: $error', tag: 'PLATFORM_ERROR');
@@ -147,11 +160,19 @@ void _setupErrorHandling() {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Color(0xFFD32F2F)),
+              const Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Color(0xFFD32F2F),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Widget Error',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFD32F2F)),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFD32F2F),
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -168,7 +189,10 @@ void _setupErrorHandling() {
     }
     return const Material(
       child: Center(
-        child: Text('Something went wrong', style: TextStyle(fontSize: 16, color: Colors.grey)),
+        child: Text(
+          'Something went wrong',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
       ),
     );
   };
@@ -187,9 +211,15 @@ Future<void> _initializeRemainingServices() async {
       if (!AppInitState.prefsReady.isCompleted) {
         AppInitState.prefsReady.complete(prefs);
       }
-      LoggingService.log('SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+      LoggingService.log(
+        'SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)',
+        tag: 'INIT',
+      );
     } catch (e, stack) {
-      LoggingService.log('SharedPreferences init failed: $e', tag: 'INIT_ERROR');
+      LoggingService.log(
+        'SharedPreferences init failed: $e',
+        tag: 'INIT_ERROR',
+      );
       if (!AppInitState.prefsReady.isCompleted) {
         AppInitState.prefsReady.completeError(e, stack);
       }
@@ -204,7 +234,10 @@ Future<void> _initializeRemainingServices() async {
     if (!AppInitState.allReady.isCompleted) {
       AppInitState.allReady.complete();
     }
-    LoggingService.log('All initialization complete (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+    LoggingService.log(
+      'All initialization complete (${stopwatch.elapsedMilliseconds}ms)',
+      tag: 'INIT',
+    );
   } catch (e, stack) {
     LoggingService.log('Initialization error: $e', tag: 'INIT_ERROR');
     if (!AppInitState.allReady.isCompleted) {
@@ -239,12 +272,18 @@ void _runAppWithDeferredInit() {
         if (errorString.contains('getParameter') ||
             errorString.contains('WebGL') ||
             errorString.contains('CanvasKit')) {
-          LoggingService.log('WebGL/CanvasKit error (non-fatal): ${_safeErrorToString(exception)}', tag: 'WEBGL_ERROR');
+          LoggingService.log(
+            'WebGL/CanvasKit error (non-fatal): ${_safeErrorToString(exception)}',
+            tag: 'WEBGL_ERROR',
+          );
           // Don't rethrow - allow app to continue
           return;
         }
         // For other errors, log and continue
-        LoggingService.log('Flutter error: ${_safeErrorToString(exception)}', tag: 'FLUTTER_ERROR');
+        LoggingService.log(
+          'Flutter error: ${_safeErrorToString(exception)}',
+          tag: 'FLUTTER_ERROR',
+        );
       };
       PlatformDispatcher.instance.onError = (error, stack) {
         // Handle WebGL/CanvasKit errors gracefully
@@ -252,7 +291,10 @@ void _runAppWithDeferredInit() {
         if (errorString.contains('getParameter') ||
             errorString.contains('WebGL') ||
             errorString.contains('CanvasKit')) {
-          LoggingService.log('WebGL/CanvasKit error (non-fatal): $error', tag: 'WEBGL_ERROR');
+          LoggingService.log(
+            'WebGL/CanvasKit error (non-fatal): $error',
+            tag: 'WEBGL_ERROR',
+          );
           return true; // Mark as handled, don't crash
         }
         // Log other errors
@@ -276,11 +318,19 @@ void _runAppWithDeferredInit() {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: Color(0xFFD32F2F)),
+              const Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Color(0xFFD32F2F),
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Widget Error',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFD32F2F)),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFD32F2F),
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -298,7 +348,10 @@ void _runAppWithDeferredInit() {
     // Release mode: minimal error display
     return const Material(
       child: Center(
-        child: Text('Something went wrong', style: TextStyle(fontSize: 16, color: Colors.grey)),
+        child: Text(
+          'Something went wrong',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
       ),
     );
   };
@@ -318,12 +371,16 @@ Future<void> _initializeInBackground() async {
   try {
     // Initialize Firebase
     LoggingService.log('Initializing Firebase...', tag: 'INIT');
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
     // Enable Firestore Persistence (must be done before other Firestore usage)
     try {
       if (kIsWeb) {
-        await FirebaseFirestore.instance.enablePersistence(const PersistenceSettings(synchronizeTabs: true));
+        await FirebaseFirestore.instance.enablePersistence(
+          const PersistenceSettings(synchronizeTabs: true),
+        );
       } else {
         // Mobile/Desktop usually enabled by default, but ensuring settings
         FirebaseFirestore.instance.settings = const Settings(
@@ -333,19 +390,31 @@ Future<void> _initializeInBackground() async {
       }
       LoggingService.log('Firestore persistence enabled', tag: 'INIT');
     } catch (e) {
-      LoggingService.log('Firestore persistence failed: $e', tag: 'INIT_WARNING');
+      LoggingService.log(
+        'Firestore persistence failed: $e',
+        tag: 'INIT_WARNING',
+      );
     }
     AppInitState.firebaseReady.complete();
-    LoggingService.log('Firebase ready (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+    LoggingService.log(
+      'Firebase ready (${stopwatch.elapsedMilliseconds}ms)',
+      tag: 'INIT',
+    );
 
     // Initialize SharedPreferences
     LoggingService.log('Initializing SharedPreferences...', tag: 'INIT');
     try {
       final prefs = await SharedPreferences.getInstance();
       AppInitState.prefsReady.complete(prefs);
-      LoggingService.log('SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+      LoggingService.log(
+        'SharedPreferences ready (${stopwatch.elapsedMilliseconds}ms)',
+        tag: 'INIT',
+      );
     } catch (e, stack) {
-      LoggingService.log('SharedPreferences init failed: $e', tag: 'INIT_ERROR');
+      LoggingService.log(
+        'SharedPreferences init failed: $e',
+        tag: 'INIT_ERROR',
+      );
       // Complete with error so app can handle it gracefully
       if (!AppInitState.prefsReady.isCompleted) {
         AppInitState.prefsReady.completeError(e, stack);
@@ -356,7 +425,9 @@ Future<void> _initializeInBackground() async {
 
     // Configure FCM background message handler (mobile only)
     if (!kIsWeb) {
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
       LoggingService.log('FCM background handler configured', tag: 'INIT');
     }
 
@@ -367,7 +438,10 @@ Future<void> _initializeInBackground() async {
 
     // Mark all initialization as complete
     AppInitState.allReady.complete();
-    LoggingService.log('All initialization complete (${stopwatch.elapsedMilliseconds}ms)', tag: 'INIT');
+    LoggingService.log(
+      'All initialization complete (${stopwatch.elapsedMilliseconds}ms)',
+      tag: 'INIT',
+    );
   } catch (e, stack) {
     LoggingService.log('Initialization error: $e', tag: 'INIT_ERROR');
     // Complete with error so app can handle it
@@ -460,7 +534,10 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
       _prefs = await AppInitState.prefsReady.future;
       LoggingService.log('Prefs ready, updating state...', tag: 'APP');
     } catch (e) {
-      LoggingService.log('SharedPreferences init error: $e - continuing without persistence', tag: 'APP_ERROR');
+      LoggingService.log(
+        'SharedPreferences init error: $e - continuing without persistence',
+        tag: 'APP_ERROR',
+      );
       // Continue without SharedPreferences - providers will use fallbacks
       _prefs = null;
     }
@@ -483,7 +560,9 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
 
     // Phase 2: Initialized - show app with auth-aware splash overlay
     // Override SharedPreferences provider if available (null is acceptable - providers handle it)
-    final overrides = _prefs != null ? [sharedPreferencesProvider.overrideWithValue(_prefs)] : <Override>[];
+    final overrides = _prefs != null
+        ? [sharedPreferencesProvider.overrideWithValue(_prefs)]
+        : <Override>[];
 
     return ProviderScope(
       overrides: overrides,
@@ -517,7 +596,9 @@ class _InitializingSplash extends StatelessWidget {
     // Use platform brightness to match HTML splash
     final brightness = MediaQuery.platformBrightnessOf(context);
     final isDark = brightness == Brightness.dark;
-    final backgroundColor = isDark ? const Color(0xFF000000) : const Color(0xFFFAFAFA);
+    final backgroundColor = isDark
+        ? const Color(0xFF000000)
+        : const Color(0xFFFAFAFA);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -541,7 +622,10 @@ class _InitializedApp extends ConsumerStatefulWidget {
   final bool showSplash;
   final VoidCallback onSplashComplete;
 
-  const _InitializedApp({required this.showSplash, required this.onSplashComplete});
+  const _InitializedApp({
+    required this.showSplash,
+    required this.onSplashComplete,
+  });
 
   @override
   ConsumerState<_InitializedApp> createState() => _InitializedAppState();
@@ -564,7 +648,10 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
     if (!_authChecked && !authState.isLoading) {
       _authChecked = true;
       if (!_authReadyCompleter.isCompleted) {
-        LoggingService.log('Auth check complete, isAuthenticated=${authState.isAuthenticated}', tag: 'APP');
+        LoggingService.log(
+          'Auth check complete, isAuthenticated=${authState.isAuthenticated}',
+          tag: 'APP',
+        );
         _authReadyCompleter.complete();
       }
     }
@@ -589,7 +676,9 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
       ],
       supportedLocales: const [Locale('en'), Locale('hr')],
       builder: (context, child) {
-        return Stack(children: [if (child != null) child, const OfflineIndicator()]);
+        return Stack(
+          children: [if (child != null) child, const OfflineIndicator()],
+        );
       },
     );
 

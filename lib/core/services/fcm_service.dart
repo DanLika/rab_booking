@@ -26,13 +26,15 @@ class FcmService {
 
   // Stream controllers for UI integration
   final _navigationController = StreamController<String>.broadcast();
-  final _foregroundMessageController = StreamController<RemoteMessage>.broadcast();
+  final _foregroundMessageController =
+      StreamController<RemoteMessage>.broadcast();
 
   /// Stream of booking IDs to navigate to
   Stream<String> get navigationStream => _navigationController.stream;
 
   /// Stream of foreground messages to show alerts for
-  Stream<RemoteMessage> get foregroundMessageStream => _foregroundMessageController.stream;
+  Stream<RemoteMessage> get foregroundMessageStream =>
+      _foregroundMessageController.stream;
 
   bool _initialized = false;
   String? _currentToken;
@@ -50,7 +52,11 @@ class FcmService {
 
     try {
       // Request permission (iOS requires this)
-      final settings = await _messagingInstance.requestPermission(alert: true, badge: true, sound: true);
+      final settings = await _messagingInstance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
       debugPrint('[FCM] Permission status: ${settings.authorizationStatus}');
 
@@ -143,14 +149,19 @@ class FcmService {
     try {
       final platform = _getPlatform();
 
-      await _firestore.collection('users').doc(user.uid).collection('data').doc('fcmTokens').set({
-        token: {
-          'token': token,
-          'platform': platform,
-          'createdAt': FieldValue.serverTimestamp(),
-          'lastSeen': FieldValue.serverTimestamp(),
-        },
-      }, SetOptions(merge: true));
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('data')
+          .doc('fcmTokens')
+          .set({
+            token: {
+              'token': token,
+              'platform': platform,
+              'createdAt': FieldValue.serverTimestamp(),
+              'lastSeen': FieldValue.serverTimestamp(),
+            },
+          }, SetOptions(merge: true));
 
       debugPrint('[FCM] Token saved for platform: $platform');
     } catch (e) {
@@ -164,7 +175,11 @@ class FcmService {
     if (userId == null || _currentToken == null) return;
 
     try {
-      final tokensRef = _firestore.collection('users').doc(userId).collection('data').doc('fcmTokens');
+      final tokensRef = _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('data')
+          .doc('fcmTokens');
 
       // Remove the specific token entry using FieldValue.delete()
       await tokensRef.update({'$_currentToken': FieldValue.delete()});
@@ -190,7 +205,9 @@ class FcmService {
     final bookingId = data['bookingId'] as String?;
     final category = data['category'] as String?;
 
-    debugPrint('[FCM] Tapped notification - category: $category, bookingId: $bookingId');
+    debugPrint(
+      '[FCM] Tapped notification - category: $category, bookingId: $bookingId',
+    );
 
     if (bookingId != null) {
       // Emit to navigation stream for Router to handle

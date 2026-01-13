@@ -11,10 +11,10 @@
  * @module priceValidation
  */
 
-import {admin, db} from "../firebase";
-import {HttpsError} from "firebase-functions/v2/https";
-import {logInfo, logWarn, logError} from "../logger";
-import {logPriceMismatch} from "./securityMonitoring";
+import { admin, db } from "../firebase";
+import { HttpsError } from "firebase-functions/v2/https";
+import { logInfo, logWarn, logError } from "../logger";
+import { logPriceMismatch } from "./securityMonitoring";
 
 /**
  * Price calculation result
@@ -25,7 +25,7 @@ interface PriceCalculationResult {
   /** Number of nights in the booking */
   nights: number;
   /** Breakdown of prices per night */
-  breakdown: Array<{date: string; price: number}>;
+  breakdown: Array<{ date: string; price: number }>;
 }
 
 /**
@@ -133,11 +133,11 @@ export async function calculateBookingPrice(
   }
 
   // Build price breakdown for ALL nights (using daily_prices or fallback)
-  const breakdown: Array<{date: string; price: number}> = [];
+  const breakdown: Array<{ date: string; price: number }> = [];
   let totalPrice = 0;
 
   // Iterate through each night in the booking range
-  let currentDate = new Date(checkInDate.toDate());
+  const currentDate = new Date(checkInDate.toDate());
   currentDate.setUTCHours(0, 0, 0, 0);
 
   for (let i = 0; i < expectedNights; i++) {
@@ -192,7 +192,7 @@ export async function calculateBookingPrice(
     }
 
     totalPrice += nightPrice;
-    breakdown.push({date: dateStr, price: nightPrice});
+    breakdown.push({ date: dateStr, price: nightPrice });
 
     // Move to next day
     currentDate.setDate(currentDate.getDate() + 1);
@@ -265,7 +265,7 @@ export async function validateBookingPrice(
   ) ? servicesTotal : 0;
 
   // Calculate server-side nightly price (with fallback support)
-  const {totalPrice: serverNightlyPrice} = await calculateBookingPrice(
+  const { totalPrice: serverNightlyPrice } = await calculateBookingPrice(
     unitId,
     checkInDate,
     checkOutDate,
@@ -314,7 +314,7 @@ export async function validateBookingPrice(
         serverNightlyPrice,
         servicesTotal: validatedServicesTotal,
         percentageDifference: percentageDifference.toFixed(2),
-      }).catch(() => {});
+      }).catch(() => { });
     } else {
       // Small mismatch - log to Cloud Logs only (no Sentry spam)
       logInfo("[PriceValidation] Small price mismatch (cached/floating-point) - using server price", {

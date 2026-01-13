@@ -410,6 +410,7 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
 
     // Get pending bookings count using optimized provider (dedicated query)
@@ -468,21 +469,26 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
                   ),
                 ),
                 if (pendingCount > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.danger,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      pendingCount.toString(),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                  Semantics(
+                    label:
+                        '$pendingCount ${l10n.ownerStatusPending.toLowerCase()}',
+                    excludeSemantics: true,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.danger,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        pendingCount.toString(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

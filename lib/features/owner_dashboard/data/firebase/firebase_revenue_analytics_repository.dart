@@ -18,7 +18,12 @@ class RevenueStats {
     required this.revenueByProperty,
   });
 
-  static const empty = RevenueStats(totalRevenue: 0, thisMonthRevenue: 0, trend: 0, revenueByProperty: {});
+  static const empty = RevenueStats(
+    totalRevenue: 0,
+    thisMonthRevenue: 0,
+    trend: 0,
+    revenueByProperty: {},
+  );
 }
 
 /// Firebase implementation of Revenue Analytics Repository
@@ -66,13 +71,15 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
         }
 
         // Last month revenue (for trend calculation)
-        if (booking.createdAt.isAfter(lastMonth.start) && booking.createdAt.isBefore(lastMonth.end)) {
+        if (booking.createdAt.isAfter(lastMonth.start) &&
+            booking.createdAt.isBefore(lastMonth.end)) {
           lastMonthRevenue += price;
         }
 
         // Revenue by property
         final propertyName = unitIdToPropertyName[booking.unitId] ?? 'Unknown';
-        revenueByProperty[propertyName] = (revenueByProperty[propertyName] ?? 0.0) + price;
+        revenueByProperty[propertyName] =
+            (revenueByProperty[propertyName] ?? 0.0) + price;
       }
 
       return RevenueStats(
@@ -82,13 +89,20 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
         revenueByProperty: revenueByProperty,
       );
     } catch (e) {
-      throw AnalyticsException('Failed to get revenue stats', code: 'analytics/revenue-stats-failed', originalError: e);
+      throw AnalyticsException(
+        'Failed to get revenue stats',
+        code: 'analytics/revenue-stats-failed',
+        originalError: e,
+      );
     }
   }
 
   /// OPTIMIZED: Get revenue data for last N days using pre-cached unitIds.
   /// Reduces queries from ~5 to ~1-2 (depending on unit count).
-  Future<List<RevenueDataPoint>> getRevenueByDaysOptimized({required List<String> unitIds, required int days}) async {
+  Future<List<RevenueDataPoint>> getRevenueByDaysOptimized({
+    required List<String> unitIds,
+    required int days,
+  }) async {
     final endDate = DateTime.now();
     final startDate = endDate.subtract(Duration(days: days - 1));
 
@@ -100,13 +114,23 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
       final Map<String, double> revenueByDate = {};
 
       // Query bookings with pre-cached unitIds
-      for (int i = 0; i < unitIds.length; i += FirestoreRepositoryMixin.batchLimit) {
-        final batch = unitIds.skip(i).take(FirestoreRepositoryMixin.batchLimit).toList();
+      for (
+        int i = 0;
+        i < unitIds.length;
+        i += FirestoreRepositoryMixin.batchLimit
+      ) {
+        final batch = unitIds
+            .skip(i)
+            .take(FirestoreRepositoryMixin.batchLimit)
+            .toList();
         // NEW STRUCTURE: Use collection group query for subcollection
         final bookingsSnapshot = await _firestore
             .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
-            .where('status', whereIn: FirestoreRepositoryMixin.confirmedStatuses)
+            .where(
+              'status',
+              whereIn: FirestoreRepositoryMixin.confirmedStatuses,
+            )
             .where('created_at', isGreaterThanOrEqualTo: startDate)
             .where('created_at', isLessThanOrEqualTo: endDate)
             .get();
@@ -133,7 +157,10 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
   // ============================================================
 
   /// Get revenue data for last N days
-  Future<List<RevenueDataPoint>> getRevenueByDays(String ownerId, int days) async {
+  Future<List<RevenueDataPoint>> getRevenueByDays(
+    String ownerId,
+    int days,
+  ) async {
     try {
       final endDate = DateTime.now();
       final startDate = endDate.subtract(Duration(days: days - 1));
@@ -145,13 +172,23 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
 
       final Map<String, double> revenueByDate = {};
 
-      for (int i = 0; i < unitIds.length; i += FirestoreRepositoryMixin.batchLimit) {
-        final batch = unitIds.skip(i).take(FirestoreRepositoryMixin.batchLimit).toList();
+      for (
+        int i = 0;
+        i < unitIds.length;
+        i += FirestoreRepositoryMixin.batchLimit
+      ) {
+        final batch = unitIds
+            .skip(i)
+            .take(FirestoreRepositoryMixin.batchLimit)
+            .toList();
         // NEW STRUCTURE: Use collection group query for subcollection
         final bookingsSnapshot = await _firestore
             .collectionGroup('bookings')
             .where('unit_id', whereIn: batch)
-            .where('status', whereIn: FirestoreRepositoryMixin.confirmedStatuses)
+            .where(
+              'status',
+              whereIn: FirestoreRepositoryMixin.confirmedStatuses,
+            )
             .where('created_at', isGreaterThanOrEqualTo: startDate)
             .where('created_at', isLessThanOrEqualTo: endDate)
             .get();
@@ -186,7 +223,11 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
 
       return result.getSum('total_price') ?? 0.0;
     } catch (e) {
-      throw AnalyticsException('Failed to get total revenue', code: 'analytics/total-revenue-failed', originalError: e);
+      throw AnalyticsException(
+        'Failed to get total revenue',
+        code: 'analytics/total-revenue-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -195,7 +236,11 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
   Future<double> getRevenueThisMonth(String ownerId) async {
     try {
       final range = getCurrentMonthRange();
-      return await _getRevenueInRangeAggregated(ownerId, range.start, range.end);
+      return await _getRevenueInRangeAggregated(
+        ownerId,
+        range.start,
+        range.end,
+      );
     } catch (e) {
       throw AnalyticsException(
         'Failed to get revenue this month',
@@ -210,7 +255,11 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
   Future<double> getRevenueLastMonth(String ownerId) async {
     try {
       final range = getLastMonthRange();
-      return await _getRevenueInRangeAggregated(ownerId, range.start, range.end);
+      return await _getRevenueInRangeAggregated(
+        ownerId,
+        range.start,
+        range.end,
+      );
     } catch (e) {
       throw AnalyticsException(
         'Failed to get revenue last month',
@@ -234,7 +283,10 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
   /// Get revenue by property
   Future<Map<String, double>> getRevenueByProperty(String ownerId) async {
     try {
-      final propertiesSnapshot = await _firestore.collection('properties').where('owner_id', isEqualTo: ownerId).get();
+      final propertiesSnapshot = await _firestore
+          .collection('properties')
+          .where('owner_id', isEqualTo: ownerId)
+          .get();
 
       final Map<String, double> revenueByProperty = {};
 
@@ -248,7 +300,10 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
         }
 
         final bookings = await _fetchConfirmedBookings(unitIds);
-        revenueByProperty[propertyName] = bookings.fold<double>(0.0, (total, b) => total + b.totalPrice);
+        revenueByProperty[propertyName] = bookings.fold<double>(
+          0.0,
+          (total, b) => total + b.totalPrice,
+        );
       }
 
       return revenueByProperty;
@@ -279,7 +334,11 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
         revenueByProperty: results[3] as Map<String, double>,
       );
     } catch (e) {
-      throw AnalyticsException('Failed to get revenue stats', code: 'analytics/revenue-stats-failed', originalError: e);
+      throw AnalyticsException(
+        'Failed to get revenue stats',
+        code: 'analytics/revenue-stats-failed',
+        originalError: e,
+      );
     }
   }
 
@@ -289,7 +348,10 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
 
   /// Get all unit IDs for an owner
   Future<List<String>> _getOwnerUnitIds(String ownerId) async {
-    final propertiesSnapshot = await _firestore.collection('properties').where('owner_id', isEqualTo: ownerId).get();
+    final propertiesSnapshot = await _firestore
+        .collection('properties')
+        .where('owner_id', isEqualTo: ownerId)
+        .get();
 
     final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
     if (propertyIds.isEmpty) return [];
@@ -299,7 +361,11 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
 
   /// Get unit IDs for a specific property
   Future<List<String>> _getPropertyUnitIds(String propertyId) async {
-    final unitsSnapshot = await _firestore.collection('properties').doc(propertyId).collection('units').get();
+    final unitsSnapshot = await _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .get();
     return unitsSnapshot.docs.map((doc) => doc.id).toList();
   }
 
@@ -313,8 +379,15 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
 
     final List<BookingModel> bookings = [];
 
-    for (int i = 0; i < unitIds.length; i += FirestoreRepositoryMixin.batchLimit) {
-      final batch = unitIds.skip(i).take(FirestoreRepositoryMixin.batchLimit).toList();
+    for (
+      int i = 0;
+      i < unitIds.length;
+      i += FirestoreRepositoryMixin.batchLimit
+    ) {
+      final batch = unitIds
+          .skip(i)
+          .take(FirestoreRepositoryMixin.batchLimit)
+          .toList();
 
       // NEW STRUCTURE: Use collection group query for subcollection
       Query<Map<String, dynamic>> query = _firestore
@@ -345,7 +418,11 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
 
   /// Get revenue in a date range using server-side aggregation
   /// OPTIMIZED: Uses Firestore sum() instead of fetching all docs
-  Future<double> _getRevenueInRangeAggregated(String ownerId, DateTime startDate, DateTime endDate) async {
+  Future<double> _getRevenueInRangeAggregated(
+    String ownerId,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
     final result = await _firestore
         .collectionGroup('bookings')
         .where('owner_id', isEqualTo: ownerId)
@@ -362,19 +439,34 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
   String _dateKey(DateTime date) => date.toIso8601String().split('T')[0];
 
   /// Build data points for chart
-  List<RevenueDataPoint> _buildDataPoints(DateTime startDate, int days, Map<String, double> revenueByDate) {
+  List<RevenueDataPoint> _buildDataPoints(
+    DateTime startDate,
+    int days,
+    Map<String, double> revenueByDate,
+  ) {
     return List.generate(days, (i) {
       final date = startDate.add(Duration(days: i));
       final dateStr = _dateKey(date);
-      return RevenueDataPoint(label: _formatDateLabel(date, i, days), value: revenueByDate[dateStr] ?? 0.0, date: date);
+      return RevenueDataPoint(
+        label: _formatDateLabel(date, i, days),
+        value: revenueByDate[dateStr] ?? 0.0,
+        date: date,
+      );
     });
   }
 
   /// Generate empty data points when there's no data
-  List<RevenueDataPoint> _generateEmptyDataPoints(DateTime startDate, int days) {
+  List<RevenueDataPoint> _generateEmptyDataPoints(
+    DateTime startDate,
+    int days,
+  ) {
     return List.generate(days, (i) {
       final date = startDate.add(Duration(days: i));
-      return RevenueDataPoint(label: _formatDateLabel(date, i, days), value: 0.0, date: date);
+      return RevenueDataPoint(
+        label: _formatDateLabel(date, i, days),
+        value: 0.0,
+        date: date,
+      );
     });
   }
 

@@ -15,10 +15,12 @@ class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  ConsumerState<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  ConsumerState<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends ConsumerState<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends ConsumerState<NotificationSettingsScreen> {
   NotificationPreferences? _currentPreferences;
   bool _isSaving = false;
 
@@ -32,7 +34,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
 
     try {
       final updated = _currentPreferences!.copyWith(masterEnabled: value);
-      await ref.read(userProfileNotifierProvider.notifier).updateNotificationPreferences(updated);
+      await ref
+          .read(userProfileNotifierProvider.notifier)
+          .updateNotificationPreferences(updated);
 
       if (mounted) {
         // Invalidate provider to force refresh from Firestore
@@ -46,21 +50,37 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         final l10n = AppLocalizations.of(context);
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          value ? l10n.notificationSettingsEnabled : l10n.notificationSettingsDisabled,
+          value
+              ? l10n.notificationSettingsEnabled
+              : l10n.notificationSettingsDisabled,
         );
       }
     } catch (e, stackTrace) {
-      LoggingService.log('Error toggling master switch: $e', tag: 'NotificationSettings');
-      await LoggingService.logError('Failed to toggle master switch', e, stackTrace);
+      LoggingService.log(
+        'Error toggling master switch: $e',
+        tag: 'NotificationSettings',
+      );
+      await LoggingService.logError(
+        'Failed to toggle master switch',
+        e,
+        stackTrace,
+      );
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.notificationSettingsUpdateError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.notificationSettingsUpdateError,
+        );
       }
     }
   }
 
-  Future<void> _updateCategory(String category, NotificationChannels channels) async {
+  Future<void> _updateCategory(
+    String category,
+    NotificationChannels channels,
+  ) async {
     if (_currentPreferences == null) return;
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -71,17 +91,27 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
     try {
       final updatedCategories = switch (category) {
         // 'bookings' removed - owner always receives booking emails
-        'payments' => _currentPreferences!.categories.copyWith(payments: channels),
-        'calendar' => _currentPreferences!.categories.copyWith(calendar: channels),
-        'marketing' => _currentPreferences!.categories.copyWith(marketing: channels),
+        'payments' => _currentPreferences!.categories.copyWith(
+          payments: channels,
+        ),
+        'calendar' => _currentPreferences!.categories.copyWith(
+          calendar: channels,
+        ),
+        'marketing' => _currentPreferences!.categories.copyWith(
+          marketing: channels,
+        ),
         _ => null,
       };
 
       if (updatedCategories == null) return;
 
-      final updated = _currentPreferences!.copyWith(categories: updatedCategories);
+      final updated = _currentPreferences!.copyWith(
+        categories: updatedCategories,
+      );
 
-      await ref.read(userProfileNotifierProvider.notifier).updateNotificationPreferences(updated);
+      await ref
+          .read(userProfileNotifierProvider.notifier)
+          .updateNotificationPreferences(updated);
 
       if (mounted) {
         // Invalidate provider to force refresh from Firestore
@@ -93,15 +123,29 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         });
 
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.notificationSettingsUpdated(category));
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.notificationSettingsUpdated(category),
+        );
       }
     } catch (e, stackTrace) {
-      LoggingService.log('Error updating category $category: $e', tag: 'NotificationSettings');
-      await LoggingService.logError('Failed to update notification category', e, stackTrace);
+      LoggingService.log(
+        'Error updating category $category: $e',
+        tag: 'NotificationSettings',
+      );
+      await LoggingService.logError(
+        'Failed to update notification category',
+        e,
+        stackTrace,
+      );
       if (mounted) {
         setState(() => _isSaving = false);
         final l10n = AppLocalizations.of(context);
-        ErrorDisplayUtils.showErrorSnackBar(context, e, userMessage: l10n.notificationSettingsUpdateError);
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.notificationSettingsUpdateError,
+        );
       }
     }
   }
@@ -129,7 +173,10 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           data: (preferences) {
             // Initialize with default preferences if none exist
             _currentPreferences ??=
-                preferences ?? NotificationPreferences(userId: FirebaseAuth.instance.currentUser?.uid ?? '');
+                preferences ??
+                NotificationPreferences(
+                  userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                );
 
             final masterEnabled = _currentPreferences!.masterEnabled;
             final categories = _currentPreferences!.categories;
@@ -144,8 +191,13 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                   decoration: BoxDecoration(
                     color: context.gradients.cardBackground,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: context.gradients.sectionBorder, width: 1.5),
-                    boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+                    border: Border.all(
+                      color: context.gradients.sectionBorder,
+                      width: 1.5,
+                    ),
+                    boxShadow: isDark
+                        ? AppShadows.elevation2Dark
+                        : AppShadows.elevation2,
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -156,15 +208,22 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: masterEnabled
-                                ? theme.colorScheme.primary.withAlpha((0.12 * 255).toInt())
-                                : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                                ? theme.colorScheme.primary.withAlpha(
+                                    (0.12 * 255).toInt(),
+                                  )
+                                : theme.colorScheme.surfaceContainerHighest
+                                      .withAlpha((0.3 * 255).toInt()),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
-                            masterEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+                            masterEnabled
+                                ? Icons.notifications_active_rounded
+                                : Icons.notifications_off_rounded,
                             color: masterEnabled
                                 ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurface.withAlpha((0.38 * 255).toInt()),
+                                : theme.colorScheme.onSurface.withAlpha(
+                                    (0.38 * 255).toInt(),
+                                  ),
                             size: 24,
                           ),
                         ),
@@ -187,7 +246,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                                 l10n.notificationSettingsMasterSwitch,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                               ),
                             ],
@@ -210,26 +271,40 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withAlpha((0.3 * 255).toInt()),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()), width: 1.5),
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withAlpha(
+                          (0.3 * 255).toInt(),
+                        ),
+                        width: 1.5,
+                      ),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.error.withAlpha((0.12 * 255).toInt()),
+                            color: theme.colorScheme.error.withAlpha(
+                              (0.12 * 255).toInt(),
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(Icons.info_outline, color: theme.colorScheme.error, size: 18),
+                          child: Icon(
+                            Icons.info_outline,
+                            color: theme.colorScheme.error,
+                            size: 18,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             l10n.notificationSettingsDisabledWarning,
                             style: TextStyle(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -245,7 +320,11 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                   padding: const EdgeInsets.only(left: 16, bottom: 12),
                   child: Text(
                     l10n.notificationSettingsCategories,
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                 ),
 
@@ -265,7 +344,8 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                   iconColor: theme.colorScheme.primary,
                   channels: categories.payments,
                   enabled: masterEnabled,
-                  onChanged: (channels) => _updateCategory('payments', channels),
+                  onChanged: (channels) =>
+                      _updateCategory('payments', channels),
                 ),
 
                 // Calendar Category - hidden until implemented
@@ -304,7 +384,11 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
             );
           },
           loading: () => Center(
-            child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary)),
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.colorScheme.primary,
+              ),
+            ),
           ),
           error: (error, stack) => Center(
             child: Padding(
@@ -320,23 +404,38 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
-                          theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
+                          theme.colorScheme.error.withAlpha(
+                            (0.1 * 255).toInt(),
+                          ),
+                          theme.colorScheme.error.withAlpha(
+                            (0.05 * 255).toInt(),
+                          ),
                         ],
                       ),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.error_outline_rounded, size: 50, color: theme.colorScheme.error),
+                    child: Icon(
+                      Icons.error_outline_rounded,
+                      size: 50,
+                      color: theme.colorScheme.error,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     l10n.notificationSettingsLoadError,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     error.toString(),
-                    style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6), fontSize: 14),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 14,
+                    ),
                     textAlign: TextAlign.center,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -386,13 +485,20 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           ),
           title: Text(
             title,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               description,
-              style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ),
           ),
           children: [
@@ -411,7 +517,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                   context: context,
                   theme: theme,
                   value: enabled && channels.email,
-                  onChanged: enabled && !_isSaving ? (value) => onChanged(channels.copyWith(email: value)) : null,
+                  onChanged: enabled && !_isSaving
+                      ? (value) => onChanged(channels.copyWith(email: value))
+                      : null,
                   title: l10n.notificationSettingsEmailChannel,
                   subtitle: l10n.notificationSettingsEmailChannelDesc,
                   icon: Icons.email_outlined,
@@ -429,7 +537,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                   context: context,
                   theme: theme,
                   value: enabled && channels.push,
-                  onChanged: enabled && !_isSaving ? (value) => onChanged(channels.copyWith(push: value)) : null,
+                  onChanged: enabled && !_isSaving
+                      ? (value) => onChanged(channels.copyWith(push: value))
+                      : null,
                   title: l10n.notificationSettingsPushChannel,
                   subtitle: l10n.notificationSettingsPushChannelDesc,
                   icon: Icons.notifications_outlined,
@@ -469,12 +579,18 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 decoration: BoxDecoration(
                   color: enabled
                       ? iconColor.withAlpha((0.12 * 255).toInt())
-                      : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).toInt()),
+                      : theme.colorScheme.surfaceContainerHighest.withAlpha(
+                          (0.3 * 255).toInt(),
+                        ),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   icon,
-                  color: enabled ? iconColor : theme.colorScheme.onSurface.withAlpha((0.38 * 255).toInt()),
+                  color: enabled
+                      ? iconColor
+                      : theme.colorScheme.onSurface.withAlpha(
+                          (0.38 * 255).toInt(),
+                        ),
                   size: 20,
                 ),
               ),
@@ -491,7 +607,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                         fontSize: 14,
                         color: enabled
                             ? theme.colorScheme.onSurface
-                            : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.4,
+                              ),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -501,14 +619,20 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                         fontSize: 12,
                         color: enabled
                             ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
-                            : theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.3,
+                              ),
                       ),
                     ),
                   ],
                 ),
               ),
               // Switch
-              Switch(value: value, onChanged: onChanged, activeThumbColor: iconColor),
+              Switch(
+                value: value,
+                onChanged: onChanged,
+                activeThumbColor: iconColor,
+              ),
             ],
           ),
         ),

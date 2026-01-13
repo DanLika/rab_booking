@@ -410,7 +410,7 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     // Get pending bookings count using optimized provider (dedicated query)

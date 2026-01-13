@@ -328,8 +328,10 @@ service cloud.firestore {
 
     // Login attempts - rate limiting
     match /loginAttempts/{email} {
-      allow read: if false;
-      allow write: if false;
+      // SECURITY: allow read/write for rate limiting. 
+      // rate_limit_service.dart uses sanitized email as doc ID.
+      allow get, create, update: if true;
+      allow list, delete: if false;
     }
 
     // Email verifications - OTP codes

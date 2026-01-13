@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../l10n/app_localizations.dart';
@@ -416,10 +417,13 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
           appBar: AppBar(
             toolbarHeight:
                 56.0, // Standard AppBar height (matches CommonAppBar)
-            title: Text(
+            title: AutoSizeText(
               widget.unitId == null
                   ? l10n.unitWizardCreateTitle
                   : l10n.unitWizardEditTitle,
+              maxLines: 1,
+              minFontSize: 14,
+              stepGranularity: 1,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Colors.white,

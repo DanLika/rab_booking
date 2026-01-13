@@ -71,7 +71,7 @@ class RevenueGuideEmptyState extends ConsumerWidget {
               child: Column(
                 children: [
                   _ActionCard(
-                    icon: Icons.sync_alt_rounded,
+                    icon: Icons.sync_rounded,
                     title: l10n.revenueGuideActionIcal,
                     subtitle: l10n.revenueGuideActionIcalDesc,
                     onTap: () => context.push(OwnerRoutes.icalImport),

@@ -14,6 +14,7 @@ import '../widgets/auth_logo_icon.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_auth_button.dart';
 import '../widgets/premium_input_field.dart';
+import '../../../../shared/widgets/login_loading_overlay.dart';
 
 /// Forgot password screen
 ///
@@ -138,6 +139,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                 ),
               ),
             ),
+            if (_isLoading)
+              const LoginLoadingOverlay(message: 'Sending reset link...'),
           ],
         ),
       ),

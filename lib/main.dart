@@ -371,11 +371,17 @@ Future<void> _initializeInBackground() async {
   try {
     // Initialize Firebase
     LoggingService.log('Initializing Firebase...', tag: 'INIT');
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-
-    // Enable Firestore Persistence (must be done before other Firestore usage)
+    try {
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      }
+    } catch (e) {
+      if (!e.toString().contains('duplicate-app')) {
+        rethrow;
+      }
+    } // Enable Firestore Persistence (must be done before other Firestore usage)
     try {
       // Use settings for all platforms
       FirebaseFirestore.instance.settings = const Settings(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import '../../core/design_tokens/gradient_tokens.dart';
 
 /// Reusable standard AppBar (non-sliver) for screens using Scaffold
@@ -73,8 +74,11 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: AppBar(
         title: Padding(
           padding: EdgeInsets.only(left: titlePadding),
-          child: Text(
+          child: AutoSizeText(
             title,
+            maxLines: 1,
+            minFontSize: 14,
+            stepGranularity: 1,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w600,
               color: titleColor,

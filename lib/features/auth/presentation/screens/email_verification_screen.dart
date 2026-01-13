@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -14,13 +15,10 @@ class EmailVerificationScreen extends ConsumerStatefulWidget {
   const EmailVerificationScreen({super.key});
 
   @override
-  ConsumerState<EmailVerificationScreen> createState() =>
-      _EmailVerificationScreenState();
+  ConsumerState<EmailVerificationScreen> createState() => _EmailVerificationScreenState();
 }
 
-class _EmailVerificationScreenState
-    extends ConsumerState<EmailVerificationScreen>
-    with WidgetsBindingObserver {
+class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScreen> with WidgetsBindingObserver {
   Timer? _refreshTimer;
   bool _isResending = false;
   int _resendCooldown = 0;
@@ -52,9 +50,7 @@ class _EmailVerificationScreenState
   }
 
   Future<void> _checkVerificationStatus() async {
-    await ref
-        .read(enhancedAuthProvider.notifier)
-        .refreshEmailVerificationStatus();
+    await ref.read(enhancedAuthProvider.notifier).refreshEmailVerificationStatus();
 
     final authState = ref.read(enhancedAuthProvider);
     if (!authState.requiresEmailVerification && mounted) {
@@ -77,7 +73,7 @@ class _EmailVerificationScreenState
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          'Verification email sent! Check your inbox.',
+          AppLocalizations.of(context)!.authVerifyEmailSuccess,
           duration: const Duration(seconds: 3),
         );
 
@@ -97,10 +93,7 @@ class _EmailVerificationScreenState
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          'Failed to send email: $e',
-        );
+        ErrorDisplayUtils.showErrorSnackBar(context, '${AppLocalizations.of(context)!.error}: $e');
       }
     } finally {
       if (mounted) {
@@ -117,137 +110,115 @@ class _EmailVerificationScreenState
 
     return showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.email_outlined, color: Theme.of(context).primaryColor),
-            const SizedBox(width: 8),
-            const Text('Change Email'),
-          ],
-        ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Row(
             children: [
-              Text(
-                'Enter your new email address. You will need to verify it.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 20),
-              Builder(
-                builder: (ctx) => TextFormField(
-                  controller: emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecorationHelper.buildDecoration(
-                    labelText: 'New Email *',
-                    prefixIcon: const Icon(Icons.email),
-                    context: ctx,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter an email';
-                    }
-                    if (!value.contains('@') || !value.contains('.')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              Builder(
-                builder: (ctx) => TextFormField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: InputDecorationHelper.buildDecoration(
-                    labelText: 'Current Password *',
-                    prefixIcon: const Icon(Icons.lock),
-                    helperText: 'Required to confirm identity',
-                    context: ctx,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 20,
-                      color: Theme.of(context).colorScheme.tertiary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'You will be logged out and need to verify the new email',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              Icon(Icons.email_outlined, color: Theme.of(context).primaryColor),
+              const SizedBox(width: 8),
+              Text(l10n.authChangeEmailTitle),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.authChangeEmailDesc, style: Theme.of(context).textTheme.bodyMedium),
+                const SizedBox(height: 20),
+                Builder(
+                  builder: (ctx) => TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecorationHelper.buildDecoration(
+                      labelText: l10n.authNewEmailLabel,
+                      prefixIcon: const Icon(Icons.email),
+                      context: ctx,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.emailRequired;
+                      }
+                      if (!value.contains('@') || !value.contains('.')) {
+                        return l10n.validEmailRequired;
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Builder(
+                  builder: (ctx) => TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: InputDecorationHelper.buildDecoration(
+                      labelText: l10n.authPasswordLabel,
+                      prefixIcon: const Icon(Icons.lock),
+                      helperText: l10n.authPasswordHelper,
+                      context: ctx,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.passwordRequired;
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Theme.of(context).colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 20, color: Theme.of(context).colorScheme.tertiary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.authLogoutHint,
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
 
-              final navigator = Navigator.of(context);
-              navigator.pop();
+                final navigator = Navigator.of(context);
+                navigator.pop();
 
-              try {
-                // Re-authenticate and update email via provider
-                await ref
-                    .read(enhancedAuthProvider.notifier)
-                    .updateEmail(
-                      newEmail: emailController.text.trim(),
-                      currentPassword: passwordController.text,
-                    );
+                try {
+                  // Re-authenticate and update email via provider
+                  await ref
+                      .read(enhancedAuthProvider.notifier)
+                      .updateEmail(newEmail: emailController.text.trim(), currentPassword: passwordController.text);
 
-                if (mounted) {
-                  ErrorDisplayUtils.showSuccessSnackBar(
-                    this.context,
-                    'Email updated! Check your new inbox for verification.',
-                  );
+                  if (mounted) {
+                    ErrorDisplayUtils.showSuccessSnackBar(this.context, l10n.authUpdateEmailSuccess);
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                  }
                 }
-              } catch (e) {
-                if (mounted) {
-                  ErrorDisplayUtils.showErrorSnackBar(this.context, e);
-                }
-              }
-            },
-            child: const Text('Change Email'),
-          ),
-        ],
-      ),
+              },
+              child: Text(l10n.authChangeEmail),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -255,12 +226,19 @@ class _EmailVerificationScreenState
   Widget build(BuildContext context) {
     final authState = ref.watch(enhancedAuthProvider);
     final email = authState.firebaseUser?.email ?? 'your email';
+    final theme = Theme.of(context);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: const CommonAppBar(
-        title: 'Verify Email',
-        // No back button - user must verify email or use "Back to login" to sign out
+      appBar: CommonAppBar(
+        title: AppLocalizations.of(context)!.authEmailVerificationTitle,
+        leadingIcon: Icons.arrow_back,
+        onLeadingIconTap: (context) async {
+          await ref.read(enhancedAuthProvider.notifier).signOut();
+          if (context.mounted) {
+            context.go(OwnerRoutes.login);
+          }
+        },
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -271,35 +249,29 @@ class _EmailVerificationScreenState
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Logo
-                AuthLogoIcon(
-                  size: 100,
-                  isWhite: Theme.of(context).brightness == Brightness.dark,
-                ),
+                AuthLogoIcon(size: 100, isWhite: Theme.of(context).brightness == Brightness.dark),
                 const SizedBox(height: 32),
 
                 // Title
                 Text(
-                  'Check your inbox',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  AppLocalizations.of(context)!.authCheckInbox,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
 
                 // Description
                 Text(
-                  'We sent a verification link to',
+                  AppLocalizations.of(context)!.authEmailVerificationSentTo,
                   style: Theme.of(context).textTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   email,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -308,14 +280,10 @@ class _EmailVerificationScreenState
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                    color: Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+                      color: Theme.of(context).colorScheme.primary.withAlpha((0.2 * 255).toInt()),
                       width: 0.5,
                     ),
                   ),
@@ -323,30 +291,21 @@ class _EmailVerificationScreenState
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Click the link in the email to verify your account',
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                fontSize: 14,
-                              ),
+                              AppLocalizations.of(context)!.authClickLinkToVerify,
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Email may take up to 10 minutes to arrive. Check your spam folder if needed.',
+                        AppLocalizations.of(context)!.authEmailArrivalHint,
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant
-                              .withAlpha((0.8 * 255).toInt()),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.8 * 255).toInt()),
                           fontSize: 12,
                         ),
                       ),
@@ -357,46 +316,43 @@ class _EmailVerificationScreenState
 
                 // Resend Button
                 OutlinedButton(
-                  onPressed: _resendCooldown > 0 || _isResending
-                      ? null
-                      : _resendVerificationEmail,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 32,
-                    ),
-                  ),
+                  onPressed: _resendCooldown > 0 || _isResending ? null : _resendVerificationEmail,
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32)),
                   child: _isResending
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
                       : Text(
                           _resendCooldown > 0
-                              ? 'Resend in ${_resendCooldown}s'
-                              : 'Resend verification email',
+                              ? AppLocalizations.of(context)!.authResendInSeconds(_resendCooldown)
+                              : AppLocalizations.of(context)!.authResendVerificationEmail,
                         ),
-                ),
-                const SizedBox(height: 16),
-
-                // Change Email
-                TextButton(
-                  onPressed: _showChangeEmailDialog,
-                  child: const Text('Wrong email?'),
                 ),
                 const SizedBox(height: 32),
 
-                // Back to Login
-                TextButton.icon(
-                  onPressed: () async {
-                    await ref.read(enhancedAuthProvider.notifier).signOut();
-                    if (context.mounted) {
-                      context.go(OwnerRoutes.login);
-                    }
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Back to login'),
+                // Action Buttons Wrap (prevents overflow on small screens)
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    // Change Email
+                    TextButton(
+                      onPressed: _showChangeEmailDialog,
+                      child: Text(AppLocalizations.of(context)!.authWrongEmail),
+                    ),
+                    Container(width: 1, height: 16, color: theme.dividerColor.withAlpha((0.5 * 255).toInt())),
+                    // Back to Login
+                    TextButton.icon(
+                      onPressed: () async {
+                        await ref.read(enhancedAuthProvider.notifier).signOut();
+                        if (context.mounted) {
+                          context.go(OwnerRoutes.login);
+                        }
+                      },
+                      icon: const Icon(Icons.logout_rounded, size: 16),
+                      label: Text(AppLocalizations.of(context)!.authBackToLogin),
+                    ),
+                  ],
                 ),
               ],
             ),

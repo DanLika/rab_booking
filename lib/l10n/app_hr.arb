@@ -96,6 +96,28 @@
   "authMustAcceptTerms": "Morate prihvatiti Uvjete korištenja i Politiku privatnosti",
   "authEnterFullName": "Molimo unesite puno ime",
   "authEnterFirstLastName": "Molimo unesite ime i prezime",
+  "authEmailVerificationTitle": "Verifikacija e-pošte",
+  "authCheckInbox": "Provjerite svoj Inbox",
+  "authEmailVerificationSentTo": "Poslali smo poveznicu za verifikaciju na",
+  "authClickLinkToVerify": "Kliknite na poveznicu u e-poruci kako biste verificirali svoj račun",
+  "authEmailArrivalHint": "E-poruka može stići za do 10 minuta. Provjerite spam mapu ako je potrebno.",
+  "authResendVerificationEmail": "Ponovno pošalji verifikacijsku poruku",
+  "authResendInSeconds": "Ponovno pošalji za {seconds}s",
+  "@authResendInSeconds": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "authWrongEmail": "Pogrešna e-pošta?",
+  "authChangeEmail": "Promijeni e-poštu",
+  "authChangeEmailTitle": "Promijeni e-poštu",
+  "authChangeEmailDesc": "Unesite svoju novu e-poštu. Morat ćete je verificirati.",
+  "authNewEmailLabel": "Nova e-pošta *",
+  "authPasswordLabel": "Trenutna lozinka *",
+  "authPasswordHelper": "Potrebno za potvrdu identiteta",
+  "authLogoutHint": "Bit ćete odjavljeni i morat ćete verificirati novu e-poštu",
+  "authVerifyEmailSuccess": "Verifikacijska poruka poslana! Provjerite svoj inbox.",
+  "authUpdateEmailSuccess": "E-pošta ažurirana! Provjerite novi inbox za verifikaciju.",
   "authIncorrectPassword": "Pogrešna lozinka. Pokušajte ponovo ili resetirajte lozinku.",
   "authWelcomeUser": "Dobrodošli, {name}!",
   "@authWelcomeUser": {
@@ -532,6 +554,14 @@
   "ownerWelcomeTitle": "Dobrodošli u BookBed!",
   "ownerWelcomeSubtitle": "Započnite dodavanjem vaše prve nekretnine kako biste mogli primati rezervacije.",
   "ownerAddFirstProperty": "Dodaj nekretninu",
+  "dashboardWelcomeUser": "Dobrodošli, {name}!",
+  "@dashboardWelcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
 
   "ownerNewBookingReceived": "Nova rezervacija primljena",
   "ownerBookingConfirmedActivity": "Rezervacija potvrđena",

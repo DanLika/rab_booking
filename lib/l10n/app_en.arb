@@ -96,6 +96,28 @@
   "authMustAcceptTerms": "You must accept the Terms & Conditions and Privacy Policy",
   "authEnterFullName": "Please enter your full name",
   "authEnterFirstLastName": "Please enter both first and last name",
+  "authEmailVerificationTitle": "Verify Email",
+  "authCheckInbox": "Check your inbox",
+  "authEmailVerificationSentTo": "We sent a verification link to",
+  "authClickLinkToVerify": "Click the link in the email to verify your account",
+  "authEmailArrivalHint": "Email may take up to 10 minutes to arrive. Check your spam folder if needed.",
+  "authResendVerificationEmail": "Resend verification email",
+  "authResendInSeconds": "Resend in {seconds}s",
+  "@authResendInSeconds": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "authWrongEmail": "Wrong email?",
+  "authChangeEmail": "Change Email",
+  "authChangeEmailTitle": "Change Email",
+  "authChangeEmailDesc": "Enter your new email address. You will need to verify it.",
+  "authNewEmailLabel": "New Email *",
+  "authPasswordLabel": "Current Password *",
+  "authPasswordHelper": "Required to confirm identity",
+  "authLogoutHint": "You will be logged out and need to verify the new email",
+  "authVerifyEmailSuccess": "Verification email sent! Check your inbox.",
+  "authUpdateEmailSuccess": "Email updated! Check your new inbox for verification.",
   "authIncorrectPassword": "Incorrect password. Try again or reset your password.",
   "authWelcomeUser": "Welcome back, {name}!",
   "@authWelcomeUser": {
@@ -532,6 +554,14 @@
   "ownerWelcomeTitle": "Welcome to BookBed!",
   "ownerWelcomeSubtitle": "Get started by adding your first property to start receiving bookings.",
   "ownerAddFirstProperty": "Add Property",
+  "dashboardWelcomeUser": "Welcome, {name}!",
+  "@dashboardWelcomeUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
 
   "ownerNewBookingReceived": "New booking received",
   "ownerBookingConfirmedActivity": "Booking confirmed",

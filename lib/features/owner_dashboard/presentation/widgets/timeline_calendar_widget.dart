@@ -1380,9 +1380,9 @@ class _TimelineCalendarWidgetState
               ),
               const SizedBox(height: AppDimensions.spaceL),
               FilledButton.icon(
-                onPressed: () => context.go(OwnerRoutes.units),
+                onPressed: () => context.go(OwnerRoutes.propertyNew),
                 icon: const Icon(Icons.add, size: 20),
-                label: Text(l10n.unitHubAddUnit),
+                label: Text(l10n.ownerAddFirstProperty),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

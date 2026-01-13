@@ -153,7 +153,96 @@ class AnalyticsService {
     }
   }
 
-  /// Authentication Events
+  /// Property Creation Funnel
+  Future<void> logAddPropertyStart() async {
+    try {
+      await _analytics.logEvent(name: 'add_property_start');
+      if (kDebugMode) print('[Analytics] Add property started');
+    } catch (e) {
+      if (kDebugMode) print('[Analytics] Error logging add_property_start: $e');
+    }
+  }
+
+  Future<void> logPropertyCreated({
+    required String propertyId,
+    required String propertyName,
+  }) async {
+    try {
+      await _analytics.logEvent(
+        name: 'property_created',
+        parameters: {'property_id': propertyId, 'property_name': propertyName},
+      );
+      if (kDebugMode) print('[Analytics] Property created: $propertyName');
+    } catch (e) {
+      if (kDebugMode) print('[Analytics] Error logging property_created: $e');
+    }
+  }
+
+  /// Subscription Funnel
+  Future<void> logViewSubscription({required int currentUnitCount}) async {
+    try {
+      await _analytics.logEvent(
+        name: 'view_subscription',
+        parameters: {'current_unit_count': currentUnitCount},
+      );
+      if (kDebugMode) {
+        print('[Analytics] View subscription (units: $currentUnitCount)');
+      }
+    } catch (e) {
+      if (kDebugMode) print('[Analytics] Error logging view_subscription: $e');
+    }
+  }
+
+  Future<void> logBeginCheckout({
+    required String planId,
+    required double price,
+  }) async {
+    try {
+      await _analytics.logBeginCheckout(
+        value: price,
+        currency: 'EUR',
+        items: [
+          AnalyticsEventItem(
+            itemId: planId,
+            itemName: 'Subscription $planId',
+            itemCategory: 'subscription',
+            price: price,
+          ),
+        ],
+      );
+      if (kDebugMode) print('[Analytics] Begin checkout: $planId');
+    } catch (e) {
+      if (kDebugMode) print('[Analytics] Error logging begin_checkout: $e');
+    }
+  }
+
+  Future<void> logSubscriptionPurchase({
+    required String planId,
+    required double price,
+    required String transactionId,
+  }) async {
+    try {
+      await _analytics.logPurchase(
+        value: price,
+        currency: 'EUR',
+        transactionId: transactionId,
+        items: [
+          AnalyticsEventItem(
+            itemId: planId,
+            itemName: 'Subscription $planId',
+            itemCategory: 'subscription',
+            price: price,
+          ),
+        ],
+      );
+      if (kDebugMode) print('[Analytics] Subscription purchased: $planId');
+    } catch (e) {
+      if (kDebugMode) {
+        print('[Analytics] Error logging subscription_purchase: $e');
+      }
+    }
+  }
+
   Future<void> logLogin(String method) async {
     try {
       await _analytics.logLogin(loginMethod: method);

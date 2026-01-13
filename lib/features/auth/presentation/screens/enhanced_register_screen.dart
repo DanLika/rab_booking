@@ -237,6 +237,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isCompact = Breakpoints.isCompactMobile(context);
+    final isSmallHeight = MediaQuery.of(context).size.height < 700;
 
     // Isti pristup kao Login: resizeToAvoidBottomInset: true
     return KeyedSubtree(
@@ -281,25 +282,26 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       padding: EdgeInsets.only(
                         left: isCompact ? 12 : 20,
                         right: isCompact ? 12 : 20,
-                        top: isCompact ? 16 : 20,
-                        bottom: isCompact ? 16 : 20,
+                        top: isSmallHeight ? 12 : (isCompact ? 16 : 20),
+                        bottom: isSmallHeight ? 12 : (isCompact ? 16 : 20),
                       ),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minHeight: minHeight),
                         child: Center(
                           child: GlassCard(
+                            padding: isSmallHeight ? const EdgeInsets.all(16) : null,
                             child: Form(
                               key: _formKey,
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  _buildHeader(theme, l10n, isCompact),
-                                  SizedBox(height: isCompact ? 20 : 24),
-                                  _buildFormFields(theme, l10n, isCompact),
-                                  SizedBox(height: isCompact ? 12 : 14),
+                                  _buildHeader(theme, l10n, isCompact, isSmallHeight),
+                                  SizedBox(height: isSmallHeight ? 16 : (isCompact ? 20 : 24)),
+                                  _buildFormFields(theme, l10n, isCompact, isSmallHeight),
+                                  SizedBox(height: isSmallHeight ? 8 : (isCompact ? 12 : 14)),
                                   _buildCheckboxes(theme, l10n),
-                                  SizedBox(height: isCompact ? 20 : 24),
+                                  SizedBox(height: isSmallHeight ? 16 : (isCompact ? 20 : 24)),
                                   GradientAuthButton(
                                     text: l10n.authCreateAccount,
                                     onPressed: _isFormValid
@@ -308,7 +310,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                     isLoading: _isLoading,
                                     icon: Icons.person_add_rounded,
                                   ),
-                                  SizedBox(height: isCompact ? 16 : 20),
+                                  SizedBox(height: isSmallHeight ? 12 : (isCompact ? 16 : 20)),
                                   _buildLoginLink(theme, l10n),
                                 ],
                               ),
@@ -329,16 +331,16 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     );
   }
 
-  Widget _buildHeader(ThemeData theme, AppLocalizations l10n, bool isCompact) {
+  Widget _buildHeader(ThemeData theme, AppLocalizations l10n, bool isCompact, bool isSmallHeight) {
     return Column(
       children: [
         AuthLogoIcon(
-          size: isCompact ? 60 : 70,
+          size: isSmallHeight ? 50 : (isCompact ? 60 : 70),
           isWhite: theme.brightness == Brightness.dark,
         ),
-        SizedBox(height: isCompact ? 16 : 24),
+        SizedBox(height: isSmallHeight ? 12 : (isCompact ? 16 : 24)),
         ProfileImagePicker(
-          size: isCompact ? 80 : 90,
+          size: isSmallHeight ? 70 : (isCompact ? 80 : 90),
           initials: _fullNameController.text.trim().isNotEmpty
               ? _fullNameController.text.trim().substring(0, 1).toUpperCase()
               : null,
@@ -349,12 +351,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             });
           },
         ),
-        SizedBox(height: isCompact ? 16 : 20),
+        SizedBox(height: isSmallHeight ? 12 : (isCompact ? 16 : 20)),
         Text(
           l10n.authCreateAccount,
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            fontSize: isCompact ? 22 : 26,
+            fontSize: isSmallHeight ? 20 : (isCompact ? 22 : 26),
             color: theme.colorScheme.onSurface,
           ),
           textAlign: TextAlign.center,
@@ -380,8 +382,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     ThemeData theme,
     AppLocalizations l10n,
     bool isCompact,
+    bool isSmallHeight,
   ) {
-    final fieldSpacing = SizedBox(height: isCompact ? 12 : 14);
+    final fieldSpacing = SizedBox(height: isSmallHeight ? 8 : (isCompact ? 12 : 14));
 
     return Column(
       children: [

@@ -133,7 +133,10 @@ service cloud.firestore {
             ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
             // Guest booking view
             ('booking_reference' in resource.data && resource.data.booking_reference != null);
-          allow create, update, delete: if isPropertyOwner(propertyId);
+          // SECURITY: Write access requires property ownership AND owner_id integrity
+          // This ensures an owner cannot create a booking with a fake owner_id
+          allow create: if isPropertyOwner(propertyId) && request.resource.data.owner_id == request.auth.uid;
+          allow update, delete: if isPropertyOwner(propertyId);
         }
 
         // Daily prices subcollection

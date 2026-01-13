@@ -172,23 +172,97 @@ class LoggingService {
     String url, {
     Map<String, dynamic>? params,
   }) {
+    // Redact sensitive data from URL and params
+    final sanitizedUrl = _redactUrl(url);
+    final sanitizedParams = params != null ? _redactMap(params) : null;
+
     if (kDebugMode) {
       log(
-        '$method $url${params != null ? ' - Params: $params' : ''}',
+        '$method $sanitizedUrl${sanitizedParams != null ? ' - Params: $sanitizedParams' : ''}',
         tag: 'NETWORK',
       );
     }
 
     // Add breadcrumb for Sentry (helps debug API-related errors)
     addBreadcrumb(
-      '$method $url',
+      '$method $sanitizedUrl',
       category: 'http',
       data: {
         'method': method,
-        'url': url,
-        if (params != null) 'params': params,
+        'url': sanitizedUrl,
+        if (sanitizedParams != null) 'params': sanitizedParams,
       },
     );
+  }
+
+  // Keys to redact in logs (GDPR/Security compliance)
+  static const _sensitiveKeys = {
+    'password',
+    'token',
+    'access_token',
+    'refresh_token',
+    'auth',
+    'key',
+    'secret',
+    'authorization',
+    'api_key',
+    'session_id',
+    'cvv',
+    'card_number',
+    'stripe_session_id',
+    'code', // OTP or Auth codes
+  };
+
+  /// Redact sensitive query parameters from URL
+  static String _redactUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      if (uri.queryParameters.isEmpty) return url;
+
+      final sanitizedParams = Map<String, dynamic>.from(uri.queryParameters);
+      bool modified = false;
+
+      for (final key in uri.queryParameters.keys) {
+        if (_isSensitiveKey(key)) {
+          sanitizedParams[key] = '[REDACTED]';
+          modified = true;
+        }
+      }
+
+      if (!modified) return url;
+
+      return uri.replace(queryParameters: sanitizedParams).toString();
+    } catch (e) {
+      return url; // Return original if parsing fails
+    }
+  }
+
+  /// Redact sensitive keys from map
+  static Map<String, dynamic> _redactMap(Map<String, dynamic> map) {
+    final copy = Map<String, dynamic>.from(map);
+    for (final key in map.keys) {
+      if (_isSensitiveKey(key)) {
+        copy[key] = '[REDACTED]';
+      } else if (copy[key] is Map) {
+        copy[key] = _redactMap(copy[key] as Map<String, dynamic>);
+      }
+    }
+    return copy;
+  }
+
+  static bool _isSensitiveKey(String key) {
+    final lowerKey = key.toLowerCase();
+
+    // Exact matches for short/common terms
+    const exactMatches = {'key', 'code', 'auth', 'token', 'id'};
+    if (exactMatches.contains(lowerKey)) return true;
+
+    // Substring matches for explicitly sensitive terms
+    for (final sensitive in _sensitiveKeys) {
+      if (exactMatches.contains(sensitive)) continue;
+      if (lowerKey.contains(sensitive)) return true;
+    }
+    return false;
   }
 
   /// Log a network response

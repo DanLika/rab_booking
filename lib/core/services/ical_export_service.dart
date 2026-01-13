@@ -79,7 +79,7 @@ class IcalExportService {
       );
 
       LoggingService.log(
-        'iCal export completed successfully for unit: $unitId, URL: $downloadUrl',
+        'iCal export completed successfully for unit: $unitId',
         tag: 'IcalExportService',
       );
 
@@ -234,8 +234,11 @@ class IcalExportService {
       // Get public download URL
       final downloadUrl = await ref.getDownloadURL();
 
+      // Log success but REDACT the token from the URL to prevent leaks in logs
+      // The full URL contains a long-lived token that allows public access
+      final redactedUrl = _redactTokenFromUrl(downloadUrl);
       LoggingService.log(
-        'iCal file uploaded successfully: $path',
+        'iCal file uploaded successfully: $path (URL: $redactedUrl)',
         tag: 'IcalExportService',
       );
 
@@ -254,5 +257,20 @@ class IcalExportService {
   /// Path format: ical-exports/{propertyId}/{unitId}/calendar.ics
   String _getStoragePath(String propertyId, String unitId) {
     return 'ical-exports/$propertyId/$unitId/calendar.ics';
+  }
+
+  /// Redact token parameter from URL for logging safety
+  String _redactTokenFromUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      if (!uri.queryParameters.containsKey('token')) return url;
+
+      final newParams = Map<String, dynamic>.from(uri.queryParameters);
+      newParams['token'] = '[REDACTED]';
+
+      return uri.replace(queryParameters: newParams).toString();
+    } catch (e) {
+      return url;
+    }
   }
 }

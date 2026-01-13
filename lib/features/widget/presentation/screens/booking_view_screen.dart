@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -276,7 +277,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
               extra: {'booking': booking, 'widgetSettings': widgetSettings},
             );
           } catch (navError) {
-            LoggingService.logError('Navigation failed', navError);
+            unawaited(LoggingService.logError('Navigation failed', navError));
             // If navigation fails, show error instead of crashing
             if (mounted) {
               setState(() {
@@ -287,7 +288,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
             }
           }
         } catch (e) {
-          LoggingService.logError('Failed to load widget settings', e);
+          unawaited(LoggingService.logError('Failed to load widget settings', e));
           // Bug Fix: Check mounted after async operation before navigation
           if (!mounted) return;
 
@@ -318,7 +319,7 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
               extra: {'booking': booking, 'widgetSettings': null},
             );
           } catch (navError) {
-            LoggingService.logError('Navigation failed', navError);
+            unawaited(LoggingService.logError('Navigation failed', navError));
             // If navigation fails, show error instead of crashing
             if (mounted) {
               setState(() {

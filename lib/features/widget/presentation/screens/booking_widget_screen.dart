@@ -1573,14 +1573,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         _validationError = null;
       });
     } on WidgetContextException catch (e) {
-      LoggingService.logError('Widget context error', e);
+      unawaited(LoggingService.logError('Widget context error', e));
       // Handle specific context loading errors
       if (!mounted) return;
       setState(() {
         _validationError = e.message;
       });
     } catch (e) {
-      LoggingService.logError('Failed to load unit data', e);
+      unawaited(LoggingService.logError('Failed to load unit data', e));
       // HIGH: Check mounted in catch block before setState
       if (!mounted) return;
       setState(() {
@@ -3379,7 +3379,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         });
       }
     } catch (e) {
-      LoggingService.logError('Booking creation failed', e);
+      unawaited(LoggingService.logError('Booking creation failed', e));
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
@@ -3947,7 +3947,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
       }
     } catch (e) {
-      LoggingService.logError('Failed to load booking for confirmation', e);
+      unawaited(LoggingService.logError('Failed to load booking for confirmation', e));
       if (mounted) {
         SnackBarHelper.showError(
           context: context,

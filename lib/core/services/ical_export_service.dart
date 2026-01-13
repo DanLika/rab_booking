@@ -36,11 +36,9 @@ class IcalExportService {
   final BookingRepository _bookingRepository;
   final FirebaseStorage _storage;
 
-  IcalExportService({
-    required BookingRepository bookingRepository,
-    FirebaseStorage? storage,
-  }) : _bookingRepository = bookingRepository,
-       _storage = storage ?? FirebaseStorage.instance;
+  IcalExportService({required BookingRepository bookingRepository, FirebaseStorage? storage})
+    : _bookingRepository = bookingRepository,
+      _storage = storage ?? FirebaseStorage.instance;
 
   /// Generate and upload iCal file for a unit
   ///
@@ -51,24 +49,15 @@ class IcalExportService {
     required UnitModel unit,
   }) async {
     try {
-      LoggingService.log(
-        'Starting iCal generation for unit: $unitId',
-        tag: 'IcalExportService',
-      );
+      LoggingService.log('Starting iCal generation for unit: $unitId', tag: 'IcalExportService');
 
       // 1. Fetch all bookings for the unit
       final bookings = await _fetchUnitBookings(unitId);
 
-      LoggingService.log(
-        'Fetched ${bookings.length} bookings for unit: $unitId',
-        tag: 'IcalExportService',
-      );
+      LoggingService.log('Fetched ${bookings.length} bookings for unit: $unitId', tag: 'IcalExportService');
 
       // 2. Generate .ics content
-      final icsContent = IcalGenerator.generateUnitCalendar(
-        unit: unit,
-        bookings: bookings,
-      );
+      final icsContent = IcalGenerator.generateUnitCalendar(unit: unit, bookings: bookings);
 
       // 3. Upload to Firebase Storage
       final downloadUrl = await _uploadToStorage(
@@ -79,17 +68,13 @@ class IcalExportService {
       );
 
       LoggingService.log(
-        'iCal export completed successfully for unit: $unitId',
+        'iCal export completed successfully for unit: $unitId, URL: ${_redactTokenFromUrl(downloadUrl)}',
         tag: 'IcalExportService',
       );
 
       return downloadUrl;
     } catch (e, stackTrace) {
-      await LoggingService.logError(
-        'Error generating iCal export: $e',
-        e,
-        stackTrace,
-      );
+      await LoggingService.logError('Error generating iCal export: $e', e, stackTrace);
       rethrow;
     }
   }
@@ -103,21 +88,11 @@ class IcalExportService {
     required UnitModel unit,
   }) async {
     try {
-      LoggingService.log(
-        'Auto-regenerating iCal for unit: $unitId',
-        tag: 'IcalExportService',
-      );
+      LoggingService.log('Auto-regenerating iCal for unit: $unitId', tag: 'IcalExportService');
 
-      await generateAndUploadIcal(
-        propertyId: propertyId,
-        unitId: unitId,
-        unit: unit,
-      );
+      await generateAndUploadIcal(propertyId: propertyId, unitId: unitId, unit: unit);
     } catch (e) {
-      LoggingService.log(
-        'Error in auto-regeneration: $e',
-        tag: 'IcalExportService',
-      );
+      LoggingService.log('Error in auto-regeneration: $e', tag: 'IcalExportService');
       // Don't rethrow - auto-regeneration failures shouldn't break booking operations
     }
   }
@@ -125,42 +100,27 @@ class IcalExportService {
   /// Delete iCal file from storage
   ///
   /// Called when iCal export is disabled or unit is deleted
-  Future<void> deleteIcalFile({
-    required String propertyId,
-    required String unitId,
-  }) async {
+  Future<void> deleteIcalFile({required String propertyId, required String unitId}) async {
     try {
       final path = _getStoragePath(propertyId, unitId);
       final ref = _storage.ref(path);
 
       await ref.delete();
 
-      LoggingService.log(
-        'iCal file deleted for unit: $unitId',
-        tag: 'IcalExportService',
-      );
+      LoggingService.log('iCal file deleted for unit: $unitId', tag: 'IcalExportService');
     } catch (e) {
       if (e is FirebaseException && e.code == 'object-not-found') {
         // File doesn't exist, that's fine
-        LoggingService.log(
-          'iCal file not found for unit: $unitId (already deleted)',
-          tag: 'IcalExportService',
-        );
+        LoggingService.log('iCal file not found for unit: $unitId (already deleted)', tag: 'IcalExportService');
       } else {
-        LoggingService.log(
-          'Error deleting iCal file: $e',
-          tag: 'IcalExportService',
-        );
+        LoggingService.log('Error deleting iCal file: $e', tag: 'IcalExportService');
         rethrow;
       }
     }
   }
 
   /// Check if iCal file exists in storage
-  Future<bool> icalFileExists({
-    required String propertyId,
-    required String unitId,
-  }) async {
+  Future<bool> icalFileExists({required String propertyId, required String unitId}) async {
     try {
       final path = _getStoragePath(propertyId, unitId);
       final ref = _storage.ref(path);
@@ -188,15 +148,11 @@ class IcalExportService {
       final bookings = await _bookingRepository.fetchUnitBookings(unitId);
 
       // Sort by check-in date
-      final sortedBookings = List<BookingModel>.from(bookings)
-        ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
+      final sortedBookings = List<BookingModel>.from(bookings)..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
       return sortedBookings;
     } catch (e) {
-      LoggingService.log(
-        'Error fetching unit bookings: $e',
-        tag: 'IcalExportService',
-      );
+      LoggingService.log('Error fetching unit bookings: $e', tag: 'IcalExportService');
       rethrow;
     }
   }
@@ -220,13 +176,8 @@ class IcalExportService {
       // Upload with metadata
       final metadata = SettableMetadata(
         contentType: 'text/calendar',
-        contentDisposition:
-            'attachment; filename="${IcalGenerator.generateFilename(unitName)}"',
-        customMetadata: {
-          'unitId': unitId,
-          'propertyId': propertyId,
-          'generatedAt': DateTime.now().toIso8601String(),
-        },
+        contentDisposition: 'attachment; filename="${IcalGenerator.generateFilename(unitName)}"',
+        customMetadata: {'unitId': unitId, 'propertyId': propertyId, 'generatedAt': DateTime.now().toIso8601String()},
       );
 
       await ref.putData(bytes, metadata);
@@ -237,17 +188,11 @@ class IcalExportService {
       // Log success but REDACT the token from the URL to prevent leaks in logs
       // The full URL contains a long-lived token that allows public access
       final redactedUrl = _redactTokenFromUrl(downloadUrl);
-      LoggingService.log(
-        'iCal file uploaded successfully: $path (URL: $redactedUrl)',
-        tag: 'IcalExportService',
-      );
+      LoggingService.log('iCal file uploaded successfully: $path (URL: $redactedUrl)', tag: 'IcalExportService');
 
       return downloadUrl;
     } catch (e) {
-      LoggingService.log(
-        'Error uploading to storage: $e',
-        tag: 'IcalExportService',
-      );
+      LoggingService.log('Error uploading to storage: $e', tag: 'IcalExportService');
       rethrow;
     }
   }

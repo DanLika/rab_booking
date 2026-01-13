@@ -112,6 +112,22 @@ dev_dependencies:
   # Sentry source maps upload (for better error tracking)
   sentry_dart_plugin: ^3.2.0
 
+  # Icon Generation
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/images/logo-light.png"
+  min_sdk_android: 21 # Required for adaptive icons
+  adaptive_icon_background: "#FFFFFF" # White background
+  adaptive_icon_foreground: "assets/images/logo-light.png"
+  web:
+    generate: true
+    image_path: "assets/images/logo-light.png"
+    background_color: "#FFFFFF"
+    theme_color: "#304FFE"
+
 flutter:
   uses-material-design: true
   generate: true

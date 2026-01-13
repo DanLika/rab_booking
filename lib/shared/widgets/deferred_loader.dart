@@ -17,7 +17,12 @@ class DeferredLoader extends StatefulWidget {
   final Widget Function() builder;
   final Widget? placeholder;
 
-  const DeferredLoader({super.key, required this.loadLibrary, required this.builder, this.placeholder});
+  const DeferredLoader({
+    super.key,
+    required this.loadLibrary,
+    required this.builder,
+    this.placeholder,
+  });
 
   @override
   State<DeferredLoader> createState() => _DeferredLoaderState();
@@ -45,7 +50,11 @@ class _DeferredLoaderState extends State<DeferredLoader> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 48,
+                    ),
                     const SizedBox(height: 16),
                     Text('Failed to load module: ${snapshot.error}'),
                     const SizedBox(height: 16),
@@ -66,7 +75,8 @@ class _DeferredLoaderState extends State<DeferredLoader> {
         }
 
         // Show loading state while fetching the JS chunk
-        return widget.placeholder ?? const Scaffold(body: LoadingOverlay(message: 'Loading module...'));
+        return widget.placeholder ??
+            const Scaffold(body: LoadingOverlay(message: 'Loading module...'));
       },
     );
   }

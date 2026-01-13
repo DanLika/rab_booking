@@ -34,7 +34,11 @@ class ImageUtils {
   ///
   /// Note: The [targetWidth] and [targetHeight] are constraints. The aspect
   /// ratio is preserved.
-  static Future<Uint8List> resizeImage(Uint8List bytes, {int targetWidth = kMaxUploadWidth, int? targetHeight}) async {
+  static Future<Uint8List> resizeImage(
+    Uint8List bytes, {
+    int targetWidth = kMaxUploadWidth,
+    int? targetHeight,
+  }) async {
     // 1. Decode the image to get dimensions
     final ui.Codec codec = await ui.instantiateImageCodec(
       bytes,
@@ -52,7 +56,9 @@ class ImageUtils {
     // a pure Dart JPEG encoder in the standard library.
     // Ideally we use image_picker's resize capabilities for the initial pick.
     // This is a fallback or for re-processing.
-    final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
 
     if (byteData == null) {
       throw Exception('Failed to resize image');

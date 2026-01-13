@@ -59,9 +59,11 @@ class ProfileScreen extends ConsumerWidget {
       ),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: user == null
-            ? Center(child: Text(l10n.ownerProfileNotAuthenticated))
-            : Builder(
+        child: SafeArea(
+          bottom: false, // ScrollView handles bottom padding
+          child: user == null
+              ? Center(child: Text(l10n.ownerProfileNotAuthenticated))
+              : Builder(
                 builder: (context) {
                   // OPTIMIZED: Use authState.userModel directly instead of separate Firestore query
                   final isAnonymous = authState.isAnonymous;
@@ -598,12 +600,13 @@ class ProfileScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24 + MediaQuery.of(context).padding.bottom),
                       ],
                     ),
                   );
-                },
-              ),
+                  },
+                ),
+        ),
       ),
     );
   }

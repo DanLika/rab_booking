@@ -58,9 +58,11 @@ class DashboardOverviewTab extends ConsumerWidget {
       drawer: const OwnerAppDrawer(currentRoute: 'overview'),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: Builder(
-          builder: (context) {
-            // Show skeleton immediately while loading properties
+        child: SafeArea(
+          bottom: false, // ListView handles bottom padding
+          child: Builder(
+            builder: (context) {
+              // Show skeleton immediately while loading properties
             if (propertiesAsync.isLoading) {
               return _buildDashboardContent(
                 context,
@@ -86,16 +88,17 @@ class DashboardOverviewTab extends ConsumerWidget {
               );
             }
 
-            return _buildDashboardContent(
-              context,
-              ref,
-              l10n,
-              theme,
-              isMobile,
-              dashboardAsync,
-              dateRange,
-            );
-          },
+              return _buildDashboardContent(
+                context,
+                ref,
+                l10n,
+                theme,
+                isMobile,
+                dashboardAsync,
+                dateRange,
+              );
+            },
+          ),
         ),
       ),
     );
@@ -386,7 +389,8 @@ class DashboardOverviewTab extends ConsumerWidget {
             child: _buildRecentActivity(context, ref),
           ),
 
-          const SizedBox(height: 24),
+          // Add safe area bottom padding
+          SizedBox(height: 24 + MediaQuery.of(context).padding.bottom),
         ],
       ),
     );

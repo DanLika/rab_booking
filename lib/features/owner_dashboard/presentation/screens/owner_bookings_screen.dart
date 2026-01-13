@@ -506,8 +506,10 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             decoration: BoxDecoration(
               gradient: context.gradients.pageBackground,
             ),
-            child: RefreshIndicator(
-              onRefresh: () async {
+            child: SafeArea(
+              bottom: false, // CustomScrollView handles bottom padding
+              child: RefreshIndicator(
+                onRefresh: () async {
                 // Refresh bookings data using windowed notifier
                 await ref
                     .read(windowedBookingsNotifierProvider.notifier)
@@ -699,12 +701,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         context.horizontalPadding,
                         0,
                         context.horizontalPadding,
-                        24,
+                        24 + MediaQuery.of(context).padding.bottom,
                       ),
                       child: _buildFaqSection(context, theme, isMobile, l10n),
                     ),
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

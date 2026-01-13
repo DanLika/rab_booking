@@ -173,12 +173,18 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen> wit
               onLeadingIconTap: (_) => _scaffoldKey.currentState?.openDrawer(),
             )
           : AppBar(
-              title: AutoSizeText(
-                _selectedUnit?.name ?? l10n.unitHubTitle,
-                style: const TextStyle(color: Colors.white),
-                maxLines: 1,
-                minFontSize: 14,
-                stepGranularity: 1,
+              title: Row(
+                children: [
+                  Flexible(
+                    child: AutoSizeText(
+                      _selectedUnit?.name ?? l10n.unitHubTitle,
+                      style: const TextStyle(color: Colors.white),
+                      maxLines: 1,
+                      minFontSize: 14,
+                      stepGranularity: 1,
+                    ),
+                  ),
+                ],
               ),
               centerTitle: false,
               leadingWidth: 40, // Reduced from 56 to move icon closer to left

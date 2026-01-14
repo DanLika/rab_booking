@@ -66,6 +66,12 @@ class BookingConfirmationData {
   /// Widget settings (optional)
   final WidgetSettings? widgetSettings;
 
+  /// Room price before additional services (optional, for price breakdown display)
+  final double? roomPrice;
+
+  /// Additional services total (optional, for price breakdown display)
+  final double? additionalServicesTotal;
+
   /// Property ID for navigation
   final String? propertyId;
 
@@ -96,6 +102,8 @@ class BookingConfirmationData {
     this.booking,
     this.emailConfig,
     this.widgetSettings,
+    this.roomPrice,
+    this.additionalServicesTotal,
     this.propertyId,
     this.unitId,
   });
@@ -107,6 +115,8 @@ class BookingConfirmationData {
     String? unitName,
     EmailNotificationConfig? emailConfig,
     WidgetSettings? widgetSettings,
+    double? roomPrice,
+    double? additionalServicesTotal,
     String? propertyId,
     String? unitId,
   }) {
@@ -125,6 +135,8 @@ class BookingConfirmationData {
       booking: booking,
       emailConfig: emailConfig,
       widgetSettings: widgetSettings,
+      roomPrice: roomPrice,
+      additionalServicesTotal: additionalServicesTotal,
       propertyId: propertyId,
       unitId: unitId,
     );
@@ -157,6 +169,8 @@ class BookingConfirmationData {
     Object? booking = _sentinel,
     Object? emailConfig = _sentinel,
     Object? widgetSettings = _sentinel,
+    Object? roomPrice = _sentinel,
+    Object? additionalServicesTotal = _sentinel,
     Object? propertyId = _sentinel,
     Object? unitId = _sentinel,
   }) {
@@ -184,6 +198,12 @@ class BookingConfirmationData {
       widgetSettings: identical(widgetSettings, _sentinel)
           ? this.widgetSettings
           : widgetSettings as WidgetSettings?,
+      roomPrice: identical(roomPrice, _sentinel)
+          ? this.roomPrice
+          : roomPrice as double?,
+      additionalServicesTotal: identical(additionalServicesTotal, _sentinel)
+          ? this.additionalServicesTotal
+          : additionalServicesTotal as double?,
       propertyId: identical(propertyId, _sentinel)
           ? this.propertyId
           : propertyId as String?,

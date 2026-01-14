@@ -1402,6 +1402,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               checkIn: confirmedBooking.checkIn,
               checkOut: confirmedBooking.checkOut,
               totalPrice: confirmedBooking.totalPrice,
+              roomPrice: _lockedPriceCalculation?.roomPrice,
+              additionalServicesTotal:
+                  _lockedPriceCalculation?.additionalServicesTotal,
               nights: confirmedBooking.checkOut
                   .difference(confirmedBooking.checkIn)
                   .inDays,
@@ -3437,6 +3440,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           checkIn: booking.checkIn,
           checkOut: booking.checkOut,
           totalPrice: booking.totalPrice,
+          roomPrice: _lockedPriceCalculation?.roomPrice,
+          additionalServicesTotal:
+              _lockedPriceCalculation?.additionalServicesTotal,
           nights: booking.checkOut.difference(booking.checkIn).inDays,
           guests: booking.guestCount,
           propertyName: _unit?.name ?? 'Property',
@@ -3924,6 +3930,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               checkIn: confirmedBooking.checkIn,
               checkOut: confirmedBooking.checkOut,
               totalPrice: confirmedBooking.totalPrice,
+              roomPrice: _lockedPriceCalculation?.roomPrice,
+              additionalServicesTotal:
+                  _lockedPriceCalculation?.additionalServicesTotal,
               nights: confirmedBooking.checkOut
                   .difference(confirmedBooking.checkIn)
                   .inDays,

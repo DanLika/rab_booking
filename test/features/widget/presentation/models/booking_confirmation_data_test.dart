@@ -184,6 +184,71 @@ void main() {
         expect(data.paymentMethod, 'unknown');
         expect(data.booking, testBooking);
       });
+
+      test('creates with price breakdown', () {
+        final data = BookingConfirmationData.fromBooking(
+          booking: testBooking,
+          propertyName: 'Test Property',
+          unitName: 'Test Unit',
+          roomPrice: 450.0,
+          additionalServicesTotal: 50.0,
+        );
+
+        expect(data.roomPrice, 450.0);
+        expect(data.additionalServicesTotal, 50.0);
+        expect(data.totalPrice, testBooking.totalPrice);
+      });
+    });
+
+    group('price breakdown fields', () {
+      test('roomPrice and additionalServicesTotal are optional', () {
+        final data = BookingConfirmationData(
+          bookingReference: 'BK-123',
+          guestEmail: 'guest@example.com',
+          guestName: 'John Doe',
+          checkIn: DateTime(2025, 1, 15),
+          checkOut: DateTime(2025, 1, 20),
+          totalPrice: 500.0,
+          nights: 5,
+          guests: 2,
+          propertyName: 'Beach Villa',
+          paymentMethod: 'stripe',
+        );
+
+        expect(data.roomPrice, isNull);
+        expect(data.additionalServicesTotal, isNull);
+      });
+
+      test('copyWith preserves price breakdown fields', () {
+        final dataWithPrices = baseData.copyWith(
+          roomPrice: 400.0,
+          additionalServicesTotal: 100.0,
+        );
+
+        expect(dataWithPrices.roomPrice, 400.0);
+        expect(dataWithPrices.additionalServicesTotal, 100.0);
+
+        // Copy without changing price fields
+        final copy = dataWithPrices.copyWith(guestName: 'Jane Doe');
+        expect(copy.roomPrice, 400.0);
+        expect(copy.additionalServicesTotal, 100.0);
+        expect(copy.guestName, 'Jane Doe');
+      });
+
+      test('copyWith can set price breakdown to null', () {
+        final dataWithPrices = baseData.copyWith(
+          roomPrice: 400.0,
+          additionalServicesTotal: 100.0,
+        );
+
+        final nulled = dataWithPrices.copyWith(
+          roomPrice: null,
+          additionalServicesTotal: null,
+        );
+
+        expect(nulled.roomPrice, isNull);
+        expect(nulled.additionalServicesTotal, isNull);
+      });
     });
   });
 }

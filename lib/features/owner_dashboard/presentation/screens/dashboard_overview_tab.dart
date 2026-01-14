@@ -1360,7 +1360,7 @@ class _ActionStepCard extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  color: isPrimary ? Colors.white : gradient.colors.first,
+                  color: isPrimary ? Colors.white : theme.colorScheme.primary,
                   size: 24,
                 ),
               ),

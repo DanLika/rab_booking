@@ -1179,6 +1179,47 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
+  /// Mark a feature as seen (Feature Discovery)
+  ///
+  /// Used by [FeatureHighlightWidget] to track which features the user has interacted with.
+  /// Uses optimistic update for instant UI feedback, then persists to Firestore.
+  Future<void> markFeatureAsSeen(String featureId) async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null || state.userModel == null) return;
+
+    // Check if already seen to avoid unnecessary writes
+    if (state.userModel!.featureFlags[featureId] == true) return;
+
+    try {
+      // Optimistic update for instant UI feedback
+      final updatedFlags = Map<String, bool>.from(
+        state.userModel!.featureFlags,
+      );
+      updatedFlags[featureId] = true;
+
+      state = state.copyWith(
+        userModel: state.userModel!.copyWith(featureFlags: updatedFlags),
+      );
+
+      // Persist to Firestore (non-blocking)
+      await _firestore.collection('users').doc(userId).update({
+        'featureFlags.$featureId': true,
+      });
+
+      LoggingService.log(
+        'Feature marked as seen: $featureId',
+        tag: 'FEATURE_DISCOVERY',
+      );
+    } catch (e) {
+      // Silent fail - feature flags are not critical
+      // User will see the highlight again next time, which is acceptable
+      LoggingService.log(
+        'Failed to mark feature as seen: $e',
+        tag: 'AUTH_WARNING',
+      );
+    }
+  }
+
   /// Update user email (Phase 3 feature)
   /// Re-authenticates user with password, then updates email and sends verification
   Future<void> updateEmail({

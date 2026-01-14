@@ -167,6 +167,10 @@ class UserModel with _$UserModel {
     /// null = use calculated status, otherwise use this value
     @JsonKey(name: 'admin_override_account_type')
     AccountType? adminOverrideAccountType,
+
+    /// Feature discovery flags (track which features the user has seen)
+    /// Keys are feature IDs, values are true if seen
+    @Default({}) Map<String, bool> featureFlags,
   }) = _UserModel;
 
   const UserModel._();

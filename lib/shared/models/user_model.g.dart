@@ -123,6 +123,11 @@ _$UserModelImpl _$$UserModelImplFromJson(
     _$AccountTypeEnumMap,
     json['admin_override_account_type'],
   ),
+  featureFlags:
+      (json['featureFlags'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as bool),
+      ) ??
+      const {},
 );
 
 Map<String, dynamic> _$$UserModelImplToJson(
@@ -158,6 +163,7 @@ Map<String, dynamic> _$$UserModelImplToJson(
   'hide_subscription': instance.hideSubscription,
   'admin_override_account_type':
       _$AccountTypeEnumMap[instance.adminOverrideAccountType],
+  'featureFlags': instance.featureFlags,
 };
 
 const _$UserRoleEnumMap = {

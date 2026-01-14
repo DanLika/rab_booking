@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -94,17 +95,20 @@ class _GradientAuthButtonState extends State<GradientAuthButton> {
                         ),
                         const SizedBox(width: 8),
                       ],
-                      Text(
-                        widget.text,
-                        style: TextStyle(
-                          color: isDisabled
-                              ? theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.38,
-                                )
-                              : Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
+                      Flexible(
+                        child: AutoSizeText(
+                          widget.text,
+                          minFontSize: 12,
+                          style: TextStyle(
+                            color: isDisabled
+                                ? theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.38,
+                                  )
+                                : Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                     ],

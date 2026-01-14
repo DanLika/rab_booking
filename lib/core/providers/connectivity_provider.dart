@@ -14,9 +14,7 @@ class ConnectivityService {
     _checkConnectivity();
 
     // Listen for changes
-    _connectivity.onConnectivityChanged.listen((results) {
-      _updateStatus(results);
-    });
+    _connectivity.onConnectivityChanged.listen(_updateStatus);
   }
 
   Future<void> _checkConnectivity() async {

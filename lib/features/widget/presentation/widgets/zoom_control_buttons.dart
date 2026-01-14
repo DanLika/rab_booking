@@ -83,7 +83,7 @@ class _ZoomButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: colors.backgroundPrimary,
             borderRadius: BorderTokens.circularSmall,
-            border: Border.all(color: colors.borderDefault, width: 1),
+            border: Border.all(color: colors.borderDefault),
             boxShadow: ShadowTokens.light,
           ),
           child: Icon(

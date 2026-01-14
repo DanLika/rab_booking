@@ -423,7 +423,6 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
                   : l10n.unitWizardEditTitle,
               maxLines: 1,
               minFontSize: 14,
-              stepGranularity: 1,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Colors.white,

@@ -35,7 +35,6 @@ class AdminApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
       routerConfig: router,
       localizationsDelegates: const [
         AppLocalizations.delegate,

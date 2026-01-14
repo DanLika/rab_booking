@@ -58,10 +58,7 @@ class AboutScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: AuthLogoIcon(
-                        size: isMobile ? 50 : 60,
-                        isWhite: false, // Inside a white card
-                      ),
+                      child: AuthLogoIcon(size: isMobile ? 50 : 60),
                     ),
                     SizedBox(height: isMobile ? 20 : 24),
 

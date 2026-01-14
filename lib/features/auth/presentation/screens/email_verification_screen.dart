@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -15,10 +15,13 @@ class EmailVerificationScreen extends ConsumerStatefulWidget {
   const EmailVerificationScreen({super.key});
 
   @override
-  ConsumerState<EmailVerificationScreen> createState() => _EmailVerificationScreenState();
+  ConsumerState<EmailVerificationScreen> createState() =>
+      _EmailVerificationScreenState();
 }
 
-class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScreen> with WidgetsBindingObserver {
+class _EmailVerificationScreenState
+    extends ConsumerState<EmailVerificationScreen>
+    with WidgetsBindingObserver {
   Timer? _refreshTimer;
   bool _isResending = false;
   int _resendCooldown = 0;
@@ -50,7 +53,9 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
   }
 
   Future<void> _checkVerificationStatus() async {
-    await ref.read(enhancedAuthProvider.notifier).refreshEmailVerificationStatus();
+    await ref
+        .read(enhancedAuthProvider.notifier)
+        .refreshEmailVerificationStatus();
 
     final authState = ref.read(enhancedAuthProvider);
     if (!authState.requiresEmailVerification && mounted) {
@@ -73,7 +78,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
-          AppLocalizations.of(context)!.authVerifyEmailSuccess,
+          AppLocalizations.of(context).authVerifyEmailSuccess,
           duration: const Duration(seconds: 3),
         );
 
@@ -93,7 +98,10 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(context, '${AppLocalizations.of(context)!.error}: $e');
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          '${AppLocalizations.of(context).error}: $e',
+        );
       }
     } finally {
       if (mounted) {
@@ -111,7 +119,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
     return showDialog(
       context: context,
       builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         return AlertDialog(
           title: Row(
             children: [
@@ -125,7 +133,10 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(l10n.authChangeEmailDesc, style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  l10n.authChangeEmailDesc,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
                 const SizedBox(height: 20),
                 Builder(
                   builder: (ctx) => TextFormField(
@@ -170,18 +181,33 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Theme.of(context).colorScheme.tertiary.withAlpha((0.3 * 255).toInt())),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, size: 20, color: Theme.of(context).colorScheme.tertiary),
+                      Icon(
+                        Icons.info_outline,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           l10n.authLogoutHint,
-                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ],
@@ -191,7 +217,10 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.cancel)),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.cancel),
+            ),
             ElevatedButton(
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
@@ -203,10 +232,16 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                   // Re-authenticate and update email via provider
                   await ref
                       .read(enhancedAuthProvider.notifier)
-                      .updateEmail(newEmail: emailController.text.trim(), currentPassword: passwordController.text);
+                      .updateEmail(
+                        newEmail: emailController.text.trim(),
+                        currentPassword: passwordController.text,
+                      );
 
                   if (mounted) {
-                    ErrorDisplayUtils.showSuccessSnackBar(this.context, l10n.authUpdateEmailSuccess);
+                    ErrorDisplayUtils.showSuccessSnackBar(
+                      this.context,
+                      l10n.authUpdateEmailSuccess,
+                    );
                   }
                 } catch (e) {
                   if (mounted) {
@@ -231,7 +266,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: CommonAppBar(
-        title: AppLocalizations.of(context)!.authEmailVerificationTitle,
+        title: AppLocalizations.of(context).authEmailVerificationTitle,
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) async {
           await ref.read(enhancedAuthProvider.notifier).signOut();
@@ -249,29 +284,34 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Logo
-                AuthLogoIcon(size: 100, isWhite: Theme.of(context).brightness == Brightness.dark),
+                AuthLogoIcon(
+                  isWhite: Theme.of(context).brightness == Brightness.dark,
+                ),
                 const SizedBox(height: 32),
 
                 // Title
                 Text(
-                  AppLocalizations.of(context)!.authCheckInbox,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                  AppLocalizations.of(context).authCheckInbox,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
 
                 // Description
                 Text(
-                  AppLocalizations.of(context)!.authEmailVerificationSentTo,
+                  AppLocalizations.of(context).authEmailVerificationSentTo,
                   style: Theme.of(context).textTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   email,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -280,10 +320,14 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withAlpha((0.2 * 255).toInt()),
                       width: 0.5,
                     ),
                   ),
@@ -291,21 +335,32 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                          Icon(
+                            Icons.info_outline,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              AppLocalizations.of(context)!.authClickLinkToVerify,
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+                              AppLocalizations.of(
+                                context,
+                              ).authClickLinkToVerify,
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        AppLocalizations.of(context)!.authEmailArrivalHint,
+                        AppLocalizations.of(context).authEmailArrivalHint,
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha((0.8 * 255).toInt()),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant
+                              .withAlpha((0.8 * 255).toInt()),
                           fontSize: 12,
                         ),
                       ),
@@ -316,14 +371,29 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
 
                 // Resend Button
                 OutlinedButton(
-                  onPressed: _resendCooldown > 0 || _isResending ? null : _resendVerificationEmail,
-                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32)),
+                  onPressed: _resendCooldown > 0 || _isResending
+                      ? null
+                      : _resendVerificationEmail,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 32,
+                    ),
+                  ),
                   child: _isResending
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : Text(
                           _resendCooldown > 0
-                              ? AppLocalizations.of(context)!.authResendInSeconds(_resendCooldown)
-                              : AppLocalizations.of(context)!.authResendVerificationEmail,
+                              ? AppLocalizations.of(
+                                  context,
+                                ).authResendInSeconds(_resendCooldown)
+                              : AppLocalizations.of(
+                                  context,
+                                ).authResendVerificationEmail,
                         ),
                 ),
                 const SizedBox(height: 32),
@@ -338,9 +408,13 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                     // Change Email
                     TextButton(
                       onPressed: _showChangeEmailDialog,
-                      child: Text(AppLocalizations.of(context)!.authWrongEmail),
+                      child: Text(AppLocalizations.of(context).authWrongEmail),
                     ),
-                    Container(width: 1, height: 16, color: theme.dividerColor.withAlpha((0.5 * 255).toInt())),
+                    Container(
+                      width: 1,
+                      height: 16,
+                      color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
+                    ),
                     // Back to Login
                     TextButton.icon(
                       onPressed: () async {
@@ -350,7 +424,7 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                         }
                       },
                       icon: const Icon(Icons.logout_rounded, size: 16),
-                      label: Text(AppLocalizations.of(context)!.authBackToLogin),
+                      label: Text(AppLocalizations.of(context).authBackToLogin),
                     ),
                   ],
                 ),

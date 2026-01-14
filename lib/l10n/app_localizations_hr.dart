@@ -297,8 +297,7 @@ class AppLocalizationsHr extends AppLocalizations {
       'E-poruka može stići za do 10 minuta. Provjerite spam mapu ako je potrebno.';
 
   @override
-  String get authResendVerificationEmail =>
-      'Ponovno pošalji verifikacijsku poruku';
+  String get authResendVerificationEmail => 'Ponovno pošalji';
 
   @override
   String authResendInSeconds(int seconds) {
@@ -7788,6 +7787,16 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get subscriptionStatusSuspended => 'Račun suspendiran';
+
+  @override
+  String get subscriptionWebOnlyTitle => 'Potreban web dashboard';
+
+  @override
+  String get subscriptionWebOnlyMessage =>
+      'Upravljanje pretplatom dostupno je samo na web dashboardu. Molimo koristite preglednik za upravljanje pretplatom i postavkama plaćanja.';
+
+  @override
+  String get subscriptionContinueToWeb => 'Nastavi na web';
 
   @override
   String get calendarTutorialScrollHint =>

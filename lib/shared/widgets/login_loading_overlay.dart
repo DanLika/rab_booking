@@ -10,7 +10,7 @@ import '../../features/auth/presentation/widgets/auth_logo_icon.dart';
 ///
 /// Features:
 /// - **Glassmorphism:** Uses [BackdropFilter] for blur effect.
-/// - **Debounce:** Only shows content if loading takes longer than 300ms to prevent flickering.
+/// - **Debounce:** Only shows content if loading takes longer than 50ms to prevent flickering.
 class LoginLoadingOverlay extends StatefulWidget {
   final String? message;
 
@@ -27,8 +27,8 @@ class _LoginLoadingOverlayState extends State<LoginLoadingOverlay> {
   @override
   void initState() {
     super.initState();
-    // Debounce: Only show if loading takes > 300ms
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+    // Debounce: Only show if loading takes > 50ms (reduced from 300ms for faster feedback)
+    _debounceTimer = Timer(const Duration(milliseconds: 50), () {
       if (mounted) {
         setState(() {
           _shouldShow = true;

@@ -635,7 +635,7 @@ abstract class AppLocalizations {
   /// No description provided for @authResendVerificationEmail.
   ///
   /// In en, this message translates to:
-  /// **'Resend verification email'**
+  /// **'Resend email'**
   String get authResendVerificationEmail;
 
   /// No description provided for @authResendInSeconds.
@@ -13962,6 +13962,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account Suspended'**
   String get subscriptionStatusSuspended;
+
+  /// No description provided for @subscriptionWebOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Web Dashboard Required'**
+  String get subscriptionWebOnlyTitle;
+
+  /// No description provided for @subscriptionWebOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription management is only available on the web dashboard. Please use your browser to manage your subscription and billing settings.'**
+  String get subscriptionWebOnlyMessage;
+
+  /// No description provided for @subscriptionContinueToWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to Web'**
+  String get subscriptionContinueToWeb;
 
   /// No description provided for @calendarTutorialScrollHint.
   ///

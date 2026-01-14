@@ -101,7 +101,7 @@
   "authEmailVerificationSentTo": "We sent a verification link to",
   "authClickLinkToVerify": "Click the link in the email to verify your account",
   "authEmailArrivalHint": "Email may take up to 10 minutes to arrive. Check your spam folder if needed.",
-  "authResendVerificationEmail": "Resend verification email",
+  "authResendVerificationEmail": "Resend email",
   "authResendInSeconds": "Resend in {seconds}s",
   "@authResendInSeconds": {
     "placeholders": {
@@ -3306,6 +3306,9 @@
   "subscriptionStatusActive": "Active Subscription",
   "subscriptionStatusExpired": "Trial Expired",
   "subscriptionStatusSuspended": "Account Suspended",
+  "subscriptionWebOnlyTitle": "Web Dashboard Required",
+  "subscriptionWebOnlyMessage": "Subscription management is only available on the web dashboard. Please use your browser to manage your subscription and billing settings.",
+  "subscriptionContinueToWeb": "Continue to Web",
   "calendarTutorialScrollHint": "Swipe horizontally to view more dates",
   "calendarTutorialLongPressHint": "Long press on the grid to add a booking",
   "calendarTutorialGotIt": "Got it!",

@@ -1544,7 +1544,11 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: AutoSizeText(l10n.cancel, maxLines: 1),
+                        child: AutoSizeText(
+                          l10n.cancel,
+                          maxLines: 1,
+                          minFontSize: 10,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1557,7 +1561,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                               : context.gradients.brandPrimary,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: ElevatedButton.icon(
+                        child: ElevatedButton(
                           onPressed: _isSaving ? null : _saveFeed,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isSaving
@@ -1575,26 +1579,38 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          icon: _isSaving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Icon(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _isSaving
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Icon(
+                                      widget.existingFeed == null
+                                          ? Icons.add
+                                          : Icons.save,
+                                      size: 18,
+                                    ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: AutoSizeText(
                                   widget.existingFeed == null
-                                      ? Icons.add
-                                      : Icons.save,
-                                  size: 18,
+                                      ? l10n.icalAddFeedButton
+                                      : l10n.save,
+                                  maxLines: 1,
+                                  minFontSize: 10,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                          label: AutoSizeText(
-                            widget.existingFeed == null
-                                ? l10n.icalAddFeedButton
-                                : l10n.save,
-                            maxLines: 1,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           ),
                         ),
                       ),

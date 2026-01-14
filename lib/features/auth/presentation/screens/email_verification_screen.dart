@@ -266,14 +266,15 @@ class _EmailVerificationScreenState
       appBar: CommonAppBar(
         title: AppLocalizations.of(context).authEmailVerificationTitle,
         leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) async {
+        onLeadingIconTap: (_) async {
+          // Use this.context instead of passed context for proper navigation
           try {
             await ref.read(enhancedAuthProvider.notifier).signOut();
           } catch (e) {
             // Ignore sign out errors, just navigate
           }
-          if (context.mounted) {
-            context.go(OwnerRoutes.login);
+          if (mounted) {
+            this.context.go(OwnerRoutes.login);
           }
         },
       ),
@@ -400,45 +401,54 @@ class _EmailVerificationScreenState
                 ),
                 const SizedBox(height: 32),
 
-                // Action Buttons Row with Flexible to prevent overflow
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                // Action Buttons - Vertical Layout
+                Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Change Email
-                    Flexible(
-                      child: TextButton(
-                        onPressed: _showChangeEmailDialog,
-                        child: Text(
-                          AppLocalizations.of(context).authWrongEmail,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    // Change Email Button
+                    TextButton.icon(
+                      onPressed: _showChangeEmailDialog,
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.colorScheme.onSurfaceVariant,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
                       ),
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      label: Text(
+                        AppLocalizations.of(context).authWrongEmail,
+                        style: const TextStyle(fontSize: 14),
+                      ),
                     ),
-                    Container(
-                      width: 1,
-                      height: 16,
-                      color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
-                    ),
-                    // Back to Login
-                    Flexible(
-                      child: TextButton.icon(
-                        onPressed: () async {
-                          await ref
-                              .read(enhancedAuthProvider.notifier)
-                              .signOut();
-                          if (context.mounted) {
-                            context.go(OwnerRoutes.login);
-                          }
-                        },
-                        icon: const Icon(Icons.logout_rounded, size: 16),
-                        label: Text(
-                          AppLocalizations.of(context).authBackToLogin,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 8),
+                    // Back to Login Button
+                    TextButton.icon(
+                      onPressed: () async {
+                        await ref.read(enhancedAuthProvider.notifier).signOut();
+                        if (mounted) {
+                          this.context.go(OwnerRoutes.login);
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.colorScheme.onSurfaceVariant,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
+                      ),
+                      icon: Icon(
+                        Icons.logout_rounded,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      label: Text(
+                        AppLocalizations.of(context).authBackToLogin,
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ),
                   ],

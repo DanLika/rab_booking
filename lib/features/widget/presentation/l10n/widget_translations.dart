@@ -1713,6 +1713,34 @@ class WidgetTranslations {
     }
   }
 
+  String get room {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Smještaj';
+      case 'de':
+        return 'Unterkunft';
+      case 'it':
+        return 'Alloggio';
+      case 'en':
+      default:
+        return 'Accommodation';
+    }
+  }
+
+  String get services {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Usluge';
+      case 'de':
+        return 'Dienstleistungen';
+      case 'it':
+        return 'Servizi';
+      case 'en':
+      default:
+        return 'Services';
+    }
+  }
+
   // ============================================================================
   // BANK DETAILS SECTION TRANSLATIONS
   // ============================================================================

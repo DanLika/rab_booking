@@ -54,6 +54,12 @@ class BookingSummaryCard extends ConsumerWidget {
   /// Total price
   final double totalPrice;
 
+  /// Room price before additional services (optional, for price breakdown)
+  final double? roomPrice;
+
+  /// Additional services total (optional, for price breakdown)
+  final double? additionalServicesTotal;
+
   /// Whether dark mode is active (for DetailRowWidget)
   final bool isDarkMode;
 
@@ -71,6 +77,8 @@ class BookingSummaryCard extends ConsumerWidget {
     required this.nights,
     required this.guests,
     required this.totalPrice,
+    this.roomPrice,
+    this.additionalServicesTotal,
     required this.isDarkMode,
     required this.colors,
   });
@@ -162,6 +170,34 @@ class BookingSummaryCard extends ConsumerWidget {
             valueFontWeight: FontWeight.w400,
           ),
           const SizedBox(height: SpacingTokens.s),
+          // Show price breakdown if available
+          if (roomPrice != null) ...[
+            DetailRowWidget(
+              label: tr.room,
+              value: NumberFormat.currency(
+                symbol: tr.currencySymbol,
+                locale: tr.locale.toString(),
+                decimalDigits: 2,
+              ).format(roomPrice),
+              isDarkMode: isDarkMode,
+              hasPadding: true,
+              valueFontWeight: FontWeight.w400,
+            ),
+          ],
+          if (additionalServicesTotal != null &&
+              additionalServicesTotal! > 0) ...[
+            DetailRowWidget(
+              label: tr.services,
+              value: NumberFormat.currency(
+                symbol: tr.currencySymbol,
+                locale: tr.locale.toString(),
+                decimalDigits: 2,
+              ).format(additionalServicesTotal),
+              isDarkMode: isDarkMode,
+              hasPadding: true,
+              valueFontWeight: FontWeight.w400,
+            ),
+          ],
           DetailRowWidget(
             label: tr.totalPrice,
             // Bug Fix: Use NumberFormat.currency for proper locale-aware formatting

@@ -1226,6 +1226,78 @@ window.pwaPromptInstall()  // async function
 
 **Izvor sadržaja:** Ovaj projekt (CLAUDE.md, SECURITY_FIXES.md, kod)
 
+---
+
+## 📝 TODO: Admin Controls Feature
+
+**Prioritet:** Low (nice-to-have)
+**Kompleksnost:** ~20-30 minuta
+**Izvor:** Ekstrahirano iz branch `sentinel-firestore-audit-15445911159531971809`
+
+### Opis
+Admin kontrole za upravljanje korisničkim računima iz Admin panela bez potrebe za direktnim Firestore editiranjem.
+
+### Nova polja u UserModel (`lib/shared/models/user_model.dart`):
+```dart
+/// Hide subscription page from this user (e.g., for special deals)
+final bool hideSubscription;
+
+/// Admin override of account type (bypasses subscription logic)
+final AccountType? adminOverrideAccountType;
+```
+
+### Potrebne izmjene:
+
+**1. UserModel** (`lib/shared/models/user_model.dart`):
+- Dodati `hideSubscription` (bool, default: false)
+- Dodati `adminOverrideAccountType` (AccountType?, nullable)
+- Ažurirati `fromJson()` i `toJson()`
+- Ažurirati `copyWith()`
+
+**2. AdminUsersRepository** (`lib/features/admin/data/repositories/`):
+```dart
+Future<void> updateAdminFlags({
+  required String userId,
+  bool? hideSubscription,
+  AccountType? adminOverrideAccountType,
+  bool clearOverride = false,  // Set to true to remove override
+}) async {
+  final updates = <String, dynamic>{
+    'updated_at': FieldValue.serverTimestamp(),
+  };
+  if (hideSubscription != null) {
+    updates['hide_subscription'] = hideSubscription;
+  }
+  if (clearOverride) {
+    updates['admin_override_account_type'] = FieldValue.delete();
+  } else if (adminOverrideAccountType != null) {
+    updates['admin_override_account_type'] = adminOverrideAccountType.name;
+  }
+  await _firestore.collection('users').doc(userId).update(updates);
+}
+```
+
+**3. UserDetailScreen** (`lib/features/admin/presentation/screens/user_detail_screen.dart`):
+- Dodati "Admin Controls" card sa:
+  - Switch za `hideSubscription`
+  - Dropdown za `adminOverrideAccountType` (None, Free, Premium, Enterprise)
+  - Save button
+
+**4. SubscriptionScreen** provjera:
+```dart
+// U subscription_screen.dart
+if (user.hideSubscription) {
+  // Redirect away or show "Contact admin" message
+}
+
+// Za account type provjeru
+AccountType get effectiveAccountType =>
+    user.adminOverrideAccountType ?? user.accountType;
+```
+
+### Korištenje
+- Admin može sakriti subscription stranicu za korisnika koji ima special deal
+- Admin može override-ati account type bez potrebe za Stripe subscription
 
 ---
 

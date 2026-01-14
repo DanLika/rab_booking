@@ -279,6 +279,67 @@ class AppLocalizationsHr extends AppLocalizations {
   String get authEnterFirstLastName => 'Molimo unesite ime i prezime';
 
   @override
+  String get authEmailVerificationTitle => 'Verifikacija e-pošte';
+
+  @override
+  String get authCheckInbox => 'Provjerite svoj Inbox';
+
+  @override
+  String get authEmailVerificationSentTo =>
+      'Poslali smo poveznicu za verifikaciju na';
+
+  @override
+  String get authClickLinkToVerify =>
+      'Kliknite na poveznicu u e-poruci kako biste verificirali svoj račun';
+
+  @override
+  String get authEmailArrivalHint =>
+      'E-poruka može stići za do 10 minuta. Provjerite spam mapu ako je potrebno.';
+
+  @override
+  String get authResendVerificationEmail =>
+      'Ponovno pošalji verifikacijsku poruku';
+
+  @override
+  String authResendInSeconds(int seconds) {
+    return 'Ponovno pošalji za ${seconds}s';
+  }
+
+  @override
+  String get authWrongEmail => 'Pogrešna e-pošta?';
+
+  @override
+  String get authChangeEmail => 'Promijeni e-poštu';
+
+  @override
+  String get authChangeEmailTitle => 'Promijeni e-poštu';
+
+  @override
+  String get authChangeEmailDesc =>
+      'Unesite svoju novu e-poštu. Morat ćete je verificirati.';
+
+  @override
+  String get authNewEmailLabel => 'Nova e-pošta *';
+
+  @override
+  String get authPasswordLabel => 'Trenutna lozinka *';
+
+  @override
+  String get authPasswordHelper => 'Potrebno za potvrdu identiteta';
+
+  @override
+  String get authLogoutHint =>
+      'Bit ćete odjavljeni i morat ćete verificirati novu e-poštu';
+
+  @override
+  String get authVerifyEmailSuccess =>
+      'Verifikacijska poruka poslana! Provjerite svoj inbox.';
+
+  @override
+  String get authUpdateEmailSuccess =>
+      'E-pošta ažurirana! Provjerite novi inbox za verifikaciju.';
+
+  @override
   String get authIncorrectPassword =>
       'Pogrešna lozinka. Pokušajte ponovo ili resetirajte lozinku.';
 
@@ -7685,11 +7746,20 @@ class AppLocalizationsHr extends AppLocalizations {
       'Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.';
 
   @override
-  String get subscriptionComingSoon => 'Uskoro';
+  String get subscriptionComingSoon => 'Upravljaj na Webu';
 
   @override
   String get subscriptionComingSoonMessage =>
-      'Integracija plaćanja uskoro stiže! Za sada, molimo kontaktirajte nas za nadogradnju računa.';
+      'Za nadogradnju pretplate ili upravljanje naplatom, posjetite našu web aplikaciju na app.bookbed.io';
+
+  @override
+  String get subscriptionVisitWebsite => 'Posjeti web stranicu';
+
+  @override
+  String get subscriptionCopyUrl => 'Kopiraj URL';
+
+  @override
+  String get subscriptionUrlCopied => 'URL kopiran u međuspremnik';
 
   @override
   String get profileSubscriptionSubtitle => 'Upravljajte svojim planom';

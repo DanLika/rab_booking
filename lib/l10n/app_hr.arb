@@ -3297,8 +3297,11 @@
   "subscriptionFaqCancelAnswer": "Da! Možete otkazati svoju pretplatu u bilo kojem trenutku. Vaš pristup će nastaviti do kraja obračunskog razdoblja.",
   "subscriptionFaqDataSafeQuestion": "Jesu li moji podaci sigurni?",
   "subscriptionFaqDataSafeAnswer": "Apsolutno. Vaši podaci su sigurno pohranjeni i nikada neće biti obrisani, čak i ako vaš probni period istekne ili otkažete pretplatu.",
-  "subscriptionComingSoon": "Uskoro",
-  "subscriptionComingSoonMessage": "Integracija plaćanja uskoro stiže! Za sada, molimo kontaktirajte nas za nadogradnju računa.",
+  "subscriptionComingSoon": "Upravljaj na Webu",
+  "subscriptionComingSoonMessage": "Za nadogradnju pretplate ili upravljanje naplatom, posjetite našu web aplikaciju na app.bookbed.io",
+  "subscriptionVisitWebsite": "Posjeti web stranicu",
+  "subscriptionCopyUrl": "Kopiraj URL",
+  "subscriptionUrlCopied": "URL kopiran u međuspremnik",
   "profileSubscriptionSubtitle": "Upravljajte svojim planom",
   "subscriptionDaysLeft": "{count, plural, =0{Danas} =1{Još {count} dan} few{Još {count} dana} other{Još {count} dana}}",
   "@subscriptionDaysLeft": {

@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
-import '../../../l10n/app_localizations.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../l10n/app_localizations.dart';
 
 import '../../../shared/widgets/common_app_bar.dart';
 import '../models/trial_status.dart';
 import '../providers/trial_status_provider.dart';
 
+const String _webDashboardUrl = 'https://app.bookbed.io';
+
 /// Subscription management screen
 ///
-/// TODO: Implement full subscription flow when payment integration is ready
-/// - Display current subscription status
-/// - Show available plans
-/// - Handle Stripe checkout
-/// - Manage billing
+/// For App Store compliance, subscription payments are handled via web dashboard.
+/// Users are redirected to app.bookbed.io for billing management.
 class SubscriptionScreen extends ConsumerWidget {
   const SubscriptionScreen({super.key});
 
@@ -78,7 +80,6 @@ class SubscriptionScreen extends ConsumerWidget {
               l10n.subscriptionFeatureCalendarSync,
             ],
             isCurrentPlan: trialStatus.isInTrial,
-            onSelect: null, // Can't select free plan
           ),
           const SizedBox(height: 16),
 
@@ -127,16 +128,66 @@ class SubscriptionScreen extends ConsumerWidget {
   }
 
   void _handleUpgrade(BuildContext context, AppLocalizations l10n) {
-    // TODO: Implement Stripe checkout
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(l10n.subscriptionComingSoon),
-        content: Text(l10n.subscriptionComingSoonMessage),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.subscriptionComingSoonMessage),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.link, size: 18, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      _webDashboardUrl,
+                      style: TextStyle(fontFamily: 'monospace', fontSize: 13),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 18),
+                    onPressed: () {
+                      Clipboard.setData(
+                        const ClipboardData(text: _webDashboardUrl),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.subscriptionUrlCopied)),
+                      );
+                    },
+                    tooltip: l10n.subscriptionCopyUrl,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.ok),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.close),
+          ),
+          FilledButton.icon(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final uri = Uri.parse(_webDashboardUrl);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            icon: const Icon(Icons.open_in_new, size: 18),
+            label: Text(l10n.subscriptionVisitWebsite),
           ),
         ],
       ),

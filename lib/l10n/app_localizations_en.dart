@@ -274,6 +274,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authEnterFirstLastName => 'Please enter both first and last name';
 
   @override
+  String get authEmailVerificationTitle => 'Verify Email';
+
+  @override
+  String get authCheckInbox => 'Check your inbox';
+
+  @override
+  String get authEmailVerificationSentTo => 'We sent a verification link to';
+
+  @override
+  String get authClickLinkToVerify =>
+      'Click the link in the email to verify your account';
+
+  @override
+  String get authEmailArrivalHint =>
+      'Email may take up to 10 minutes to arrive. Check your spam folder if needed.';
+
+  @override
+  String get authResendVerificationEmail => 'Resend verification email';
+
+  @override
+  String authResendInSeconds(int seconds) {
+    return 'Resend in ${seconds}s';
+  }
+
+  @override
+  String get authWrongEmail => 'Wrong email?';
+
+  @override
+  String get authChangeEmail => 'Change Email';
+
+  @override
+  String get authChangeEmailTitle => 'Change Email';
+
+  @override
+  String get authChangeEmailDesc =>
+      'Enter your new email address. You will need to verify it.';
+
+  @override
+  String get authNewEmailLabel => 'New Email *';
+
+  @override
+  String get authPasswordLabel => 'Current Password *';
+
+  @override
+  String get authPasswordHelper => 'Required to confirm identity';
+
+  @override
+  String get authLogoutHint =>
+      'You will be logged out and need to verify the new email';
+
+  @override
+  String get authVerifyEmailSuccess =>
+      'Verification email sent! Check your inbox.';
+
+  @override
+  String get authUpdateEmailSuccess =>
+      'Email updated! Check your new inbox for verification.';
+
+  @override
   String get authIncorrectPassword =>
       'Incorrect password. Try again or reset your password.';
 
@@ -7624,11 +7683,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Absolutely. Your data is stored securely and will never be deleted, even if your trial expires or you cancel your subscription.';
 
   @override
-  String get subscriptionComingSoon => 'Coming Soon';
+  String get subscriptionComingSoon => 'Manage on Web';
 
   @override
   String get subscriptionComingSoonMessage =>
-      'Payment integration is coming soon! For now, please contact us to upgrade your account.';
+      'To upgrade your subscription or manage billing, please visit our web dashboard at app.bookbed.io';
+
+  @override
+  String get subscriptionVisitWebsite => 'Visit Website';
+
+  @override
+  String get subscriptionCopyUrl => 'Copy URL';
+
+  @override
+  String get subscriptionUrlCopied => 'URL copied to clipboard';
 
   @override
   String get profileSubscriptionSubtitle => 'Manage your plan';

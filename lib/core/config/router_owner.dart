@@ -42,7 +42,6 @@ import '../../features/widget/presentation/screens/booking_widget_screen.dart';
 import '../../features/widget/presentation/screens/booking_view_screen.dart';
 import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
-import '../../shared/providers/repository_providers.dart';
 import '../../shared/widgets/loading_overlay.dart';
 import '../providers/enhanced_auth_provider.dart';
 import '../../features/subscription/screens/subscription_screen.dart';
@@ -126,17 +125,17 @@ class OwnerRoutes {
 
 /// Owner app GoRouter
 final ownerRouterProvider = Provider<GoRouter>((ref) {
-  // Watch enhancedAuthProvider so router rebuilds when auth state changes
-  final authState = ref.watch(enhancedAuthProvider);
+  // OPTIMIZATION: Do not watch state directly to avoid rebuilding Router on every state change.
+  // Instead, read state inside redirect() and listen to stream for updates.
+  final authNotifier = ref.watch(enhancedAuthProvider.notifier);
 
   return GoRouter(
     // No initialLocation - let GoRouter read from URL (important for /calendar widget)
     debugLogDiagnostics: true,
-    refreshListenable: GoRouterRefreshStream(
-      ref.watch(firebaseAuthProvider).authStateChanges(),
-    ),
+    refreshListenable: GoRouterRefreshStream(authNotifier.stream),
     redirect: (context, state) {
-      // Use the watched authState from above
+      // Use ref.read to get current state without triggering rebuilds of the provider
+      final authState = ref.read(enhancedAuthProvider);
       final isAuthenticated = authState.isAuthenticated;
       final isLoading = authState.isLoading;
       final isLoggingIn =

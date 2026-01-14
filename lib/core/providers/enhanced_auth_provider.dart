@@ -70,6 +70,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   final SecurityEventsService _security;
   final IpGeolocationService _geolocation;
   StreamSubscription<User?>? _authSubscription;
+  String? _loadingUserId; // Prevents concurrent profile loads for same user
 
   EnhancedAuthNotifier(
     this._auth,
@@ -122,6 +123,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       return;
     }
 
+    // Prevent concurrent loads for the same user
+    if (_loadingUserId == firebaseUser.uid) {
+      LoggingService.log(
+        'User profile load already in progress for ${firebaseUser.uid}, skipping duplicate request',
+        tag: 'ENHANCED_AUTH',
+      );
+      return;
+    }
+
+    _loadingUserId = firebaseUser.uid;
     LoggingService.log(
       'Loading user profile for ${firebaseUser.uid}...',
       tag: 'ENHANCED_AUTH',
@@ -267,12 +278,23 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       }
     } catch (e) {
       unawaited(LoggingService.logError('ERROR loading user profile', e));
+
+      // Calculate verification requirement even on error
+      // This prevents the "Flash" bug where router redirects to dashboard
+      // because requiresEmailVerification defaults to false
+      final requiresVerification =
+          AuthFeatureFlags.requireEmailVerification &&
+          !firebaseUser.emailVerified;
+
       // Set isLoading to false even on error (initial check complete)
       state = EnhancedAuthState(
         firebaseUser: firebaseUser,
         isLoading: false,
+        requiresEmailVerification: requiresVerification,
         error: 'Failed to load user profile: $e',
       );
+    } finally {
+      _loadingUserId = null;
     }
   }
 

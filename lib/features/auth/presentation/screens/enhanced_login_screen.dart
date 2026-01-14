@@ -357,6 +357,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isCompact = Breakpoints.isCompactMobile(context);
+    final isSmallHeight = MediaQuery.of(context).size.height < 700;
 
     // PRISTUP 1: resizeToAvoidBottomInset: true - klasičan Flutter pristup
     return KeyedSubtree(
@@ -408,12 +409,15 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                     ? 8
                                     : 12)
                               : 20,
-                          vertical: isCompact ? 16 : 20,
+                          vertical: isSmallHeight ? 12 : (isCompact ? 16 : 20),
                         ),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(minHeight: minHeight),
                           child: Center(
                             child: GlassCard(
+                              padding: isSmallHeight
+                                  ? const EdgeInsets.all(16)
+                                  : null,
                               child: Form(
                                 key: _formKey,
                                 autovalidateMode: _autovalidateMode,
@@ -422,14 +426,35 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    _buildHeader(theme, l10n, isCompact),
-                                    SizedBox(height: isCompact ? 24 : 32),
+                                    _buildHeader(
+                                      theme,
+                                      l10n,
+                                      isCompact,
+                                      isSmallHeight,
+                                    ),
+                                    SizedBox(
+                                      height: isSmallHeight
+                                          ? 16
+                                          : (isCompact ? 24 : 32),
+                                    ),
                                     _buildEmailField(l10n),
-                                    SizedBox(height: isCompact ? 12 : 14),
+                                    SizedBox(
+                                      height: isSmallHeight
+                                          ? 8
+                                          : (isCompact ? 12 : 14),
+                                    ),
                                     _buildPasswordField(theme, l10n),
-                                    SizedBox(height: isCompact ? 12 : 14),
+                                    SizedBox(
+                                      height: isSmallHeight
+                                          ? 8
+                                          : (isCompact ? 12 : 14),
+                                    ),
                                     _buildRememberMeRow(theme, l10n),
-                                    SizedBox(height: isCompact ? 20 : 24),
+                                    SizedBox(
+                                      height: isSmallHeight
+                                          ? 16
+                                          : (isCompact ? 20 : 24),
+                                    ),
                                     AnimatedBuilder(
                                       animation: _shakeAnimation,
                                       builder: (context, child) {
@@ -452,12 +477,24 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                             .isGoogleSignInEnabled ||
                                         AuthFeatureFlags
                                             .isAppleSignInEnabled) ...[
-                                      SizedBox(height: isCompact ? 16 : 20),
+                                      SizedBox(
+                                        height: isSmallHeight
+                                            ? 12
+                                            : (isCompact ? 16 : 20),
+                                      ),
                                       _buildDivider(theme, l10n),
-                                      SizedBox(height: isCompact ? 16 : 20),
+                                      SizedBox(
+                                        height: isSmallHeight
+                                            ? 12
+                                            : (isCompact ? 16 : 20),
+                                      ),
                                       _buildSocialButtons(l10n),
                                     ],
-                                    SizedBox(height: isCompact ? 20 : 24),
+                                    SizedBox(
+                                      height: isSmallHeight
+                                          ? 16
+                                          : (isCompact ? 20 : 24),
+                                    ),
                                     _buildRegisterLink(theme, l10n),
                                   ],
                                 ),
@@ -478,21 +515,26 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     );
   }
 
-  Widget _buildHeader(ThemeData theme, AppLocalizations l10n, bool isCompact) {
+  Widget _buildHeader(
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool isCompact,
+    bool isSmallHeight,
+  ) {
     return Column(
       children: [
         Center(
           child: AuthLogoIcon(
-            size: isCompact ? 70 : 80,
+            size: isSmallHeight ? 60 : (isCompact ? 70 : 80),
             isWhite: theme.brightness == Brightness.dark,
           ),
         ),
-        SizedBox(height: isCompact ? 16 : 20),
+        SizedBox(height: isSmallHeight ? 10 : (isCompact ? 16 : 20)),
         Text(
           l10n.authOwnerLogin,
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            fontSize: isCompact ? 22 : 26,
+            fontSize: isSmallHeight ? 20 : (isCompact ? 22 : 26),
           ),
           textAlign: TextAlign.center,
         ),

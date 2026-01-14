@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/config/environment.dart';
 import 'core/config/router_owner.dart';
 import 'core/error_handling/error_boundary.dart';
 import 'core/providers/enhanced_auth_provider.dart';
@@ -27,9 +28,7 @@ import 'shared/widgets/offline_indicator.dart';
 
 import 'shared/widgets/global_navigation_loader.dart';
 
-// Sentry DSN for web error tracking (Crashlytics doesn't support web)
-const String _sentryDsn =
-    'https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144';
+// Sentry DSN loaded from EnvironmentConfig (eliminates hardcoded constant)
 
 /// Global initialization state - tracks what has been initialized
 class AppInitState {
@@ -226,7 +225,7 @@ Future<void> _initializeRemainingServices() async {
     }
 
     // Initialize Sentry for web (non-blocking)
-    if (kReleaseMode && kIsWeb && _sentryDsn.isNotEmpty) {
+    if (kReleaseMode && kIsWeb && EnvironmentConfig.sentryDsn != null) {
       unawaited(_initSentry());
     }
 
@@ -432,7 +431,7 @@ Future<void> _initializeInBackground() async {
     }
 
     // Initialize Sentry for web (non-blocking)
-    if (kReleaseMode && kIsWeb && _sentryDsn.isNotEmpty) {
+    if (kReleaseMode && kIsWeb && EnvironmentConfig.sentryDsn != null) {
       unawaited(_initSentry());
     }
 
@@ -458,7 +457,7 @@ Future<void> _initializeInBackground() async {
 Future<void> _initSentry() async {
   try {
     await SentryFlutter.init((options) {
-      options.dsn = _sentryDsn;
+      options.dsn = EnvironmentConfig.sentryDsn;
       options.tracesSampleRate = 0.2;
       options.environment = 'production';
 

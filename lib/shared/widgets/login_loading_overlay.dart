@@ -53,7 +53,7 @@ class _LoginLoadingOverlayState extends State<LoginLoadingOverlay> {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
       child: Container(
-        color: (isDarkMode ? Colors.black : Colors.white).withAlpha(150),
+        color: (isDarkMode ? Colors.black : Colors.white).withAlpha(200),
         width: double.infinity,
         height: double.infinity,
         child: Center(

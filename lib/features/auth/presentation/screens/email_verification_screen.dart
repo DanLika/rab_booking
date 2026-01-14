@@ -59,11 +59,9 @@ class _EmailVerificationScreenState
 
     final authState = ref.read(enhancedAuthProvider);
     if (!authState.requiresEmailVerification && mounted) {
-      // Email verified! Let router handle navigation based on onboarding status
-      // Router will redirect to:
-      // - /onboarding/wizard if requiresOnboarding is true
-      // - /owner/overview if requiresOnboarding is false
-      context.go('/');
+      // Email verified! Navigate to owner overview
+      // Router will handle onboarding redirect if needed
+      context.go(OwnerRoutes.overview);
     }
   }
 
@@ -269,7 +267,11 @@ class _EmailVerificationScreenState
         title: AppLocalizations.of(context).authEmailVerificationTitle,
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) async {
-          await ref.read(enhancedAuthProvider.notifier).signOut();
+          try {
+            await ref.read(enhancedAuthProvider.notifier).signOut();
+          } catch (e) {
+            // Ignore sign out errors, just navigate
+          }
           if (context.mounted) {
             context.go(OwnerRoutes.login);
           }
@@ -398,17 +400,21 @@ class _EmailVerificationScreenState
                 ),
                 const SizedBox(height: 32),
 
-                // Action Buttons Wrap (prevents overflow on small screens)
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 12,
-                  runSpacing: 8,
+                // Action Buttons Row with Flexible to prevent overflow
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Change Email
-                    TextButton(
-                      onPressed: _showChangeEmailDialog,
-                      child: Text(AppLocalizations.of(context).authWrongEmail),
+                    Flexible(
+                      child: TextButton(
+                        onPressed: _showChangeEmailDialog,
+                        child: Text(
+                          AppLocalizations.of(context).authWrongEmail,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
                     Container(
                       width: 1,
@@ -416,15 +422,24 @@ class _EmailVerificationScreenState
                       color: theme.dividerColor.withAlpha((0.5 * 255).toInt()),
                     ),
                     // Back to Login
-                    TextButton.icon(
-                      onPressed: () async {
-                        await ref.read(enhancedAuthProvider.notifier).signOut();
-                        if (context.mounted) {
-                          context.go(OwnerRoutes.login);
-                        }
-                      },
-                      icon: const Icon(Icons.logout_rounded, size: 16),
-                      label: Text(AppLocalizations.of(context).authBackToLogin),
+                    Flexible(
+                      child: TextButton.icon(
+                        onPressed: () async {
+                          await ref
+                              .read(enhancedAuthProvider.notifier)
+                              .signOut();
+                          if (context.mounted) {
+                            context.go(OwnerRoutes.login);
+                          }
+                        },
+                        icon: const Icon(Icons.logout_rounded, size: 16),
+                        label: Text(
+                          AppLocalizations.of(context).authBackToLogin,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ),
                   ],
                 ),

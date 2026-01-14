@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 
 /// Social login button with hover effect and focus state
@@ -71,22 +72,26 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (widget.customIcon != null)
-                          widget.customIcon!
-                        else
-                          Icon(
-                            widget.icon,
-                            size: 22,
-                            color: _isHighlighted
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurface,
-                          ),
-                        const SizedBox(width: 8),
-                        Text(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        final isNarrow = screenWidth <= 340;
+
+                        final iconWidget = widget.customIcon != null
+                            ? widget.customIcon!
+                            : Icon(
+                                widget.icon,
+                                size: 22,
+                                color: _isHighlighted
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurface,
+                              );
+
+                        final textWidget = AutoSizeText(
                           widget.label,
+                          maxLines: 1,
+                          minFontSize: 10,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -94,8 +99,30 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
                                 ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurface,
                           ),
-                        ),
-                      ],
+                        );
+
+                        // Use Column layout on very narrow screens
+                        if (isNarrow) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              iconWidget,
+                              const SizedBox(height: 4),
+                              textWidget,
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            iconWidget,
+                            const SizedBox(width: 8),
+                            textWidget,
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),

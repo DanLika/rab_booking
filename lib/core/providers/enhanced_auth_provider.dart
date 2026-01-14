@@ -307,40 +307,54 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     try {
       state = state.copyWith(isLoading: true);
 
-      // SECURITY: IP-based rate limiting for login (Cloud Function)
-      try {
-        final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
-        final callable = functions.httpsCallable('checkLoginRateLimit');
-        await callable.call({'email': email});
-      } on FirebaseFunctionsException catch (e) {
-        if (e.code == 'resource-exhausted') {
-          LoggingService.log(
-            'IP-based rate limit exceeded for login',
-            tag: 'ENHANCED_AUTH',
+      // PERFORMANCE: Run Cloud and Local checks in PARALLEL to reduce wait time
+
+      // 1. Cloud Rate Limit Future (wrapped to handle errors internally)
+      final cloudRateLimitFuture = (() async {
+        try {
+          final functions = FirebaseFunctions.instanceFor(
+            region: 'europe-west1',
           );
-          state = state.copyWith(isLoading: false, error: e.message);
-          throw e.message ??
-              'Too many login attempts. Please wait before trying again.';
+          final callable = functions.httpsCallable('checkLoginRateLimit');
+          await callable.call({'email': email});
+        } on FirebaseFunctionsException catch (e) {
+          if (e.code == 'resource-exhausted') {
+            LoggingService.log(
+              'IP-based rate limit exceeded for login',
+              tag: 'ENHANCED_AUTH',
+            );
+            // Throw message string to be caught by outer try/catch
+            throw e.message ??
+                'Too many login attempts. Please wait before trying again.';
+          }
+          // Continue with login if rate limit check fails (fail-open for availability)
+          LoggingService.log(
+            'IP rate limit check failed, continuing: ${e.message}',
+            tag: 'AUTH_WARNING',
+          );
         }
-        // Continue with login if rate limit check fails (fail-open for availability)
-        LoggingService.log(
-          'IP rate limit check failed, continuing: ${e.message}',
-          tag: 'AUTH_WARNING',
-        );
-      }
+      })();
 
-      // PERFORMANCE: Run rate limit check and persistence setup in PARALLEL
-      // Both are independent operations, no need to wait sequentially
-      final rateLimitFuture = _rateLimit.checkRateLimit(email);
-      final persistenceFuture = kIsWeb
-          ? _auth.setPersistence(
-              rememberMe ? Persistence.LOCAL : Persistence.SESSION,
-            )
-          : Future<void>.value();
+      // 2. Local Rate Limit & Persistence Future (run in parallel)
+      final localChecksFuture = Future.wait([
+        _rateLimit.checkRateLimit(email),
+        kIsWeb
+            ? _auth.setPersistence(
+                rememberMe ? Persistence.LOCAL : Persistence.SESSION,
+              )
+            : Future<void>.value(),
+      ]);
 
-      // Wait for both to complete
-      final results = await Future.wait([rateLimitFuture, persistenceFuture]);
-      final rateLimit = results[0] as LoginAttempt?;
+      // Wait for ALL checks to complete
+      // If Cloud limit throws, this await will throw and be caught by outer try/catch
+      final results = await Future.wait([
+        cloudRateLimitFuture,
+        localChecksFuture,
+      ]);
+
+      // Extract local results
+      final localResults = results[1] as List<dynamic>;
+      final rateLimit = localResults[0] as LoginAttempt?;
 
       // Check rate limit result
       if (rateLimit != null && rateLimit.isLocked) {
@@ -518,31 +532,45 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     try {
       state = state.copyWith(isLoading: true);
 
-      // SECURITY: IP-based rate limiting for registration (Cloud Function)
-      // Stricter limits for registration to prevent spam account creation
-      try {
-        final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
-        final callable = functions.httpsCallable('checkRegistrationRateLimit');
-        await callable.call({'email': email});
-      } on FirebaseFunctionsException catch (e) {
-        if (e.code == 'resource-exhausted') {
-          LoggingService.log(
-            'IP-based rate limit exceeded for registration',
-            tag: 'ENHANCED_AUTH',
-          );
-          state = state.copyWith(isLoading: false, error: e.message);
-          throw e.message ??
-              'Too many registration attempts. Please wait before trying again.';
-        }
-        // Continue with registration if rate limit check fails (fail-open for availability)
-        LoggingService.log(
-          'IP rate limit check failed, continuing: ${e.message}',
-          tag: 'AUTH_WARNING',
-        );
-      }
+      // PERFORMANCE: Run Cloud and Local checks in PARALLEL
 
-      // Check email-based rate limit (Dart-side, Firestore-backed)
-      final rateLimit = await _rateLimit.checkRateLimit(email);
+      // 1. Cloud Rate Limit Future (wrapped to handle errors internally)
+      final cloudRateLimitFuture = (() async {
+        try {
+          final functions = FirebaseFunctions.instanceFor(
+            region: 'europe-west1',
+          );
+          final callable = functions.httpsCallable(
+            'checkRegistrationRateLimit',
+          );
+          await callable.call({'email': email});
+        } on FirebaseFunctionsException catch (e) {
+          if (e.code == 'resource-exhausted') {
+            LoggingService.log(
+              'IP-based rate limit exceeded for registration',
+              tag: 'ENHANCED_AUTH',
+            );
+            throw e.message ??
+                'Too many registration attempts. Please wait before trying again.';
+          }
+          // Continue with registration if rate limit check fails (fail-open for availability)
+          LoggingService.log(
+            'IP rate limit check failed, continuing: ${e.message}',
+            tag: 'AUTH_WARNING',
+          );
+        }
+      })();
+
+      // 2. Local Rate Limit Future
+      final localRateLimitFuture = _rateLimit.checkRateLimit(email);
+
+      // Wait for both in parallel
+      final (_, rateLimit) = await (
+        cloudRateLimitFuture,
+        localRateLimitFuture,
+      ).wait;
+
+      // Check email-based rate limit
       if (rateLimit != null && rateLimit.isLocked) {
         throw _rateLimit.getRateLimitMessage(rateLimit);
       }

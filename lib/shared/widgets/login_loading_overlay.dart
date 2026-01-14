@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../features/auth/presentation/widgets/auth_logo_icon.dart';
@@ -5,14 +6,47 @@ import '../../features/auth/presentation/widgets/auth_logo_icon.dart';
 /// A premium, splash-like loading overlay for authentication processes.
 ///
 /// Provides a blurred background (Glassmorphism), centered logo,
-/// and a circular progress indicator as requested by the user.
-class LoginLoadingOverlay extends StatelessWidget {
+/// and a circular progress indicator.
+///
+/// Features:
+/// - **Glassmorphism:** Uses [BackdropFilter] for blur effect.
+/// - **Debounce:** Only shows content if loading takes longer than 300ms to prevent flickering.
+class LoginLoadingOverlay extends StatefulWidget {
   final String? message;
 
   const LoginLoadingOverlay({super.key, this.message});
 
   @override
+  State<LoginLoadingOverlay> createState() => _LoginLoadingOverlayState();
+}
+
+class _LoginLoadingOverlayState extends State<LoginLoadingOverlay> {
+  bool _shouldShow = false;
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Debounce: Only show if loading takes > 300ms
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _shouldShow = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_shouldShow) return const SizedBox.shrink();
+
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
@@ -27,7 +61,7 @@ class LoginLoadingOverlay extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Logo with a subtle hero-like presence
-              AuthLogoIcon(size: 100, isWhite: isDarkMode),
+              AuthLogoIcon(isWhite: isDarkMode),
               const SizedBox(height: 48),
 
               // Custom Circular Progress Indicator
@@ -49,10 +83,10 @@ class LoginLoadingOverlay extends StatelessWidget {
                 ],
               ),
 
-              if (message != null) ...[
+              if (widget.message != null) ...[
                 const SizedBox(height: 32),
                 Text(
-                  message!,
+                  widget.message!,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: isDarkMode ? Colors.white70 : Colors.black87,
                     fontWeight: FontWeight.w500,

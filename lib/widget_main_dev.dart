@@ -87,7 +87,6 @@ class _BookingWidgetAppState extends ConsumerState<BookingWidgetApp> {
 
     return MaterialApp.router(
       title: 'BookBed Widget (DEV)',
-      debugShowCheckedModeBanner: true, // Show debug banner in dev
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeModeEnum,

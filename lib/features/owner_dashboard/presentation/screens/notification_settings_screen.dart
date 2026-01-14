@@ -525,7 +525,6 @@ class _NotificationSettingsScreenState
                   icon: Icons.email_outlined,
                   iconColor: theme.colorScheme.primary,
                   enabled: enabled,
-                  isLast: false,
                 );
               },
             ),

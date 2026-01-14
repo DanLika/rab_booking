@@ -107,8 +107,6 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
                 color: theme.colorScheme.primary.withOpacity(0.3),
-                style: BorderStyle.solid,
-                width: 1,
               ),
             ),
             child: Center(

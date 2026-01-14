@@ -131,7 +131,7 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<AccountType>(
-                    value: _selectedAccountType,
+                    initialValue: _selectedAccountType,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Account Type',
@@ -251,14 +251,13 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<AccountType?>(
-                    value: _selectedOverrideType,
+                    initialValue: _selectedOverrideType,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Override Account Type',
                     ),
                     items: [
                       const DropdownMenuItem<AccountType?>(
-                        value: null,
                         child: Text('No Override (use calculated)'),
                       ),
                       ...AccountType.values.map((type) {

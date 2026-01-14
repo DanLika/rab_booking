@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/config/router_owner.dart';
 import '../providers/trial_status_provider.dart';
 
 /// Banner widget that shows trial status warnings
@@ -46,11 +48,7 @@ class TrialBanner extends ConsumerWidget {
   }
 
   void _navigateToSubscription(BuildContext context) {
-    // TODO: Navigate to subscription screen when implemented
-    // context.push('/subscription');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Subscription screen coming soon!')),
-    );
+    context.push(OwnerRoutes.subscription);
   }
 }
 

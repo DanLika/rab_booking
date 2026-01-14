@@ -602,6 +602,108 @@ abstract class AppLocalizations {
   /// **'Please enter both first and last name'**
   String get authEnterFirstLastName;
 
+  /// No description provided for @authEmailVerificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Email'**
+  String get authEmailVerificationTitle;
+
+  /// No description provided for @authCheckInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your inbox'**
+  String get authCheckInbox;
+
+  /// No description provided for @authEmailVerificationSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a verification link to'**
+  String get authEmailVerificationSentTo;
+
+  /// No description provided for @authClickLinkToVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the link in the email to verify your account'**
+  String get authClickLinkToVerify;
+
+  /// No description provided for @authEmailArrivalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Email may take up to 10 minutes to arrive. Check your spam folder if needed.'**
+  String get authEmailArrivalHint;
+
+  /// No description provided for @authResendVerificationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend verification email'**
+  String get authResendVerificationEmail;
+
+  /// No description provided for @authResendInSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend in {seconds}s'**
+  String authResendInSeconds(int seconds);
+
+  /// No description provided for @authWrongEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong email?'**
+  String get authWrongEmail;
+
+  /// No description provided for @authChangeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Email'**
+  String get authChangeEmail;
+
+  /// No description provided for @authChangeEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Email'**
+  String get authChangeEmailTitle;
+
+  /// No description provided for @authChangeEmailDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your new email address. You will need to verify it.'**
+  String get authChangeEmailDesc;
+
+  /// No description provided for @authNewEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New Email *'**
+  String get authNewEmailLabel;
+
+  /// No description provided for @authPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Password *'**
+  String get authPasswordLabel;
+
+  /// No description provided for @authPasswordHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Required to confirm identity'**
+  String get authPasswordHelper;
+
+  /// No description provided for @authLogoutHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You will be logged out and need to verify the new email'**
+  String get authLogoutHint;
+
+  /// No description provided for @authVerifyEmailSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email sent! Check your inbox.'**
+  String get authVerifyEmailSuccess;
+
+  /// No description provided for @authUpdateEmailSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Email updated! Check your new inbox for verification.'**
+  String get authUpdateEmailSuccess;
+
   /// No description provided for @authIncorrectPassword.
   ///
   /// In en, this message translates to:
@@ -13798,14 +13900,32 @@ abstract class AppLocalizations {
   /// No description provided for @subscriptionComingSoon.
   ///
   /// In en, this message translates to:
-  /// **'Coming Soon'**
+  /// **'Manage on Web'**
   String get subscriptionComingSoon;
 
   /// No description provided for @subscriptionComingSoonMessage.
   ///
   /// In en, this message translates to:
-  /// **'Payment integration is coming soon! For now, please contact us to upgrade your account.'**
+  /// **'To upgrade your subscription or manage billing, please visit our web dashboard at app.bookbed.io'**
   String get subscriptionComingSoonMessage;
+
+  /// No description provided for @subscriptionVisitWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit Website'**
+  String get subscriptionVisitWebsite;
+
+  /// No description provided for @subscriptionCopyUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy URL'**
+  String get subscriptionCopyUrl;
+
+  /// No description provided for @subscriptionUrlCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'URL copied to clipboard'**
+  String get subscriptionUrlCopied;
 
   /// No description provided for @profileSubscriptionSubtitle.
   ///

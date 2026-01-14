@@ -972,13 +972,15 @@ class _MoneyLoadingAnimation extends StatelessWidget {
                     delay: Duration(milliseconds: index * 120),
                     onPlay: (controller) => controller.repeat(reverse: true),
                   )
-                  .slideY(
+                  .moveY(
                     duration: Duration(milliseconds: 800 + (index * 150)),
                     curve: AnimationTokens.easeInOut,
                     begin: 0,
-                    end: -20,
+                    end:
+                        -20, // 20 pixels max movement (moveY uses absolute pixels)
                   )
                   .fade(
+                    delay: Duration.zero, // Run in parallel with moveY
                     duration: Duration(milliseconds: 800 + (index * 150)),
                     curve: AnimationTokens.easeInOut,
                     begin: 0.4,

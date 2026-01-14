@@ -173,6 +173,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                 );
               }
 
+              // On mobile, stack cards vertically
               return Column(
                 children: [
                   _ActionStepCard(
@@ -586,51 +587,89 @@ class DashboardOverviewTab extends ConsumerWidget {
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 900;
 
+    final cardSpacing = isMobile ? 10.0 : 12.0;
+
+    // Build the 4 stat card widgets
+    final revenueCard = _buildStatCard(
+      context: context,
+      title: l10n.ownerDashboardRevenue,
+      value: '€${data.revenue.toStringAsFixed(0)}',
+      icon: Icons.euro_rounded,
+      gradient: _createThemeGradient(context, _getPurpleShade(context, 3)),
+      isMobile: isMobile,
+      isTablet: isTablet,
+    );
+
+    final bookingsCard = _buildStatCard(
+      context: context,
+      title: l10n.ownerDashboardBookings,
+      value: '${data.bookings}',
+      icon: Icons.calendar_today_rounded,
+      gradient: _createThemeGradient(context, _getPurpleShade(context, 4)),
+      isMobile: isMobile,
+      isTablet: isTablet,
+      animationDelay: 100,
+    );
+
+    final checkInsCard = _buildStatCard(
+      context: context,
+      title: l10n.ownerUpcomingCheckIns,
+      value: '${data.upcomingCheckIns}',
+      icon: Icons.schedule_rounded,
+      gradient: _createThemeGradient(context, _getPurpleShade(context, 5)),
+      isMobile: isMobile,
+      isTablet: isTablet,
+      animationDelay: 200,
+    );
+
+    final occupancyCard = _buildStatCard(
+      context: context,
+      title: l10n.ownerOccupancyRate,
+      value: '${data.occupancyRate.toStringAsFixed(1)}%',
+      icon: Icons.analytics_rounded,
+      gradient: _createThemeGradient(context, _getPurpleShade(context, 2)),
+      isMobile: isMobile,
+      isTablet: isTablet,
+      animationDelay: 300,
+    );
+
+    // On mobile: explicit 2x2 grid
+    if (isMobile) {
+      return Column(
+        children: [
+          // First row: Revenue + Bookings
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: revenueCard),
+                SizedBox(width: cardSpacing),
+                Expanded(child: bookingsCard),
+              ],
+            ),
+          ),
+          SizedBox(height: cardSpacing),
+          // Second row: Check-ins + Occupancy
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: checkInsCard),
+                SizedBox(width: cardSpacing),
+                Expanded(child: occupancyCard),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // On tablet/desktop: use Wrap for flexible layout
     return Wrap(
-      spacing: isMobile ? 10.0 : 12.0,
-      runSpacing: isMobile ? 10.0 : 12.0,
+      spacing: cardSpacing,
+      runSpacing: cardSpacing,
       alignment: WrapAlignment.center,
-      children: [
-        _buildStatCard(
-          context: context,
-          title: l10n.ownerDashboardRevenue,
-          value: '€${data.revenue.toStringAsFixed(0)}',
-          icon: Icons.euro_rounded,
-          gradient: _createThemeGradient(context, _getPurpleShade(context, 3)),
-          isMobile: isMobile,
-          isTablet: isTablet,
-        ),
-        _buildStatCard(
-          context: context,
-          title: l10n.ownerDashboardBookings,
-          value: '${data.bookings}',
-          icon: Icons.calendar_today_rounded,
-          gradient: _createThemeGradient(context, _getPurpleShade(context, 4)),
-          isMobile: isMobile,
-          isTablet: isTablet,
-          animationDelay: 100,
-        ),
-        _buildStatCard(
-          context: context,
-          title: l10n.ownerUpcomingCheckIns,
-          value: '${data.upcomingCheckIns}',
-          icon: Icons.schedule_rounded,
-          gradient: _createThemeGradient(context, _getPurpleShade(context, 5)),
-          isMobile: isMobile,
-          isTablet: isTablet,
-          animationDelay: 200,
-        ),
-        _buildStatCard(
-          context: context,
-          title: l10n.ownerOccupancyRate,
-          value: '${data.occupancyRate.toStringAsFixed(1)}%',
-          icon: Icons.analytics_rounded,
-          gradient: _createThemeGradient(context, _getPurpleShade(context, 2)),
-          isMobile: isMobile,
-          isTablet: isTablet,
-          animationDelay: 300,
-        ),
-      ],
+      children: [revenueCard, bookingsCard, checkInsCard, occupancyCard],
     );
   }
 
@@ -646,25 +685,6 @@ class DashboardOverviewTab extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final wrapSpacing = isMobile ? 10.0 : 12.0;
-    final horizontalPadding = context.horizontalPadding;
-
-    double cardWidth;
-    if (isMobile) {
-      // Calculate width for 2 columns: (Screen - Padding*2 - Gap) / 2
-      final availableWidth = screenWidth - (horizontalPadding * 2);
-      cardWidth = (availableWidth - wrapSpacing) / 2;
-    } else if (isTablet) {
-      // Calculate width for 3 columns: (Screen - Padding*2 - Gap*2) / 3
-      final availableWidth = screenWidth - (horizontalPadding * 2);
-      cardWidth = (availableWidth - (wrapSpacing * 2)) / 3;
-    } else {
-      cardWidth = 280.0;
-    }
-
-    // RESPONSIVE: Ensure minimum width for very small screens (<320px)
-    if (cardWidth < 130) cardWidth = 130;
 
     final accentColor = gradient.colors.isNotEmpty
         ? gradient.colors.first
@@ -690,9 +710,10 @@ class DashboardOverviewTab extends ConsumerWidget {
         );
       },
       child: Container(
-        width: cardWidth,
+        // On mobile, let Expanded handle width; on tablet/desktop, use fixed width
+        width: isMobile ? null : (isTablet ? 200.0 : 280.0),
         height: isMobile ? 130 : 150,
-        constraints: const BoxConstraints(maxWidth: 280),
+        constraints: isMobile ? null : const BoxConstraints(maxWidth: 280),
         decoration: BoxDecoration(
           color: cardBgColor,
           borderRadius: BorderRadius.circular(12),

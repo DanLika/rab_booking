@@ -101,7 +101,7 @@
   "authEmailVerificationSentTo": "Poslali smo poveznicu za verifikaciju na",
   "authClickLinkToVerify": "Kliknite na poveznicu u e-poruci kako biste verificirali svoj račun",
   "authEmailArrivalHint": "E-poruka može stići za do 10 minuta. Provjerite spam mapu ako je potrebno.",
-  "authResendVerificationEmail": "Ponovno pošalji verifikacijsku poruku",
+  "authResendVerificationEmail": "Ponovno pošalji",
   "authResendInSeconds": "Ponovno pošalji za {seconds}s",
   "@authResendInSeconds": {
     "placeholders": {
@@ -3313,6 +3313,9 @@
   "subscriptionStatusActive": "Aktivna pretplata",
   "subscriptionStatusExpired": "Istekao probni period",
   "subscriptionStatusSuspended": "Račun suspendiran",
+  "subscriptionWebOnlyTitle": "Potreban web dashboard",
+  "subscriptionWebOnlyMessage": "Upravljanje pretplatom dostupno je samo na web dashboardu. Molimo koristite preglednik za upravljanje pretplatom i postavkama plaćanja.",
+  "subscriptionContinueToWeb": "Nastavi na web",
   "calendarTutorialScrollHint": "Povucite horizontalno za pregled datuma",
   "calendarTutorialLongPressHint": "Dugi pritisak na mrežu za dodavanje rezervacije",
   "calendarTutorialGotIt": "Razumijem!",

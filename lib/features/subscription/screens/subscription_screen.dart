@@ -1,584 +1,110 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import '../../../core/design_tokens/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 
-import '../../../core/services/analytics_service.dart';
-import '../../owner_dashboard/presentation/providers/owner_properties_provider.dart';
-import '../../../shared/widgets/common_app_bar.dart';
-import '../models/trial_status.dart';
-import '../providers/trial_status_provider.dart';
+const String _webDashboardUrl = 'https://app.bookbed.io/owner/subscription';
 
-const String _webDashboardUrl = 'https://app.bookbed.io';
-
-/// Subscription management screen
+/// Simplified Subscription Screen
 ///
-/// For App Store compliance, subscription payments are handled via web dashboard.
-/// Users are redirected to app.bookbed.io for billing management.
-class SubscriptionScreen extends ConsumerStatefulWidget {
+/// Shows a redirect to web dashboard for subscription management.
+/// App Store guidelines require in-app purchases for subscriptions,
+/// but BookBed handles payments via web dashboard instead.
+///
+/// This avoids Firestore permission issues from trialStatusProvider.
+class SubscriptionScreen extends StatelessWidget {
   const SubscriptionScreen({super.key});
 
   @override
-  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
-}
-
-class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Use addPostFrameCallback to ensure providers are ready and avoid build-phase side effects
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _logSubscriptionView();
-    });
-  }
-
-  void _logSubscriptionView() {
-    // Only log if we have data, otherwise the watcher in build will handle it via listener if needed
-    // But since this is initState, we just try our best.
-    // Actually, reading provider in initState is fine for one-off if we don't watch.
-    // But better to use ref.read inside the callback.
-    final properties = ref.read(ownerPropertiesProvider).valueOrNull;
-    if (properties != null) {
-      final unitCount = properties.fold<int>(0, (sum, p) => sum + p.unitsCount);
-      AnalyticsService.instance.logViewSubscription(
-        currentUnitCount: unitCount,
-      );
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final trialStatusAsync = ref.watch(trialStatusProvider);
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-
-    // Ensure properties are loaded so we can log correctly if not already (optional optimization)
-    // We don't necessarily need to watch it for the UI, but we do for the analytics context.
-    // However, to keep it clean, we rely on the provider being alive from dashboard.
+    final colors = isDark ? ColorTokens.dark : ColorTokens.light;
 
     return Scaffold(
-      appBar: CommonAppBar(
-        title: l10n.subscriptionTitle,
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (ctx) => Navigator.of(ctx).pop(),
+      backgroundColor: colors.backgroundPrimary,
+      appBar: AppBar(
+        title: Text(l10n.subscriptionTitle),
+        backgroundColor: colors.backgroundPrimary,
+        foregroundColor: colors.textPrimary,
+        elevation: 0,
       ),
-      body: trialStatusAsync.when(
-        data: (trialStatus) => _buildContent(context, theme, trialStatus, l10n),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Text(l10n.subscriptionErrorLoading(error.toString())),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContent(
-    BuildContext context,
-    ThemeData theme,
-    TrialStatus? trialStatus,
-    AppLocalizations l10n,
-  ) {
-    if (trialStatus == null) {
-      return Center(child: Text(l10n.subscriptionLoginRequired));
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Current Status Card
-          _StatusCard(trialStatus: trialStatus),
-          const SizedBox(height: 24),
-
-          // Plans Section
-          Text(
-            l10n.subscriptionAvailablePlans,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Free Plan
-          _PlanCard(
-            title: l10n.subscriptionFreeTrial,
-            price: l10n.subscriptionFreeTrialPrice,
-            period: l10n.subscriptionFreeTrialPeriod,
-            features: [
-              l10n.subscriptionFeatureProperties2,
-              l10n.subscriptionFeatureBasicBooking,
-              l10n.subscriptionFeatureEmailNotifications,
-              l10n.subscriptionFeatureCalendarSync,
-            ],
-            isCurrentPlan: trialStatus.isInTrial,
-          ),
-          const SizedBox(height: 16),
-
-          // Pro Plan
-          _PlanCard(
-            title: l10n.subscriptionPlanPro,
-            price: l10n.subscriptionProPrice,
-            period: l10n.subscriptionProPeriod,
-            features: [
-              l10n.subscriptionFeatureUnlimitedProperties,
-              l10n.subscriptionFeatureAdvancedAnalytics,
-              l10n.subscriptionFeaturePrioritySupport,
-              l10n.subscriptionFeatureCustomBranding,
-              l10n.subscriptionFeatureApiAccess,
-              l10n.subscriptionFeatureMultiUser,
-            ],
-            isCurrentPlan: !trialStatus.isInTrial && trialStatus.isActive,
-            isRecommended: true,
-            onSelect: () => _handleUpgrade(context, l10n),
-          ),
-          const SizedBox(height: 32),
-
-          // FAQ Section
-          Text(
-            l10n.subscriptionFaq,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _FaqItem(
-            question: l10n.subscriptionFaqTrialEndQuestion,
-            answer: l10n.subscriptionFaqTrialEndAnswer,
-          ),
-          _FaqItem(
-            question: l10n.subscriptionFaqCancelQuestion,
-            answer: l10n.subscriptionFaqCancelAnswer,
-          ),
-          _FaqItem(
-            question: l10n.subscriptionFaqDataSafeQuestion,
-            answer: l10n.subscriptionFaqDataSafeAnswer,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _handleUpgrade(BuildContext context, AppLocalizations l10n) {
-    // ANALYTICS: Log begin checkout
-    AnalyticsService.instance.logBeginCheckout(
-      planId: 'pro_monthly',
-      price: 19.99,
-    );
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.subscriptionComingSoon),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.subscriptionComingSoonMessage),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.link, size: 18, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      _webDashboardUrl,
-                      style: TextStyle(fontFamily: 'monospace', fontSize: 13),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.copy, size: 18),
-                    onPressed: () {
-                      Clipboard.setData(
-                        const ClipboardData(text: _webDashboardUrl),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.subscriptionUrlCopied)),
-                      );
-                    },
-                    tooltip: l10n.subscriptionCopyUrl,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.close),
-          ),
-          FilledButton.icon(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              final uri = Uri.parse(_webDashboardUrl);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-              }
-            },
-            icon: const Icon(Icons.open_in_new, size: 18),
-            label: Text(l10n.subscriptionVisitWebsite),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Card showing current subscription status
-class _StatusCard extends StatelessWidget {
-  final TrialStatus trialStatus;
-
-  const _StatusCard({required this.trialStatus});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-
-    Color backgroundColor;
-    Color borderColor;
-    IconData icon;
-
-    switch (trialStatus.accountStatus) {
-      case AccountStatus.trial:
-        backgroundColor = Colors.blue.shade50;
-        borderColor = Colors.blue.shade200;
-        icon = Icons.access_time_rounded;
-        break;
-      case AccountStatus.active:
-        backgroundColor = Colors.green.shade50;
-        borderColor = Colors.green.shade200;
-        icon = Icons.check_circle_rounded;
-        break;
-      case AccountStatus.trialExpired:
-        backgroundColor = Colors.red.shade50;
-        borderColor = Colors.red.shade200;
-        icon = Icons.warning_amber_rounded;
-        break;
-      case AccountStatus.suspended:
-        backgroundColor = Colors.grey.shade100;
-        borderColor = Colors.grey.shade300;
-        icon = Icons.block_rounded;
-        break;
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 32, color: borderColor),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(SpacingTokens.xl),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  l10n.subscriptionCurrentStatus,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(SpacingTokens.l),
+                  decoration: BoxDecoration(
+                    color: colors.accent.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.language_rounded,
+                    size: 64,
+                    color: colors.accent,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: SpacingTokens.xl),
+
+                // Title
                 Text(
-                  _getStatusText(trialStatus.accountStatus, l10n),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  l10n.subscriptionWebOnlyTitle,
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeXXL,
+                    fontWeight: TypographyTokens.bold,
+                    color: colors.textPrimary,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                if (trialStatus.isInTrial) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.subscriptionDaysLeft(trialStatus.daysRemaining),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
+                const SizedBox(height: SpacingTokens.m),
+
+                // Description
+                Text(
+                  l10n.subscriptionWebOnlyMessage,
+                  style: TextStyle(
+                    fontSize: TypographyTokens.fontSizeM,
+                    color: colors.textSecondary,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: SpacingTokens.xxl),
+
+                // Continue to Web button
+                FilledButton.icon(
+                  onPressed: _launchWebDashboard,
+                  icon: const Icon(Icons.open_in_new),
+                  label: Text(l10n.subscriptionContinueToWeb),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colors.accent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: SpacingTokens.xl,
+                      vertical: SpacingTokens.m,
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: TypographyTokens.fontSizeL,
+                      fontWeight: TypographyTokens.semiBold,
                     ),
                   ),
-                ],
+                ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  String _getStatusText(AccountStatus status, AppLocalizations l10n) {
-    switch (status) {
-      case AccountStatus.trial:
-        return l10n.subscriptionStatusTrial;
-      case AccountStatus.active:
-        return l10n.subscriptionStatusActive;
-      case AccountStatus.trialExpired:
-        return l10n.subscriptionStatusExpired;
-      case AccountStatus.suspended:
-        return l10n.subscriptionStatusSuspended;
-    }
-  }
-}
-
-/// Card showing a subscription plan
-class _PlanCard extends StatelessWidget {
-  final String title;
-  final String price;
-  final String period;
-  final List<String> features;
-  final bool isCurrentPlan;
-  final bool isRecommended;
-  final VoidCallback? onSelect;
-
-  const _PlanCard({
-    required this.title,
-    required this.price,
-    required this.period,
-    required this.features,
-    this.isCurrentPlan = false,
-    this.isRecommended = false,
-    this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isRecommended ? theme.primaryColor : Colors.grey.shade200,
-          width: isRecommended ? 2 : 1,
         ),
-        boxShadow: isRecommended
-            ? [
-                BoxShadow(
-                  color: theme.primaryColor.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (isRecommended)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.primaryColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(14),
-                ),
-              ),
-              child: Text(
-                l10n.subscriptionRecommended,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  letterSpacing: 1,
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    if (isCurrentPlan)
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          l10n.subscriptionCurrent,
-                          style: TextStyle(
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.end,
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: [
-                    Text(
-                      price,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        period,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 16),
-                ...features.map(
-                  (feature) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.check_circle_rounded,
-                          size: 18,
-                          color: Colors.green.shade600,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(feature),
-                      ],
-                    ),
-                  ),
-                ),
-                if (onSelect != null && !isCurrentPlan) ...[
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: onSelect,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(l10n.subscriptionUpgradeNow),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
-}
 
-/// FAQ item widget
-class _FaqItem extends StatefulWidget {
-  final String question;
-  final String answer;
-
-  const _FaqItem({required this.question, required this.answer});
-
-  @override
-  State<_FaqItem> createState() => _FaqItemState();
-}
-
-class _FaqItemState extends State<_FaqItem> {
-  bool _isExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () => setState(() => _isExpanded = !_isExpanded),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.question,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    _isExpanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    color: Colors.grey.shade600,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_isExpanded)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Text(
-                widget.answer,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade700,
-                  height: 1.5,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
+  Future<void> _launchWebDashboard() async {
+    final uri = Uri.parse(_webDashboardUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 }

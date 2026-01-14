@@ -291,7 +291,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Email may take up to 10 minutes to arrive. Check your spam folder if needed.';
 
   @override
-  String get authResendVerificationEmail => 'Resend verification email';
+  String get authResendVerificationEmail => 'Resend email';
 
   @override
   String authResendInSeconds(int seconds) {
@@ -7724,6 +7724,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionStatusSuspended => 'Account Suspended';
+
+  @override
+  String get subscriptionWebOnlyTitle => 'Web Dashboard Required';
+
+  @override
+  String get subscriptionWebOnlyMessage =>
+      'Subscription management is only available on the web dashboard. Please use your browser to manage your subscription and billing settings.';
+
+  @override
+  String get subscriptionContinueToWeb => 'Continue to Web';
 
   @override
   String get calendarTutorialScrollHint =>

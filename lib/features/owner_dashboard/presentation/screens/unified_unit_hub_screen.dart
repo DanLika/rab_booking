@@ -19,6 +19,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
+import '../../../../shared/widgets/smart_tooltip.dart';
 import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
@@ -202,10 +203,33 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
               actions: [
-                IconButton(
-                  icon: const Icon(Icons.list, color: Colors.white),
-                  onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-                  tooltip: l10n.unitHubShowAllUnits,
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: SmartTooltip(
+                    message: l10n.unitHubShowAllUnits,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _scaffoldKey.currentState?.openEndDrawer(),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(25),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Colors.white.withAlpha(40),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.list,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
               flexibleSpace: Container(

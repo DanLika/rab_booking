@@ -597,7 +597,26 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2026-01-10 | **Version**: 6.28
+**Last Updated**: 2026-01-14 | **Version**: 6.29
+
+**Changelog 6.29**: App Store Submission Preparation & UI Fixes:
+- **iOS Deployment Target Fix**:
+  - Problem: Runner.xcodeproj targetao iOS 13.0, Podfile zahtijevao iOS 15.0
+  - Fix: Ažurirane sve 3 instance `IPHONEOS_DEPLOYMENT_TARGET` na 15.0
+  - Rezultat: `flutter build ios --release` sada prolazi
+- **Subscription Screen Simplification**:
+  - Problem: `trialStatusProvider` uzrokovao Firestore permission error
+  - Fix: Uklonjena Firestore zavisnost, screen sada samo pokazuje web redirect button
+  - Novi l10n: `subscriptionWebOnlyTitle`, `subscriptionWebOnlyMessage`, `subscriptionContinueToWeb`
+  - App Store compliance: Subscription management na webu, ne u app-u
+- **Stripe Loading Animation Fix**:
+  - Problem: Currency simboli (€, $, £) se pomjerali ~640px umjesto 20px
+  - Uzrok: `slideY(end: -20)` koristi widget height multiplier, ne pixele
+  - Fix: Promijenjeno na `moveY(end: -20)` koji koristi apsolutne pixele
+- **Unit Hub Menu Button Styling**:
+  - Zamijenjen plain `IconButton` sa styled button (container, border, SmartTooltip)
+  - Konzistentno sa calendar toolbar button stilom
+- **App Store Audit**: Verified Sign in with Apple, ATT compliance, ATS, FCM config
 
 **Changelog 6.28**: Dashboard Metrics Fix - Exclude Pending Bookings:
 - **Problem**: Dashboard Revenue, Bookings Count, i Occupancy Rate uključivali pending bookinge

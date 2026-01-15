@@ -50,7 +50,7 @@ class AuthLogoIcon extends StatelessWidget {
 
     // Build the logo image with optional color inversion for dark mode
     Widget logoImage = Image.asset(
-      'assets/images/Apple_App_Icon.png',
+      'assets/images/logo-light.png',
       width: size,
       height: size,
       cacheWidth: cacheSize,

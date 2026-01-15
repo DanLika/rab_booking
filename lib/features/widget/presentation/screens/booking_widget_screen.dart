@@ -625,9 +625,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 // #endregion
 
                 // Reset processing state FIRST (before any async operations)
-                setState(() {
-                  _isProcessing = false;
-                });
+                if (mounted) {
+                  setState(() {
+                    _isProcessing = false;
+                  });
+                }
 
                 // #region agent log
                 try {
@@ -1096,7 +1098,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   /// Reset form state to initial values (clear all user input)
   void _resetFormState() {
-    setState(_formState.resetState);
+    if (mounted) {
+      setState(_formState.resetState);
+    }
 
     // Reset selected additional services (provider-based)
     ref.invalidate(selectedAdditionalServicesProvider);
@@ -1209,10 +1213,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         } catch (_) {}
         // #endregion
 
-        setState(() {
-          _isProcessing = false;
-          _showGuestForm = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+            _showGuestForm = false;
+          });
+        }
         _resetFormState();
 
         // #region agent log
@@ -1289,9 +1295,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final paymentStartTime = DateTime.now().toUtc();
 
     // Clear any previous error
-    setState(() {
-      _validationError = null;
-    });
+    if (mounted) {
+      setState(() {
+        _validationError = null;
+      });
+    }
 
     try {
       final bookingRepo = ref.read(bookingRepositoryProvider);
@@ -1457,9 +1465,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Data loads in background - no BookBed Loader blocking the UI.
   Future<void> _validateUnitAndProperty() async {
     // HYBRID LOADING: Don't block UI - let it show immediately
-    setState(() {
-      _validationError = null;
-    });
+    if (mounted) {
+      setState(() {
+        _validationError = null;
+      });
+    }
 
     try {
       // MODE 1: Slug-based URL resolution (clean URLs for standalone pages)
@@ -1475,18 +1485,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // No subdomain in URL - this shouldn't happen for slug URLs
         if (slugResult == null) {
-          setState(() {
-            _validationError =
-                'Unable to determine property.\n\nSubdomain not found in URL.';
-          });
+          if (mounted) {
+            setState(() {
+              _validationError =
+                  'Unable to determine property.\n\nSubdomain not found in URL.';
+            });
+          }
           return;
         }
 
         // Check for errors
         if (slugResult.isError) {
-          setState(() {
-            _validationError = slugResult.error;
-          });
+          if (mounted) {
+            setState(() {
+              _validationError = slugResult.error;
+            });
+          }
           return;
         }
 
@@ -1522,18 +1536,22 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // MODE 2: Query param validation (iframe embeds)
       // Check if both property and unit IDs are provided
       if (_propertyId == null || _propertyId!.isEmpty) {
-        setState(() {
-          _validationError =
-              'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
-        });
+        if (mounted) {
+          setState(() {
+            _validationError =
+                'Missing property parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
+          });
+        }
         return;
       }
 
       if (_unitId.isEmpty) {
-        setState(() {
-          _validationError =
-              'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
-        });
+        if (mounted) {
+          setState(() {
+            _validationError =
+                'Missing unit parameter in URL.\n\nPlease use: ?property=PROPERTY_ID&unit=UNIT_ID';
+          });
+        }
         return;
       }
 
@@ -1853,11 +1871,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
                   try {
                     // Clear selected dates
-                    setState(() {
-                      _checkIn = null;
-                      _checkOut = null;
-                      _showGuestForm = false;
-                    });
+                    if (mounted) {
+                      setState(() {
+                        _checkIn = null;
+                        _checkOut = null;
+                        _showGuestForm = false;
+                      });
+                    }
 
                     // Show user-friendly error message
                     if (mounted) {
@@ -2185,15 +2205,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                                 }
                                               }
 
-                                              setState(() {
-                                                _checkIn = start;
-                                                _checkOut = end;
-                                                // Bug Fix: Date selection IS interaction - show booking flow
-                                                _hasInteractedWithBookingFlow =
-                                                    true;
-                                                _pillBarDismissed =
-                                                    false; // Reset dismissed flag for new date selection
-                                              });
+                                              if (mounted) {
+                                                setState(() {
+                                                  _checkIn = start;
+                                                  _checkOut = end;
+                                                  // Bug Fix: Date selection IS interaction - show booking flow
+                                                  _hasInteractedWithBookingFlow =
+                                                      true;
+                                                  _pillBarDismissed =
+                                                      false; // Reset dismissed flag for new date selection
+                                                });
+                                              }
 
                                               // Bug #53: Save form data after date selection
                                               _saveFormData();
@@ -2246,9 +2268,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   Positioned.fill(
                     child: GestureDetector(
                       onTap: () {
-                        setState(() {
-                          _showGuestForm = false;
-                        });
+                        if (mounted) {
+                          setState(() {
+                            _showGuestForm = false;
+                          });
+                        }
                       },
                       child: Container(
                         color: Colors.black.withValues(alpha: 0.5),
@@ -2273,11 +2297,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   ZoomControlButtons(
                     currentScale: _zoomScale,
                     onScaleChanged: (newScale) {
-                      setState(() {
-                        _zoomScale = newScale;
-                        _transformationController.value = Matrix4.identity()
-                          ..scale(newScale);
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _zoomScale = newScale;
+                          _transformationController.value = Matrix4.identity()
+                            ..scale(newScale);
+                        });
+                      }
                     },
                   ),
               ],
@@ -2501,19 +2527,23 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             }(),
             onClose: () {
               // Bug Fix: Set dismissed flag instead of clearing dates
-              setState(() {
-                _pillBarDismissed = true;
-                _showGuestForm = false;
-              });
+              if (mounted) {
+                setState(() {
+                  _pillBarDismissed = true;
+                  _showGuestForm = false;
+                });
+              }
               _saveFormData();
             },
             onReserve: () {
               // Bug #64: Lock price when user starts booking process
-              setState(() {
-                _showGuestForm = true;
-                _hasInteractedWithBookingFlow = true;
-                _lockedPriceCalculation = calculation.copyWithLock();
-              });
+              if (mounted) {
+                setState(() {
+                  _showGuestForm = true;
+                  _hasInteractedWithBookingFlow = true;
+                  _lockedPriceCalculation = calculation.copyWithLock();
+                });
+              }
               _saveFormData();
             },
             guestFormBuilder: () =>
@@ -2571,7 +2601,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               propertyId: _propertyId ?? '',
               unitId: _unitId,
               onAcceptedChanged: (accepted) {
-                setState(() => _taxLegalAccepted = accepted);
+                if (mounted) {
+                  setState(() => _taxLegalAccepted = accepted);
+                }
               },
             ),
             translations: WidgetTranslations.of(context, ref),
@@ -2708,7 +2740,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
                 // Auto-select the single method
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (_selectedPaymentMethod != singleMethod) {
+                  if (mounted && _selectedPaymentMethod != singleMethod) {
                     setState(() {
                       _selectedPaymentMethod = singleMethod!;
                     });
@@ -2797,8 +2829,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       title: tr.creditCard,
                       subtitle: tr.instantConfirmationViaStripe,
                       isSelected: _selectedPaymentMethod == 'stripe',
-                      onTap: () =>
-                          setState(() => _selectedPaymentMethod = 'stripe'),
+                      onTap: () {
+                        if (mounted) {
+                          setState(() => _selectedPaymentMethod = 'stripe');
+                        }
+                      },
                       isDarkMode: isDarkMode,
                       depositAmount: depositFormatted,
                     ),
@@ -2819,9 +2854,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             subtitle: tr.bankTransferSubtitle,
                             isSelected:
                                 _selectedPaymentMethod == 'bank_transfer',
-                            onTap: () => setState(
-                              () => _selectedPaymentMethod = 'bank_transfer',
-                            ),
+                            onTap: () {
+                              if (mounted) {
+                                setState(
+                                  () =>
+                                      _selectedPaymentMethod = 'bank_transfer',
+                                );
+                              }
+                            },
                             isDarkMode: isDarkMode,
                             depositAmount: calculation.formatDeposit(
                               tr.currencySymbol,
@@ -2849,9 +2889,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             subtitle: tr.payAtTheProperty,
                             isSelected:
                                 _selectedPaymentMethod == 'pay_on_arrival',
-                            onTap: () => setState(
-                              () => _selectedPaymentMethod = 'pay_on_arrival',
-                            ),
+                            onTap: () {
+                              if (mounted) {
+                                setState(
+                                  () =>
+                                      _selectedPaymentMethod = 'pay_on_arrival',
+                                );
+                              }
+                            },
                             isDarkMode: isDarkMode,
                           ),
                         );
@@ -2988,7 +3033,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             isLoading: _isVerifyingEmail,
             onEmailChanged: (value) {
               // Reset verification when email changes
-              if (_emailVerified) {
+              if (_emailVerified && mounted) {
                 setState(() {
                   _emailVerified = false;
                 });
@@ -3017,11 +3062,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               CountryCodeDropdown(
                 selectedCountry: _selectedCountry,
                 onChanged: (country) {
-                  setState(() {
-                    _selectedCountry = country;
-                    // Re-validate phone number with new country
-                    _formKey.currentState?.validate();
-                  });
+                  if (mounted) {
+                    setState(() {
+                      _selectedCountry = country;
+                      // Re-validate phone number with new country
+                      _formKey.currentState?.validate();
+                    });
+                  }
                 },
                 textColor: minimalistColors.textPrimary,
                 backgroundColor: minimalistColors.backgroundSecondary,
@@ -3052,8 +3099,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             children: _children,
             maxGuests: _unit?.maxGuests ?? 10,
             isDarkMode: ref.watch(themeProvider),
-            onAdultsChanged: (value) => setState(() => _adults = value),
-            onChildrenChanged: (value) => setState(() => _children = value),
+            onAdultsChanged: (value) {
+              if (mounted) {
+                setState(() => _adults = value);
+              }
+            },
+            onChildrenChanged: (value) {
+              if (mounted) {
+                setState(() => _children = value);
+              }
+            },
           ),
           const SizedBox(height: SpacingTokens.s),
 
@@ -3201,9 +3256,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         currentCalculation: calculation,
         lockedCalculation: _lockedPriceCalculation,
         onLockUpdated: () {
-          setState(() {
-            _lockedPriceCalculation = calculation.copyWithLock();
-          });
+          if (mounted) {
+            setState(() {
+              _lockedPriceCalculation = calculation.copyWithLock();
+            });
+          }
         },
       );
 
@@ -3266,9 +3323,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return;
     }
 
-    setState(() {
-      _isProcessing = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isProcessing = true;
+      });
+    }
 
     try {
       // Submit booking via use case
@@ -3375,11 +3434,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         );
 
         // Reset selection so user can pick new dates
-        setState(() {
-          _checkIn = null;
-          _checkOut = null;
-          _showGuestForm = false;
-        });
+        if (mounted) {
+          setState(() {
+            _checkIn = null;
+            _checkOut = null;
+            _showGuestForm = false;
+          });
+        }
       }
     } catch (e) {
       LoggingService.logError('Booking creation failed', e);

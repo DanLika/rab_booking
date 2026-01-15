@@ -30,6 +30,7 @@ import { db } from "./firebase";
 import { logError, logSuccess } from "./logger";
 
 // Import new email templates (V2 - OPCIJA A: Refined Premium)
+import { escapeHtml } from "./email/utils/template-helpers";
 import {
   sendBookingConfirmationEmailV2,
   sendPendingBookingRequestEmailV2,
@@ -1214,7 +1215,7 @@ export async function sendTrialExpiringEmail(
       <!-- Content -->
       <div style="padding: 24px;">
         <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
-          Hi ${name},
+          Hi ${escapeHtml(name)},
         </p>
         
         <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">
@@ -1329,7 +1330,7 @@ export async function sendTrialExpiredEmail(
       <!-- Content -->
       <div style="padding: 24px;">
         <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
-          Hi ${name},
+          Hi ${escapeHtml(name)},
         </p>
         
         <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">

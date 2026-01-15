@@ -52,7 +52,7 @@ class FcmService {
 
     try {
       // Request permission (iOS requires this)
-      final settings = await _messagingInstance.requestPermission(badge: true);
+      final settings = await _messagingInstance.requestPermission();
 
       debugPrint('[FCM] Permission status: ${settings.authorizationStatus}');
 

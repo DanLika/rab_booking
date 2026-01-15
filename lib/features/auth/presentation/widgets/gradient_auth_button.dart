@@ -98,7 +98,6 @@ class _GradientAuthButtonState extends State<GradientAuthButton> {
                       Flexible(
                         child: AutoSizeText(
                           widget.text,
-                          minFontSize: 12,
                           style: TextStyle(
                             color: isDisabled
                                 ? theme.colorScheme.onSurface.withValues(

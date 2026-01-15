@@ -86,13 +86,13 @@ class _TabButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: isSelected
-                ? activeColor.withOpacity(0.15)
+                ? activeColor.withValues(alpha: 0.15)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: isSelected
                   ? activeColor
-                  : theme.colorScheme.outline.withOpacity(0.3),
+                  : theme.colorScheme.outline.withValues(alpha: 0.3),
               width: isSelected ? 1.5 : 1,
             ),
           ),
@@ -107,7 +107,7 @@ class _TabButton extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? activeColor
-                        : activeColor.withOpacity(0.6),
+                        : activeColor.withValues(alpha: 0.6),
                     shape: BoxShape.circle,
                   ),
                 ),

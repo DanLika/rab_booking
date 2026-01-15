@@ -21,14 +21,14 @@ void main() {
       });
 
       test('preserves already normalized date', () {
-        final date = DateTime(2024, 6, 15);
+        final date = DateTime.utc(2024, 6, 15);
         final normalized = DateNormalizer.normalize(date);
 
         expect(normalized, date);
       });
 
       test('handles midnight correctly', () {
-        final date = DateTime(2024, 6, 15, 0, 0, 0, 0);
+        final date = DateTime.utc(2024, 6, 15, 0, 0, 0, 0);
         final normalized = DateNormalizer.normalize(date);
 
         expect(normalized, date);

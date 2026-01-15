@@ -103,10 +103,10 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
               horizontal: kTimelineBookingBlockHorizontalMargin,
             ),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.15),
+              color: theme.colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.3),
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
               ),
             ),
             child: Center(
@@ -114,7 +114,7 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
                 l10n.calendarTutorialExampleBooking,
                 style: TextStyle(
                   fontSize: 10,
-                  color: theme.colorScheme.primary.withOpacity(0.6),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.6),
                   fontWeight: FontWeight.bold,
                 ),
                 overflow: TextOverflow.ellipsis,

@@ -637,10 +637,10 @@ class _ProfileCompletionWidget extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(isDark ? 0.1 : 0.15),
+          color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.15),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withOpacity(isDark ? 0.2 : 0.3),
+            color: Colors.white.withValues(alpha: isDark ? 0.2 : 0.3),
           ),
         ),
         child: Column(
@@ -659,7 +659,7 @@ class _ProfileCompletionWidget extends StatelessWidget {
                 ),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   size: 14,
                 ),
               ],
@@ -669,9 +669,9 @@ class _ProfileCompletionWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: percentage / 100,
-                backgroundColor: Colors.white.withOpacity(0.2),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  Colors.white.withOpacity(0.9),
+                  Colors.white.withValues(alpha: 0.9),
                 ),
                 minHeight: 6,
               ),
@@ -681,7 +681,7 @@ class _ProfileCompletionWidget extends StatelessWidget {
               children: [
                 Icon(
                   Icons.info_outline_rounded,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   size: 14,
                 ),
                 const SizedBox(width: 6),
@@ -689,7 +689,7 @@ class _ProfileCompletionWidget extends StatelessWidget {
                   child: Text(
                     suggestion,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 12,
                     ),
                   ),
@@ -722,7 +722,7 @@ class _SubscriptionBanner extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: context.gradients.premiumEnd.withOpacity(0.3),
+              color: context.gradients.premiumEnd.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -734,7 +734,7 @@ class _SubscriptionBanner extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -760,7 +760,7 @@ class _SubscriptionBanner extends StatelessWidget {
                   Text(
                     l10n.subscriptionBannerSubtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 13,
                     ),
                   ),
@@ -769,7 +769,7 @@ class _SubscriptionBanner extends StatelessWidget {
             ),
             Icon(
               Icons.arrow_forward_ios_rounded,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               size: 16,
             ),
           ],

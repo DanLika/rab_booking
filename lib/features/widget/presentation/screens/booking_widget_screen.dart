@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:async' show unawaited, Timer, StreamSubscription;
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -489,7 +489,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         tag: 'TAB_COMM',
       );
     } catch (e) {
-      LoggingService.logError('[CrossTab] Failed to initialize', e);
+      unawaited(LoggingService.logError('[CrossTab] Failed to initialize', e));
     }
   }
 
@@ -1594,14 +1594,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         _validationError = null;
       });
     } on WidgetContextException catch (e) {
-      LoggingService.logError('Widget context error', e);
+      unawaited(LoggingService.logError('Widget context error', e));
       // Handle specific context loading errors
       if (!mounted) return;
       setState(() {
         _validationError = e.message;
       });
     } catch (e) {
-      LoggingService.logError('Failed to load unit data', e);
+      unawaited(LoggingService.logError('Failed to load unit data', e));
       // HIGH: Check mounted in catch block before setState
       if (!mounted) return;
       setState(() {
@@ -2300,8 +2300,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       if (mounted) {
                         setState(() {
                           _zoomScale = newScale;
-                          _transformationController.value = Matrix4.identity()
-                            ..scale(newScale);
+                          _transformationController.value =
+                              Matrix4.diagonal3Values(newScale, newScale, 1.0);
                         });
                       }
                     },
@@ -3443,7 +3443,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
       }
     } catch (e) {
-      LoggingService.logError('Booking creation failed', e);
+      unawaited(LoggingService.logError('Booking creation failed', e));
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
@@ -3853,7 +3853,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
       }
     } catch (e) {
-      await LoggingService.logError('[Stripe] Error in payment flow', e);
+      unawaited(LoggingService.logError('[Stripe] Error in payment flow', e));
       if (mounted) {
         // Reset processing state on error so user can try again
         setState(() {
@@ -4017,7 +4017,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
       }
     } catch (e) {
-      LoggingService.logError('Failed to load booking for confirmation', e);
+      unawaited(
+        LoggingService.logError('Failed to load booking for confirmation', e),
+      );
       if (mounted) {
         SnackBarHelper.showError(
           context: context,

@@ -142,7 +142,7 @@ class _OwnerTimelineCalendarScreenState
       data: (bookings) =>
           bookings.values.fold<int>(0, (sum, list) => sum + list.length) == 0,
       loading: () => false,
-      error: (_, __) => false,
+      error: (_, _) => false,
     );
 
     // Safely get localizations - use try-catch to prevent errors if context is not ready

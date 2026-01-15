@@ -538,7 +538,7 @@ void main() {
 
         expect(result.isAvailable, isFalse);
         expect(result.conflictType, ConflictType.blockedDate);
-        expect(result.conflictDate, DateTime(2024, 1, 17));
+        expect(result.conflictDate, DateTime.utc(2024, 1, 17));
       });
 
       test('detects conflict when blocked date is checkIn date', () async {

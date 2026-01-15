@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// BookBed logo widget that displays the official logo image
 ///
-/// Uses the logo-light.avif asset. In dark mode, the logo colors are
-/// automatically inverted to ensure visibility on dark backgrounds.
+/// Uses the logo-light.png asset (1024x1024px transparent) for high-quality rendering.
+/// In dark mode, the logo colors are automatically inverted to ensure visibility on dark backgrounds.
 ///
 /// Usage:
 /// ```dart

@@ -98,8 +98,8 @@ export const sendPasswordResetEmail = onCall(
         // URL you want to redirect back to after password reset
         // This should be your app's password reset page
         url: process.env.PASSWORD_RESET_REDIRECT_URL ||
-          (process.env.WEB_APP_URL ? `${process.env.WEB_APP_URL}/auth/reset-password` :
-            "https://bookbed.app/auth/reset-password"),
+          (process.env.WEB_APP_URL ? `${process.env.WEB_APP_URL}/forgot-password` :
+            "https://app.bookbed.io/forgot-password"),
         handleCodeInApp: false, // Open link in browser, not app
       };
 

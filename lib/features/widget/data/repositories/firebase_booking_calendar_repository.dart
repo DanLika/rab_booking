@@ -1334,7 +1334,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         checkOut: (data['check_out'] as Timestamp).toDate(),
         status: status,
         createdAt:
-            (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            (data['created_at'] as Timestamp?)?.toDate() ??
+            DateTime.now().toUtc(),
       );
     } catch (e) {
       LoggingService.logError('Error parsing booking document ${doc.id}', e);

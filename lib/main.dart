@@ -519,7 +519,7 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Precache critical logo asset for splash screen and auth screens
+    // Precache critical logo asset for splash screen and auth screens (transparent 1024x1024)
     precacheImage(const AssetImage('assets/images/logo-light.png'), context);
   }
 

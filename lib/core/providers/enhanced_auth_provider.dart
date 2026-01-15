@@ -786,6 +786,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     final refreshedUser = _auth.currentUser;
 
     if (refreshedUser != null && refreshedUser.emailVerified) {
+      // Force refresh the auth token to ensure Firestore has updated credentials
+      // This fixes permission-denied error when updating emailVerified field
+      await refreshedUser.getIdToken(true); // true = force refresh
+
       // Update Firestore
       await _firestore.collection('users').doc(user.uid).update({
         'emailVerified': true,

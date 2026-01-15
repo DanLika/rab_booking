@@ -15,6 +15,60 @@
       ]
     },
     {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trialWarning7DaysSent",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trialExpiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trialWarning3DaysSent",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trialExpiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "accountStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trialWarning1DaySent",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trialExpiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "daily_prices",
       "queryScope": "COLLECTION_GROUP",
       "fields": [

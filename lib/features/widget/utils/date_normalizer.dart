@@ -19,28 +19,34 @@ class DateNormalizer {
 
   /// Normalizes a DateTime by removing time components.
   ///
-  /// Returns a new DateTime with only year, month, and day.
-  /// Time is set to 00:00:00.000
+  /// Returns a new DateTime with only year, month, and day in UTC.
+  /// Time is set to 00:00:00.000 UTC.
+  ///
+  /// CRITICAL: Always uses UTC to avoid timezone bugs (per CLAUDE.md standards).
   static DateTime normalize(DateTime date) {
-    return DateTime(date.year, date.month, date.day);
+    return DateTime.utc(date.year, date.month, date.day);
   }
 
   /// Normalizes a Firestore Timestamp to DateTime.
   ///
-  /// Converts Timestamp to DateTime and removes time components.
+  /// Converts Timestamp to DateTime and removes time components in UTC.
   /// Returns null if timestamp is null.
+  ///
+  /// CRITICAL: Always uses UTC to avoid timezone bugs (per CLAUDE.md standards).
   static DateTime? fromTimestamp(Timestamp? timestamp) {
     if (timestamp == null) return null;
     final date = timestamp.toDate();
-    return DateTime(date.year, date.month, date.day);
+    return DateTime.utc(date.year, date.month, date.day);
   }
 
   /// Normalizes a Firestore Timestamp to DateTime (non-nullable).
   ///
   /// Throws [ArgumentError] if timestamp is null.
+  ///
+  /// CRITICAL: Always uses UTC to avoid timezone bugs (per CLAUDE.md standards).
   static DateTime fromTimestampRequired(Timestamp timestamp) {
     final date = timestamp.toDate();
-    return DateTime(date.year, date.month, date.day);
+    return DateTime.utc(date.year, date.month, date.day);
   }
 
   /// Checks if two dates are the same day (ignoring time).
@@ -138,24 +144,32 @@ class DateNormalizer {
   }
 
   /// Returns the first day of the month containing [date].
+  ///
+  /// CRITICAL: Always uses UTC to avoid timezone bugs (per CLAUDE.md standards).
   static DateTime firstDayOfMonth(DateTime date) {
     // ignore: avoid_redundant_argument_values
-    return DateTime(date.year, date.month, 1); // Explicit for clarity
+    return DateTime.utc(date.year, date.month, 1); // Explicit for clarity
   }
 
   /// Returns the last day of the month containing [date].
+  ///
+  /// CRITICAL: Always uses UTC to avoid timezone bugs (per CLAUDE.md standards).
   static DateTime lastDayOfMonth(DateTime date) {
-    return DateTime(date.year, date.month + 1, 0);
+    return DateTime.utc(date.year, date.month + 1, 0);
   }
 
   /// Returns the first day of the year containing [date].
+  ///
+  /// CRITICAL: Always uses UTC to avoid timezone bugs (per CLAUDE.md standards).
   static DateTime firstDayOfYear(DateTime date) {
     // ignore: avoid_redundant_argument_values
-    return DateTime(date.year, 1, 1); // Explicit for clarity
+    return DateTime.utc(date.year, 1, 1); // Explicit for clarity
   }
 
   /// Returns the last day of the year containing [date].
+  ///
+  /// CRITICAL: Always uses UTC to avoid timezone bugs (per CLAUDE.md standards).
   static DateTime lastDayOfYear(DateTime date) {
-    return DateTime(date.year, 12, 31);
+    return DateTime.utc(date.year, 12, 31);
   }
 }

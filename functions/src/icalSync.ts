@@ -70,6 +70,9 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
       // Generic iCal providers
       "webcal.io",
       "icalendar.org",
+      // Testing/Development: GitHub hosted iCal files
+      "gist.githubusercontent.com",
+      "raw.githubusercontent.com",
     ];
 
     // Check if domain is in allowed list or is a subdomain of allowed domains

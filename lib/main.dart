@@ -519,8 +519,11 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Precache critical logo asset for splash screen and auth screens
-    precacheImage(const AssetImage('assets/images/logo-light.png'), context);
+    // Precache critical logo asset for splash screen and auth screens (high-res 1024x1024)
+    precacheImage(
+      const AssetImage('assets/images/Apple_App_Icon.png'),
+      context,
+    );
   }
 
   /// Wait for all initialization to complete

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// BookBed logo widget that displays the official logo image
 ///
-/// Uses the logo-light.avif asset. In dark mode, the logo colors are
-/// automatically inverted to ensure visibility on dark backgrounds.
+/// Uses the Apple_App_Icon.png asset (1024x1024px) for high-quality rendering.
+/// In dark mode, the logo colors are automatically inverted to ensure visibility on dark backgrounds.
 ///
 /// Usage:
 /// ```dart
@@ -34,7 +34,7 @@ class BookBedLogo extends StatelessWidget {
     final cacheSize = (size * MediaQuery.of(context).devicePixelRatio).toInt();
 
     Widget logoImage = Image.asset(
-      'assets/images/logo-light.png',
+      'assets/images/Apple_App_Icon.png',
       width: size,
       height: size,
       cacheWidth: cacheSize,

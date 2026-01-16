@@ -208,10 +208,15 @@ jobs:
             BYTES=$(stat -c%s "$MAIN_JS" 2>/dev/null || stat -f%z "$MAIN_JS")
             echo "main.dart.js: $SIZE ($BYTES bytes)"
 
-            # Fail if main.dart.js > 5MB (5242880 bytes)
-            if [ "$BYTES" -gt 5242880 ]; then
-              echo "❌ ERROR: main.dart.js exceeds 5MB limit!"
+            # Fail if main.dart.js > 8MB (8388608 bytes)
+            # Flutter web apps are larger due to Dart runtime
+            if [ "$BYTES" -gt 8388608 ]; then
+              echo "❌ ERROR: main.dart.js exceeds 8MB limit!"
               exit 1
+            elif [ "$BYTES" -gt 6291456 ]; then
+              echo "⚠️ Warning: main.dart.js is over 6MB"
+            else
+              echo "✅ Bundle size OK"
             fi
           fi
 

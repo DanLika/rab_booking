@@ -38,7 +38,6 @@ jobs:
         run: |
           flutter build web \
             --release \
-            
             --source-maps \
             --base-href /
           

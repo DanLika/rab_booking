@@ -425,7 +425,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      // Non-critical logging, safe to ignore if fails
+      if (kDebugMode) {
+        debugPrint('Error logging tab communication init entry: $e');
+      }
+    }
     // #endregion
 
     try {
@@ -465,7 +470,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_${logData['hypothesisId']}',
         );
-      } catch (_) {}
+      } catch (e) {
+        // Non-critical logging, safe to ignore if fails
+        if (kDebugMode) {
+          debugPrint('Error logging tab communication listeners setup: $e');
+        }
+      }
       // #endregion
 
       // If in iframe, also listen for postMessage from popup windows
@@ -532,7 +542,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                 tag: 'DEBUG_${logData['hypothesisId']}',
               );
-            } catch (_) {}
+            } catch (e) {
+              // Non-critical logging, safe to ignore if fails
+              if (kDebugMode) {
+                debugPrint('Error logging PaymentBridge message received: $e');
+              }
+            }
             // #endregion
 
             if (sessionId != null && status == 'success') {
@@ -564,7 +579,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e) {
+                  // Non-critical logging, safe to ignore if fails
+                  if (kDebugMode) {
+                    debugPrint(
+                        'Error logging PaymentBridge timeout cancel BEFORE: $e');
+                  }
+                }
                 // #endregion
 
                 _paymentCompletionTimeout!.cancel();
@@ -588,7 +609,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e) {
+                  // Non-critical logging, safe to ignore if fails
+                  if (kDebugMode) {
+                    debugPrint(
+                        'Error logging PaymentBridge timeout cancel AFTER: $e');
+                  }
+                }
                 // #endregion
 
                 LoggingService.log(
@@ -621,7 +648,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e) {
+                  // Non-critical logging, safe to ignore if fails
+                  if (kDebugMode) {
+                    debugPrint(
+                        'Error logging PaymentBridge state reset BEFORE: $e');
+                  }
+                }
                 // #endregion
 
                 // Reset processing state FIRST (before any async operations)
@@ -649,7 +682,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e) {
+                  // Non-critical logging, safe to ignore if fails
+                  if (kDebugMode) {
+                    debugPrint(
+                        'Error logging PaymentBridge state reset AFTER: $e');
+                  }
+                }
                 // #endregion
 
                 LoggingService.log(
@@ -902,7 +941,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      // Non-critical logging, safe to ignore if fails
+      if (kDebugMode) {
+        debugPrint('Error logging CrossTab message received entry: $e');
+      }
+    }
     // #endregion
 
     final bookingId = message.bookingId;
@@ -1141,7 +1185,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_${logData['hypothesisId']}',
         );
-      } catch (_) {}
+      } catch (e) {
+        // Non-critical logging, safe to ignore if fails
+        if (kDebugMode) {
+          debugPrint('Error logging timeout start entry: $e');
+        }
+      }
     }
     // #endregion
 
@@ -1173,7 +1222,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_${logData['hypothesisId']}',
         );
-      } catch (_) {}
+      } catch (e) {
+        // Non-critical logging, safe to ignore if fails
+        if (kDebugMode) {
+          debugPrint('Error logging timeout fired: $e');
+        }
+      }
       // #endregion
       if (!mounted) {
         LoggingService.log(
@@ -1210,7 +1264,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
             tag: 'DEBUG_${logData['hypothesisId']}',
           );
-        } catch (_) {}
+        } catch (e) {
+          // Non-critical logging, safe to ignore if fails
+          if (kDebugMode) {
+            debugPrint('Error logging timeout state reset BEFORE: $e');
+          }
+        }
         // #endregion
 
         if (mounted) {
@@ -1241,7 +1300,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
             tag: 'DEBUG_${logData['hypothesisId']}',
           );
-        } catch (_) {}
+        } catch (e) {
+          // Non-critical logging, safe to ignore if fails
+          if (kDebugMode) {
+            debugPrint('Error logging timeout state reset AFTER: $e');
+          }
+        }
         // #endregion
 
         LoggingService.log(
@@ -1270,7 +1334,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      // Non-critical logging, safe to ignore if fails
+      if (kDebugMode) {
+        debugPrint('Error logging timeout start exit: $e');
+      }
+    }
     // #endregion
   }
 
@@ -1808,7 +1877,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      // Non-critical logging, safe to ignore if fails
+      if (kDebugMode) {
+        debugPrint('Error logging dispose cleanup entry: $e');
+      }
+    }
     // #endregion
 
     _paymentCompletionTimeout?.cancel();
@@ -1831,7 +1905,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      // Non-critical logging, safe to ignore if fails
+      if (kDebugMode) {
+        debugPrint('Error logging dispose cleanup exit: $e');
+      }
+    }
     // #endregion
 
     super.dispose();
@@ -3740,7 +3819,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                   tag: 'DEBUG_${logData['hypothesisId']}',
                 );
-              } catch (_) {}
+              } catch (e) {
+                // Ignore errors if RenderBox is disposed or context is invalid
+              }
               // #endregion
 
               _startPaymentCompletionTimeout();
@@ -3770,7 +3851,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                 tag: 'DEBUG_${logData['hypothesisId']}',
               );
-            } catch (_) {}
+            } catch (e) {
+              // Ignore errors if context is no longer valid
+            }
             // #endregion
             // Iframe + mobile: redirect top-level window (not iframe)
             // NOTE: In redirect scenario, we reset _isProcessing immediately because

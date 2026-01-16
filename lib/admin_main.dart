@@ -5,8 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/admin/providers/admin_providers.dart';
-// TODO: Switch to firebase_options.dart for production
-import 'firebase_options_dev.dart';
+import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 
 /// Admin Dashboard Entrypoint
@@ -17,7 +16,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const ProviderScope(child: AdminApp()));
 }

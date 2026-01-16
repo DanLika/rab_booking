@@ -1,5 +1,6 @@
 import 'dart:async' show unawaited;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -175,7 +176,12 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_VIEW',
       );
-    } catch (_) {}
+    } catch (e) {
+      // Non-critical logging, safe to ignore if fails
+      if (kDebugMode) {
+        debugPrint('Error logging booking lookup entry: $e');
+      }
+    }
     // #endregion
 
     try {
@@ -203,7 +209,12 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_VIEW',
         );
-      } catch (_) {}
+      } catch (e) {
+        // Non-critical logging, safe to ignore if fails
+        if (kDebugMode) {
+          debugPrint('Error logging verifyBookingAccess call: $e');
+        }
+      }
       // #endregion
 
       final booking = await service.verifyBookingAccess(
@@ -233,7 +244,12 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_VIEW',
         );
-      } catch (_) {}
+      } catch (e) {
+        // Non-critical logging, safe to ignore if fails
+        if (kDebugMode) {
+          debugPrint('Error logging booking lookup success: $e');
+        }
+      }
       // #endregion
 
       if (mounted) {

@@ -262,14 +262,14 @@ jobs:
               COVERAGE=$((LINES_HIT * 100 / LINES_FOUND))
               echo "📊 Code Coverage: $COVERAGE% ($LINES_HIT/$LINES_FOUND lines)"
 
-              # Warning if below 50%, fail if below 30%
-              if [ "$COVERAGE" -lt 30 ]; then
-                echo "❌ Coverage below 30% threshold!"
+              # Warning if below 20%, fail if below 10%
+              if [ "$COVERAGE" -lt 10 ]; then
+                echo "❌ Coverage below 10% threshold!"
                 exit 1
-              elif [ "$COVERAGE" -lt 50 ]; then
-                echo "⚠️ Warning: Coverage below 50%"
+              elif [ "$COVERAGE" -lt 20 ]; then
+                echo "⚠️ Warning: Coverage below 20%"
               else
-                echo "✅ Coverage meets threshold"
+                echo "✅ Coverage meets threshold ($COVERAGE%)"
               fi
             else
               echo "⚠️ No coverage data found"

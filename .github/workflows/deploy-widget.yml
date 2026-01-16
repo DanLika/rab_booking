@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy-widget:
-    name: Deploy Widget to Netlify
+    name: Deploy Widget to Firebase Hosting
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -32,44 +32,35 @@ jobs:
       - name: Generate code (build_runner)
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build Flutter web (with source maps for Sentry)
+      - name: Build Flutter web widget
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
           flutter build web \
             --release \
+            --target lib/widget_main.dart \
+            -o build/web_widget \
             --source-maps \
             --base-href /
-          
-          # Source maps are automatically uploaded by sentry_dart_plugin during build
-          # If upload fails, build continues (non-blocking)
 
       - name: Copy embed.js to build
-        run: |
-          # Copy embed.js from public directory (the actual location)
-          cp public/embed.js build/web/
-          # widget-test.html is for local testing only, not needed in production build
+        run: cp public/embed.js build/web_widget/
 
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v2
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          publish-dir: './build/web'
-          production-deploy: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from GitHub Actions - ${{ github.event.head_commit.message }}"
-          enable-pull-request-comment: false
-          enable-commit-comment: true
-          overwrites-pull-request-comment: false
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: rab-booking-248fc
+          channelId: live
+          target: widget
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          FIREBASE_CLI_EXPERIMENTS: webframeworks
 
       - name: Notify on success
         if: success()
-        run: |
-          echo "✅ Widget deployed successfully to https://view.bookbed.io"
+        run: echo "✅ Widget deployed successfully to https://view.bookbed.io"
 
       - name: Notify on failure
         if: failure()
-        run: |
-          echo "❌ Widget deployment failed"
+        run: echo "❌ Widget deployment failed"

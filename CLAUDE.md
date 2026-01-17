@@ -597,7 +597,40 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2026-01-14 | **Version**: 6.29
+**Last Updated**: 2026-01-18 | **Version**: 6.30
+
+**Changelog 6.30**: Safari Web Compatibility Fixes:
+- **Flutter Loader TypeError Fix** (`web/index.html`):
+  - **Problem**: `TypeError: _flutter.loader.load is not a function` on Chrome & Safari
+  - **Root Cause**: `flutter_bootstrap.js` adds `loader` as nested property on `_flutter` object
+  - **Original Approach**: `Object.defineProperty` only intercepted initial `_flutter` assignment, not nested `loader`
+  - **Fix**: JavaScript `Proxy` with `set` trap to intercept all property assignments including `loader`
+  - **Renderer Fallback**: Check `buildConfig.builds` before injecting renderer config
+  - Prevents "FlutterLoader could not find a build compatible" error
+- **Safari Firebase Init Error Fix** (`main.dart`, `widget_main.dart`, `widget_main_dev.dart`):
+  - **Problem**: `Null check operator used on a null value` during Firebase initialization on Safari
+  - **Root Cause**: `Firebase.apps` getter throws on Safari when SDK hasn't fully initialized
+  - **Fix**: Wrapped `Firebase.apps.isEmpty` in nested try-catch:
+    ```dart
+    bool needsInit = true;
+    try {
+      needsInit = Firebase.apps.isEmpty;
+    } catch (_) {
+      // Safari throws - assume needs init
+      needsInit = true;
+    }
+    if (needsInit) await Firebase.initializeApp(...);
+    ```
+  - Applied to: Owner app (`main.dart`), Widget production (`widget_main.dart`), Widget dev (`widget_main_dev.dart`)
+- **Removed Firebase Compat SDK Pre-initialization**:
+  - Commented out `firebase-app-compat.js` and related SDK scripts in `index.html`
+  - Was causing conflicts with Flutter's modular Firebase SDK
+- **Files Modified**:
+  - `web/index.html`: Proxy-based loader interception, renderer fallback, removed compat SDK
+  - `lib/main.dart`: Safari-safe Firebase init with detailed logging
+  - `lib/widget_main.dart`: Added `_initializeFirebaseSafely()` helper
+  - `lib/widget_main_dev.dart`: Added `_initializeFirebaseSafelyDev()` helper
+- **Result**: Both Owner Dashboard and Widget now work on Safari (tested on macOS Safari)
 
 **Changelog 6.29**: App Store Submission Preparation & UI Fixes:
 - **iOS Deployment Target Fix**:

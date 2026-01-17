@@ -370,16 +370,44 @@ Future<void> _initializeInBackground() async {
     // Initialize Firebase
     LoggingService.log('Initializing Firebase...', tag: 'INIT');
     try {
-      if (Firebase.apps.isEmpty) {
+      // SAFARI FIX: Firebase.apps getter can throw "Null check operator used on a null value"
+      // on Safari when the SDK hasn't fully initialized. Wrap in nested try-catch.
+      bool needsInit = true;
+      try {
+        LoggingService.log('Checking Firebase.apps.isEmpty...', tag: 'INIT');
+        needsInit = Firebase.apps.isEmpty;
+        LoggingService.log('Firebase.apps.isEmpty = $needsInit', tag: 'INIT');
+      } catch (appsCheckError) {
+        // Safari throws here - assume Firebase needs initialization
+        LoggingService.log(
+          'Firebase.apps check failed (Safari?): $appsCheckError - will try to initialize',
+          tag: 'INIT_WARNING',
+        );
+        needsInit = true;
+      }
+
+      if (needsInit) {
+        LoggingService.log('Calling Firebase.initializeApp...', tag: 'INIT');
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
+        LoggingService.log('Firebase.initializeApp completed', tag: 'INIT');
+      } else {
+        LoggingService.log(
+          'Firebase already initialized, skipping',
+          tag: 'INIT',
+        );
       }
     } catch (e) {
+      LoggingService.log('Firebase init error: $e', tag: 'INIT_ERROR');
       if (!e.toString().contains('duplicate-app')) {
         rethrow;
       }
-    } // Enable Firestore Persistence (must be done before other Firestore usage)
+      LoggingService.log('Ignoring duplicate-app error', tag: 'INIT');
+    }
+
+    // Enable Firestore Persistence (must be done before other Firestore usage)
+    LoggingService.log('Configuring Firestore persistence...', tag: 'INIT');
     try {
       // Use settings for all platforms
       FirebaseFirestore.instance.settings = const Settings(
@@ -393,6 +421,8 @@ Future<void> _initializeInBackground() async {
         tag: 'INIT_WARNING',
       );
     }
+
+    LoggingService.log('Completing firebaseReady...', tag: 'INIT');
     AppInitState.firebaseReady.complete();
     LoggingService.log(
       'Firebase ready (${stopwatch.elapsedMilliseconds}ms)',
@@ -467,11 +497,13 @@ Future<void> _initSentry() async {
         final message = event.message?.formatted.toLowerCase() ?? '';
 
         // Downgrade geolocation errors to info level
-        // These are expected failures when ip-api.com is unreachable or slow
-        if (exceptionString.contains('ip-api.com') ||
-            exceptionString.contains('geolocation') ||
-            message.contains('ip-api.com') ||
-            message.contains('geolocation')) {
+        // These are expected failures when geolocation services are unreachable or slow
+        if (exceptionString.contains('geolocation') ||
+            exceptionString.contains('ipapi') ||
+            exceptionString.contains('ipwhois') ||
+            message.contains('geolocation') ||
+            message.contains('ipapi') ||
+            message.contains('ipwhois')) {
           return event.copyWith(level: SentryLevel.info);
         }
 

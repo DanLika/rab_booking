@@ -180,8 +180,10 @@
   <!-- Payment Bridge for Stripe Checkout in iframes -->
   <script src="payment_bridge.js"></script>
 
-  <!-- Firebase SDK - Load BEFORE Flutter for Safari compatibility -->
-  <!-- Safari has issues with dynamic ES module loading, so we pre-load Firebase -->
+  <!-- Firebase SDK - Commented out: Flutter handles Firebase initialization internally -->
+  <!-- The compat SDK pre-initialization was causing conflicts with Flutter's modular SDK -->
+  <!-- If Safari issues resurface, investigate alternative compatibility approaches -->
+  <!--
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
@@ -189,21 +191,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics-compat.js"></script>
   <script>
-    // Pre-initialize Firebase for Safari compatibility
-    // This ensures firebase global is available before Flutter loads
     if (typeof firebase !== 'undefined') {
-      firebase.initializeApp({
-        apiKey: "AIzaSyB2J8MaHvIU1sw4ItO3tzsn5LC9pDvgD5s",
-        authDomain: "rab-booking-248fc.firebaseapp.com",
-        projectId: "rab-booking-248fc",
-        storageBucket: "rab-booking-248fc.firebasestorage.app",
-        messagingSenderId: "592597958982",
-        appId: "1:592597958982:web:7703de3f5a2ab47dd3e547",
-        measurementId: "G-4XK4F6ZVMZ"
-      });
+      firebase.initializeApp({...});
       console.log('[FIREBASE] Pre-initialized for Safari compatibility');
     }
   </script>
+  -->
 
   <title>BookBed - Vacation Rental Management</title>
   <link rel="manifest" href="manifest.json">

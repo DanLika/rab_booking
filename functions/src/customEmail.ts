@@ -17,7 +17,7 @@ import {setUser} from "./sentry";
  * - Rate limiting: 10 emails per minute per user
  * - Input validation and length limits
  */
-export const sendCustomEmailToGuest = onCall(async (request) => {
+export const sendCustomEmailToGuest = onCall({secrets: ["RESEND_API_KEY"]}, async (request) => {
   // Verify authentication
   if (!request.auth) {
     throw new HttpsError(

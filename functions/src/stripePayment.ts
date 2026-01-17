@@ -113,7 +113,7 @@ function isAllowedReturnUrl(returnUrl: string): boolean {
  *
  * Security: Validates return URL against whitelist
  */
-export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }, async (request) => {
+export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "RESEND_API_KEY"] }, async (request) => {
   // ========================================================================
   // SECURITY: Rate Limiting - BEFORE any business logic
   // ========================================================================
@@ -768,7 +768,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey] }
  * - Uses atomic transaction to prevent race conditions
  * - No more "ghost bookings" - only paid bookings exist
  */
-export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookSecret] }, async (req, res) => {
+export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookSecret, "RESEND_API_KEY"] }, async (req, res) => {
   const sig = req.headers["stripe-signature"];
 
   if (!sig) {

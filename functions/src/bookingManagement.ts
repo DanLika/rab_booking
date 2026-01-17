@@ -72,7 +72,10 @@ async function trackEmailFailure(
  * Runs daily to check for bookings that exceeded payment deadline
  */
 export const autoCancelExpiredBookings = onSchedule(
-  "every 24 hours",
+  {
+    schedule: "every 24 hours",
+    secrets: ["RESEND_API_KEY"],
+  },
   async () => {
     const now = admin.firestore.Timestamp.now();
 
@@ -162,7 +165,10 @@ export const autoCancelExpiredBookings = onSchedule(
  */
 // NEW STRUCTURE: Wildcard path for subcollection triggers
 export const onBookingCreated = onDocumentCreated(
-  "properties/{propertyId}/units/{unitId}/bookings/{bookingId}",
+  {
+    document: "properties/{propertyId}/units/{unitId}/bookings/{bookingId}",
+    secrets: ["RESEND_API_KEY"],
+  },
   async (event) => {
     const booking = event.data?.data();
 
@@ -255,7 +261,10 @@ export const onBookingCreated = onDocumentCreated(
  */
 // NEW STRUCTURE: Wildcard path for subcollection triggers
 export const onBookingStatusChange = onDocumentUpdated(
-  "properties/{propertyId}/units/{unitId}/bookings/{bookingId}",
+  {
+    document: "properties/{propertyId}/units/{unitId}/bookings/{bookingId}",
+    secrets: ["RESEND_API_KEY"],
+  },
   async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();

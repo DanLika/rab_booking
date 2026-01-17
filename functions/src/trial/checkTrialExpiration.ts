@@ -24,6 +24,7 @@ export const checkTrialExpiration = onSchedule(
     timeoutSeconds: 540,
     memory: "512MiB",
     region: "europe-west1",
+    secrets: ["RESEND_API_KEY"],
   },
   async () => {
     logInfo("[Trial Expiration] Starting daily check for expired trials");

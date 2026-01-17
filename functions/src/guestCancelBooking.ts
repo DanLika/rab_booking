@@ -57,7 +57,7 @@ function validateEmailConfig(emailConfig: any): {
  * 2. Cancellation is within the allowed deadline (hours before check-in)
  * 3. Guest provides correct booking reference and email
  */
-export const guestCancelBooking = onCall(async (request) => {
+export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (request) => {
   const data = request.data;
 
   // Support both camelCase and snake_case for backward compatibility

@@ -39,7 +39,7 @@ function toDate(value: any): Date {
  * - Caller must be authenticated
  * - Caller must be the owner of the property
  */
-export const resendBookingEmail = onCall(async (request) => {
+export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"]}, async (request) => {
   // Verify authentication
   if (!request.auth) {
     throw new HttpsError(

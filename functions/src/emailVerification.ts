@@ -52,7 +52,7 @@ function hashEmail(email: string): string {
  * Rate limiting: Max 5 codes per email per day
  */
 export const sendEmailVerificationCode = onCall(
-  {cors: true},
+  {cors: true, secrets: ["RESEND_API_KEY"]},
   async (request) => {
     try {
       const {email} = request.data;

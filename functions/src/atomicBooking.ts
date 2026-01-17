@@ -54,7 +54,7 @@ const MAX_BOOKING_NIGHTS = 365; // 1 year maximum (DoS protection)
  * CRITICAL: Prevents double bookings by ensuring only ONE booking
  * succeeds when multiple users try to book same dates simultaneously.
  */
-export const createBookingAtomic = onCall(async (request) => {
+export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (request) => {
   const userId = request.auth?.uid || null;
   const data = request.data;
 

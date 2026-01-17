@@ -180,6 +180,31 @@
   <!-- Payment Bridge for Stripe Checkout in iframes -->
   <script src="payment_bridge.js"></script>
 
+  <!-- Firebase SDK - Load BEFORE Flutter for Safari compatibility -->
+  <!-- Safari has issues with dynamic ES module loading, so we pre-load Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics-compat.js"></script>
+  <script>
+    // Pre-initialize Firebase for Safari compatibility
+    // This ensures firebase global is available before Flutter loads
+    if (typeof firebase !== 'undefined') {
+      firebase.initializeApp({
+        apiKey: "AIzaSyB2J8MaHvIU1sw4ItO3tzsn5LC9pDvgD5s",
+        authDomain: "rab-booking-248fc.firebaseapp.com",
+        projectId: "rab-booking-248fc",
+        storageBucket: "rab-booking-248fc.firebasestorage.app",
+        messagingSenderId: "592597958982",
+        appId: "1:592597958982:web:7703de3f5a2ab47dd3e547",
+        measurementId: "G-4XK4F6ZVMZ"
+      });
+      console.log('[FIREBASE] Pre-initialized for Safari compatibility');
+    }
+  </script>
+
   <title>BookBed - Vacation Rental Management</title>
   <link rel="manifest" href="manifest.json">
 </head>
@@ -190,7 +215,7 @@
   <div id="native-splash">
     <div class="splash-logo">
       <!-- BookBed Logo Image -->
-      <img class="splash-logo-icon" src="assets/images/Apple_App_Icon.png" alt="BookBed Logo">
+      <img class="splash-logo-icon" src="assets/assets/images/Apple_App_Icon.png" alt="BookBed Logo">
       <span class="splash-logo-text">BookBed</span>
     </div>
     <div class="splash-progress-container">
@@ -614,9 +639,12 @@
     })();
   </script>
 
-  <!-- Flutter Loader with Auto-Renderer Detection for Old Browsers -->
+  <!-- Flutter Loader with Auto-Renderer Detection for Safari/Old Browsers -->
   <script>
-    (function() {
+    (function () {
+      // Detect Safari browser
+      var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
       // Detect WebGL support
       function hasWebGLSupport() {
         try {
@@ -643,41 +671,100 @@
       }
 
       // Choose renderer based on browser capabilities
-      var useHtmlRenderer = !hasWebGLSupport() || !isModernBrowser();
+      // Safari works better with HTML renderer due to WebGL issues
+      var useHtmlRenderer = isSafari || !hasWebGLSupport() || !isModernBrowser();
 
-      if (useHtmlRenderer) {
+      if (isSafari) {
+        console.warn('[FLUTTER] Safari detected - using HTML renderer for compatibility');
+        console.warn('[FLUTTER] Note: Debug mode may have issues on Safari due to DDC script loading limits (1900+ scripts)');
+      } else if (useHtmlRenderer) {
         console.log('[FLUTTER] Using HTML renderer (old browser or no WebGL)');
       } else {
         console.log('[FLUTTER] Using CanvasKit renderer');
       }
 
-      // Load flutter_bootstrap.js and configure
-      var script = document.createElement('script');
-      script.src = 'flutter_bootstrap.js';
-      script.async = true;
-
-      // Configure Flutter before bootstrap runs
-      window._flutter = {
-        loader: {
-          config: {
-            renderer: useHtmlRenderer ? 'html' : 'canvaskit',
-            canvasKitVariant: useHtmlRenderer ? undefined : 'auto'
-          }
-        }
+      // Store config for interception
+      window._bookbedRendererConfig = {
+        preferredRenderer: useHtmlRenderer ? 'html' : 'canvaskit'
       };
 
-      // When Flutter is ready, update splash progress and hide it
-      window.addEventListener('flutter-first-frame', function() {
+      // Function to wrap the loader's load() function
+      function wrapLoaderFunction(loader) {
+        if (loader._wrapped) return;
+
+        var originalLoad = loader.load.bind(loader);
+        loader.load = function (options) {
+          options = options || {};
+          options.config = options.config || {};
+
+          // Check if preferred renderer is available in buildConfig
+          var preferredRenderer = window._bookbedRendererConfig.preferredRenderer;
+          var buildConfig = window._flutter && window._flutter.buildConfig;
+          var builds = buildConfig && buildConfig.builds;
+
+          if (builds && Array.isArray(builds)) {
+            // Check if there's a build with our preferred renderer
+            var hasPreferredBuild = builds.some(function (b) {
+              return b && b.renderer === preferredRenderer;
+            });
+
+            if (hasPreferredBuild) {
+              options.config.renderer = preferredRenderer;
+              console.log('[FLUTTER] Injecting renderer config:', preferredRenderer);
+            } else {
+              // Preferred renderer not available, use whatever is available
+              var availableRenderer = builds.find(function (b) { return b && b.renderer; });
+              if (availableRenderer) {
+                console.log('[FLUTTER] Preferred renderer "' + preferredRenderer + '" not available, using "' + availableRenderer.renderer + '"');
+              } else {
+                console.log('[FLUTTER] No renderer specified in builds, using Flutter default');
+              }
+            }
+          } else {
+            // No buildConfig available, just inject our preference
+            options.config.renderer = options.config.renderer || preferredRenderer;
+            console.log('[FLUTTER] Injecting renderer config:', options.config.renderer);
+          }
+
+          return originalLoad(options);
+        };
+        loader._wrapped = true;
+        console.log('[FLUTTER] Successfully wrapped loader.load() function');
+      }
+
+      // Use Proxy to intercept when 'loader' property is added to _flutter
+      // This catches: window._flutter.loader = new FlutterLoader()
+      var _flutterTarget = {};
+      var _flutterProxy = new Proxy(_flutterTarget, {
+        set: function (target, prop, value) {
+          target[prop] = value;
+          // When loader is added, wrap its load() function
+          if (prop === 'loader' && value && typeof value.load === 'function') {
+            wrapLoaderFunction(value);
+          }
+          return true;
+        },
+        get: function (target, prop) {
+          return target[prop];
+        }
+      });
+
+      // Set the proxy as window._flutter
+      // flutter_bootstrap.js will use this proxy when it does: window._flutter.loader = new b
+      window._flutter = _flutterProxy;
+
+      // When Flutter is ready, hide native splash
+      window.addEventListener('flutter-first-frame', function () {
         console.log('[FLUTTER] First frame rendered');
-        // Hide native splash - Flutter will take over
         if (window.hideNativeSplash) {
           window.hideNativeSplash();
         }
       });
-
-      document.body.appendChild(script);
     })();
   </script>
+
+  <!-- Load Flutter Bootstrap -->
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 
 </html>

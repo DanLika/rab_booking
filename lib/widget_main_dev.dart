@@ -18,12 +18,33 @@ import 'firebase_options_dev.dart'; // Import DEV options
 /// WIDGET DEVELOPMENT ENTRY POINT
 ///
 /// Uses [DevFirebaseOptions] to connect to bookbed-dev project.
+
+/// Safari-compatible Firebase initialization for DEV
+Future<void> _initializeFirebaseSafelyDev() async {
+  try {
+    bool needsInit = true;
+    try {
+      needsInit = Firebase.apps.isEmpty;
+    } catch (_) {
+      needsInit = true;
+    }
+
+    if (needsInit) {
+      await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
+    }
+  } catch (e) {
+    if (!e.toString().contains('duplicate-app')) {
+      rethrow;
+    }
+  }
+}
+
 void main() async {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase with DEV options
-  await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
+  // Initialize Firebase with DEV options (Safari fix)
+  await _initializeFirebaseSafelyDev();
 
   SharedPreferences? prefs;
   try {

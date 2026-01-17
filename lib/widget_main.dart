@@ -35,6 +35,34 @@ const String _sentryDsn =
 /// Embed code:
 /// <iframe src="https://bookbed.io/?unit=UNIT_ID"
 ///         width="100%" height="900px" frameborder="0"></iframe>
+
+/// Safari-compatible Firebase initialization
+/// Firebase.apps getter throws "Null check operator used on a null value" on Safari
+/// This wrapper catches that error and proceeds with initialization
+Future<void> _initializeFirebaseSafely() async {
+  try {
+    // SAFARI FIX: Firebase.apps getter can throw on Safari
+    bool needsInit = true;
+    try {
+      needsInit = Firebase.apps.isEmpty;
+    } catch (_) {
+      // Safari throws here - assume Firebase needs initialization
+      needsInit = true;
+    }
+
+    if (needsInit) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+  } catch (e) {
+    // Ignore duplicate-app errors
+    if (!e.toString().contains('duplicate-app')) {
+      rethrow;
+    }
+  }
+}
+
 void main() async {
   // Use path-based URL strategy (clean URLs without #)
   // This allows email links like /view?ref=XXX to work correctly
@@ -48,8 +76,8 @@ void main() async {
   SharedPreferences? prefs;
 
   await Future.wait([
-    // Initialize Firebase
-    Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+    // Initialize Firebase (with Safari fix)
+    _initializeFirebaseSafely(),
 
     // Initialize SharedPreferences for widget entry point
     // This is needed for providers that use SharedPreferences (e.g., form persistence)
@@ -88,11 +116,13 @@ void main() async {
           final message = event.message?.formatted.toLowerCase() ?? '';
 
           // Downgrade geolocation errors to info level
-          // These are expected failures when ip-api.com is unreachable or slow
-          if (exceptionString.contains('ip-api.com') ||
-              exceptionString.contains('geolocation') ||
-              message.contains('ip-api.com') ||
-              message.contains('geolocation')) {
+          // These are expected failures when geolocation services are unreachable or slow
+          if (exceptionString.contains('geolocation') ||
+              exceptionString.contains('ipapi') ||
+              exceptionString.contains('ipwhois') ||
+              message.contains('geolocation') ||
+              message.contains('ipapi') ||
+              message.contains('ipwhois')) {
             return event.copyWith(
               level: SentryLevel.info,
               tags: {...?event.tags, 'app_type': 'booking_widget'},

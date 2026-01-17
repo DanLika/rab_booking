@@ -614,7 +614,70 @@
     })();
   </script>
 
-  <script src="flutter_bootstrap.js" async></script>
+  <!-- Flutter Loader with Auto-Renderer Detection for Old Browsers -->
+  <script>
+    (function() {
+      // Detect WebGL support
+      function hasWebGLSupport() {
+        try {
+          var canvas = document.createElement('canvas');
+          var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+          if (!gl) return false;
+          // Test getParameter to ensure full WebGL support
+          gl.getParameter(gl.VERSION);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      // Detect old browser (ES6 support check)
+      function isModernBrowser() {
+        try {
+          // Check for ES6 features
+          eval('class Test {}; let x = () => {}; const y = `test`;');
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      // Choose renderer based on browser capabilities
+      var useHtmlRenderer = !hasWebGLSupport() || !isModernBrowser();
+
+      if (useHtmlRenderer) {
+        console.log('[FLUTTER] Using HTML renderer (old browser or no WebGL)');
+      } else {
+        console.log('[FLUTTER] Using CanvasKit renderer');
+      }
+
+      // Load flutter_bootstrap.js and configure
+      var script = document.createElement('script');
+      script.src = 'flutter_bootstrap.js';
+      script.async = true;
+
+      // Configure Flutter before bootstrap runs
+      window._flutter = {
+        loader: {
+          config: {
+            renderer: useHtmlRenderer ? 'html' : 'canvaskit',
+            canvasKitVariant: useHtmlRenderer ? undefined : 'auto'
+          }
+        }
+      };
+
+      // When Flutter is ready, update splash progress and hide it
+      window.addEventListener('flutter-first-frame', function() {
+        console.log('[FLUTTER] First frame rendered');
+        // Hide native splash - Flutter will take over
+        if (window.hideNativeSplash) {
+          window.hideNativeSplash();
+        }
+      });
+
+      document.body.appendChild(script);
+    })();
+  </script>
 </body>
 
 </html>

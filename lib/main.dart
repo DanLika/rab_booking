@@ -20,7 +20,6 @@ import 'core/providers/theme_provider.dart';
 import 'core/services/logging_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/web_utils.dart';
-import 'core/widgets/owner_splash_screen.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/providers/repository_providers.dart';
@@ -507,7 +506,6 @@ class BookBedApp extends ConsumerStatefulWidget {
 
 class _BookBedAppState extends ConsumerState<BookBedApp> {
   bool _isInitialized = false;
-  bool _showFlutterSplash = true;
   SharedPreferences? _prefs;
 
   @override
@@ -519,7 +517,7 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Precache critical logo asset for splash screen and auth screens (transparent 1024x1024)
+    // Precache critical logo asset for auth screens (transparent 1024x1024)
     precacheImage(const AssetImage('assets/images/logo-light.png'), context);
   }
 
@@ -529,7 +527,6 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
 
     try {
       // Wait for SharedPreferences (needed for theme/locale)
-      // If SharedPreferences fails to initialize, providers will handle it gracefully
       _prefs = await AppInitState.prefsReady.future;
       LoggingService.log('Prefs ready, updating state...', tag: 'APP');
     } catch (e) {
@@ -537,12 +534,9 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
         'SharedPreferences init error: $e - continuing without persistence',
         tag: 'APP_ERROR',
       );
-      // Continue without SharedPreferences - providers will use fallbacks
       _prefs = null;
     }
 
-    // Mark as initialized regardless of SharedPreferences status
-    // Providers will handle missing SharedPreferences gracefully
     if (mounted) {
       setState(() {
         _isInitialized = true;
@@ -552,37 +546,17 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Phase 1: Before initialization - show Flutter splash (matches HTML splash)
+    // Before initialization - show transparent widget (HTML splash is visible)
     if (!_isInitialized) {
       return const _InitializingSplash();
     }
 
-    // Phase 2: Initialized - show app with auth-aware splash overlay
-    // Override SharedPreferences provider if available (null is acceptable - providers handle it)
+    // Override SharedPreferences provider if available
     final overrides = _prefs != null
         ? [sharedPreferencesProvider.overrideWithValue(_prefs)]
         : <Override>[];
 
-    return ProviderScope(
-      overrides: overrides,
-      child: _InitializedApp(
-        showSplash: _showFlutterSplash,
-        onSplashComplete: () {
-          if (mounted) {
-            setState(() {
-              _showFlutterSplash = false;
-            });
-            // Hide native HTML splash
-            _hideNativeSplash();
-          }
-        },
-      ),
-    );
-  }
-
-  /// Hide the native HTML splash screen
-  void _hideNativeSplash() {
-    hideNativeSplash();
+    return ProviderScope(overrides: overrides, child: const _InitializedApp());
   }
 }
 
@@ -618,21 +592,14 @@ class _InitializingSplash extends StatelessWidget {
 
 /// The fully initialized app with all providers
 class _InitializedApp extends ConsumerStatefulWidget {
-  final bool showSplash;
-  final VoidCallback onSplashComplete;
-
-  const _InitializedApp({
-    required this.showSplash,
-    required this.onSplashComplete,
-  });
+  const _InitializedApp();
 
   @override
   ConsumerState<_InitializedApp> createState() => _InitializedAppState();
 }
 
 class _InitializedAppState extends ConsumerState<_InitializedApp> {
-  final Completer<void> _authReadyCompleter = Completer<void>();
-  bool _authChecked = false;
+  bool _splashHidden = false;
 
   @override
   Widget build(BuildContext context) {
@@ -643,20 +610,21 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
     // Watch auth state to detect when initial auth check is complete
     final authState = ref.watch(enhancedAuthProvider);
 
-    // Complete the auth ready future when auth is no longer loading
-    if (!_authChecked && !authState.isLoading) {
-      _authChecked = true;
-      if (!_authReadyCompleter.isCompleted) {
-        LoggingService.log(
-          'Auth check complete, isAuthenticated=${authState.isAuthenticated}',
-          tag: 'APP',
-        );
-        _authReadyCompleter.complete();
-      }
+    // Hide HTML splash when auth check is complete (only once)
+    if (!_splashHidden && !authState.isLoading) {
+      _splashHidden = true;
+      LoggingService.log(
+        'Auth check complete, isAuthenticated=${authState.isAuthenticated}',
+        tag: 'APP',
+      );
+      // Hide native HTML splash - use post-frame callback to avoid setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        hideNativeSplash();
+      });
     }
 
     // Build the main app
-    final app = MaterialApp.router(
+    return MaterialApp.router(
       title: 'BookBed',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
@@ -678,17 +646,5 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
       ],
       supportedLocales: const [Locale('en'), Locale('hr')],
     );
-
-    // Show splash overlay while waiting for auth
-    if (widget.showSplash) {
-      return OwnerSplashOverlay(
-        initializationFuture: _authReadyCompleter.future,
-        minimumDisplayTime: 0,
-        onComplete: widget.onSplashComplete,
-        child: app,
-      );
-    }
-
-    return app;
   }
 }

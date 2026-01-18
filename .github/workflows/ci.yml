@@ -122,39 +122,41 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 7
 
-  # Job 4: Build iOS (Owner App)
-  build-ios:
-    name: Build iOS App
-    runs-on: macos-latest
-    needs: test
-    timeout-minutes: 45
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.5'
-          channel: 'stable'
-          cache: true
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Generate code (build_runner)
-        run: dart run build_runner build --delete-conflicting-outputs
-
-      - name: Build iOS (no codesign)
-        run: flutter build ios --release --no-codesign
-
-      - name: Upload iOS build
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-build
-          path: build/ios/iphoneos/Runner.app
-          retention-days: 7
+  # Job 4: Build iOS (Owner App) - DISABLED
+  # iOS builds require Apple Developer certificates in CI
+  # Build iOS locally for App Store submission instead
+  # build-ios:
+  #   name: Build iOS App
+  #   runs-on: macos-latest
+  #   needs: test
+  #   timeout-minutes: 45
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup Flutter
+  #       uses: subosito/flutter-action@v2
+  #       with:
+  #         flutter-version: '3.38.5'
+  #         channel: 'stable'
+  #         cache: true
+  #
+  #     - name: Get dependencies
+  #       run: flutter pub get
+  #
+  #     - name: Generate code (build_runner)
+  #       run: dart run build_runner build --delete-conflicting-outputs
+  #
+  #     - name: Build iOS (no codesign)
+  #       run: flutter build ios --release --no-codesign
+  #
+  #     - name: Upload iOS build
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: ios-build
+  #         path: build/ios/iphoneos/Runner.app
+  #         retention-days: 7
 
   # Job 5: Security scan (disabled - requires GitHub Advanced Security)
   # To enable: Go to repo Settings > Security > Code security and analysis

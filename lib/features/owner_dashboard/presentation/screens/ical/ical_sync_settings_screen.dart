@@ -1127,28 +1127,29 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           .call({'feedId': feed.id, 'propertyId': feed.propertyId})
           .withCloudFunctionTimeout('syncIcalFeedNow');
 
+      // FIXED: Check mounted before using ref (widget may be disposed during async call)
+      if (!mounted) return;
+
       // Invalidate providers to refresh UI after sync
       ref.invalidate(icalFeedsStreamProvider);
       ref.invalidate(icalStatisticsProvider);
 
-      if (mounted) {
-        final data = result.data as Map<String, dynamic>?;
-        final success = data?['success'] ?? false;
-        final message = data?['message'] as String?;
-        final bookingsCreated = data?['bookingsCreated'] as int? ?? 0;
+      final data = result.data as Map<String, dynamic>?;
+      final success = data?['success'] ?? false;
+      final message = data?['message'] as String?;
+      final bookingsCreated = data?['bookingsCreated'] as int? ?? 0;
 
-        if (success) {
-          ErrorDisplayUtils.showSuccessSnackBar(
-            context,
-            l10n.icalSyncSuccess(bookingsCreated),
-          );
-        } else {
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            message ?? l10n.icalUnknownError,
-            userMessage: l10n.icalSyncErrorMessage,
-          );
-        }
+      if (success) {
+        ErrorDisplayUtils.showSuccessSnackBar(
+          context,
+          l10n.icalSyncSuccess(bookingsCreated),
+        );
+      } else {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          message ?? l10n.icalUnknownError,
+          userMessage: l10n.icalSyncErrorMessage,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -1170,10 +1171,11 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         feed.propertyId,
         IcalStatus.paused,
       );
-      // Invalidate providers to refresh UI immediately
-      ref.invalidate(icalFeedsStreamProvider);
-      ref.invalidate(icalStatisticsProvider);
+      // FIXED: Check mounted before using ref (widget may be disposed during async call)
       if (mounted) {
+        // Invalidate providers to refresh UI immediately
+        ref.invalidate(icalFeedsStreamProvider);
+        ref.invalidate(icalStatisticsProvider);
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedPaused);
       }
     } catch (e) {
@@ -1196,10 +1198,11 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         feed.propertyId,
         IcalStatus.active,
       );
-      // Invalidate providers to refresh UI immediately
-      ref.invalidate(icalFeedsStreamProvider);
-      ref.invalidate(icalStatisticsProvider);
+      // FIXED: Check mounted before using ref (widget may be disposed during async call)
       if (mounted) {
+        // Invalidate providers to refresh UI immediately
+        ref.invalidate(icalFeedsStreamProvider);
+        ref.invalidate(icalStatisticsProvider);
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedResumed);
       }
     } catch (e) {
@@ -1238,10 +1241,11 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 final repository = ref.read(icalRepositoryProvider);
                 // Delete feed and all associated events
                 await repository.deleteIcalFeed(feed.id, feed.propertyId);
-                // Invalidate providers to refresh UI immediately
-                ref.invalidate(icalFeedsStreamProvider);
-                ref.invalidate(icalStatisticsProvider);
+                // FIXED: Check mounted before using ref (widget may be disposed during async call)
                 if (mounted) {
+                  // Invalidate providers to refresh UI immediately
+                  ref.invalidate(icalFeedsStreamProvider);
+                  ref.invalidate(icalStatisticsProvider);
                   ErrorDisplayUtils.showSuccessSnackBar(
                     this.context,
                     l10n.icalFeedDeleted,
@@ -1299,6 +1303,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   _selectedPropertyId; // OPTIMIZED: Store property ID to avoid re-reading provider
   IcalPlatform _selectedPlatform = IcalPlatform.bookingCom;
   bool _isSaving = false;
+  String? _platformMismatchWarning;
 
   @override
   void initState() {
@@ -1310,6 +1315,37 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
       _selectedUnitId = widget.existingFeed!.unitId;
       _selectedPropertyId = widget.existingFeed!.propertyId;
       _selectedPlatform = widget.existingFeed!.platform;
+    }
+    // Check initial URL for platform mismatch
+    _checkPlatformMismatch();
+  }
+
+  /// Check if URL matches selected platform and show warning if not
+  void _checkPlatformMismatch() {
+    final url = _icalUrlController.text.trim();
+    if (url.isEmpty) {
+      setState(() => _platformMismatchWarning = null);
+      return;
+    }
+
+    final detectedPlatform = IcalPlatform.detectFromUrl(url);
+    // No warning if we can't detect the platform or if "other" is selected
+    if (detectedPlatform == null || _selectedPlatform == IcalPlatform.other) {
+      setState(() => _platformMismatchWarning = null);
+      return;
+    }
+
+    // Warn if detected platform doesn't match selected platform
+    if (detectedPlatform != _selectedPlatform) {
+      final l10n = AppLocalizations.of(context);
+      setState(() {
+        _platformMismatchWarning = l10n.icalUrlPlatformMismatch(
+          detectedPlatform.displayName,
+          _selectedPlatform.displayName,
+        );
+      });
+    } else {
+      setState(() => _platformMismatchWarning = null);
     }
   }
 
@@ -1484,8 +1520,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                               child: Text(l10n.icalPlatformOther),
                             ),
                           ],
-                          onChanged: (value) =>
-                              setState(() => _selectedPlatform = value!),
+                          onChanged: (value) {
+                            setState(() => _selectedPlatform = value!);
+                            _checkPlatformMismatch();
+                          },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -1496,6 +1534,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                             context: context,
                           ),
                           maxLines: 2,
+                          onChanged: (_) => _checkPlatformMismatch(),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return l10n.icalUrlRequired;
@@ -1507,6 +1546,41 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                             return null;
                           },
                         ),
+                        // Platform mismatch warning
+                        if (_platformMismatchWarning != null) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.amber.withValues(alpha: 0.5),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: Colors.amber,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _platformMismatchWarning!,
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? Colors.amber.shade200
+                                          : Colors.amber.shade900,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -1676,11 +1750,17 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         feedIdForSync = widget.existingFeed!.id;
       }
 
-      ref.invalidate(icalFeedsStreamProvider);
-      ref.invalidate(icalStatisticsProvider);
-
+      // FIXED: Check mounted before using ref (widget may be disposed during async call)
       if (mounted) {
-        Navigator.pop(context);
+        ref.invalidate(icalFeedsStreamProvider);
+        ref.invalidate(icalStatisticsProvider);
+
+        // CRITICAL: Capture l10n and trigger sync BEFORE Navigator.pop()
+        // After pop(), the widget context becomes invalid and _triggerAutoSync fails silently
+        final syncPlatform = _selectedPlatform;
+        final syncPropertyId = _selectedPropertyId!;
+
+        // Show success and pop the dialog
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
           widget.existingFeed == null
@@ -1688,13 +1768,12 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
               : l10n.icalFeedUpdated,
         );
 
-        // FIX: Auto-trigger sync immediately after saving new/updated feed
+        // FIX: Auto-trigger sync BEFORE Navigator.pop() while context is still valid
         // This runs in the background - user doesn't need to wait
-        _triggerAutoSync(
-          feedIdForSync,
-          _selectedPropertyId!,
-          _selectedPlatform,
-        );
+        _triggerAutoSync(feedIdForSync, syncPropertyId, syncPlatform);
+
+        // Pop AFTER triggering sync (gives time for snackbar to appear)
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
@@ -1710,61 +1789,92 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
 
   /// Trigger automatic sync after saving a feed (fire-and-forget)
   /// Shows info snackbar when sync completes or fails
+  ///
+  /// IMPORTANT: Captures ScaffoldMessenger before async to allow snackbars
+  /// even after Navigator.pop() disposes this widget
   void _triggerAutoSync(
     String feedId,
     String propertyId,
     IcalPlatform platform,
   ) async {
-    final l10n = AppLocalizations.of(context);
+    debugPrint('[AutoSync] Starting auto-sync for feed: $feedId');
 
-    // Show sync started notification
-    if (mounted) {
-      ErrorDisplayUtils.showInfoSnackBar(
-        context,
-        l10n.icalSyncStarted(platform.displayName),
-      );
-    }
+    // CRITICAL: Capture these BEFORE any async/await operations
+    // After Navigator.pop(), context becomes invalid but messenger still works
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+
+    debugPrint(
+      '[AutoSync] Captured messenger, showing "sync started" snackbar',
+    );
+
+    // Show sync started notification (immediate, before pop)
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.icalSyncStarted(platform.displayName)),
+        backgroundColor: theme.colorScheme.primary,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
 
     try {
+      debugPrint('[AutoSync] Calling syncIcalFeedNow Cloud Function...');
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('syncIcalFeedNow');
       final result = await callable
           .call({'feedId': feedId, 'propertyId': propertyId})
           .withCloudFunctionTimeout('syncIcalFeedNow');
 
+      debugPrint('[AutoSync] Cloud Function returned: ${result.data}');
+
       // Invalidate providers to refresh UI after sync
-      ref.invalidate(icalFeedsStreamProvider);
-      ref.invalidate(icalStatisticsProvider);
-      // Also refresh calendar to show new bookings
-      ref.invalidate(calendarBookingsProvider);
-
+      // FIXED: Check mounted before using ref (widget may be disposed during async call)
       if (mounted) {
-        final data = result.data as Map<String, dynamic>?;
-        final success = data?['success'] ?? false;
-        final message = data?['message'] as String?;
-        final bookingsCreated = data?['bookingsCreated'] as int? ?? 0;
-
-        if (success) {
-          ErrorDisplayUtils.showSuccessSnackBar(
-            context,
-            l10n.icalSyncSuccess(bookingsCreated),
-          );
-        } else {
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            message ?? l10n.icalUnknownError,
-            userMessage: l10n.icalSyncErrorMessage,
-          );
-        }
+        ref.invalidate(icalFeedsStreamProvider);
+        ref.invalidate(icalStatisticsProvider);
+        // Also refresh calendar to show new bookings
+        ref.invalidate(calendarBookingsProvider);
       }
-    } catch (e) {
-      if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          e,
-          userMessage: l10n.icalSyncErrorMessage,
+
+      final data = result.data as Map<String, dynamic>?;
+      final success = data?['success'] ?? false;
+      final message = data?['message'] as String?;
+      final bookingsCreated = data?['bookingsCreated'] as int? ?? 0;
+
+      debugPrint(
+        '[AutoSync] Success: $success, bookingsCreated: $bookingsCreated',
+      );
+
+      // Use captured messenger - works even after widget disposed
+      if (success) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n.icalSyncSuccess(bookingsCreated)),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(message ?? l10n.icalSyncErrorMessage),
+            backgroundColor: theme.colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
+    } catch (e, stack) {
+      debugPrint('[AutoSync] ERROR: $e');
+      debugPrint('[AutoSync] Stack: $stack');
+      // Use captured messenger for error display
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.icalSyncErrorMessage),
+          backgroundColor: theme.colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 }

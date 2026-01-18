@@ -12,7 +12,15 @@ void main() async {
   EnvironmentConfig.setEnvironment(Environment.production);
 
   // Initialize Firebase with production options
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    if (!e.toString().contains('duplicate-app')) {
+      rethrow;
+    }
+  }
 
   app.runMainApp();
 }

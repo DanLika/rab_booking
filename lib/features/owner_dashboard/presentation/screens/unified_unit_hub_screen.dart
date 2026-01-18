@@ -196,9 +196,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 minFontSize: 14,
               ),
               centerTitle: false,
-              leadingWidth: 40, // Reduced from 56 to move icon closer to left
               leading: IconButton(
-                padding: EdgeInsets.zero, // Remove internal padding
                 icon: const Icon(Icons.menu, color: Colors.white),
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),

@@ -12,6 +12,7 @@ import '../../../../../../core/utils/error_display_utils.dart';
 import '../../../../../../shared/models/unit_model.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
 import '../../providers/owner_properties_provider.dart';
+import '../../providers/owner_calendar_provider.dart';
 import 'state/unit_wizard_provider.dart';
 import 'widgets/wizard_progress_bar.dart';
 import 'widgets/wizard_navigation_buttons.dart';
@@ -358,6 +359,8 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
 
       // Invalidate units provider so Unit Hub refreshes its list
       ref.invalidate(ownerUnitsProvider);
+      // Also invalidate calendar provider so timeline shows new unit immediately
+      ref.invalidate(allOwnerUnitsProvider);
 
       // Show success message
       if (mounted) {

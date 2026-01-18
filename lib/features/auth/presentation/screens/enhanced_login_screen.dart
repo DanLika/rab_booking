@@ -595,7 +595,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         if (_passwordErrorFromServer != null) {
           return _passwordErrorFromServer;
         }
-        return PasswordValidator.validateMinimumLength(value);
+        // For login, only validate length - Firebase Auth handles the rest
+        return PasswordValidator.validateLoginPassword(value);
       },
     );
   }

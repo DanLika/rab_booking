@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/async_utils.dart';
+import '../../../../core/utils/timestamp_converter.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/constants/widget_constants.dart';
 import '../../domain/services/i_availability_checker.dart';
@@ -301,15 +302,21 @@ class AvailabilityChecker implements IAvailabilityChecker {
           .get()
           .withShortTimeout('checkIcalEvents');
 
+      // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
+      const converter = NullableTimestampConverter();
+
       for (final doc in snapshot.docs) {
         try {
           final data = doc.data();
-          final eventStart = DateNormalizer.fromTimestamp(
-            data['start_date'] as Timestamp?,
-          );
-          final eventEnd = DateNormalizer.fromTimestamp(
-            data['end_date'] as Timestamp?,
-          );
+          // Use converter instead of direct cast for web compatibility
+          final eventStartRaw = converter.fromJson(data['start_date']);
+          final eventEndRaw = converter.fromJson(data['end_date']);
+          final eventStart = eventStartRaw != null
+              ? DateNormalizer.normalize(eventStartRaw)
+              : null;
+          final eventEnd = eventEndRaw != null
+              ? DateNormalizer.normalize(eventEndRaw)
+              : null;
 
           if (eventStart == null || eventEnd == null) continue;
 
@@ -356,12 +363,17 @@ class AvailabilityChecker implements IAvailabilityChecker {
           .get()
           .withShortTimeout('checkBlockedDates');
 
+      // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
+      const converter = NullableTimestampConverter();
+
       for (final doc in snapshot.docs) {
         try {
           final data = doc.data();
-          final blockedDate = DateNormalizer.fromTimestamp(
-            data['date'] as Timestamp?,
-          );
+          // Use converter instead of direct cast for web compatibility
+          final blockedDateRaw = converter.fromJson(data['date']);
+          final blockedDate = blockedDateRaw != null
+              ? DateNormalizer.normalize(blockedDateRaw)
+              : null;
 
           if (blockedDate == null) continue;
 
@@ -418,11 +430,16 @@ class AvailabilityChecker implements IAvailabilityChecker {
           .get()
           .withShortTimeout('checkBlockedCheckInOut');
 
+      // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
+      const converter = NullableTimestampConverter();
+
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        final docDate = DateNormalizer.fromTimestamp(
-          data['date'] as Timestamp?,
-        );
+        // Use converter instead of direct cast for web compatibility
+        final docDateRaw = converter.fromJson(data['date']);
+        final docDate = docDateRaw != null
+            ? DateNormalizer.normalize(docDateRaw)
+            : null;
 
         if (docDate == null) continue;
 

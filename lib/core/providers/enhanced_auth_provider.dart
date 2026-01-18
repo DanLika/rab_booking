@@ -399,7 +399,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       // Attempt sign in
       LoggingService.log(
-        'Calling Firebase signInWithEmailAndPassword...',
+        'Calling Firebase signInWithEmailAndPassword: email=$email',
         tag: 'ENHANCED_AUTH',
       );
       final credential = await _auth.signInWithEmailAndPassword(

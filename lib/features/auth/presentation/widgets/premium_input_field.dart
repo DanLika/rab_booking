@@ -13,6 +13,7 @@ class PremiumInputField extends StatefulWidget {
   final int? maxLines;
   final FocusNode? focusNode;
   final Iterable<String>? autofillHints;
+  final TextCapitalization? textCapitalization;
 
   const PremiumInputField({
     super.key,
@@ -26,6 +27,7 @@ class PremiumInputField extends StatefulWidget {
     this.maxLines = 1,
     this.focusNode,
     this.autofillHints,
+    this.textCapitalization,
   });
 
   @override
@@ -64,6 +66,17 @@ class _PremiumInputFieldState extends State<PremiumInputField> {
           validator: widget.validator,
           maxLines: widget.maxLines,
           autofillHints: widget.autofillHints,
+          // Disable iOS Smart Punctuation which converts "..." to "…" (one character)
+          // This was causing password validation to fail when users typed 3 dots
+          autocorrect: false,
+          enableSuggestions: false,
+          // Disable auto-capitalization for password fields to prevent Samsung keyboard
+          // from capitalizing letters after uppercase characters (e.g., zG → zGEMBO)
+          textCapitalization:
+              widget.textCapitalization ??
+              (widget.obscureText
+                  ? TextCapitalization.none
+                  : TextCapitalization.none),
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,

@@ -23,6 +23,7 @@ import '../../../../shared/widgets/gradient_button.dart';
 import '../widgets/embed_code_generator_dialog.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_properties_provider.dart';
+import '../providers/owner_calendar_provider.dart';
 
 /// Unit form screen for add/edit
 class UnitFormScreen extends ConsumerStatefulWidget {
@@ -974,6 +975,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           coverImage: allImages.isNotEmpty ? allImages.first : null,
         );
       }
+
+      // Invalidate calendar provider so timeline shows new unit immediately
+      ref.invalidate(allOwnerUnitsProvider);
 
       if (mounted) {
         final l10nSuccess = AppLocalizations.of(context);

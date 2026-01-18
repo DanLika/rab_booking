@@ -3,49 +3,115 @@ import '../../../../../../../../shared/models/booking_model.dart';
 import '../../../../../../../../core/constants/enums.dart';
 import '../../../../../../../../l10n/app_localizations.dart';
 
-/// Action buttons section for booking card
+/// Action buttons section for booking card (footer section)
 ///
 /// Displays context-appropriate action buttons based on booking status
 /// - Pending: 2x2 grid (Approve, Reject, Details)
 /// - Confirmed: Dynamic row/column layout (Details, Complete, Cancel)
 /// - Others: Dynamic row/column layout (Details)
+/// - Imported: Read-only info message
 ///
 /// Callbacks are required for each action
 class BookingCardActions extends StatelessWidget {
-  final BookingModel booking;
+  final BookingModel? booking;
   final bool isMobile;
-  final VoidCallback onShowDetails;
+  final VoidCallback? onShowDetails;
   final VoidCallback? onApprove;
   final VoidCallback? onReject;
   final VoidCallback? onComplete;
   final VoidCallback? onCancel;
 
+  /// For imported reservations - displays info message instead of actions
+  final bool isImported;
+  final String? importedSource;
+
   const BookingCardActions({
     super.key,
-    required this.booking,
+    this.booking,
     required this.isMobile,
-    required this.onShowDetails,
+    this.onShowDetails,
     this.onApprove,
     this.onReject,
     this.onComplete,
     this.onCancel,
+    this.isImported = false,
+    this.importedSource,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        isMobile ? 12 : 16,
-        0,
-        isMobile ? 12 : 16,
-        isMobile ? 12 : 16,
+    // Footer container with rounded bottom corners
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.grey.shade50,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.05),
+          ),
+        ),
       ),
+      child: isImported
+          ? _buildImportedFooter(context, theme, l10n)
+          : _buildActionsFooter(context, theme, l10n, isDark),
+    );
+  }
+
+  Widget _buildImportedFooter(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: isMobile ? 10 : 12,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 14,
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              l10n.tooltipManageOn(_getPlatformName(importedSource ?? '')),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.7,
+                ),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionsFooter(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool isDark,
+  ) {
+    return Padding(
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final theme = Theme.of(context);
-
           // More granular responsive sizing based on available width
           final availableWidth = constraints.maxWidth;
           final isVeryNarrow = availableWidth < 350;
@@ -63,8 +129,6 @@ class BookingCardActions extends StatelessWidget {
           final fontSize = isVeryNarrow ? 12.0 : 14.0;
           // Consistent button height for all buttons
           final buttonHeight = isVeryNarrow ? 40.0 : 44.0;
-
-          final isDark = theme.brightness == Brightness.dark;
 
           // Define buttons - using slate colors for better dark mode visibility
           final detailsBtn = OutlinedButton.icon(
@@ -95,7 +159,7 @@ class BookingCardActions extends StatelessWidget {
                 vertical: verticalPadding,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
               side: BorderSide(
                 color: isDark
@@ -122,10 +186,7 @@ class BookingCardActions extends StatelessWidget {
                 vertical: verticalPadding,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(
-                  color: const Color(0xFF4CAF50).withAlpha((0.3 * 255).toInt()),
-                ),
+                borderRadius: BorderRadius.circular(10),
               ),
               elevation: 0,
             ),
@@ -139,9 +200,7 @@ class BookingCardActions extends StatelessWidget {
               style: TextStyle(fontSize: fontSize),
             ),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(
-                0xFFE57373,
-              ), // Softirana crvena (manje agresivna)
+              backgroundColor: const Color(0xFFE57373), // Softirana crvena
               foregroundColor: Colors.white,
               minimumSize: Size(0, buttonHeight),
               padding: EdgeInsets.symmetric(
@@ -149,10 +208,7 @@ class BookingCardActions extends StatelessWidget {
                 vertical: verticalPadding,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(
-                  color: const Color(0xFFE57373).withAlpha((0.3 * 255).toInt()),
-                ),
+                borderRadius: BorderRadius.circular(10),
               ),
               elevation: 0,
             ),
@@ -174,12 +230,7 @@ class BookingCardActions extends StatelessWidget {
                 vertical: verticalPadding,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: BorderSide(
-                  color: theme.colorScheme.primary.withAlpha(
-                    (0.3 * 255).toInt(),
-                  ),
-                ),
+                borderRadius: BorderRadius.circular(10),
               ),
               elevation: 0,
             ),
@@ -213,7 +264,7 @@ class BookingCardActions extends StatelessWidget {
                 vertical: verticalPadding,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
               side: BorderSide(
                 color: isDark
@@ -224,7 +275,7 @@ class BookingCardActions extends StatelessWidget {
           );
 
           // Custom layout for Pending status (2x2 grid)
-          if (booking.status == BookingStatus.pending) {
+          if (booking?.status == BookingStatus.pending) {
             return Column(
               children: [
                 Row(
@@ -250,17 +301,19 @@ class BookingCardActions extends StatelessWidget {
           final actionButtons = <Widget>[];
 
           // Always show details
-          actionButtons.add(detailsBtn);
+          if (onShowDetails != null) {
+            actionButtons.add(detailsBtn);
+          }
 
           // Mark as Completed button (only for confirmed and past check-out)
-          if (booking.status == BookingStatus.confirmed &&
-              booking.isPast &&
+          if (booking?.status == BookingStatus.confirmed &&
+              booking!.isPast &&
               onComplete != null) {
             actionButtons.add(completeBtn);
           }
 
           // Cancel button (only for confirmed bookings)
-          if (booking.canBeCancelled && onCancel != null) {
+          if (booking?.canBeCancelled == true && onCancel != null) {
             actionButtons.add(cancelBtn);
           }
 
@@ -298,5 +351,23 @@ class BookingCardActions extends StatelessWidget {
         },
       ),
     );
+  }
+
+  String _getPlatformName(String source) {
+    switch (source.toLowerCase()) {
+      case 'booking_com':
+      case 'booking.com':
+        return 'Booking.com';
+      case 'airbnb':
+        return 'Airbnb';
+      case 'vrbo':
+        return 'VRBO';
+      case 'expedia':
+        return 'Expedia';
+      default:
+        return source.isNotEmpty
+            ? source[0].toUpperCase() + source.substring(1)
+            : 'iCal';
+    }
   }
 }

@@ -6130,6 +6130,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalSyncErrorMessage => 'Error during synchronization';
 
   @override
+  String get icalNoEventsTitle => 'No imported reservations';
+
+  @override
+  String get icalNoEventsSubtitle =>
+      'Add iCal feeds from Booking.com, Airbnb or other platforms to see imported reservations here.';
+
+  @override
   String get icalUnknownError => 'Unknown error';
 
   @override
@@ -6203,6 +6210,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalUrlInvalid => 'URL must start with http:// or https://';
+
+  @override
+  String icalUrlPlatformMismatch(
+    String detectedPlatform,
+    String selectedPlatform,
+  ) {
+    return 'This URL appears to be from $detectedPlatform. You selected $selectedPlatform.';
+  }
 
   @override
   String get icalAutoSyncInfo => 'Automatic synchronization';
@@ -7833,6 +7848,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingsTabCancelled => 'Cancelled';
+
+  @override
+  String get bookingsTabImported => 'Imported';
 
   @override
   String ownerProfileCompletionStatus(int percentage) {

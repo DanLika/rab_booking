@@ -42,7 +42,6 @@ _$UnitModelImpl _$$UnitModelImplFromJson(
 Map<String, dynamic> _$$UnitModelImplToJson(
   _$UnitModelImpl instance,
 ) => <String, dynamic>{
-  'id': instance.id,
   'property_id': instance.propertyId,
   'owner_id': instance.ownerId,
   'name': instance.name,

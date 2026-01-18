@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import '../../features/owner_dashboard/domain/models/ical_feed.dart';
 import '../../shared/models/booking_model.dart';
 import '../../shared/models/unit_model.dart';
 import '../../shared/repositories/booking_repository.dart';
@@ -35,16 +37,20 @@ import 'logging_service.dart';
 class IcalExportService {
   final BookingRepository _bookingRepository;
   final FirebaseStorage _storage;
+  final FirebaseFirestore _firestore;
 
   IcalExportService({
     required BookingRepository bookingRepository,
     FirebaseStorage? storage,
+    FirebaseFirestore? firestore,
   }) : _bookingRepository = bookingRepository,
-       _storage = storage ?? FirebaseStorage.instance;
+       _storage = storage ?? FirebaseStorage.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Generate and upload iCal file for a unit
   ///
   /// Returns the public download URL
+  /// Includes both native bookings AND imported iCal events from external platforms
   Future<String> generateAndUploadIcal({
     required String propertyId,
     required String unitId,
@@ -64,13 +70,22 @@ class IcalExportService {
         tag: 'IcalExportService',
       );
 
-      // 2. Generate .ics content
+      // 2. Fetch imported iCal events (from Booking.com, Airbnb, etc.)
+      final importedEvents = await _fetchImportedIcalEvents(propertyId, unitId);
+
+      LoggingService.log(
+        'Fetched ${importedEvents.length} imported iCal events for unit: $unitId',
+        tag: 'IcalExportService',
+      );
+
+      // 3. Generate .ics content (includes both bookings and imported events)
       final icsContent = IcalGenerator.generateUnitCalendar(
         unit: unit,
         bookings: bookings,
+        importedEvents: importedEvents,
       );
 
-      // 3. Upload to Firebase Storage
+      // 4. Upload to Firebase Storage
       final downloadUrl = await _uploadToStorage(
         propertyId: propertyId,
         unitId: unitId,
@@ -198,6 +213,37 @@ class IcalExportService {
         tag: 'IcalExportService',
       );
       rethrow;
+    }
+  }
+
+  /// Fetch imported iCal events for a unit
+  ///
+  /// These are reservations imported from external platforms (Booking.com, Airbnb, etc.)
+  /// Stored in: properties/{propertyId}/ical_events/{eventId}
+  Future<List<IcalEvent>> _fetchImportedIcalEvents(
+    String propertyId,
+    String unitId,
+  ) async {
+    try {
+      final snapshot = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('ical_events')
+          .where('unit_id', isEqualTo: unitId)
+          .orderBy('start_date')
+          .get();
+
+      final events = snapshot.docs.map(IcalEvent.fromFirestore).toList();
+
+      return events;
+    } catch (e) {
+      LoggingService.log(
+        'Error fetching imported iCal events: $e',
+        tag: 'IcalExportService',
+      );
+      // Return empty list on error - don't fail the export
+      // Native bookings are more important than imported events
+      return [];
     }
   }
 

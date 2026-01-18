@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:collection/collection.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
@@ -13,8 +14,10 @@ import '../../../../l10n/app_localizations.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_bookings_view_preference_provider.dart';
 import '../providers/overbooking_detection_provider.dart';
+import '../providers/unified_bookings_provider.dart';
 import '../../domain/models/bookings_view_mode.dart';
 import '../../domain/models/overbooking_conflict.dart';
+import '../../domain/models/unified_booking_item.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
@@ -29,6 +32,7 @@ import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/bookings/bookings_filters_dialog.dart';
 import '../widgets/bookings/bookings_tab_bar.dart';
+import '../widgets/bookings/imported_reservations_list.dart';
 import '../widgets/bookings/revenue_guide_empty_state.dart';
 import '../widgets/bookings/premium_loading_indicator.dart';
 // Booking card components
@@ -39,6 +43,7 @@ import '../widgets/bookings/booking_card/booking_card_date_range.dart';
 import '../widgets/bookings/booking_card/booking_card_payment_info.dart';
 import '../widgets/bookings/booking_card/booking_card_notes.dart';
 import '../widgets/bookings/booking_card/booking_card_actions.dart';
+import '../widgets/bookings/booking_card/imported_reservation_card.dart';
 // Booking action dialogs
 import '../widgets/booking_actions/booking_approve_dialog.dart';
 import '../widgets/booking_actions/booking_reject_dialog.dart';
@@ -545,8 +550,20 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   ),
 
                   // Bookings content - using state-based approach
-                  // Show loading skeleton during initial load
-                  if (windowedState.isInitialLoad && bookings.isEmpty)
+                  // Show imported reservations when "Imported" tab is selected
+                  if (filters.showImportedOnly)
+                    const ImportedReservationsList()
+                  // For "All" (no status filter) - use unified list that merges regular + imported
+                  else if (filters.status == null)
+                    _buildUnifiedBookingsList(
+                      ref,
+                      viewMode,
+                      isMobile,
+                      theme,
+                      l10n,
+                    )
+                  // Show loading skeleton during initial load (status filter active)
+                  else if (windowedState.isInitialLoad && bookings.isEmpty)
                     viewMode == BookingsViewMode.table
                         ? SliverToBoxAdapter(
                             child: Padding(
@@ -570,7 +587,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                               childCount: 5,
                             ),
                           )
-                  // Show error state
+                  // Show error state (status filter active)
                   else if (windowedState.error != null && bookings.isEmpty)
                     SliverToBoxAdapter(
                       child: Center(
@@ -605,7 +622,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         ),
                       ),
                     )
-                  // Show empty state
+                  // Show empty state (status filter active)
                   else if (windowedState.isEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
@@ -615,7 +632,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                         child: const RevenueGuideEmptyState(),
                       ),
                     )
-                  // Show bookings list
+                  // Show bookings list (status filter active - regular bookings only)
                   else if (viewMode == BookingsViewMode.card)
                     _buildBookingsSliverList(bookings, isMobile)
                   else
@@ -1129,6 +1146,192 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     );
   }
 
+  /// Build unified bookings list (merges regular bookings + imported reservations)
+  /// Used when "All" filter is selected (no status filter)
+  Widget _buildUnifiedBookingsList(
+    WidgetRef ref,
+    BookingsViewMode viewMode,
+    bool isMobile,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    final isLoading = ref.watch(isUnifiedBookingsLoadingProvider);
+    final error = ref.watch(unifiedBookingsErrorProvider);
+    final unifiedAsync = ref.watch(unifiedBookingsProvider);
+
+    // Loading state
+    if (isLoading) {
+      return viewMode == BookingsViewMode.table
+          ? SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.horizontalPadding,
+                ),
+                child: SkeletonLoader.bookingsTable(),
+              ),
+            )
+          : SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    context.horizontalPadding,
+                    0,
+                    context.horizontalPadding,
+                    16,
+                  ),
+                  child: const BookingCardSkeleton(),
+                ),
+                childCount: 5,
+              ),
+            );
+    }
+
+    // Error state
+    if (error != null) {
+      return SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(context.horizontalPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: AppDimensions.iconSizeXL,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(height: AppDimensions.spaceS),
+                Text(
+                  l10n.ownerBookingsErrorLoading,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: AppDimensions.spaceXS),
+                Text(
+                  error,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.textColorSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 5,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Get data from async value
+    final unifiedItems = unifiedAsync.valueOrNull ?? [];
+
+    // Empty state
+    if (unifiedItems.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+          child: const RevenueGuideEmptyState(),
+        ),
+      );
+    }
+
+    // Table view (only shows regular bookings - imported don't have all fields)
+    if (viewMode == BookingsViewMode.table) {
+      final regularBookings = unifiedItems
+          .whereType<RegularBookingItem>()
+          .map((item) => item.ownerBooking)
+          .toList();
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: context.horizontalPadding),
+          child: BookingsTableView(bookings: regularBookings),
+        ),
+      );
+    }
+
+    // Card view - render both types
+    return _buildUnifiedSliverList(unifiedItems, isMobile);
+  }
+
+  /// Build sliver list for unified booking items (regular + imported)
+  Widget _buildUnifiedSliverList(
+    List<UnifiedBookingItem> items,
+    bool isMobile,
+  ) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 900;
+    final horizontalPad = context.horizontalPadding;
+
+    if (isDesktop) {
+      // Desktop: 2-column layout
+      final rowCount = (items.length / 2).ceil();
+
+      return SliverPadding(
+        padding: EdgeInsets.fromLTRB(horizontalPad, 0, horizontalPad, 24),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, rowIndex) {
+            final leftIndex = rowIndex * 2;
+            final rightIndex = leftIndex + 1;
+
+            final leftItem = items[leftIndex];
+            final rightItem = rightIndex < items.length
+                ? items[rightIndex]
+                : null;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: RepaintBoundary(child: _buildUnifiedCard(leftItem)),
+                  ),
+                  if (rightItem != null) ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: RepaintBoundary(
+                        child: _buildUnifiedCard(rightItem),
+                      ),
+                    ),
+                  ] else
+                    const Spacer(),
+                ],
+              ),
+            );
+          }, childCount: rowCount),
+        ),
+      );
+    } else {
+      // Mobile/Tablet: Single column
+      return SliverPadding(
+        padding: EdgeInsets.fromLTRB(horizontalPad, 0, horizontalPad, 24),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final item = items[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: RepaintBoundary(child: _buildUnifiedCard(item)),
+            );
+          }, childCount: items.length),
+        ),
+      );
+    }
+  }
+
+  /// Build the appropriate card widget based on booking type
+  Widget _buildUnifiedCard(UnifiedBookingItem item) {
+    return switch (item) {
+      RegularBookingItem(:final ownerBooking) => _BookingCard(
+        key: ValueKey(ownerBooking.booking.id),
+        ownerBooking: ownerBooking,
+      ),
+      ImportedBookingItem(:final event) => ImportedReservationCard(
+        key: ValueKey('imported_${event.id}'),
+        event: event,
+      ),
+    };
+  }
+
   /// Build bookings list using SliverList for proper lazy loading
   /// Eliminates nested ListView anti-pattern and fixes performance issues
   Widget _buildBookingsSliverList(List<OwnerBooking> bookings, bool isMobile) {
@@ -1405,7 +1608,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   }
 }
 
-/// Booking card widget
+/// Booking card widget with modern premium design
 class _BookingCard extends ConsumerWidget {
   const _BookingCard({super.key, required this.ownerBooking});
 
@@ -1429,11 +1632,13 @@ class _BookingCard extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16), // Modernized: 16px
         border: Border.all(
           color: hasConflict
               ? Colors.red
-              : context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
+              : isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.08),
           width: hasConflict ? 2 : 1,
         ),
         boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
@@ -1441,12 +1646,24 @@ class _BookingCard extends ConsumerWidget {
       child: Stack(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16), // Match container
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Section
-                BookingCardHeader(booking: booking, isMobile: isMobile),
+                // Header Section (with rounded top corners)
+                BookingCardHeader(
+                  booking: booking,
+                  isMobile: isMobile,
+                  hasConflict: hasConflict,
+                ),
+
+                // Conflict Banner
+                if (hasConflict)
+                  _BookingConflictBanner(
+                    bookingId: booking.id,
+                    unitId: unit.id,
+                    isMobile: isMobile,
+                  ),
 
                 // Card Body
                 Padding(
@@ -1514,9 +1731,7 @@ class _BookingCard extends ConsumerWidget {
                   ),
                 ),
 
-                SizedBox(height: isMobile ? 12 : 16),
-
-                // Action buttons
+                // Action buttons (footer with rounded bottom corners)
                 BookingCardActions(
                   booking: booking,
                   isMobile: isMobile,
@@ -1821,6 +2036,59 @@ class _ViewModeButton extends StatelessWidget {
                 : theme.colorScheme.onSurfaceVariant,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BookingConflictBanner extends ConsumerWidget {
+  final String bookingId;
+  final String unitId;
+  final bool isMobile;
+
+  const _BookingConflictBanner({
+    required this.bookingId,
+    required this.unitId,
+    required this.isMobile,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final conflicts = ref.watch(conflictsForUnitProvider(unitId));
+    final conflict = conflicts.firstWhereOrNull(
+      (c) => c.booking1.id == bookingId || c.booking2.id == bookingId,
+    );
+
+    if (conflict == null) return const SizedBox.shrink();
+
+    final isFirst = conflict.booking1.id == bookingId;
+    final otherGuestName = isFirst ? conflict.guest2Name : conflict.guest1Name;
+
+    return Container(
+      width: double.infinity,
+      color: Colors.red.withValues(alpha: 0.1),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: 8,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.red.shade700,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Overbooking: Conflicting with ${otherGuestName ?? "another guest"}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.red.shade900,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -13,7 +13,8 @@ part 'property_model.g.dart';
 class PropertyModel with _$PropertyModel {
   const factory PropertyModel({
     /// Property ID (UUID)
-    required String id,
+    /// Not written to Firestore - document ID is used instead
+    @JsonKey(includeToJson: false) required String id,
 
     /// Owner user ID (nullable for backwards compatibility with legacy properties)
     @JsonKey(name: 'owner_id') String? ownerId,

@@ -22,6 +22,8 @@ UnitModel _$UnitModelFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$UnitModel {
   /// Unit ID (UUID)
+  /// Not written to Firestore - document ID is used instead
+  @JsonKey(includeToJson: false)
   String get id => throw _privateConstructorUsedError;
 
   /// Parent property ID
@@ -120,7 +122,7 @@ abstract class $UnitModelCopyWith<$Res> {
       _$UnitModelCopyWithImpl<$Res, UnitModel>;
   @useResult
   $Res call({
-    String id,
+    @JsonKey(includeToJson: false) String id,
     @JsonKey(name: 'property_id') String propertyId,
     @JsonKey(name: 'owner_id') String? ownerId,
     String name,
@@ -291,7 +293,7 @@ abstract class _$$UnitModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    String id,
+    @JsonKey(includeToJson: false) String id,
     @JsonKey(name: 'property_id') String propertyId,
     @JsonKey(name: 'owner_id') String? ownerId,
     String name,
@@ -454,7 +456,7 @@ class __$$UnitModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$UnitModelImpl extends _UnitModel {
   const _$UnitModelImpl({
-    required this.id,
+    @JsonKey(includeToJson: false) required this.id,
     @JsonKey(name: 'property_id') required this.propertyId,
     @JsonKey(name: 'owner_id') this.ownerId,
     required this.name,
@@ -484,7 +486,9 @@ class _$UnitModelImpl extends _UnitModel {
       _$$UnitModelImplFromJson(json);
 
   /// Unit ID (UUID)
+  /// Not written to Firestore - document ID is used instead
   @override
+  @JsonKey(includeToJson: false)
   final String id;
 
   /// Parent property ID
@@ -704,7 +708,7 @@ class _$UnitModelImpl extends _UnitModel {
 
 abstract class _UnitModel extends UnitModel {
   const factory _UnitModel({
-    required final String id,
+    @JsonKey(includeToJson: false) required final String id,
     @JsonKey(name: 'property_id') required final String propertyId,
     @JsonKey(name: 'owner_id') final String? ownerId,
     required final String name,
@@ -737,7 +741,9 @@ abstract class _UnitModel extends UnitModel {
       _$UnitModelImpl.fromJson;
 
   /// Unit ID (UUID)
+  /// Not written to Firestore - document ID is used instead
   @override
+  @JsonKey(includeToJson: false)
   String get id;
 
   /// Parent property ID

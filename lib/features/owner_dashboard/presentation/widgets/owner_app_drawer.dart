@@ -10,6 +10,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../providers/notifications_provider.dart';
 import '../providers/owner_bookings_provider.dart';
 
 /// Premium Owner App Navigation Drawer
@@ -154,7 +155,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             ),
 
             // Settings & Profile
-            _DrawerItem(
+            _DrawerItemWithNotificationBadge(
               icon: Icons.notifications_outlined,
               title: l10n.ownerDrawerNotifications,
               isSelected: currentRoute == 'notifications',
@@ -485,6 +486,133 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
                       ),
                       child: Text(
                         pendingCount.toString(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onTap: widget.onTap,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium Drawer Item with Notification Badge (amber/yellow color)
+class _DrawerItemWithNotificationBadge extends ConsumerStatefulWidget {
+  final IconData icon;
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _DrawerItemWithNotificationBadge({
+    required this.icon,
+    required this.title,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  ConsumerState<_DrawerItemWithNotificationBadge> createState() =>
+      _DrawerItemWithNotificationBadgeState();
+}
+
+class _DrawerItemWithNotificationBadgeState
+    extends ConsumerState<_DrawerItemWithNotificationBadge> {
+  bool _isHovered = false;
+
+  // Light purple for dark theme text (lightened version of brandPurple)
+  static const _lightPurple = Color(0xFFB794F6);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Get unread notifications count
+    final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
+    final unreadCount = unreadCountAsync.maybeWhen(
+      data: (count) => count,
+      orElse: () => 0,
+    );
+
+    // In dark mode, use lighter purple text and stronger purple background
+    final selectedTextColor = isDark
+        ? _lightPurple
+        : theme.colorScheme.brandPurple;
+    final selectedBgAlpha = isDark ? 0.15 : 0.12;
+    final hoverBgAlpha = isDark ? 0.08 : 0.06;
+
+    // Amber badge color - slightly darker for better contrast
+    final badgeColor = isDark ? Colors.amber.shade600 : Colors.amber.shade700;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: widget.isSelected
+                ? theme.colorScheme.brandPurple.withValues(
+                    alpha: selectedBgAlpha,
+                  )
+                : _isHovered
+                ? theme.colorScheme.brandPurple.withValues(alpha: hoverBgAlpha)
+                : Colors.transparent,
+          ),
+          child: ListTile(
+            leading: Icon(
+              widget.icon,
+              color: widget.isSelected
+                  ? selectedTextColor
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+              size: 24,
+            ),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: widget.isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      color: widget.isSelected
+                          ? selectedTextColor
+                          : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                if (unreadCount > 0)
+                  Semantics(
+                    label:
+                        '$unreadCount ${l10n.ownerDrawerNotifications.toLowerCase()}',
+                    excludeSemantics: true,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: badgeColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        unreadCount.toString(),
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,

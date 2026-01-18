@@ -62,11 +62,15 @@ class BookingsFilters {
   final DateTime? startDate;
   final DateTime? endDate;
 
+  /// When true, shows only imported reservations (iCal events from Booking.com, Airbnb, etc.)
+  final bool showImportedOnly;
+
   const BookingsFilters({
     this.status,
     this.propertyId,
     this.startDate,
     this.endDate,
+    this.showImportedOnly = false,
   });
 
   BookingsFilters copyWith({
@@ -78,12 +82,14 @@ class BookingsFilters {
     bool clearStartDate = false,
     DateTime? endDate,
     bool clearEndDate = false,
+    bool? showImportedOnly,
   }) {
     return BookingsFilters(
       status: clearStatus ? null : (status ?? this.status),
       propertyId: clearProperty ? null : (propertyId ?? this.propertyId),
       startDate: clearStartDate ? null : (startDate ?? this.startDate),
       endDate: clearEndDate ? null : (endDate ?? this.endDate),
+      showImportedOnly: showImportedOnly ?? this.showImportedOnly,
     );
   }
 
@@ -91,7 +97,8 @@ class BookingsFilters {
       status != null ||
       propertyId != null ||
       startDate != null ||
-      endDate != null;
+      endDate != null ||
+      showImportedOnly;
 }
 
 /// Paginated bookings state - server-side pagination
@@ -148,7 +155,12 @@ class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
   }
 
   void setStatus(BookingStatus? status) {
-    state = state.copyWith(status: status, clearStatus: status == null);
+    // When setting a status, disable imported filter
+    state = state.copyWith(
+      status: status,
+      clearStatus: status == null,
+      showImportedOnly: false,
+    );
   }
 
   void setProperty(String? propertyId) {
@@ -164,6 +176,15 @@ class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
       clearStartDate: startDate == null,
       endDate: endDate,
       clearEndDate: endDate == null,
+    );
+  }
+
+  /// Toggle showing only imported reservations (iCal events)
+  void setShowImportedOnly(bool value) {
+    // When showing imported only, clear status filter
+    state = state.copyWith(
+      showImportedOnly: value,
+      clearStatus: value, // Clear status when showing imported
     );
   }
 

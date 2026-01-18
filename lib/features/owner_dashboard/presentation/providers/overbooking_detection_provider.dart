@@ -126,7 +126,9 @@ Stream<List<OverbookingConflict>> overbookingConflicts(Ref ref) async* {
             unitId: unitId,
             unitName: unitName,
             booking1: booking1,
+            guest1Name: booking1.guestName,
             booking2: booking2,
+            guest2Name: booking2.guestName,
             conflictDates: conflictDates,
             detectedAt: DateTime.now(),
           );
@@ -202,12 +204,17 @@ class OverbookingAutoResolver extends _$OverbookingAutoResolver {
       final isConfirmed1 = booking1.status == BookingStatus.confirmed;
       final isConfirmed2 = booking2.status == BookingStatus.confirmed;
 
+      // CRITICAL: Do not auto-reject if the confirmed booking is external/iCal
+      // and the pending one is ours OR if both are ours.
+      // Actually, we can ONLY cancel OUR pending bookings.
+      // We cannot cancel external bookings.
+
       BookingModel? bookingToReject;
 
-      if (isPending1 && isConfirmed2) {
+      if (isPending1 && isConfirmed2 && !booking1.isExternalBooking) {
         // Reject booking1 (pending), keep booking2 (confirmed)
         bookingToReject = booking1;
-      } else if (isPending2 && isConfirmed1) {
+      } else if (isPending2 && isConfirmed1 && !booking2.isExternalBooking) {
         // Reject booking2 (pending), keep booking1 (confirmed)
         bookingToReject = booking2;
       }

@@ -55,7 +55,6 @@ _$PropertyModelImpl _$$PropertyModelImplFromJson(
 Map<String, dynamic> _$$PropertyModelImplToJson(
   _$PropertyModelImpl instance,
 ) => <String, dynamic>{
-  'id': instance.id,
   'owner_id': instance.ownerId,
   'name': instance.name,
   'slug': instance.slug,

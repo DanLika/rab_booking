@@ -2555,6 +2555,8 @@
     }
   },
   "icalSyncErrorMessage": "Error during synchronization",
+  "icalNoEventsTitle": "No imported reservations",
+  "icalNoEventsSubtitle": "Add iCal feeds from Booking.com, Airbnb or other platforms to see imported reservations here.",
   "icalUnknownError": "Unknown error",
   "icalFeedPaused": "Feed paused",
   "icalFeedPauseError": "Error pausing feed",
@@ -2585,6 +2587,13 @@
   "icalPasteFromClipboard": "Paste from clipboard",
   "icalUrlRequired": "Please enter iCal URL",
   "icalUrlInvalid": "URL must start with http:// or https://",
+  "icalUrlPlatformMismatch": "This URL appears to be from {detectedPlatform}. You selected {selectedPlatform}.",
+  "@icalUrlPlatformMismatch": {
+    "placeholders": {
+      "detectedPlatform": {"type": "String"},
+      "selectedPlatform": {"type": "String"}
+    }
+  },
   "icalAutoSyncInfo": "Automatic synchronization",
   "icalAutoSyncInfoDesc": "Reservations will be automatically synchronized every 60 minutes. Initial synchronization will start immediately after adding.",
   "icalAdd": "Add",
@@ -3339,6 +3348,7 @@
   "bookingsTabPending": "Pending",
   "bookingsTabConfirmed": "Confirmed",
   "bookingsTabCancelled": "Cancelled",
+  "bookingsTabImported": "Imported",
   "ownerProfileCompletionStatus": "Profile {percentage}% complete",
   "@ownerProfileCompletionStatus": {
     "placeholders": {

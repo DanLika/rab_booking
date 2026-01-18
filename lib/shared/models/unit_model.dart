@@ -9,7 +9,8 @@ part 'unit_model.g.dart';
 class UnitModel with _$UnitModel {
   const factory UnitModel({
     /// Unit ID (UUID)
-    required String id,
+    /// Not written to Firestore - document ID is used instead
+    @JsonKey(includeToJson: false) required String id,
 
     /// Parent property ID
     @JsonKey(name: 'property_id') required String propertyId,

@@ -172,7 +172,26 @@ class PasswordValidator {
     return result.isValid ? null : result.errorMessage;
   }
 
-  /// Minimum length validation (8+ characters only) - for login and register
+  /// Login validation - only checks minimum length
+  /// For login, we only validate length since Firebase Auth handles the actual authentication
+  /// Security checks (sequential, repeating chars) are only enforced during registration
+  static String? validateLoginPassword(String? password) {
+    if (password == null || password.isEmpty) {
+      return 'Please enter your password';
+    }
+
+    if (password.length < minLength) {
+      return 'Password must be at least $minLength characters';
+    }
+
+    if (password.length > maxLength) {
+      return 'Password must be less than $maxLength characters';
+    }
+
+    return null;
+  }
+
+  /// Minimum length validation (8+ characters only) - for registration
   /// Includes minimal validation to prevent weak passwords like "12345678" or "11111111"
   static String? validateMinimumLength(String? password) {
     if (password == null || password.isEmpty) {

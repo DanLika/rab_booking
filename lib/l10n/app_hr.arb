@@ -2561,6 +2561,8 @@
     }
   },
   "icalSyncErrorMessage": "Greška prilikom sinkronizacije",
+  "icalNoEventsTitle": "Nema uvezenih rezervacija",
+  "icalNoEventsSubtitle": "Dodajte iCal feed-ove sa Booking.com, Airbnb ili drugih platformi da biste vidjeli uvezene rezervacije ovdje.",
   "icalUnknownError": "Nepoznata greška",
   "icalFeedPaused": "Feed pauziran",
   "icalFeedPauseError": "Greška prilikom pauziranja feeda",
@@ -2591,6 +2593,13 @@
   "icalPasteFromClipboard": "Zalijepi iz clipboard-a",
   "icalUrlRequired": "Molimo unesite iCal URL",
   "icalUrlInvalid": "URL mora početi sa http:// ili https://",
+  "icalUrlPlatformMismatch": "Ovaj URL izgleda kao da je sa {detectedPlatform}. Odabrali ste {selectedPlatform}.",
+  "@icalUrlPlatformMismatch": {
+    "placeholders": {
+      "detectedPlatform": {"type": "String"},
+      "selectedPlatform": {"type": "String"}
+    }
+  },
   "icalAutoSyncInfo": "Automatska sinkronizacija",
   "icalAutoSyncInfoDesc": "Rezervacije će se automatski sinkronizirati svakih 60 minuta. Početna sinkronizacija će se pokrenuti odmah nakon dodavanja.",
   "icalAdd": "Dodaj",
@@ -3346,6 +3355,7 @@
   "bookingsTabPending": "Na čekanju",
   "bookingsTabConfirmed": "Potvrđene",
   "bookingsTabCancelled": "Otkazane",
+  "bookingsTabImported": "Uvezene",
   "ownerProfileCompletionStatus": "Profil {percentage}% ispunjen",
   "@ownerProfileCompletionStatus": {
     "placeholders": {

@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 import '../../shared/models/booking_model.dart';
 import '../../shared/models/unit_model.dart';
+import '../../features/owner_dashboard/domain/models/ical_feed.dart';
 import '../constants/enums.dart';
 
 /// iCal (RFC 5545) generator for booking calendar export
@@ -16,9 +17,11 @@ class IcalGenerator {
   /// Generate complete iCal calendar for all bookings of a unit
   ///
   /// Used for owner export - includes all bookings for a specific unit
+  /// Now also includes imported iCal events (from Booking.com, Airbnb, etc.)
   static String generateUnitCalendar({
     required UnitModel unit,
     required List<BookingModel> bookings,
+    List<IcalEvent>? importedEvents,
   }) {
     final buffer = StringBuffer();
 
@@ -35,6 +38,13 @@ class IcalGenerator {
     // Add each booking as an event
     for (final booking in bookings) {
       buffer.write(_formatEvent(booking, unit.name));
+    }
+
+    // Add imported iCal events (from external platforms)
+    if (importedEvents != null) {
+      for (final event in importedEvents) {
+        buffer.write(_formatIcalEvent(event, unit.name));
+      }
     }
 
     // Calendar footer
@@ -168,6 +178,64 @@ class IcalGenerator {
 
     // Join with actual newlines - _escape() will convert to \n for iCal format
     return parts.join('\n');
+  }
+
+  /// Format an imported iCal event as VEVENT
+  ///
+  /// Creates an all-day event from startDate to endDate
+  /// Used for events imported from external platforms (Booking.com, Airbnb, etc.)
+  static String _formatIcalEvent(IcalEvent event, String unitName) {
+    final buffer = StringBuffer();
+
+    // Event start
+    buffer.writeln('BEGIN:VEVENT');
+
+    // UID - Unique identifier (required by RFC 5545)
+    // Use external ID from the imported event
+    buffer.writeln('UID:${event.externalId}@bookbed.io');
+
+    // DTSTAMP - Timestamp when event was created (required)
+    buffer.writeln('DTSTAMP:${_formatTimestamp(event.createdAt)}');
+
+    // DTSTART - Start date (all-day event)
+    buffer.writeln('DTSTART;VALUE=DATE:${_formatDate(event.startDate)}');
+
+    // DTEND - End date (all-day event, exclusive - day after end)
+    final endDate = event.endDate.add(const Duration(days: 1));
+    buffer.writeln('DTEND;VALUE=DATE:${_formatDate(endDate)}');
+
+    // SUMMARY - Event title with source platform
+    buffer.writeln(
+      'SUMMARY:${_escape('${event.guestName} (${event.source}) - $unitName')}',
+    );
+
+    // DESCRIPTION - Event details
+    final descriptionParts = <String>[];
+    descriptionParts.add('Unit: $unitName');
+    descriptionParts.add('Source: ${event.source}');
+    descriptionParts.add('Guest: ${event.guestName}');
+    if (event.description != null && event.description!.isNotEmpty) {
+      descriptionParts.add('Notes: ${event.description}');
+    }
+    descriptionParts.add('Imported Event ID: ${event.id}');
+    buffer.writeln('DESCRIPTION:${_escape(descriptionParts.join('\n'))}');
+
+    // STATUS - Always CONFIRMED for imported events
+    buffer.writeln('STATUS:CONFIRMED');
+
+    // LOCATION - Unit name
+    buffer.writeln('LOCATION:${_escape(unitName)}');
+
+    // LAST-MODIFIED - Last update timestamp
+    buffer.writeln('LAST-MODIFIED:${_formatTimestamp(event.updatedAt)}');
+
+    // CREATED - Creation timestamp
+    buffer.writeln('CREATED:${_formatTimestamp(event.createdAt)}');
+
+    // Event end
+    buffer.writeln('END:VEVENT');
+
+    return buffer.toString();
   }
 
   /// Map BookingStatus to iCal STATUS

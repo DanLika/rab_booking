@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -569,13 +570,13 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
         }
 
         transaction.update(docRef, {
-          'check_in': _checkIn.toUtc().toIso8601String(),
-          'check_out': _checkOut.toUtc().toIso8601String(),
+          'check_in': Timestamp.fromDate(_checkIn),
+          'check_out': Timestamp.fromDate(_checkOut),
           'guest_count': _guestCount,
           'notes': _notesController.text.trim().isEmpty
               ? null
               : _notesController.text.trim(),
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
+          'updated_at': Timestamp.fromDate(DateTime.now()),
         });
       });
 

@@ -22,6 +22,8 @@ PropertyModel _$PropertyModelFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$PropertyModel {
   /// Property ID (UUID)
+  /// Not written to Firestore - document ID is used instead
+  @JsonKey(includeToJson: false)
   String get id => throw _privateConstructorUsedError;
 
   /// Owner user ID (nullable for backwards compatibility with legacy properties)
@@ -145,7 +147,7 @@ abstract class $PropertyModelCopyWith<$Res> {
   ) = _$PropertyModelCopyWithImpl<$Res, PropertyModel>;
   @useResult
   $Res call({
-    String id,
+    @JsonKey(includeToJson: false) String id,
     @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
@@ -375,7 +377,7 @@ abstract class _$$PropertyModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    String id,
+    @JsonKey(includeToJson: false) String id,
     @JsonKey(name: 'owner_id') String? ownerId,
     String name,
     String? slug,
@@ -584,7 +586,7 @@ class __$$PropertyModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PropertyModelImpl extends _PropertyModel {
   const _$PropertyModelImpl({
-    required this.id,
+    @JsonKey(includeToJson: false) required this.id,
     @JsonKey(name: 'owner_id') this.ownerId,
     required this.name,
     this.slug,
@@ -622,7 +624,9 @@ class _$PropertyModelImpl extends _PropertyModel {
       _$$PropertyModelImplFromJson(json);
 
   /// Property ID (UUID)
+  /// Not written to Firestore - document ID is used instead
   @override
+  @JsonKey(includeToJson: false)
   final String id;
 
   /// Owner user ID (nullable for backwards compatibility with legacy properties)
@@ -887,7 +891,7 @@ class _$PropertyModelImpl extends _PropertyModel {
 
 abstract class _PropertyModel extends PropertyModel {
   const factory _PropertyModel({
-    required final String id,
+    @JsonKey(includeToJson: false) required final String id,
     @JsonKey(name: 'owner_id') final String? ownerId,
     required final String name,
     final String? slug,
@@ -928,7 +932,9 @@ abstract class _PropertyModel extends PropertyModel {
       _$PropertyModelImpl.fromJson;
 
   /// Property ID (UUID)
+  /// Not written to Firestore - document ID is used instead
   @override
+  @JsonKey(includeToJson: false)
   String get id;
 
   /// Owner user ID (nullable for backwards compatibility with legacy properties)

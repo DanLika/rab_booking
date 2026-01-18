@@ -11220,6 +11220,18 @@ abstract class AppLocalizations {
   /// **'Error during synchronization'**
   String get icalSyncErrorMessage;
 
+  /// No description provided for @icalNoEventsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No imported reservations'**
+  String get icalNoEventsTitle;
+
+  /// No description provided for @icalNoEventsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add iCal feeds from Booking.com, Airbnb or other platforms to see imported reservations here.'**
+  String get icalNoEventsSubtitle;
+
   /// No description provided for @icalUnknownError.
   ///
   /// In en, this message translates to:
@@ -11363,6 +11375,15 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'URL must start with http:// or https://'**
   String get icalUrlInvalid;
+
+  /// No description provided for @icalUrlPlatformMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This URL appears to be from {detectedPlatform}. You selected {selectedPlatform}.'**
+  String icalUrlPlatformMismatch(
+    String detectedPlatform,
+    String selectedPlatform,
+  );
 
   /// No description provided for @icalAutoSyncInfo.
   ///
@@ -14160,6 +14181,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get bookingsTabCancelled;
+
+  /// No description provided for @bookingsTabImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported'**
+  String get bookingsTabImported;
 
   /// No description provided for @ownerProfileCompletionStatus.
   ///

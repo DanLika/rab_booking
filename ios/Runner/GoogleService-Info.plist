@@ -2,18 +2,24 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>592597958982-a38onq6ft57de2dprnsi3lg0rog27bvg.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.592597958982-a38onq6ft57de2dprnsi3lg0rog27bvg</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>592597958982-71vq95vk46dv8olikiq0fks19md5hk5a.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyA857meSxpfUFDvF7ZorkTrKrOQZi152go</string>
+	<string>AIzaSyAOFQ2jykLZlTtE6whuGDb-09r8HyAHs90</string>
 	<key>GCM_SENDER_ID</key>
-	<string>733027606474</string>
+	<string>592597958982</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>io.bookbed.app</string>
 	<key>PROJECT_ID</key>
-	<string>bookbed-dev</string>
+	<string>rab-booking-248fc</string>
 	<key>STORAGE_BUCKET</key>
-	<string>bookbed-dev.firebasestorage.app</string>
+	<string>rab-booking-248fc.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:733027606474:ios:600363248e5e0e5aebf933</string>
+	<string>1:592597958982:ios:157b8d20e9e17aa7d3e547</string>
 </dict>
 </plist>

@@ -138,26 +138,56 @@ class FirebaseIcalRepository {
   /// Delete iCal feed and its events
   /// Path: properties/{propertyId}/ical_feeds/{feedId}
   Future<void> deleteIcalFeed(String feedId, String propertyId) async {
+    LoggingService.log(
+      'Deleting feed: $feedId from property: $propertyId',
+      tag: 'IcalRepository',
+    );
+
     try {
-      // Delete all events from this feed
-      final eventsSnapshot = await _firestore
+      // Query path: properties/{propertyId}/ical_events where feed_id == feedId
+      final eventsQuery = _firestore
           .collection('properties')
           .doc(propertyId)
           .collection('ical_events')
-          .where('feed_id', isEqualTo: feedId)
-          .get();
+          .where('feed_id', isEqualTo: feedId);
+
+      LoggingService.log(
+        'Querying events at: properties/$propertyId/ical_events where feed_id == $feedId',
+        tag: 'IcalRepository',
+      );
+
+      final eventsSnapshot = await eventsQuery.get();
+
+      LoggingService.log(
+        'Found ${eventsSnapshot.docs.length} events to delete',
+        tag: 'IcalRepository',
+      );
+
+      // Log each event being deleted for debugging
+      for (final doc in eventsSnapshot.docs) {
+        LoggingService.log(
+          'Deleting event: ${doc.id} (feed_id: ${doc.data()['feed_id']})',
+          tag: 'IcalRepository',
+        );
+      }
 
       // Use batch delete (Firestore batch limit is 500)
       const batchSize = 500;
+      int deletedCount = 0;
       for (int i = 0; i < eventsSnapshot.docs.length; i += batchSize) {
         final batch = _firestore.batch();
         final batchDocs = eventsSnapshot.docs.skip(i).take(batchSize);
 
         for (final doc in batchDocs) {
           batch.delete(doc.reference);
+          deletedCount++;
         }
 
         await batch.commit();
+        LoggingService.log(
+          'Batch committed: $deletedCount events deleted so far',
+          tag: 'IcalRepository',
+        );
       }
 
       // Delete the feed from subcollection
@@ -169,11 +199,14 @@ class FirebaseIcalRepository {
           .delete();
 
       LoggingService.log(
-        'Feed deleted: $feedId with ${eventsSnapshot.docs.length} events',
+        'Feed deleted successfully: $feedId with $deletedCount events removed',
         tag: 'IcalRepository',
       );
-    } catch (e) {
-      LoggingService.log('Error deleting feed: $e', tag: 'IcalRepository');
+    } catch (e, stackTrace) {
+      LoggingService.log(
+        'Error deleting feed $feedId: $e\n$stackTrace',
+        tag: 'IcalRepository',
+      );
       rethrow;
     }
   }
@@ -269,6 +302,45 @@ class FirebaseIcalRepository {
     } catch (e) {
       LoggingService.log(
         'Error getting unit events: $e',
+        tag: 'IcalRepository',
+      );
+      return [];
+    }
+  }
+
+  /// Get ALL iCal events across all owner's properties
+  /// Used on the Bookings page when "Imported" tab is selected
+  Future<List<IcalEvent>> getAllOwnerIcalEvents(String ownerId) async {
+    try {
+      // First, get all owner's properties
+      final propertiesSnapshot = await _firestore
+          .collection('properties')
+          .where('owner_id', isEqualTo: ownerId)
+          .get();
+
+      final propertyIds = propertiesSnapshot.docs.map((doc) => doc.id).toList();
+
+      if (propertyIds.isEmpty) return [];
+
+      // Query events from each property's subcollection
+      final List<IcalEvent> allEvents = [];
+      for (final propertyId in propertyIds) {
+        final eventsSnapshot = await _firestore
+            .collection('properties')
+            .doc(propertyId)
+            .collection('ical_events')
+            .orderBy('start_date', descending: true)
+            .get();
+        allEvents.addAll(eventsSnapshot.docs.map(IcalEvent.fromFirestore));
+      }
+
+      // Sort by start date descending (most recent first)
+      allEvents.sort((a, b) => b.startDate.compareTo(a.startDate));
+
+      return allEvents;
+    } catch (e) {
+      LoggingService.log(
+        'Error getting all owner iCal events: $e',
         tag: 'IcalRepository',
       );
       return [];

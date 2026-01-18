@@ -20,6 +20,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../../../shared/widgets/app_filter_chip.dart';
 import '../providers/owner_properties_provider.dart';
+import '../providers/owner_calendar_provider.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/services/logging_service.dart';
@@ -1190,6 +1191,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
       }
 
       ref.invalidate(ownerPropertiesProvider);
+      // Also invalidate calendar provider so timeline shows new property immediately
+      ref.invalidate(ownerPropertiesCalendarProvider);
 
       if (mounted) {
         final l10nSuccess = AppLocalizations.of(context);

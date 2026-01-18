@@ -117,3 +117,15 @@ final icalFeedsProvider =
     AsyncNotifierProvider<IcalFeedsNotifier, List<IcalFeed>>(
       IcalFeedsNotifier.new,
     );
+
+/// Provider for ALL iCal events across all owner's units
+/// Used on the Bookings page when "Imported" tab is selected
+final allOwnerIcalEventsProvider = FutureProvider<List<IcalEvent>>((ref) async {
+  final userId = ref.watch(enhancedAuthProvider).firebaseUser?.uid;
+  if (userId == null) {
+    return [];
+  }
+
+  final repository = ref.watch(icalRepositoryProvider);
+  return repository.getAllOwnerIcalEvents(userId);
+});

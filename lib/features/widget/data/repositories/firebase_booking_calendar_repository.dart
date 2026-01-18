@@ -118,14 +118,19 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
         // Parse iCal events as "blocked" dates
         // Client-side filtering: include events that overlap with the date range
+        // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
+        const icalConverter = NullableTimestampConverter();
         final icalEvents = icalEventsSnapshot.docs
             .map((doc) {
               try {
                 final data = doc.data();
+                final startDate = icalConverter.fromJson(data['start_date']);
+                final endDate = icalConverter.fromJson(data['end_date']);
+                if (startDate == null || endDate == null) return null;
                 return {
                   'id': doc.id,
-                  'start_date': (data['start_date'] as Timestamp).toDate(),
-                  'end_date': (data['end_date'] as Timestamp).toDate(),
+                  'start_date': startDate,
+                  'end_date': endDate,
                   'source': data['source'] ?? 'ical',
                   'guest_name': data['guest_name'] ?? 'External Booking',
                 };
@@ -273,14 +278,19 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
 
         // Parse iCal events as "blocked" dates
         // Client-side filtering: include events that overlap with the date range
+        // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
+        const icalConverter = NullableTimestampConverter();
         final icalEvents = icalEventsSnapshot.docs
             .map((doc) {
               try {
                 final data = doc.data();
+                final startDate = icalConverter.fromJson(data['start_date']);
+                final endDate = icalConverter.fromJson(data['end_date']);
+                if (startDate == null || endDate == null) return null;
                 return {
                   'id': doc.id,
-                  'start_date': (data['start_date'] as Timestamp).toDate(),
-                  'end_date': (data['end_date'] as Timestamp).toDate(),
+                  'start_date': startDate,
+                  'end_date': endDate,
                   'source': data['source'] ?? 'ical',
                   'guest_name': data['guest_name'] ?? 'External Booking',
                 };
@@ -409,14 +419,19 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           .toList();
 
       // Parse iCal events
+      // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
+      const icalConverter = NullableTimestampConverter();
       final icalEvents = icalEventsSnapshot.docs
           .map((doc) {
             try {
               final data = doc.data();
+              final startDate = icalConverter.fromJson(data['start_date']);
+              final endDate = icalConverter.fromJson(data['end_date']);
+              if (startDate == null || endDate == null) return null;
               return {
                 'id': doc.id,
-                'start_date': (data['start_date'] as Timestamp).toDate(),
-                'end_date': (data['end_date'] as Timestamp).toDate(),
+                'start_date': startDate,
+                'end_date': endDate,
                 'source': data['source'] ?? 'ical',
                 'guest_name': data['guest_name'] ?? 'External Booking',
               };
@@ -535,14 +550,19 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           .toList();
 
       // Parse iCal events
+      // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
+      const icalConverter = NullableTimestampConverter();
       final icalEvents = icalEventsSnapshot.docs
           .map((doc) {
             try {
               final data = doc.data();
+              final startDate = icalConverter.fromJson(data['start_date']);
+              final endDate = icalConverter.fromJson(data['end_date']);
+              if (startDate == null || endDate == null) return null;
               return {
                 'id': doc.id,
-                'start_date': (data['start_date'] as Timestamp).toDate(),
-                'end_date': (data['end_date'] as Timestamp).toDate(),
+                'start_date': startDate,
+                'end_date': endDate,
                 'source': data['source'] ?? 'ical',
                 'guest_name': data['guest_name'] ?? 'External Booking',
               };

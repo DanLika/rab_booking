@@ -7,7 +7,7 @@ import '../../providers/owner_bookings_provider.dart';
 
 /// Horizontal tab bar for filtering bookings by status
 ///
-/// Displays tabs for: All, Pending, Confirmed, Cancelled
+/// Displays tabs for: All, Pending, Confirmed, Cancelled, Imported
 /// Each tab shows a color indicator matching its status.
 class BookingsTabBar extends ConsumerWidget {
   const BookingsTabBar({super.key});
@@ -18,11 +18,13 @@ class BookingsTabBar extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
 
     // Map BookingStatus to L10n strings
-    final tabs = [
+    // null status = "All", special 'imported' marker for imported tab
+    final tabs = <(Object?, String)>[
       (null, l10n.bookingsTabAll),
       (BookingStatus.pending, l10n.bookingsTabPending),
       (BookingStatus.confirmed, l10n.bookingsTabConfirmed),
       (BookingStatus.cancelled, l10n.bookingsTabCancelled),
+      ('imported', l10n.bookingsTabImported), // Special marker for imported
     ];
 
     return Container(
@@ -33,9 +35,21 @@ class BookingsTabBar extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4),
         itemCount: tabs.length,
         itemBuilder: (context, index) {
-          final status = tabs[index].$1;
+          final tabValue = tabs[index].$1;
           final label = tabs[index].$2;
-          final isSelected = filters.status == status;
+
+          // Determine if this tab is selected
+          final bool isSelected;
+          final BookingStatus? status;
+          final bool isImportedTab = tabValue == 'imported';
+
+          if (isImportedTab) {
+            isSelected = filters.showImportedOnly;
+            status = null;
+          } else {
+            status = tabValue as BookingStatus?;
+            isSelected = !filters.showImportedOnly && filters.status == status;
+          }
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -43,10 +57,17 @@ class BookingsTabBar extends ConsumerWidget {
               label: label,
               isSelected: isSelected,
               status: status,
+              isImportedTab: isImportedTab,
               onTap: () {
-                ref
-                    .read(bookingsFiltersNotifierProvider.notifier)
-                    .setStatus(status);
+                if (isImportedTab) {
+                  ref
+                      .read(bookingsFiltersNotifierProvider.notifier)
+                      .setShowImportedOnly(true);
+                } else {
+                  ref
+                      .read(bookingsFiltersNotifierProvider.notifier)
+                      .setStatus(status);
+                }
               },
             ),
           );
@@ -60,12 +81,14 @@ class _TabButton extends StatelessWidget {
   final String label;
   final bool isSelected;
   final BookingStatus? status;
+  final bool isImportedTab;
   final VoidCallback onTap;
 
   const _TabButton({
     required this.label,
     required this.isSelected,
     required this.status,
+    this.isImportedTab = false,
     required this.onTap,
   });
 
@@ -73,8 +96,13 @@ class _TabButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Determine color based on status or default primary
-    final activeColor = status?.color ?? theme.colorScheme.primary;
+    // Determine color based on status, imported tab, or default primary
+    final Color activeColor;
+    if (isImportedTab) {
+      activeColor = Colors.grey.shade600;
+    } else {
+      activeColor = status?.color ?? theme.colorScheme.primary;
+    }
 
     return Material(
       color: Colors.transparent,
@@ -100,7 +128,16 @@ class _TabButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (status != null) ...[
+              if (isImportedTab) ...[
+                Icon(
+                  Icons.cloud_download_outlined,
+                  size: 14,
+                  color: isSelected
+                      ? activeColor
+                      : activeColor.withValues(alpha: 0.6),
+                ),
+                const SizedBox(width: 6),
+              ] else if (status != null) ...[
                 Container(
                   width: 8,
                   height: 8,

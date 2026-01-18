@@ -6173,6 +6173,13 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalSyncErrorMessage => 'Greška prilikom sinkronizacije';
 
   @override
+  String get icalNoEventsTitle => 'Nema uvezenih rezervacija';
+
+  @override
+  String get icalNoEventsSubtitle =>
+      'Dodajte iCal feed-ove sa Booking.com, Airbnb ili drugih platformi da biste vidjeli uvezene rezervacije ovdje.';
+
+  @override
   String get icalUnknownError => 'Nepoznata greška';
 
   @override
@@ -6246,6 +6253,14 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalUrlInvalid => 'URL mora početi sa http:// ili https://';
+
+  @override
+  String icalUrlPlatformMismatch(
+    String detectedPlatform,
+    String selectedPlatform,
+  ) {
+    return 'Ovaj URL izgleda kao da je sa $detectedPlatform. Odabrali ste $selectedPlatform.';
+  }
 
   @override
   String get icalAutoSyncInfo => 'Automatska sinkronizacija';
@@ -7898,6 +7913,9 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get bookingsTabCancelled => 'Otkazane';
+
+  @override
+  String get bookingsTabImported => 'Uvezene';
 
   @override
   String ownerProfileCompletionStatus(int percentage) {

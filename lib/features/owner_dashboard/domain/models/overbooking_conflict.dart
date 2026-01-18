@@ -20,8 +20,14 @@ class OverbookingConflict with _$OverbookingConflict {
     /// First booking in conflict
     required BookingModel booking1,
 
+    /// Guest name for first booking (for UI benefit)
+    String? guest1Name,
+
     /// Second booking in conflict
     required BookingModel booking2,
+
+    /// Guest name for second booking (for UI benefit)
+    String? guest2Name,
 
     /// List of dates where conflict occurs
     required List<DateTime> conflictDates,

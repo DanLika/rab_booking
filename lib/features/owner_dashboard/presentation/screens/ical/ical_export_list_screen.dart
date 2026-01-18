@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -40,14 +41,21 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
 
     final l10n = AppLocalizations.of(context);
     try {
-      // Generate iCal content
-      await ref
+      // Generate iCal content and get download URL
+      final downloadUrl = await ref
           .read(icalExportServiceProvider)
           .generateAndUploadIcal(
             propertyId: propertyId,
             unitId: unit.id,
             unit: unit,
           );
+
+      // Trigger download by opening the URL
+      // Firebase Storage URLs with ?alt=media download the file directly
+      final uri = Uri.parse(downloadUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
 
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalExportSuccess);

@@ -119,56 +119,69 @@ export interface HeaderOptions {
 }
 
 export function generateHeader(options: HeaderOptions): string {
-  const {icon, emoji, title, subtitle, bookingReference} = options;
+  const { icon, emoji, title, subtitle, bookingReference } = options;
 
   // Use emoji if provided, otherwise use icon HTML, or default to clipboard emoji
   const iconContent = emoji ?
-    `<div style="font-size: 48px; margin-bottom: 16px;">${emoji}</div>` :
-    (icon || `<div style="font-size: 48px; margin-bottom: 16px;">📋</div>`);
+    `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;">
+      <tr><td style="font-size: 48px; line-height: 1; padding-bottom: 16px;">${emoji}</td></tr>
+    </table>` :
+    (icon ? `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;">
+      <tr><td style="padding-bottom: 16px;">${icon}</td></tr>
+    </table>` : `<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto;">
+      <tr><td style="font-size: 48px; line-height: 1; padding-bottom: 16px;">📋</td></tr>
+    </table>`);
 
   let refHtml = "";
   if (bookingReference) {
     refHtml = `
-      <div style="
-        display: inline-block;
-        background-color: ${COLORS.cardBgSubtle};
-        border: 1px solid ${COLORS.border};
-        border-radius: 8px;
-        padding: 8px 16px;
-        margin-top: 16px;
-      ">
-        <span style="font-size: 12px; color: ${COLORS.textSecondary};">Referenca</span>
-        <strong style="
-          display: block;
-          font-size: 16px;
-          color: ${COLORS.textPrimary};
-          font-family: monospace;
-          letter-spacing: 1px;
-        ">${escapeHtml(bookingReference)}</strong>
-      </div>
+      <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 0 auto; margin-top: 16px;">
+        <tr>
+          <td style="
+            background-color: ${COLORS.cardBgSubtle};
+            border: 1px solid ${COLORS.border};
+            border-radius: 8px;
+            padding: 8px 16px;
+            text-align: center;
+          ">
+            <span style="font-size: 12px; color: ${COLORS.textSecondary}; display: block;">Referenca</span>
+            <strong style="
+              font-size: 16px;
+              color: ${COLORS.textPrimary};
+              font-family: monospace;
+              letter-spacing: 1px;
+            ">${escapeHtml(bookingReference)}</strong>
+          </td>
+        </tr>
+      </table>
     `;
   }
 
   return `
-    <div style="text-align: center; padding: 32px 24px;">
-      ${iconContent}
-      <h1 style="
-        margin: 0 0 8px 0;
-        font-size: 24px;
-        font-weight: 700;
-        color: ${COLORS.textPrimary};
-        line-height: 1.3;
-      ">${escapeHtml(title)}</h1>
-      ${subtitle ? `
-        <p style="
-          margin: 0;
-          font-size: 14px;
-          color: ${COLORS.textSecondary};
-          line-height: 1.5;
-        ">${escapeHtml(subtitle)}</p>
-      ` : ""}
-      ${refHtml}
-    </div>
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+      <tr>
+        <td align="center" style="padding: 32px 24px;">
+          ${iconContent}
+          <h1 style="
+            margin: 0;
+            padding-bottom: 8px;
+            font-size: 24px;
+            font-weight: 700;
+            color: ${COLORS.textPrimary};
+            line-height: 1.3;
+          ">${escapeHtml(title)}</h1>
+          ${subtitle ? `
+            <p style="
+              margin: 0;
+              font-size: 14px;
+              color: ${COLORS.textSecondary};
+              line-height: 1.5;
+            ">${escapeHtml(subtitle)}</p>
+          ` : ""}
+          ${refHtml}
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -178,22 +191,26 @@ export function generateHeader(options: HeaderOptions): string {
 
 export function generateCard(title: string, content: string): string {
   return `
-    <div class="card" style="
-      background-color: ${COLORS.cardBg};
-      border: 1px solid ${COLORS.border};
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-    ">
-      <h2 style="
-        margin: 0 0 16px 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: ${COLORS.textPrimary};
-      ">${escapeHtml(title)}</h2>
-      ${content}
-    </div>
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="margin-bottom: 20px;">
+      <tr>
+        <td style="
+          background-color: ${COLORS.cardBg};
+          border: 1px solid ${COLORS.border};
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+        ">
+          <h2 style="
+            margin: 0;
+            padding-bottom: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: ${COLORS.textPrimary};
+          ">${escapeHtml(title)}</h2>
+          ${content}
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -261,26 +278,30 @@ export interface ButtonOptions {
 }
 
 export function generateButton(options: ButtonOptions): string {
-  const {text, url, secondary} = options;
+  const { text, url, secondary } = options;
 
   const bgColor = secondary ? COLORS.cardBg : COLORS.buttonPrimary;
   const textColor = secondary ? COLORS.textPrimary : "#FFFFFF";
   const border = secondary ? `2px solid ${COLORS.border}` : "none";
 
   return `
-    <div class="button-container" style="text-align: center; margin: 24px 0;">
-      <a href="${escapeHtml(url)}" class="button" style="
-        display: inline-block;
-        background-color: ${bgColor};
-        color: ${textColor};
-        text-decoration: none;
-        padding: 14px 32px;
-        border-radius: 8px;
-        font-size: 15px;
-        font-weight: 600;
-        border: ${border};
-      ">${escapeHtml(text)}</a>
-    </div>
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="margin: 24px 0;">
+      <tr>
+        <td align="center">
+          <a href="${escapeHtml(url)}" style="
+            display: inline-block;
+            background-color: ${bgColor};
+            color: ${textColor};
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            border: ${border};
+          ">${escapeHtml(text)}</a>
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -295,7 +316,7 @@ export interface AlertOptions {
 }
 
 export function generateAlert(options: AlertOptions): string {
-  const {type, title, message} = options;
+  const { type, title, message } = options;
 
   const emojiMap = {
     info: "ℹ️",
@@ -305,45 +326,50 @@ export function generateAlert(options: AlertOptions): string {
   };
 
   const colorMap = {
-    info: {bg: COLORS.infoBg, border: COLORS.infoBorder, text: COLORS.info},
-    success: {bg: COLORS.successBg, border: COLORS.successBorder, text: COLORS.success},
-    warning: {bg: COLORS.warningBg, border: COLORS.warningBorder, text: COLORS.warning},
-    error: {bg: COLORS.errorBg, border: COLORS.errorBorder, text: COLORS.error},
+    info: { bg: COLORS.infoBg, border: COLORS.infoBorder, text: COLORS.info },
+    success: { bg: COLORS.successBg, border: COLORS.successBorder, text: COLORS.success },
+    warning: { bg: COLORS.warningBg, border: COLORS.warningBorder, text: COLORS.warning },
+    error: { bg: COLORS.errorBg, border: COLORS.errorBorder, text: COLORS.error },
   };
 
   const colors = colorMap[type];
   const emoji = emojiMap[type];
 
   return `
-    <div class="alert alert-${type}" style="
-      background-color: ${colors.bg};
-      border: 1px solid ${colors.border};
-      border-radius: 8px;
-      padding: 16px;
-      margin: 20px 0;
-    ">
-      <div style="display: flex; align-items: flex-start;">
-        <span style="font-size: 18px; margin-right: 12px; line-height: 1;">${emoji}</span>
-        <div style="flex: 1;">
-          ${title ? `
-            <strong style="
-              display: block;
-              font-size: 15px;
-              font-weight: 600;
-              color: ${colors.text};
-              margin-bottom: 6px;
-              line-height: 1.4;
-            ">${escapeHtml(title)}</strong>
-          ` : ""}
-          <span style="
-            font-size: 14px;
-            color: ${COLORS.textSecondary};
-            line-height: 1.6;
-            display: block;
-          ">${escapeHtml(message)}</span>
-        </div>
-      </div>
-    </div>
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="margin: 20px 0;">
+      <tr>
+        <td style="
+          background-color: ${colors.bg};
+          border: 1px solid ${colors.border};
+          border-radius: 8px;
+          padding: 16px;
+        ">
+          <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
+            <tr>
+              <td valign="top" style="font-size: 18px; padding-right: 12px; line-height: 1; width: 30px;">${emoji}</td>
+              <td valign="top">
+                ${title ? `
+                  <strong style="
+                    display: block;
+                    font-size: 15px;
+                    font-weight: 600;
+                    color: ${colors.text};
+                    padding-bottom: 6px;
+                    line-height: 1.4;
+                  ">${escapeHtml(title)}</strong>
+                ` : ""}
+                <span style="
+                  font-size: 14px;
+                  color: ${COLORS.textSecondary};
+                  line-height: 1.6;
+                  display: block;
+                ">${escapeHtml(message)}</span>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -355,11 +381,11 @@ export type BadgeType = "success" | "warning" | "error" | "info" | "neutral";
 
 export function generateBadge(text: string, type: BadgeType = "neutral"): string {
   const colorMap = {
-    success: {bg: COLORS.successBg, text: COLORS.success},
-    warning: {bg: COLORS.warningBg, text: COLORS.warning},
-    error: {bg: COLORS.errorBg, text: COLORS.error},
-    info: {bg: COLORS.infoBg, text: COLORS.info},
-    neutral: {bg: COLORS.cardBgSubtle, text: COLORS.textSecondary},
+    success: { bg: COLORS.successBg, text: COLORS.success },
+    warning: { bg: COLORS.warningBg, text: COLORS.warning },
+    error: { bg: COLORS.errorBg, text: COLORS.error },
+    info: { bg: COLORS.infoBg, text: COLORS.info },
+    neutral: { bg: COLORS.cardBgSubtle, text: COLORS.textSecondary },
   };
 
   const colors = colorMap[type];
@@ -402,7 +428,7 @@ export interface FooterOptions {
 }
 
 export function generateFooter(options: FooterOptions = {}): string {
-  const {contactEmail, contactPhone, additionalText} = options;
+  const { contactEmail, contactPhone, additionalText } = options;
 
   let contactHtml = "";
   if (contactEmail || contactPhone) {
@@ -418,35 +444,36 @@ export function generateFooter(options: FooterOptions = {}): string {
   const defaultText = "Ovaj email je automatski generisan. Molimo ne odgovarajte direktno na ovaj email.";
 
   return `
-    <div style="
-      text-align: center;
-      padding: 24px;
-      border-top: 1px solid ${COLORS.border};
-      margin-top: 24px;
-    ">
-      ${contactHtml ? `
-        <p style="
-          margin: 0 0 12px 0;
-          font-size: 13px;
-          color: ${COLORS.textSecondary};
-          line-height: 1.5;
-        ">${contactHtml}</p>
-      ` : ""}
-      ${additionalText ? `
-        <p style="
-          margin: 0 0 12px 0;
-          font-size: 13px;
-          color: ${COLORS.textSecondary};
-          line-height: 1.5;
-        ">${escapeHtml(additionalText)}</p>
-      ` : ""}
-      <p style="
-        margin: 0;
-        font-size: 12px;
-        color: ${COLORS.textMuted};
-        line-height: 1.5;
-      ">${defaultText}</p>
-    </div>
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="border-top: 1px solid ${COLORS.border}; margin-top: 24px;">
+      <tr>
+        <td align="center" style="padding: 24px;">
+          ${contactHtml ? `
+            <p style="
+              margin: 0;
+              padding-bottom: 12px;
+              font-size: 13px;
+              color: ${COLORS.textSecondary};
+              line-height: 1.5;
+            ">${contactHtml}</p>
+          ` : ""}
+          ${additionalText ? `
+            <p style="
+              margin: 0;
+              padding-bottom: 12px;
+              font-size: 13px;
+              color: ${COLORS.textSecondary};
+              line-height: 1.5;
+            ">${escapeHtml(additionalText)}</p>
+          ` : ""}
+          <p style="
+            margin: 0;
+            font-size: 12px;
+            color: ${COLORS.textMuted};
+            line-height: 1.5;
+          ">${defaultText}</p>
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -479,7 +506,7 @@ export function generateIntro(text: string): string {
 /**
  * Generate paragraph with consistent spacing
  */
-export function generateParagraph(text: string, options?: {marginBottom?: string}): string {
+export function generateParagraph(text: string, options?: { marginBottom?: string }): string {
   const marginBottom = options?.marginBottom || "16px";
   return `
     <p class="paragraph" style="
@@ -519,12 +546,12 @@ export function generateBookingDetailsCard(details: BookingDetails): string {
   const nights = calculateNights(details.checkIn, details.checkOut);
 
   const rows: DetailRow[] = [
-    {label: "Nekretnina", value: details.propertyName},
-    {label: "Jedinica", value: details.unitName},
-    {label: "Prijava", value: formatDate(details.checkIn)},
-    {label: "Odjava", value: formatDate(details.checkOut)},
-    {label: "Broj noćenja", value: `${nights} ${nights === 1 ? "noć" : "noći"}`},
-    {label: "Broj gostiju", value: details.guests.toString()},
+    { label: "Nekretnina", value: details.propertyName },
+    { label: "Jedinica", value: details.unitName },
+    { label: "Prijava", value: formatDate(details.checkIn) },
+    { label: "Odjava", value: formatDate(details.checkOut) },
+    { label: "Broj noćenja", value: `${nights} ${nights === 1 ? "noć" : "noći"}` },
+    { label: "Broj gostiju", value: details.guests.toString() },
   ];
 
   return generateCard("📅 Detalji rezervacije", generateDetailsTable(rows));
@@ -545,11 +572,11 @@ export function generatePaymentDetailsCard(details: PaymentDetails): string {
   const rows: DetailRow[] = [];
 
   if (details.depositAmount !== undefined && details.depositAmount > 0) {
-    rows.push({label: "Kapara", value: formatCurrency(details.depositAmount)});
+    rows.push({ label: "Kapara", value: formatCurrency(details.depositAmount) });
   }
 
   if (details.remainingAmount !== undefined && details.remainingAmount > 0) {
-    rows.push({label: "Preostalo za platiti", value: formatCurrency(details.remainingAmount)});
+    rows.push({ label: "Preostalo za platiti", value: formatCurrency(details.remainingAmount) });
   }
 
   rows.push({
@@ -560,9 +587,9 @@ export function generatePaymentDetailsCard(details: PaymentDetails): string {
 
   if (details.paymentMethod) {
     const methodText = details.paymentMethod === "stripe" ? "Kartica" :
-                       details.paymentMethod === "bank_transfer" ? "Bankovni prijenos" :
-                       "Plaćanje na mjestu";
-    rows.push({label: "Način plaćanja", value: methodText});
+      details.paymentMethod === "bank_transfer" ? "Bankovni prijenos" :
+        "Plaćanje na mjestu";
+    rows.push({ label: "Način plaćanja", value: methodText });
   }
 
   return generateCard("💳 Detalji plaćanja", generateDetailsTable(rows));
@@ -574,25 +601,29 @@ export function generatePaymentDetailsCard(details: PaymentDetails): string {
 
 export function wrapEmailContent(content: string): string {
   return `
-    <div style="
+    <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%" style="
       background-color: ${COLORS.pageBg};
-      padding: 4px;
       min-height: 100%;
     ">
-      <div style="
-        max-width: 560px;
-        margin: 0 auto;
-        background-color: ${COLORS.cardBg};
-        border-radius: 12px;
-        border: 1px solid ${COLORS.border};
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
-        overflow: hidden;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-      ">
-        ${content}
-      </div>
-    </div>
+      <tr>
+        <td align="center" style="padding: 4px;">
+          <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="
+            max-width: 560px;
+            width: 100%;
+            background-color: ${COLORS.cardBg};
+            border-radius: 12px;
+            border: 1px solid ${COLORS.border};
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+          ">
+            <tr>
+              <td style="word-wrap: break-word; overflow-wrap: break-word;">
+                ${content}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   `.trim();
 }
 
@@ -613,19 +644,19 @@ export function generateBankTransferCard(details: BankDetails): string {
   const rows: DetailRow[] = [];
 
   if (details.bankName) {
-    rows.push({label: "Banka", value: details.bankName});
+    rows.push({ label: "Banka", value: details.bankName });
   }
   if (details.accountHolder) {
-    rows.push({label: "Primatelj", value: details.accountHolder});
+    rows.push({ label: "Primatelj", value: details.accountHolder });
   }
   if (details.iban) {
-    rows.push({label: "IBAN", value: details.iban});
+    rows.push({ label: "IBAN", value: details.iban });
   }
   if (details.swift) {
-    rows.push({label: "SWIFT/BIC", value: details.swift});
+    rows.push({ label: "SWIFT/BIC", value: details.swift });
   }
-  rows.push({label: "Poziv na broj", value: details.reference, highlight: true});
-  rows.push({label: "Iznos", value: formatCurrency(details.amount), highlight: true});
+  rows.push({ label: "Poziv na broj", value: details.reference, highlight: true });
+  rows.push({ label: "Iznos", value: formatCurrency(details.amount), highlight: true });
 
   return generateCard("🏦 Podaci za uplatu", generateDetailsTable(rows));
 }

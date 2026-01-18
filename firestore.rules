@@ -129,7 +129,9 @@ service cloud.firestore {
         // - Guest: View booking (by booking_reference)
         match /bookings/{bookingId} {
           allow read: if
-            // Owner can read their own bookings
+            // Property owner can read ALL bookings in their property's units
+            isPropertyOwner(propertyId) ||
+            // Owner can read their own bookings (legacy check)
             (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
             // Widget calendar availability (public for calendar display)
             ('unit_id' in resource.data && 'status' in resource.data) ||

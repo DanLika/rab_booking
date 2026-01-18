@@ -32,6 +32,48 @@ enum IcalPlatform {
     IcalPlatform.airbnb => 'airbnb',
     IcalPlatform.other => 'other',
   };
+
+  /// Detect platform from iCal URL
+  ///
+  /// Returns the detected platform or null if URL doesn't match any known pattern.
+  /// Used for URL validation to warn users if URL doesn't match selected platform.
+  static IcalPlatform? detectFromUrl(String url) {
+    final lowerUrl = url.toLowerCase();
+
+    // Booking.com patterns:
+    // - https://ical.booking.com/...
+    // - https://admin.booking.com/...
+    if (lowerUrl.contains('booking.com')) {
+      return IcalPlatform.bookingCom;
+    }
+
+    // Airbnb patterns:
+    // - https://www.airbnb.com/calendar/ical/...
+    // - https://airbnb.com/...
+    if (lowerUrl.contains('airbnb.com') || lowerUrl.contains('airbnb.')) {
+      return IcalPlatform.airbnb;
+    }
+
+    // Google Calendar patterns (informational - treated as "other"):
+    // - https://calendar.google.com/...
+    if (lowerUrl.contains('calendar.google.com') ||
+        lowerUrl.contains('googleapis.com')) {
+      return IcalPlatform.other;
+    }
+
+    // Unknown URL - could be any platform
+    return null;
+  }
+
+  /// Check if URL matches this platform
+  bool matchesUrl(String url) {
+    final detected = detectFromUrl(url);
+    // If we can't detect the platform, don't warn (could be custom URL)
+    if (detected == null) return true;
+    // "other" platform matches anything
+    if (this == IcalPlatform.other) return true;
+    return detected == this;
+  }
 }
 
 /// Status for iCal feed sync

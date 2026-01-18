@@ -157,12 +157,13 @@ class WidgetSettings {
       themeOptions: themeOptionsData != null
           ? ThemeOptions.fromMap(themeOptionsData)
           : null,
-      createdAt: data['created_at'] is Timestamp
-          ? (data['created_at'] as Timestamp).toDate()
-          : DateTime.now().toUtc(),
-      updatedAt: data['updated_at'] is Timestamp
-          ? (data['updated_at'] as Timestamp).toDate()
-          : DateTime.now().toUtc(),
+      // WEB COMPATIBILITY: Use parseFlexible to handle Timestamp, String, or int
+      createdAt:
+          DateTimeParser.parseFlexible(data['created_at']) ??
+          DateTime.now().toUtc(),
+      updatedAt:
+          DateTimeParser.parseFlexible(data['updated_at']) ??
+          DateTime.now().toUtc(),
     );
   }
 

@@ -4,8 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/design_tokens/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 
-const String _webDashboardUrl = 'https://app.bookbed.io/owner/subscription';
-
 /// Subscription Screen
 ///
 /// Platform-aware screen that shows:
@@ -462,7 +460,7 @@ class SubscriptionScreen extends StatelessWidget {
 
             // Continue to Web button
             FilledButton.icon(
-              onPressed: _launchWebDashboard,
+              onPressed: () => _launchWebDashboard(context),
               icon: const Icon(Icons.open_in_new),
               label: Text(l10n.subscriptionContinueToWeb),
               style: FilledButton.styleFrom(
@@ -484,10 +482,36 @@ class SubscriptionScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _launchWebDashboard() async {
+  static const String _webDashboardUrl = 'https://app.bookbed.io';
+
+  Future<void> _launchWebDashboard(BuildContext context) async {
     final uri = Uri.parse(_webDashboardUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      // Note: Don't use canLaunchUrl() - it returns false on Android 11+
+      // even when launchUrl() would work. Just try to launch directly.
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not open browser. Please visit app.bookbed.io manually.',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not open browser. Please visit app.bookbed.io manually.',
+            ),
+          ),
+        );
+      }
     }
   }
 }

@@ -84,9 +84,9 @@ class IcalFeedsNotifier extends AsyncNotifier<List<IcalFeed>> {
   }
 
   /// Delete iCal feed
-  Future<void> deleteFeed(String feedId) async {
+  Future<void> deleteFeed(String feedId, String propertyId) async {
     final repository = ref.read(icalRepositoryProvider);
-    await repository.deleteIcalFeed(feedId);
+    await repository.deleteIcalFeed(feedId, propertyId);
 
     // Refresh the list
     ref.invalidateSelf();
@@ -95,12 +95,14 @@ class IcalFeedsNotifier extends AsyncNotifier<List<IcalFeed>> {
   /// Update feed status
   Future<void> updateFeedStatus(
     String feedId,
+    String propertyId,
     IcalStatus status, {
     String? errorMessage,
   }) async {
     final repository = ref.read(icalRepositoryProvider);
     await repository.updateFeedStatus(
       feedId,
+      propertyId,
       status,
       errorMessage: errorMessage,
     );

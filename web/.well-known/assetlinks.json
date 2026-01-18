@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.bookbed.app",
+    "sha256_cert_fingerprints": [
+      "F7:D2:E5:53:65:F7:C3:DA:8B:8D:31:E7:A1:44:0C:D2:DA:DC:79:41:5A:E7:D2:15:7B:46:8D:56:31:FF:5B:2F"
+    ]
+  }
+}]

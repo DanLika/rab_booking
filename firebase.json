@@ -25,13 +25,23 @@
             "public": "build/web_owner",
             "ignore": [
                 "firebase.json",
-                "**/.*",
                 "**/node_modules/**"
             ],
             "rewrites": [
                 {
                     "source": "**",
                     "destination": "/index.html"
+                }
+            ],
+            "headers": [
+                {
+                    "source": "/.well-known/assetlinks.json",
+                    "headers": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
                 }
             ]
         },

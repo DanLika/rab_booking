@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/design_tokens/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/widgets/common_app_bar.dart';
+import '../../owner_dashboard/presentation/widgets/owner_app_drawer.dart';
 
 /// Subscription Screen
 ///
@@ -23,12 +25,12 @@ class SubscriptionScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.backgroundPrimary,
-      appBar: AppBar(
-        title: Text(l10n.subscriptionTitle),
-        backgroundColor: colors.backgroundPrimary,
-        foregroundColor: colors.textPrimary,
-        elevation: 0,
+      appBar: CommonAppBar(
+        title: l10n.subscriptionTitle,
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
       ),
+      drawer: const OwnerAppDrawer(currentRoute: 'subscription'),
       body: SafeArea(
         child: kIsWeb
             ? _buildWebSubscriptionContent(context, colors, l10n)

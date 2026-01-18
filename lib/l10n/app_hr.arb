@@ -3312,6 +3312,8 @@
   "subscriptionCopyUrl": "Kopiraj URL",
   "subscriptionUrlCopied": "URL kopiran u međuspremnik",
   "profileSubscriptionSubtitle": "Upravljajte svojim planom",
+  "profileManageSubscription": "Upravljanje pretplatom",
+  "profileManageSubscriptionSubtitle": "Pregledajte ili promijenite trenutni plan",
   "subscriptionDaysLeft": "{count, plural, =0{Danas} =1{Još {count} dan} few{Još {count} dana} other{Još {count} dana}}",
   "@subscriptionDaysLeft": {
     "placeholders": {

@@ -64,14 +64,14 @@ class BookingCardHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (isImported) ...[
+          if (importedSource case final source?) ...[
             // Platform icon for imported
-            PlatformIcon(source: importedSource!, size: 24),
+            PlatformIcon(source: source, size: 24),
             const SizedBox(width: 10),
             // Platform name
             Expanded(
               child: Text(
-                _getPlatformName(importedSource!),
+                _getPlatformName(source),
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurfaceVariant,

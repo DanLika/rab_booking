@@ -210,7 +210,9 @@ class OwnerAppDrawer extends ConsumerWidget {
         children: [
           // Logo - White variant for dark background
           // Note: animate=false to prevent potential rendering issues in drawer
-          Center(child: AuthLogoIcon(size: 70, isWhite: true, animate: false)),
+          const Center(
+            child: AuthLogoIcon(size: 70, isWhite: true, animate: false),
+          ),
           const SizedBox(height: 20),
 
           // User Info

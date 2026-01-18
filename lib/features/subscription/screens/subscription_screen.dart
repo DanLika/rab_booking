@@ -254,7 +254,7 @@ class SubscriptionScreen extends StatelessWidget {
                       BorderTokens.radiusSmall,
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'RECOMMENDED',
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeXS,
@@ -332,7 +332,7 @@ class SubscriptionScreen extends StatelessWidget {
                     vertical: SpacingTokens.m,
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'Upgrade Now',
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeL,
@@ -472,7 +472,7 @@ class SubscriptionScreen extends StatelessWidget {
                   horizontal: SpacingTokens.xl,
                   vertical: SpacingTokens.m,
                 ),
-                textStyle: TextStyle(
+                textStyle: const TextStyle(
                   fontSize: TypographyTokens.fontSizeL,
                   fontWeight: TypographyTokens.semiBold,
                 ),

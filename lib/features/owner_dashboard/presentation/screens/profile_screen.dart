@@ -359,10 +359,10 @@ class ProfileScreen extends ConsumerWidget {
                                       ref,
                                     ),
                               ),
-                              // Subscription tile - only for trial users (hidden for premium/enterprise or by admin)
+                              // Subscription tile - show for all users unless hidden by admin
+                              // Trial users see "Upgrade to Pro", paid users see "Manage Subscription"
                               if (authState.userModel?.hideSubscription !=
-                                      true &&
-                                  isTrial) ...[
+                                  true) ...[
                                 Divider(
                                   height: 1,
                                   indent: 72,
@@ -370,8 +370,12 @@ class ProfileScreen extends ConsumerWidget {
                                 ),
                                 PremiumListTile(
                                   icon: Icons.workspace_premium,
-                                  title: l10n.ownerDrawerSubscription,
-                                  subtitle: l10n.profileSubscriptionSubtitle,
+                                  title: isTrial
+                                      ? l10n.ownerDrawerSubscription
+                                      : l10n.profileManageSubscription,
+                                  subtitle: isTrial
+                                      ? l10n.profileSubscriptionSubtitle
+                                      : l10n.profileManageSubscriptionSubtitle,
                                   onTap: () =>
                                       context.push(OwnerRoutes.subscription),
                                   isLast: true,

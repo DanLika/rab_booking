@@ -97,6 +97,21 @@ service cloud.firestore {
         allow read: if false;
         allow write: if false;
       }
+
+      // Security events subcollection - user login/logout/password change events
+      // Users can create and read their own security events
+      match /securityEvents/{eventId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if false; // Immutable audit log
+      }
+
+      // Devices subcollection - user device tracking for session management
+      match /devices/{deviceId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
     }
 
     // User Profiles - LEGACY collection (kept for backwards compatibility)
@@ -374,6 +389,15 @@ service cloud.firestore {
     match /tenants/{tenantId} {
       allow read: if false;
       allow write: if false;
+    }
+
+    // Security events - user login/logout/password change events
+    // Users can create events for their own actions
+    // Only Cloud Functions can read all events (via Admin SDK)
+    match /security_events/{eventId} {
+      allow read: if false; // Only Cloud Functions via Admin SDK
+      allow create: if isAuthenticated(); // User can log their own security events
+      allow update, delete: if false; // Immutable audit log
     }
   }
 }

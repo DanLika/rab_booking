@@ -7717,6 +7717,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSubscriptionSubtitle => 'Manage your plan';
 
   @override
+  String get profileManageSubscription => 'Manage Subscription';
+
+  @override
+  String get profileManageSubscriptionSubtitle =>
+      'View or change your current plan';
+
+  @override
   String subscriptionDaysLeft(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

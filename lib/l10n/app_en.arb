@@ -3305,6 +3305,8 @@
   "subscriptionCopyUrl": "Copy URL",
   "subscriptionUrlCopied": "URL copied to clipboard",
   "profileSubscriptionSubtitle": "Manage your plan",
+  "profileManageSubscription": "Manage Subscription",
+  "profileManageSubscriptionSubtitle": "View or change your current plan",
   "subscriptionDaysLeft": "{count, plural, =0{Today} =1{1 day left} other{{count} days left}}",
   "@subscriptionDaysLeft": {
     "placeholders": {

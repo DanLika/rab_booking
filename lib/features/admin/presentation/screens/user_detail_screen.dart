@@ -118,6 +118,10 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
           ),
           const SizedBox(height: 24),
 
+          // User Statistics Card
+          _buildStatisticsCard(context),
+          const SizedBox(height: 24),
+
           // Account type editor
           Card(
             child: Padding(
@@ -346,6 +350,98 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
             ),
           ),
           Expanded(child: SelectableText(value)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatisticsCard(BuildContext context) {
+    final propertiesCountAsync = ref.watch(
+      userPropertiesCountProvider(widget.userId),
+    );
+    final bookingsCountAsync = ref.watch(
+      userBookingsCountProvider(widget.userId),
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'User Statistics',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatItem(
+                    context,
+                    icon: Icons.home_work,
+                    label: 'Properties',
+                    value: propertiesCountAsync.when(
+                      data: (count) => count.toString(),
+                      loading: () => '...',
+                      error: (_, _) => '-',
+                    ),
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildStatItem(
+                    context,
+                    icon: Icons.calendar_today,
+                    label: 'Bookings',
+                    value: bookingsCountAsync.when(
+                      data: (count) => count.toString(),
+                      loading: () => '...',
+                      error: (_, _) => '-',
+                    ),
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 32),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+          ),
         ],
       ),
     );

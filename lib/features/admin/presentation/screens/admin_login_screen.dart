@@ -57,10 +57,12 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       if (!authState.isAdmin) {
         // Sign out and show error
         await ref.read(enhancedAuthProvider.notifier).signOut();
-        setState(() {
-          _error = 'Access denied. Admin privileges required.';
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _error = 'Access denied. Admin privileges required.';
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -69,10 +71,12 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
         context.go('/dashboard');
       }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 

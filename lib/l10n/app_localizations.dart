@@ -13954,6 +13954,18 @@ abstract class AppLocalizations {
   /// **'Manage your plan'**
   String get profileSubscriptionSubtitle;
 
+  /// No description provided for @profileManageSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Subscription'**
+  String get profileManageSubscription;
+
+  /// No description provided for @profileManageSubscriptionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View or change your current plan'**
+  String get profileManageSubscriptionSubtitle;
+
   /// No description provided for @subscriptionDaysLeft.
   ///
   /// In en, this message translates to:

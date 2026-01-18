@@ -160,3 +160,21 @@ final userDetailProvider = FutureProvider.family<UserModel?, String>((
   final repo = ref.watch(adminUsersRepositoryProvider);
   return repo.getUserById(userId);
 });
+
+/// Provider for user's properties count
+final userPropertiesCountProvider = FutureProvider.family<int, String>((
+  ref,
+  userId,
+) async {
+  final repo = ref.watch(adminUsersRepositoryProvider);
+  return repo.getUserPropertiesCount(userId);
+});
+
+/// Provider for user's bookings count
+final userBookingsCountProvider = FutureProvider.family<int, String>((
+  ref,
+  userId,
+) async {
+  final repo = ref.watch(adminUsersRepositoryProvider);
+  return repo.getUserBookingsCount(userId);
+});

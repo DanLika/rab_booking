@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:collection/collection.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/constants/app_dimensions.dart';
@@ -349,59 +348,6 @@ class _ImportedReservationCard extends ConsumerWidget {
               ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _BookingConflictBanner extends ConsumerWidget {
-  final String bookingId;
-  final String unitId;
-  final bool isMobile;
-
-  const _BookingConflictBanner({
-    required this.bookingId,
-    required this.unitId,
-    required this.isMobile,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final conflicts = ref.watch(conflictsForUnitProvider(unitId));
-    final conflict = conflicts.firstWhereOrNull(
-      (c) => c.booking1.id == bookingId || c.booking2.id == bookingId,
-    );
-
-    if (conflict == null) return const SizedBox.shrink();
-
-    final isFirst = conflict.booking1.id == bookingId;
-    final otherGuestName = isFirst ? conflict.guest2Name : conflict.guest1Name;
-
-    return Container(
-      width: double.infinity,
-      color: Colors.red.withValues(alpha: 0.1),
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 12 : 16,
-        vertical: 8,
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: Colors.red.shade700,
-            size: 18,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Overbooking: Conflicting with ${otherGuestName ?? "another guest"}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.red.shade900,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

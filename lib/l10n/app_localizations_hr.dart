@@ -7779,6 +7779,13 @@ class AppLocalizationsHr extends AppLocalizations {
   String get profileSubscriptionSubtitle => 'Upravljajte svojim planom';
 
   @override
+  String get profileManageSubscription => 'Upravljanje pretplatom';
+
+  @override
+  String get profileManageSubscriptionSubtitle =>
+      'Pregledajte ili promijenite trenutni plan';
+
+  @override
   String subscriptionDaysLeft(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

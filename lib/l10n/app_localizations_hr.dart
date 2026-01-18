@@ -2626,11 +2626,8 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerProfileHelpSupport => 'Pomoć i podrška';
 
   @override
-  String get ownerProfileHelpSupportSubtitle => 'Dobijte pomoć s aplikacijom';
-
-  @override
-  String get ownerProfileHelpSupportComingSoon =>
-      'Pomoć i podrška uskoro dolazi';
+  String get ownerProfileHelpSupportSubtitle =>
+      'Kontaktirajte nas putem emaila';
 
   @override
   String get ownerProfileAbout => 'O aplikaciji';
@@ -2917,9 +2914,6 @@ class AppLocalizationsHr extends AppLocalizations {
       'Pratite rezervacije, prihode i popunjenost';
 
   @override
-  String get aboutBuiltWith => 'Izrađeno S';
-
-  @override
   String get aboutContactSupport => 'Kontakt i Podrška';
 
   @override
@@ -2929,7 +2923,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get aboutWebsiteLabel => 'Web stranica';
 
   @override
-  String get aboutCopyright => '© 2025 BookBed. Sva prava pridržana.';
+  String get aboutCopyright => '© 2026 BookBed. Sva prava pridržana.';
 
   @override
   String get unitHubTitle => 'Smještajne Jedinice';

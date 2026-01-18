@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../shared/models/user_model.dart' show AccountType;
 import '../../../../core/providers/language_provider.dart';
@@ -452,11 +453,32 @@ class ProfileScreen extends ConsumerWidget {
                                 icon: Icons.help_outline,
                                 title: l10n.ownerProfileHelpSupport,
                                 subtitle: l10n.ownerProfileHelpSupportSubtitle,
-                                onTap: () {
-                                  ErrorDisplayUtils.showInfoSnackBar(
-                                    context,
-                                    l10n.ownerProfileHelpSupportComingSoon,
+                                onTap: () async {
+                                  final userEmail =
+                                      FirebaseAuth
+                                          .instance
+                                          .currentUser
+                                          ?.email ??
+                                      '';
+                                  final Uri emailUri = Uri(
+                                    scheme: 'mailto',
+                                    path: 'support@bookbed.io',
+                                    queryParameters: {
+                                      'subject': 'BookBed Support Request',
+                                      'body':
+                                          'User Email: $userEmail\n\nDescribe your issue:\n\n',
+                                    },
                                   );
+                                  if (await canLaunchUrl(emailUri)) {
+                                    await launchUrl(emailUri);
+                                  } else {
+                                    if (context.mounted) {
+                                      ErrorDisplayUtils.showErrorSnackBar(
+                                        context,
+                                        'Could not open email client',
+                                      );
+                                    }
+                                  }
                                 },
                               ),
                               Divider(

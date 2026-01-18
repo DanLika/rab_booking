@@ -4959,14 +4959,8 @@ abstract class AppLocalizations {
   /// No description provided for @ownerProfileHelpSupportSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Get help with the app'**
+  /// **'Contact us via email'**
   String get ownerProfileHelpSupportSubtitle;
-
-  /// No description provided for @ownerProfileHelpSupportComingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Help & Support coming soon'**
-  String get ownerProfileHelpSupportComingSoon;
 
   /// No description provided for @ownerProfileAbout.
   ///
@@ -5490,12 +5484,6 @@ abstract class AppLocalizations {
   /// **'Track bookings, revenue, and occupancy'**
   String get aboutFeatureAnalyticsDesc;
 
-  /// No description provided for @aboutBuiltWith.
-  ///
-  /// In en, this message translates to:
-  /// **'Built With'**
-  String get aboutBuiltWith;
-
   /// No description provided for @aboutContactSupport.
   ///
   /// In en, this message translates to:
@@ -5517,7 +5505,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutCopyright.
   ///
   /// In en, this message translates to:
-  /// **'© 2025 BookBed. All rights reserved.'**
+  /// **'© 2026 BookBed. All rights reserved.'**
   String get aboutCopyright;
 
   /// No description provided for @unitHubTitle.

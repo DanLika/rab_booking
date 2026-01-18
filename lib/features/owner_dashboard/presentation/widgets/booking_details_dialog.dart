@@ -143,7 +143,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                       icon: Icons.person_outline,
                       title: l10n.ownerDetailsGuestInfo,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     _DetailRow(
                       label: l10n.ownerDetailsName,
                       value: ownerBooking.guestName,
@@ -189,7 +189,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                       icon: Icons.home_outlined,
                       title: l10n.ownerDetailsPropertyInfo,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     _DetailRow(
                       label: l10n.ownerDetailsProperty,
                       value: property.name,
@@ -207,7 +207,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                       icon: Icons.calendar_today_outlined,
                       title: l10n.ownerDetailsStayInfo,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     _DetailRow(
                       label: l10n.ownerDetailsCheckIn,
                       value:
@@ -234,7 +234,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                       icon: Icons.payment_outlined,
                       title: l10n.ownerDetailsPaymentInfo,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     _DetailRow(
                       label: l10n.ownerDetailsTotalPrice,
                       value: booking.formattedTotalPrice,
@@ -280,7 +280,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                         icon: Icons.note_outlined,
                         title: l10n.ownerDetailsNotes,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       SelectableText(
                         booking.notes!,
                         style: TextStyle(color: theme.colorScheme.onSurface),
@@ -293,7 +293,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                         icon: Icons.cancel_outlined,
                         title: l10n.ownerDetailsCancellationInfo,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       if (booking.cancelledAt != null)
                         _DetailRow(
                           label: l10n.ownerDetailsCancelledOn,
@@ -747,7 +747,7 @@ class _ThemedDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Divider(
-      height: 24,
+      height: 16,
       thickness: 1,
       color: isDark
           ? AppColors.sectionDividerDark
@@ -798,7 +798,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space
@@ -852,7 +852,7 @@ class _DetailRowWithWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space

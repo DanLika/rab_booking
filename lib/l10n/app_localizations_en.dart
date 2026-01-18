@@ -2609,10 +2609,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerProfileHelpSupport => 'Help & Support';
 
   @override
-  String get ownerProfileHelpSupportSubtitle => 'Get help with the app';
-
-  @override
-  String get ownerProfileHelpSupportComingSoon => 'Help & Support coming soon';
+  String get ownerProfileHelpSupportSubtitle => 'Contact us via email';
 
   @override
   String get ownerProfileAbout => 'About';
@@ -2898,9 +2895,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Track bookings, revenue, and occupancy';
 
   @override
-  String get aboutBuiltWith => 'Built With';
-
-  @override
   String get aboutContactSupport => 'Contact & Support';
 
   @override
@@ -2910,7 +2904,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutWebsiteLabel => 'Website';
 
   @override
-  String get aboutCopyright => '© 2025 BookBed. All rights reserved.';
+  String get aboutCopyright => '© 2026 BookBed. All rights reserved.';
 
   @override
   String get unitHubTitle => 'Accommodation Units';

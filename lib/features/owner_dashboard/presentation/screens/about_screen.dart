@@ -173,26 +173,6 @@ class AboutScreen extends StatelessWidget {
               ),
               SizedBox(height: isMobile ? 16 : 20),
 
-              // Technology Stack
-              _InfoCard(
-                title: l10n.aboutBuiltWith,
-                icon: Icons.code,
-                isDark: isDark,
-                isMobile: isMobile,
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _TechChip('Flutter', isMobile),
-                    _TechChip('Firebase', isMobile),
-                    _TechChip('Stripe', isMobile),
-                    _TechChip('Resend', isMobile),
-                    _TechChip('Cloud Functions', isMobile),
-                  ],
-                ),
-              ),
-              SizedBox(height: isMobile ? 16 : 20),
-
               // Contact & Support
               _InfoCard(
                 title: l10n.aboutContactSupport,
@@ -353,40 +333,6 @@ class _FeatureItem extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Tech Chip Widget
-class _TechChip extends StatelessWidget {
-  final String label;
-  final bool isMobile;
-
-  const _TechChip(this.label, this.isMobile);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 12 : 16,
-        vertical: isMobile ? 6 : 8,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: isMobile ? 12 : 14,
-          fontWeight: FontWeight.w600,
-          color: theme.colorScheme.primary,
-        ),
-      ),
     );
   }
 }

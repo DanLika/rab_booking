@@ -80,12 +80,6 @@ service cloud.firestore {
         allow delete: if isOwner(userId) || isAdmin();
       }
 
-      // Security events subcollection
-      match /securityEvents/{eventId} {
-        allow read: if isOwner(userId);
-        allow write: if isOwner(userId);
-      }
-
       // Notifications subcollection
       // Path: users/{userId}/notifications/{notificationId}
       match /notifications/{notificationId} {
@@ -165,6 +159,13 @@ service cloud.firestore {
       // iCal events subcollection
       match /ical_events/{eventId} {
         allow read: if true; // Widget needs to read events for availability
+        allow create, update, delete: if isPropertyOwner(propertyId);
+      }
+
+      // iCal feeds subcollection (feed configurations)
+      // Path: properties/{propertyId}/ical_feeds/{feedId}
+      match /ical_feeds/{feedId} {
+        allow read: if isPropertyOwner(propertyId);
         allow create, update, delete: if isPropertyOwner(propertyId);
       }
     }
@@ -248,6 +249,16 @@ service cloud.firestore {
       // Writes go through specific subcollection path above
     }
 
+    // Collection group: ical_feeds
+    // Used by: Scheduled sync Cloud Function, owner dashboard
+    match /{path=**}/ical_feeds/{feedId} {
+      // Read requires authentication - only owner should access their feeds
+      allow read: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
+      // Writes go through specific subcollection path above
+    }
+
     // ========================================================================
     // DEPRECATED TOP-LEVEL COLLECTIONS
     // Kept for backward compatibility - migrate data to subcollections
@@ -310,15 +321,16 @@ service cloud.firestore {
       allow update, delete: if isResourceOwner();
     }
 
-    // iCal feeds - owner dashboard manages external calendar imports
+    // DEPRECATED: Root-level iCal feeds
+    // iCal feeds are now stored as subcollections: properties/{propertyId}/ical_feeds/{feedId}
+    // This rule is kept for backward compatibility with legacy data
+    // TODO: Remove after confirming no legacy feeds remain
     match /ical_feeds/{feedId} {
       allow read: if isAuthenticated() && (
         resource == null ||
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
       );
-      allow create: if isAuthenticated() &&
-        ('property_id' in request.resource.data) &&
-        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow create: if false; // DISABLED - use subcollection path
       allow update, delete: if isAuthenticated() &&
         ('property_id' in resource.data) &&
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
@@ -348,19 +360,6 @@ service cloud.firestore {
     match /email_verifications/{emailHash} {
       allow read: if false;
       allow write: if false;
-    }
-
-    // Security events - audit log (top-level, deprecated)
-    match /securityEvents/{eventId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow write: if false;
-    }
-
-    // Security events - new collection for security monitoring
-    // Only Cloud Functions can write via Admin SDK
-    match /security_events/{eventId} {
-      allow read: if false; // Only accessible via Firebase Console
-      allow write: if false; // Only Cloud Functions via Admin SDK
     }
 
     // Email templates - locked for future use

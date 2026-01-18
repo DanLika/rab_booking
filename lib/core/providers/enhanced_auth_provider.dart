@@ -1062,9 +1062,14 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       googleProvider.addScope('profile');
 
       // Sign in with popup for web, native SDK for mobile
-      final UserCredential userCredential = await _auth.signInWithProvider(
-        googleProvider,
-      );
+      final UserCredential userCredential;
+      if (kIsWeb) {
+        // Web: Use signInWithPopup (signInWithProvider is not implemented for web)
+        userCredential = await _auth.signInWithPopup(googleProvider);
+      } else {
+        // Mobile: Use signInWithProvider
+        userCredential = await _auth.signInWithProvider(googleProvider);
+      }
 
       if (userCredential.user == null) {
         throw AuthException.noUserReturned('Google');

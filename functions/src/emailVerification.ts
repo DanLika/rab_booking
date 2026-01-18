@@ -22,7 +22,7 @@ function getUTCDayString(date: Date): string {
 // ============================================
 const VERIFICATION_TTL_MINUTES = 30; // Extended from 10 to 30 minutes
 const MAX_ATTEMPTS = 3;
-const DAILY_LIMIT = 5;
+const DAILY_LIMIT = 20; // Increased from 5 for testing
 const RESEND_COOLDOWN_SECONDS = 60;
 
 /**

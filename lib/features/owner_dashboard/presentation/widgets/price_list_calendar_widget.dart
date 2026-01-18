@@ -696,18 +696,23 @@ class _PriceListCalendarWidgetState
                         )
                       : pricesAsync.when(
                           data: (priceMap) {
-                            // Update local cache with server data
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              _localState.setMonthPrices(
-                                _selectedMonth,
-                                priceMap,
-                              );
-                            });
+                            // Only sync server data to local cache if we don't have any cached data yet
+                            // This prevents overwriting optimistic updates with stale server data
+                            final existingCache = _localState.getMonthPrices(
+                              _selectedMonth,
+                            );
+                            if (existingCache == null) {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                _localState.setMonthPrices(
+                                  _selectedMonth,
+                                  priceMap,
+                                );
+                              });
+                            }
 
                             // Use local cache for display (supports optimistic updates)
-                            final displayMap =
-                                _localState.getMonthPrices(_selectedMonth) ??
-                                priceMap;
+                            // Falls back to server data only if no local cache exists
+                            final displayMap = existingCache ?? priceMap;
 
                             return GridView.builder(
                               shrinkWrap: true,
@@ -1635,6 +1640,11 @@ class _PriceListCalendarWidgetState
                                           date: date,
                                           price: price,
                                           priceModel: priceModel,
+                                        );
+
+                                        // Invalidate local cache first so new server data can be synced
+                                        _localState.invalidateMonth(
+                                          DateTime(date.year, date.month),
                                         );
 
                                         // Refresh from server

@@ -25,45 +25,35 @@ import {safeToDate} from "./utils/dateValidation";
 /**
  * Track email sending failure for monitoring/alerting
  *
- * This creates a record that can be:
- * - Monitored via Cloud Monitoring
- * - Used to trigger alerts
- * - Picked up by a retry job
+ * Logs to Cloud Logging for:
+ * - Monitoring via Cloud Monitoring dashboards
+ * - Alerting via Log-based metrics
+ * - Querying via Logs Explorer
  *
  * @param bookingId - Booking ID
  * @param emailType - Type of email that failed
  * @param recipient - Email recipient
  * @param error - Error that occurred
  */
-async function trackEmailFailure(
+function trackEmailFailure(
   bookingId: string,
   emailType: string,
   recipient: string,
   error: unknown
-): Promise<void> {
-  try {
-    await db.collection("email_failures").add({
-      booking_id: bookingId,
-      email_type: emailType,
-      recipient,
-      error_message: error instanceof Error ? error.message : String(error),
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      retry_count: 0,
-      resolved: false,
-    });
-
-    logWarn("[BookingManagement] Email failure tracked for monitoring", {
-      bookingId,
-      emailType,
-      recipient,
-    });
-  } catch (trackError) {
-    // Don't fail if tracking fails - just log
-    logError("[BookingManagement] Failed to track email failure", trackError, {
-      bookingId,
-      emailType,
-    });
-  }
+): void {
+  // Log to Cloud Logging with structured data for monitoring/alerting
+  // Can create Log-based metrics in GCP Console to trigger alerts
+  logWarn("[EmailFailure] Failed to send email", {
+    bookingId,
+    emailType,
+    recipient,
+    errorMessage: error instanceof Error ? error.message : String(error),
+    errorStack: error instanceof Error ? error.stack : undefined,
+    // Structured labels for Cloud Monitoring queries
+    severity: "WARNING",
+    component: "email",
+    action: "send_failure",
+  });
 }
 
 /**
@@ -136,7 +126,7 @@ export const autoCancelExpiredBookings = onSchedule(
           } catch (error) {
             logError("Failed to send cancellation email after retries", error, {bookingId: doc.id});
             // Track failure for monitoring/alerting
-            await trackEmailFailure(
+            trackEmailFailure(
               doc.id,
               "auto_cancel_notification",
               booking.guest_email,
@@ -333,7 +323,7 @@ export const onBookingStatusChange = onDocumentUpdated(
         } catch (emailError) {
           logError("Failed to send booking approval email after retries", emailError);
           // Track failure for monitoring/alerting
-          await trackEmailFailure(
+          trackEmailFailure(
             event.params.bookingId,
             "booking_approved",
             after.guest_email || "",
@@ -395,7 +385,7 @@ export const onBookingStatusChange = onDocumentUpdated(
         } catch (emailError) {
           logError("Failed to send booking rejection email after retries", emailError);
           // Track failure for monitoring/alerting
-          await trackEmailFailure(
+          trackEmailFailure(
             event.params.bookingId,
             "booking_rejected",
             after.guest_email || "",
@@ -480,7 +470,7 @@ export const onBookingStatusChange = onDocumentUpdated(
           } catch (emailError) {
             logError("Failed to send cancellation email after retries", emailError);
             // Track failure for monitoring/alerting
-            await trackEmailFailure(
+            trackEmailFailure(
               event.params.bookingId,
               "booking_cancellation",
               after.guest_email || "",

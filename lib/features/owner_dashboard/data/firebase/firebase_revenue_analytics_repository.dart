@@ -32,6 +32,32 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
 
   FirebaseRevenueAnalyticsRepository(this._firestore);
 
+  /// Extract propertyId from document path for collectionGroup queries.
+  /// Path format: properties/{propertyId}/units/{unitId}/bookings/{bookingId}
+  String? _extractPropertyIdFromPath(String path) {
+    final segments = path.split('/');
+    if (segments.length >= 2 && segments[0] == 'properties') {
+      return segments[1];
+    }
+    return null;
+  }
+
+  /// Create BookingModel from Firestore document, extracting propertyId from path if missing.
+  BookingModel _bookingFromDoc(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = Map<String, dynamic>.from(doc.data());
+    if (data['property_id'] == null) {
+      final extractedPropertyId = _extractPropertyIdFromPath(
+        doc.reference.path,
+      );
+      if (extractedPropertyId != null) {
+        data['property_id'] = extractedPropertyId;
+      }
+    }
+    return BookingModel.fromJson({...data, 'id': doc.id});
+  }
+
   // ============================================================
   // OPTIMIZED METHODS - Use these with pre-cached unitIds
   // ============================================================
@@ -136,7 +162,7 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
             .get();
 
         for (final doc in bookingsSnapshot.docs) {
-          final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
+          final booking = _bookingFromDoc(doc);
           final date = _dateKey(booking.createdAt);
           revenueByDate[date] = (revenueByDate[date] ?? 0) + booking.totalPrice;
         }
@@ -194,7 +220,7 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
             .get();
 
         for (final doc in bookingsSnapshot.docs) {
-          final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
+          final booking = _bookingFromDoc(doc);
           final date = _dateKey(booking.createdAt);
           revenueByDate[date] = (revenueByDate[date] ?? 0) + booking.totalPrice;
         }
@@ -406,7 +432,7 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
 
       for (final doc in snapshot.docs) {
         try {
-          bookings.add(BookingModel.fromJson({...doc.data(), 'id': doc.id}));
+          bookings.add(_bookingFromDoc(doc));
         } catch (_) {
           // Skip invalid bookings
         }

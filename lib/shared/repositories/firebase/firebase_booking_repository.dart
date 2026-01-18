@@ -9,6 +9,35 @@ class FirebaseBookingRepository implements BookingRepository {
 
   FirebaseBookingRepository(this._firestore);
 
+  /// Extract propertyId from document path for collectionGroup queries.
+  /// Path format: properties/{propertyId}/units/{unitId}/bookings/{bookingId}
+  /// Returns null if path doesn't match expected format.
+  String? _extractPropertyIdFromPath(String path) {
+    final segments = path.split('/');
+    // Expected: ['properties', '{propertyId}', 'units', '{unitId}', 'bookings', '{bookingId}']
+    if (segments.length >= 2 && segments[0] == 'properties') {
+      return segments[1];
+    }
+    return null;
+  }
+
+  /// Create BookingModel from Firestore document, extracting propertyId from path if missing.
+  BookingModel _bookingFromDoc(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data();
+    // If property_id is missing from document, extract from path
+    if (data['property_id'] == null) {
+      final extractedPropertyId = _extractPropertyIdFromPath(
+        doc.reference.path,
+      );
+      if (extractedPropertyId != null) {
+        data['property_id'] = extractedPropertyId;
+      }
+    }
+    return BookingModel.fromJson({...data, 'id': doc.id});
+  }
+
   @override
   Future<List<BookingModel>> fetchUnitBookings(String unitId) async {
     // NEW STRUCTURE: Use collection group query to find bookings across all units
@@ -32,9 +61,7 @@ class FirebaseBookingRepository implements BookingRepository {
           ],
         )
         .get();
-    return snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    return snapshot.docs.map(_bookingFromDoc).toList();
   }
 
   @override
@@ -62,7 +89,7 @@ class FirebaseBookingRepository implements BookingRepository {
           .get();
       for (final doc in unitBookings.docs) {
         if (doc.id == id) {
-          return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+          return _bookingFromDoc(doc);
         }
       }
     }
@@ -73,7 +100,7 @@ class FirebaseBookingRepository implements BookingRepository {
 
     for (final doc in snapshot.docs) {
       if (doc.id == id) {
-        return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+        return _bookingFromDoc(doc);
       }
     }
     return null;
@@ -88,8 +115,7 @@ class FirebaseBookingRepository implements BookingRepository {
         .limit(1)
         .get();
     if (snapshot.docs.isEmpty) return null;
-    final doc = snapshot.docs.first;
-    return BookingModel.fromJson({...doc.data(), 'id': doc.id});
+    return _bookingFromDoc(snapshot.docs.first);
   }
 
   @override
@@ -183,9 +209,7 @@ class FirebaseBookingRepository implements BookingRepository {
         .collectionGroup('bookings')
         .where('user_id', isEqualTo: userId)
         .get();
-    return snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    return snapshot.docs.map(_bookingFromDoc).toList();
   }
 
   @override
@@ -195,9 +219,7 @@ class FirebaseBookingRepository implements BookingRepository {
         .collectionGroup('bookings')
         .where('property_id', isEqualTo: propertyId)
         .get();
-    return snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    return snapshot.docs.map(_bookingFromDoc).toList();
   }
 
   @override
@@ -290,9 +312,7 @@ class FirebaseBookingRepository implements BookingRepository {
         )
         .get();
 
-    final bookings = snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    final bookings = snapshot.docs.map(_bookingFromDoc).toList();
 
     return bookings.where((booking) {
       return booking.overlapsWithDates(checkIn, checkOut);
@@ -320,9 +340,7 @@ class FirebaseBookingRepository implements BookingRepository {
     }
 
     final snapshot = await query.get();
-    var bookings = snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    var bookings = snapshot.docs.map(_bookingFromDoc).toList();
 
     // Filter by date range in memory
     if (startDate != null || endDate != null) {
@@ -352,9 +370,7 @@ class FirebaseBookingRepository implements BookingRepository {
         .where('status', isEqualTo: status.value)
         .get();
 
-    return snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    return snapshot.docs.map(_bookingFromDoc).toList();
   }
 
   @override
@@ -368,9 +384,7 @@ class FirebaseBookingRepository implements BookingRepository {
         .orderBy('check_in')
         .get();
 
-    return snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    return snapshot.docs.map(_bookingFromDoc).toList();
   }
 
   @override
@@ -381,9 +395,7 @@ class FirebaseBookingRepository implements BookingRepository {
         .where('user_id', isEqualTo: userId)
         .get();
 
-    final bookings = snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    final bookings = snapshot.docs.map(_bookingFromDoc).toList();
 
     return bookings.where((booking) => booking.isCurrent).toList();
   }
@@ -399,9 +411,7 @@ class FirebaseBookingRepository implements BookingRepository {
         .orderBy('check_out', descending: true)
         .get();
 
-    return snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    return snapshot.docs.map(_bookingFromDoc).toList();
   }
 
   @override
@@ -414,9 +424,7 @@ class FirebaseBookingRepository implements BookingRepository {
         .orderBy('created_at', descending: true)
         .get();
 
-    return snapshot.docs
-        .map((doc) => BookingModel.fromJson({...doc.data(), 'id': doc.id}))
-        .toList();
+    return snapshot.docs.map(_bookingFromDoc).toList();
   }
 
   @override

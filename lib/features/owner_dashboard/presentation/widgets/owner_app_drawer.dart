@@ -208,7 +208,8 @@ class OwnerAppDrawer extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Logo - White variant for dark background
-          const Center(child: AuthLogoIcon(size: 70, isWhite: true)),
+          // Note: animate=false to prevent potential rendering issues in drawer
+          Center(child: AuthLogoIcon(size: 70, isWhite: true, animate: false)),
           const SizedBox(height: 20),
 
           // User Info

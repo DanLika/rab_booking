@@ -106,6 +106,35 @@ class FirebaseOwnerBookingsRepository {
     }
   }
 
+  /// Extract propertyId from document path for collectionGroup queries.
+  /// Path format: properties/{propertyId}/units/{unitId}/bookings/{bookingId}
+  /// Returns null if path doesn't match expected format.
+  String? _extractPropertyIdFromPath(String path) {
+    final segments = path.split('/');
+    // Expected: ['properties', '{propertyId}', 'units', '{unitId}', 'bookings', '{bookingId}']
+    if (segments.length >= 2 && segments[0] == 'properties') {
+      return segments[1];
+    }
+    return null;
+  }
+
+  /// Create BookingModel from Firestore document, extracting propertyId from path if missing.
+  BookingModel _bookingFromDoc(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = Map<String, dynamic>.from(doc.data());
+    // If property_id is missing from document, extract from path
+    if (data['property_id'] == null) {
+      final extractedPropertyId = _extractPropertyIdFromPath(
+        doc.reference.path,
+      );
+      if (extractedPropertyId != null) {
+        data['property_id'] = extractedPropertyId;
+      }
+    }
+    return BookingModel.fromJson({...data, 'id': doc.id});
+  }
+
   /// Get all bookings for owner's properties
   Future<List<OwnerBooking>> getOwnerBookings({
     String? ownerId,
@@ -207,7 +236,7 @@ class FirebaseOwnerBookingsRepository {
       );
       for (final doc in bookingsSnapshot.docs) {
         try {
-          final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
+          final booking = _bookingFromDoc(doc);
           // Filter by property/unit if specified
           if (propertyId != null && booking.propertyId != propertyId) continue;
           if (unitId != null && booking.unitId != unitId) continue;
@@ -391,7 +420,7 @@ class FirebaseOwnerBookingsRepository {
           .withListFetchTimeout('getCalendarBookings');
 
       for (final doc in bookingsSnapshot.docs) {
-        final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
+        final booking = _bookingFromDoc(doc);
 
         // Filter by date range and property/unit if specified
         if (booking.checkOut.isBefore(startDate)) continue;
@@ -468,7 +497,7 @@ class FirebaseOwnerBookingsRepository {
           .withListFetchTimeout('getCalendarBookingsWithUnitIds');
 
       for (final doc in bookingsSnapshot.docs) {
-        final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
+        final booking = _bookingFromDoc(doc);
 
         // Filter by date range and unit IDs
         if (booking.checkOut.isBefore(startDate)) continue;
@@ -733,7 +762,16 @@ class FirebaseOwnerBookingsRepository {
 
       if (bookingDoc == null || !bookingDoc.exists) return null;
 
-      final bookingData = bookingDoc.data()!;
+      final bookingData = Map<String, dynamic>.from(bookingDoc.data()!);
+      // Extract propertyId from path if not in document data
+      if (bookingData['property_id'] == null) {
+        final extractedPropertyId = _extractPropertyIdFromPath(
+          bookingDoc.reference.path,
+        );
+        if (extractedPropertyId != null) {
+          bookingData['property_id'] = extractedPropertyId;
+        }
+      }
       final booking = BookingModel.fromJson({
         ...bookingData,
         'id': bookingDoc.id,
@@ -1090,10 +1128,7 @@ class FirebaseOwnerBookingsRepository {
       final List<BookingModel> bookings = [];
       for (final doc in pageDocs) {
         try {
-          final booking = BookingModel.fromJson({
-            ...(doc.data()),
-            'id': doc.id,
-          });
+          final booking = _bookingFromDoc(doc);
 
           // Client-side filtering by unit IDs, property, and dates
           if (!filteredUnitIds.contains(booking.unitId)) continue;
@@ -1203,10 +1238,7 @@ class FirebaseOwnerBookingsRepository {
       final List<BookingModel> bookings = [];
       for (final doc in beforeCursorDocs) {
         try {
-          final booking = BookingModel.fromJson({
-            ...(doc.data()),
-            'id': doc.id,
-          });
+          final booking = _bookingFromDoc(doc);
 
           // Client-side filtering
           if (!filteredUnitIds.contains(booking.unitId)) continue;
@@ -1466,10 +1498,7 @@ class FirebaseOwnerBookingsRepository {
       );
       for (final doc in snapshot.docs) {
         try {
-          final booking = BookingModel.fromJson({
-            ...(doc.data()),
-            'id': doc.id,
-          });
+          final booking = _bookingFromDoc(doc);
           // Filter by unitIds client-side
           if (unitIds.contains(booking.unitId)) {
             allBookings.add(booking);
@@ -1513,10 +1542,7 @@ class FirebaseOwnerBookingsRepository {
       );
       for (final doc in snapshot.docs) {
         try {
-          final booking = BookingModel.fromJson({
-            ...(doc.data()),
-            'id': doc.id,
-          });
+          final booking = _bookingFromDoc(doc);
           // Filter by unitIds client-side
           if (unitIds.contains(booking.unitId)) {
             allBookings.add(booking);

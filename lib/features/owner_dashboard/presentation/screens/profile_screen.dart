@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../shared/models/user_model.dart' show AccountType;
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/config/router_owner.dart';
@@ -65,6 +66,12 @@ class ProfileScreen extends ConsumerWidget {
                 builder: (context) {
                   // OPTIMIZED: Use authState.userModel directly instead of separate Firestore query
                   final isAnonymous = authState.isAnonymous;
+                  // Calculate effective account type (admin override takes precedence)
+                  final effectiveAccountType =
+                      authState.userModel?.adminOverrideAccountType ??
+                      authState.userModel?.accountType ??
+                      AccountType.trial;
+                  final isTrial = effectiveAccountType == AccountType.trial;
                   final displayName =
                       authState.userModel?.displayName ??
                       authState.userModel?.fullName ??
@@ -286,8 +293,9 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
 
-                        // Subscription Banner (for non-hidden subscription users)
-                        if (authState.userModel?.hideSubscription != true) ...[
+                        // Subscription Banner (only for trial users, hidden for premium/enterprise)
+                        if (authState.userModel?.hideSubscription != true &&
+                            isTrial) ...[
                           _SubscriptionBanner(isDark: isDark),
                           const SizedBox(height: 12),
                         ],
@@ -351,9 +359,10 @@ class ProfileScreen extends ConsumerWidget {
                                       ref,
                                     ),
                               ),
-                              // Subscription tile - conditionally hidden by admin
+                              // Subscription tile - only for trial users (hidden for premium/enterprise or by admin)
                               if (authState.userModel?.hideSubscription !=
-                                  true) ...[
+                                      true &&
+                                  isTrial) ...[
                                 Divider(
                                   height: 1,
                                   indent: 72,

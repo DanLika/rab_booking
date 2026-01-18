@@ -3,6 +3,10 @@ import '../../domain/models/ical_feed.dart';
 import '../../../../core/services/logging_service.dart';
 
 /// Repository for managing iCal feeds and events
+///
+/// Structure:
+/// - ical_feeds: properties/{propertyId}/ical_feeds/{feedId}
+/// - ical_events: properties/{propertyId}/ical_events/{eventId}
 class FirebaseIcalRepository {
   final FirebaseFirestore _firestore;
 
@@ -13,6 +17,7 @@ class FirebaseIcalRepository {
   // ============================================
 
   /// Get all iCal feeds for owner's properties
+  /// Uses collectionGroup query since feeds are now subcollections
   Future<List<IcalFeed>> getOwnerIcalFeeds(String ownerId) async {
     try {
       // First, get all owner's properties
@@ -25,13 +30,13 @@ class FirebaseIcalRepository {
 
       if (propertyIds.isEmpty) return [];
 
-      // Firestore whereIn limit is 10, so we need to batch queries
+      // Query feeds from each property's subcollection
       final List<IcalFeed> allFeeds = [];
-      for (int i = 0; i < propertyIds.length; i += 10) {
-        final batch = propertyIds.skip(i).take(10).toList();
+      for (final propertyId in propertyIds) {
         final feedsSnapshot = await _firestore
+            .collection('properties')
+            .doc(propertyId)
             .collection('ical_feeds')
-            .where('property_id', whereIn: batch)
             .get();
         allFeeds.addAll(feedsSnapshot.docs.map(IcalFeed.fromFirestore));
       }
@@ -47,10 +52,11 @@ class FirebaseIcalRepository {
   }
 
   /// Get iCal feeds for specific unit
+  /// Uses collectionGroup query since feeds are subcollections
   Future<List<IcalFeed>> getUnitIcalFeeds(String unitId) async {
     try {
       final snapshot = await _firestore
-          .collection('ical_feeds')
+          .collectionGroup('ical_feeds')
           .where('unit_id', isEqualTo: unitId)
           .get();
 
@@ -74,13 +80,13 @@ class FirebaseIcalRepository {
 
           if (propertyIds.isEmpty) return <IcalFeed>[];
 
-          // Firestore whereIn limit is 10, so we need to batch queries
+          // Query feeds from each property's subcollection
           final List<IcalFeed> allFeeds = [];
-          for (int i = 0; i < propertyIds.length; i += 10) {
-            final batch = propertyIds.skip(i).take(10).toList();
+          for (final propertyId in propertyIds) {
             final feedsSnapshot = await _firestore
+                .collection('properties')
+                .doc(propertyId)
                 .collection('ical_feeds')
-                .where('property_id', whereIn: batch)
                 .get();
             allFeeds.addAll(feedsSnapshot.docs.map(IcalFeed.fromFirestore));
           }
@@ -90,9 +96,12 @@ class FirebaseIcalRepository {
   }
 
   /// Create new iCal feed
+  /// Path: properties/{propertyId}/ical_feeds/{feedId}
   Future<String> createIcalFeed(IcalFeed feed) async {
     try {
       final docRef = await _firestore
+          .collection('properties')
+          .doc(feed.propertyId)
           .collection('ical_feeds')
           .add(
             feed
@@ -109,9 +118,12 @@ class FirebaseIcalRepository {
   }
 
   /// Update iCal feed
+  /// Path: properties/{propertyId}/ical_feeds/{feedId}
   Future<void> updateIcalFeed(IcalFeed feed) async {
     try {
       await _firestore
+          .collection('properties')
+          .doc(feed.propertyId)
           .collection('ical_feeds')
           .doc(feed.id)
           .update(feed.copyWith(updatedAt: DateTime.now()).toFirestore());
@@ -123,31 +135,11 @@ class FirebaseIcalRepository {
     }
   }
 
-  /// Delete iCal feed
-  Future<void> deleteIcalFeed(String feedId) async {
+  /// Delete iCal feed and its events
+  /// Path: properties/{propertyId}/ical_feeds/{feedId}
+  Future<void> deleteIcalFeed(String feedId, String propertyId) async {
     try {
-      // First get the feed to know which property it belongs to
-      final feedDoc = await _firestore
-          .collection('ical_feeds')
-          .doc(feedId)
-          .get();
-      if (!feedDoc.exists) {
-        LoggingService.log('Feed not found: $feedId', tag: 'IcalRepository');
-        return;
-      }
-
-      final feedData = feedDoc.data()!;
-      final propertyId = feedData['property_id'] as String?;
-
-      if (propertyId == null) {
-        LoggingService.log(
-          'Feed has no property_id: $feedId',
-          tag: 'IcalRepository',
-        );
-        return;
-      }
-
-      // NEW STRUCTURE: Delete all events from this feed in the new subcollection
+      // Delete all events from this feed
       final eventsSnapshot = await _firestore
           .collection('properties')
           .doc(propertyId)
@@ -168,8 +160,13 @@ class FirebaseIcalRepository {
         await batch.commit();
       }
 
-      // Delete the feed
-      await _firestore.collection('ical_feeds').doc(feedId).delete();
+      // Delete the feed from subcollection
+      await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('ical_feeds')
+          .doc(feedId)
+          .delete();
 
       LoggingService.log(
         'Feed deleted: $feedId with ${eventsSnapshot.docs.length} events',
@@ -182,17 +179,24 @@ class FirebaseIcalRepository {
   }
 
   /// Update feed status (active/error/paused)
+  /// Path: properties/{propertyId}/ical_feeds/{feedId}
   Future<void> updateFeedStatus(
     String feedId,
+    String propertyId,
     IcalStatus status, {
     String? errorMessage,
   }) async {
     try {
-      await _firestore.collection('ical_feeds').doc(feedId).update({
-        'status': status.toFirestoreValue(),
-        'last_error': errorMessage,
-        'updated_at': Timestamp.now(),
-      });
+      await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('ical_feeds')
+          .doc(feedId)
+          .update({
+            'status': status.toFirestoreValue(),
+            'last_error': errorMessage,
+            'updated_at': Timestamp.now(),
+          });
 
       LoggingService.log(
         'Feed status updated: $feedId -> $status',
@@ -208,22 +212,34 @@ class FirebaseIcalRepository {
   }
 
   /// Update last sync timestamp
-  Future<void> updateLastSync(String feedId, int eventCount) async {
+  /// Path: properties/{propertyId}/ical_feeds/{feedId}
+  Future<void> updateLastSync(
+    String feedId,
+    String propertyId,
+    int eventCount,
+  ) async {
     try {
       final feedDoc = await _firestore
+          .collection('properties')
+          .doc(propertyId)
           .collection('ical_feeds')
           .doc(feedId)
           .get();
       final currentSyncCount = (feedDoc.data()?['sync_count'] ?? 0) as int;
 
-      await _firestore.collection('ical_feeds').doc(feedId).update({
-        'last_synced': Timestamp.now(),
-        'sync_count': currentSyncCount + 1,
-        'event_count': eventCount,
-        'status': 'active',
-        'last_error': null,
-        'updated_at': Timestamp.now(),
-      });
+      await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('ical_feeds')
+          .doc(feedId)
+          .update({
+            'last_synced': Timestamp.now(),
+            'sync_count': currentSyncCount + 1,
+            'event_count': eventCount,
+            'status': 'active',
+            'last_error': null,
+            'updated_at': Timestamp.now(),
+          });
 
       LoggingService.log(
         'Last sync updated for feed: $feedId',
@@ -298,25 +314,10 @@ class FirebaseIcalRepository {
   }
 
   /// Create iCal event
-  Future<String> createIcalEvent(IcalEvent event) async {
+  /// Requires propertyId since feeds are now subcollections
+  Future<String> createIcalEvent(IcalEvent event, String propertyId) async {
     try {
-      // NEW STRUCTURE: Get feed to determine property path
-      final feedDoc = await _firestore
-          .collection('ical_feeds')
-          .doc(event.feedId)
-          .get();
-      if (!feedDoc.exists) {
-        throw Exception('Feed not found: ${event.feedId}');
-      }
-
-      final feedData = feedDoc.data()!;
-      final propertyId = feedData['property_id'] as String?;
-
-      if (propertyId == null) {
-        throw Exception('Feed has no property_id: ${event.feedId}');
-      }
-
-      // Write to new subcollection structure
+      // Write to subcollection structure
       final docRef = await _firestore
           .collection('properties')
           .doc(propertyId)
@@ -336,30 +337,15 @@ class FirebaseIcalRepository {
   }
 
   /// Batch create iCal events (for sync)
-  /// CRITICAL: All events must belong to the same feed (same propertyId)
-  Future<void> batchCreateIcalEvents(List<IcalEvent> events) async {
+  /// Requires propertyId since feeds are now subcollections
+  Future<void> batchCreateIcalEvents(
+    List<IcalEvent> events,
+    String propertyId,
+  ) async {
     try {
       if (events.isEmpty) return;
 
-      // NEW STRUCTURE: Get propertyId from the first event's feed
-      // All events in a batch should have the same feedId
-      final feedId = events.first.feedId;
-      final feedDoc = await _firestore
-          .collection('ical_feeds')
-          .doc(feedId)
-          .get();
-      if (!feedDoc.exists) {
-        throw Exception('Feed not found: $feedId');
-      }
-
-      final feedData = feedDoc.data()!;
-      final propertyId = feedData['property_id'] as String?;
-
-      if (propertyId == null) {
-        throw Exception('Feed has no property_id: $feedId');
-      }
-
-      // Write to new subcollection structure
+      // Write to subcollection structure
       final batch = _firestore.batch();
 
       for (final event in events) {
@@ -386,30 +372,10 @@ class FirebaseIcalRepository {
   }
 
   /// Delete all events for a feed (before re-syncing)
-  Future<void> deleteEventsForFeed(String feedId) async {
+  /// Requires propertyId since feeds are now subcollections
+  Future<void> deleteEventsForFeed(String feedId, String propertyId) async {
     try {
-      // NEW STRUCTURE: Get feed to determine property path
-      final feedDoc = await _firestore
-          .collection('ical_feeds')
-          .doc(feedId)
-          .get();
-      if (!feedDoc.exists) {
-        LoggingService.log('Feed not found: $feedId', tag: 'IcalRepository');
-        return;
-      }
-
-      final feedData = feedDoc.data()!;
-      final propertyId = feedData['property_id'] as String?;
-
-      if (propertyId == null) {
-        LoggingService.log(
-          'Feed has no property_id: $feedId',
-          tag: 'IcalRepository',
-        );
-        return;
-      }
-
-      // Query events from new subcollection structure
+      // Query events from subcollection structure
       final snapshot = await _firestore
           .collection('properties')
           .doc(propertyId)

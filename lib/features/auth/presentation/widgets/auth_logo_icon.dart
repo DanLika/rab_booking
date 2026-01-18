@@ -65,10 +65,21 @@ class AuthLogoIcon extends StatelessWidget {
       },
     );
 
-    // In dark mode, invert the logo colors so it's visible on dark backgrounds
-    if ((isWhite || isDarkMode) && !useMinimalistic) {
+    // Apply color filter for visibility on different backgrounds
+    // isWhite: Force white logo (for dark/colored backgrounds like drawer header)
+    // isDarkMode: Make logo white for dark theme backgrounds (applies to both
+    //             minimalistic and colorized modes - logo must be visible)
+    if (isWhite || isDarkMode) {
+      // Use color matrix to convert any color to white while preserving alpha
+      // This is more reliable than BlendMode.srcIn which can produce unexpected
+      // colors (like green) with some RGBA images
       logoImage = ColorFiltered(
-        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+        colorFilter: const ColorFilter.matrix(<double>[
+          0, 0, 0, 0, 255, // Red channel: output 255 (white)
+          0, 0, 0, 0, 255, // Green channel: output 255 (white)
+          0, 0, 0, 0, 255, // Blue channel: output 255 (white)
+          0, 0, 0, 1, 0, // Alpha channel: preserve original
+        ]),
         child: logoImage,
       );
     }

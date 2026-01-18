@@ -186,11 +186,21 @@ export async function sendOverbookingDetectedEmailV2(
 
   const subject = `Overbooking Detected - Immediate Action Required - ${escapeHtml(params.conflictId)}`;
 
-  await resendClient.emails.send({
+  // IMPORTANT: Check the result object - Resend can return success with error inside
+  const result = await resendClient.emails.send({
     from: `${fromName} <${fromEmail}>`,
     to: params.ownerEmail,
     subject: subject,
     html,
   });
+
+  // Resend SDK returns { data, error } - check for error
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const typedResult = result as any;
+  if (typedResult.error) {
+    throw new Error(
+      `Resend API error: ${typedResult.error.message || JSON.stringify(typedResult.error)}`
+    );
+  }
 }
 

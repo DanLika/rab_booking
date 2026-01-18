@@ -1262,12 +1262,22 @@ export async function sendTrialExpiringEmail(
 </html>
     `.trim();
 
-    await resend.emails.send({
+    // IMPORTANT: Check the result object - Resend can return success with error inside
+    const result = await resend.emails.send({
       from: `${FROM_NAME()} <${FROM_EMAIL()}>`,
       to: email,
       subject: `⏰ Your BookBed trial expires in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`,
       html,
     });
+
+    // Resend SDK returns { data, error } - check for error
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedResult = result as any;
+    if (typedResult.error) {
+      throw new Error(
+        `Resend API error: ${typedResult.error.message || JSON.stringify(typedResult.error)}`
+      );
+    }
 
     logSuccess("[Trial Email] Expiring warning sent", {
       email,
@@ -1378,12 +1388,22 @@ export async function sendTrialExpiredEmail(
 </html>
     `.trim();
 
-    await resend.emails.send({
+    // IMPORTANT: Check the result object - Resend can return success with error inside
+    const result = await resend.emails.send({
       from: `${FROM_NAME()} <${FROM_EMAIL()}>`,
       to: email,
       subject: "Your BookBed trial has expired - Upgrade to continue",
       html,
     });
+
+    // Resend SDK returns { data, error } - check for error
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedResult = result as any;
+    if (typedResult.error) {
+      throw new Error(
+        `Resend API error: ${typedResult.error.message || JSON.stringify(typedResult.error)}`
+      );
+    }
 
     logSuccess("[Trial Email] Expired notification sent", {
       email,

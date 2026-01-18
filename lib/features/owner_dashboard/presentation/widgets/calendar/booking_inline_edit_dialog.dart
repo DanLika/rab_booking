@@ -9,12 +9,16 @@ import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../../core/utils/responsive_spacing_helper.dart';
+import '../../../../../core/utils/async_utils.dart';
+import '../../../../../core/services/logging_service.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../providers/owner_calendar_provider.dart';
+import '../../providers/platform_connections_provider.dart';
 import '../../../utils/booking_overlap_detector.dart';
+import '../dialogs/update_booking_warning_dialog.dart';
 
 /// Inline booking edit dialog
 /// Quick edit for booking dates, guest count, status, and notes
@@ -570,10 +574,11 @@ class _BookingInlineEditDialogState
   }
 
   Future<void> _saveChanges() async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _isSaving = true);
 
     try {
-      // FIXED: Validate for overlaps before saving
+      // Validate for overlaps before saving
       final allBookingsMap = await ref.read(calendarBookingsProvider.future);
 
       // Check if new dates would overlap with existing bookings
@@ -608,42 +613,112 @@ class _BookingInlineEditDialogState
         return;
       }
 
-      final repository = ref.read(bookingRepositoryProvider);
+      // Check if dates changed
+      final datesChanged =
+          _checkIn != widget.booking.checkIn ||
+          _checkOut != widget.booking.checkOut;
 
-      // Create updated booking
-      final updatedBooking = widget.booking.copyWith(
-        checkIn: _checkIn,
-        checkOut: _checkOut,
-        guestCount: _guestCount,
-        status: _status,
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
-        updatedAt: DateTime.now(),
-      );
+      // If dates changed, check for platform integrations and show warning
+      if (datesChanged) {
+        final platformConnectionsAsync = await ref.read(
+          platformConnectionsForUnitProvider(widget.booking.unitId).future,
+        );
 
-      // Save to Firestore
-      await repository.updateBooking(updatedBooking);
+        // If unit has active platform connections, show warning dialog
+        if (platformConnectionsAsync.isNotEmpty && mounted) {
+          final platformNames = platformConnectionsAsync
+              .map((c) => c.platform.displayName)
+              .toSet()
+              .toList();
+
+          final confirmed = await UpdateBookingWarningDialog.show(
+            context: context,
+            oldCheckIn: widget.booking.checkIn,
+            oldCheckOut: widget.booking.checkOut,
+            newCheckIn: _checkIn,
+            newCheckOut: _checkOut,
+            platformNames: platformNames,
+          );
+
+          if (!confirmed) {
+            setState(() => _isSaving = false);
+            return;
+          }
+        }
+      }
+
+      // Check if check-out date changed (for token expiration update)
+      final checkOutChanged = _checkOut != widget.booking.checkOut;
+
+      // FIX: Use direct Firestore transaction instead of repository
+      // This avoids the slow fetchBookingById which searches ALL bookings
+      final firestore = ref.read(firestoreProvider);
+
+      // Build direct document reference using known path
+      // Structure: properties/{propertyId}/units/{unitId}/bookings/{bookingId}
+      final docRef = firestore
+          .collection('properties')
+          .doc(widget.booking.propertyId)
+          .collection('units')
+          .doc(widget.booking.unitId)
+          .collection('bookings')
+          .doc(widget.booking.id);
+
+      await firestore.runTransaction((transaction) async {
+        final docSnapshot = await transaction.get(docRef);
+
+        if (!docSnapshot.exists) {
+          throw Exception(
+            'Booking no longer exists. It may have been deleted.',
+          );
+        }
+
+        transaction.update(docRef, {
+          'check_in': _checkIn.toUtc().toIso8601String(),
+          'check_out': _checkOut.toUtc().toIso8601String(),
+          'guest_count': _guestCount,
+          'status': _status.name,
+          'notes': _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        });
+      });
+
+      // If check-out date changed, update token expiration
+      if (checkOutChanged) {
+        try {
+          final functions = ref.read(firebaseFunctionsProvider);
+          final callable = functions.httpsCallable(
+            'updateBookingTokenExpiration',
+          );
+          await callable
+              .call({'bookingId': widget.booking.id})
+              .withCloudFunctionTimeout('updateBookingTokenExpiration');
+        } catch (e) {
+          // Log error but don't block booking update
+          LoggingService.logWarning('Failed to update token expiration: $e');
+        }
+      }
 
       // Refresh calendar
       ref.invalidate(calendarBookingsProvider);
 
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to indicate success
-        ErrorDisplayUtils.showSuccessSnackBar(
-          context,
-          'Booking updated successfully',
-        );
+        ErrorDisplayUtils.showSuccessSnackBar(context, l10n.editBookingSuccess);
       }
     } catch (e) {
-      setState(() => _isSaving = false);
-
       if (mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           e,
-          userMessage: 'Failed to update booking',
+          userMessage: l10n.editBookingError,
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
       }
     }
   }

@@ -2,6 +2,7 @@ import 'dart:async' show unawaited, Timer, StreamSubscription;
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart' show PointerScrollEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/web_utils.dart';
@@ -244,6 +245,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   double _zoomScale = 1.0;
   final TransformationController _transformationController =
       TransformationController();
+  // Key to get InteractiveViewer size for centered zoom
+  final _interactiveViewerKey = GlobalKey();
 
   @override
   void initState() {
@@ -2143,83 +2146,115 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                   // Calendar with lazy loading - shows skeleton first for faster perceived load
                                   // Wrapped in InteractiveViewer for zoom control (mobile web)
                                   // InteractiveViewer allows both zoom and pan/scroll
-                                  InteractiveViewer(
-                                    transformationController:
-                                        _transformationController,
-                                    boundaryMargin: const EdgeInsets.all(
-                                      double.infinity,
-                                    ),
-                                    minScale: 1.0,
-                                    maxScale: 3.0,
-                                    panEnabled:
-                                        _zoomScale >
-                                        1.0, // Pan only when zoomed
-                                    scaleEnabled:
-                                        false, // Disable pinch - use buttons only
-                                    child: LazyCalendarContainer(
-                                      propertyId: _propertyId ?? '',
-                                      unitId: unitId,
-                                      forceMonthView: forceMonthView,
-                                      // Disable date selection in calendar_only mode
-                                      onRangeSelected:
-                                          widgetMode == WidgetMode.calendarOnly
-                                          ? null
-                                          : (start, end) {
-                                              // Validate minimum nights requirement
-                                              if (start != null &&
-                                                  end != null) {
-                                                // Use unit's minStayNights (source of truth), NOT widget_settings
-                                                final minNights =
-                                                    _unit?.minStayNights ?? 1;
-                                                final selectedNights = end
-                                                    .difference(start)
-                                                    .inDays;
+                                  // Listener captures scroll wheel events for desktop pan support
+                                  Listener(
+                                    onPointerSignal: (event) {
+                                      // Handle scroll wheel for desktop pan (only when zoomed)
+                                      if (event is PointerScrollEvent &&
+                                          _zoomScale > 1.0) {
+                                        // Get current transformation
+                                        final matrix = _transformationController
+                                            .value
+                                            .clone();
+                                        // Apply scroll delta as pan (inverted for natural scroll direction)
+                                        // Scroll down/right = move view down/right
+                                        matrix.setEntry(
+                                          0,
+                                          3,
+                                          matrix.entry(0, 3) -
+                                              event.scrollDelta.dx,
+                                        );
+                                        matrix.setEntry(
+                                          1,
+                                          3,
+                                          matrix.entry(1, 3) -
+                                              event.scrollDelta.dy,
+                                        );
+                                        _transformationController.value =
+                                            matrix;
+                                      }
+                                    },
+                                    child: InteractiveViewer(
+                                      key: _interactiveViewerKey,
+                                      transformationController:
+                                          _transformationController,
+                                      boundaryMargin: const EdgeInsets.all(
+                                        double.infinity,
+                                      ),
+                                      minScale: 1.0,
+                                      maxScale: 3.0,
+                                      panEnabled:
+                                          _zoomScale >
+                                          1.0, // Pan only when zoomed
+                                      scaleEnabled:
+                                          false, // Disable pinch - use buttons only
+                                      child: LazyCalendarContainer(
+                                        propertyId: _propertyId ?? '',
+                                        unitId: unitId,
+                                        forceMonthView: forceMonthView,
+                                        // Disable date selection in calendar_only mode
+                                        onRangeSelected:
+                                            widgetMode ==
+                                                WidgetMode.calendarOnly
+                                            ? null
+                                            : (start, end) {
+                                                // Validate minimum nights requirement
+                                                if (start != null &&
+                                                    end != null) {
+                                                  // Use unit's minStayNights (source of truth), NOT widget_settings
+                                                  final minNights =
+                                                      _unit?.minStayNights ?? 1;
+                                                  final selectedNights = end
+                                                      .difference(start)
+                                                      .inDays;
 
-                                                if (selectedNights <
-                                                    minNights) {
-                                                  // Show error message
-                                                  final tr =
-                                                      WidgetTranslations.of(
-                                                        context,
-                                                        ref,
-                                                      );
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        tr.minimumNightsRequired(
-                                                          minNights,
-                                                          selectedNights,
+                                                  if (selectedNights <
+                                                      minNights) {
+                                                    // Show error message
+                                                    final tr =
+                                                        WidgetTranslations.of(
+                                                          context,
+                                                          ref,
+                                                        );
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                          tr.minimumNightsRequired(
+                                                            minNights,
+                                                            selectedNights,
+                                                          ),
                                                         ),
+                                                        backgroundColor:
+                                                            minimalistColors
+                                                                .error,
+                                                        duration:
+                                                            const Duration(
+                                                              seconds: 3,
+                                                            ),
                                                       ),
-                                                      backgroundColor:
-                                                          minimalistColors
-                                                              .error,
-                                                      duration: const Duration(
-                                                        seconds: 3,
-                                                      ),
-                                                    ),
-                                                  );
-                                                  return;
+                                                    );
+                                                    return;
+                                                  }
                                                 }
-                                              }
 
-                                              if (mounted) {
-                                                setState(() {
-                                                  _checkIn = start;
-                                                  _checkOut = end;
-                                                  // Bug Fix: Date selection IS interaction - show booking flow
-                                                  _hasInteractedWithBookingFlow =
-                                                      true;
-                                                  _pillBarDismissed =
-                                                      false; // Reset dismissed flag for new date selection
-                                                });
-                                              }
+                                                if (mounted) {
+                                                  setState(() {
+                                                    _checkIn = start;
+                                                    _checkOut = end;
+                                                    // Bug Fix: Date selection IS interaction - show booking flow
+                                                    _hasInteractedWithBookingFlow =
+                                                        true;
+                                                    _pillBarDismissed =
+                                                        false; // Reset dismissed flag for new date selection
+                                                  });
+                                                }
 
-                                              // Bug #53: Save form data after date selection
-                                              _saveFormData();
-                                            },
+                                                // Bug #53: Save form data after date selection
+                                                _saveFormData();
+                                              },
+                                      ),
                                     ),
                                   ),
 
@@ -2300,8 +2335,35 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       if (mounted) {
                         setState(() {
                           _zoomScale = newScale;
-                          _transformationController.value =
-                              Matrix4.diagonal3Values(newScale, newScale, 1.0);
+                          // Get InteractiveViewer size for centered zoom
+                          final renderBox =
+                              _interactiveViewerKey.currentContext
+                                      ?.findRenderObject()
+                                  as RenderBox?;
+                          if (renderBox != null) {
+                            final size = renderBox.size;
+                            // Calculate translation to keep zoom centered
+                            // Formula: translate = (1 - scale) * center / 2
+                            final dx = (1 - newScale) * size.width / 2;
+                            final dy = (1 - newScale) * size.height / 2;
+                            // Build transformation matrix for centered zoom:
+                            // 1. Scale uniformly
+                            // 2. Translate to keep center fixed
+                            final matrix = Matrix4.identity();
+                            matrix.setEntry(0, 0, newScale); // Scale X
+                            matrix.setEntry(1, 1, newScale); // Scale Y
+                            matrix.setEntry(0, 3, dx); // Translate X
+                            matrix.setEntry(1, 3, dy); // Translate Y
+                            _transformationController.value = matrix;
+                          } else {
+                            // Fallback to origin zoom if size not available
+                            _transformationController.value =
+                                Matrix4.diagonal3Values(
+                                  newScale,
+                                  newScale,
+                                  1.0,
+                                );
+                          }
                         });
                       }
                     },

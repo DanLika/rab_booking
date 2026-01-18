@@ -120,9 +120,10 @@ export const scheduledIcalSync = onSchedule(
     logInfo("[Scheduled iCal Sync] Starting automatic sync of all feeds");
 
     try {
-      // Get all active feeds
+      // Get all active feeds using collectionGroup
+      // Path: properties/{propertyId}/ical_feeds/{feedId}
       const feedsSnapshot = await db
-        .collection('ical_feeds')
+        .collectionGroup('ical_feeds')
         .where('status', 'in', ['active', 'error']) // Include error feeds to retry
         .get();
 
@@ -144,6 +145,20 @@ export const scheduledIcalSync = onSchedule(
         const feedId = feedDoc.id;
         const feedData = feedDoc.data();
 
+        // Extract propertyId from document path
+        // Path: properties/{propertyId}/ical_feeds/{feedId}
+        const pathSegments = feedDoc.ref.path.split('/');
+        const propertyId = pathSegments[1]; // properties/[propertyId]/ical_feeds/feedId
+
+        if (!propertyId) {
+          logError("[Scheduled iCal Sync] Could not extract propertyId from path", null, {
+            feedId,
+            path: feedDoc.ref.path
+          });
+          errorCount++;
+          continue;
+        }
+
         // Skip if sync interval hasn't elapsed (check last_synced)
         const lastSynced = feedData.last_synced?.toDate();
         const syncIntervalMinutes = feedData.sync_interval_minutes || 30;
@@ -153,6 +168,7 @@ export const scheduledIcalSync = onSchedule(
           if (new Date() < nextSyncTime) {
             logInfo("[Scheduled iCal Sync] Skipping feed - sync interval not elapsed", {
               feedId,
+              propertyId,
               lastSynced: lastSynced.toISOString(),
               nextSync: nextSyncTime.toISOString()
             });
@@ -161,12 +177,13 @@ export const scheduledIcalSync = onSchedule(
         }
 
         try {
-          const eventsImported = await syncSingleFeed(db, feedId, feedData);
+          const eventsImported = await syncSingleFeed(db, feedId, propertyId, feedData);
           successCount++;
           totalEventsImported += eventsImported;
 
           logInfo("[Scheduled iCal Sync] Feed synced successfully", {
             feedId,
+            propertyId,
             platform: feedData.platform,
             eventsImported
           });
@@ -174,6 +191,7 @@ export const scheduledIcalSync = onSchedule(
           errorCount++;
           logError("[Scheduled iCal Sync] Failed to sync feed", error, {
             feedId,
+            propertyId,
             platform: feedData.platform
           });
           // Continue with next feed even if one fails
@@ -210,34 +228,41 @@ export const syncIcalFeedNow = onCall(async (request) => {
   // Set user context for Sentry error tracking
   setUser(request.auth.uid);
 
-  const { feedId } = request.data;
+  const { feedId, propertyId } = request.data;
 
-  if (!feedId) {
-    throw new HttpsError('invalid-argument', 'feedId is required');
+  if (!feedId || !propertyId) {
+    throw new HttpsError('invalid-argument', 'feedId and propertyId are required');
   }
 
   const db = admin.firestore();
 
   try {
-    logInfo("[iCal Sync] Manual sync requested for feed", {feedId});
+    logInfo("[iCal Sync] Manual sync requested for feed", {feedId, propertyId});
 
-    // Get feed document
-    const feedDoc = await db.collection('ical_feeds').doc(feedId).get();
+    // Verify user owns this property
+    const propertyDoc = await db.collection('properties').doc(propertyId).get();
+
+    if (!propertyDoc.exists || propertyDoc.data()?.owner_id !== request.auth.uid) {
+      throw new HttpsError('permission-denied', 'You do not own this property');
+    }
+
+    // Get feed document from subcollection
+    // Path: properties/{propertyId}/ical_feeds/{feedId}
+    const feedDoc = await db
+      .collection('properties')
+      .doc(propertyId)
+      .collection('ical_feeds')
+      .doc(feedId)
+      .get();
 
     if (!feedDoc.exists) {
       throw new HttpsError('not-found', 'Feed not found');
     }
 
-    // Verify user owns this feed
     const feedData = feedDoc.data()!;
-    const propertyDoc = await db.collection('properties').doc(feedData.property_id).get();
-
-    if (!propertyDoc.exists || propertyDoc.data()?.owner_id !== request.auth.uid) {
-      throw new HttpsError('permission-denied', 'You do not own this feed');
-    }
 
     // Sync the feed
-    const bookingsCreated = await syncSingleFeed(db, feedId, feedData);
+    const bookingsCreated = await syncSingleFeed(db, feedId, propertyId, feedData);
 
     logSuccess("[iCal Sync] Manual sync completed for feed", {feedId, bookingsCreated});
 
@@ -256,15 +281,24 @@ export const syncIcalFeedNow = onCall(async (request) => {
 /**
  * Sync a single iCal feed
  * Returns number of bookings created
+ * Path: properties/{propertyId}/ical_feeds/{feedId}
  */
 async function syncSingleFeed(
   db: FirebaseFirestore.Firestore,
   feedId: string,
+  propertyId: string,
   feedData: any
 ): Promise<number> {
   const { unit_id, ical_url, platform } = feedData;
 
-  logInfo("[iCal Sync] Syncing feed", {feedId, unitId: unit_id, platform});
+  logInfo("[iCal Sync] Syncing feed", {feedId, propertyId, unitId: unit_id, platform});
+
+  // Helper to get feed reference
+  const feedRef = db
+    .collection('properties')
+    .doc(propertyId)
+    .collection('ical_feeds')
+    .doc(feedId);
 
   try {
     // SECURITY: Validate URL before fetching (SSRF prevention)
@@ -289,22 +323,14 @@ async function syncSingleFeed(
 
     logInfo("[iCal Sync] Parsed events from platform", {platform, eventCount: events.length});
 
-    // Get propertyId from feed data for subcollection path
-    const propertyId = feedData.property_id;
-    if (!propertyId) {
-      throw new Error(`Feed ${feedId} is missing property_id`);
-    }
-
     // Delete old events for this feed
-    // NEW STRUCTURE: Use property-level subcollection
     await deleteOldEvents(db, feedId, propertyId);
 
     // Insert new events
-    // NEW STRUCTURE: Use property-level subcollection
     const insertedCount = await insertNewEvents(db, feedId, unit_id, propertyId, platform, events);
 
-    // Update feed metadata
-    await db.collection('ical_feeds').doc(feedId).update({
+    // Update feed metadata in subcollection
+    await feedRef.update({
       last_synced: admin.firestore.Timestamp.now(),
       sync_count: admin.firestore.FieldValue.increment(1),
       event_count: insertedCount,
@@ -321,8 +347,8 @@ async function syncSingleFeed(
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-    // Update feed with error status
-    await db.collection('ical_feeds').doc(feedId).update({
+    // Update feed with error status in subcollection
+    await feedRef.update({
       status: 'error',
       last_error: errorMessage,
       updated_at: admin.firestore.Timestamp.now(),
@@ -378,7 +404,9 @@ function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
         }
 
         if (response.statusCode !== 200) {
-          reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
+          // Include truncated URL for debugging (hide full URL for security)
+          const urlHost = new URL(url).host;
+          reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage} (host: ${urlHost})`));
           return;
         }
 

@@ -17,6 +17,7 @@ import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../../domain/models/ical_feed.dart';
 import '../../providers/ical_feeds_provider.dart';
+import '../../providers/owner_calendar_provider.dart';
 import '../../providers/owner_properties_provider.dart';
 import '../../widgets/owner_app_drawer.dart';
 
@@ -1123,7 +1124,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('syncIcalFeedNow');
       final result = await callable
-          .call({'feedId': feed.id})
+          .call({'feedId': feed.id, 'propertyId': feed.propertyId})
           .withCloudFunctionTimeout('syncIcalFeedNow');
 
       // Invalidate providers to refresh UI after sync
@@ -1164,7 +1165,11 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     final l10n = AppLocalizations.of(context);
     try {
       final repository = ref.read(icalRepositoryProvider);
-      await repository.updateFeedStatus(feed.id, IcalStatus.paused);
+      await repository.updateFeedStatus(
+        feed.id,
+        feed.propertyId,
+        IcalStatus.paused,
+      );
       // Invalidate providers to refresh UI immediately
       ref.invalidate(icalFeedsStreamProvider);
       ref.invalidate(icalStatisticsProvider);
@@ -1186,7 +1191,11 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     final l10n = AppLocalizations.of(context);
     try {
       final repository = ref.read(icalRepositoryProvider);
-      await repository.updateFeedStatus(feed.id, IcalStatus.active);
+      await repository.updateFeedStatus(
+        feed.id,
+        feed.propertyId,
+        IcalStatus.active,
+      );
       // Invalidate providers to refresh UI immediately
       ref.invalidate(icalFeedsStreamProvider);
       ref.invalidate(icalStatisticsProvider);
@@ -1228,7 +1237,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               try {
                 final repository = ref.read(icalRepositoryProvider);
                 // Delete feed and all associated events
-                await repository.deleteIcalFeed(feed.id);
+                await repository.deleteIcalFeed(feed.id, feed.propertyId);
                 // Invalidate providers to refresh UI immediately
                 ref.invalidate(icalFeedsStreamProvider);
                 ref.invalidate(icalStatisticsProvider);
@@ -1644,6 +1653,8 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         throw StateError('Property ID not set - unit must be selected first');
       }
 
+      String feedIdForSync;
+
       if (widget.existingFeed == null) {
         final newFeed = IcalFeed(
           id: '',
@@ -1654,13 +1665,15 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-        await repository.createIcalFeed(newFeed);
+        // FIX: Capture the created feed ID for auto-sync
+        feedIdForSync = await repository.createIcalFeed(newFeed);
       } else {
         final updatedFeed = widget.existingFeed!.copyWith(
           icalUrl: _icalUrlController.text.trim(),
           platform: _selectedPlatform,
         );
         await repository.updateIcalFeed(updatedFeed);
+        feedIdForSync = widget.existingFeed!.id;
       }
 
       ref.invalidate(icalFeedsStreamProvider);
@@ -1674,6 +1687,14 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
               ? l10n.icalAddFeedTitle
               : l10n.icalFeedUpdated,
         );
+
+        // FIX: Auto-trigger sync immediately after saving new/updated feed
+        // This runs in the background - user doesn't need to wait
+        _triggerAutoSync(
+          feedIdForSync,
+          _selectedPropertyId!,
+          _selectedPlatform,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -1682,6 +1703,66 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           context,
           e,
           userMessage: l10n.icalFeedSaveError,
+        );
+      }
+    }
+  }
+
+  /// Trigger automatic sync after saving a feed (fire-and-forget)
+  /// Shows info snackbar when sync completes or fails
+  void _triggerAutoSync(
+    String feedId,
+    String propertyId,
+    IcalPlatform platform,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+
+    // Show sync started notification
+    if (mounted) {
+      ErrorDisplayUtils.showInfoSnackBar(
+        context,
+        l10n.icalSyncStarted(platform.displayName),
+      );
+    }
+
+    try {
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('syncIcalFeedNow');
+      final result = await callable
+          .call({'feedId': feedId, 'propertyId': propertyId})
+          .withCloudFunctionTimeout('syncIcalFeedNow');
+
+      // Invalidate providers to refresh UI after sync
+      ref.invalidate(icalFeedsStreamProvider);
+      ref.invalidate(icalStatisticsProvider);
+      // Also refresh calendar to show new bookings
+      ref.invalidate(calendarBookingsProvider);
+
+      if (mounted) {
+        final data = result.data as Map<String, dynamic>?;
+        final success = data?['success'] ?? false;
+        final message = data?['message'] as String?;
+        final bookingsCreated = data?['bookingsCreated'] as int? ?? 0;
+
+        if (success) {
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.icalSyncSuccess(bookingsCreated),
+          );
+        } else {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            message ?? l10n.icalUnknownError,
+            userMessage: l10n.icalSyncErrorMessage,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          e,
+          userMessage: l10n.icalSyncErrorMessage,
         );
       }
     }

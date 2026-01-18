@@ -63,8 +63,8 @@ export const deleteUserAccount = onCall(
 
     try {
       // Step 1: Log deletion event BEFORE deleting anything
-      // This creates an audit trail even if deletion partially fails
-      await logDeletionEvent(userId);
+      // This creates an audit trail in Cloud Logging
+      logDeletionEvent(userId);
 
       // Step 2: Get user's email for logging (before deletion)
       let userEmail: string | undefined;
@@ -78,22 +78,22 @@ export const deleteUserAccount = onCall(
       // Step 3: Anonymize guest bookings made BY this user on other owners' properties
       await anonymizeGuestBookings(userId, userEmail);
 
-      // Step 4: Delete all owned properties (cascades to units, bookings, prices)
+      // Step 4: Delete all owned properties (cascades to units, bookings, prices, ical_events, ical_feeds)
       await deleteOwnedProperties(userId);
+
+      // Step 4.5: Delete legacy root-level iCal feeds (if any exist from old data)
+      await deleteIcalFeedsLegacy(userId);
 
       // Step 5: Delete platform connections (Booking.com, Airbnb OAuth)
       await deletePlatformConnections(userId);
 
-      // Step 6: Delete iCal feeds
-      await deleteIcalFeeds(userId);
-
-      // Step 7: Delete user document and all subcollections
+      // Step 6: Delete user document and all subcollections
       await deleteUserDocument(userId);
 
-      // Step 8: Delete legacy user_profiles document if exists
+      // Step 7: Delete legacy user_profiles document if exists
       await deleteLegacyProfile(userId);
 
-      // Step 9: Finally, delete Firebase Auth account
+      // Step 8: Finally, delete Firebase Auth account
       await admin.auth().deleteUser(userId);
 
       logInfo("[DeleteAccount] Account deleted successfully", {
@@ -124,25 +124,15 @@ export const deleteUserAccount = onCall(
 
 /**
  * Log deletion event before deleting anything
+ * Uses Cloud Logging for audit trail (queryable in GCP Console)
  */
-async function logDeletionEvent(userId: string): Promise<void> {
-  try {
-    await db.collection("security_events").add({
-      type: "account_deleted",
-      userId,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      details: {
-        reason: "user_requested",
-        source: "app",
-      },
-    });
-  } catch (error) {
-    // Log but don't fail - deletion should continue
-    logWarn("[DeleteAccount] Failed to log deletion event", {
-      userId,
-      error: String(error),
-    });
-  }
+function logDeletionEvent(userId: string): void {
+  logInfo("[DeleteAccount] Account deletion initiated", {
+    type: "account_deleted",
+    userId,
+    reason: "user_requested",
+    source: "app",
+  });
 }
 
 /**
@@ -261,6 +251,9 @@ async function deletePropertyCascade(
   // Delete ical_events subcollection
   await deleteSubcollection(propertyRef, "ical_events");
 
+  // Delete ical_feeds subcollection (feed configurations)
+  await deleteSubcollection(propertyRef, "ical_feeds");
+
   // Delete the property document itself
   await propertyRef.delete();
 }
@@ -347,10 +340,18 @@ async function deletePlatformConnections(userId: string): Promise<void> {
 }
 
 /**
- * Delete iCal feed configurations
+ * Delete iCal feed configurations from root-level collection (LEGACY)
+ *
+ * @deprecated iCal feeds are now stored as subcollections under properties
+ * Path: properties/{propertyId}/ical_feeds/{feedId}
+ * Cascade delete is handled by deletePropertyCascade()
+ *
+ * This function is kept for backward compatibility to clean up any
+ * legacy feeds that might still exist at root level.
  */
-async function deleteIcalFeeds(userId: string): Promise<void> {
+async function deleteIcalFeedsLegacy(userId: string): Promise<void> {
   try {
+    // Check for any legacy feeds at root level
     const feedsSnapshot = await db
       .collection("ical_feeds")
       .where("owner_id", "==", userId)
@@ -364,12 +365,13 @@ async function deleteIcalFeeds(userId: string): Promise<void> {
     }
     await batch.commit();
 
-    logInfo("[DeleteAccount] iCal feeds deleted", {
+    logInfo("[DeleteAccount] Legacy iCal feeds deleted", {
       userId,
       count: feedsSnapshot.size,
     });
   } catch (error) {
-    logWarn("[DeleteAccount] iCal feeds deletion failed", {
+    // Silently ignore - legacy collection may not exist
+    logWarn("[DeleteAccount] Legacy iCal feeds deletion failed (may not exist)", {
       userId,
       error: String(error),
     });
@@ -385,8 +387,6 @@ async function deleteUserDocument(userId: string): Promise<void> {
   // Delete subcollections first
   const subcollections = [
     "data",
-    "securityEvents",
-    "security_events",
     "notifications",
     "rate_limits",
     "devices",

@@ -66,7 +66,7 @@ enum IcalStatus {
 }
 
 /// iCal feed configuration for syncing external calendar sources
-/// Path: ical_feeds/{feedId}
+/// Path: properties/{propertyId}/ical_feeds/{feedId}
 @freezed
 class IcalFeed with _$IcalFeed {
   const IcalFeed._();
@@ -157,7 +157,7 @@ class IcalFeed with _$IcalFeed {
 }
 
 /// iCal event imported from external calendar
-/// Path: ical_events/{eventId}
+/// Path: properties/{propertyId}/ical_events/{eventId}
 @freezed
 class IcalEvent with _$IcalEvent {
   const IcalEvent._();

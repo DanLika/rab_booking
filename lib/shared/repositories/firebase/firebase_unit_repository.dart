@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../unit_repository.dart';
 import '../../models/unit_model.dart';
 import '../../../core/exceptions/app_exceptions.dart';
+import '../../../core/utils/timestamp_converter.dart';
 
 class FirebaseUnitRepository implements UnitRepository {
   final FirebaseFirestore _firestore;
@@ -165,10 +166,12 @@ class FirebaseUnitRepository implements UnitRepository {
         .get();
 
     // Check for overlap in memory (client-side)
+    // FIX: Use TimestampConverter to handle both Timestamp and ISO String formats
+    const converter = TimestampConverter();
     final hasOverlap = snapshot.docs.any((doc) {
       final data = doc.data();
-      final bookingCheckIn = (data['check_in'] as Timestamp).toDate();
-      final bookingCheckOut = (data['check_out'] as Timestamp).toDate();
+      final bookingCheckIn = converter.fromJson(data['check_in']);
+      final bookingCheckOut = converter.fromJson(data['check_out']);
 
       // Overlap logic: bookings overlap if:
       // (bookingCheckOut > checkIn) AND (bookingCheckIn < checkOut)

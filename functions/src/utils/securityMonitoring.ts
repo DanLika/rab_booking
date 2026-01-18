@@ -4,15 +4,16 @@
  * Provides logging and tracking of security-related events for monitoring and alerting.
  *
  * Events are logged to:
- * 1. Firestore `security_events` collection (for analysis)
- * 2. Structured logs (for Cloud Logging)
- * 3. Sentry (for critical/high severity events - real-time alerting)
+ * 1. Structured logs (for Cloud Logging - queryable in GCP Console)
+ * 2. Sentry (for critical/high severity events - real-time alerting)
+ *
+ * NOTE: Firestore `security_events` collection was removed as redundant.
+ * Cloud Logging + Sentry provides sufficient monitoring without extra write costs.
  *
  * @module securityMonitoring
  */
 
 import {logWarn, logInfo} from "../logger";
-import * as admin from "firebase-admin";
 import {captureMessage} from "../sentry";
 
 /**
@@ -61,29 +62,7 @@ export async function logSecurityEvent(
   details: Record<string, unknown>,
   severity: SecuritySeverity = "medium"
 ): Promise<void> {
-  const event = {
-    type: eventType,
-    severity: severity,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    details: details,
-  };
-
-  // Log to Firestore for analysis (fire-and-forget, don't block)
-  try {
-    // Use set with auto-generated ID for better performance
-    const db = admin.firestore();
-    db.collection("security_events").add(event).catch((err) => {
-      // Silently fail - don't let monitoring failure affect main flow
-      logWarn("[SecurityMonitoring] Failed to write to Firestore", {error: err.message});
-    });
-  } catch (error) {
-    // Fallback to console logging if Firestore fails
-    logWarn(`[SecurityMonitoring] Firestore write failed: ${eventType}`, details);
-  }
-
-  // Always log to structured logs based on severity
-  // NOTE: For critical/high, we use logWarn (not logError) because Sentry
-  // is handled separately via captureMessage below - avoids duplicate alerts
+  // Log to Cloud Logging based on severity
   const logMessage = `[Security:${severity.toUpperCase()}] ${eventType}`;
 
   switch (severity) {
@@ -101,7 +80,6 @@ export async function logSecurityEvent(
   }
 
   // Sentry integration for critical/high severity events
-  // This is the ONLY path that sends to Sentry for security events
   if (severity === "critical" || severity === "high") {
     const sentryLevel = severity === "critical" ? "fatal" : "error";
     captureMessage(

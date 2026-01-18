@@ -45,8 +45,10 @@ class GeoLocationResult {
 ///
 /// Uses multiple free APIs as fallbacks:
 /// 1. ipapi.co (150 requests/day, no key required)
-/// 2. ip-api.com (45 requests/minute, no key required)
-/// 3. ipwhois.app (10000 requests/month, no key required)
+/// 2. ipwhois.app (10000 requests/month, no key required)
+///
+/// Note: ip-api.com was removed because it only supports HTTPS for paid users,
+/// which causes Mixed Content errors on HTTPS sites.
 ///
 /// Usage:
 /// ```dart
@@ -72,10 +74,9 @@ class IpGeolocationService {
 
   /// Get geolocation for specific IP address
   Future<GeoLocationResult?> getGeolocation(String? ipAddress) async {
-    // Try multiple providers in sequence
+    // Try multiple providers in sequence (all HTTPS)
     final providers = [
       () => _tryIpApiCo(ipAddress),
-      () => _tryIpApiCom(ipAddress),
       () => _tryIpWhoisApp(ipAddress),
     ];
 
@@ -118,38 +119,6 @@ class IpGeolocationService {
         region: json['region'],
         latitude: json['latitude']?.toDouble(),
         longitude: json['longitude']?.toDouble(),
-      );
-    }
-
-    return null;
-  }
-
-  /// Try ip-api.com (45 requests/minute)
-  Future<GeoLocationResult?> _tryIpApiCom(String? ipAddress) async {
-    final url = ipAddress != null && ipAddress.isNotEmpty
-        ? 'http://ip-api.com/json/$ipAddress'
-        : 'http://ip-api.com/json/';
-
-    // PERFORMANCE: 1s timeout per provider (total 3s for all providers)
-    final response = await _client
-        .get(Uri.parse(url))
-        .timeout(const Duration(seconds: 1));
-
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-
-      // Check status
-      if (json['status'] != 'success') {
-        return null;
-      }
-
-      return GeoLocationResult(
-        ipAddress: json['query'] ?? '',
-        country: json['country'],
-        city: json['city'],
-        region: json['regionName'],
-        latitude: json['lat']?.toDouble(),
-        longitude: json['lon']?.toDouble(),
       );
     }
 

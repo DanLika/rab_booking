@@ -90,23 +90,13 @@ export const revokeAllRefreshTokens = onCall(
         });
       }
 
-      // Log security event
-      try {
-        await db.collection("users").doc(userId).collection("security_events").add({
-          type: "tokens_revoked",
-          timestamp: admin.firestore.FieldValue.serverTimestamp(),
-          details: {
-            reason: "user_requested",
-            revokeTime,
-          },
-        });
-      } catch (logError) {
-        // Don't fail if logging fails
-        logWarn("[RevokeTokens] Security event logging failed", {
-          userId,
-          error: String(logError),
-        });
-      }
+      // Log security event to Cloud Logging
+      logInfo("[RevokeTokens] Tokens revoked", {
+        type: "tokens_revoked",
+        userId,
+        reason: "user_requested",
+        revokeTime,
+      });
 
       return {
         success: true,

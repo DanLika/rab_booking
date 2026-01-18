@@ -8,6 +8,7 @@ import '../../domain/repositories/i_booking_calendar_repository.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/utils/timestamp_converter.dart';
 import '../helpers/availability_checker.dart';
 import '../helpers/booking_price_calculator.dart';
 import '../../utils/date_key_generator.dart';
@@ -1326,15 +1327,21 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         orElse: () => BookingStatus.confirmed,
       );
 
+      // FIX: Use TimestampConverter to handle both Timestamp and ISO String formats
+      // This is needed because some code paths save dates as ISO strings (e.g., inline edit)
+      // while others save as Firestore Timestamps (e.g., Cloud Functions)
+      const converter = TimestampConverter();
+      const nullableConverter = NullableTimestampConverter();
+
       // Extract ONLY non-PII fields needed for calendar display
       return BookingModel(
         id: doc.id,
         unitId: unitId, // From query param, not document (safer)
-        checkIn: (data['check_in'] as Timestamp).toDate(),
-        checkOut: (data['check_out'] as Timestamp).toDate(),
+        checkIn: converter.fromJson(data['check_in']),
+        checkOut: converter.fromJson(data['check_out']),
         status: status,
         createdAt:
-            (data['created_at'] as Timestamp?)?.toDate() ??
+            nullableConverter.fromJson(data['created_at']) ??
             DateTime.now().toUtc(),
       );
     } catch (e) {

@@ -7,6 +7,10 @@ abstract final class AuthFeatureFlags {
   ///
   /// Set to true when Google Sign-In is enabled in Firebase Console
   /// and all authorized domains are configured.
+  ///
+  /// SHA-1 certificates added to Firebase Console (rab-booking-248fc):
+  /// - Debug: 28:F4:F5:3D:F1:4A:E2:5D:CD:F6:62:53:A9:52:9B:4E:12:3F:6D:28
+  /// - Play Store: 85:1C:B5:E2:33:A5:32:A4:44:8A:45:B9:37:AA:45:7A:3C:F0:D4:8A
   static const bool isGoogleSignInEnabled = true;
 
   /// Whether Apple Sign-In is enabled and configured.

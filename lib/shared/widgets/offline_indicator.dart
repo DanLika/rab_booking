@@ -46,11 +46,7 @@ class OfflineIndicator extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.wifi_off,
-                            color: Colors.white,
-                            size: 16,
-                          ),
+                          Icon(Icons.wifi_off, color: Colors.white, size: 16),
                           SizedBox(width: 8),
                           Flexible(
                             child: Text(

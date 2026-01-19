@@ -16,29 +16,23 @@ class AdminDashboardScreen extends ConsumerWidget {
     final isMobile = MediaQuery.of(context).size.width < _mobileBreakpoint;
 
     return Scaffold(
-      appBar: isMobile
-          ? null // Mobile has AppBar in shell
-          : AppBar(
-              title: const Text('Dashboard'),
-              automaticallyImplyLeading: false,
-            ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(isMobile ? 16 : 24),
+        padding: EdgeInsets.all(isMobile ? 12 : 16),
         child: statsAsync.when(
           data: (stats) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Overview',
-                style: isMobile
-                    ? Theme.of(context).textTheme.titleLarge
-                    : Theme.of(context).textTheme.headlineMedium,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 24),
-              // Responsive stats grid
+              const SizedBox(height: 16),
+              // Stats in a single row (responsive)
               LayoutBuilder(
                 builder: (context, constraints) {
-                  // Full width cards on mobile
+                  // On mobile, stack vertically with smaller spacing
                   if (constraints.maxWidth < _mobileBreakpoint) {
                     return Column(
                       children: [
@@ -47,49 +41,52 @@ class AdminDashboardScreen extends ConsumerWidget {
                           value: stats['totalOwners']?.toString() ?? '0',
                           icon: Icons.people,
                           color: Colors.blue,
-                          fullWidth: true,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         _StatsCard(
                           title: 'Trial Users',
                           value: stats['trialUsers']?.toString() ?? '0',
                           icon: Icons.timer,
                           color: Colors.orange,
-                          fullWidth: true,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         _StatsCard(
                           title: 'Premium Users',
                           value: stats['premiumUsers']?.toString() ?? '0',
                           icon: Icons.star,
                           color: Colors.green,
-                          fullWidth: true,
                         ),
                       ],
                     );
                   }
-                  // Wrap layout on desktop/tablet
-                  return Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
+                  // On desktop/tablet, single row with flex
+                  return Row(
                     children: [
-                      _StatsCard(
-                        title: 'Total Owners',
-                        value: stats['totalOwners']?.toString() ?? '0',
-                        icon: Icons.people,
-                        color: Colors.blue,
+                      Expanded(
+                        child: _StatsCard(
+                          title: 'Total Owners',
+                          value: stats['totalOwners']?.toString() ?? '0',
+                          icon: Icons.people,
+                          color: Colors.blue,
+                        ),
                       ),
-                      _StatsCard(
-                        title: 'Trial Users',
-                        value: stats['trialUsers']?.toString() ?? '0',
-                        icon: Icons.timer,
-                        color: Colors.orange,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatsCard(
+                          title: 'Trial Users',
+                          value: stats['trialUsers']?.toString() ?? '0',
+                          icon: Icons.timer,
+                          color: Colors.orange,
+                        ),
                       ),
-                      _StatsCard(
-                        title: 'Premium Users',
-                        value: stats['premiumUsers']?.toString() ?? '0',
-                        icon: Icons.star,
-                        color: Colors.green,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatsCard(
+                          title: 'Premium Users',
+                          value: stats['premiumUsers']?.toString() ?? '0',
+                          icon: Icons.star,
+                          color: Colors.green,
+                        ),
                       ),
                     ],
                   );
@@ -121,6 +118,11 @@ class AdminDashboardScreen extends ConsumerWidget {
                     style: Theme.of(context).textTheme.bodySmall,
                     textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => ref.invalidate(dashboardStatsProvider),
+                    child: const Text('Retry'),
+                  ),
                 ],
               ),
             ),
@@ -136,51 +138,48 @@ class _StatsCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
-  final bool fullWidth;
 
   const _StatsCard({
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
-    this.fullWidth = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Container(
-        width: fullWidth ? double.infinity : 200,
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  child: Icon(icon, color: color),
-                ),
-                const Spacer(),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

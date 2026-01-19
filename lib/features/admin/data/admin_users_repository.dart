@@ -92,7 +92,7 @@ class AdminUsersRepository {
   Future<int> getUserPropertiesCount(String userId) async {
     final snapshot = await _firestore
         .collection('properties')
-        .where('ownerId', isEqualTo: userId)
+        .where('owner_id', isEqualTo: userId)
         .count()
         .get();
     return snapshot.count ?? 0;

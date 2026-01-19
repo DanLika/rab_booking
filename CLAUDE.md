@@ -181,12 +181,14 @@ ava race condition gdje 2 korisnika plate za iste datume.
 | `app.bookbed.io` | Owner Dashboard | `bookbed-owner` |
 | `view.bookbed.io` | **Booking Widget** (embed iframe) | `bookbed-widget` |
 | `*.view.bookbed.io` | Klijent subdomene za widget | `bookbed-widget` |
+| `bookbed-admin.web.app` | **Admin Dashboard** | `bookbed-admin` |
 
 **Firebase Hosting targets** (`.firebaserc`):
 | Target | Site ID | Build folder | Custom domain |
 |--------|---------|--------------|---------------|
 | `owner` | `bookbed-owner` | `build/web_owner` | app.bookbed.io |
 | `widget` | `bookbed-widget` | `build/web_widget` | view.bookbed.io, *.view.bookbed.io |
+| `admin` | `bookbed-admin` | `build/web_admin` | bookbed-admin.web.app |
 
 **Build commands**:
 ```bash
@@ -196,8 +198,14 @@ flutter build web --release --target lib/main.dart -o build/web_owner
 # Booking widget
 flutter build web --release --target lib/widget_main.dart -o build/web_widget
 
-# Deploy
+# Admin dashboard
+flutter build web --release --target lib/admin_main.dart -o build/web_admin
+
+# Deploy all
 firebase deploy --only hosting
+
+# Deploy admin only
+firebase deploy --only hosting:admin
 ```
 
 **Klijent subdomene** (dodaju se u Firebase Console → Hosting → Add custom domain):
@@ -208,7 +216,58 @@ firebase deploy --only hosting
 
 ---
 
-## ?? MULTI-PLATFORM BUILD SYSTEM
+## 🔐 ADMIN DASHBOARD
+
+**URL**: `https://bookbed-admin.web.app`
+
+**Entry point**: `lib/admin_main.dart`
+
+**Screens**:
+| Screen | Fajl | Svrha |
+|--------|------|-------|
+| Login | `admin_login_screen.dart` | Email/password auth za admine |
+| Dashboard | `admin_dashboard_screen.dart` | Stats: total owners, trial, premium |
+| Users List | `users_list_screen.dart` | Lista svih owner-a sa paginacijom |
+| User Detail | `user_detail_screen.dart` | Detalji korisnika, properties count, bookings count |
+
+**Shell navigacija** (`admin_shell_screen.dart`):
+- Unified Drawer za mobile i desktop
+- Dark/Light theme toggle u drawer-u
+- Logout dugme u drawer-u
+
+**Firestore Rules za Admin pristup**:
+```javascript
+// users collection - admin može čitati sve korisnike
+allow read: if isOwner(userId) || isAdmin() || isAdminFromFirestore();
+
+// bookings collection group - admin može čitati sve bookinge
+match /{path=**}/bookings/{bookingId} {
+  allow read: if
+    isAdmin() || isAdminFromFirestore() ||
+    // ... ostale rules
+}
+```
+
+**Admin provjera** (dva načina):
+1. `isAdmin()` - Firebase custom claims: `request.auth.token.isAdmin == true`
+2. `isAdminFromFirestore()` - Firestore document: `users/{uid}.role == 'admin'`
+
+**Providers** (`admin_providers.dart`):
+- `adminNavIndexProvider` - trenutni tab index
+- `adminDarkModeProvider` - dark/light mode state
+
+**Repository** (`admin_users_repository.dart`):
+- `getOwners()` - paginated lista owner-a
+- `getUserById()` - pojedinačni korisnik
+- `getDashboardStats()` - count agregacije
+- `getUserPropertiesCount()` - broj property-ja korisnika
+- `getUserBookingsCount()` - broj bookinga korisnika (collectionGroup query)
+
+**⚠️ VAŽNO**: Admin bookings count koristi `collectionGroup('bookings').where('owner_id', isEqualTo: userId)` - zahtijeva admin pristup u Firestore rules!
+
+---
+
+## 📱 MULTI-PLATFORM BUILD SYSTEM
 
 ### Podr�ane platforme
 | Platforma | Build mod | Hot Reload | Napomena |
@@ -597,7 +656,21 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2026-01-18 | **Version**: 6.30
+**Last Updated**: 2026-01-19 | **Version**: 6.31
+
+**Changelog 6.31**: Admin Dashboard Documentation & Fixes:
+- **Admin Dashboard Section Added** to CLAUDE.md:
+  - URL: `https://bookbed-admin.web.app`
+  - Entry point, screens, shell navigation documented
+  - Firestore rules for admin access documented
+  - Admin providers and repository patterns documented
+- **Firestore Rules Fix** (`firestore.rules`):
+  - Added `isAdmin() || isAdminFromFirestore() ||` to bookings collection group rules
+  - Fixes: Admin couldn't see user's bookings count (permission-denied)
+- **UI Fixes** (`admin_shell_screen.dart`, `users_list_screen.dart`):
+  - Removed theme toggle from AppBar (kept only in drawer)
+  - Fixed refresh button on Users page (moved to content row)
+- **Hosting Targets Updated**: Added `admin` target for `bookbed-admin.web.app`
 
 **Changelog 6.30**: Safari Web Compatibility Fixes:
 - **Flutter Loader TypeError Fix** (`web/index.html`):

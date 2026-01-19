@@ -16,14 +16,25 @@ class UsersListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ownersAsync = ref.watch(ownersListProvider);
     final isMobile = MediaQuery.of(context).size.width < _mobileBreakpoint;
+    final padding = isMobile ? 12.0 : 24.0;
 
     return Scaffold(
-      appBar: isMobile
-          ? null // Mobile has AppBar in shell
-          : AppBar(
-              title: const Text('Users'),
-              automaticallyImplyLeading: false,
-              actions: [
+      // No AppBar - shell provides it
+      body: Padding(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title row with refresh button
+            Row(
+              children: [
+                Text(
+                  'Users',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.refresh),
                   tooltip: 'Refresh',
@@ -31,26 +42,30 @@ class UsersListScreen extends ConsumerWidget {
                 ),
               ],
             ),
-      body: Padding(
-        padding: EdgeInsets.all(isMobile ? 16 : 24),
-        child: ownersAsync.when(
-          data: (owners) => isMobile
-              ? _UsersList(owners: owners)
-              : _UsersTable(owners: owners),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Error loading users: $err'),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () => ref.invalidate(ownersListProvider),
-                  child: const Text('Retry'),
+            SizedBox(height: isMobile ? 12 : 16),
+            // Content
+            Expanded(
+              child: ownersAsync.when(
+                data: (owners) => isMobile
+                    ? _UsersList(owners: owners)
+                    : _UsersTable(owners: owners),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, _) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Error loading users: $err'),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () => ref.invalidate(ownersListProvider),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

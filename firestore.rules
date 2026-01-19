@@ -235,6 +235,8 @@ service cloud.firestore {
     // the rule will only return documents where owner_id == attacker's uid (none).
     match /{path=**}/bookings/{bookingId} {
       allow read: if
+        // ADMIN: Full access for admin dashboard
+        isAdmin() || isAdminFromFirestore() ||
         // PRIMARY SECURITY: Owner can read ONLY their own bookings
         // This works for ALL query patterns: realtime subscriptions, analytics, etc.
         // Even if query filters by unit_id/check_in, only owner's bookings are returned

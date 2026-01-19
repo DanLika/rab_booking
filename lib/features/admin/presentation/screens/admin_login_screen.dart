@@ -82,6 +82,33 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Full screen loading overlay when logging in
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.admin_panel_settings,
+                size: 64,
+                color: Colors.deepPurple,
+              ),
+              const SizedBox(height: 24),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                'Signing in...',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Center(
         child: ConstrainedBox(
@@ -110,18 +137,38 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade50,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.red.shade900.withValues(alpha: 0.3)
+                              : Colors.red.shade50,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.shade200),
+                          border: Border.all(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.red.shade700
+                                : Colors.red.shade200,
+                          ),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error, color: Colors.red.shade700),
+                            Icon(
+                              Icons.error,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.red.shade300
+                                  : Colors.red.shade700,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _error!,
-                                style: TextStyle(color: Colors.red.shade700),
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.red.shade300
+                                      : Colors.red.shade700,
+                                ),
                               ),
                             ),
                           ],
@@ -163,17 +210,8 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
-                        onPressed: _isLoading ? null : _login,
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Login'),
+                        onPressed: _login,
+                        child: const Text('Login'),
                       ),
                     ),
                   ],

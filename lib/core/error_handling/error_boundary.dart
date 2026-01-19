@@ -355,9 +355,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint(
-        'Global navigator failed: ${_safeExceptionToString(e)}',
-      );
+      debugPrint('Global navigator failed: ${_safeExceptionToString(e)}');
     }
 
     // Fallback: try GoRouter context

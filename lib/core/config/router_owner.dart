@@ -123,6 +123,10 @@ class OwnerRoutes {
   static const String notFound = '/404';
 }
 
+/// Global navigator key for error boundary navigation
+/// Used when GoRouter context is not available (e.g., during error recovery)
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 /// Owner app GoRouter
 final ownerRouterProvider = Provider<GoRouter>((ref) {
   // OPTIMIZATION: Do not watch state directly to avoid rebuilding Router on every state change.
@@ -130,6 +134,7 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(enhancedAuthProvider.notifier);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     // No initialLocation - let GoRouter read from URL (important for /calendar widget)
     debugLogDiagnostics: true,
     refreshListenable: GoRouterRefreshStream(authNotifier.stream),

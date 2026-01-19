@@ -44,15 +44,23 @@ class OfflineIndicator extends ConsumerWidget {
                       color: const Color(0xFF333333), // Dark grey
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.wifi_off, color: Colors.white, size: 16),
+                          Icon(
+                            Icons.wifi_off,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                           SizedBox(width: 8),
-                          Text(
-                            'Nema interneta - Prikazujem spremljene podatke',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                          Flexible(
+                            child: Text(
+                              'Nema interneta',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

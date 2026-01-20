@@ -315,11 +315,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     return Center(
       child: Padding(
         // No top padding - spacing handled by CalendarCompactLegend margin (consistent with year view)
-        padding: const EdgeInsets.only(
-          left: SpacingTokens.l,
-          right: SpacingTokens.l,
-          bottom: SpacingTokens.m,
-        ),
+        // No horizontal padding - parent container (booking_widget_screen) provides horizontal padding
+        padding: const EdgeInsets.only(bottom: SpacingTokens.m),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 650),
           child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),
@@ -336,11 +333,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     return Center(
       child: Padding(
         // No top padding - spacing handled by CalendarCompactLegend margin (consistent with year view)
-        padding: const EdgeInsets.only(
-          left: SpacingTokens.s,
-          right: SpacingTokens.s,
-          bottom: SpacingTokens.s,
-        ),
+        // No horizontal padding - parent container (booking_widget_screen) provides horizontal padding
+        padding: const EdgeInsets.only(bottom: SpacingTokens.s),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: _buildSingleMonthGrid(_currentMonth, data, maxHeight, colors),

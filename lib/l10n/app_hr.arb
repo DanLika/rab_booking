@@ -3368,5 +3368,29 @@
   "ownerProfileSuggestionAddress": "Dodajte adresu za račune",
   "ownerProfileSuggestionPhone": "Dodajte telefonski broj za rezervacije",
   "subscriptionBannerTitle": "Nadogradite na Pro",
-  "subscriptionBannerSubtitle": "Otključajte neograničen broj objekata i premium značajke"
+  "subscriptionBannerSubtitle": "Otključajte neograničen broj objekata i premium značajke",
+
+  "forceUpdateTitle": "Ažuriranje obavezno",
+  "forceUpdateMessage": "Nova verzija BookBed aplikacije je obavezna za nastavak. Molimo ažurirajte aplikaciju iz Google Play trgovine.",
+  "forceUpdateButton": "Ažuriraj sada",
+  "forceUpdateRequiredVersion": "Minimalna verzija potrebna: {version}",
+  "@forceUpdateRequiredVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "optionalUpdateTitle": "Ažuriranje dostupno",
+  "optionalUpdateMessage": "Nova verzija BookBed aplikacije je dostupna sa poboljšanjima i ispravkama grešaka.",
+  "optionalUpdateNow": "Ažuriraj sada",
+  "optionalUpdateLater": "Podsjeti me kasnije",
+  "optionalUpdateVersion": "Najnovija verzija: {version}",
+  "@optionalUpdateVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  }
 }

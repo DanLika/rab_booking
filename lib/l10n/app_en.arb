@@ -3361,5 +3361,29 @@
   "ownerProfileSuggestionAddress": "Add your address for invoices",
   "ownerProfileSuggestionPhone": "Add phone number for bookings",
   "subscriptionBannerTitle": "Upgrade to Pro",
-  "subscriptionBannerSubtitle": "Unlock unlimited properties and premium features"
+  "subscriptionBannerSubtitle": "Unlock unlimited properties and premium features",
+
+  "forceUpdateTitle": "Update Required",
+  "forceUpdateMessage": "A new version of BookBed is required to continue. Please update the app from Google Play Store.",
+  "forceUpdateButton": "Update Now",
+  "forceUpdateRequiredVersion": "Minimum version required: {version}",
+  "@forceUpdateRequiredVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "optionalUpdateTitle": "Update Available",
+  "optionalUpdateMessage": "A new version of BookBed is available with improvements and bug fixes.",
+  "optionalUpdateNow": "Update Now",
+  "optionalUpdateLater": "Remind Me Later",
+  "optionalUpdateVersion": "Latest version: {version}",
+  "@optionalUpdateVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  }
 }

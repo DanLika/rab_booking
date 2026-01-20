@@ -1467,13 +1467,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// HYBRID LOADING: UI shows immediately with skeleton calendar.
   /// Data loads in background - no BookBed Loader blocking the UI.
   Future<void> _validateUnitAndProperty() async {
-    // HYBRID LOADING: Don't block UI - let it show immediately
-    if (mounted) {
-      setState(() {
-        _validationError = null;
-      });
-    }
-
+    // CRITICAL: Don't clear error until data is successfully loaded
+    // This prevents calendar from showing before validation completes
     try {
       // MODE 1: Slug-based URL resolution (clean URLs for standalone pages)
       // URL format: https://jasko-rab.bookbed.io/apartman-6
@@ -1530,6 +1525,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         if (!mounted) return;
 
+        // Only clear error after successful data load
         setState(() {
           _validationError = null;
         });
@@ -1593,6 +1589,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // HIGH: Check mounted before setState
       if (!mounted) return;
 
+      // Only clear error after successful data load
       setState(() {
         _validationError = null;
       });

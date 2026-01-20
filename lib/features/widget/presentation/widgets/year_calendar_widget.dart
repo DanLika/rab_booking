@@ -281,7 +281,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
   ) {
     final screenWidth = MediaQuery.maybeOf(context)?.size.width ?? 400.0;
     final isDesktop = screenWidth >= 1024;
-    final padding = isDesktop ? SpacingTokens.l : SpacingTokens.m;
+    final bottomPadding = isDesktop ? SpacingTokens.l : SpacingTokens.m;
 
     // Use LayoutBuilder to get actual available width for accurate cell sizing
     return LayoutBuilder(
@@ -292,11 +292,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                 constraints.maxWidth != double.infinity
             ? constraints.maxWidth
             : 1200.0; // Fallback to reasonable default
-        // Calculate available width after padding
-        final availableWidth = (maxWidth - (padding * 2)).clamp(
-          300.0,
-          maxWidth,
-        );
+        // No horizontal padding subtraction - parent container provides horizontal padding
+        final availableWidth = maxWidth.clamp(300.0, maxWidth);
         // Get cell size that fits within available width
         final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
           availableWidth,
@@ -307,11 +304,8 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         return Center(
           child: Padding(
             // No top padding - spacing handled by CalendarCompactLegend margin
-            padding: EdgeInsets.only(
-              left: padding,
-              right: padding,
-              bottom: padding,
-            ),
+            // No horizontal padding - parent container (booking_widget_screen) provides horizontal padding
+            padding: EdgeInsets.only(bottom: bottomPadding),
             child: Stack(
               children: [
                 // Year calendar grid - sized to fit within container

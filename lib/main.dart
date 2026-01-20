@@ -17,6 +17,7 @@ import 'core/error_handling/error_boundary.dart';
 import 'core/providers/enhanced_auth_provider.dart';
 import 'core/providers/language_provider.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/providers/version_check_provider.dart';
 import 'core/services/logging_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/web_utils.dart';
@@ -665,7 +666,9 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
       routerConfig: router,
       builder: (context, child) {
         final wrappedChild = ErrorBoundary(
-          child: GlobalNavigationOverlay(child: child!),
+          child: VersionCheckWrapper(
+            child: GlobalNavigationOverlay(child: child!),
+          ),
         );
         return Stack(children: [wrappedChild, const OfflineIndicator()]);
       },

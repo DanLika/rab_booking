@@ -782,24 +782,36 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    await user.reload();
-    final refreshedUser = _auth.currentUser;
+    try {
+      await user.reload();
+      final refreshedUser = _auth.currentUser;
 
-    if (refreshedUser != null && refreshedUser.emailVerified) {
-      // Force refresh the auth token to ensure Firestore has updated credentials
-      // This fixes permission-denied error when updating emailVerified field
-      await refreshedUser.getIdToken(true); // true = force refresh
+      if (refreshedUser != null && refreshedUser.emailVerified) {
+        // Force refresh the auth token to ensure Firestore has updated credentials
+        // This fixes permission-denied error when updating emailVerified field
+        await refreshedUser.getIdToken(true); // true = force refresh
 
-      // Update Firestore
-      await _firestore.collection('users').doc(user.uid).update({
-        'emailVerified': true,
-      });
+        // Update Firestore
+        await _firestore.collection('users').doc(user.uid).update({
+          'emailVerified': true,
+        });
 
-      // Log verification success
-      await _security.logEmailVerification(user.uid);
+        // Log verification success
+        await _security.logEmailVerification(user.uid);
 
-      // Reload profile
-      await _loadUserProfile(refreshedUser);
+        // Reload profile
+        await _loadUserProfile(refreshedUser);
+      }
+    } catch (e, stackTrace) {
+      // Network errors during reload are non-critical - user can retry
+      // Don't crash the app, just log the error
+      await LoggingService.logError(
+        'EnhancedAuthProvider: Failed to refresh email verification status',
+        e,
+        stackTrace,
+      );
+      // Rethrow so caller knows refresh failed (for UI feedback)
+      rethrow;
     }
   }
 

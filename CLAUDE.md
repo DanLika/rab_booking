@@ -656,7 +656,21 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2026-01-19 | **Version**: 6.31
+**Last Updated**: 2026-01-20 | **Version**: 6.32
+
+**Changelog 6.32**: Email Verification Network Error Fix (v1.0.2+6):
+- **CRASH FIX**: Network errors during email verification no longer crash the app
+- **Problem**: When checking email verification status, network failures (timeout, no connection) caused app crash
+- **Root Cause**: `User.reload()` in `refreshEmailVerificationStatus()` had no error handling
+- **Fix** (`enhanced_auth_provider.dart:781-806`):
+  - Added try-catch around `user.reload()` to catch and log network errors
+  - Error is rethrown for caller to handle gracefully
+- **Fix** (`email_verification_screen.dart:55-75`):
+  - Added try-catch around `_checkVerificationStatus()` call
+  - Shows user-friendly error message: "Network error. Please check your internet connection"
+  - User can retry manually or when app resumes
+- **Result**: Graceful degradation instead of crash, better UX for poor network conditions
+- **Version**: Bumped to 1.0.2+6 for Google Play release
 
 **Changelog 6.31**: Admin Dashboard Documentation & Fixes:
 - **Admin Dashboard Section Added** to CLAUDE.md:

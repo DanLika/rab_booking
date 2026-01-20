@@ -53,15 +53,26 @@ class _EmailVerificationScreenState
   }
 
   Future<void> _checkVerificationStatus() async {
-    await ref
-        .read(enhancedAuthProvider.notifier)
-        .refreshEmailVerificationStatus();
+    try {
+      await ref
+          .read(enhancedAuthProvider.notifier)
+          .refreshEmailVerificationStatus();
 
-    final authState = ref.read(enhancedAuthProvider);
-    if (!authState.requiresEmailVerification && mounted) {
-      // Email verified! Navigate to owner overview
-      // Router will handle onboarding redirect if needed
-      context.go(OwnerRoutes.overview);
+      final authState = ref.read(enhancedAuthProvider);
+      if (!authState.requiresEmailVerification && mounted) {
+        // Email verified! Navigate to owner overview
+        // Router will handle onboarding redirect if needed
+        context.go(OwnerRoutes.overview);
+      }
+    } catch (e) {
+      // Network error during verification check - show user-friendly message
+      // Don't crash, user can try again manually
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          AppLocalizations.of(context).errorNetworkFailed,
+        );
+      }
     }
   }
 

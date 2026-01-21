@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/presentation/widgets/common/contact/contact_item_widget.dart';
@@ -94,8 +95,10 @@ void main() {
         ),
       );
 
-      final textWidget = tester.widget<Text>(find.text('test@example.com'));
-      expect(textWidget.style?.decoration, TextDecoration.underline);
+      final autoSizeText = tester.widget<AutoSizeText>(
+        find.byType(AutoSizeText),
+      );
+      expect(autoSizeText.style?.decoration, TextDecoration.underline);
     });
   });
 }

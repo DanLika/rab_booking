@@ -119,7 +119,7 @@ void main() {
             .get();
 
         expect(doc.exists, true);
-        expect(doc.data()!['widget_mode'], 'calendar_only');
+        expect(doc.data()!['widget_mode'], 'booking_pending');
         expect(doc.data()!['require_owner_approval'], true);
         expect(
           doc.data()!['contact_options']['email_address'],

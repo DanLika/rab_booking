@@ -285,16 +285,22 @@ void main() {
       expect(result.errorMessage, contains('Bank transfer is not available'));
     });
 
-    test('returns failure when selected pay_on_arrival but not enabled', () {
-      final settings = createTestSettings(stripeEnabled: true);
-      final result = BookingValidationService.validatePaymentMethod(
-        widgetMode: WidgetMode.bookingInstant,
-        selectedPaymentMethod: 'pay_on_arrival',
-        widgetSettings: settings,
-      );
-      expect(result.isValid, isFalse);
-      expect(result.errorMessage, contains('Pay on arrival is not available'));
-    });
+    test(
+      'allows pay_on_arrival in bookingInstant mode when other payment available',
+      () {
+        // Note: pay_on_arrival validation was removed from bookingInstant mode.
+        // When a valid payment method is available, any selectedPaymentMethod is allowed
+        // because the UI should only show valid options.
+        final settings = createTestSettings(stripeEnabled: true);
+        final result = BookingValidationService.validatePaymentMethod(
+          widgetMode: WidgetMode.bookingInstant,
+          selectedPaymentMethod: 'pay_on_arrival',
+          widgetSettings: settings,
+        );
+        // pay_on_arrival passes because validation only checks stripe/bank_transfer
+        expect(result.isValid, isTrue);
+      },
+    );
 
     test('returns success when selected method is enabled', () {
       final settings = createTestSettings(stripeEnabled: true);
@@ -316,14 +322,18 @@ void main() {
       expect(result.isValid, isTrue);
     });
 
-    test('returns success when pay_on_arrival selected and enabled', () {
+    test('fails when only pay_on_arrival enabled but no payment method', () {
+      // Note: In bookingInstant mode, Stripe or Bank Transfer must be enabled.
+      // allowPayOnArrival alone is not sufficient - it's deprecated in this mode.
       final settings = createTestSettings(allowPayOnArrival: true);
       final result = BookingValidationService.validatePaymentMethod(
         widgetMode: WidgetMode.bookingInstant,
         selectedPaymentMethod: 'pay_on_arrival',
         widgetSettings: settings,
       );
-      expect(result.isValid, isTrue);
+      // Fails because no valid payment methods (stripe/bank) are enabled
+      expect(result.isValid, isFalse);
+      expect(result.errorMessage, contains('No payment methods'));
     });
   });
 

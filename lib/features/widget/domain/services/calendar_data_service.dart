@@ -21,6 +21,12 @@ class CalendarDataParams {
   final double? weekendBasePrice;
   final List<int>? weekendDays;
 
+  /// Global default: minimum days in advance required for booking (0 = same-day allowed)
+  final int minDaysAdvance;
+
+  /// Global default: maximum days in advance allowed for booking
+  final int maxDaysAdvance;
+
   const CalendarDataParams({
     required this.unitId,
     required this.startDate,
@@ -29,6 +35,8 @@ class CalendarDataParams {
     required this.basePrice,
     this.weekendBasePrice,
     this.weekendDays,
+    this.minDaysAdvance = 0,
+    this.maxDaysAdvance = 365,
   });
 }
 
@@ -110,6 +118,8 @@ class CalendarDataService {
       basePrice: params.basePrice,
       weekendBasePrice: params.weekendBasePrice,
       weekendDays: effectiveWeekendDays,
+      defaultMinDaysAdvance: params.minDaysAdvance,
+      defaultMaxDaysAdvance: params.maxDaysAdvance,
     );
 
     // Mark booked dates from internal bookings
@@ -263,6 +273,8 @@ class CalendarDataService {
     required double basePrice,
     double? weekendBasePrice,
     required List<int> weekendDays,
+    required int defaultMinDaysAdvance,
+    required int defaultMaxDaysAdvance,
   }) {
     DateTime current = DateTime.utc(startDate.year, startDate.month);
     final lastDay = DateTime.utc(endDate.year, endDate.month + 1, 0);
@@ -297,8 +309,9 @@ class CalendarDataService {
         price: effectivePrice,
         blockCheckIn: priceData?.blockCheckIn ?? false,
         blockCheckOut: priceData?.blockCheckOut ?? false,
-        minDaysAdvance: priceData?.minDaysAdvance,
-        maxDaysAdvance: priceData?.maxDaysAdvance,
+        // Use per-day value if set, otherwise fallback to global default
+        minDaysAdvance: priceData?.minDaysAdvance ?? defaultMinDaysAdvance,
+        maxDaysAdvance: priceData?.maxDaysAdvance ?? defaultMaxDaysAdvance,
         minNightsOnArrival: priceData?.minNightsOnArrival,
         maxNightsOnArrival: priceData?.maxNightsOnArrival,
       );

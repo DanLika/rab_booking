@@ -1182,108 +1182,60 @@ class _PriceListCalendarWidgetState
                                   ),
                                 ),
                                 children: [
-                                  // Min/Max nights row
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          controller: minNightsController,
-                                          decoration:
-                                              InputDecorationHelper.buildDecoration(
-                                                labelText: AppLocalizations.of(
-                                                  context,
-                                                ).priceCalendarMinNights,
-                                                hintText: AppLocalizations.of(
-                                                  context,
-                                                ).priceCalendarHintExample('2'),
-                                                isMobile: isMobile,
-                                                context: context,
-                                              ),
-                                          keyboardType: TextInputType.number,
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter
-                                                .digitsOnly,
-                                          ],
-                                        ),
-                                      ),
-                                      SizedBox(width: isMobile ? 8 : 12),
-                                      Expanded(
-                                        child: TextField(
-                                          controller: maxNightsController,
-                                          decoration:
-                                              InputDecorationHelper.buildDecoration(
-                                                labelText: AppLocalizations.of(
-                                                  context,
-                                                ).priceCalendarMaxNights,
-                                                hintText:
-                                                    AppLocalizations.of(
-                                                      context,
-                                                    ).priceCalendarHintExample(
-                                                      '14',
-                                                    ),
-                                                isMobile: isMobile,
-                                                context: context,
-                                              ),
-                                          keyboardType: TextInputType.number,
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter
-                                                .digitsOnly,
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                  // Min nights field with explanation
+                                  _buildAdvancedOptionField(
+                                    controller: minNightsController,
+                                    label: AppLocalizations.of(
+                                      context,
+                                    ).priceCalendarMinNights,
+                                    hint: AppLocalizations.of(
+                                      context,
+                                    ).priceCalendarMinNightsHint,
+                                    example: '2',
+                                    isMobile: isMobile,
+                                    theme: theme,
                                   ),
                                   SizedBox(height: isMobile ? 12 : 16),
-                                  // Min/Max days advance booking row
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          controller: minDaysAdvanceController,
-                                          decoration:
-                                              InputDecorationHelper.buildDecoration(
-                                                labelText: AppLocalizations.of(
-                                                  context,
-                                                ).priceCalendarMinDaysAdvance,
-                                                hintText: AppLocalizations.of(
-                                                  context,
-                                                ).priceCalendarHintExample('1'),
-                                                isMobile: isMobile,
-                                                context: context,
-                                              ),
-                                          keyboardType: TextInputType.number,
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter
-                                                .digitsOnly,
-                                          ],
-                                        ),
-                                      ),
-                                      SizedBox(width: isMobile ? 8 : 12),
-                                      Expanded(
-                                        child: TextField(
-                                          controller: maxDaysAdvanceController,
-                                          decoration:
-                                              InputDecorationHelper.buildDecoration(
-                                                labelText: AppLocalizations.of(
-                                                  context,
-                                                ).priceCalendarMaxDaysAdvance,
-                                                hintText:
-                                                    AppLocalizations.of(
-                                                      context,
-                                                    ).priceCalendarHintExample(
-                                                      '365',
-                                                    ),
-                                                isMobile: isMobile,
-                                                context: context,
-                                              ),
-                                          keyboardType: TextInputType.number,
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter
-                                                .digitsOnly,
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                  // Max nights field with explanation
+                                  _buildAdvancedOptionField(
+                                    controller: maxNightsController,
+                                    label: AppLocalizations.of(
+                                      context,
+                                    ).priceCalendarMaxNights,
+                                    hint: AppLocalizations.of(
+                                      context,
+                                    ).priceCalendarMaxNightsHint,
+                                    example: '14',
+                                    isMobile: isMobile,
+                                    theme: theme,
+                                  ),
+                                  SizedBox(height: isMobile ? 12 : 16),
+                                  // Min days advance field with explanation
+                                  _buildAdvancedOptionField(
+                                    controller: minDaysAdvanceController,
+                                    label: AppLocalizations.of(
+                                      context,
+                                    ).priceCalendarMinDaysAdvance,
+                                    hint: AppLocalizations.of(
+                                      context,
+                                    ).priceCalendarMinDaysAdvanceHint,
+                                    example: '1',
+                                    isMobile: isMobile,
+                                    theme: theme,
+                                  ),
+                                  SizedBox(height: isMobile ? 12 : 16),
+                                  // Max days advance field with explanation
+                                  _buildAdvancedOptionField(
+                                    controller: maxDaysAdvanceController,
+                                    label: AppLocalizations.of(
+                                      context,
+                                    ).priceCalendarMaxDaysAdvance,
+                                    hint: AppLocalizations.of(
+                                      context,
+                                    ).priceCalendarMaxDaysAdvanceHint,
+                                    example: '365',
+                                    isMobile: isMobile,
+                                    theme: theme,
                                   ),
                                 ],
                               ),
@@ -2853,6 +2805,43 @@ class _PriceListCalendarWidgetState
           );
         },
       ),
+    );
+  }
+
+  /// Build an advanced option field with label, hint explanation, and input
+  Widget _buildAdvancedOptionField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required String example,
+    required bool isMobile,
+    required ThemeData theme,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          decoration: InputDecorationHelper.buildDecoration(
+            labelText: label,
+            hintText: AppLocalizations.of(
+              context,
+            ).priceCalendarHintExample(example),
+            isMobile: isMobile,
+            context: context,
+          ),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          hint,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
     );
   }
 

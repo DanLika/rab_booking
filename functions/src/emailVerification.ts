@@ -192,6 +192,15 @@ export const sendEmailVerificationCode = onCall(
         message: "Verification code sent successfully",
       };
     } catch (error: any) {
+      // RATE LIMIT: Expected behavior - don't log to Sentry
+      // 'resource-exhausted' is thrown when user tries to resend too quickly
+      // This is normal UX flow, not an error condition
+      if (error instanceof HttpsError && error.code === "resource-exhausted") {
+        // Log locally but NOT to Sentry (logOperation instead of logError)
+        logOperation(`Rate limit hit for verification (expected): ${error.message}`);
+        throw error;
+      }
+
       logError("Error sending verification code", error);
 
       // Re-throw HttpsError as-is

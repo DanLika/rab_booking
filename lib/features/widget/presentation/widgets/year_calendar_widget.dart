@@ -89,15 +89,19 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     // Defensive null check: handle loading/error states gracefully
     final widgetCtx = widgetCtxAsync.valueOrNull;
     final minNights = widgetCtx?.unit.minStayNights ?? 1;
+    final minDaysAdvance = widgetCtx?.settings.minDaysAdvance ?? 0;
+    final maxDaysAdvance = widgetCtx?.settings.maxDaysAdvance ?? 365;
 
     // Use realtime stream provider for automatic updates when bookings change
-    // OPTIMIZED: Pass minNights to eliminate redundant widgetSettings stream fetch
+    // OPTIMIZED: Pass settings to eliminate redundant widgetSettings stream fetch
     final calendarData = ref.watch(
       realtimeYearCalendarProvider(
         widget.propertyId,
         widget.unitId,
         _currentYear,
         minNights,
+        minDaysAdvance,
+        maxDaysAdvance,
       ),
     );
 
@@ -1097,14 +1101,15 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           ),
           // Price (only if cell is large enough)
           if (showPrice)
+            // Price (better visibility in dark mode - use textPrimary)
             Text(
               '€${displayPrice.toStringAsFixed(0)}',
               style: TextStyle(
                 fontSize: (cellSize * 0.28).clamp(6.0, 10.0),
                 fontWeight: FontWeight.w500,
                 color: isPast
-                    ? colors.textSecondary.withValues(alpha: 0.7)
-                    : colors.textSecondary,
+                    ? colors.textPrimary.withValues(alpha: 0.5)
+                    : colors.textPrimary.withValues(alpha: 0.85),
               ),
             ),
         ],

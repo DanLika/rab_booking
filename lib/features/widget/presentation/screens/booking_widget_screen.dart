@@ -1522,9 +1522,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
         // PRE-WARM widgetContextProvider cache so calendar has immediate access
         // Without this, calendar's minNights defaults to 1 and badge doesn't show
-        // ignore: unused_result
-        ref.read(
-          widgetContextProvider((propertyId: _propertyId!, unitId: _unitId)),
+        // FIX: Must await .future to ensure cache is populated before calendar renders
+        // Otherwise ref.watch() in calendar returns AsyncLoading and minNights defaults to 1
+        await ref.read(
+          widgetContextProvider((
+            propertyId: _propertyId!,
+            unitId: _unitId,
+          )).future,
         );
 
         // Set default payment method based on what's enabled
@@ -1726,6 +1730,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         _hasInteractedWithBookingFlow = formData.hasInteractedWithBookingFlow;
         // Bug Fix: Don't auto-show guest form from cache
         // User should explicitly select dates or click to open booking flow
+
+        // Bug Fix: Clamp restored guest count to maxGuests
+        // Saved form data may have higher guest count if:
+        // 1. User previously booked a property with higher capacity
+        // 2. Owner changed the maxGuests setting since last visit
+        final maxGuests = _unit?.maxGuests ?? 0;
+        if (maxGuests > 0) {
+          final totalGuests = _adults + _children;
+          if (totalGuests > maxGuests) {
+            // Prioritize adults, reduce children first
+            _children = 0;
+            _adults = maxGuests.clamp(1, maxGuests);
+          }
+        }
       });
 
       // Validate restored payment method - it may be invalid if widget mode changed
@@ -1979,7 +1997,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _sendIframeHeight();
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      // In iframe: false (host site handles keyboard resize)
+      // In standalone: true (browser handles keyboard resize, prevents black space)
+      resizeToAvoidBottomInset: !isInIframe,
       backgroundColor: minimalistColors.backgroundPrimary,
       body: SafeArea(
         bottom:

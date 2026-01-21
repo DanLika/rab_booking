@@ -42,7 +42,7 @@ IBookingCalendarRepository bookingCalendarRepository(Ref ref) {
 ///   booking changes occur in quick succession.
 /// - keepAlive: true prevents re-subscription when switching between
 ///   Year and Month views (stream persists during session).
-/// - Accepts minNights parameter to eliminate redundant widgetSettings fetch.
+/// - Accepts settings parameters to eliminate redundant widgetSettings fetch.
 ///
 /// Query savings: ~60% reduction when switching views frequently.
 /// Stream reduction: 4 → 3 streams (25% reduction per provider).
@@ -53,6 +53,8 @@ Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
   String unitId,
   int year,
   int minNights,
+  int minDaysAdvance,
+  int maxDaysAdvance,
 ) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
   return repository
@@ -61,6 +63,8 @@ Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
         unitId: unitId,
         year: year,
         minNights: minNights,
+        minDaysAdvance: minDaysAdvance,
+        maxDaysAdvance: maxDaysAdvance,
       )
       .debounceTime(const Duration(milliseconds: _calendarDebounceMs))
       .map(
@@ -77,7 +81,7 @@ Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
 ///   booking changes occur in quick succession.
 /// - keepAlive: true prevents re-subscription when switching between
 ///   Year and Month views (stream persists during session).
-/// - Accepts minNights parameter to eliminate redundant widgetSettings fetch.
+/// - Accepts settings parameters to eliminate redundant widgetSettings fetch.
 ///
 /// Query savings: ~60% reduction when switching views frequently.
 /// Stream reduction: 4 → 3 streams (25% reduction per provider).
@@ -89,6 +93,8 @@ Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
   int year,
   int month,
   int minNights,
+  int minDaysAdvance,
+  int maxDaysAdvance,
 ) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
   return repository
@@ -98,6 +104,8 @@ Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
         year: year,
         month: month,
         minNights: minNights,
+        minDaysAdvance: minDaysAdvance,
+        maxDaysAdvance: maxDaysAdvance,
       )
       .debounceTime(const Duration(milliseconds: _calendarDebounceMs))
       .map(

@@ -7746,6 +7746,42 @@ abstract class AppLocalizations {
   /// **'In this mode, guests can create a reservation but CANNOT pay online. You arrange payment privately after confirming the reservation.'**
   String get widgetSettingsBookingWithoutPaymentDesc;
 
+  /// No description provided for @widgetSettingsAdvanceBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance Booking'**
+  String get widgetSettingsAdvanceBooking;
+
+  /// No description provided for @widgetSettingsAdvanceBookingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Control how far in advance guests can book'**
+  String get widgetSettingsAdvanceBookingDesc;
+
+  /// No description provided for @widgetSettingsMinDaysAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum days in advance'**
+  String get widgetSettingsMinDaysAdvance;
+
+  /// No description provided for @widgetSettingsMinDaysAdvanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'0 = same-day booking allowed'**
+  String get widgetSettingsMinDaysAdvanceHint;
+
+  /// No description provided for @widgetSettingsMaxDaysAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum days in advance'**
+  String get widgetSettingsMaxDaysAdvance;
+
+  /// No description provided for @widgetSettingsMaxDaysAdvanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'365 = up to 1 year ahead'**
+  String get widgetSettingsMaxDaysAdvanceHint;
+
   /// No description provided for @bookingCreateTitle.
   ///
   /// In en, this message translates to:
@@ -10878,11 +10914,23 @@ abstract class AppLocalizations {
   /// **'Min. nights'**
   String get priceCalendarMinNights;
 
+  /// No description provided for @priceCalendarMinNightsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum nights required for check-in on this date'**
+  String get priceCalendarMinNightsHint;
+
   /// No description provided for @priceCalendarMaxNights.
   ///
   /// In en, this message translates to:
   /// **'Max. nights'**
   String get priceCalendarMaxNights;
+
+  /// No description provided for @priceCalendarMaxNightsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum nights allowed for check-in on this date'**
+  String get priceCalendarMaxNightsHint;
 
   /// No description provided for @priceCalendarMinDaysAdvance.
   ///
@@ -10890,11 +10938,23 @@ abstract class AppLocalizations {
   /// **'Min. days advance'**
   String get priceCalendarMinDaysAdvance;
 
+  /// No description provided for @priceCalendarMinDaysAdvanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking must be made at least this many days before check-in'**
+  String get priceCalendarMinDaysAdvanceHint;
+
   /// No description provided for @priceCalendarMaxDaysAdvance.
   ///
   /// In en, this message translates to:
   /// **'Max. days advance'**
   String get priceCalendarMaxDaysAdvance;
+
+  /// No description provided for @priceCalendarMaxDaysAdvanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How far in advance guests can book for check-in on this date'**
+  String get priceCalendarMaxDaysAdvanceHint;
 
   /// No description provided for @priceCalendarDeleteConfirmTitle.
   ///

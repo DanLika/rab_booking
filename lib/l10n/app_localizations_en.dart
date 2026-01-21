@@ -4151,6 +4151,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'In this mode, guests can create a reservation but CANNOT pay online. You arrange payment privately after confirming the reservation.';
 
   @override
+  String get widgetSettingsAdvanceBooking => 'Advance Booking';
+
+  @override
+  String get widgetSettingsAdvanceBookingDesc =>
+      'Control how far in advance guests can book';
+
+  @override
+  String get widgetSettingsMinDaysAdvance => 'Minimum days in advance';
+
+  @override
+  String get widgetSettingsMinDaysAdvanceHint => '0 = same-day booking allowed';
+
+  @override
+  String get widgetSettingsMaxDaysAdvance => 'Maximum days in advance';
+
+  @override
+  String get widgetSettingsMaxDaysAdvanceHint => '365 = up to 1 year ahead';
+
+  @override
   String get bookingCreateTitle => 'New Booking';
 
   @override
@@ -5892,13 +5911,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get priceCalendarMinNights => 'Min. nights';
 
   @override
+  String get priceCalendarMinNightsHint =>
+      'Minimum nights required for check-in on this date';
+
+  @override
   String get priceCalendarMaxNights => 'Max. nights';
+
+  @override
+  String get priceCalendarMaxNightsHint =>
+      'Maximum nights allowed for check-in on this date';
 
   @override
   String get priceCalendarMinDaysAdvance => 'Min. days advance';
 
   @override
+  String get priceCalendarMinDaysAdvanceHint =>
+      'Booking must be made at least this many days before check-in';
+
+  @override
   String get priceCalendarMaxDaysAdvance => 'Max. days advance';
+
+  @override
+  String get priceCalendarMaxDaysAdvanceHint =>
+      'How far in advance guests can book for check-in on this date';
 
   @override
   String get priceCalendarDeleteConfirmTitle => 'Delete confirmation';

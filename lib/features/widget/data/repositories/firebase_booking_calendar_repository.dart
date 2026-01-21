@@ -169,11 +169,15 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           }
         }
 
-        // Parse widget settings to get minNights
+        // Parse widget settings to get booking restrictions
         int minNights = 1; // Default
+        int minDaysAdvance = 0; // Default
+        int maxDaysAdvance = 365; // Default
         if (widgetSettingsSnapshot.exists) {
           final settingsData = widgetSettingsSnapshot.data();
           minNights = settingsData?['min_nights'] ?? 1;
+          minDaysAdvance = settingsData?['min_days_advance'] ?? 0;
+          maxDaysAdvance = settingsData?['max_days_advance'] ?? 365;
         }
 
         // Build calendar with both bookings and iCal events
@@ -183,6 +187,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           year,
           minNights,
           icalEvents,
+          minDaysAdvance,
+          maxDaysAdvance,
         );
       },
     ).onErrorReturnWith((error, stackTrace) {
@@ -329,11 +335,15 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           }
         }
 
-        // Parse widget settings to get minNights
+        // Parse widget settings to get booking restrictions
         int minNights = 1; // Default
+        int minDaysAdvance = 0; // Default
+        int maxDaysAdvance = 365; // Default
         if (widgetSettingsSnapshot.exists) {
           final settingsData = widgetSettingsSnapshot.data();
           minNights = settingsData?['min_nights'] ?? 1;
+          minDaysAdvance = settingsData?['min_days_advance'] ?? 0;
+          maxDaysAdvance = settingsData?['max_days_advance'] ?? 365;
         }
 
         // Build calendar with bookings AND iCal events
@@ -344,6 +354,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           month,
           minNights,
           icalEvents,
+          minDaysAdvance,
+          maxDaysAdvance,
         );
       },
     ).onErrorReturnWith((error, stackTrace) {
@@ -359,9 +371,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     });
   }
 
-  /// OPTIMIZED: Year calendar with minNights passed as parameter.
+  /// OPTIMIZED: Year calendar with settings passed as parameters.
   ///
-  /// This eliminates the widgetSettingsStream since minNights is already
+  /// This eliminates the widgetSettingsStream since settings are already
   /// available from widgetContextProvider (cached with keepAlive: true).
   ///
   /// Stream reduction: 4 → 3 streams (bookings, prices, iCal)
@@ -371,6 +383,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     required String unitId,
     required int year,
     required int minNights,
+    int minDaysAdvance = 0,
+    int maxDaysAdvance = 365,
   }) {
     // Bug #65 Fix: Use UTC for DST-safe date handling
     final startDate = DateTime.utc(year);
@@ -468,13 +482,15 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         }
       }
 
-      // Build calendar using passed minNights (no fetch needed!)
+      // Build calendar using passed settings (no fetch needed!)
       return _buildYearCalendarMap(
         bookings,
         priceMap,
         year,
         minNights,
         icalEvents,
+        minDaysAdvance,
+        maxDaysAdvance,
       );
     }).onErrorReturnWith((error, stackTrace) {
       LoggingService.logError(
@@ -486,9 +502,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     });
   }
 
-  /// OPTIMIZED: Month calendar with minNights passed as parameter.
+  /// OPTIMIZED: Month calendar with settings passed as parameters.
   ///
-  /// This eliminates the widgetSettingsStream since minNights is already
+  /// This eliminates the widgetSettingsStream since settings are already
   /// available from widgetContextProvider (cached with keepAlive: true).
   ///
   /// Stream reduction: 4 → 3 streams (bookings, prices, iCal)
@@ -499,6 +515,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     required int year,
     required int month,
     required int minNights,
+    int minDaysAdvance = 0,
+    int maxDaysAdvance = 365,
   }) {
     // Bug #65 Fix: Use UTC for DST-safe date handling
     final startDate = DateTime.utc(year, month);
@@ -599,7 +617,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         }
       }
 
-      // Build calendar using passed minNights (no fetch needed!)
+      // Build calendar using passed settings (no fetch needed!)
       return _buildCalendarMap(
         bookings,
         priceMap,
@@ -607,6 +625,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         month,
         minNights,
         icalEvents,
+        minDaysAdvance,
+        maxDaysAdvance,
       );
     }).onErrorReturnWith((error, stackTrace) {
       LoggingService.logError(
@@ -627,6 +647,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     int month,
     int minNights, [
     List<Map<String, dynamic>>? icalEvents,
+    int defaultMinDaysAdvance = 0,
+    int defaultMaxDaysAdvance = 365,
   ]) {
     final Map<DateTime, CalendarDateInfo> calendar = {};
     final daysInMonth = DateTime.utc(year, month + 1, 0).day;
@@ -647,8 +669,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         // Include restriction fields from daily_prices
         blockCheckIn: priceModel?.blockCheckIn ?? false,
         blockCheckOut: priceModel?.blockCheckOut ?? false,
-        minDaysAdvance: priceModel?.minDaysAdvance,
-        maxDaysAdvance: priceModel?.maxDaysAdvance,
+        // Use per-day value if set, otherwise fallback to global default
+        minDaysAdvance: priceModel?.minDaysAdvance ?? defaultMinDaysAdvance,
+        maxDaysAdvance: priceModel?.maxDaysAdvance ?? defaultMaxDaysAdvance,
         minNightsOnArrival: priceModel?.minNightsOnArrival,
         maxNightsOnArrival: priceModel?.maxNightsOnArrival,
       );
@@ -882,6 +905,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     int year,
     int minNights, [
     List<Map<String, dynamic>>? icalEvents,
+    int defaultMinDaysAdvance = 0,
+    int defaultMaxDaysAdvance = 365,
   ]) {
     final Map<DateTime, CalendarDateInfo> calendar = {};
 
@@ -904,8 +929,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           // Include restriction fields from daily_prices
           blockCheckIn: priceModel?.blockCheckIn ?? false,
           blockCheckOut: priceModel?.blockCheckOut ?? false,
-          minDaysAdvance: priceModel?.minDaysAdvance,
-          maxDaysAdvance: priceModel?.maxDaysAdvance,
+          // Use per-day value if set, otherwise fallback to global default
+          minDaysAdvance: priceModel?.minDaysAdvance ?? defaultMinDaysAdvance,
+          maxDaysAdvance: priceModel?.maxDaysAdvance ?? defaultMaxDaysAdvance,
           minNightsOnArrival: priceModel?.minNightsOnArrival,
           maxNightsOnArrival: priceModel?.maxNightsOnArrival,
         );

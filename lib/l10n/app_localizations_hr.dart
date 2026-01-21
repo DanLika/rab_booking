@@ -4176,6 +4176,27 @@ class AppLocalizationsHr extends AppLocalizations {
       'U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.';
 
   @override
+  String get widgetSettingsAdvanceBooking => 'Rezerviranje Unaprijed';
+
+  @override
+  String get widgetSettingsAdvanceBookingDesc =>
+      'Kontrolirajte koliko unaprijed gosti mogu rezervirati';
+
+  @override
+  String get widgetSettingsMinDaysAdvance => 'Minimalno dana unaprijed';
+
+  @override
+  String get widgetSettingsMinDaysAdvanceHint =>
+      '0 = rezervacija isti dan dopuštena';
+
+  @override
+  String get widgetSettingsMaxDaysAdvance => 'Maksimalno dana unaprijed';
+
+  @override
+  String get widgetSettingsMaxDaysAdvanceHint =>
+      '365 = do godinu dana unaprijed';
+
+  @override
   String get bookingCreateTitle => 'Nova rezervacija';
 
   @override
@@ -5930,13 +5951,29 @@ class AppLocalizationsHr extends AppLocalizations {
   String get priceCalendarMinNights => 'Min. noći';
 
   @override
+  String get priceCalendarMinNightsHint =>
+      'Minimalni broj noćenja za prijavu ovog datuma';
+
+  @override
   String get priceCalendarMaxNights => 'Max. noći';
+
+  @override
+  String get priceCalendarMaxNightsHint =>
+      'Maksimalni broj noćenja za prijavu ovog datuma';
 
   @override
   String get priceCalendarMinDaysAdvance => 'Min. dana unaprijed';
 
   @override
+  String get priceCalendarMinDaysAdvanceHint =>
+      'Rezervacija mora biti napravljena najmanje ovoliko dana prije prijave';
+
+  @override
   String get priceCalendarMaxDaysAdvance => 'Max. dana unaprijed';
+
+  @override
+  String get priceCalendarMaxDaysAdvanceHint =>
+      'Koliko unaprijed gosti mogu rezervirati za prijavu ovog datuma';
 
   @override
   String get priceCalendarDeleteConfirmTitle => 'Potvrda brisanja';

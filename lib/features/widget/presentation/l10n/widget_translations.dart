@@ -4263,6 +4263,21 @@ class WidgetTranslations {
     }
   }
 
+  /// Rate limit message when user tries to resend too quickly
+  String emailVerificationRateLimited(int seconds) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Molimo pričekajte $seconds sekundi prije ponovnog slanja';
+      case 'de':
+        return 'Bitte warten Sie $seconds Sekunden vor dem erneuten Senden';
+      case 'it':
+        return 'Per favore attendi $seconds secondi prima di inviare di nuovo';
+      case 'en':
+      default:
+        return 'Please wait $seconds seconds before requesting again';
+    }
+  }
+
   String get emailVerificationInvalidCode {
     switch (locale.languageCode) {
       case 'hr':

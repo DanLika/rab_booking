@@ -39,10 +39,10 @@ abstract class IBookingCalendarRepository {
     required int month,
   });
 
-  /// OPTIMIZED: Watch year calendar data with minNights passed as parameter.
+  /// OPTIMIZED: Watch year calendar data with settings passed as parameters.
   ///
   /// This eliminates the redundant widgetSettingsStream fetch since the caller
-  /// already has minNights from widgetContextProvider.
+  /// already has settings from widgetContextProvider.
   ///
   /// Query reduction: 4 streams → 3 streams (25% reduction per provider)
   Stream<Map<DateTime, CalendarDateInfo>> watchYearCalendarDataOptimized({
@@ -50,12 +50,14 @@ abstract class IBookingCalendarRepository {
     required String unitId,
     required int year,
     required int minNights,
+    int minDaysAdvance = 0,
+    int maxDaysAdvance = 365,
   });
 
-  /// OPTIMIZED: Watch month calendar data with minNights passed as parameter.
+  /// OPTIMIZED: Watch month calendar data with settings passed as parameters.
   ///
   /// This eliminates the redundant widgetSettingsStream fetch since the caller
-  /// already has minNights from widgetContextProvider.
+  /// already has settings from widgetContextProvider.
   ///
   /// Query reduction: 4 streams → 3 streams (25% reduction per provider)
   Stream<Map<DateTime, CalendarDateInfo>> watchCalendarDataOptimized({
@@ -64,6 +66,8 @@ abstract class IBookingCalendarRepository {
     required int year,
     required int month,
     required int minNights,
+    int minDaysAdvance = 0,
+    int maxDaysAdvance = 365,
   });
 
   /// Check if date range is available for booking

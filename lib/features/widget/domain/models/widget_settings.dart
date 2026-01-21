@@ -44,6 +44,11 @@ class WidgetSettings {
   final bool allowGuestCancellation;
   final int? cancellationDeadlineHours; // Hours before check-in
   final int minNights; // Minimum nights required for booking (default: 1)
+  final int? maxNights; // Maximum nights allowed for booking (null = no limit)
+  final int
+  minDaysAdvance; // Minimum days in advance required for booking (default: 0 = same-day allowed)
+  final int
+  maxDaysAdvance; // Maximum days in advance allowed for booking (default: 365)
   final List<int>
   weekendDays; // Days considered as weekend (1=Mon...7=Sun). Default: [5,6] (Fri, Sat nights)
 
@@ -79,6 +84,9 @@ class WidgetSettings {
     this.allowGuestCancellation = true,
     this.cancellationDeadlineHours = 48,
     this.minNights = 1,
+    this.maxNights,
+    this.minDaysAdvance = 0, // Default: same-day booking allowed
+    this.maxDaysAdvance = 365, // Default: can book up to 1 year in advance
     this.weekendDays = const [
       5,
       6,
@@ -147,6 +155,9 @@ class WidgetSettings {
       cancellationDeadlineHours:
           safeCastInt(data['cancellation_deadline_hours']) ?? 48,
       minNights: safeCastInt(data['min_nights']) ?? 1,
+      maxNights: safeCastInt(data['max_nights']),
+      minDaysAdvance: safeCastInt(data['min_days_advance']) ?? 0,
+      maxDaysAdvance: safeCastInt(data['max_days_advance']) ?? 365,
       weekendDays: weekendDaysList,
       contactOptions: ContactOptions.fromMap(contactOptionsData),
       emailConfig: EmailNotificationConfig.fromMap(emailConfigData),
@@ -181,6 +192,9 @@ class WidgetSettings {
       'allow_guest_cancellation': allowGuestCancellation,
       'cancellation_deadline_hours': cancellationDeadlineHours,
       'min_nights': minNights,
+      'max_nights': maxNights,
+      'min_days_advance': minDaysAdvance,
+      'max_days_advance': maxDaysAdvance,
       'weekend_days': weekendDays,
       'contact_options': contactOptions.toMap(),
       'email_config': emailConfig.toMap(),
@@ -232,9 +246,10 @@ class WidgetSettings {
     allowGuestCancellation: allowGuestCancellation,
     cancellationDeadlineHours: cancellationDeadlineHours,
     minNights: minNights,
-    // maxNights not stored in WidgetSettings yet - use default
+    maxNights: maxNights,
     weekendDays: weekendDays,
-    // minDaysAdvance, maxDaysAdvance not stored - use defaults
+    minDaysAdvance: minDaysAdvance,
+    maxDaysAdvance: maxDaysAdvance,
   );
 
   /// Create a copy with some fields replaced.
@@ -251,6 +266,9 @@ class WidgetSettings {
     bool? allowGuestCancellation,
     int? cancellationDeadlineHours,
     int? minNights,
+    int? maxNights,
+    int? minDaysAdvance,
+    int? maxDaysAdvance,
     List<int>? weekendDays,
     ContactOptions? contactOptions,
     EmailNotificationConfig? emailConfig,
@@ -276,6 +294,9 @@ class WidgetSettings {
       cancellationDeadlineHours:
           cancellationDeadlineHours ?? this.cancellationDeadlineHours,
       minNights: minNights ?? this.minNights,
+      maxNights: maxNights ?? this.maxNights,
+      minDaysAdvance: minDaysAdvance ?? this.minDaysAdvance,
+      maxDaysAdvance: maxDaysAdvance ?? this.maxDaysAdvance,
       weekendDays: weekendDays ?? this.weekendDays,
       contactOptions: contactOptions ?? this.contactOptions,
       emailConfig: emailConfig ?? this.emailConfig,

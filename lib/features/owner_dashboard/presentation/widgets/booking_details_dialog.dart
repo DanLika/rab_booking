@@ -688,7 +688,7 @@ class _ThemedDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Divider(
         height: 1,
         thickness: 1,
@@ -710,7 +710,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 5),
+      padding: const EdgeInsets.only(top: 4, bottom: 6),
       child: Row(
         children: [
           Container(
@@ -722,11 +722,16 @@ class _SectionHeader extends StatelessWidget {
             child: Icon(icon, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 10),
-          Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          Expanded(
+            child: AutoSizeText(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                height: 1.2,
+              ),
+              maxLines: 1,
+              minFontSize: 12,
+            ),
           ),
         ],
       ),
@@ -745,7 +750,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 1),
+      padding: const EdgeInsets.only(bottom: 4),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space
@@ -764,6 +769,7 @@ class _DetailRow extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.textColorSecondary,
                     fontSize: fontSize,
+                    height: 1.2,
                   ),
                   maxLines: 1,
                   minFontSize: 10,
@@ -777,6 +783,7 @@ class _DetailRow extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: valueColor,
                     fontSize: fontSize,
+                    height: 1.2,
                   ),
                   maxLines: 3,
                 ),
@@ -799,7 +806,7 @@ class _DetailRowWithWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 1),
+      padding: const EdgeInsets.only(bottom: 4),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space
@@ -817,6 +824,7 @@ class _DetailRowWithWidget extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.textColorSecondary,
                     fontSize: fontSize,
+                    height: 1.2,
                   ),
                   maxLines: 1,
                   minFontSize: 10,

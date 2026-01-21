@@ -139,14 +139,62 @@ class _EmailVerificationDialogState
       print(
         '[EmailVerification] FirebaseFunctionsException: ${e.code} - ${e.message}',
       );
-      await LoggingService.logError('[EmailVerification] Functions error', e);
 
-      if (mounted) {
-        setState(() {
-          _errorMessage =
-              e.message ??
-              WidgetTranslations.of(context, ref).emailVerificationFailedToSend;
-        });
+      // RATE LIMIT: Expected behavior - don't log to Sentry
+      // Error code 'resource-exhausted' means user is trying to resend too quickly
+      if (e.code == 'resource-exhausted') {
+        LoggingService.log(
+          '[EmailVerification] Rate limit hit (expected behavior): ${e.message}',
+        );
+
+        if (mounted) {
+          // Extract seconds from message if possible, default to 60
+          final secondsMatch = RegExp(
+            r'(\d+)\s*seconds?',
+          ).firstMatch(e.message ?? '');
+          final seconds = secondsMatch != null
+              ? int.tryParse(secondsMatch.group(1)!) ?? 60
+              : 60;
+
+          setState(() {
+            _errorMessage = WidgetTranslations.of(
+              context,
+              ref,
+            ).emailVerificationRateLimited(seconds);
+            // Start cooldown timer to show when user can try again
+            _resendCooldown = seconds;
+          });
+
+          // Start cooldown countdown
+          _cooldownTimer?.cancel();
+          _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+            if (mounted) {
+              setState(() {
+                _resendCooldown--;
+                if (_resendCooldown == 0) {
+                  timer.cancel();
+                  _errorMessage = null; // Clear error when cooldown ends
+                }
+              });
+            } else {
+              timer.cancel();
+            }
+          });
+        }
+      } else {
+        // Other errors - log to Sentry
+        await LoggingService.logError('[EmailVerification] Functions error', e);
+
+        if (mounted) {
+          setState(() {
+            _errorMessage =
+                e.message ??
+                WidgetTranslations.of(
+                  context,
+                  ref,
+                ).emailVerificationFailedToSend;
+          });
+        }
       }
     } catch (e, stackTrace) {
       // ignore: avoid_print

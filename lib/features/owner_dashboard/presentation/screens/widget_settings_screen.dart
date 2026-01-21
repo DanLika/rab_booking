@@ -65,6 +65,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
   bool _requireApproval = true;
   bool _allowCancellation = true;
   int _cancellationHours = 48;
+  int _minDaysAdvance = 0;
+  int _maxDaysAdvance = 365;
 
   // Contact Options
   bool _showPhone = true;
@@ -153,6 +155,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
       _requireApproval = settings.requireOwnerApproval;
       _allowCancellation = settings.allowGuestCancellation;
       _cancellationHours = settings.cancellationDeadlineHours ?? 48;
+      _minDaysAdvance = settings.minDaysAdvance;
+      _maxDaysAdvance = settings.maxDaysAdvance;
 
       // Contact Options
       _showPhone = settings.contactOptions.showPhone;
@@ -188,20 +192,53 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
         // Show dialog to go to profile
         final goToProfile = await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(l10n.widgetSettingsBankNotEntered),
-            content: Text(l10n.widgetSettingsBankNotEnteredDesc),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(l10n.cancel),
+          builder: (ctx) {
+            final theme = Theme.of(ctx);
+            return AlertDialog(
+              title: Text(
+                l10n.widgetSettingsBankNotEntered,
+                textAlign: TextAlign.center,
               ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(l10n.widgetSettingsAddBankDetails),
+              content: Text(
+                l10n.widgetSettingsBankNotEnteredDesc,
+                textAlign: TextAlign.center,
               ),
-            ],
-          ),
+              actionsAlignment: MainAxisAlignment.center,
+              actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              actions: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Cancel button - outlined style
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: Text(l10n.cancel),
+                    ),
+                    const SizedBox(height: 8),
+                    // Add bank details button - filled style
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 14,
+                          ),
+                        ),
+                        child: Text(
+                          l10n.widgetSettingsAddBankDetails,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
         );
 
         if (goToProfile == true && mounted) {
@@ -505,6 +542,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
             : _requireApproval,
         allowGuestCancellation: _allowCancellation,
         cancellationDeadlineHours: _cancellationHours,
+        // Advance booking restrictions
+        minDaysAdvance: _minDaysAdvance,
+        maxDaysAdvance: _maxDaysAdvance,
         // Use minNights from unit settings (not widget settings)
         // This is configured in "Edit Unit" form, not here
         minNights: _existingSettings?.minNights ?? 1,
@@ -1647,14 +1687,25 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                     ),
                   );
 
+                  // Build advance booking card
+                  final advanceBookingCard = _buildAdvanceBookingCard(
+                    l10nInner,
+                  );
+
                   // Desktop: cancellation switch left, deadline slider right
                   if (isDesktop) {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    return Column(
                       children: [
-                        Expanded(child: cancellationCard),
-                        const SizedBox(width: 12),
-                        Expanded(child: deadlineCard),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: cancellationCard),
+                            const SizedBox(width: 12),
+                            Expanded(child: deadlineCard),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        advanceBookingCard,
                       ],
                     );
                   } else {
@@ -1664,6 +1715,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                         cancellationCard,
                         const SizedBox(height: 12),
                         deadlineCard,
+                        const SizedBox(height: 12),
+                        advanceBookingCard,
                       ],
                     );
                   }
@@ -1673,6 +1726,131 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
           ),
         ),
       ),
+    );
+  }
+
+  /// Build advance booking restrictions card
+  Widget _buildAdvanceBookingCard(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Icon(
+                Icons.date_range,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.widgetSettingsAdvanceBooking,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.widgetSettingsAdvanceBookingDesc,
+            style: TextStyle(
+              fontSize: 13,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Min/Max days advance inputs
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 400;
+              final minDaysField = _buildDaysAdvanceField(
+                label: l10n.widgetSettingsMinDaysAdvance,
+                hint: l10n.widgetSettingsMinDaysAdvanceHint,
+                value: _minDaysAdvance,
+                onChanged: (val) => setState(() => _minDaysAdvance = val),
+              );
+              final maxDaysField = _buildDaysAdvanceField(
+                label: l10n.widgetSettingsMaxDaysAdvance,
+                hint: l10n.widgetSettingsMaxDaysAdvanceHint,
+                value: _maxDaysAdvance,
+                onChanged: (val) => setState(() => _maxDaysAdvance = val),
+              );
+
+              if (isWide) {
+                return Row(
+                  children: [
+                    Expanded(child: minDaysField),
+                    const SizedBox(width: 12),
+                    Expanded(child: maxDaysField),
+                  ],
+                );
+              } else {
+                return Column(
+                  children: [
+                    minDaysField,
+                    const SizedBox(height: 12),
+                    maxDaysField,
+                  ],
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build a days advance input field
+  Widget _buildDaysAdvanceField({
+    required String label,
+    required String hint,
+    required int value,
+    required ValueChanged<int> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.8),
+          ),
+        ),
+        const SizedBox(height: 4),
+        TextFormField(
+          initialValue: value.toString(),
+          keyboardType: TextInputType.number,
+          decoration: InputDecorationHelper.buildDecoration(
+            context: context,
+            labelText: label,
+            hintText: hint,
+            prefixIcon: const Icon(Icons.today),
+          ),
+          onChanged: (text) {
+            final parsed = int.tryParse(text) ?? 0;
+            onChanged(parsed.clamp(0, 730));
+          },
+        ),
+      ],
     );
   }
 

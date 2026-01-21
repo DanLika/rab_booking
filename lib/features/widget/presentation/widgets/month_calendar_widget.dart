@@ -60,9 +60,11 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
     // Defensive null check: handle loading/error states gracefully
     final widgetCtx = widgetCtxAsync.valueOrNull;
     final minNights = widgetCtx?.unit.minStayNights ?? 1;
+    final minDaysAdvance = widgetCtx?.settings.minDaysAdvance ?? 0;
+    final maxDaysAdvance = widgetCtx?.settings.maxDaysAdvance ?? 365;
 
     // Use realtime stream provider for automatic updates when bookings change
-    // OPTIMIZED: Pass minNights to eliminate redundant widgetSettings stream fetch
+    // OPTIMIZED: Pass settings to eliminate redundant widgetSettings stream fetch
     final calendarData = ref.watch(
       realtimeMonthCalendarProvider(
         widget.propertyId,
@@ -70,6 +72,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
         _currentMonth.year,
         _currentMonth.month,
         minNights,
+        minDaysAdvance,
+        maxDaysAdvance,
       ),
     );
     final isDarkMode = ref.watch(themeProvider);
@@ -842,6 +846,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             ),
           ),
           // Price (if available)
+          // Price (better visibility in dark mode - use textPrimary instead of textSecondary)
           if (displayPrice != null)
             Text(
               '€${displayPrice.toStringAsFixed(0)}',
@@ -849,8 +854,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                 fontSize: TypographyTokens.fontSizeXS,
                 fontWeight: TypographyTokens.semiBold,
                 color: isPast
-                    ? colors.textSecondary.withValues(alpha: 0.7)
-                    : colors.textSecondary,
+                    ? colors.textPrimary.withValues(alpha: 0.5)
+                    : colors.textPrimary.withValues(alpha: 0.85),
               ),
             ),
         ],

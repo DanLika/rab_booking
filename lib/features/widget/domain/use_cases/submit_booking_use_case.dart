@@ -207,8 +207,8 @@ class SubmitBookingUseCase {
       totalPrice: params.totalPrice,
       servicesTotal: params.servicesTotal,
       paymentOption: params.paymentOption, // 'deposit' or 'full'
-      paymentMethod:
-          params.paymentMethod, // 'stripe', 'bank_transfer', 'pay_on_arrival'
+      paymentMethod: params
+          .paymentMethod, // 'stripe' or 'bank_transfer' (pay_on_arrival removed)
       requireOwnerApproval:
           params.widgetSettings?.requireOwnerApproval ?? false,
       notes: sanitizedNotes,

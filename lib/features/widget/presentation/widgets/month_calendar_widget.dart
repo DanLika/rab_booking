@@ -17,6 +17,7 @@ import '../../../../core/localization/error_messages.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
+import '../../../../shared/models/unit_model.dart';
 import 'calendar/month_calendar_skeleton.dart';
 
 class MonthCalendarWidget extends ConsumerStatefulWidget {
@@ -157,8 +158,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                       // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
                       // Re-read from async value to ensure we have the latest state
                       final currentWidgetCtx = widgetCtxAsync.valueOrNull;
-                      final fallbackPrice =
-                          currentWidgetCtx?.unit.pricePerNight;
+                      final unit = currentWidgetCtx?.unit;
                       return CalendarTooltipBuilder.build(
                         context: context,
                         hoveredDate: _hoveredDate,
@@ -167,8 +167,10 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                         colors: colors,
                         tooltipHeight: 120.0,
                         ignorePointer: true,
-                        // Use unit's base price as fallback when no daily_price exists
-                        fallbackPrice: fallbackPrice,
+                        // Use unit's prices for fallback when no daily_price exists
+                        fallbackPrice: unit?.pricePerNight,
+                        weekendBasePrice: unit?.weekendBasePrice,
+                        weekendDays: unit?.weekendDays,
                       );
                     },
                     loading: () => const SizedBox.shrink(),
@@ -454,6 +456,15 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       return _buildEmptyCell(colors);
     }
 
+    // Get unit for price fallbacks
+    final widgetCtxAsync = ref.watch(
+      widgetContextProvider((
+        propertyId: widget.propertyId,
+        unitId: widget.unitId,
+      )),
+    );
+    final unit = widgetCtxAsync.valueOrNull?.unit;
+
     final isInRange = CalendarDateUtils.isDateInRange(
       date,
       _rangeStart,
@@ -543,27 +554,8 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
                     child: const SizedBox.expand(),
                   ),
                 ),
-                // Day number overlay - centered
-                Center(
-                  child: Text(
-                    date.day.toString(),
-                    style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeL,
-                      fontWeight: TypographyTokens.bold,
-                      // Past dates use secondary color for cleaner "disabled" look
-                      color: isPast ? colors.textSecondary : colors.textPrimary,
-                      shadows: [
-                        Shadow(
-                          offset: const Offset(0, 1),
-                          blurRadius: 2.0,
-                          color: colors.backgroundPrimary.withValues(
-                            alpha: 0.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // Day number and price overlay - centered
+                _buildDayCellContent(date, dateInfo, isPast, colors, unit),
                 // Range indicators
                 if (isRangeStart || isRangeEnd)
                   Positioned(
@@ -798,5 +790,71 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       case DateStatus.pastReservation:
         return colors.statusPastReservationBorder;
     }
+  }
+
+  /// Builds the day cell content (day number + price) with weekend pricing logic
+  Widget _buildDayCellContent(
+    DateTime date,
+    CalendarDateInfo dateInfo,
+    bool isPast,
+    WidgetColorScheme colors,
+    UnitModel? unit,
+  ) {
+    // Price hierarchy (same as CalendarTooltipBuilder):
+    // 1. Custom weekend price from daily_prices (per-day override)
+    // 2. Unit's default weekend base price (if it's a weekend day)
+    // 3. Custom regular price from daily_prices (per-day override)
+    // 4. Unit's base price (fallback)
+    final effectiveWeekendDays = unit?.weekendDays ?? const [5, 6];
+    final isWeekend = effectiveWeekendDays.contains(date.weekday);
+
+    final double? displayPrice;
+    if (dateInfo.price != null) {
+      // Custom daily price set - use it
+      displayPrice = dateInfo.price;
+    } else if (isWeekend && unit?.weekendBasePrice != null) {
+      // Weekend day with no custom price - use weekend base price
+      displayPrice = unit!.weekendBasePrice;
+    } else {
+      // Regular day or no weekend price - use base price
+      displayPrice = unit?.pricePerNight;
+    }
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Day number
+          Text(
+            date.day.toString(),
+            style: TextStyle(
+              fontSize: TypographyTokens.fontSizeL,
+              fontWeight: TypographyTokens.bold,
+              color: isPast ? colors.textSecondary : colors.textPrimary,
+              shadows: [
+                Shadow(
+                  offset: const Offset(0, 1),
+                  blurRadius: 2.0,
+                  color: colors.backgroundPrimary.withValues(alpha: 0.3),
+                ),
+              ],
+            ),
+          ),
+          // Price (if available)
+          if (displayPrice != null)
+            Text(
+              '€${displayPrice.toStringAsFixed(0)}',
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeXS,
+                fontWeight: TypographyTokens.semiBold,
+                color: isPast
+                    ? colors.textSecondary.withValues(alpha: 0.7)
+                    : colors.textSecondary,
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

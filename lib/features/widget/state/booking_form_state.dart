@@ -63,7 +63,7 @@ class BookingFormState {
   // ============================================
 
   /// Number of adult guests (minimum 1)
-  int adults = 2;
+  int adults = 1;
 
   /// Number of child guests
   int children = 0;
@@ -154,7 +154,7 @@ class BookingFormState {
     checkOut = null;
 
     // Reset guest count to defaults
-    adults = 2;
+    adults = 1;
     children = 0;
 
     // Reset country to default

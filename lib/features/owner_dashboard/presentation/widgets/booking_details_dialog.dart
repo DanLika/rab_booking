@@ -143,7 +143,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                       icon: Icons.person_outline,
                       title: l10n.ownerDetailsGuestInfo,
                     ),
-                    const SizedBox(height: 8),
                     _DetailRow(
                       label: l10n.ownerDetailsName,
                       value: ownerBooking.guestName,
@@ -189,7 +188,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                       icon: Icons.home_outlined,
                       title: l10n.ownerDetailsPropertyInfo,
                     ),
-                    const SizedBox(height: 8),
                     _DetailRow(
                       label: l10n.ownerDetailsProperty,
                       value: property.name,
@@ -207,7 +205,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                       icon: Icons.calendar_today_outlined,
                       title: l10n.ownerDetailsStayInfo,
                     ),
-                    const SizedBox(height: 8),
                     _DetailRow(
                       label: l10n.ownerDetailsCheckIn,
                       value:
@@ -234,7 +231,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                       icon: Icons.payment_outlined,
                       title: l10n.ownerDetailsPaymentInfo,
                     ),
-                    const SizedBox(height: 8),
                     _DetailRow(
                       label: l10n.ownerDetailsTotalPrice,
                       value: booking.formattedTotalPrice,
@@ -280,7 +276,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                         icon: Icons.note_outlined,
                         title: l10n.ownerDetailsNotes,
                       ),
-                      const SizedBox(height: 8),
                       SelectableText(
                         booking.notes!,
                         style: TextStyle(color: theme.colorScheme.onSurface),
@@ -293,7 +288,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                         icon: Icons.cancel_outlined,
                         title: l10n.ownerDetailsCancellationInfo,
                       ),
-                      const SizedBox(height: 8),
                       if (booking.cancelledAt != null)
                         _DetailRow(
                           label: l10n.ownerDetailsCancelledOn,
@@ -348,104 +342,51 @@ class BookingDetailsDialog extends ConsumerWidget {
                   bottom: Radius.circular(11),
                 ),
               ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isNarrow = constraints.maxWidth < 400;
-
-                  if (isNarrow) {
-                    // Stack buttons vertically on narrow screens
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (booking.status != BookingStatus.cancelled) ...[
-                          SizedBox(
-                            width: double.infinity,
-                            child: _ModernActionButton(
-                              icon: Icons.edit_outlined,
-                              label: l10n.ownerDetailsEdit,
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                showEditBookingDialog(context, ref, booking);
-                              },
-                              gradient: context.gradients.brandPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-                        SizedBox(
-                          width: double.infinity,
-                          child: _ModernActionButton(
-                            icon: Icons.email_outlined,
-                            label: l10n.ownerDetailsEmail,
-                            onPressed: () {
-                              // FIXED BUG #6: Close parent dialog before opening send email dialog
-                              Navigator.of(context).pop();
-                              showSendEmailDialog(context, ref, booking);
-                            },
-                            gradient: context.gradients.brandPrimary,
-                          ),
-                        ),
-                        if (booking.status != BookingStatus.cancelled) ...[
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: _ModernActionButton(
-                              icon: Icons.replay_outlined,
-                              label: l10n.ownerDetailsResend,
-                              onPressed: () =>
-                                  _resendConfirmationEmail(context, ref, l10n),
-                              gradient: context.gradients.brandPrimary,
-                            ),
-                          ),
-                        ],
-                      ],
-                    );
-                  } else {
-                    // Use Row on wider screens
-                    return Row(
-                      children: [
-                        if (booking.status != BookingStatus.cancelled) ...[
-                          Expanded(
-                            child: _ModernActionButton(
-                              icon: Icons.edit_outlined,
-                              label: l10n.ownerDetailsEdit,
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                showEditBookingDialog(context, ref, booking);
-                              },
-                              gradient: context.gradients.brandPrimary,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        Expanded(
-                          child: _ModernActionButton(
-                            icon: Icons.email_outlined,
-                            label: l10n.ownerDetailsEmail,
-                            onPressed: () {
-                              // FIXED BUG #6 (wide screen): Close parent dialog before opening send email dialog
-                              Navigator.of(context).pop();
-                              showSendEmailDialog(context, ref, booking);
-                            },
-                            gradient: context.gradients.brandPrimary,
-                          ),
-                        ),
-                        if (booking.status != BookingStatus.cancelled) ...[
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _ModernActionButton(
-                              icon: Icons.replay_outlined,
-                              label: l10n.ownerDetailsResend,
-                              onPressed: () =>
-                                  _resendConfirmationEmail(context, ref, l10n),
-                              gradient: context.gradients.brandPrimary,
-                            ),
-                          ),
-                        ],
-                      ],
-                    );
-                  }
-                },
+              // UX FIX: Always use Row layout with auto-sizing buttons
+              // This ensures buttons fit even on 340px width screens
+              child: Row(
+                children: [
+                  if (booking.status != BookingStatus.cancelled) ...[
+                    Expanded(
+                      child: _ModernActionButton(
+                        icon: Icons.edit_outlined,
+                        label: l10n.ownerDetailsEdit,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          showEditBookingDialog(context, ref, booking);
+                        },
+                        gradient: context.gradients.brandPrimary,
+                        compact: true,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  Expanded(
+                    child: _ModernActionButton(
+                      icon: Icons.email_outlined,
+                      label: l10n.ownerDetailsEmail,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        showSendEmailDialog(context, ref, booking);
+                      },
+                      gradient: context.gradients.brandPrimary,
+                      compact: true,
+                    ),
+                  ),
+                  if (booking.status != BookingStatus.cancelled) ...[
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _ModernActionButton(
+                        icon: Icons.replay_outlined,
+                        label: l10n.ownerDetailsResend,
+                        onPressed: () =>
+                            _resendConfirmationEmail(context, ref, l10n),
+                        gradient: context.gradients.brandPrimary,
+                        compact: true,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -746,12 +687,15 @@ class _ThemedDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Divider(
-      height: 16,
-      thickness: 1,
-      color: isDark
-          ? AppColors.sectionDividerDark
-          : AppColors.sectionDividerLight,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Divider(
+        height: 1,
+        thickness: 1,
+        color: isDark
+            ? AppColors.sectionDividerDark
+            : AppColors.sectionDividerLight,
+      ),
     );
   }
 }
@@ -765,24 +709,27 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            gradient: context.gradients.brandPrimary,
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              gradient: context.gradients.brandPrimary,
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
+            ),
+            child: Icon(icon, color: Colors.white, size: 18),
           ),
-          child: Icon(icon, color: Colors.white, size: 18),
-        ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
+          const SizedBox(width: 10),
+          Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -798,7 +745,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 1),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space
@@ -852,7 +799,7 @@ class _DetailRowWithWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 1),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space
@@ -892,12 +839,14 @@ class _ModernActionButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     required this.gradient,
+    this.compact = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
   final Gradient gradient;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -921,7 +870,10 @@ class _ModernActionButton extends StatelessWidget {
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 6 : 12,
+            vertical: compact ? 10 : 12,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -930,17 +882,17 @@ class _ModernActionButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18),
-            const SizedBox(width: 6),
+            Icon(icon, size: compact ? 16 : 18),
+            const SizedBox(width: 4),
             Flexible(
               child: AutoSizeText(
                 label,
-                style: const TextStyle(
-                  fontSize: 14,
+                style: TextStyle(
+                  fontSize: compact ? 12 : 14,
                   fontWeight: FontWeight.w600,
                 ),
                 maxLines: 1,
-                minFontSize: 10,
+                minFontSize: 8,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

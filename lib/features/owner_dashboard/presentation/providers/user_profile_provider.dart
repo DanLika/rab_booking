@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../shared/models/notification_preferences_model.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../../shared/repositories/user_profile_repository.dart';
@@ -25,7 +25,9 @@ UserProfileRepository userProfileRepository(Ref ref) {
 /// - Memory freed when navigating away from profile screens
 @riverpod
 Stream<UserProfile?> watchUserProfile(Ref ref) {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  // Consistency: Use enhancedAuthProvider for auth state
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
   if (userId == null) {
     return Stream.value(null);
   }
@@ -37,7 +39,8 @@ Stream<UserProfile?> watchUserProfile(Ref ref) {
 /// Watch company details
 @riverpod
 Stream<CompanyDetails?> companyDetails(Ref ref) {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
   if (userId == null) {
     return Stream.value(null);
   }
@@ -49,7 +52,8 @@ Stream<CompanyDetails?> companyDetails(Ref ref) {
 /// Watch complete user data (profile + company)
 @riverpod
 Stream<UserData?> userData(Ref ref) {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
   if (userId == null) {
     return Stream.value(null);
   }
@@ -63,7 +67,8 @@ Stream<UserData?> userData(Ref ref) {
 /// Watch notification preferences
 @riverpod
 Stream<NotificationPreferences?> notificationPreferences(Ref ref) {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
   if (userId == null) {
     return Stream.value(null);
   }

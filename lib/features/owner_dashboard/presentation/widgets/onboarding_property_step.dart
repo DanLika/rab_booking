@@ -43,7 +43,7 @@ class _OnboardingPropertyStepState
       _websiteController.text = propertyData.website ?? '';
       _selectedType = PropertyType.values.firstWhere(
         (e) => e.name == propertyData.propertyType,
-        orElse: () => PropertyType.apartment,
+        orElse: () => PropertyType.villa,
       );
     } else {
       _countryController.text = 'Hrvatska'; // Default
@@ -72,7 +72,7 @@ class _OnboardingPropertyStepState
     if (_formKey.currentState?.validate() ?? false) {
       final data = PropertyFormData(
         name: _nameController.text.trim(),
-        propertyType: _selectedType?.name ?? PropertyType.apartment.name,
+        propertyType: _selectedType?.name ?? PropertyType.villa.name,
         address: _addressController.text.trim(),
         city: _cityController.text.trim(),
         country: _countryController.text.trim(),
@@ -279,9 +279,7 @@ class _OnboardingPropertyStepState
   String _getPropertyTypeLabel(PropertyType type, AppLocalizations l10n) =>
       switch (type) {
         PropertyType.villa => l10n.onboardingPropertyTypeVilla,
-        PropertyType.apartment => l10n.onboardingPropertyTypeApartment,
-        PropertyType.studio => l10n.onboardingPropertyTypeStudio,
         PropertyType.house => l10n.onboardingPropertyTypeHouse,
-        PropertyType.room => l10n.onboardingPropertyTypeRoom,
+        PropertyType.other => l10n.onboardingPropertyTypeOther,
       };
 }

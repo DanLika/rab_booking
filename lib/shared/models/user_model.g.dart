@@ -128,6 +128,8 @@ _$UserModelImpl _$$UserModelImplFromJson(
         (k, e) => MapEntry(k, e as bool),
       ) ??
       const {},
+  profileCompleted: json['profile_completed'] as bool? ?? true,
+  lastProvider: json['last_provider'] as String?,
 );
 
 Map<String, dynamic> _$$UserModelImplToJson(
@@ -164,6 +166,8 @@ Map<String, dynamic> _$$UserModelImplToJson(
   'admin_override_account_type':
       _$AccountTypeEnumMap[instance.adminOverrideAccountType],
   'featureFlags': instance.featureFlags,
+  'profile_completed': instance.profileCompleted,
+  'last_provider': instance.lastProvider,
 };
 
 const _$UserRoleEnumMap = {

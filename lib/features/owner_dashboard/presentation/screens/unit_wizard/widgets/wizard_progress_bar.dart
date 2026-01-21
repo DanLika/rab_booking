@@ -4,13 +4,13 @@ import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 
 /// Wizard Progress Bar - shows current step and completion status
-/// Displays 5 steps with icons, labels, and visual indicators
+/// Displays 4 steps with icons, labels, and visual indicators
 class WizardProgressBar extends StatelessWidget {
-  final int currentStep; // 1-5
-  final int totalSteps; // Always 5
+  final int currentStep; // 1-4
+  final int totalSteps; // Always 4
   final Map<int, bool> completedSteps; // {1: true, 2: true, ...}
-  final Set<int> optionalSteps; // {4} - Photos step is optional
-  final Set<int> requiredSteps; // {1,2,3,5} - required steps
+  final Set<int> optionalSteps; // Empty - all steps required
+  final Set<int> requiredSteps; // {1,2,3,4} - all steps required
   final Function(int)? onStepTap; // Optional - jump to step
 
   // Green color from Confirmed badge (#66BB6A)
@@ -21,8 +21,7 @@ class WizardProgressBar extends StatelessWidget {
     1: Icons.info_outline, // Info/Basic
     2: Icons.people_outline, // Capacity
     3: Icons.euro, // Pricing + Availability
-    4: Icons.photo_library_outlined, // Photos
-    5: Icons.check_circle_outline, // Review
+    4: Icons.check_circle_outline, // Review
   };
 
   // Step labels mapping - returns localized labels
@@ -30,17 +29,16 @@ class WizardProgressBar extends StatelessWidget {
     1: l10n.unitWizardProgressInfo,
     2: l10n.unitWizardProgressCapacity,
     3: l10n.unitWizardProgressPrice,
-    4: l10n.unitWizardProgressPhotos,
-    5: l10n.unitWizardProgressReview,
+    4: l10n.unitWizardProgressReview,
   };
 
   const WizardProgressBar({
     super.key,
     required this.currentStep,
-    this.totalSteps = 5,
+    this.totalSteps = 4,
     this.completedSteps = const {},
-    this.optionalSteps = const {4},
-    this.requiredSteps = const {1, 2, 3, 5},
+    this.optionalSteps = const {},
+    this.requiredSteps = const {1, 2, 3, 4},
     this.onStepTap,
   });
 

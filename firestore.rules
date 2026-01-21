@@ -393,6 +393,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // App config - version control and force update settings
+    // Read-only for authenticated users (mobile apps fetch version)
+    // Only Cloud Functions can write (via Admin SDK)
+    match /app_config/{platform} {
+      allow read: if isAuthenticated(); // Any authenticated user can check version
+      allow write: if false; // Only Cloud Functions via Admin SDK
+    }
+
     // Security events - user login/logout/password change events
     // Users can create events for their own actions
     // Only Cloud Functions can read all events (via Admin SDK)

@@ -40,6 +40,8 @@ class CalendarTooltipBuilder {
   /// - [tooltipHeight]: Height of tooltip (150 for year, 120 for month)
   /// - [ignorePointer]: Whether to wrap in IgnorePointer (true for month)
   /// - [fallbackPrice]: Unit's base price to use when daily price is not set
+  /// - [weekendBasePrice]: Unit's default weekend price (for Fri-Sat nights)
+  /// - [weekendDays]: Days considered weekend (1=Mon...7=Sun, default: [5,6])
   static Widget build({
     required BuildContext context,
     required DateTime? hoveredDate,
@@ -49,6 +51,8 @@ class CalendarTooltipBuilder {
     double tooltipHeight = 150.0,
     bool ignorePointer = false,
     double? fallbackPrice,
+    double? weekendBasePrice,
+    List<int>? weekendDays,
   }) {
     if (hoveredDate == null) return const SizedBox.shrink();
 
@@ -94,8 +98,20 @@ class CalendarTooltipBuilder {
         ? DateStatus.pending
         : dateInfo.status;
 
-    // Use fallback price (unit's base pricePerNight) when no daily_price exists
-    final effectivePrice = dateInfo.price ?? fallbackPrice;
+    // Price hierarchy for display:
+    // 1. Custom daily price from daily_prices collection
+    // 2. Unit's weekend base price (if it's a weekend day and no custom price)
+    // 3. Unit's base price (fallback)
+    final effectiveWeekendDays = weekendDays ?? const [5, 6];
+    final isWeekend = effectiveWeekendDays.contains(hoveredDate.weekday);
+    final double? effectivePrice;
+    if (dateInfo.price != null) {
+      effectivePrice = dateInfo.price;
+    } else if (isWeekend && weekendBasePrice != null) {
+      effectivePrice = weekendBasePrice;
+    } else {
+      effectivePrice = fallbackPrice;
+    }
 
     final tooltip = CalendarHoverTooltip(
       date: hoveredDate,

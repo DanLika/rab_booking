@@ -345,18 +345,39 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
     const widgetSettings = widgetSettingsDoc.data();
     const stripeConfig = widgetSettings?.stripe_config;
     const bankTransferConfig = widgetSettings?.bank_transfer_config;
-    const allowPayOnArrival =
-      widgetSettings?.allow_pay_on_arrival ?? false;
     const icalExportEnabled =
       widgetSettings?.ical_export_enabled ?? false;
+    // Widget mode determines payment requirements:
+    // - booking_pending: No payment (manual approval)
+    // - booking_instant: Payment required (Stripe or Bank Transfer)
+    const widgetMode = widgetSettings?.widget_mode;
 
-    // Validate payment method is enabled in settings
+    // ========================================================================
+    // PAYMENT METHOD VALIDATION - Simplified logic (2024 refactor)
+    // ========================================================================
+    // bookingPending mode: No payment required, manual approval
+    // bookingInstant mode: Payment required (Stripe or Bank Transfer)
+    // ========================================================================
+
+    // Validate Stripe is enabled if selected
     const isStripeDisabled =
       paymentMethod === "stripe" && (!stripeConfig || !stripeConfig.enabled);
+
+    // Validate Bank Transfer is enabled if selected
     const isBankTransferDisabled = paymentMethod === "bank_transfer" &&
       (!bankTransferConfig || !bankTransferConfig.enabled);
-    const isPayOnArrivalDisabled =
-      (paymentMethod === "none" || paymentMethod === "pay_on_arrival") && !allowPayOnArrival;
+
+    // bookingInstant mode REQUIRES payment - no pay_on_arrival/none allowed
+    // This is like Airbnb: instant bookings must have upfront payment
+    const isNoPaymentInInstantMode =
+      widgetMode === "booking_instant" &&
+      (paymentMethod === "none" || paymentMethod === "pay_on_arrival");
+
+    // bookingPending mode does NOT allow online payment
+    // Payment is arranged privately between guest and owner
+    const isPaymentInPendingMode =
+      widgetMode === "booking_pending" &&
+      (paymentMethod === "stripe" || paymentMethod === "bank_transfer");
 
     if (isStripeDisabled) {
       throw new HttpsError(
@@ -372,18 +393,25 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
       );
     }
 
-    if (isPayOnArrivalDisabled) {
+    if (isNoPaymentInInstantMode) {
       throw new HttpsError(
         "permission-denied",
-        "Pay on arrival not enabled. Select another payment method."
+        "Payment required for instant bookings. Please select Stripe or Bank Transfer."
+      );
+    }
+
+    if (isPaymentInPendingMode) {
+      throw new HttpsError(
+        "permission-denied",
+        "Online payment not available for this booking mode. Contact the owner directly."
       );
     }
 
     logInfo("[AtomicBooking] Widget settings validated", {
       paymentMethod,
+      widgetMode,
       stripeEnabled: stripeConfig?.enabled ?? false,
       bankTransferEnabled: bankTransferConfig?.enabled ?? false,
-      allowPayOnArrival,
     });
 
     // ========================================================================

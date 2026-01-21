@@ -50,7 +50,10 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   bool _acceptedTerms = false;
   bool _acceptedPrivacy = false;
   bool _newsletterOptIn = false;
-  bool _isFormValid = false;
+  // UX FIX: Button enabled when fields are non-empty and checkboxes checked
+  // Validation errors are shown AFTER clicking submit, not while typing
+  // This gives users a chance to finish typing before seeing errors
+  bool _canAttemptSubmit = false;
   String? _emailErrorFromServer;
 
   Uint8List? _profileImageBytes;
@@ -61,11 +64,11 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     super.initState();
     _emailController.addListener(_clearServerError);
 
-    // Listen to all fields to update form validity for button state
-    _fullNameController.addListener(_updateFormValidity);
-    _emailController.addListener(_updateFormValidity);
-    _passwordController.addListener(_updateFormValidity);
-    _confirmPasswordController.addListener(_updateFormValidity);
+    // Listen to all fields to update button state (enabled when non-empty)
+    _fullNameController.addListener(_updateCanAttemptSubmit);
+    _emailController.addListener(_updateCanAttemptSubmit);
+    _passwordController.addListener(_updateCanAttemptSubmit);
+    _confirmPasswordController.addListener(_updateCanAttemptSubmit);
   }
 
   @override
@@ -84,47 +87,40 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     }
   }
 
-  void _updateFormValidity() {
-    // Check if all fields are valid (without showing errors to user)
-    final nameValid =
-        ProfileValidators.validateName(_fullNameController.text) == null;
-    final emailValid =
-        ProfileValidators.validateEmail(_emailController.text) == null;
-    final passwordValid =
-        PasswordValidator.validateMinimumLength(_passwordController.text) ==
-        null;
-    final confirmValid =
-        PasswordValidator.validateConfirmPassword(
-          _passwordController.text,
-          _confirmPasswordController.text,
-        ) ==
-        null;
+  /// UX FIX: Check if user CAN attempt to submit (fields non-empty + checkboxes)
+  /// This doesn't validate content - validation happens on submit click
+  void _updateCanAttemptSubmit() {
+    // Button enabled when all required fields have SOME content
+    // We don't check if content is VALID here - that happens on submit
+    final hasName = _fullNameController.text.trim().isNotEmpty;
+    final hasEmail = _emailController.text.trim().isNotEmpty;
+    final hasPassword = _passwordController.text.isNotEmpty;
+    final hasConfirm = _confirmPasswordController.text.isNotEmpty;
 
     final newState =
-        nameValid &&
-        emailValid &&
-        passwordValid &&
-        confirmValid &&
+        hasName &&
+        hasEmail &&
+        hasPassword &&
+        hasConfirm &&
         _acceptedTerms &&
         _acceptedPrivacy;
 
-    if (_isFormValid != newState) {
-      setState(() => _isFormValid = newState);
+    if (_canAttemptSubmit != newState) {
+      setState(() => _canAttemptSubmit = newState);
     }
   }
 
   Future<void> _handleRegister() async {
     final l10n = AppLocalizations.of(context);
 
+    // Trigger validation - errors will show in input fields
     if (!_formKey.currentState!.validate()) {
       ErrorDisplayUtils.showErrorSnackBar(context, l10n.pleaseFixErrors);
       return;
     }
 
-    if (!_acceptedTerms || !_acceptedPrivacy) {
-      ErrorDisplayUtils.showErrorSnackBar(context, l10n.authMustAcceptTerms);
-      return;
-    }
+    // Note: Checkbox check removed - _canAttemptSubmit already guarantees
+    // both _acceptedTerms && _acceptedPrivacy are true (button disabled otherwise)
 
     setState(() => _isLoading = true);
 
@@ -328,7 +324,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                   ),
                                   GradientAuthButton(
                                     text: l10n.authCreateAccount,
-                                    onPressed: _isFormValid
+                                    onPressed: _canAttemptSubmit
                                         ? _handleRegister
                                         : null,
                                     isLoading: _isLoading,
@@ -525,7 +521,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           value: _acceptedTerms,
           onChanged: (value) {
             setState(() => _acceptedTerms = value!);
-            _updateFormValidity();
+            _updateCanAttemptSubmit();
           },
           linkText: l10n.authTermsConditions,
           prefixText: l10n.authAcceptTerms,
@@ -539,7 +535,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           value: _acceptedPrivacy,
           onChanged: (value) {
             setState(() => _acceptedPrivacy = value!);
-            _updateFormValidity();
+            _updateCanAttemptSubmit();
           },
           linkText: l10n.authPrivacyPolicy,
           prefixText: l10n.authAcceptTerms,

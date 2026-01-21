@@ -26,6 +26,7 @@ class EnhancedAuthState {
   final String? error;
   final bool requiresEmailVerification;
   final bool requiresOnboarding;
+  final bool requiresProfileCompletion;
 
   const EnhancedAuthState({
     this.firebaseUser,
@@ -34,6 +35,7 @@ class EnhancedAuthState {
     this.error,
     this.requiresEmailVerification = false,
     this.requiresOnboarding = false,
+    this.requiresProfileCompletion = false,
   });
 
   bool get isAuthenticated => firebaseUser != null && userModel != null;
@@ -49,6 +51,7 @@ class EnhancedAuthState {
     String? error,
     bool? requiresEmailVerification,
     bool? requiresOnboarding,
+    bool? requiresProfileCompletion,
   }) {
     return EnhancedAuthState(
       firebaseUser: firebaseUser ?? this.firebaseUser,
@@ -58,6 +61,8 @@ class EnhancedAuthState {
       requiresEmailVerification:
           requiresEmailVerification ?? this.requiresEmailVerification,
       requiresOnboarding: requiresOnboarding ?? this.requiresOnboarding,
+      requiresProfileCompletion:
+          requiresProfileCompletion ?? this.requiresProfileCompletion,
     );
   }
 }
@@ -233,12 +238,20 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         // Check email verification status (respects feature flag)
         // SECURITY FIX: Use ONLY Firebase Auth's emailVerified status
         // Do NOT trust Firestore userModel.emailVerified as it can be stale or manipulated
+        // EXCEPTION: Social sign-in users (Google, Apple) have pre-verified emails
+        final isSocialProvider =
+            userModel.lastProvider == 'google.com' ||
+            userModel.lastProvider == 'apple.com';
         final requiresVerification =
             AuthFeatureFlags.requireEmailVerification &&
-            !firebaseUser.emailVerified;
+            !firebaseUser.emailVerified &&
+            !isSocialProvider;
 
         // Check onboarding status
         final requiresOnboarding = userModel.needsOnboarding;
+
+        // Check profile completion status (for social sign-in users)
+        final requiresProfileCompletion = !userModel.profileCompleted;
 
         // Set isLoading to false when user profile is loaded (initial check complete)
         state = EnhancedAuthState(
@@ -247,6 +260,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           isLoading: false,
           requiresEmailVerification: requiresVerification,
           requiresOnboarding: requiresOnboarding,
+          requiresProfileCompletion: requiresProfileCompletion,
         );
 
         // Set user context for Sentry/Crashlytics error tracking
@@ -299,30 +313,62 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   }
 
   /// Create user profile in Firestore
-  Future<void> _createUserProfile(User firebaseUser) async {
+  ///
+  /// [providerId] - The authentication provider ID (e.g., 'google.com', 'apple.com', 'password')
+  /// For social sign-in users, sets profileCompleted=false to trigger profile completion flow.
+  Future<void> _createUserProfile(
+    User firebaseUser, {
+    String? providerId,
+  }) async {
+    // Determine if this is a social sign-in (Google, Apple)
+    final isSocialSignIn =
+        providerId == 'google.com' || providerId == 'apple.com';
+
+    // Parse display name for first/last name
+    // Note: Apple only provides name on FIRST sign-in, subsequent logins may have empty name
+    String firstName = '';
+    String lastName = '';
+
+    if (firebaseUser.displayName != null &&
+        firebaseUser.displayName!.isNotEmpty) {
+      final nameParts = firebaseUser.displayName!.split(' ');
+      firstName = nameParts.first;
+      lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+    }
+
     final userModel = UserModel(
       id: firebaseUser.uid,
       email: firebaseUser.email!,
-      firstName: firebaseUser.displayName?.split(' ').first ?? '',
-      lastName: firebaseUser.displayName?.split(' ').last ?? '',
+      firstName: firstName,
+      lastName: lastName,
       role: UserRole.owner, // Default to owner (was guest before)
-      emailVerified: firebaseUser.emailVerified,
+      emailVerified:
+          firebaseUser.emailVerified ||
+          isSocialSignIn, // Social sign-in emails are verified
       onboardingCompleted: true, // Skip onboarding for OAuth users
       displayName: firebaseUser.displayName,
       phone: firebaseUser.phoneNumber,
       avatarUrl: firebaseUser.photoURL,
       createdAt: DateTime.now(),
+      // Social sign-in: profile needs completion (phone, address, etc.)
+      profileCompleted: !isSocialSignIn,
+      lastProvider: providerId,
     );
 
     await _firestore
         .collection('users')
         .doc(firebaseUser.uid)
         .set(userModel.toJson());
+
     // Set isLoading to false when user profile is created (initial check complete)
+    // For social sign-in, set requiresProfileCompletion flag
     state = EnhancedAuthState(
       firebaseUser: firebaseUser,
       userModel: userModel,
       isLoading: false,
+      requiresProfileCompletion: isSocialSignIn,
+      // Social sign-in emails are pre-verified by the provider
+      requiresEmailVerification: false,
     );
   }
 
@@ -610,6 +656,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         throw _rateLimit.getRateLimitMessage(rateLimit);
       }
 
+      // NOTE: fetchSignInMethodsForEmail is deprecated and disabled by default
+      // for security (email enumeration protection). Instead, we handle the
+      // email-already-in-use error with an improved message that mentions
+      // Google/Apple Sign-In as potential alternatives.
+
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -728,8 +779,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         requiresEmailVerification: AuthFeatureFlags.requireEmailVerification,
       );
     } on FirebaseAuthException catch (e) {
-      // Determine error message, with rate limit check wrapped in try-catch
-      // to ensure isLoading is ALWAYS reset even if rate limit operations fail
+      // PRIORITY: Critical errors like email-already-in-use should ALWAYS
+      // be shown to user, not hidden behind rate limit messages.
+      // This fixes the bug where users registering with Google-linked emails
+      // see "try again in X seconds" instead of "email already exists".
+      if (e.code == 'email-already-in-use') {
+        final errorMessage = _getAuthErrorMessage(e);
+        state = state.copyWith(isLoading: false, error: errorMessage);
+        throw errorMessage;
+      }
+
+      // For other errors, apply rate limiting logic
       String errorMessage;
       try {
         // Record failed attempt
@@ -1092,12 +1152,22 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       if (isNewUser) {
         // Create user profile in Firestore for new users
-        await _createUserProfile(userCredential.user!);
+        // Pass provider ID to set profileCompleted=false for profile completion flow
+        await _createUserProfile(
+          userCredential.user!,
+          providerId: 'google.com',
+        );
         unawaited(AnalyticsService.instance.logSignUp('google'));
       } else {
-        // Update last login for existing users
-        await _updateLastLogin(userCredential.user!.uid);
+        // Update last login and provider for existing users
+        await _updateLastLogin(
+          userCredential.user!.uid,
+          provider: 'google.com',
+        );
         unawaited(AnalyticsService.instance.logLogin('google'));
+
+        // Load profile to check if profile completion is needed
+        await _loadUserProfile(userCredential.user!);
       }
 
       // Log security event (non-blocking)
@@ -1114,7 +1184,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         );
       }
 
-      state = state.copyWith(isLoading: false);
+      // State is already updated by _createUserProfile or _loadUserProfile
+      if (state.isLoading) {
+        state = state.copyWith(isLoading: false);
+      }
     } on FirebaseAuthException catch (e) {
       LoggingService.log(
         'Google Sign-In error: ${e.code} - ${e.message}',
@@ -1171,13 +1244,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       if (isNewUser) {
         // Create user profile in Firestore for new users
-        // Note: Apple may not provide display name on subsequent logins
-        await _createUserProfile(userCredential.user!);
+        // Note: Apple may not provide display name on subsequent logins (only on first sign-in)
+        // Pass provider ID to set profileCompleted=false for profile completion flow
+        await _createUserProfile(userCredential.user!, providerId: 'apple.com');
         unawaited(AnalyticsService.instance.logSignUp('apple'));
       } else {
-        // Update last login for existing users
-        await _updateLastLogin(userCredential.user!.uid);
+        // Update last login and provider for existing users
+        await _updateLastLogin(userCredential.user!.uid, provider: 'apple.com');
         unawaited(AnalyticsService.instance.logLogin('apple'));
+
+        // Load profile to check if profile completion is needed
+        await _loadUserProfile(userCredential.user!);
       }
 
       // Log security event (non-blocking)
@@ -1194,7 +1271,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         );
       }
 
-      state = state.copyWith(isLoading: false);
+      // State is already updated by _createUserProfile or _loadUserProfile
+      if (state.isLoading) {
+        state = state.copyWith(isLoading: false);
+      }
     } on FirebaseAuthException catch (e) {
       LoggingService.log(
         'Apple Sign-In error: ${e.code} - ${e.message}',
@@ -1214,12 +1294,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
-  /// Update last login timestamp
-  Future<void> _updateLastLogin(String userId) async {
+  /// Update last login timestamp and optionally the provider
+  Future<void> _updateLastLogin(String userId, {String? provider}) async {
     try {
-      await _firestore.collection('users').doc(userId).update({
+      final updates = <String, dynamic>{
         'lastLoginAt': FieldValue.serverTimestamp(),
-      });
+      };
+      if (provider != null) {
+        updates['last_provider'] = provider;
+      }
+      await _firestore.collection('users').doc(userId).update(updates);
     } catch (e) {
       // Ignore error
     }
@@ -1240,6 +1324,32 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         requiresOnboarding: false,
       );
     }
+  }
+
+  /// Complete profile (for social sign-in users)
+  ///
+  /// Called after user completes their profile on Edit Profile screen.
+  /// Sets profileCompleted=true in Firestore and updates state.
+  Future<void> completeProfile() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    await _firestore.collection('users').doc(userId).update({
+      'profile_completed': true,
+      'updated_at': FieldValue.serverTimestamp(),
+    });
+
+    if (state.userModel != null) {
+      state = state.copyWith(
+        userModel: state.userModel!.copyWith(profileCompleted: true),
+        requiresProfileCompletion: false,
+      );
+    }
+
+    LoggingService.log(
+      'Profile completed for user: $userId',
+      tag: 'ENHANCED_AUTH',
+    );
   }
 
   /// Mark a feature as seen (Feature Discovery)
@@ -1350,7 +1460,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       case 'invalid-credential':
         return 'Incorrect password. Try again or reset your password';
       case 'email-already-in-use':
-        return 'An account already exists with this email';
+        // BUG FIX: Improved message that mentions Google/Apple Sign-In
+        // Since fetchSignInMethodsForEmail is deprecated, we can't detect the provider,
+        // so we mention both possibilities to help the user
+        return 'This email is already registered. If you previously signed up with Google or Apple, please use that sign-in method instead.';
       case 'invalid-email':
         return 'Invalid email address';
       case 'weak-password':

@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/models/unified_dashboard_data.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
 import 'owner_bookings_provider.dart';
 import 'owner_calendar_provider.dart';
 
@@ -59,10 +59,19 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     // Watch date range - provider rebuilds when it changes
     final dateRange = ref.watch(dashboardDateRangeNotifierProvider);
 
-    try {
-      final auth = FirebaseAuth.instance;
-      final userId = auth.currentUser?.uid;
+    // BUG FIX: Watch auth state to rebuild when user changes
+    // This fixes the issue where dashboard showed stale data after re-login
+    // with Google Sign-In because keepAlive providers retained old user context
+    final authState = ref.watch(enhancedAuthProvider);
+    final userId = authState.userModel?.id;
 
+    // Log the userId for debugging
+    LoggingService.log(
+      'Dashboard build - userId: $userId, isAuthenticated: ${authState.isAuthenticated}',
+      tag: 'DASHBOARD',
+    );
+
+    try {
       if (userId == null) {
         await LoggingService.logError('Dashboard: User not authenticated');
         throw AuthException(
@@ -83,10 +92,14 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       final bookings = await _queryBookingsForPeriod(
         unitIds: unitIds,
         dateRange: dateRange,
+        userId: userId,
       );
 
       // Query upcoming check-ins (always next 7 days, regardless of selected period)
-      final upcomingCheckIns = await _queryUpcomingCheckIns(unitIds: unitIds);
+      final upcomingCheckIns = await _queryUpcomingCheckIns(
+        unitIds: unitIds,
+        userId: userId,
+      );
 
       // Filter for confirmed/completed bookings for metrics and charts
       // Pending bookings are excluded as they represent unconfirmed revenue
@@ -162,11 +175,9 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
   Future<List<Map<String, dynamic>>> _queryBookingsForPeriod({
     required List<String> unitIds,
     required DateRangeFilter dateRange,
+    required String userId,
   }) async {
     final firestore = ref.read(firestoreProvider);
-    final auth = FirebaseAuth.instance;
-    final userId = auth.currentUser?.uid;
-    if (userId == null) return [];
 
     final List<Map<String, dynamic>> allBookings = [];
 
@@ -208,11 +219,9 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
   /// Query upcoming check-ins (next 7 days)
   Future<List<Map<String, dynamic>>> _queryUpcomingCheckIns({
     required List<String> unitIds,
+    required String userId,
   }) async {
     final firestore = ref.read(firestoreProvider);
-    final auth = FirebaseAuth.instance;
-    final userId = auth.currentUser?.uid;
-    if (userId == null) return [];
 
     final now = DateTime.now();
     final nowTimestamp = Timestamp.fromDate(now);

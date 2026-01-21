@@ -19,14 +19,12 @@ import 'widgets/wizard_navigation_buttons.dart';
 import 'steps/step_1_basic_info.dart';
 import 'steps/step_2_capacity.dart';
 import 'steps/step_3_pricing.dart';
-import 'steps/step_4_photos.dart';
-import 'steps/step_5_review.dart';
+import 'steps/step_4_review.dart';
 
 /// Unit Wizard Screen - Multi-step wizard for creating/editing units
 ///
 /// Features:
-/// - 5-step wizard flow (Basic Info → Review & Publish)
-/// - Skip optional step (Photos)
+/// - 4-step wizard flow (Basic Info → Capacity → Pricing → Review & Publish)
 /// - Responsive design (mobile + desktop)
 /// - Pre-select property when creating from property context
 /// - Duplicate existing unit with pre-filled data
@@ -114,7 +112,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
 
   /// Handle step navigation
   Future<void> _goToStep(int step) async {
-    if (step < 1 || step > 5) return;
+    if (step < 1 || step > 4) return;
 
     await _pageController.animateToPage(
       step - 1,
@@ -150,7 +148,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
     notifier.markStepCompleted(currentStep);
 
     // Move to next step
-    if (currentStep < 5) {
+    if (currentStep < 4) {
       notifier.goToNextStep();
       unawaited(
         _pageController.nextPage(
@@ -179,29 +177,6 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
     );
   }
 
-  /// Handle skip button (optional steps only)
-  void _handleSkip() {
-    final notifier = ref.read(
-      unitWizardNotifierProvider(widget.unitId).notifier,
-    );
-    final currentState = ref
-        .read(unitWizardNotifierProvider(widget.unitId))
-        .value;
-
-    if (currentState == null) return;
-
-    // Mark as skipped
-    notifier.markStepSkipped(currentState.currentStep);
-    notifier.goToNextStep();
-
-    unawaited(
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      ),
-    );
-  }
-
   /// Validate step data
   bool _validateStep(int step, dynamic state) {
     switch (step) {
@@ -216,9 +191,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
             state.maxGuests != null;
       case 3: // Pricing & Availability
         return state.pricePerNight != null && state.minStayNights != null;
-      case 4: // Photos (optional)
-        return true; // Always valid
-      case 5: // Review & Publish
+      case 4: // Review & Publish
         return _validateAllRequiredSteps(state);
       default:
         return true;
@@ -250,8 +223,8 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
         message = l10n.unitWizardValidationStep2;
       case 3:
         message = l10n.unitWizardValidationStep3;
-      case 5:
-        message = l10n.unitWizardValidationStep5;
+      case 4:
+        message = l10n.unitWizardValidationStep5; // Review step validation
       default:
         message = l10n.unitWizardValidationDefault;
     }
@@ -391,8 +364,8 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
 
   /// Get next button label based on current step
   String _getNextLabel(int step, AppLocalizations l10n) => switch (step) {
-    5 => l10n.unitWizardPublish,
-    4 => l10n.unitWizardContinueToReview,
+    4 => l10n.unitWizardPublish,
+    3 => l10n.unitWizardContinueToReview,
     _ => l10n.unitWizardNext,
   };
 
@@ -467,8 +440,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
                             Step1BasicInfo(unitId: widget.unitId),
                             Step2Capacity(unitId: widget.unitId),
                             Step3Pricing(unitId: widget.unitId),
-                            Step4Photos(unitId: widget.unitId),
-                            Step5Review(unitId: widget.unitId),
+                            Step4Review(unitId: widget.unitId),
                           ],
                         ),
                       ),
@@ -477,12 +449,8 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
                       WizardNavigationButtons(
                         onBack: draft.currentStep > 1 ? _handleBack : null,
                         onNext: _handleNext,
-                        onSkip: draft.currentStep == 4 ? _handleSkip : null,
                         nextLabel: _getNextLabel(draft.currentStep, l10n),
                         showBack: draft.currentStep > 1,
-                        showSkip:
-                            draft.currentStep ==
-                            4, // Only Photos step is optional
                       ),
                     ],
                   ),

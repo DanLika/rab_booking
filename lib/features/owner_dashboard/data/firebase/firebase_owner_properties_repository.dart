@@ -175,6 +175,7 @@ class FirebaseOwnerPropertiesRepository {
     String? slug,
     String? subdomain,
     String? address,
+    String? city,
     double? latitude,
     double? longitude,
     required List<String> amenities,
@@ -191,7 +192,7 @@ class FirebaseOwnerPropertiesRepository {
         'description': description,
         'property_type': propertyType,
         'location': location,
-        'city': location, // For compatibility
+        'city': city ?? location,
         'address': address,
         'latitude': latitude,
         'longitude': longitude,
@@ -222,6 +223,7 @@ class FirebaseOwnerPropertiesRepository {
     String? propertyType,
     String? location,
     String? address,
+    String? city,
     double? latitude,
     double? longitude,
     List<String>? amenities,
@@ -236,10 +238,8 @@ class FirebaseOwnerPropertiesRepository {
       if (subdomain != null) updates['subdomain'] = subdomain;
       if (description != null) updates['description'] = description;
       if (propertyType != null) updates['property_type'] = propertyType;
-      if (location != null) {
-        updates['location'] = location;
-        updates['city'] = location; // For compatibility
-      }
+      if (location != null) updates['location'] = location;
+      if (city != null) updates['city'] = city;
       if (address != null) updates['address'] = address;
       if (latitude != null) updates['latitude'] = latitude;
       if (longitude != null) updates['longitude'] = longitude;
@@ -424,16 +424,21 @@ class FirebaseOwnerPropertiesRepository {
 
   /// Watch all owner units (real-time stream)
   /// OPTIMIZED: Uses parallel queries
+  /// FIX: Uses .snapshots().first instead of .get() to bypass Firestore cache
+  /// and ensure newly created units are immediately visible
   Stream<List<UnitModel>> watchAllOwnerUnits(String ownerId) {
     // First watch properties, then for each emit, get all units
     return watchOwnerProperties(ownerId).asyncMap((properties) async {
       final futures = properties.map((property) async {
+        // Use .snapshots().first instead of .get() to bypass local cache
+        // This ensures newly created units are fetched from server
         final snapshot = await _firestore
             .collection('properties')
             .doc(property.id)
             .collection('units')
             .orderBy('created_at', descending: true)
-            .get();
+            .snapshots()
+            .first;
 
         return snapshot.docs.map((doc) {
           return UnitModel.fromJson({

@@ -19,9 +19,11 @@ _$PropertyModelImpl _$$PropertyModelImplFromJson(
       : PropertyBranding.fromJson(json['branding'] as Map<String, dynamic>),
   customDomain: json['custom_domain'] as String?,
   description: json['description'] as String,
-  propertyType:
-      $enumDecodeNullable(_$PropertyTypeEnumMap, json['property_type']) ??
-      PropertyType.apartment,
+  propertyType: json['property_type'] == null
+      ? PropertyType.villa
+      : const PropertyTypeConverter().fromJson(
+          json['property_type'] as String?,
+        ),
   location: json['location'] as String,
   city: json['city'] as String?,
   country: json['country'] as String? ?? 'Croatia',
@@ -62,7 +64,7 @@ Map<String, dynamic> _$$PropertyModelImplToJson(
   'branding': instance.branding,
   'custom_domain': instance.customDomain,
   'description': instance.description,
-  'property_type': _$PropertyTypeEnumMap[instance.propertyType]!,
+  'property_type': const PropertyTypeConverter().toJson(instance.propertyType),
   'location': instance.location,
   'city': instance.city,
   'country': instance.country,
@@ -85,14 +87,6 @@ Map<String, dynamic> _$$PropertyModelImplToJson(
   'bedrooms': instance.bedrooms,
   'bathrooms': instance.bathrooms,
   'deleted_at': instance.deletedAt?.toIso8601String(),
-};
-
-const _$PropertyTypeEnumMap = {
-  PropertyType.villa: 'villa',
-  PropertyType.apartment: 'apartment',
-  PropertyType.studio: 'studio',
-  PropertyType.house: 'house',
-  PropertyType.room: 'room',
 };
 
 const _$PropertyAmenityEnumMap = {

@@ -1063,6 +1063,21 @@ class FirebaseOwnerBookingsRepository {
     return countQuery.count ?? 0;
   }
 
+  /// Watch pending bookings count in real-time
+  /// Returns a Stream that emits new count whenever bookings change
+  /// Used for drawer badge that needs to update instantly
+  Stream<int> watchPendingBookingsCount() {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return Stream.value(0);
+
+    return _firestore
+        .collectionGroup('bookings')
+        .where('owner_id', isEqualTo: userId)
+        .where('status', isEqualTo: BookingStatus.pending.name)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
   /// Get paginated bookings for owner with Firestore cursor
   /// Uses server-side pagination - only fetches [limit] bookings per page
   ///

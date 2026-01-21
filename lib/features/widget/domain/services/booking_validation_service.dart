@@ -153,10 +153,10 @@ class BookingValidationService {
     final isStripeEnabled = widgetSettings?.stripeConfig?.enabled == true;
     final isBankTransferEnabled =
         widgetSettings?.bankTransferConfig?.enabled == true;
-    final isPayOnArrivalEnabled = widgetSettings?.allowPayOnArrival == true;
 
-    // Check if at least one payment method is enabled
-    if (!isStripeEnabled && !isBankTransferEnabled && !isPayOnArrivalEnabled) {
+    // For bookingInstant mode: At least one payment method must be enabled
+    // (Stripe or Bank Transfer - pay_on_arrival was removed from this mode)
+    if (!isStripeEnabled && !isBankTransferEnabled) {
       return const ValidationResult.failure(
         'No payment methods are currently available. Please contact the property owner.',
         snackBarDuration: Duration(seconds: 5),
@@ -178,13 +178,9 @@ class BookingValidationService {
       );
     }
 
-    if (selectedPaymentMethod == 'pay_on_arrival' &&
-        !(widgetSettings?.allowPayOnArrival ?? false)) {
-      return const ValidationResult.failure(
-        'Pay on arrival is not available. Please select another payment method.',
-        snackBarDuration: Duration(seconds: 5),
-      );
-    }
+    // Note: pay_on_arrival validation removed - this option is no longer available
+    // in bookingInstant mode. For bookingPending mode, payment validation is skipped
+    // entirely (see early return at top of this function).
 
     return const ValidationResult.success();
   }

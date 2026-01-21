@@ -130,6 +130,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     List<UnitModel> units,
     List<PropertyModel> properties,
   ) {
+    // BUG FIX: Guard against empty properties list (race condition)
+    // If properties haven't loaded yet, skip auto-selection - will be triggered
+    // again when properties load via the properties listener
+    if (properties.isEmpty) return;
+
     if (units.isNotEmpty && _selectedUnit == null) {
       // Auto-select first unit when none is selected
       final firstUnit = units.first;
@@ -176,6 +181,16 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       next,
     ) {
       next.whenData((units) => _handleUnitsChanged(units, properties));
+    });
+
+    // BUG FIX: Also listen for properties changes to handle race condition
+    // If properties load AFTER units, we need to trigger auto-selection
+    ref.listen<AsyncValue<List<PropertyModel>>>(ownerPropertiesProvider, (
+      previous,
+      next,
+    ) {
+      final units = ref.read(ownerUnitsProvider).valueOrNull ?? [];
+      next.whenData((props) => _handleUnitsChanged(units, props));
     });
 
     final l10n = AppLocalizations.of(context);

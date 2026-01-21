@@ -196,6 +196,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Login failed. Please check your credentials and try again.';
 
   @override
+  String get authErrorEmailLinkedToGoogle =>
+      'This email is already linked to a Google account. Please sign in with Google instead.';
+
+  @override
+  String get authErrorEmailLinkedToApple =>
+      'This email is already linked to an Apple account. Please sign in with Apple instead.';
+
+  @override
+  String get authErrorEmailAlreadyInUse =>
+      'This email is already registered. If you previously signed up with Google or Apple, please use that sign-in method instead.';
+
+  @override
   String get authForgotPassword => 'Forgot password?';
 
   @override
@@ -2754,6 +2766,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editProfilePropertyType => 'Property Type';
 
   @override
+  String get editProfileWelcomeTitle => 'Complete Your Profile';
+
+  @override
+  String get editProfileWelcomeMessage =>
+      'Please add your contact details to complete your account setup.';
+
+  @override
   String get notificationSettingsTitle => 'Notification Settings';
 
   @override
@@ -3619,10 +3638,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get propertyFormLocationRequired => 'Location is required';
 
   @override
-  String get propertyFormAddress => 'Address';
+  String get propertyFormAddress => 'Street and number *';
 
   @override
-  String get propertyFormAddressHint => 'Street and number';
+  String get propertyFormAddressHint => 'e.g. Obala Petra Krešimira 5';
+
+  @override
+  String get propertyFormAddressRequired => 'Street and number is required';
+
+  @override
+  String get propertyFormCity => 'City *';
+
+  @override
+  String get propertyFormCityHint => 'e.g. Rab';
+
+  @override
+  String get propertyFormCityRequired => 'City is required';
 
   @override
   String get propertyFormAmenities => 'Amenities';
@@ -4382,16 +4413,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingPropertyTypeVilla => 'Villa';
 
   @override
-  String get onboardingPropertyTypeApartment => 'Apartment';
-
-  @override
-  String get onboardingPropertyTypeStudio => 'Studio';
-
-  @override
   String get onboardingPropertyTypeHouse => 'House';
 
   @override
-  String get onboardingPropertyTypeRoom => 'Room';
+  String get onboardingPropertyTypeOther => 'Other';
 
   @override
   String get themeSelectionTitle => 'Select Theme';
@@ -7874,4 +7899,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subscriptionBannerSubtitle =>
       'Unlock unlimited properties and premium features';
+
+  @override
+  String get forceUpdateTitle => 'Update Required';
+
+  @override
+  String get forceUpdateMessage =>
+      'A new version of BookBed is required to continue. Please update the app from Google Play Store.';
+
+  @override
+  String get forceUpdateButton => 'Update Now';
+
+  @override
+  String forceUpdateRequiredVersion(String version) {
+    return 'Minimum version required: $version';
+  }
+
+  @override
+  String get optionalUpdateTitle => 'Update Available';
+
+  @override
+  String get optionalUpdateMessage =>
+      'A new version of BookBed is available with improvements and bug fixes.';
+
+  @override
+  String get optionalUpdateNow => 'Update Now';
+
+  @override
+  String get optionalUpdateLater => 'Remind Me Later';
+
+  @override
+  String optionalUpdateVersion(String version) {
+    return 'Latest version: $version';
+  }
 }

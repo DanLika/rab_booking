@@ -191,6 +191,8 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                       // Embed code card
                       _buildSimpleEmbedCard(
                         code: _iframeEmbedCode,
+                        propertyId: widget.propertyId,
+                        unitId: widget.unitId,
                         onCopy: () =>
                             _copyToClipboard(_iframeEmbedCode, 'Embed kod'),
                       ),
@@ -318,7 +320,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                 ),
                 const SizedBox(width: 8),
                 const Text(
-                  'Shareable URL (Clean Link)',
+                  'URL za dijeljenje',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -336,7 +338,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Text(
-                    'RECOMMENDED',
+                    'PREPORUČENO',
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
@@ -348,7 +350,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Perfect for sharing on social media, email, or as a direct link',
+              'Idealno za dijeljenje na društvenim mrežama, emailom ili kao direktni link',
               style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 8),
@@ -367,7 +369,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                   IconButton(
                     icon: const Icon(Icons.copy, size: 20),
                     onPressed: onCopy,
-                    tooltip: 'Copy',
+                    tooltip: 'Kopiraj',
                   ),
               ],
             ),
@@ -378,8 +380,11 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   }
 
   /// Simple embed code card - clean and easy to copy
+  /// Shows property_id and unit_id in bold for easy identification
   Widget _buildSimpleEmbedCard({
     required String code,
+    required String propertyId,
+    required String unitId,
     required VoidCallback onCopy,
   }) {
     return Card(
@@ -397,7 +402,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                 ),
                 const SizedBox(width: 8),
                 const Text(
-                  'Embed Code',
+                  'Kod za ugradnju',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
@@ -430,18 +435,80 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey.shade300),
               ),
-              child: SelectableText(
-                code,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontFamily: 'monospace',
-                  height: 1.6,
-                ),
+              child: _buildHighlightedEmbedCode(
+                code: code,
+                propertyId: propertyId,
+                unitId: unitId,
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Build embed code with highlighted property_id and unit_id
+  /// Visual only - copy still gets plain text
+  Widget _buildHighlightedEmbedCode({
+    required String code,
+    required String propertyId,
+    required String unitId,
+  }) {
+    const normalStyle = TextStyle(
+      fontSize: 13,
+      fontFamily: 'monospace',
+      height: 1.6,
+    );
+
+    final boldStyle = TextStyle(
+      fontSize: 13,
+      fontFamily: 'monospace',
+      fontWeight: FontWeight.bold,
+      backgroundColor: AppColors.authSecondary.withValues(alpha: 0.15),
+      height: 1.6,
+    );
+
+    // Split embed code around property and unit IDs to create highlighted spans
+    final spans = <TextSpan>[];
+    var remaining = code;
+
+    // Find and highlight property ID
+    final propertyMarker = 'property=$propertyId';
+    final propertyIndex = remaining.indexOf(propertyMarker);
+    if (propertyIndex != -1) {
+      // Text before property
+      spans.add(
+        TextSpan(
+          text: remaining.substring(0, propertyIndex + 9),
+          style: normalStyle,
+        ),
+      ); // "property="
+      // Property ID (bold)
+      spans.add(TextSpan(text: propertyId, style: boldStyle));
+      remaining = remaining.substring(propertyIndex + propertyMarker.length);
+    }
+
+    // Find and highlight unit ID
+    final unitMarker = 'unit=$unitId';
+    final unitIndex = remaining.indexOf(unitMarker);
+    if (unitIndex != -1) {
+      // Text before unit
+      spans.add(
+        TextSpan(
+          text: remaining.substring(0, unitIndex + 5),
+          style: normalStyle,
+        ),
+      ); // "unit="
+      // Unit ID (bold)
+      spans.add(TextSpan(text: unitId, style: boldStyle));
+      remaining = remaining.substring(unitIndex + unitMarker.length);
+    }
+
+    // Remaining text
+    if (remaining.isNotEmpty) {
+      spans.add(TextSpan(text: remaining, style: normalStyle));
+    }
+
+    return SelectableText.rich(TextSpan(children: spans));
   }
 }

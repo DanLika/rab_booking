@@ -295,6 +295,25 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return OwnerRoutes.emailVerification;
       }
 
+      // PROFILE COMPLETION: Redirect social sign-in users to complete profile
+      // Block access to protected routes until profile is completed
+      final requiresProfileCompletion = authState.requiresProfileCompletion;
+      final isProfileEditRoute =
+          state.matchedLocation == OwnerRoutes.profileEdit;
+
+      if (isAuthenticated &&
+          requiresProfileCompletion &&
+          !isProfileEditRoute &&
+          !isPublicAuthRoute) {
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Redirecting to profile edit (profile incomplete)',
+            tag: 'ROUTER',
+          );
+        }
+        return OwnerRoutes.profileEdit;
+      }
+
       if (kDebugMode) {
         LoggingService.log('  → No redirect needed', tag: 'ROUTER');
       }

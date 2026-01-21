@@ -19,6 +19,10 @@ class CalendarDayCell extends StatelessWidget {
   /// Default: [5, 6] (Friday, Saturday nights for hotel pricing)
   final List<int>? weekendDays;
 
+  /// Unit's default weekend base price (fallback when no custom daily price).
+  /// Used when the day is a weekend and no custom price is set in daily_prices.
+  final double? weekendBasePrice;
+
   const CalendarDayCell({
     super.key,
     required this.date,
@@ -30,6 +34,7 @@ class CalendarDayCell extends StatelessWidget {
     required this.isMobile,
     required this.isSmallMobile,
     this.weekendDays,
+    this.weekendBasePrice,
   });
 
   @override
@@ -47,11 +52,24 @@ class CalendarDayCell extends StatelessWidget {
     final hasPrice = regularPrice != null;
     final isAvailable = priceData?.available ?? true;
 
-    final price = (isWeekend && weekendPrice != null)
-        ? weekendPrice
-        : (regularPrice ?? basePrice);
+    // Price hierarchy:
+    // 1. Custom weekend price from daily_prices (per-day override)
+    // 2. Unit's default weekend base price (if it's a weekend day)
+    // 3. Custom regular price from daily_prices (per-day override)
+    // 4. Unit's base price (fallback)
+    final double price;
+    if (isWeekend && weekendPrice != null) {
+      price = weekendPrice;
+    } else if (isWeekend && weekendBasePrice != null && regularPrice == null) {
+      price = weekendBasePrice!;
+    } else {
+      price = regularPrice ?? basePrice;
+    }
 
-    final hasWeekendPrice = weekendPrice != null;
+    // Check if this day uses weekend pricing (custom or unit default)
+    final hasWeekendPrice =
+        weekendPrice != null ||
+        (isWeekend && weekendBasePrice != null && regularPrice == null);
     final blockCheckIn = priceData?.blockCheckIn ?? false;
     final blockCheckOut = priceData?.blockCheckOut ?? false;
     final hasRestrictions =

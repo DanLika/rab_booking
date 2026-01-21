@@ -1520,6 +1520,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           }
         }
 
+        // PRE-WARM widgetContextProvider cache so calendar has immediate access
+        // Without this, calendar's minNights defaults to 1 and badge doesn't show
+        // ignore: unused_result
+        ref.read(
+          widgetContextProvider((propertyId: _propertyId!, unitId: _unitId)),
+        );
+
         // Set default payment method based on what's enabled
         _setDefaultPaymentMethod();
 
@@ -1622,7 +1629,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final isStripeEnabled = _widgetSettings?.stripeConfig?.enabled == true;
     final isBankTransferEnabled =
         _widgetSettings?.bankTransferConfig?.enabled == true;
-    final isPayOnArrivalEnabled = _widgetSettings?.allowPayOnArrival == true;
+    // Pay on Arrival is NOT allowed in bookingInstant mode - it defeats the purpose
+    // of instant payment. If owner wants pay on arrival, they should use bookingPending.
+    final isPayOnArrivalEnabled =
+        _widgetSettings?.allowPayOnArrival == true &&
+        _widgetSettings?.widgetMode != WidgetMode.bookingInstant;
 
     // If current selection is valid, keep it
     if (_selectedPaymentMethod == 'stripe' && isStripeEnabled) return;
@@ -1716,6 +1727,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Bug Fix: Don't auto-show guest form from cache
         // User should explicitly select dates or click to open booking flow
       });
+
+      // Validate restored payment method - it may be invalid if widget mode changed
+      // (e.g., user had pay_on_arrival selected but owner changed to bookingInstant)
+      _setDefaultPaymentMethod();
     }
   }
 
@@ -2689,10 +2704,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final minimalistColors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     // Safety check: At least one payment method must be available
+    // Note: Pay on Arrival doesn't count for bookingInstant mode - it defeats
+    // the purpose of instant payment. If owner wants pay on arrival, they
+    // should use bookingPending mode instead.
     final hasAnyPaymentMethod =
         (_widgetSettings?.stripeConfig?.enabled == true) ||
-        (_widgetSettings?.bankTransferConfig?.enabled == true) ||
-        (_widgetSettings?.allowPayOnArrival == true);
+        (_widgetSettings?.bankTransferConfig?.enabled == true);
 
     // If no payment methods available, show error message
     if (_widgetSettings?.widgetMode == WidgetMode.bookingInstant &&
@@ -2751,8 +2768,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   _widgetSettings?.stripeConfig?.enabled == true;
               final isBankTransferEnabled =
                   _widgetSettings?.bankTransferConfig?.enabled == true;
-              final isPayOnArrivalEnabled =
-                  _widgetSettings?.allowPayOnArrival == true;
+              // Note: Pay on Arrival is NOT available in bookingInstant mode
+              // It defeats the purpose of instant payment - if owner wants
+              // pay on arrival, they should use bookingPending mode instead
 
               int enabledCount = 0;
               String? singleMethod;
@@ -2778,12 +2796,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 singleMethodTitle = tr.bankTransfer;
                 singleMethodSubtitle = depositFormatted;
               }
-              if (isPayOnArrivalEnabled) {
-                enabledCount++;
-                singleMethod = 'pay_on_arrival';
-                singleMethodTitle = tr.payOnArrival;
-                singleMethodSubtitle = tr.paymentAtProperty;
-              }
+              // Note: Pay on Arrival is not available in bookingInstant mode
+              // (isPayOnArrivalEnabled is always false here)
 
               // If no payment methods enabled, show error
               if (enabledCount == 0) {
@@ -2859,13 +2873,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   _widgetSettings?.stripeConfig?.enabled == true;
               final isBankTransferEnabled =
                   _widgetSettings?.bankTransferConfig?.enabled == true;
-              final isPayOnArrivalEnabled =
-                  _widgetSettings?.allowPayOnArrival == true;
+              // Note: Pay on Arrival is NOT available in bookingInstant mode
 
               int enabledCount = 0;
               if (isStripeEnabled) enabledCount++;
               if (isBankTransferEnabled) enabledCount++;
-              if (isPayOnArrivalEnabled) enabledCount++;
 
               // Only show payment selectors if multiple options
               if (enabledCount <= 1) {
@@ -2929,38 +2941,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         );
                       },
                     ),
-
-                  // Pay on Arrival option - house + key icons
-                  if (isPayOnArrivalEnabled)
-                    Builder(
-                      builder: (context) {
-                        final tr = WidgetTranslations.of(context, ref);
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            top: (isStripeEnabled || isBankTransferEnabled)
-                                ? SpacingTokens.s
-                                : 0,
-                          ),
-                          child: PaymentOptionWidget(
-                            icon: Icons.villa_rounded,
-                            secondaryIcon: Icons.key_rounded,
-                            title: tr.payOnArrival,
-                            subtitle: tr.payAtTheProperty,
-                            isSelected:
-                                _selectedPaymentMethod == 'pay_on_arrival',
-                            onTap: () {
-                              if (mounted) {
-                                setState(
-                                  () =>
-                                      _selectedPaymentMethod = 'pay_on_arrival',
-                                );
-                              }
-                            },
-                            isDarkMode: isDarkMode,
-                          ),
-                        );
-                      },
-                    ),
+                  // Note: Pay on Arrival is NOT available in bookingInstant mode
                 ],
               );
             },

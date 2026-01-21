@@ -1,17 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../models/trial_status.dart';
 
 /// Provider for current user's trial status
 final trialStatusProvider = StreamProvider<TrialStatus?>((ref) {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return Stream.value(null);
+  // Consistency: Use enhancedAuthProvider for auth state
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
+  if (userId == null) return Stream.value(null);
 
   return FirebaseFirestore.instance
       .collection('users')
-      .doc(user.uid)
+      .doc(userId)
       .snapshots()
       .map((doc) {
         if (!doc.exists) return null;

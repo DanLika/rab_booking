@@ -43,12 +43,13 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
   final _slugController = TextEditingController();
   final _subdomainController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
   final _addressController = TextEditingController();
+  final _cityController = TextEditingController();
 
-  PropertyType _selectedType = PropertyType.apartment;
+  PropertyType _selectedType = PropertyType.villa;
   Set<PropertyAmenity> _selectedAmenities = {};
-  bool _isPublished = false;
+  bool _isPublished =
+      true; // Default to ON - most owners want to publish immediately
   bool _isLoading = false;
   bool _isManualSlugEdit = false;
 
@@ -80,8 +81,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
     _subdomainController.text = property.subdomain ?? '';
     _descriptionController.text = property.description;
     _selectedType = property.propertyType;
-    _locationController.text = property.location;
     _addressController.text = property.address ?? '';
+    _cityController.text = property.city ?? '';
     _selectedAmenities = property.amenities.toSet();
     _isPublished = property.isActive;
     _isManualSlugEdit = property.slug != null;
@@ -100,8 +101,8 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
     _slugController.dispose();
     _subdomainController.dispose();
     _descriptionController.dispose();
-    _locationController.dispose();
     _addressController.dispose();
+    _cityController.dispose();
     _subdomainDebounceTimer?.cancel();
     super.dispose();
   }
@@ -565,7 +566,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                 title: l10n.propertyFormLocation,
                                 icon: Icons.location_on,
                                 children: [
-                                  // Location + Address - Responsive layout
+                                  // Street + City - Responsive layout
                                   LayoutBuilder(
                                     builder: (context, constraints) {
                                       final isVerySmall =
@@ -577,32 +578,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                           crossAxisAlignment:
                                               CrossAxisAlignment.stretch,
                                           children: [
-                                            TextFormField(
-                                              controller: _locationController,
-                                              decoration:
-                                                  InputDecorationHelper.buildDecoration(
-                                                    labelText: l10n
-                                                        .propertyFormLocationLabel,
-                                                    hintText: l10n
-                                                        .propertyFormLocationHint,
-                                                    prefixIcon: const Icon(
-                                                      Icons.location_on,
-                                                    ),
-                                                    isMobile: isMobile,
-                                                    context: context,
-                                                  ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormLocationRequired;
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                            const SizedBox(
-                                              height: AppDimensions.spaceM,
-                                            ),
+                                            // Street and number (required)
                                             TextFormField(
                                               controller: _addressController,
                                               decoration:
@@ -617,6 +593,41 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                                     isMobile: isMobile,
                                                     context: context,
                                                   ),
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
+                                                  return l10n
+                                                      .propertyFormAddressRequired;
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                            const SizedBox(
+                                              height: AppDimensions.spaceM,
+                                            ),
+                                            // City (required)
+                                            TextFormField(
+                                              controller: _cityController,
+                                              decoration:
+                                                  InputDecorationHelper.buildDecoration(
+                                                    labelText:
+                                                        l10n.propertyFormCity,
+                                                    hintText: l10n
+                                                        .propertyFormCityHint,
+                                                    prefixIcon: const Icon(
+                                                      Icons.location_city,
+                                                    ),
+                                                    isMobile: isMobile,
+                                                    context: context,
+                                                  ),
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
+                                                  return l10n
+                                                      .propertyFormCityRequired;
+                                                }
+                                                return null;
+                                              },
                                             ),
                                           ],
                                         );
@@ -627,32 +638,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Expanded(
-                                            child: TextFormField(
-                                              controller: _locationController,
-                                              decoration:
-                                                  InputDecorationHelper.buildDecoration(
-                                                    labelText: l10n
-                                                        .propertyFormLocationLabel,
-                                                    hintText: l10n
-                                                        .propertyFormLocationHint,
-                                                    prefixIcon: const Icon(
-                                                      Icons.location_on,
-                                                    ),
-                                                    isMobile: isMobile,
-                                                    context: context,
-                                                  ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return l10n
-                                                      .propertyFormLocationRequired;
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
+                                          // Street and number (required)
                                           Expanded(
                                             child: TextFormField(
                                               controller: _addressController,
@@ -668,6 +654,41 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                                     isMobile: isMobile,
                                                     context: context,
                                                   ),
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
+                                                  return l10n
+                                                      .propertyFormAddressRequired;
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          // City (required)
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller: _cityController,
+                                              decoration:
+                                                  InputDecorationHelper.buildDecoration(
+                                                    labelText:
+                                                        l10n.propertyFormCity,
+                                                    hintText: l10n
+                                                        .propertyFormCityHint,
+                                                    prefixIcon: const Icon(
+                                                      Icons.location_city,
+                                                    ),
+                                                    isMobile: isMobile,
+                                                    context: context,
+                                                  ),
+                                              validator: (value) {
+                                                if (value == null ||
+                                                    value.isEmpty) {
+                                                  return l10n
+                                                      .propertyFormCityRequired;
+                                                }
+                                                return null;
+                                              },
                                             ),
                                           ),
                                         ],
@@ -1149,6 +1170,10 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           }
         }
 
+        // Construct location from address and city
+        final constructedLocation =
+            '${_addressController.text.trim()}, ${_cityController.text.trim()}';
+
         // Update other fields (subdomain already updated by Cloud Function if changed)
         await repository.updateProperty(
           propertyId: widget.property!.id,
@@ -1159,14 +1184,17 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
               : subdomainValue, // Skip if already set by Cloud Function
           description: _descriptionController.text,
           propertyType: _selectedType.value,
-          location: _locationController.text,
-          address: _addressController.text.isEmpty
-              ? null
-              : _addressController.text,
+          location: constructedLocation,
+          address: _addressController.text.trim(),
+          city: _cityController.text.trim(),
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           isActive: _isPublished,
         );
       } else {
+        // Construct location from address and city
+        final constructedLocation =
+            '${_addressController.text.trim()}, ${_cityController.text.trim()}';
+
         // Create mode - subdomain validation already done above
         await repository.createProperty(
           ownerId: ownerId,
@@ -1175,10 +1203,9 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
           subdomain: subdomainValue,
           description: _descriptionController.text,
           propertyType: _selectedType.value,
-          location: _locationController.text,
-          address: _addressController.text.isEmpty
-              ? null
-              : _addressController.text,
+          location: constructedLocation,
+          address: _addressController.text.trim(),
+          city: _cityController.text.trim(),
           amenities: PropertyAmenity.toStringList(_selectedAmenities.toList()),
           isActive: _isPublished,
         );

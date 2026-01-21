@@ -747,6 +747,8 @@ class _PriceListCalendarWidgetState
                                         date.day,
                                       )],
                                   basePrice: widget.unit.pricePerNight,
+                                  weekendBasePrice:
+                                      widget.unit.weekendBasePrice,
                                   isSelected: _selectedDays.contains(date),
                                   isBulkEditMode: _bulkEditMode,
                                   onTap: () => _onDayCellTap(date),

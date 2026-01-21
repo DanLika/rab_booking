@@ -54,7 +54,8 @@ class UnitWizardDraft with _$UnitWizardDraft {
     Map<String, dynamic>? taxLegalConfig,
 
     // Step 8: Review & Publish (FINAL)
-    @Default(false) bool isPublished, // false = draft, true = active unit
+    @Default(true)
+    bool isPublished, // Default to ON - most owners want to publish immediately
     // Timestamps
     DateTime? lastSaved,
     DateTime? createdAt,

@@ -817,6 +817,18 @@ mixin _$UserModel {
   /// Keys are feature IDs, values are true if seen
   Map<String, bool> get featureFlags => throw _privateConstructorUsedError;
 
+  /// Profile completion status for social sign-in users.
+  /// Default true for backwards compatibility (existing users).
+  /// Set to false when user registers via Google/Apple for the first time.
+  @JsonKey(name: 'profile_completed')
+  bool get profileCompleted => throw _privateConstructorUsedError;
+
+  /// Last authentication provider used.
+  /// Values: 'google.com', 'apple.com', 'password', null
+  /// Used to auto-populate profile data from social providers.
+  @JsonKey(name: 'last_provider')
+  String? get lastProvider => throw _privateConstructorUsedError;
+
   /// Serializes this UserModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -864,6 +876,8 @@ abstract class $UserModelCopyWith<$Res> {
     @JsonKey(name: 'admin_override_account_type')
     AccountType? adminOverrideAccountType,
     Map<String, bool> featureFlags,
+    @JsonKey(name: 'profile_completed') bool profileCompleted,
+    @JsonKey(name: 'last_provider') String? lastProvider,
   });
 
   $EmployeePermissionsCopyWith<$Res>? get permissions;
@@ -908,6 +922,8 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? hideSubscription = null,
     Object? adminOverrideAccountType = freezed,
     Object? featureFlags = null,
+    Object? profileCompleted = null,
+    Object? lastProvider = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -1007,6 +1023,14 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
                 ? _value.featureFlags
                 : featureFlags // ignore: cast_nullable_to_non_nullable
                       as Map<String, bool>,
+            profileCompleted: null == profileCompleted
+                ? _value.profileCompleted
+                : profileCompleted // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            lastProvider: freezed == lastProvider
+                ? _value.lastProvider
+                : lastProvider // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -1068,6 +1092,8 @@ abstract class _$$UserModelImplCopyWith<$Res>
     @JsonKey(name: 'admin_override_account_type')
     AccountType? adminOverrideAccountType,
     Map<String, bool> featureFlags,
+    @JsonKey(name: 'profile_completed') bool profileCompleted,
+    @JsonKey(name: 'last_provider') String? lastProvider,
   });
 
   @override
@@ -1112,6 +1138,8 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? hideSubscription = null,
     Object? adminOverrideAccountType = freezed,
     Object? featureFlags = null,
+    Object? profileCompleted = null,
+    Object? lastProvider = freezed,
   }) {
     return _then(
       _$UserModelImpl(
@@ -1211,6 +1239,14 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value._featureFlags
             : featureFlags // ignore: cast_nullable_to_non_nullable
                   as Map<String, bool>,
+        profileCompleted: null == profileCompleted
+            ? _value.profileCompleted
+            : profileCompleted // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        lastProvider: freezed == lastProvider
+            ? _value.lastProvider
+            : lastProvider // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -1248,6 +1284,8 @@ class _$UserModelImpl extends _UserModel {
     @JsonKey(name: 'hide_subscription') this.hideSubscription = false,
     @JsonKey(name: 'admin_override_account_type') this.adminOverrideAccountType,
     final Map<String, bool> featureFlags = const {},
+    @JsonKey(name: 'profile_completed') this.profileCompleted = true,
+    @JsonKey(name: 'last_provider') this.lastProvider,
   }) : _devices = devices,
        _recentSecurityEvents = recentSecurityEvents,
        _featureFlags = featureFlags,
@@ -1398,9 +1436,23 @@ class _$UserModelImpl extends _UserModel {
     return EqualUnmodifiableMapView(_featureFlags);
   }
 
+  /// Profile completion status for social sign-in users.
+  /// Default true for backwards compatibility (existing users).
+  /// Set to false when user registers via Google/Apple for the first time.
+  @override
+  @JsonKey(name: 'profile_completed')
+  final bool profileCompleted;
+
+  /// Last authentication provider used.
+  /// Values: 'google.com', 'apple.com', 'password', null
+  /// Used to auto-populate profile data from social providers.
+  @override
+  @JsonKey(name: 'last_provider')
+  final String? lastProvider;
+
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType, featureFlags: $featureFlags)';
+    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType, featureFlags: $featureFlags, profileCompleted: $profileCompleted, lastProvider: $lastProvider)';
   }
 
   @override
@@ -1457,7 +1509,11 @@ class _$UserModelImpl extends _UserModel {
             const DeepCollectionEquality().equals(
               other._featureFlags,
               _featureFlags,
-            ));
+            ) &&
+            (identical(other.profileCompleted, profileCompleted) ||
+                other.profileCompleted == profileCompleted) &&
+            (identical(other.lastProvider, lastProvider) ||
+                other.lastProvider == lastProvider));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1488,6 +1544,8 @@ class _$UserModelImpl extends _UserModel {
     hideSubscription,
     adminOverrideAccountType,
     const DeepCollectionEquality().hash(_featureFlags),
+    profileCompleted,
+    lastProvider,
   ]);
 
   /// Create a copy of UserModel
@@ -1539,6 +1597,8 @@ abstract class _UserModel extends UserModel {
     @JsonKey(name: 'admin_override_account_type')
     final AccountType? adminOverrideAccountType,
     final Map<String, bool> featureFlags,
+    @JsonKey(name: 'profile_completed') final bool profileCompleted,
+    @JsonKey(name: 'last_provider') final String? lastProvider,
   }) = _$UserModelImpl;
   const _UserModel._() : super._();
 
@@ -1657,6 +1717,20 @@ abstract class _UserModel extends UserModel {
   /// Keys are feature IDs, values are true if seen
   @override
   Map<String, bool> get featureFlags;
+
+  /// Profile completion status for social sign-in users.
+  /// Default true for backwards compatibility (existing users).
+  /// Set to false when user registers via Google/Apple for the first time.
+  @override
+  @JsonKey(name: 'profile_completed')
+  bool get profileCompleted;
+
+  /// Last authentication provider used.
+  /// Values: 'google.com', 'apple.com', 'password', null
+  /// Used to auto-populate profile data from social providers.
+  @override
+  @JsonKey(name: 'last_provider')
+  String? get lastProvider;
 
   /// Create a copy of UserModel
   /// with the given fields replaced by the non-null parameter values.

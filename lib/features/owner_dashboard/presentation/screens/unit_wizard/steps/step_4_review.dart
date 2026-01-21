@@ -5,11 +5,11 @@ import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 import '../state/unit_wizard_provider.dart';
 
-/// Step 5: Review & Publish - Final review before creating the unit
-class Step5Review extends ConsumerWidget {
+/// Step 4: Review & Publish - Final review before creating the unit
+class Step4Review extends ConsumerWidget {
   final String? unitId;
 
-  const Step5Review({super.key, this.unitId});
+  const Step4Review({super.key, this.unitId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -17,6 +17,10 @@ import {
   BookingEmailTracking,
 } from "./utils/bookingHelpers";
 import {safeToDate} from "./utils/dateValidation";
+import {
+  generateBookingAccessToken,
+  calculateTokenExpiration,
+} from "./bookingAccessToken";
 
 // ==========================================
 // EMAIL ERROR TRACKING
@@ -292,6 +296,23 @@ export const onBookingStatusChange = onDocumentUpdated(
             .get();
           const propertyData = propertyDoc.data();
 
+          // Generate new access token for "View my reservation" link
+          // The plaintext token is only available at generation time,
+          // so we must create a new one when approving the booking
+          const {token: accessToken, hashedToken} = generateBookingAccessToken();
+          const checkOutDate = safeToDate(after.check_out, "check_out");
+          const tokenExpiration = calculateTokenExpiration(checkOutDate);
+
+          // Update booking with new access token (before sending email)
+          await event.data?.after.ref.update({
+            access_token: hashedToken,
+            token_expires_at: tokenExpiration,
+          });
+
+          logInfo("Generated new access token for approved booking", {
+            bookingId: event.params.bookingId,
+          });
+
           // Send booking approved email to guest with retry
           await sendEmailWithRetry(
             async () => {
@@ -300,10 +321,13 @@ export const onBookingStatusChange = onDocumentUpdated(
                 after.guest_name || "Guest",
                 after.booking_reference || "",
                 safeToDate(after.check_in, "check_in"),
-                safeToDate(after.check_out, "check_out"),
+                checkOutDate,
                 propertyData?.name || "Property",
                 propertyData?.contact_email,
-                after.property_id
+                accessToken, // Plaintext token for "View my reservation" link
+                after.total_price,
+                after.deposit_amount || after.advance_amount,
+                after.property_id // For subdomain URL generation
               );
             },
             "Booking Approved",

@@ -52,7 +52,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
   /// Go to next step
   void goToNextStep() {
     final currentState = state.value;
-    if (currentState == null || currentState.currentStep >= 5) return;
+    if (currentState == null || currentState.currentStep >= 4) return;
 
     final nextStep = currentState.currentStep + 1;
     state = AsyncValue.data(currentState.copyWith(currentStep: nextStep));
@@ -69,7 +69,7 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
 
   /// Jump to specific step
   void jumpToStep(int step) {
-    if (step < 1 || step > 5) return;
+    if (step < 1 || step > 4) return;
 
     final currentState = state.value;
     if (currentState == null) return;
@@ -132,10 +132,10 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     'seasonStartDate' => draft.copyWith(seasonStartDate: value),
     'seasonEndDate' => draft.copyWith(seasonEndDate: value),
     'blockedDates' => draft.copyWith(blockedDates: value),
-    // Step 4 - Photos (optional)
+    // Step 4 - Review & Publish (no fields to update here)
+    // Legacy photo fields (kept for backwards compatibility)
     'images' => draft.copyWith(images: value),
     'coverImageUrl' => draft.copyWith(coverImageUrl: value),
-    // Step 5 - Review & Publish (no fields to update here)
     // Additional fields for future use
     'widgetMode' => draft.copyWith(widgetMode: value),
     'widgetTheme' => draft.copyWith(widgetTheme: value),

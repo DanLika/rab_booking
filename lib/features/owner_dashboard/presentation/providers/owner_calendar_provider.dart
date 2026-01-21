@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
@@ -66,8 +65,11 @@ Future<List<UnitModel>> allOwnerUnits(Ref ref) async {
 @Riverpod(keepAlive: true)
 Future<Map<String, List<BookingModel>>> calendarBookings(Ref ref) async {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
-  final auth = FirebaseAuth.instance;
-  final userId = auth.currentUser?.uid;
+
+  // BUG FIX: Watch auth state to rebuild when user changes
+  // Consistent with dashboard fix - prevents stale data after re-login
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
 
   if (userId == null) {
     throw AuthException(
@@ -131,8 +133,10 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
   @override
   void build() {
     _isDisposed = false;
-    final auth = FirebaseAuth.instance;
-    final userId = auth.currentUser?.uid;
+
+    // BUG FIX: Watch auth state to rebuild subscriptions when user changes
+    final authState = ref.watch(enhancedAuthProvider);
+    final userId = authState.userModel?.id;
 
     if (userId != null) {
       _setupRealtimeSubscription(userId: userId);
@@ -277,8 +281,9 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
 
   /// Manually refresh subscription (useful for debugging)
   void refresh() {
-    final auth = FirebaseAuth.instance;
-    final userId = auth.currentUser?.uid;
+    // Use auth provider for consistency
+    final authState = ref.read(enhancedAuthProvider);
+    final userId = authState.userModel?.id;
 
     if (userId != null) {
       _setupRealtimeSubscription(userId: userId);

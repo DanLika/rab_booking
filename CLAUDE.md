@@ -656,7 +656,103 @@ window.pwaPromptInstall()  // async function
 
 ---
 
-**Last Updated**: 2026-01-20 | **Version**: 6.32
+## 🔄 FORCE UPDATE SYSTEM (Android)
+
+**Dokumentacija**: `docs/FORCE_UPDATE_SETUP.md`
+
+**Komponente:**
+| Fajl | Svrha |
+|------|-------|
+| `core/models/app_config.dart` | Freezed model za Firestore config (minRequiredVersion, latestVersion, forceUpdateEnabled) |
+| `core/services/version_check_service.dart` | Fetch-uje config iz Firestore, poredi verzije, vraća UpdateStatus |
+| `core/widgets/force_update_dialog.dart` | Non-dismissible dialog - blokira app dok korisnik ne update-uje |
+| `core/widgets/optional_update_dialog.dart` | Dismissible dialog - podseća svakih 24h |
+| `core/providers/version_check_provider.dart` | Provider + VersionCheckWrapper widget |
+| `main.dart` | VersionCheckWrapper wrap-uje GlobalNavigationOverlay |
+
+**Firestore Config** (`app_config/android`):
+```json
+{
+  "minRequiredVersion": "1.0.2",
+  "latestVersion": "1.0.3",
+  "forceUpdateEnabled": true,
+  "updateMessage": "Nova verzija sa sigurnosnim popravkama je dostupna.",
+  "storeUrl": "https://play.google.com/store/apps/details?id=io.bookbed.app"
+}
+```
+
+**Firestore Rules**:
+```javascript
+match /app_config/{platform} {
+  allow read: if isAuthenticated(); // Svaki authenticated user može check-ovati verziju
+  allow write: if false; // Samo Cloud Functions (Admin SDK)
+}
+```
+
+**Kada se poziva:**
+1. **App start** - `VersionCheckWrapper.initState()` → `addPostFrameCallback`
+2. **App resume** - `didChangeAppLifecycleState(resumed)` → check verziju
+
+**Version comparison:**
+- Semantic versioning: `MAJOR.MINOR.PATCH` (e.g., `1.0.2`)
+- `1.0.2` < `1.0.3` → FORCE UPDATE ako `minRequiredVersion = 1.0.3`
+- `1.0.2` < `1.0.3` → OPTIONAL UPDATE ako `latestVersion = 1.0.3` i `minRequiredVersion <= 1.0.2`
+
+**UpdateStatus enum:**
+- `forceUpdate` → Shows ForceUpdateDialog (cannot dismiss, must update)
+- `optionalUpdate` → Shows OptionalUpdateDialog (dismissible, reminds every 24h)
+- `upToDate` → No dialog
+
+**Logging:**
+```
+VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
+```
+
+**⚠️ VAŽNO**: Force update radi SAMO na Android native app. Web verzija se automatski ažurira pri deploy-u.
+
+---
+
+**Last Updated**: 2026-01-21 | **Version**: 6.34
+
+**Changelog 6.34**: Weekend Pricing Display & UX Improvements:
+- **Weekend Pricing in Widget Calendar** (main feature):
+  - **Problem**: Weekend pricing showed correctly in owner dashboard but NOT in embedded widget calendar
+  - **Root Cause**: Widget calendar only showed prices in hover tooltips (desktop-only), mobile users couldn't see prices
+  - **Fix** (`month_calendar_widget.dart`, `year_calendar_widget.dart`):
+    - Added `_buildDayCellContent()` helper with price display directly in calendar cells
+    - Price hierarchy: custom daily price → weekend base price → base price
+    - Year calendar: price only shows when cellSize >= 24px (responsive)
+- **Registration Form UX Fix** (`enhanced_register_screen.dart`):
+  - **Problem**: Button disabled on any validation failure without showing why
+  - **Fix**: Button only disabled when fields are EMPTY. Validation errors shown on submit click
+  - Better UX: users see exactly what needs fixing
+- **Unit Hub Race Condition Fix** (`unified_unit_hub_screen.dart`):
+  - **Problem**: Auto-selection failed when units loaded before properties (empty properties list)
+  - **Fix**: Added guard `if (properties.isEmpty) return;` in `_handleUnitsChanged()`
+  - Added `ref.listen` for properties changes to re-trigger auto-selection
+- **Booking Details Dialog** (`booking_details_dialog.dart`):
+  - Responsive spacing improvements for small screens
+  - Payment method and payment option display added
+- **Unit Wizard Simplified**: Reduced from 5 steps to 4 steps (removed Photos step - photos added via Unit Hub)
+
+**Changelog 6.33**: Force Update System (Android) - IMPLEMENTED:
+- **NEW FEATURE**: App version control sa force/optional update dialogs
+- **Components Created**:
+  - `AppConfig` model (freezed) - Firestore config za verzije
+  - `VersionCheckService` - Version comparison logic (semantic versioning)
+  - `ForceUpdateDialog` - Non-dismissible dialog za kritične update-e
+  - `OptionalUpdateDialog` - Dismissible dialog, podseća svakih 24h
+  - `VersionCheckWrapper` - Widget za automatic version checking
+- **Integration** (`main.dart`):
+  - VersionCheckWrapper wrap-uje GlobalNavigationOverlay
+  - Check-uje verziju na app start i app resume
+- **Firestore**:
+  - Collection: `app_config/{platform}` (android, ios)
+  - Security rules: Read za authenticated usere, write samo Admin SDK
+- **Localization**: 10 novih stringova (EN + HR) za update dialogs
+- **Documentation**: `docs/FORCE_UPDATE_SETUP.md` - setup instrukcije
+- **Testing Required**: Kreirati test `app_config/android` dokument u Firestore
+- **Next Release**: Force update će biti aktivan tek u 1.0.3+ (trenutno 1.0.2+6)
 
 **Changelog 6.32**: Email Verification Network Error Fix (v1.0.2+6):
 - **CRASH FIX**: Network errors during email verification no longer crash the app

@@ -3,7 +3,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
-import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 
 /// About screen - App information, version, and credits
 class AboutScreen extends StatelessWidget {
@@ -43,12 +42,11 @@ class AboutScreen extends StatelessWidget {
                 padding: EdgeInsets.all(isMobile ? 32 : 48),
                 child: Column(
                   children: [
-                    // App Icon
+                    // App Icon - High resolution non-transparent image
                     Container(
                       width: isMobile ? 80 : 100,
                       height: isMobile ? 80 : 100,
                       decoration: BoxDecoration(
-                        color: Colors.white,
                         borderRadius: BorderRadius.circular(isMobile ? 20 : 24),
                         boxShadow: [
                           BoxShadow(
@@ -58,7 +56,15 @@ class AboutScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: AuthLogoIcon(size: isMobile ? 50 : 60),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(isMobile ? 20 : 24),
+                        child: Image.asset(
+                          'assets/images/Apple_App_Icon.png',
+                          width: isMobile ? 80 : 100,
+                          height: isMobile ? 80 : 100,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
                     SizedBox(height: isMobile ? 20 : 24),
 
@@ -70,10 +76,11 @@ class AboutScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                     SizedBox(height: isMobile ? 8 : 12),
 
-                    // App Tagline
+                    // App Tagline - centered
                     Text(
                       l10n.aboutTagline,
                       style: TextStyle(
@@ -81,27 +88,7 @@ class AboutScreen extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w500,
                       ),
-                    ),
-                    SizedBox(height: isMobile ? 16 : 20),
-
-                    // Version Badge
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 16 : 20,
-                        vertical: isMobile ? 8 : 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        l10n.aboutVersion,
-                        style: TextStyle(
-                          fontSize: isMobile ? 14 : 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),

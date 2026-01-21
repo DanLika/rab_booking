@@ -9,6 +9,7 @@ import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
 
 part 'owner_bookings_provider.g.dart';
 
@@ -196,11 +197,13 @@ class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
 /// Owner unit IDs provider - cached list of unit IDs for pagination
 /// This is small data (just IDs) so OK to cache
 /// keepAlive: Prevents re-fetching on every navigation (used by 5+ providers)
+/// BUG FIX: Watch enhancedAuthProvider to auto-invalidate on user change
+/// This fixes the bug where data persisted after logout/login with different account
 @Riverpod(keepAlive: true)
 Future<List<String>> ownerUnitIds(Ref ref) async {
-  final repository = ref.watch(ownerBookingsRepositoryProvider);
-  final auth = FirebaseAuth.instance;
-  final userId = auth.currentUser?.uid;
+  // Watch auth state - provider rebuilds when user changes (login/logout)
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
 
   if (userId == null) {
     throw AuthException(
@@ -209,6 +212,7 @@ Future<List<String>> ownerUnitIds(Ref ref) async {
     );
   }
 
+  final repository = ref.watch(ownerBookingsRepositoryProvider);
   return repository.getOwnerUnitIds(userId);
 }
 
@@ -666,39 +670,31 @@ bool isLoadingMoreBookings(Ref ref) {
   return state.isLoadingMore;
 }
 
-/// Pending bookings count - for drawer badge
-/// OPTIMIZED: Uses Firestore count() aggregation (0 document reads!)
-/// keepAlive: Caches result to avoid re-fetching on every drawer open
-@Riverpod(keepAlive: true)
-Future<int> pendingBookingsCount(Ref ref) async {
+/// Pending bookings count - for drawer badge (REAL-TIME STREAM)
+/// Uses Firestore snapshots() for instant updates when bookings change
+/// Automatically updates badge when booking is confirmed/cancelled/created
+@riverpod
+Stream<int> pendingBookingsCount(Ref ref) {
   final repository = ref.watch(ownerBookingsRepositoryProvider);
   final auth = FirebaseAuth.instance;
   final userId = auth.currentUser?.uid;
 
-  if (userId == null) return 0;
+  if (userId == null) return Stream.value(0);
 
-  try {
-    // Get cached unit IDs
-    final unitIds = await ref.watch(ownerUnitIdsProvider.future);
-
-    // OPTIMIZED: Use count() aggregation instead of fetching documents
-    return await repository.getBookingsCountByStatus(
-      unitIds: unitIds,
-      status: BookingStatus.pending,
-    );
-  } catch (_) {
-    return 0;
-  }
+  // Use stream-based method for real-time updates
+  return repository.watchPendingBookingsCount();
 }
 
 /// Recent owner bookings provider (for dashboard activity)
 /// Small dataset (10 items), OK to use simple query
 /// keepAlive: Dashboard is frequently visited, avoid re-fetching
+/// BUG FIX: Watch enhancedAuthProvider to auto-invalidate on user change
+/// This fixes the bug where bookings persisted after logout/login with different account
 @Riverpod(keepAlive: true)
 Future<List<OwnerBooking>> recentOwnerBookings(Ref ref) async {
-  final repository = ref.watch(ownerBookingsRepositoryProvider);
-  final auth = FirebaseAuth.instance;
-  final userId = auth.currentUser?.uid;
+  // Watch auth state - provider rebuilds when user changes (login/logout)
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
 
   if (userId == null) {
     throw AuthException(
@@ -707,7 +703,9 @@ Future<List<OwnerBooking>> recentOwnerBookings(Ref ref) async {
     );
   }
 
-  // Get unit IDs (cached)
+  final repository = ref.watch(ownerBookingsRepositoryProvider);
+
+  // Get unit IDs (cached, but also invalidates on user change now)
   final unitIds = await ref.watch(ownerUnitIdsProvider.future);
 
   // Fetch just 10 most recent

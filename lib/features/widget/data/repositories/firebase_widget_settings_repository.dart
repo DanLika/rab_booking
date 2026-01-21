@@ -96,8 +96,12 @@ class FirebaseWidgetSettingsRepository {
         id: unitId,
         propertyId: propertyId,
         ownerId: ownerId, // Required for Firestore security rules
-        widgetMode:
-            WidgetMode.calendarOnly, // Default: show availability + contact
+        widgetMode: WidgetMode
+            .bookingPending, // Default: guests can book, owner approves
+        // allowPayOnArrival field DEPRECATED - server validation uses widgetMode:
+        // - booking_pending: No payment required (inherently "pay on arrival")
+        // - booking_instant: Payment required (Stripe or Bank Transfer)
+        allowPayOnArrival: false,
         contactOptions: ContactOptions(
           emailAddress: ownerEmail,
           phoneNumber: ownerPhone,

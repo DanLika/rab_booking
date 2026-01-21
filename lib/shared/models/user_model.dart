@@ -171,6 +171,16 @@ class UserModel with _$UserModel {
     /// Feature discovery flags (track which features the user has seen)
     /// Keys are feature IDs, values are true if seen
     @Default({}) Map<String, bool> featureFlags,
+
+    /// Profile completion status for social sign-in users.
+    /// Default true for backwards compatibility (existing users).
+    /// Set to false when user registers via Google/Apple for the first time.
+    @JsonKey(name: 'profile_completed') @Default(true) bool profileCompleted,
+
+    /// Last authentication provider used.
+    /// Values: 'google.com', 'apple.com', 'password', null
+    /// Used to auto-populate profile data from social providers.
+    @JsonKey(name: 'last_provider') String? lastProvider,
   }) = _UserModel;
 
   const UserModel._();

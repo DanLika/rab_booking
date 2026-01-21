@@ -530,25 +530,33 @@ class _EmbedWidgetGuideScreenState
                 top: Radius.circular(11),
               ),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.apartment,
-                  size: 20,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    property.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                // Row 1: Icon + Property name
+                Row(
+                  children: [
+                    Icon(
+                      Icons.apartment,
+                      size: 20,
+                      color: theme.colorScheme.primary,
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        property.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                // Row 2: Subdomain link (if available)
                 if (property.subdomain != null &&
-                    property.subdomain!.isNotEmpty)
+                    property.subdomain!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -567,6 +575,7 @@ class _EmbedWidgetGuideScreenState
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ),
@@ -639,7 +648,7 @@ class _EmbedWidgetGuideScreenState
 
           const SizedBox(height: 8),
 
-          // Code block
+          // Code block - with highlighted IDs for easy identification
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(10),
@@ -652,19 +661,84 @@ class _EmbedWidgetGuideScreenState
                 color: theme.colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
-            child: SelectableText(
-              embedCode,
-              style: TextStyle(
-                fontSize: 11,
-                fontFamily: 'monospace',
-                color: theme.colorScheme.primary,
-                height: 1.4,
-              ),
+            child: _buildHighlightedEmbedCode(
+              embedCode: embedCode,
+              propertyId: propertyId,
+              unitId: unit.id,
+              theme: theme,
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// Build embed code with highlighted property_id and unit_id
+  /// Visual only - copy still gets plain text
+  Widget _buildHighlightedEmbedCode({
+    required String embedCode,
+    required String propertyId,
+    required String unitId,
+    required ThemeData theme,
+  }) {
+    final normalStyle = TextStyle(
+      fontSize: 11,
+      fontFamily: 'monospace',
+      color: theme.colorScheme.primary,
+      height: 1.4,
+    );
+
+    final boldStyle = TextStyle(
+      fontSize: 11,
+      fontFamily: 'monospace',
+      color: theme.colorScheme.primary,
+      fontWeight: FontWeight.bold,
+      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+      height: 1.4,
+    );
+
+    // Split embed code around property and unit IDs to create highlighted spans
+    final spans = <TextSpan>[];
+    var remaining = embedCode;
+
+    // Find and highlight property ID
+    final propertyMarker = 'property=$propertyId';
+    final propertyIndex = remaining.indexOf(propertyMarker);
+    if (propertyIndex != -1) {
+      // Text before property
+      spans.add(
+        TextSpan(
+          text: remaining.substring(0, propertyIndex + 9),
+          style: normalStyle,
+        ),
+      ); // "property="
+      // Property ID (bold)
+      spans.add(TextSpan(text: propertyId, style: boldStyle));
+      remaining = remaining.substring(propertyIndex + propertyMarker.length);
+    }
+
+    // Find and highlight unit ID
+    final unitMarker = 'unit=$unitId';
+    final unitIndex = remaining.indexOf(unitMarker);
+    if (unitIndex != -1) {
+      // Text before unit
+      spans.add(
+        TextSpan(
+          text: remaining.substring(0, unitIndex + 5),
+          style: normalStyle,
+        ),
+      ); // "unit="
+      // Unit ID (bold)
+      spans.add(TextSpan(text: unitId, style: boldStyle));
+      remaining = remaining.substring(unitIndex + unitMarker.length);
+    }
+
+    // Remaining text
+    if (remaining.isNotEmpty) {
+      spans.add(TextSpan(text: remaining, style: normalStyle));
+    }
+
+    return SelectableText.rich(TextSpan(children: spans));
   }
 
   /// Build empty state widget

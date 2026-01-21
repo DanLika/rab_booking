@@ -239,17 +239,11 @@ enum PropertyType {
   /// Villa - standalone house with luxury amenities
   villa('villa'),
 
-  /// Apartment - unit within a building
-  apartment('apartment'),
-
-  /// Studio - compact living space
-  studio('studio'),
-
   /// House - traditional family home
   house('house'),
 
-  /// Room - single room rental
-  room('room');
+  /// Other - any other property type
+  other('other');
 
   const PropertyType(this.value);
 
@@ -258,26 +252,23 @@ enum PropertyType {
   /// Get display name for the property type
   String get displayName => switch (this) {
     PropertyType.villa => 'Villa',
-    PropertyType.apartment => 'Apartment',
-    PropertyType.studio => 'Studio',
     PropertyType.house => 'House',
-    PropertyType.room => 'Room',
+    PropertyType.other => 'Other',
   };
 
   /// Get Croatian display name
   String get displayNameHR => switch (this) {
     PropertyType.villa => 'Vila',
-    PropertyType.apartment => 'Apartman',
-    PropertyType.studio => 'Studio',
     PropertyType.house => 'Kuća',
-    PropertyType.room => 'Soba',
+    PropertyType.other => 'Ostalo',
   };
 
   /// Parse from string value
+  /// Handles legacy values (apartment, studio, room) by mapping to 'other'
   static PropertyType fromString(String value) {
     return PropertyType.values.firstWhere(
       (type) => type.value == value,
-      orElse: () => PropertyType.apartment,
+      orElse: () => PropertyType.other, // Legacy values map to 'other'
     );
   }
 }

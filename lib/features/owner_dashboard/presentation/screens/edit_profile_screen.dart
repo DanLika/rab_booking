@@ -255,6 +255,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
+      // Mark profile as completed for social sign-in users
+      final authState = ref.read(enhancedAuthProvider);
+      if (authState.requiresProfileCompletion) {
+        await ref.read(enhancedAuthProvider.notifier).completeProfile();
+      }
+
       if (mounted) {
         setState(() {
           _isDirty = false;
@@ -425,6 +431,69 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build first-time profile completion banner for social sign-in users
+  Widget _buildFirstTimeCompletionBanner(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
+            theme.colorScheme.secondary.withAlpha((0.1 * 255).toInt()),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.celebration_rounded,
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.editProfileWelcomeTitle,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.editProfileWelcomeMessage,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -703,6 +772,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                       textAlign: TextAlign.center,
                                     ),
                                     const SizedBox(height: 32),
+
+                                    // Show welcome banner for first-time social sign-in users
+                                    if (authState.requiresProfileCompletion)
+                                      _buildFirstTimeCompletionBanner(l10n),
 
                                     // ========== KARTICA 1: LIČNI PODACI ==========
                                     _buildProfileCard(

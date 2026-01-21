@@ -452,6 +452,24 @@ abstract class AppLocalizations {
   /// **'Login failed. Please check your credentials and try again.'**
   String get authErrorGeneric;
 
+  /// No description provided for @authErrorEmailLinkedToGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already linked to a Google account. Please sign in with Google instead.'**
+  String get authErrorEmailLinkedToGoogle;
+
+  /// No description provided for @authErrorEmailLinkedToApple.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already linked to an Apple account. Please sign in with Apple instead.'**
+  String get authErrorEmailLinkedToApple;
+
+  /// No description provided for @authErrorEmailAlreadyInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered. If you previously signed up with Google or Apple, please use that sign-in method instead.'**
+  String get authErrorEmailAlreadyInUse;
+
   /// No description provided for @authForgotPassword.
   ///
   /// In en, this message translates to:
@@ -5238,6 +5256,18 @@ abstract class AppLocalizations {
   /// **'Property Type'**
   String get editProfilePropertyType;
 
+  /// No description provided for @editProfileWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Your Profile'**
+  String get editProfileWelcomeTitle;
+
+  /// No description provided for @editProfileWelcomeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please add your contact details to complete your account setup.'**
+  String get editProfileWelcomeMessage;
+
   /// No description provided for @notificationSettingsTitle.
   ///
   /// In en, this message translates to:
@@ -6771,14 +6801,38 @@ abstract class AppLocalizations {
   /// No description provided for @propertyFormAddress.
   ///
   /// In en, this message translates to:
-  /// **'Address'**
+  /// **'Street and number *'**
   String get propertyFormAddress;
 
   /// No description provided for @propertyFormAddressHint.
   ///
   /// In en, this message translates to:
-  /// **'Street and number'**
+  /// **'e.g. Obala Petra Krešimira 5'**
   String get propertyFormAddressHint;
+
+  /// No description provided for @propertyFormAddressRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Street and number is required'**
+  String get propertyFormAddressRequired;
+
+  /// No description provided for @propertyFormCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City *'**
+  String get propertyFormCity;
+
+  /// No description provided for @propertyFormCityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Rab'**
+  String get propertyFormCityHint;
+
+  /// No description provided for @propertyFormCityRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'City is required'**
+  String get propertyFormCityRequired;
 
   /// No description provided for @propertyFormAmenities.
   ///
@@ -8178,29 +8232,17 @@ abstract class AppLocalizations {
   /// **'Villa'**
   String get onboardingPropertyTypeVilla;
 
-  /// No description provided for @onboardingPropertyTypeApartment.
-  ///
-  /// In en, this message translates to:
-  /// **'Apartment'**
-  String get onboardingPropertyTypeApartment;
-
-  /// No description provided for @onboardingPropertyTypeStudio.
-  ///
-  /// In en, this message translates to:
-  /// **'Studio'**
-  String get onboardingPropertyTypeStudio;
-
   /// No description provided for @onboardingPropertyTypeHouse.
   ///
   /// In en, this message translates to:
   /// **'House'**
   String get onboardingPropertyTypeHouse;
 
-  /// No description provided for @onboardingPropertyTypeRoom.
+  /// No description provided for @onboardingPropertyTypeOther.
   ///
   /// In en, this message translates to:
-  /// **'Room'**
-  String get onboardingPropertyTypeRoom;
+  /// **'Other'**
+  String get onboardingPropertyTypeOther;
 
   /// No description provided for @themeSelectionTitle.
   ///
@@ -14223,6 +14265,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlock unlimited properties and premium features'**
   String get subscriptionBannerSubtitle;
+
+  /// No description provided for @forceUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Required'**
+  String get forceUpdateTitle;
+
+  /// No description provided for @forceUpdateMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of BookBed is required to continue. Please update the app from Google Play Store.'**
+  String get forceUpdateMessage;
+
+  /// No description provided for @forceUpdateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get forceUpdateButton;
+
+  /// No description provided for @forceUpdateRequiredVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum version required: {version}'**
+  String forceUpdateRequiredVersion(String version);
+
+  /// No description provided for @optionalUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Available'**
+  String get optionalUpdateTitle;
+
+  /// No description provided for @optionalUpdateMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of BookBed is available with improvements and bug fixes.'**
+  String get optionalUpdateMessage;
+
+  /// No description provided for @optionalUpdateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get optionalUpdateNow;
+
+  /// No description provided for @optionalUpdateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind Me Later'**
+  String get optionalUpdateLater;
+
+  /// No description provided for @optionalUpdateVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest version: {version}'**
+  String optionalUpdateVersion(String version);
 }
 
 class _AppLocalizationsDelegate

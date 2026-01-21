@@ -201,6 +201,18 @@ class AppLocalizationsHr extends AppLocalizations {
       'Prijava nije uspjela. Provjerite podatke i pokušajte ponovo.';
 
   @override
+  String get authErrorEmailLinkedToGoogle =>
+      'Ovaj email je već povezan sa Google računom. Molimo prijavite se putem Google Sign-In.';
+
+  @override
+  String get authErrorEmailLinkedToApple =>
+      'Ovaj email je već povezan sa Apple računom. Molimo prijavite se putem Apple Sign-In.';
+
+  @override
+  String get authErrorEmailAlreadyInUse =>
+      'Ovaj email je već registriran. Ako ste se ranije prijavili putem Google ili Apple, molimo koristite tu metodu prijave.';
+
+  @override
   String get authForgotPassword => 'Zaboravili lozinku?';
 
   @override
@@ -1674,7 +1686,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerDrawerGuides => 'Uputstva';
 
   @override
-  String get ownerDrawerEmbedWidget => 'Embed Widget';
+  String get ownerDrawerEmbedWidget => 'Ugradnja widgeta';
 
   @override
   String get ownerDrawerAddToSite => 'Dodavanje na sajt';
@@ -2773,6 +2785,13 @@ class AppLocalizationsHr extends AppLocalizations {
   String get editProfilePropertyType => 'Vrsta Nekretnine';
 
   @override
+  String get editProfileWelcomeTitle => 'Dovršite Svoj Profil';
+
+  @override
+  String get editProfileWelcomeMessage =>
+      'Molimo dodajte kontakt podatke kako biste dovršili postavljanje računa.';
+
+  @override
   String get notificationSettingsTitle => 'Postavke Obavijesti';
 
   @override
@@ -3641,10 +3660,22 @@ class AppLocalizationsHr extends AppLocalizations {
   String get propertyFormLocationRequired => 'Lokacija je obavezna';
 
   @override
-  String get propertyFormAddress => 'Adresa';
+  String get propertyFormAddress => 'Ulica i broj *';
 
   @override
-  String get propertyFormAddressHint => 'Ulica i broj';
+  String get propertyFormAddressHint => 'npr. Obala Petra Krešimira 5';
+
+  @override
+  String get propertyFormAddressRequired => 'Ulica i broj je obavezna';
+
+  @override
+  String get propertyFormCity => 'Grad *';
+
+  @override
+  String get propertyFormCityHint => 'npr. Rab';
+
+  @override
+  String get propertyFormCityRequired => 'Grad je obavezan';
 
   @override
   String get propertyFormAmenities => 'Sadržaji';
@@ -3860,17 +3891,17 @@ class AppLocalizationsHr extends AppLocalizations {
   String get unitFormSaving => 'Spremanje...';
 
   @override
-  String get unitFormEmbedWidget => 'Embed Widget';
+  String get unitFormEmbedWidget => 'Widget za rezervacije';
 
   @override
   String get unitFormEmbedDesc =>
-      'Integrirajte booking widget na vašu web stranicu';
+      'Integrirajte widget za rezervacije na vašu web stranicu';
 
   @override
   String get unitFormWidgetSettings => 'Postavke Widgeta';
 
   @override
-  String get unitFormGenerateEmbed => 'Generiraj Embed Kod';
+  String get unitFormGenerateEmbed => 'Generiraj kod';
 
   @override
   String get unitFormSuccessUpdate => 'Jedinica uspješno ažurirana';
@@ -4407,19 +4438,13 @@ class AppLocalizationsHr extends AppLocalizations {
   String get onboardingPropertyWebsiteHint => 'https://example.com';
 
   @override
-  String get onboardingPropertyTypeVilla => 'Villa';
-
-  @override
-  String get onboardingPropertyTypeApartment => 'Apartman';
-
-  @override
-  String get onboardingPropertyTypeStudio => 'Studio';
+  String get onboardingPropertyTypeVilla => 'Vila';
 
   @override
   String get onboardingPropertyTypeHouse => 'Kuća';
 
   @override
-  String get onboardingPropertyTypeRoom => 'Soba';
+  String get onboardingPropertyTypeOther => 'Ostalo';
 
   @override
   String get themeSelectionTitle => 'Odaberi temu';
@@ -4689,21 +4714,21 @@ class AppLocalizationsHr extends AppLocalizations {
   String get embedGuideTitle => 'Ugradnja Widgeta';
 
   @override
-  String get embedGuideHeaderTitle => 'Embed Booking Widget';
+  String get embedGuideHeaderTitle => 'Widget za rezervacije';
 
   @override
   String get embedGuideHeaderSubtitle =>
-      'Dodajte kalendar i booking sistem na vašu web stranicu';
+      'Dodajte kalendar i sustav rezervacija na vašu web stranicu';
 
   @override
   String get embedGuideHeaderTip =>
-      '💡 Embed widget omogućava vašim gostima da vide dostupnost i kreiraju rezervacije direktno sa vaše web stranice, bez potrebe za redirekcijom.';
+      '💡 Widget omogućava vašim gostima da vide dostupnost i kreiraju rezervacije direktno sa vaše web stranice, bez potrebe za preusmjeravanjem.';
 
   @override
   String get embedGuideStep1Title => 'Konfigurirajte Widget';
 
   @override
-  String get embedGuideStep2Title => 'Generiraj Embed Kod';
+  String get embedGuideStep2Title => 'Generiraj kod';
 
   @override
   String get embedGuideStep3Title => 'Dodajte na Vaš Sajt';
@@ -4721,21 +4746,21 @@ class AppLocalizationsHr extends AppLocalizations {
   String get embedGuideCodeCopied => 'Kod kopiran!';
 
   @override
-  String get embedGuideYourEmbedCodes => 'Vaši Embed Kodovi';
+  String get embedGuideYourEmbedCodes => 'Vaši kodovi za ugradnju';
 
   @override
-  String get embedGuideCopyIframe => 'Kopirajte iframe kod za svaki apartman';
+  String get embedGuideCopyIframe => 'Kopirajte kod za svaki apartman';
 
   @override
   String get embedGuideWidgetLanguage => 'Jezik widgeta';
 
   @override
   String get embedGuideNoProperties =>
-      'Nemate nekretnina. Kreirajte nekretninu da biste dobili embed kodove.';
+      'Nemate nekretnina. Kreirajte nekretninu da biste dobili kodove.';
 
   @override
   String get embedGuideNoUnits =>
-      'Nemate apartmana. Kreirajte apartman da biste dobili embed kod.';
+      'Nemate apartmana. Kreirajte apartman da biste dobili kod.';
 
   @override
   String get embedGuideStep1Intro =>
@@ -4781,11 +4806,11 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get embedGuideStep2Intro =>
-      'Nakon konfiguracije, generirajte embed kod:';
+      'Nakon konfiguracije, generirajte kod za ugradnju:';
 
   @override
   String get embedGuideStep2Nav1 =>
-      'U Edit Unit formi, kliknite \"Generiraj Embed Kod\"';
+      'U Edit Unit formi, kliknite \"Generiraj kod\"';
 
   @override
   String get embedGuideStep2Nav2 => 'Otvorit će se dialog sa iframe kodom';
@@ -4867,7 +4892,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get embedGuideAdvResponsiveDesc =>
-      'Za widget koji se automatski prilagođava širini ekrana, koristite responsive embed kod iz dialoga.';
+      'Za widget koji se automatski prilagođava širini ekrana, koristite responsive kod iz dijaloga.';
 
   @override
   String get embedGuideAdvLanguage => 'Promjena Jezika';
@@ -4902,7 +4927,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get embedGuideTroubleHeightSolution =>
-      '• Podesite height parametar u iframe tagu (npr. height=\"1200px\")\n• Koristite responsive embed kod za automatsko prilagođavanje';
+      '• Podesite height parametar u iframe tagu (npr. height=\"1200px\")\n• Koristite responsive kod za automatsko prilagođavanje';
 
   @override
   String get embedGuideTroublePayment => 'Plaćanje ne radi';
@@ -4922,7 +4947,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get embedGuideSimpleStepsTitle => '3 Jednostavna Koraka';
 
   @override
-  String get embedGuideSimpleStep1 => 'Kopirajte embed kod za vaš apartman';
+  String get embedGuideSimpleStep1 => 'Kopirajte kod za vaš apartman';
 
   @override
   String get embedGuideSimpleStep2 => 'Zalijepite ga u HTML vaše web stranice';
@@ -4941,7 +4966,7 @@ class AppLocalizationsHr extends AppLocalizations {
       'Widget ima ugrađen odabir jezika. Korisnici mogu birati između HR, EN, DE, IT.';
 
   @override
-  String get embedHelpTitle => 'Pomoć za Embed Widget';
+  String get embedHelpTitle => 'Pomoć za ugradnju widgeta';
 
   @override
   String get embedHelpTabInstallation => 'Vodič';
@@ -5685,7 +5710,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get editBookingError => 'Greška pri ažuriranju rezervacije';
 
   @override
-  String get embedCodeTitle => 'Embed Kod za Widget';
+  String get embedCodeTitle => 'Kod za ugradnju widgeta';
 
   @override
   String get embedCodeUnit => 'Jedinica';
@@ -5736,7 +5761,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get embedCodeInstructionsText =>
-      '1. Kopirajte embed kod (kliknite na \"Kopiraj\" dugme)\n2. Otvorite stranicu vaše web stranice u editoru\n3. Zalijepite kod na željeno mjesto\n4. Spremite i objavite stranicu';
+      '1. Kopirajte kod (kliknite na \"Kopiraj\" dugme)\n2. Otvorite stranicu vaše web stranice u editoru\n3. Zalijepite kod na željeno mjesto\n4. Spremite i objavite stranicu';
 
   @override
   String get sendEmailTitle => 'Pošalji Email Gostu';
@@ -6437,7 +6462,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalGuideFaq2A =>
-      'Da! Rezervacije uvezene preko iCal-a će biti prikazane kao zauzeti dani u embed widgetu, sprječavajući dvostruke rezervacije.';
+      'Da! Rezervacije uvezene preko iCal-a će biti prikazane kao zauzeti dani u widgetu na vašoj stranici, sprječavajući dvostruke rezervacije.';
 
   @override
   String get icalGuideFaq3Q => 'Mogu li dodati više feed-ova za isti apartman?';
@@ -6962,7 +6987,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerFaqGeneral1A =>
-      'Ovo je multi-tenant booking platforma koja omogućava vlasnicima apartmana da upravljaju rezervacijama, primaju plaćanja i embed-uju booking widget na svoju web stranicu. Platforma podržava Stripe plaćanja, iCal sinkronizaciju s Booking.com/Airbnb, i više jezika.';
+      'Ovo je multi-tenant booking platforma koja omogućava vlasnicima apartmana da upravljaju rezervacijama, primaju plaćanja i ugrade widget za rezervacije na svoju web stranicu. Platforma podržava Stripe plaćanja, iCal sinkronizaciju s Booking.com/Airbnb, i više jezika.';
 
   @override
   String get ownerFaqGeneral2Q => 'Da li postoji mobilna aplikacija?';
@@ -7046,7 +7071,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerFaqWidget1A =>
-      'Idite na Unit Form → \"Generiraj Embed Kod\" → Kopirajte iframe kod → Zalijepite u HTML vaše stranice. Detaljnije uputstvo je u \"Embed Widget\" sekciji uputstava.';
+      'Idite na Unit Form → \"Generiraj kod\" → Kopirajte iframe kod → Zalijepite u HTML vaše stranice. Detaljnije uputstvo je u sekciji \"Ugradnja widgeta\".';
 
   @override
   String get ownerFaqWidget2Q => 'Mogu li prilagoditi izgled widgeta?';
@@ -7060,7 +7085,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerFaqWidget3A =>
-      'Da, widget je potpuno responsive i prilagođava se svim veličinama ekrana. Koristite responsive embed kod za najbolje rezultate.';
+      'Da, widget je potpuno responsive i prilagođava se svim veličinama ekrana. Koristite responsive kod za najbolje rezultate.';
 
   @override
   String get ownerFaqWidget4Q =>
@@ -7068,7 +7093,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerFaqWidget4A =>
-      'Da, možete embed-ovati više widgeta (za različite apartmane) na istoj stranici. Svaki widget će imati svoj jedinstveni unit ID u URL-u.';
+      'Da, možete ugraditi više widgeta (za različite apartmane) na istoj stranici. Svaki widget će imati svoj jedinstveni unit ID u URL-u.';
 
   @override
   String get ownerFaqWidget5Q => 'Da li widget podržava više jezika?';
@@ -7940,4 +7965,37 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get subscriptionBannerSubtitle =>
       'Otključajte neograničen broj objekata i premium značajke';
+
+  @override
+  String get forceUpdateTitle => 'Ažuriranje obavezno';
+
+  @override
+  String get forceUpdateMessage =>
+      'Nova verzija BookBed aplikacije je obavezna za nastavak. Molimo ažurirajte aplikaciju iz Google Play trgovine.';
+
+  @override
+  String get forceUpdateButton => 'Ažuriraj sada';
+
+  @override
+  String forceUpdateRequiredVersion(String version) {
+    return 'Minimalna verzija potrebna: $version';
+  }
+
+  @override
+  String get optionalUpdateTitle => 'Ažuriranje dostupno';
+
+  @override
+  String get optionalUpdateMessage =>
+      'Nova verzija BookBed aplikacije je dostupna sa poboljšanjima i ispravkama grešaka.';
+
+  @override
+  String get optionalUpdateNow => 'Ažuriraj sada';
+
+  @override
+  String get optionalUpdateLater => 'Podsjeti me kasnije';
+
+  @override
+  String optionalUpdateVersion(String version) {
+    return 'Najnovija verzija: $version';
+  }
 }

@@ -57,7 +57,9 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
   final _bankCustomNotesController = TextEditingController();
   bool _bankUseCustomNotes = false;
 
-  bool _payOnArrivalEnabled = false;
+  // Note: _payOnArrivalEnabled removed - logic simplified:
+  // bookingPending = no payment (inherently pay on arrival)
+  // bookingInstant = payment required (Stripe or Bank Transfer)
 
   // Booking Behavior
   bool _requireApproval = true;
@@ -145,8 +147,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
       _bankUseCustomNotes =
           settings.bankTransferConfig?.useCustomNotes ?? false;
 
-      // Pay on Arrival
-      _payOnArrivalEnabled = settings.allowPayOnArrival;
+      // Note: allowPayOnArrival field no longer loaded - simplified logic
 
       // Booking Behavior
       _requireApproval = settings.requireOwnerApproval;
@@ -432,11 +433,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
       return;
     }
 
-    // Validation: At least one payment method must be enabled in bookingInstant mode
-    // (No validation needed for bookingPending - payment methods are hidden)
+    // Validation: At least one ACTUAL payment method must be enabled in bookingInstant mode
+    // Note: Pay on Arrival is NOT a payment method for bookingInstant - it collects no upfront payment
+    // If owner wants pay on arrival, they should use bookingPending mode instead
     if (_selectedMode == WidgetMode.bookingInstant) {
-      final hasPaymentMethod =
-          _stripeEnabled || _bankTransferEnabled || _payOnArrivalEnabled;
+      final hasPaymentMethod = _stripeEnabled || _bankTransferEnabled;
       if (!hasPaymentMethod) {
         if (mounted) {
           ErrorDisplayUtils.showErrorSnackBar(
@@ -492,7 +493,11 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                 useCustomNotes: _bankUseCustomNotes,
               )
             : null,
-        allowPayOnArrival: _payOnArrivalEnabled,
+        // Pay on Arrival toggle removed - logic simplified:
+        // - bookingPending: No payment required (server allows paymentMethod='none')
+        // - bookingInstant: Payment required (Stripe or Bank Transfer only)
+        // Field kept for backward compatibility but always set to false
+        allowPayOnArrival: false,
         // For bookingPending mode, approval is ALWAYS required (hardcoded true)
         // For bookingInstant mode, use the user's selection
         requireOwnerApproval: _selectedMode == WidgetMode.bookingPending
@@ -1241,36 +1246,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                 ),
               ),
 
-              const SizedBox(height: 12),
-
-              // Pay on Arrival - Simple switch card (not collapsible since no options)
-              Builder(
-                builder: (context) {
-                  // Force Pay on Arrival if both Stripe and Bank Transfer are disabled
-                  final isForced = !_stripeEnabled && !_bankTransferEnabled;
-
-                  // Auto-enable if forced
-                  if (isForced && !_payOnArrivalEnabled) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      setState(() => _payOnArrivalEnabled = true);
-                    });
-                  }
-
-                  final l10nInner = AppLocalizations.of(context);
-                  return _buildCompactSwitchCard(
-                    icon: Icons.payments,
-                    label: l10nInner.widgetSettingsPayOnArrival,
-                    subtitle: isForced
-                        ? l10nInner.widgetSettingsPayOnArrivalRequired
-                        : l10nInner.widgetSettingsPayOnArrivalDesc,
-                    value: _payOnArrivalEnabled,
-                    onChanged: isForced
-                        ? null
-                        : (val) => setState(() => _payOnArrivalEnabled = val),
-                    isWarning: isForced,
-                  );
-                },
-              ),
+              // Pay on Arrival toggle REMOVED - simplified logic:
+              // - bookingPending mode: No payment, manual approval (inherently "pay on arrival")
+              // - bookingInstant mode: Payment required (Stripe or Bank Transfer)
+              // See: atomicBooking.ts validation for server-side enforcement
             ],
           ),
         ),

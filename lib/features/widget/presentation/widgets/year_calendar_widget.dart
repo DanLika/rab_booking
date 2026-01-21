@@ -18,6 +18,7 @@ import 'calendar/calendar_date_selection_validator.dart';
 import 'calendar/calendar_tooltip_builder.dart';
 import 'calendar/year_calendar_painters.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
+import '../../../../shared/models/unit_model.dart';
 import 'calendar/year_calendar_skeleton.dart';
 import '../../../../core/services/logging_service.dart';
 
@@ -158,15 +159,17 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
               // Defensive null check: ensure widgetCtxAsync has valid data before accessing unit
               // Re-read from async value to ensure we have the latest state
               final currentWidgetCtx = widgetCtxAsync.valueOrNull;
-              final fallbackPrice = currentWidgetCtx?.unit.pricePerNight;
+              final unit = currentWidgetCtx?.unit;
               return CalendarTooltipBuilder.build(
                 context: context,
                 hoveredDate: _hoveredDate,
                 mousePosition: _mousePosition,
                 data: data,
                 colors: colors,
-                // Use unit's base price as fallback when no daily_price exists
-                fallbackPrice: fallbackPrice,
+                // Use unit's prices for fallback when no daily_price exists
+                fallbackPrice: unit?.pricePerNight,
+                weekendBasePrice: unit?.weekendBasePrice,
+                weekendDays: unit?.weekendDays,
               );
             },
             loading: () => const SizedBox.shrink(),
@@ -466,6 +469,15 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
         return _buildEmptyCell(cellSize, colors);
       }
 
+      // Get unit for price fallbacks
+      final widgetCtxAsync = ref.watch(
+        widgetContextProvider((
+          propertyId: widget.propertyId,
+          unitId: widget.unitId,
+        )),
+      );
+      final unit = widgetCtxAsync.valueOrNull?.unit;
+
       final isInRange = CalendarDateUtils.isDateInRange(
         date,
         _rangeStart,
@@ -629,19 +641,15 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
                         ),
                       ),
                     ),
-                  // Day number in center
-                  Center(
-                    child: Text(
-                      day.toString(),
-                      style: TextStyle(
-                        fontSize: (cellSize * 0.45).clamp(8.0, 14.0),
-                        fontWeight: FontWeight.w600,
-                        // Past dates use secondary color for cleaner "disabled" look
-                        color: isPast
-                            ? colors.textSecondary
-                            : colors.textPrimary,
-                      ),
-                    ),
+                  // Day number and price in center
+                  _buildYearCellContent(
+                    date,
+                    dateInfo,
+                    day,
+                    cellSize,
+                    isPast,
+                    colors,
+                    unit,
                   ),
                   // Today indicator dot
                   if (isToday)
@@ -1038,5 +1046,69 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
     }
 
     return false; // No orphan gaps would be created
+  }
+
+  /// Builds the year calendar cell content (day number + price) with weekend pricing logic
+  Widget _buildYearCellContent(
+    DateTime date,
+    CalendarDateInfo dateInfo,
+    int day,
+    double cellSize,
+    bool isPast,
+    WidgetColorScheme colors,
+    UnitModel? unit,
+  ) {
+    // Price hierarchy (same as month calendar and tooltip):
+    // 1. Custom weekend price from daily_prices (per-day override)
+    // 2. Unit's default weekend base price (if it's a weekend day)
+    // 3. Custom regular price from daily_prices (per-day override)
+    // 4. Unit's base price (fallback)
+    final effectiveWeekendDays = unit?.weekendDays ?? const [5, 6];
+    final isWeekend = effectiveWeekendDays.contains(date.weekday);
+
+    final double? displayPrice;
+    if (dateInfo.price != null) {
+      // Custom daily price set - use it
+      displayPrice = dateInfo.price;
+    } else if (isWeekend && unit?.weekendBasePrice != null) {
+      // Weekend day with no custom price - use weekend base price
+      displayPrice = unit!.weekendBasePrice;
+    } else {
+      // Regular day or no weekend price - use base price
+      displayPrice = unit?.pricePerNight;
+    }
+
+    // For very small cells, only show day number (no room for price)
+    final showPrice = cellSize >= 24 && displayPrice != null;
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Day number
+          Text(
+            day.toString(),
+            style: TextStyle(
+              fontSize: (cellSize * 0.45).clamp(8.0, 14.0),
+              fontWeight: FontWeight.w600,
+              color: isPast ? colors.textSecondary : colors.textPrimary,
+            ),
+          ),
+          // Price (only if cell is large enough)
+          if (showPrice)
+            Text(
+              '€${displayPrice.toStringAsFixed(0)}',
+              style: TextStyle(
+                fontSize: (cellSize * 0.28).clamp(6.0, 10.0),
+                fontWeight: FontWeight.w500,
+                color: isPast
+                    ? colors.textSecondary.withValues(alpha: 0.7)
+                    : colors.textSecondary,
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

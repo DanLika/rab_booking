@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/constants/enums.dart';
 import '../../core/utils/geopoint_converter.dart';
+import '../../core/utils/property_type_converter.dart';
 import '../../core/utils/timestamp_converter.dart';
 import 'property_branding_model.dart';
 
@@ -40,9 +41,11 @@ class PropertyModel with _$PropertyModel {
     /// Detailed description
     required String description,
 
-    /// Property type (villa, apartment, studio, etc.)
+    /// Property type (villa, house, other)
+    /// Uses custom converter to handle legacy values (apartment, studio, room)
     @JsonKey(name: 'property_type')
-    @Default(PropertyType.apartment)
+    @PropertyTypeConverter()
+    @Default(PropertyType.villa)
     PropertyType propertyType,
 
     /// Location (city, address, etc.)

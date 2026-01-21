@@ -52,8 +52,10 @@ mixin _$PropertyModel {
   /// Detailed description
   String get description => throw _privateConstructorUsedError;
 
-  /// Property type (villa, apartment, studio, etc.)
+  /// Property type (villa, house, other)
+  /// Uses custom converter to handle legacy values (apartment, studio, room)
   @JsonKey(name: 'property_type')
+  @PropertyTypeConverter()
   PropertyType get propertyType => throw _privateConstructorUsedError;
 
   /// Location (city, address, etc.)
@@ -155,7 +157,9 @@ abstract class $PropertyModelCopyWith<$Res> {
     PropertyBranding? branding,
     @JsonKey(name: 'custom_domain') String? customDomain,
     String description,
-    @JsonKey(name: 'property_type') PropertyType propertyType,
+    @JsonKey(name: 'property_type')
+    @PropertyTypeConverter()
+    PropertyType propertyType,
     String location,
     String? city,
     String? country,
@@ -385,7 +389,9 @@ abstract class _$$PropertyModelImplCopyWith<$Res>
     PropertyBranding? branding,
     @JsonKey(name: 'custom_domain') String? customDomain,
     String description,
-    @JsonKey(name: 'property_type') PropertyType propertyType,
+    @JsonKey(name: 'property_type')
+    @PropertyTypeConverter()
+    PropertyType propertyType,
     String location,
     String? city,
     String? country,
@@ -594,7 +600,9 @@ class _$PropertyModelImpl extends _PropertyModel {
     this.branding,
     @JsonKey(name: 'custom_domain') this.customDomain,
     required this.description,
-    @JsonKey(name: 'property_type') this.propertyType = PropertyType.apartment,
+    @JsonKey(name: 'property_type')
+    @PropertyTypeConverter()
+    this.propertyType = PropertyType.villa,
     required this.location,
     this.city,
     this.country = 'Croatia',
@@ -662,9 +670,11 @@ class _$PropertyModelImpl extends _PropertyModel {
   @override
   final String description;
 
-  /// Property type (villa, apartment, studio, etc.)
+  /// Property type (villa, house, other)
+  /// Uses custom converter to handle legacy values (apartment, studio, room)
   @override
   @JsonKey(name: 'property_type')
+  @PropertyTypeConverter()
   final PropertyType propertyType;
 
   /// Location (city, address, etc.)
@@ -899,7 +909,9 @@ abstract class _PropertyModel extends PropertyModel {
     final PropertyBranding? branding,
     @JsonKey(name: 'custom_domain') final String? customDomain,
     required final String description,
-    @JsonKey(name: 'property_type') final PropertyType propertyType,
+    @JsonKey(name: 'property_type')
+    @PropertyTypeConverter()
+    final PropertyType propertyType,
     required final String location,
     final String? city,
     final String? country,
@@ -970,9 +982,11 @@ abstract class _PropertyModel extends PropertyModel {
   @override
   String get description;
 
-  /// Property type (villa, apartment, studio, etc.)
+  /// Property type (villa, house, other)
+  /// Uses custom converter to handle legacy values (apartment, studio, room)
   @override
   @JsonKey(name: 'property_type')
+  @PropertyTypeConverter()
   PropertyType get propertyType;
 
   /// Location (city, address, etc.)

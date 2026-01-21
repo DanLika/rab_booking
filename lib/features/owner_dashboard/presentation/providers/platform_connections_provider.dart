@@ -1,7 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/async_utils.dart';
 import '../../domain/models/platform_connection.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -11,7 +11,9 @@ part 'platform_connections_provider.g.dart';
 /// Stream provider for all platform connections for the current owner
 @riverpod
 Stream<List<PlatformConnection>> platformConnections(Ref ref) {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  // Consistency: Use enhancedAuthProvider for auth state
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
   if (userId == null) {
     return Stream.value([]);
   }
@@ -33,7 +35,8 @@ Stream<List<PlatformConnection>> platformConnectionsForUnit(
   Ref ref,
   String unitId,
 ) {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  final authState = ref.watch(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
   if (userId == null) {
     return Stream.value([]);
   }
@@ -89,7 +92,8 @@ Future<Map<String, dynamic>> connectAirbnb(
 /// Remove platform connection
 @riverpod
 Future<void> removePlatformConnection(Ref ref, String connectionId) async {
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  final authState = ref.read(enhancedAuthProvider);
+  final userId = authState.userModel?.id;
   if (userId == null) {
     throw Exception('User not authenticated');
   }

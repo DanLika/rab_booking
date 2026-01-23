@@ -13,7 +13,7 @@ import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../shared/widgets/login_loading_overlay.dart';
+import '../../../../shared/widgets/universal_loader.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_logo_icon.dart';
 import '../widgets/glass_card.dart';
@@ -508,7 +508,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                 ),
               ),
             ),
-            if (_isLoading) LoginLoadingOverlay(message: l10n.loading),
+            if (_isLoading) UniversalLoader.forAuth(message: l10n.loading),
           ],
         ),
       ),

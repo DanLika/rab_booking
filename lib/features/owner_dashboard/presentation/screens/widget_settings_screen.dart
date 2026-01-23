@@ -19,6 +19,7 @@ import '../../../widget/presentation/providers/widget_settings_provider.dart'
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/user_profile_provider.dart';
+import '../../../../shared/widgets/universal_loader.dart';
 
 /// Widget Settings Screen - Configure embedded widget for each unit
 class WidgetSettingsScreen extends ConsumerStatefulWidget {
@@ -660,7 +661,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     final l10n = AppLocalizations.of(context);
 
     final bodyContent = _isLoading
-        ? const Center(child: CircularProgressIndicator())
+        ? UniversalLoader.forSection()
         : Form(
             key: _formKey,
             child: ListView(

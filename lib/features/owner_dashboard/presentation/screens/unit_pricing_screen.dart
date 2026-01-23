@@ -17,6 +17,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../providers/owner_properties_provider.dart';
+import '../../../../shared/widgets/universal_loader.dart';
 
 /// Screen for managing unit pricing (base price and bulk month pricing)
 /// Can be accessed from drawer (no unit selected) or from unit management (specific unit)
@@ -403,7 +404,7 @@ class _UnitPricingScreenState extends ConsumerState<UnitPricingScreen>
           }
         },
       ),
-      body: const Center(child: CircularProgressIndicator()),
+      body: UniversalLoader.forSection(),
     );
   }
 

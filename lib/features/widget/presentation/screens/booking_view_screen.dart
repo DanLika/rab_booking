@@ -1,5 +1,4 @@
 import 'dart:async' show unawaited;
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -152,89 +151,14 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
       return;
     }
 
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_view_screen.dart:103',
-        'message': 'Booking lookup - entry',
-        'data': {
-          'bookingRef': widget.bookingRef,
-          'email': widget.email != null
-              ? '${widget.email!.substring(0, 3)}***'
-              : null,
-          'hasToken': widget.token != null,
-          'hostname': Uri.base.host,
-        },
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'VIEW',
-      };
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_VIEW',
-      );
-    } catch (_) {}
-    // #endregion
-
     try {
       final service = ref.read(bookingLookupServiceProvider);
-
-      // #region agent log
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_view_screen.dart:118',
-          'message': 'Booking lookup - calling verifyBookingAccess',
-          'data': {
-            'bookingRef': widget.bookingRef,
-            'email': widget.email != null
-                ? '${widget.email!.substring(0, 3)}***'
-                : null,
-            'hasToken': widget.token != null,
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'VIEW',
-        };
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_VIEW',
-        );
-      } catch (_) {}
-      // #endregion
 
       final booking = await service.verifyBookingAccess(
         bookingReference: widget.bookingRef!,
         email: widget.email!,
         accessToken: widget.token, // Optional - for secure access
       );
-
-      // #region agent log
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_view_screen.dart:124',
-          'message': 'Booking lookup - success',
-          'data': {
-            'bookingId': booking.bookingId,
-            'bookingRef': booking.bookingReference,
-            'propertyId': booking.propertyId,
-            'unitId': booking.unitId,
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'VIEW',
-        };
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_VIEW',
-        );
-      } catch (_) {}
-      // #endregion
 
       if (mounted) {
         // Fetch widget settings for cancellation policy

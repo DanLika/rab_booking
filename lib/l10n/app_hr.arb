@@ -872,7 +872,8 @@
   "ownerTableCancelledByOwner": "Otkazano od strane vlasnika",
 
   "ownerDetailsTitle": "Detalji rezervacije",
-  "ownerDetailsBookingId": "ID rezervacije",
+  "ownerDetailsBookingInfo": "Informacije o rezervaciji",
+  "ownerDetailsBookingId": "ID",
   "ownerDetailsStatus": "Status",
   "ownerDetailsGuestInfo": "Informacije o gostu",
   "ownerDetailsName": "Ime",

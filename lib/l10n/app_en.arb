@@ -872,7 +872,8 @@
   "ownerTableCancelledByOwner": "Cancelled by owner",
 
   "ownerDetailsTitle": "Booking details",
-  "ownerDetailsBookingId": "Booking ID",
+  "ownerDetailsBookingInfo": "Booking information",
+  "ownerDetailsBookingId": "ID",
   "ownerDetailsStatus": "Status",
   "ownerDetailsGuestInfo": "Guest information",
   "ownerDetailsName": "Name",

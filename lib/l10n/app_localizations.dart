@@ -4218,10 +4218,16 @@ abstract class AppLocalizations {
   /// **'Booking details'**
   String get ownerDetailsTitle;
 
+  /// No description provided for @ownerDetailsBookingInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking information'**
+  String get ownerDetailsBookingInfo;
+
   /// No description provided for @ownerDetailsBookingId.
   ///
   /// In en, this message translates to:
-  /// **'Booking ID'**
+  /// **'ID'**
   String get ownerDetailsBookingId;
 
   /// No description provided for @ownerDetailsStatus.

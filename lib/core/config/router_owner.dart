@@ -42,7 +42,7 @@ import '../../features/widget/presentation/screens/booking_widget_screen.dart';
 import '../../features/widget/presentation/screens/booking_view_screen.dart';
 import '../../features/widget/presentation/screens/booking_details_screen.dart';
 import '../../shared/presentation/screens/not_found_screen.dart';
-import '../../shared/widgets/loading_overlay.dart';
+import '../../shared/widgets/universal_loader.dart';
 import '../providers/enhanced_auth_provider.dart';
 import '../../features/subscription/screens/subscription_screen.dart';
 
@@ -348,7 +348,9 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           // Using PageTransitions.fade for smooth entry
           return PageTransitions.fade(
             key: state.pageKey,
-            child: const Scaffold(body: LoadingOverlay(message: 'Loading...')),
+            child: Scaffold(
+              body: UniversalLoader.forScreen(message: 'Loading...'),
+            ),
           );
         },
       ),
@@ -774,8 +776,8 @@ class PropertyEditLoader extends ConsumerWidget {
           }
           return PropertyFormScreen(property: property);
         },
-        loading: () => const Scaffold(
-          body: LoadingOverlay(message: 'Loading property...'),
+        loading: () => Scaffold(
+          body: UniversalLoader.forScreen(message: 'Loading property...'),
         ),
         error: (error, stack) => Scaffold(
           body: Center(child: Text('Error loading property: $error')),
@@ -803,8 +805,9 @@ class UnitEditLoader extends ConsumerWidget {
           }
           return UnitFormScreen(propertyId: unit.propertyId, unit: unit);
         },
-        loading: () =>
-            const Scaffold(body: LoadingOverlay(message: 'Loading unit...')),
+        loading: () => Scaffold(
+          body: UniversalLoader.forScreen(message: 'Loading unit...'),
+        ),
         error: (error, stack) =>
             Scaffold(body: Center(child: Text('Error loading unit: $error'))),
       ),
@@ -830,8 +833,9 @@ class UnitPricingLoader extends ConsumerWidget {
           }
           return UnitPricingScreen(unit: unit);
         },
-        loading: () =>
-            const Scaffold(body: LoadingOverlay(message: 'Loading pricing...')),
+        loading: () => Scaffold(
+          body: UniversalLoader.forScreen(message: 'Loading pricing...'),
+        ),
         error: (error, stack) =>
             Scaffold(body: Center(child: Text('Error loading unit: $error'))),
       ),
@@ -860,8 +864,8 @@ class WidgetSettingsLoader extends ConsumerWidget {
             unitId: unitId,
           );
         },
-        loading: () => const Scaffold(
-          body: LoadingOverlay(message: 'Loading settings...'),
+        loading: () => Scaffold(
+          body: UniversalLoader.forScreen(message: 'Loading settings...'),
         ),
         error: (error, stack) =>
             Scaffold(body: Center(child: Text('Error loading unit: $error'))),

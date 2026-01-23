@@ -125,15 +125,18 @@ class BookingDetailsDialog extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Booking Reference (user-friendly ID)
+                    // Booking Info Section (with icon like other sections)
+                    _SectionHeader(
+                      icon: Icons.confirmation_number_outlined,
+                      title: l10n.ownerDetailsBookingInfo,
+                    ),
                     _DetailRow(
                       label: l10n.ownerDetailsBookingId,
                       value: booking.bookingReference ?? booking.id,
                     ),
-                    _DetailRow(
+                    _DetailRowWithWidget(
                       label: l10n.ownerDetailsStatus,
-                      value: booking.status.displayNameLocalized(context),
-                      valueColor: booking.status.color,
+                      child: _StatusBadge(status: booking.status),
                     ),
 
                     _ThemedDivider(),
@@ -700,7 +703,7 @@ class _ThemedDivider extends StatelessWidget {
   }
 }
 
-/// Section header widget with icon and gradient accent
+/// Section header widget with icon and subtle accent
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.icon, required this.title});
 
@@ -709,23 +712,27 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 6),
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              gradient: context.gradients.brandPrimary,
+              // Subtle background instead of full gradient
+              color: primaryColor.withValues(alpha: 0.12),
               borderRadius: const BorderRadius.all(Radius.circular(8)),
             ),
-            child: Icon(icon, color: Colors.white, size: 18),
+            child: Icon(icon, color: primaryColor, size: 18),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: AutoSizeText(
               title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 height: 1.2,
               ),
@@ -750,7 +757,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 8),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space
@@ -806,7 +813,7 @@ class _DetailRowWithWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 8),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space
@@ -835,6 +842,36 @@ class _DetailRowWithWidget extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Status badge widget - displays booking status as a colored chip
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+
+  final BookingStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor = status.color;
+    final statusText = status.displayNameLocalized(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: statusColor.withValues(alpha: 0.4), width: 1),
+      ),
+      child: Text(
+        statusText,
+        style: TextStyle(
+          color: statusColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
       ),
     );
   }

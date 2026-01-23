@@ -2236,7 +2236,10 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerDetailsTitle => 'Detalji rezervacije';
 
   @override
-  String get ownerDetailsBookingId => 'ID rezervacije';
+  String get ownerDetailsBookingInfo => 'Informacije o rezervaciji';
+
+  @override
+  String get ownerDetailsBookingId => 'ID';
 
   @override
   String get ownerDetailsStatus => 'Status';

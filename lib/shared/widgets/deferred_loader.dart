@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'loading_overlay.dart';
+import 'universal_loader.dart';
 
 /// A widget that handles the loading of deferred libraries.
 ///
@@ -76,7 +76,9 @@ class _DeferredLoaderState extends State<DeferredLoader> {
 
         // Show loading state while fetching the JS chunk
         return widget.placeholder ??
-            const Scaffold(body: LoadingOverlay(message: 'Loading module...'));
+            Scaffold(
+              body: UniversalLoader.forScreen(message: 'Loading module...'),
+            );
       },
     );
   }

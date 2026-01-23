@@ -14,6 +14,7 @@ import '../../../../shared/widgets/message_box.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../../../../shared/widgets/universal_loader.dart';
 
 /// Dedicated Bank Account Screen for bank transfer payment settings
 class BankAccountScreen extends ConsumerStatefulWidget {
@@ -461,7 +462,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => UniversalLoader.forSection(),
               error: (error, stack) =>
                   Center(child: Text('${l10n.error}: $error')),
             ),

@@ -50,7 +50,9 @@
       }
 
       #native-splash .splash-logo-icon {
-        filter: invert(1) brightness(2);
+        /* brightness(0) makes image black, invert(1) flips to white */
+        /* This avoids the green color that invert(1) brightness(2) produced */
+        filter: brightness(0) invert(1);
       }
 
       #native-splash .splash-progress-bg {

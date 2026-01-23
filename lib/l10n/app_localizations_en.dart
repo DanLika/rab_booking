@@ -2220,7 +2220,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerDetailsTitle => 'Booking details';
 
   @override
-  String get ownerDetailsBookingId => 'Booking ID';
+  String get ownerDetailsBookingInfo => 'Booking information';
+
+  @override
+  String get ownerDetailsBookingId => 'ID';
 
   @override
   String get ownerDetailsStatus => 'Status';

@@ -652,7 +652,58 @@ window.pwaPromptInstall()  // async function
 // Eventi: 'pwa-installable', 'pwa-installed'
 ```
 
-**TODO**: Web Push Notifications (Safari iOS 16.4+ only, zahtijeva VAPID ključeve)
+---
+
+## 🔔 FCM PUSH NOTIFICATIONS (Web)
+
+**Komponente:**
+| Fajl | Svrha |
+|------|-------|
+| `lib/core/services/fcm_service.dart` | Flutter FCM service - token management, permission, message handling |
+| `lib/core/widgets/fcm_navigation_handler.dart` | Foreground message UI (snackbar) + navigation on tap |
+| `web/firebase-messaging-sw.js` | Service Worker za background notifications |
+| `functions/src/fcmService.ts` | Cloud Functions - šalje push notifikacije |
+
+**VAPID Key**: Hardcoded u `fcm_service.dart` (linija 18-19)
+- Generirano u Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
+
+**Token Storage**: `users/{userId}/data/fcmTokens` (Map format)
+```json
+{
+  "fcmToken123...": {
+    "token": "fcmToken123...",
+    "platform": "web",
+    "createdAt": Timestamp,
+    "lastSeen": Timestamp
+  }
+}
+```
+
+**Flow:**
+1. User logs in → `fcmService.initialize()` called from `enhanced_auth_provider.dart`
+2. Browser requests notification permission
+3. FCM token saved to Firestore
+4. Booking created → `atomicBooking.ts` calls `sendPendingBookingPushNotification()`
+5. Cloud Function reads tokens from Firestore, sends via `messaging.sendEachForMulticast()`
+6. **Foreground**: `FcmNavigationHandler` shows snackbar with "View" button
+7. **Background**: Service Worker shows system notification
+
+**Foreground vs Background:**
+- **Foreground** (app open): `FirebaseMessaging.onMessage` → Flutter handles → snackbar
+- **Background** (tab closed/minimized): Service Worker `onBackgroundMessage` → system notification
+
+**Navigation from SnackBar:**
+```dart
+// ⚠️ VAŽNO: SnackBar action koristi drugačiji context - nema GoRouter
+// Rješenje: koristi ref.read(ownerRouterProvider).go() umjesto context.go()
+final router = ref.read(ownerRouterProvider);
+router.go('/owner/bookings?booking=$bookingId');
+```
+
+**Kada se šalje push:**
+- `sendPendingBookingPushNotification()` - novi pending booking (widget)
+- `sendBookingPushNotification()` - booking confirmed/updated/cancelled
+- `sendPaymentPushNotification()` - payment received
 
 ---
 
@@ -712,7 +763,22 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-21 | **Version**: 6.34
+**Last Updated**: 2026-01-23 | **Version**: 6.35
+
+**Changelog 6.35**: Web Push Notifications (FCM):
+- **NEW FEATURE**: Push notifications za Owner Dashboard (web)
+- **Components Created**:
+  - `fcm_service.dart` - Flutter FCM service sa VAPID key, token management
+  - `fcm_navigation_handler.dart` - Foreground snackbar + navigation handling
+  - `firebase-messaging-sw.js` - Service Worker za background notifications
+  - `fcmService.ts` - Cloud Functions za slanje push notifikacija
+- **Token Storage**: `users/{userId}/data/fcmTokens` (Map format, supports multiple devices)
+- **Integration** (`atomicBooking.ts`):
+  - `sendPendingBookingPushNotification()` za pending bookinge
+  - `sendBookingPushNotification()` za confirmed/updated/cancelled
+- **Bug Fix**: "No GoRouter found in context" - SnackBar action koristi `ref.read(ownerRouterProvider).go()` umjesto `context.go()`
+- **Foreground**: Shows snackbar with "View" button → navigates to booking
+- **Background**: Service Worker shows system notification with click-to-open
 
 **Changelog 6.34**: Weekend Pricing Display & UX Improvements:
 - **Weekend Pricing in Widget Calendar** (main feature):

@@ -27,6 +27,7 @@ import 'shared/providers/repository_providers.dart';
 import 'shared/widgets/offline_indicator.dart';
 
 import 'shared/widgets/global_navigation_loader.dart';
+import 'core/widgets/fcm_navigation_handler.dart';
 
 // Sentry DSN loaded from EnvironmentConfig (eliminates hardcoded constant)
 
@@ -550,8 +551,11 @@ class _BookBedAppState extends ConsumerState<BookBedApp> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Precache critical logo asset for auth screens (transparent 1024x1024)
+    // Precache critical logo assets for auth screens (transparent 1024x1024)
+    // logo-light.png = purple logo for light theme
+    // logo-dark.png = white logo for dark theme
     precacheImage(const AssetImage('assets/images/logo-light.png'), context);
+    precacheImage(const AssetImage('assets/images/logo-dark.png'), context);
   }
 
   /// Wait for all initialization to complete
@@ -667,7 +671,9 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
       builder: (context, child) {
         final wrappedChild = ErrorBoundary(
           child: VersionCheckWrapper(
-            child: GlobalNavigationOverlay(child: child!),
+            child: FcmNavigationHandler(
+              child: GlobalNavigationOverlay(child: child!),
+            ),
           ),
         );
         return Stack(children: [wrappedChild, const OfflineIndicator()]);

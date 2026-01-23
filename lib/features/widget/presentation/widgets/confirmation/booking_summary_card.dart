@@ -86,9 +86,9 @@ class BookingSummaryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
-    // Use backgroundTertiary in dark mode for better contrast
+    // Dark mode: pure black background matching parent, with visible border
     final cardBackground = isDarkMode
-        ? colors.backgroundTertiary
+        ? ColorTokens.pureBlack
         : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
@@ -131,6 +131,7 @@ class BookingSummaryCard extends ConsumerWidget {
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
+            stacked: true, // Email can be long, show below label
           ),
           const SizedBox(height: SpacingTokens.s),
           DetailRowWidget(

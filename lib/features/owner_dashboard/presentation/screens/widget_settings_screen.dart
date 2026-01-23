@@ -69,12 +69,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
   int _minDaysAdvance = 0;
   int _maxDaysAdvance = 365;
 
-  // Contact Options
-  bool _showPhone = true;
-  final _phoneController = TextEditingController();
-  bool _showEmail = true;
-  final _emailController = TextEditingController();
-
   // External Calendar Sync Options
   bool _externalCalendarEnabled = false;
   bool _syncBookingCom = false;
@@ -158,12 +152,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
       _cancellationHours = settings.cancellationDeadlineHours ?? 48;
       _minDaysAdvance = settings.minDaysAdvance;
       _maxDaysAdvance = settings.maxDaysAdvance;
-
-      // Contact Options
-      _showPhone = settings.contactOptions.showPhone;
-      _phoneController.text = settings.contactOptions.phoneNumber ?? '';
-      _showEmail = settings.contactOptions.showEmail;
-      _emailController.text = settings.contactOptions.emailAddress ?? '';
 
       // External Calendar Sync Options
       _externalCalendarEnabled =
@@ -549,16 +537,8 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
         // Use minNights from unit settings (not widget settings)
         // This is configured in "Edit Unit" form, not here
         minNights: _existingSettings?.minNights ?? 1,
-        contactOptions: ContactOptions(
-          showPhone: _showPhone,
-          phoneNumber: _phoneController.text.isEmpty
-              ? null
-              : _phoneController.text,
-          showEmail: _showEmail,
-          emailAddress: _emailController.text.isEmpty
-              ? null
-              : _emailController.text,
-        ),
+        // Contact options no longer displayed in widget - use default empty
+        contactOptions: const ContactOptions(),
         emailConfig:
             _existingSettings?.emailConfig ?? const EmailNotificationConfig(),
         externalCalendarConfig: _externalCalendarEnabled
@@ -631,8 +611,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
 
   @override
   void dispose() {
-    _phoneController.dispose();
-    _emailController.dispose();
     _bookingComAccountIdController.dispose();
     _bookingComAccessTokenController.dispose();
     _airbnbAccountIdController.dispose();
@@ -693,12 +671,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
 
                   _buildBookingBehaviorSection(),
                   const SizedBox(height: 24),
-                ],
-
-                // Contact Options - ONLY for calendarOnly mode
-                // In booking modes, guests use the booking form, so contact info is not needed
-                if (_selectedMode == WidgetMode.calendarOnly) ...[
-                  _buildContactOptionsSection(),
                 ],
 
                 const SizedBox(height: 32),
@@ -1937,313 +1909,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
               context,
             ).colorScheme.onSurface.withValues(alpha: 0.12),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactOptionsSection() {
-    final theme = Theme.of(context);
-    final sectionPadding = context.horizontalPadding;
-    final l10n = AppLocalizations.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: theme.brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.2)
-                : Colors.black.withValues(alpha: 0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: context.gradients.sectionBorder,
-              width: 1.5,
-            ),
-          ),
-          padding: EdgeInsets.all(sectionPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with icon and title
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.contact_phone,
-                      color: theme.colorScheme.primary,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.widgetSettingsContactInfo,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          height: 2,
-                          width: 40,
-                          decoration: BoxDecoration(
-                            gradient: GradientTokens.brandPrimary,
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.widgetSettingsContactDesc,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Copy from Profile button
-              _buildCopyFromProfileButton(),
-              const SizedBox(height: 16),
-
-              // Compact inline layout
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final isDesktop = constraints.maxWidth >= 600;
-
-                  if (isDesktop) {
-                    // Desktop: 2 columns inline
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _buildCompactContactField(
-                            icon: Icons.phone,
-                            label: l10n.widgetSettingsPhone,
-                            controller: _phoneController,
-                            enabled: _showPhone,
-                            onToggle: (val) => setState(() => _showPhone = val),
-                            keyboardType: TextInputType.phone,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildCompactContactField(
-                            icon: Icons.email,
-                            label: l10n.widgetSettingsEmail,
-                            controller: _emailController,
-                            enabled: _showEmail,
-                            onToggle: (val) => setState(() => _showEmail = val),
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                        ),
-                      ],
-                    );
-                  } else {
-                    // Mobile: Stacked
-                    return Column(
-                      children: [
-                        _buildCompactContactField(
-                          icon: Icons.phone,
-                          label: l10n.widgetSettingsPhone,
-                          controller: _phoneController,
-                          enabled: _showPhone,
-                          onToggle: (val) => setState(() => _showPhone = val),
-                          keyboardType: TextInputType.phone,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildCompactContactField(
-                          icon: Icons.email,
-                          label: l10n.widgetSettingsEmail,
-                          controller: _emailController,
-                          enabled: _showEmail,
-                          onToggle: (val) => setState(() => _showEmail = val),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                      ],
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Copy from Profile button - automatically fills contact fields from user profile
-  Widget _buildCopyFromProfileButton() {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final userProfileAsync = ref.watch(watchUserProfileProvider);
-
-    return userProfileAsync.when(
-      data: (profile) {
-        if (profile == null) return const SizedBox.shrink();
-
-        final hasPhone = profile.phoneE164.isNotEmpty;
-        final hasEmail = profile.emailContact.isNotEmpty;
-
-        // Don't show button if profile has no contact info
-        if (!hasPhone && !hasEmail) return const SizedBox.shrink();
-
-        return OutlinedButton.icon(
-          onPressed: () {
-            setState(() {
-              if (hasPhone) {
-                _phoneController.text = profile.phoneE164;
-                _showPhone = true;
-              }
-              if (hasEmail) {
-                _emailController.text = profile.emailContact;
-                _showEmail = true;
-              }
-            });
-            ErrorDisplayUtils.showSuccessSnackBar(
-              context,
-              l10n.widgetSettingsCopiedFromProfile,
-            );
-          },
-          icon: const Icon(Icons.person_outline, size: 18),
-          label: Text(l10n.widgetSettingsCopyFromProfile),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: theme.colorScheme.primary,
-            side: BorderSide(
-              color: theme.colorScheme.primary.withValues(alpha: 0.5),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
-    );
-  }
-
-  // Compact contact field with inline toggle
-  Widget _buildCompactContactField({
-    required IconData icon,
-    required String label,
-    required TextEditingController controller,
-    required bool enabled,
-    required ValueChanged<bool> onToggle,
-    TextInputType? keyboardType,
-  }) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: enabled
-            ? theme.colorScheme.primary.withValues(alpha: 0.05)
-            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: enabled
-              ? theme.colorScheme.primary.withValues(alpha: 0.2)
-              : theme.colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Toggle row
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: enabled
-                      ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  size: 16,
-                  color: enabled
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: enabled
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              Switch(
-                value: enabled,
-                onChanged: onToggle,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                activeThumbColor: theme.colorScheme.primary,
-                activeTrackColor: theme.colorScheme.primary.withValues(
-                  alpha: 0.5,
-                ),
-                inactiveThumbColor: theme.colorScheme.onSurface.withValues(
-                  alpha: 0.4,
-                ),
-                inactiveTrackColor: theme.colorScheme.onSurface.withValues(
-                  alpha: 0.12,
-                ),
-              ),
-            ],
-          ),
-          if (enabled) ...[
-            const SizedBox(height: 10),
-            Builder(
-              builder: (ctx) => TextFormField(
-                controller: controller,
-                decoration:
-                    InputDecorationHelper.buildDecoration(
-                      labelText: label,
-                      prefixIcon: Icon(icon, size: 18),
-                      context: ctx,
-                    ).copyWith(
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                    ),
-                keyboardType: keyboardType,
-                style: const TextStyle(fontSize: 14),
-              ),
-            ),
-          ],
         ],
       ),
     );

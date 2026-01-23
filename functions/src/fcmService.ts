@@ -21,6 +21,16 @@ interface PushNotificationData {
 /**
  * Get FCM tokens for a user
  * Tokens are stored per device in users/{userId}/data/fcmTokens
+ *
+ * Storage format (Flutter saves as map with token as key):
+ * {
+ *   "fcmToken123...": {
+ *     "token": "fcmToken123...",
+ *     "platform": "android",
+ *     "createdAt": Timestamp,
+ *     "lastSeen": Timestamp
+ *   }
+ * }
  */
 async function getUserFcmTokens(userId: string): Promise<string[]> {
   try {
@@ -33,28 +43,37 @@ async function getUserFcmTokens(userId: string): Promise<string[]> {
       .get();
 
     if (!tokensDoc.exists) {
-      logInfo("[FCM] No FCM tokens found for user", {userId});
       return [];
     }
 
     const data = tokensDoc.data();
-    if (!data || !data.tokens) {
+    if (!data) {
       return [];
     }
 
-    // tokens is an array of {token: string, platform: string, updatedAt: Timestamp}
-    const tokens = data.tokens as Array<{token: string; platform: string}>;
-    return tokens
-      .map((t) => t.token)
-      .filter((token): token is string => {
-        // Basic validation: must be a non-empty string of reasonable length.
-        // This prevents sending to clearly invalid/malformed tokens.
-        const isValid = typeof token === "string" && token.length > 20;
-        if (!isValid && token) {
-          logWarn("[FCM] Found invalid token format in Firestore", {userId});
-        }
-        return isValid;
-      });
+    // Flutter saves tokens as a map with token string as the key
+    // Each value contains {token, platform, createdAt, lastSeen}
+    const tokens: string[] = [];
+    for (const key of Object.keys(data)) {
+      const tokenData = data[key];
+      // The token string is stored both as the key and in the 'token' field
+      const token = typeof tokenData === "object" && tokenData?.token
+        ? tokenData.token
+        : key;
+
+      // Basic validation: must be a non-empty string of reasonable length
+      // FCM tokens are typically 150+ characters
+      if (typeof token === "string" && token.length > 20) {
+        tokens.push(token);
+      } else if (token) {
+        logWarn("[FCM] Invalid token format", {
+          userId,
+          tokenLength: typeof token === "string" ? token.length : 0,
+        });
+      }
+    }
+
+    return tokens;
   } catch (error) {
     logError("[FCM] Error fetching user FCM tokens", {userId, error});
     return [];
@@ -156,6 +175,7 @@ export async function sendPushNotification(
 
 /**
  * Remove invalid FCM tokens from Firestore
+ * Uses FieldValue.delete() to remove specific token entries from the map
  */
 async function cleanupInvalidTokens(
   userId: string,
@@ -187,18 +207,14 @@ async function cleanupInvalidTokens(
       .collection("data")
       .doc("fcmTokens");
 
-    const tokensDoc = await tokensRef.get();
-    if (!tokensDoc.exists) return;
+    // Build update object to delete invalid tokens from the map
+    // Flutter stores tokens as map keys, so we delete those keys
+    const updates: Record<string, admin.firestore.FieldValue> = {};
+    for (const token of invalidTokens) {
+      updates[token] = admin.firestore.FieldValue.delete();
+    }
 
-    const data = tokensDoc.data();
-    if (!data || !data.tokens) return;
-
-    // Filter out invalid tokens
-    const validTokens = (data.tokens as Array<{token: string}>).filter(
-      (t) => !invalidTokens.includes(t.token)
-    );
-
-    await tokensRef.update({tokens: validTokens});
+    await tokensRef.update(updates);
 
     logInfo("[FCM] Cleaned up invalid tokens", {
       userId,

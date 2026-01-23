@@ -48,9 +48,17 @@ class AuthLogoIcon extends StatelessWidget {
     // Calculate cache size based on widget size and pixel ratio for memory optimization
     final cacheSize = (size * MediaQuery.of(context).devicePixelRatio).toInt();
 
-    // Build the logo image with optional color inversion for dark mode
-    Widget logoImage = Image.asset(
-      'assets/images/logo-light.png',
+    // Use separate logo assets for light/dark modes
+    // logo-light.png = dark logo for light backgrounds
+    // logo-dark.png = white logo for dark backgrounds
+    // This is more reliable than ColorFilter which can produce artifacts
+    final useWhiteLogo = isWhite || isDarkMode;
+    final logoPath = useWhiteLogo
+        ? 'assets/images/logo-dark.png'
+        : 'assets/images/logo-light.png';
+
+    final logoImage = Image.asset(
+      logoPath,
       width: size,
       height: size,
       cacheWidth: cacheSize,
@@ -64,25 +72,6 @@ class AuthLogoIcon extends StatelessWidget {
         );
       },
     );
-
-    // Apply color filter for visibility on different backgrounds
-    // isWhite: Force white logo (for dark/colored backgrounds like drawer header)
-    // isDarkMode: Make logo white for dark theme backgrounds (applies to both
-    //             minimalistic and colorized modes - logo must be visible)
-    if (isWhite || isDarkMode) {
-      // Use color matrix to convert any color to white while preserving alpha
-      // This is more reliable than BlendMode.srcIn which can produce unexpected
-      // colors (like green) with some RGBA images
-      logoImage = ColorFiltered(
-        colorFilter: const ColorFilter.matrix(<double>[
-          0, 0, 0, 0, 255, // Red channel: output 255 (white)
-          0, 0, 0, 0, 255, // Green channel: output 255 (white)
-          0, 0, 0, 0, 255, // Blue channel: output 255 (white)
-          0, 0, 0, 1, 0, // Alpha channel: preserve original
-        ]),
-        child: logoImage,
-      );
-    }
 
     final logoWidget = Container(
       width: size,

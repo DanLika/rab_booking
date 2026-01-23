@@ -91,12 +91,12 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           translations: WidgetTranslations.of(context, ref),
         ),
         // Min nights info banner - between header and calendar
-        if (minNights > 1)
-          CalendarCompactLegend(
-            minNights: minNights,
-            colors: colors,
-            translations: WidgetTranslations.of(context, ref),
-          ),
+        // Always show regardless of minNights value for consistent UX
+        CalendarCompactLegend(
+          minNights: minNights,
+          colors: colors,
+          translations: WidgetTranslations.of(context, ref),
+        ),
 
         // Calendar and tooltip in Stack for overlay positioning
         // Note: No Expanded - calendar takes natural height for proper inline layout

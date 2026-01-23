@@ -159,7 +159,8 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="BookBed - Property Management Platform">
-  <meta name="twitter:description" content="Manage your vacation rentals with ease. Bookings, calendars, pricing, and online payments.">
+  <meta name="twitter:description"
+    content="Manage your vacation rentals with ease. Bookings, calendars, pricing, and online payments.">
   <meta name="twitter:image" content="https://app.bookbed.io/og-image.png">
 
   <!-- iOS meta tags & icons -->
@@ -173,8 +174,8 @@
   <link rel="icon" type="image/png" href="favicon.png" />
 
   <!-- Theme Color -->
-  <meta name="theme-color" content="#0066FF">
-  <meta name="msapplication-TileColor" content="#0066FF">
+  <meta name="theme-color" content="#6B4CE6">
+  <meta name="msapplication-TileColor" content="#6B4CE6">
 
   <!-- Custom Styles -->
   <link rel="stylesheet" href="style.css">
@@ -756,6 +757,25 @@
         }
       });
     })();
+  </script>
+
+  <!-- Register Firebase Messaging Service Worker -->
+  <script>
+    // Firebase Messaging requires the service worker to be registered
+    // We register it early and store the registration for Firebase to use
+    if ('serviceWorker' in navigator) {
+      window.firebaseSWRegistration = navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then(function (registration) {
+          console.log('[FCM-SW] Service worker registered with scope:', registration.scope);
+          // Store registration globally for Firebase Messaging to use
+          window.firebaseMessagingSwRegistration = registration;
+          return registration;
+        })
+        .catch(function (error) {
+          console.error('[FCM-SW] Service worker registration failed:', error);
+          console.error('[FCM-SW] Make sure firebase-messaging-sw.js exists in web/ folder');
+        });
+    }
   </script>
 
   <!-- Load Flutter Bootstrap -->

@@ -387,14 +387,11 @@ class _BookingConfirmationScreenState
                               ),
 
                             // Email confirmation with resend option
+                            // Uses Cloud Function for resend - no owner API key needed
                             EmailConfirmationCard(
                               guestEmail: widget.guestEmail,
-                              colors: colors,
-                              booking: widget.booking,
-                              emailConfig: widget.emailConfig,
-                              widgetSettings: widget.widgetSettings,
-                              propertyName: widget.propertyName,
                               bookingReference: widget.bookingReference,
+                              colors: colors,
                             ),
 
                             // Cancellation policy

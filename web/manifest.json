@@ -6,7 +6,7 @@
     "id": "/",
     "display": "standalone",
     "background_color": "#FFFFFF",
-    "theme_color": "#304FFE",
+    "theme_color": "#6B4CE6",
     "description": "Modern booking management platform for property owners and vacation rentals.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,

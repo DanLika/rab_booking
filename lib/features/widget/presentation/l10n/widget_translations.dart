@@ -2345,6 +2345,34 @@ class WidgetTranslations {
     }
   }
 
+  String get bookingNotFound {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Rezervacija nije pronađena.';
+      case 'de':
+        return 'Buchung nicht gefunden.';
+      case 'it':
+        return 'Prenotazione non trovata.';
+      case 'en':
+      default:
+        return 'Booking not found.';
+    }
+  }
+
+  String get emailMismatch {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Email adresa ne odgovara podacima rezervacije.';
+      case 'de':
+        return 'E-Mail-Adresse stimmt nicht mit der Buchung überein.';
+      case 'it':
+        return 'L\'indirizzo email non corrisponde alla prenotazione.';
+      case 'en':
+      default:
+        return 'Email does not match booking records.';
+    }
+  }
+
   String get confirmationEmailSentSuccessfully {
     switch (locale.languageCode) {
       case 'hr':

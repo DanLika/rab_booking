@@ -86,26 +86,18 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
       (request as any).rawRequest?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
       "unknown";
 
-    // In-memory check first (fast, per-instance)
-    if (!checkRateLimit(`widget_booking:${clientIp}`, 5, 300)) {
+    // In-memory rate limiting (fast, per-instance)
+    // Sufficient for abuse prevention - no Firestore cost
+    if (!checkRateLimit(`widget_booking:${clientIp}`, 10, 600)) { // 10 bookings per 10 minutes
       // Log security event (fire-and-forget)
       const ipHash = Buffer.from(clientIp).toString("base64").substring(0, 16);
       logRateLimitExceeded(ipHash, "widget_booking").catch(() => {});
 
       throw new HttpsError(
         "resource-exhausted",
-        "Too many booking attempts from your location. Please wait 5 minutes before trying again."
+        "Too many booking attempts. Please wait a few minutes before trying again."
       );
     }
-
-    // Firestore-backed check for persistence across instances
-    // Use IP hash for privacy (don't store raw IPs)
-    const ipHash = Buffer.from(clientIp).toString("base64").substring(0, 16);
-    await enforceRateLimit(`ip_${ipHash}`, "widget_booking", {
-      maxCalls: 10,
-      windowMs: 600000, // 10 bookings per 10 minutes per IP
-      errorMessage: "Too many booking attempts. Please wait a few minutes before trying again.",
-    });
   }
 
   const {

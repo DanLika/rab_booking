@@ -38,9 +38,9 @@ class CalendarViewSwitcherWidget extends ConsumerWidget {
   static const double _containerRadiusSmall = 16;
   static const double _containerRadiusNormal = 20;
 
-  // Icon sizes
-  static const double _iconSizeTiny = 14;
-  static const double _iconSizeSmall = 16;
+  // Icon sizes - increased for better visibility
+  static const double _iconSizeTiny = 16; // Was 14px - improved touch target
+  static const double _iconSizeSmall = 17;
 
   final WidgetColorScheme colors;
   final bool isDarkMode;

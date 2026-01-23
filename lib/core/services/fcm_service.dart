@@ -9,7 +9,14 @@ import 'package:flutter/foundation.dart';
 ///
 /// Handles Firebase Cloud Messaging for push notifications.
 /// Token storage: users/{userId}/data/fcmTokens (Map format)
+///
+/// Web Push: Requires VAPID key from Firebase Console
+/// (Project Settings → Cloud Messaging → Web Push certificates)
 class FcmService {
+  // VAPID key for web push notifications
+  // From Firebase Console: Project Settings → Cloud Messaging → Web Push certificates
+  static const String _vapidKey =
+      'BJ34pleaflOU2jRZNOSkKt1K_-DXsepYhUlCwSrmQfX8HrlTqr5d2HTH6UODaZiwkvideADX_yTcCpLOTNwkIzM';
   static final FcmService _instance = FcmService._internal();
   factory FcmService() => _instance;
   FcmService._internal();
@@ -44,22 +51,22 @@ class FcmService {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    // Skip on web for now - will be enabled with proper web push setup
-    if (kIsWeb) {
-      debugPrint('[FCM] Web push notifications not yet configured');
+    // Check if VAPID key is configured for web
+    if (kIsWeb && _vapidKey == 'YOUR_VAPID_KEY_HERE') {
+      debugPrint('[FCM] Web push: VAPID key not configured');
       return;
     }
 
     try {
-      // Request permission (iOS requires this)
+      // Request permission (iOS and Web require this)
       final settings = await _messagingInstance.requestPermission();
 
       debugPrint('[FCM] Permission status: ${settings.authorizationStatus}');
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
-        // Get APNS token first on iOS
-        if (defaultTargetPlatform == TargetPlatform.iOS) {
+        // Get APNS token first on iOS (not needed for web)
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
           final apnsToken = await _messagingInstance.getAPNSToken();
           debugPrint('[FCM] APNS Token: $apnsToken');
         }
@@ -70,11 +77,13 @@ class FcmService {
         // Listen for token refresh
         _messagingInstance.onTokenRefresh.listen(_onTokenRefresh);
 
-        // Configure message handling
+        // Configure message handling (foreground messages on web handled by service worker)
         _configureMessageHandling();
 
         _initialized = true;
-        debugPrint('[FCM] Service initialized successfully');
+        debugPrint(
+          '[FCM] Service initialized successfully (platform: ${_getPlatform()})',
+        );
       } else {
         debugPrint('[FCM] Permission denied');
       }
@@ -108,10 +117,13 @@ class FcmService {
 
   /// Get current FCM token
   Future<String?> getToken() async {
-    if (kIsWeb) return null;
-
     try {
-      _currentToken = await _messagingInstance.getToken();
+      // Web requires VAPID key for token generation
+      if (kIsWeb) {
+        _currentToken = await _messagingInstance.getToken(vapidKey: _vapidKey);
+      } else {
+        _currentToken = await _messagingInstance.getToken();
+      }
       return _currentToken;
     } catch (e) {
       debugPrint('[FCM] Error getting token: $e');
@@ -159,7 +171,7 @@ class FcmService {
             },
           }, SetOptions(merge: true));
 
-      debugPrint('[FCM] Token saved for platform: $platform');
+      debugPrint('[FCM] Token saved for $platform');
     } catch (e) {
       debugPrint('[FCM] Error saving token: $e');
     }

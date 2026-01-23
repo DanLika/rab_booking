@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 /// BookBed logo widget that displays the official logo image
 ///
-/// Uses the logo-light.png asset (1024x1024px transparent) for high-quality rendering.
-/// In dark mode, the logo colors are automatically inverted to ensure visibility on dark backgrounds.
+/// Uses separate logo assets for light/dark modes:
+/// - logo-light.png = purple logo for light backgrounds
+/// - logo-dark.png = white logo for dark backgrounds
+///
+/// This approach is more reliable than ColorFilter which can produce artifacts.
 ///
 /// Usage:
 /// ```dart
@@ -33,8 +36,16 @@ class BookBedLogo extends StatelessWidget {
     // Calculate cache size based on widget size and pixel ratio for memory optimization
     final cacheSize = (size * MediaQuery.of(context).devicePixelRatio).toInt();
 
-    Widget logoImage = Image.asset(
-      'assets/images/logo-light.png',
+    // Use separate logo assets for light/dark modes
+    // logo-light.png = purple logo for light backgrounds
+    // logo-dark.png = white logo for dark backgrounds
+    // This is more reliable than ColorFilter which can produce artifacts
+    final logoPath = isDarkMode
+        ? 'assets/images/logo-dark.png'
+        : 'assets/images/logo-light.png';
+
+    final logoImage = Image.asset(
+      logoPath,
       width: size,
       height: size,
       cacheWidth: cacheSize,
@@ -49,14 +60,6 @@ class BookBedLogo extends StatelessWidget {
         );
       },
     );
-
-    // In dark mode, invert the logo colors so it's visible on dark backgrounds
-    if (isDarkMode) {
-      logoImage = ColorFiltered(
-        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-        child: logoImage,
-      );
-    }
 
     if (!showGlow) {
       return logoImage;

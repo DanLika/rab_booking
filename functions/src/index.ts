@@ -56,8 +56,11 @@ export * from "./guestCancelBooking";
 // Export update booking token expiration function
 export * from "./updateBookingTokenExpiration";
 
-// Export resend booking email function
+// Export resend booking email function (for owners - requires auth)
 export * from "./resendBookingEmail";
+
+// Export resend guest booking email function (for guests - no auth required)
+export * from "./resendGuestBookingEmail";
 
 // Export subdomain management functions
 export * from "./subdomainService";

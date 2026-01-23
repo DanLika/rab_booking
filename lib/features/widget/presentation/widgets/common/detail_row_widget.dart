@@ -32,12 +32,20 @@ import '../../theme/minimalist_colors.dart';
 ///   isDarkMode: isDarkMode,
 ///   isHighlighted: true,
 /// )
+///
+/// // Stacked layout for long values (email, URLs)
+/// DetailRowWidget(
+///   label: 'Email',
+///   value: 'verylongemail@example.com',
+///   isDarkMode: isDarkMode,
+///   stacked: true,
+/// )
 /// ```
 class DetailRowWidget extends StatelessWidget {
-  /// Label text displayed on the left
+  /// Label text displayed on the left (or top if stacked)
   final String label;
 
-  /// Value text displayed on the right
+  /// Value text displayed on the right (or below if stacked)
   final String value;
 
   /// Whether dark mode is active
@@ -54,6 +62,10 @@ class DetailRowWidget extends StatelessWidget {
   /// Use FontWeight.w400 (regular) for booking confirmation style.
   final FontWeight valueFontWeight;
 
+  /// Whether to stack label and value vertically (label on top, value below).
+  /// Use for long values like email addresses that would overflow horizontally.
+  final bool stacked;
+
   // Bug #45 Fix: Removed const to allow assert validation for non-empty label and value
   DetailRowWidget({
     super.key,
@@ -63,6 +75,7 @@ class DetailRowWidget extends StatelessWidget {
     this.isHighlighted = false,
     this.hasPadding = false,
     this.valueFontWeight = TypographyTokens.semiBold,
+    this.stacked = false,
   }) : assert(label.isNotEmpty, 'Label cannot be empty'),
        assert(value.isNotEmpty, 'Value cannot be empty');
 
@@ -70,41 +83,63 @@ class DetailRowWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
-    // Bug #46 Fix: Add Semantics widget for accessibility (screen readers)
-    final row = Semantics(
-      label: label,
-      value: value,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              color: colors.textSecondary,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              fontWeight: isHighlighted
-                  ? TypographyTokens.bold
-                  : valueFontWeight,
-              color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
-            ),
-          ),
-        ],
+    final labelWidget = Text(
+      label,
+      style: TextStyle(
+        fontSize: TypographyTokens.fontSizeM,
+        color: colors.textSecondary,
       ),
     );
+
+    final valueWidget = Text(
+      value,
+      style: TextStyle(
+        fontSize: TypographyTokens.fontSizeM,
+        fontWeight: isHighlighted ? TypographyTokens.bold : valueFontWeight,
+        color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
+      ),
+      // Allow text to wrap for stacked layout
+      softWrap: stacked,
+    );
+
+    // Bug #46 Fix: Add Semantics widget for accessibility (screen readers)
+    final Widget content;
+    if (stacked) {
+      // Stacked layout: label on top, value below (for long values like email)
+      content = Semantics(
+        label: label,
+        value: value,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            labelWidget,
+            const SizedBox(height: SpacingTokens.xxs),
+            valueWidget,
+          ],
+        ),
+      );
+    } else {
+      // Horizontal layout: label left, value right
+      content = Semantics(
+        label: label,
+        value: value,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            labelWidget,
+            Flexible(child: valueWidget),
+          ],
+        ),
+      );
+    }
 
     if (hasPadding) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xxs),
-        child: row,
+        child: content,
       );
     }
 
-    return row;
+    return content;
   }
 }

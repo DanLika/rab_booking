@@ -9,6 +9,7 @@ import { sendEmailIfAllowed } from "./emailNotificationHelper";
 import { admin, db } from "./firebase";
 import { getStripeClient, stripeSecretKey } from "./stripe";
 import { createPaymentNotification } from "./notificationService";
+import { sendPaymentPushNotification } from "./fcmService";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
@@ -1255,6 +1256,17 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       } catch (notificationError) {
         logError("Failed to create in-app payment notification", notificationError);
       }
+
+      // Send push notification for payment (non-blocking)
+      sendPaymentPushNotification(
+        ownerId,
+        result.bookingId,
+        guestName,
+        depositAmount,
+        "EUR"
+      ).catch((err) => {
+        logError("Failed to send payment push notification", err);
+      });
 
       res.json({
         received: true,

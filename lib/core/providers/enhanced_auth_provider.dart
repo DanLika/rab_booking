@@ -13,6 +13,7 @@ import '../../core/services/ip_geolocation_service.dart';
 import '../../core/services/logging_service.dart';
 import '../../core/services/analytics_service.dart';
 import '../../core/services/storage_service.dart';
+import '../../core/services/fcm_service.dart';
 import '../../core/utils/password_validator.dart';
 import '../../shared/models/user_model.dart';
 import '../../shared/providers/repository_providers.dart';
@@ -273,6 +274,17 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
             'role',
             userModel.role.name,
           ),
+        );
+
+        // Initialize FCM push notifications (non-blocking)
+        // This saves the FCM token to Firestore for Cloud Functions to use
+        unawaited(
+          fcmService.initialize().catchError((e) {
+            LoggingService.log(
+              'FCM initialization failed (non-critical): $e',
+              tag: 'FCM_INIT',
+            );
+          }),
         );
 
         LoggingService.log(
@@ -954,6 +966,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     final userId = _auth.currentUser?.uid;
     if (userId != null) {
       await _security.logLogout(userId);
+    }
+
+    // Remove FCM token before signing out (prevents notifications to logged-out user)
+    try {
+      await fcmService.removeToken();
+    } catch (e) {
+      LoggingService.log(
+        'FCM token removal failed (non-critical): $e',
+        tag: 'FCM_CLEANUP',
+      );
     }
 
     // Clear user context for Sentry/Crashlytics error tracking

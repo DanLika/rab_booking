@@ -1,74 +1,38 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
-import '../../../../../core/services/email_notification_service.dart';
-import '../../../../../shared/models/booking_model.dart';
-import '../../../domain/models/widget_settings.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../l10n/widget_translations.dart';
-
-/// Safely convert error to string, handling null and edge cases
-/// Prevents "Null check operator used on a null value" errors
-String _safeErrorToString(dynamic error) {
-  if (error == null) {
-    return 'Unknown error';
-  }
-  try {
-    return error.toString();
-  } catch (e) {
-    // If toString() itself throws, return a safe fallback
-    return 'Error: Unable to display error details';
-  }
-}
 
 /// Card showing email confirmation status with resend functionality.
 ///
 /// Displays email sent confirmation and provides option to resend
-/// if booking and email config are available.
+/// using Cloud Function (no owner API key required).
 ///
 /// Usage:
 /// ```dart
 /// EmailConfirmationCard(
 ///   guestEmail: 'guest@example.com',
+///   bookingReference: 'BK-2024-001234',
 ///   colors: ColorTokens.light,
-///   booking: bookingModel,
-///   emailConfig: emailConfig,
-///   widgetSettings: settings,
-///   propertyName: 'Beach Villa',
-///   bookingReference: 'ABC123',
 /// )
 /// ```
 class EmailConfirmationCard extends ConsumerStatefulWidget {
   /// Guest email address
   final String guestEmail;
 
+  /// Booking reference for Cloud Function verification
+  final String bookingReference;
+
   /// Color tokens for theming
   final WidgetColorScheme colors;
-
-  /// Optional booking model for resend functionality
-  final BookingModel? booking;
-
-  /// Optional email config for resend functionality
-  final EmailNotificationConfig? emailConfig;
-
-  /// Optional widget settings for resend functionality
-  final WidgetSettings? widgetSettings;
-
-  /// Property name for email content
-  final String propertyName;
-
-  /// Booking reference for email content
-  final String bookingReference;
 
   const EmailConfirmationCard({
     super.key,
     required this.guestEmail,
-    required this.colors,
-    this.booking,
-    this.emailConfig,
-    this.widgetSettings,
-    required this.propertyName,
     required this.bookingReference,
+    required this.colors,
   });
 
   @override
@@ -81,11 +45,13 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
   bool _emailResent = false;
   int _resendCount = 0;
 
-  /// Maximum number of times a user can resend confirmation email
+  /// Maximum number of times a user can resend confirmation email (client-side)
+  /// Server also has rate limiting (3 per hour per booking)
   static const int _maxResendAttempts = 5;
 
   Future<void> _resendConfirmationEmail(WidgetTranslations tr) async {
-    if (widget.booking == null || widget.emailConfig == null) {
+    // Check if we have required data
+    if (widget.guestEmail.isEmpty || widget.bookingReference.isEmpty) {
       SnackBarHelper.showError(
         context: context,
         message: tr.unableToResendEmail,
@@ -93,22 +59,11 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
       return;
     }
 
-    // Check rate limit - prevent spam
+    // Check client-side rate limit
     if (_resendCount >= _maxResendAttempts) {
       SnackBarHelper.showWarning(
         context: context,
         message: tr.maxResendAttemptsReached,
-      );
-      return;
-    }
-
-    // Only check if API key and from email are configured (not the 'enabled' flag)
-    // The 'enabled' flag controls email verification on the booking form, not confirmation emails
-    final config = widget.emailConfig!;
-    if (config.resendApiKey == null || config.fromEmail == null) {
-      SnackBarHelper.showWarning(
-        context: context,
-        message: tr.emailServiceNotConfigured,
       );
       return;
     }
@@ -118,20 +73,15 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
     });
 
     try {
-      final emailService = EmailNotificationService();
-      await emailService.sendBookingConfirmationEmail(
-        booking: widget.booking!,
-        emailConfig: widget.emailConfig!,
-        propertyName: widget.propertyName,
-        bookingReference: widget.bookingReference,
-        allowGuestCancellation:
-            widget.widgetSettings?.allowGuestCancellation ?? false,
-        cancellationDeadlineHours:
-            widget.widgetSettings?.cancellationDeadlineHours,
-        ownerEmail: widget.widgetSettings?.contactOptions.emailAddress,
-        ownerPhone: widget.widgetSettings?.contactOptions.phoneNumber,
-        customLogoUrl: widget.widgetSettings?.themeOptions?.customLogoUrl,
-      );
+      // Call Cloud Function to resend email
+      // Uses platform's Resend API key - no owner config needed
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('resendGuestBookingEmail');
+
+      await callable.call<Map<String, dynamic>>({
+        'bookingReference': widget.bookingReference,
+        'guestEmail': widget.guestEmail,
+      });
 
       setState(() {
         _isResendingEmail = false;
@@ -145,6 +95,25 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
           message: tr.confirmationEmailSentSuccessfully,
         );
       }
+    } on FirebaseFunctionsException catch (e) {
+      setState(() {
+        _isResendingEmail = false;
+      });
+
+      if (mounted) {
+        // Handle specific error codes
+        final message = switch (e.code) {
+          'resource-exhausted' => tr.maxResendAttemptsReached,
+          'not-found' => tr.bookingNotFound,
+          'permission-denied' => tr.emailMismatch,
+          _ => tr.failedToSendEmail(e.message ?? 'Unknown error'),
+        };
+        SnackBarHelper.showError(
+          context: context,
+          message: message,
+          duration: const Duration(seconds: 5),
+        );
+      }
     } catch (e) {
       setState(() {
         _isResendingEmail = false;
@@ -153,7 +122,7 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
       if (mounted) {
         SnackBarHelper.showError(
           context: context,
-          message: tr.failedToSendEmail(_safeErrorToString(e)),
+          message: tr.failedToSendEmail(e.toString()),
           duration: const Duration(seconds: 5),
         );
       }
@@ -163,12 +132,15 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
   @override
   Widget build(BuildContext context) {
     final colors = widget.colors;
-    final canResend = widget.emailConfig != null && widget.booking != null;
     final tr = WidgetTranslations.of(context, ref);
+    // Enable resend if we have email and booking reference
+    final canResend =
+        widget.guestEmail.isNotEmpty && widget.bookingReference.isNotEmpty;
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
+    // Dark mode: pure black background matching parent, with visible border
     final cardBackground = isDark
-        ? colors.backgroundTertiary
+        ? ColorTokens.pureBlack
         : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 

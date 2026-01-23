@@ -38,21 +38,48 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
     required this.translations,
   });
 
-  // Layout constants
+  // Layout constants - responsive breakpoints
+  static const _desktopBreakpoint = 1024.0; // Desktop/tablet landscape
   static const _smallScreenBreakpoint = 400.0;
   static const _tinyScreenBreakpoint =
       360.0; // iPhone SE, Galaxy S small devices
-  static const _smallIconSize = 16.0;
-  static const _tinyIconSize = 14.0;
-  static const _smallContainerSize = 28.0;
-  static const _tinyContainerSize = 24.0;
+
+  // Icon sizes - increased for better readability on small screens
+  static const _desktopIconSize = 20.0;
+  static const _normalIconSize = 18.0;
+  static const _smallIconSize = 17.0;
+  static const _tinyIconSize = 16.0; // Was 14px - too small for touch targets
+
+  // Container sizes - increased for better touch targets
+  static const _desktopContainerSize = 40.0;
+  static const _normalContainerSize = 36.0;
+  static const _smallContainerSize = 32.0; // Was 28px
+  static const _tinyContainerSize = 28.0; // Was 24px
+
   static const _shadowAlpha = 0.04;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= _desktopBreakpoint;
     final isSmallScreen = screenWidth < _smallScreenBreakpoint;
     final isTinyScreen = screenWidth < _tinyScreenBreakpoint;
+
+    // Responsive icon and container sizes
+    final iconSize = isTinyScreen
+        ? _tinyIconSize
+        : isSmallScreen
+        ? _smallIconSize
+        : isDesktop
+        ? _desktopIconSize
+        : _normalIconSize;
+    final containerSize = isTinyScreen
+        ? _tinyContainerSize
+        : isSmallScreen
+        ? _smallContainerSize
+        : isDesktop
+        ? _desktopContainerSize
+        : _normalContainerSize;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.xs),
@@ -96,11 +123,7 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
             IconButton(
               icon: Icon(
                 isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                size: isTinyScreen
-                    ? _tinyIconSize
-                    : isSmallScreen
-                    ? _smallIconSize
-                    : IconSizeTokens.small,
+                size: iconSize,
                 color: colors.textPrimary,
               ),
               onPressed: () {
@@ -111,16 +134,8 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
                   : translations.tooltipSwitchToDarkMode,
               padding: EdgeInsets.zero,
               constraints: BoxConstraints(
-                minWidth: isTinyScreen
-                    ? _tinyContainerSize
-                    : isSmallScreen
-                    ? _smallContainerSize
-                    : ConstraintTokens.iconContainerSmall,
-                minHeight: isTinyScreen
-                    ? _tinyContainerSize
-                    : isSmallScreen
-                    ? _smallContainerSize
-                    : ConstraintTokens.iconContainerSmall,
+                minWidth: containerSize,
+                minHeight: containerSize,
               ),
             ),
 
@@ -129,6 +144,8 @@ class CalendarCombinedHeaderWidget extends ConsumerWidget {
               colors: colors,
               isSmallScreen: isSmallScreen,
               isTinyScreen: isTinyScreen,
+              isDesktop: isDesktop,
+              containerSize: containerSize,
             ),
 
             // Spacing before navigation widget
@@ -154,20 +171,26 @@ class _LanguageSwitcherButton extends ConsumerWidget {
   final WidgetColorScheme colors;
   final bool isSmallScreen;
   final bool isTinyScreen;
+  final bool isDesktop;
+  final double containerSize;
 
   const _LanguageSwitcherButton({
     required this.colors,
     required this.isSmallScreen,
     required this.isTinyScreen,
+    required this.isDesktop,
+    required this.containerSize,
   });
 
-  // Size constants
-  static const _tinyFontSize = 12.0;
-  static const _smallFontSize = 14.0;
+  // Size constants - responsive font sizes
+  static const _tinyFontSize = 14.0; // Was 12px - improved readability
+  static const _smallFontSize = 15.0; // Was 14px
   static const _normalFontSize = 16.0;
-  static const _tinyButtonWidth = 34.0;
-  static const _smallButtonWidth = 40.0;
-  static const _normalButtonWidth = 48.0;
+  static const _desktopFontSize = 18.0;
+  static const _tinyButtonWidth = 38.0; // Was 34px
+  static const _smallButtonWidth = 44.0; // Was 40px
+  static const _normalButtonWidth = 50.0; // Was 48px
+  static const _desktopButtonWidth = 56.0;
   static const _menuOffset = 40.0;
   static const _menuItemFontSize = 18.0;
   static const _menuItemSpacing = 12.0;
@@ -180,17 +203,16 @@ class _LanguageSwitcherButton extends ConsumerWidget {
         ? _tinyFontSize
         : isSmallScreen
         ? _smallFontSize
+        : isDesktop
+        ? _desktopFontSize
         : _normalFontSize;
     final buttonWidth = isTinyScreen
         ? _tinyButtonWidth
         : isSmallScreen
         ? _smallButtonWidth
+        : isDesktop
+        ? _desktopButtonWidth
         : _normalButtonWidth;
-    final containerSize = isTinyScreen
-        ? CalendarCombinedHeaderWidget._tinyContainerSize
-        : isSmallScreen
-        ? CalendarCombinedHeaderWidget._smallContainerSize
-        : ConstraintTokens.iconContainerSmall;
 
     final translations = WidgetTranslations.of(context, ref);
 

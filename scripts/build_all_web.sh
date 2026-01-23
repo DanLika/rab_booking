@@ -23,48 +23,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Function to update meta tags in index.html
-update_meta_tags() {
-    local build_dir=$1
-    local domain=$2
-    local title=$3
-    local description=$4
-
-    local index_file="${build_dir}/index.html"
-
-    if [ ! -f "$index_file" ]; then
-        echo -e "${RED}Error: ${index_file} not found${NC}"
-        return 1
-    fi
-
-    echo "  Updating meta tags for ${domain}..."
-
-    # Update canonical URL
-    sed -i '' "s|href=\"https://app.bookbed.io\"|href=\"https://${domain}\"|g" "$index_file"
-
-    # Update og:image
-    sed -i '' "s|content=\"https://app.bookbed.io/og-image.png\"|content=\"https://${domain}/og-image.png\"|g" "$index_file"
-
-    # Update og:url
-    sed -i '' "s|<meta property=\"og:url\" content=\"https://app.bookbed.io\">|<meta property=\"og:url\" content=\"https://${domain}\">|g" "$index_file"
-
-    # Update og:title if provided
-    if [ -n "$title" ]; then
-        sed -i '' "s|<meta property=\"og:title\" content=\"BookBed - Property Management Platform\">|<meta property=\"og:title\" content=\"${title}\">|g" "$index_file"
-        sed -i '' "s|<meta name=\"twitter:title\" content=\"BookBed - Property Management Platform\">|<meta name=\"twitter:title\" content=\"${title}\">|g" "$index_file"
-    fi
-
-    # Update og:description if provided
-    if [ -n "$description" ]; then
-        sed -i '' "s|Manage your vacation rentals with ease. Bookings, calendars, pricing, and online payments - all in one place.|${description}|g" "$index_file"
-        sed -i '' "s|Manage your vacation rentals with ease. Bookings, calendars, pricing, and online payments.|${description}|g" "$index_file"
-    fi
-
-    # Update twitter:image
-    sed -i '' "s|content=\"https://app.bookbed.io/og-image.png\"|content=\"https://${domain}/og-image.png\"|g" "$index_file"
-
-    echo -e "  ${GREEN}Done${NC}"
-}
+# OG tags are now handled by the unified script: scripts/update_og_tags.sh
 
 # Build Owner Dashboard
 echo -e "${YELLOW}1. Building Owner Dashboard...${NC}"
@@ -87,9 +46,11 @@ echo ""
 echo -e "${YELLOW}3. Building Admin Dashboard...${NC}"
 $FLUTTER build web --release --target lib/admin_main.dart -o build/web_admin
 echo -e "${GREEN}   Admin build complete${NC}"
-update_meta_tags "build/web_admin" "bookbed-admin.web.app" \
-    "BookBed Admin Dashboard" \
-    "Admin dashboard for BookBed platform management."
+echo ""
+
+# Update OG meta tags for all targets
+echo -e "${YELLOW}4. Updating Open Graph meta tags for all domains...${NC}"
+./scripts/update_og_tags.sh
 echo ""
 
 echo -e "${GREEN}=== All builds complete ===${NC}"

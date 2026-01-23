@@ -15,6 +15,34 @@ part 'widget_context_provider.g.dart';
 /// Parameters for widget context provider
 typedef WidgetContextParams = ({String propertyId, String unitId});
 
+/// Maximum retry attempts for transient network errors
+const _maxRetryAttempts = 3;
+
+/// Base delay for exponential backoff (milliseconds)
+const _baseDelayMs = 500;
+
+/// Check if an error is likely transient (network issue) vs permanent (not found)
+bool _isTransientError(Object error) {
+  final errorStr = error.toString().toLowerCase();
+  // Transient errors: network issues, timeouts, unavailable
+  if (errorStr.contains('network') ||
+      errorStr.contains('timeout') ||
+      errorStr.contains('unavailable') ||
+      errorStr.contains('connection') ||
+      errorStr.contains('socket') ||
+      errorStr.contains('failed to connect') ||
+      errorStr.contains('deadline exceeded') ||
+      errorStr.contains('internal error')) {
+    return true;
+  }
+  // WidgetContextException with "not found" is permanent
+  if (error is WidgetContextException && errorStr.contains('not found')) {
+    return false;
+  }
+  // Default: assume transient for unknown errors
+  return true;
+}
+
 /// Aggregated context provider for the booking widget.
 ///
 /// Fetches property, unit, and widget settings in parallel with a single
@@ -56,74 +84,103 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
   final propertyId = params.propertyId;
   final unitId = params.unitId;
 
-  try {
-    // Fetch all data in parallel
-    final results = await Future.wait<Object?>([
-      ref.read(widgetPropertyByIdProvider(propertyId).future),
-      ref.read(unitByIdProvider((propertyId, unitId)).future),
-      ref.read(widgetSettingsProvider((propertyId, unitId)).future),
-    ]);
+  Object? lastError;
+  StackTrace? lastStackTrace;
 
-    // Bug #24 Fix: Use safe casting with type checks to prevent TypeError
-    final property = results[0] is PropertyModel
-        ? results[0] as PropertyModel
-        : null;
-    final unit = results[1] is UnitModel ? results[1] as UnitModel : null;
-    final settings = results[2] is WidgetSettings
-        ? results[2] as WidgetSettings
-        : null;
+  // Retry loop with exponential backoff for transient errors
+  for (var attempt = 0; attempt < _maxRetryAttempts; attempt++) {
+    try {
+      // Fetch all data in parallel
+      final results = await Future.wait<Object?>([
+        ref.read(widgetPropertyByIdProvider(propertyId).future),
+        ref.read(unitByIdProvider((propertyId, unitId)).future),
+        ref.read(widgetSettingsProvider((propertyId, unitId)).future),
+      ]);
 
-    // Validate property
-    if (property == null) {
-      throw WidgetContextException('Property not found: $propertyId');
-    }
+      // Bug #24 Fix: Use safe casting with type checks to prevent TypeError
+      final property = results[0] is PropertyModel
+          ? results[0] as PropertyModel
+          : null;
+      final unit = results[1] is UnitModel ? results[1] as UnitModel : null;
+      final settings = results[2] is WidgetSettings
+          ? results[2] as WidgetSettings
+          : null;
 
-    // Validate unit
-    if (unit == null) {
-      throw WidgetContextException(
-        'Unit not found: $unitId in property $propertyId',
-      );
-    }
+      // Validate property
+      if (property == null) {
+        throw WidgetContextException('Property not found: $propertyId');
+      }
 
-    // Get settings or use defaults
-    final effectiveSettings =
-        settings ??
-        WidgetSettings(
-          id: unitId,
-          propertyId: propertyId,
-          ownerId: property.ownerId,
-          widgetMode: WidgetMode.bookingPending,
-          contactOptions: const ContactOptions(
-            customMessage: 'Contact us for booking!',
-          ),
-          emailConfig: const EmailNotificationConfig(),
-          taxLegalConfig: const TaxLegalConfig(),
-          requireOwnerApproval: true,
-          createdAt: DateTime.now().toUtc(),
-          updatedAt: DateTime.now().toUtc(),
+      // Validate unit
+      if (unit == null) {
+        throw WidgetContextException(
+          'Unit not found: $unitId in property $propertyId',
         );
+      }
 
-    return WidgetContext(
-      property: property,
-      unit: unit,
-      settings: effectiveSettings,
-      ownerId: property.ownerId ?? '',
-    );
-  } catch (e, stackTrace) {
-    // SECURITY FIX SF-009: Log detailed error for debugging but throw generic message
-    // This prevents leaking internal implementation details (Firestore errors, TypeErrors)
-    // to the frontend, which could inform an attacker.
-    await LoggingService.logError(
-      'widgetContextProvider: Failed to load context for $params',
-      e,
-      stackTrace,
-    );
+      // Get settings or use defaults
+      final effectiveSettings =
+          settings ??
+          WidgetSettings(
+            id: unitId,
+            propertyId: propertyId,
+            ownerId: property.ownerId,
+            widgetMode: WidgetMode.bookingPending,
+            contactOptions: const ContactOptions(
+              customMessage: 'Contact us for booking!',
+            ),
+            emailConfig: const EmailNotificationConfig(),
+            taxLegalConfig: const TaxLegalConfig(),
+            requireOwnerApproval: true,
+            createdAt: DateTime.now().toUtc(),
+            updatedAt: DateTime.now().toUtc(),
+          );
 
-    // Throw a generic, user-safe exception
-    throw const WidgetContextException(
-      'Unable to load booking widget configuration. Please check the property and unit IDs.',
-    );
+      return WidgetContext(
+        property: property,
+        unit: unit,
+        settings: effectiveSettings,
+        ownerId: property.ownerId ?? '',
+      );
+    } catch (e, stackTrace) {
+      lastError = e;
+      lastStackTrace = stackTrace;
+
+      // Don't retry for permanent errors (not found)
+      if (!_isTransientError(e)) {
+        break;
+      }
+
+      // Log retry attempt
+      LoggingService.log(
+        'widgetContextProvider: Attempt ${attempt + 1}/$_maxRetryAttempts failed, retrying...',
+        tag: 'WIDGET_CONTEXT',
+      );
+
+      // Wait before retrying (exponential backoff: 0ms, 500ms, 1000ms)
+      if (attempt < _maxRetryAttempts - 1) {
+        final delayMs = _baseDelayMs * attempt;
+        if (delayMs > 0) {
+          await Future.delayed(Duration(milliseconds: delayMs));
+        }
+      }
+    }
   }
+
+  // All retries failed - log and throw generic error
+  // SECURITY FIX SF-009: Log detailed error for debugging but throw generic message
+  // This prevents leaking internal implementation details (Firestore errors, TypeErrors)
+  // to the frontend, which could inform an attacker.
+  await LoggingService.logError(
+    'widgetContextProvider: Failed to load context for $params after $_maxRetryAttempts attempts',
+    lastError,
+    lastStackTrace,
+  );
+
+  // Throw a generic, user-safe exception
+  throw const WidgetContextException(
+    'Unable to load booking widget configuration. Please check the property and unit IDs.',
+  );
 }
 
 /// Simplified provider that only needs unitId.

@@ -46,7 +46,8 @@ class BankTransferInstructionsCard extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: SpacingTokens.l),
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: isDark ? colors.backgroundTertiary : colors.backgroundSecondary,
+        // Dark mode: pure black background matching parent
+        color: isDark ? ColorTokens.pureBlack : colors.backgroundSecondary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(
           color: isDark ? colors.borderMedium : colors.borderDefault,

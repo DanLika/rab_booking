@@ -62,7 +62,6 @@ import '../widgets/booking/payment/no_payment_info.dart';
 import '../widgets/booking/payment/payment_method_card.dart';
 import '../widgets/booking/pill_bar_content.dart';
 import '../widgets/booking/booking_pill_bar.dart';
-import '../widgets/booking/contact_pill_card_widget.dart';
 // MinimalistColorSchemeAdapter is already imported via minimalist_colors.dart
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
@@ -157,6 +156,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// HYBRID LOADING: _isValidating removed - UI shows immediately
   /// Error state is still tracked for failed data fetches
   String? _validationError;
+
+  // ============================================
+  // CALENDAR REFRESH KEY
+  // ============================================
+  /// Incremented after returning from booking confirmation to force calendar rebuild.
+  /// Fixes bug where CustomPaint doesn't repaint after Navigator.pop().
+  int _calendarRefreshKey = 0;
 
   // ============================================
   // FORM STATE (centralized in BookingFormState)
@@ -1103,7 +1109,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Reset form state to initial values (clear all user input)
   void _resetFormState() {
     if (mounted) {
-      setState(_formState.resetState);
+      setState(() {
+        _formState.resetState();
+        // Increment refresh key to force calendar widget tree rebuild
+        // This fixes CustomPaint not repainting after Navigator.pop()
+        _calendarRefreshKey++;
+      });
     }
 
     // Reset selected additional services (provider-based)
@@ -2065,10 +2076,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             final basePadding = screenWidth < 600
                 ? 12.0 // Mobile
                 : screenWidth < 1024
-                ? 16.0 // Tablet
+                ? 12.0 // Tablet (same as mobile for better space utilization)
                 : isLargeScreen
-                ? 48.0 // Large screen - more breathing room
-                : 24.0; // Desktop
+                ? 24.0 // Large screen
+                : 16.0; // Desktop
 
             final horizontalPadding = basePadding;
             final verticalPadding = isLargeScreen
@@ -2259,6 +2270,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                       scaleEnabled:
                                           false, // Disable pinch - use buttons only
                                       child: LazyCalendarContainer(
+                                        // Key forces widget rebuild when returning from confirmation
+                                        // Fixes CustomPaint not repainting after Navigator.pop()
+                                        key: ValueKey(
+                                          'calendar_$_calendarRefreshKey',
+                                        ),
                                         propertyId: _propertyId ?? '',
                                         unitId: unitId,
                                         forceMonthView: forceMonthView,
@@ -2327,21 +2343,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                       ),
                                     ),
                                   ),
-
-                                  // Contact pill card (calendar only mode - inline, below calendar)
-                                  if (widgetMode ==
-                                      WidgetMode.calendarOnly) ...[
-                                    const SizedBox(height: 8),
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      child: ContactPillCardWidget(
-                                        contactOptions:
-                                            _widgetSettings?.contactOptions,
-                                        isDarkMode: isDarkMode,
-                                        screenWidth: screenWidth,
-                                      ),
-                                    ),
-                                  ],
+                                  // Contact info removed from calendar-only mode
+                                  // Host website handles its own contact information
                                 ],
                               ),
                             ),

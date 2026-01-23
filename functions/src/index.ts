@@ -68,8 +68,7 @@ export * from "./subdomainService";
 // Export cleanup scheduled functions (Stripe pending bookings)
 export * from "./cleanupExpiredPendingBookings";
 
-// Export payment deadline checker scheduler
-export * from "./bookings/checkPaymentDeadlines";
+// REMOVED: checkPaymentDeadlines - Replaced by pendingPaymentReminder in scheduledPushNotifications.ts
 
 // Export auto-complete scheduled function (Checked-out bookings)
 export * from "./completeCheckedOutBookings";
@@ -127,3 +126,6 @@ export * from "./trial/sendTrialExpirationWarning";
 
 // Export admin functions
 export * from "./admin/updateUserStatus";
+
+// Export scheduled push notifications
+export * from "./scheduledPushNotifications";

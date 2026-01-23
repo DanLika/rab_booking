@@ -1,3 +1,15 @@
+/**
+ * @deprecated REPLACED by pendingPaymentReminder in scheduledPushNotifications.ts
+ *
+ * This file is kept for reference but is no longer exported or used.
+ * The new function has:
+ * - Specific time (10:00 Europe/Zagreb) instead of "every 24 hours"
+ * - Duplicate prevention via paymentReminderSent flag
+ * - Better logging and error handling
+ *
+ * TODO: Delete this file after verifying new function works in production.
+ */
+
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { admin, db } from "../firebase";
 import { logInfo, logError, logSuccess } from "../logger";
@@ -5,10 +17,7 @@ import { sendPaymentDeadlinePushNotification } from "../fcmService";
 import { createNotification } from "../notificationService";
 
 /**
- * Scheduled Cloud Function: Check Payment Deadlines
- *
- * Runs once a day to check for pending bank transfer bookings
- * where the payment deadline is approaching (e.g., within 24 hours).
+ * @deprecated Use pendingPaymentReminder from scheduledPushNotifications.ts instead
  */
 export const checkPaymentDeadlines = onSchedule("every 24 hours", async () => {
     logInfo("Pokrećem provjeru rokova plaćanja...");

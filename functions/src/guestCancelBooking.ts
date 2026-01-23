@@ -3,6 +3,7 @@ import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import {sendBookingCancellationEmail} from "./emailService";
 import {fetchPropertyAndUnitDetails} from "./utils/bookingHelpers";
+import {sendGuestCancellationPushNotification} from "./fcmService";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
 import {safeToDate} from "./utils/dateValidation";
@@ -394,12 +395,23 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
       // Don't fail the whole cancellation if email fails
     }
 
-    // Send notification email to owner (if contact email exists)
+    // Send push notification to owner about guest cancellation (non-blocking)
     try {
-      const ownerEmail = cancellationResult.widgetSettings.contact_options?.email_address;
-      if (ownerEmail) {
-        // You can implement owner notification here if needed
-        logInfo(`Owner notification would be sent to: ${ownerEmail}`);
+      const ownerId = booking.owner_id;
+      if (ownerId) {
+        const guestName = booking.guest_details?.name || booking.guest_name || "Guest";
+        sendGuestCancellationPushNotification(
+          ownerId,
+          bookingId,
+          guestName,
+          safeToDate(booking.check_in, "check_in"),
+          safeToDate(booking.check_out, "check_out")
+        ).catch((e) => logError("Failed to send guest cancellation push notification", e));
+
+        logInfo(`Owner push notification sent for guest cancellation`, {
+          ownerId,
+          bookingId,
+        });
       }
     } catch (notificationError) {
       logError("Failed to send owner notification", notificationError);

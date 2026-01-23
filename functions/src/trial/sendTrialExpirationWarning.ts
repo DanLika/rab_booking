@@ -2,6 +2,7 @@ import {onSchedule} from "firebase-functions/v2/scheduler";
 import {admin, db} from "../firebase";
 import {logInfo, logError, logSuccess} from "../logger";
 import {sendTrialExpiringEmail} from "../emailService";
+import {sendTrialExpiringPushNotification} from "../fcmService";
 
 /**
  * Send Trial Expiration Warnings
@@ -82,6 +83,7 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
 
     const batch = db.batch();
     let emailsSent = 0;
+    let pushSent = 0;
 
     for (const doc of usersToWarnSnapshot.docs) {
       const userData = doc.data();
@@ -105,7 +107,18 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
         }
       }
 
-      // Mark warning as sent (even if email failed, to prevent spam)
+      // Send push notification (non-blocking)
+      try {
+        const sent = await sendTrialExpiringPushNotification(doc.id, days);
+        if (sent) pushSent++;
+      } catch (pushError) {
+        logError("[Trial Warning] Failed to send push notification", pushError, {
+          userId: doc.id,
+          days,
+        });
+      }
+
+      // Mark warning as sent (even if email/push failed, to prevent spam)
       batch.update(userRef, {[warningFlag]: true});
     }
 
@@ -113,6 +126,7 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
 
     logSuccess(`[Trial Warning] Sent ${days}-day warnings`, {
       emailsSent,
+      pushSent,
       totalUsers: usersToWarnSnapshot.docs.length,
     });
   } catch (error) {

@@ -360,9 +360,9 @@ export async function sendPaymentPushNotification(
 
   return sendPushNotification({
     userId,
-    title: "Payment Received",
-    body: `${guestName} paid ${formattedAmount}.`,
-    category: "payments",
+    title: "New Paid Booking",
+    body: `${guestName} paid ${formattedAmount} for their booking.`,
+    category: "bookings", // Changed from payments - this IS a booking notification
     data: {
       bookingId,
       amount: amount.toString(),
@@ -429,6 +429,54 @@ export async function sendPendingBookingPushNotification(
     data: {
       bookingId,
       action: "pending",
+    },
+  });
+}
+
+/**
+ * Send guest cancellation notification via push
+ * Notifies owner when a guest cancels their booking via booking lookup page
+ */
+export async function sendGuestCancellationPushNotification(
+  userId: string,
+  bookingId: string,
+  guestName: string,
+  checkInDate: Date,
+  checkOutDate: Date
+): Promise<boolean> {
+  const dateRange = formatDateRange(checkInDate, checkOutDate);
+
+  return sendPushNotification({
+    userId,
+    title: "Booking Cancelled by Guest",
+    body: `${guestName} cancelled their booking for ${dateRange}.`,
+    category: "bookings",
+    data: {
+      bookingId,
+      action: "guest_cancelled",
+    },
+  });
+}
+
+/**
+ * Send trial expiring notification via push
+ * Notifies owner when their trial is about to expire
+ */
+export async function sendTrialExpiringPushNotification(
+  userId: string,
+  daysRemaining: number
+): Promise<boolean> {
+  const dayText = daysRemaining === 1 ? "day" : "days";
+  const urgency = daysRemaining === 1 ? "expires tomorrow" : `expires in ${daysRemaining} ${dayText}`;
+
+  return sendPushNotification({
+    userId,
+    title: "Trial Expiring Soon",
+    body: `Your free trial ${urgency}. Upgrade to keep managing your bookings.`,
+    category: "marketing",
+    data: {
+      action: "trial_expiring",
+      daysRemaining: daysRemaining.toString(),
     },
   });
 }

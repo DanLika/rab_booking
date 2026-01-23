@@ -107,6 +107,9 @@ export * from "./deleteUserAccount";
 // Export unit management (cascade delete on unit deletion)
 export * from "./unitManagement";
 
+// Export property management (cascade delete on property deletion)
+export * from "./propertyManagement";
+
 // REMOVED: migrations/migrateToSubcollections - One-time migration complete, no longer needed
 
 // Export user creation trigger for trial initialization

@@ -34,9 +34,10 @@ class _FAQScreenState extends State<FAQScreen> {
   String _selectedCategoryKey = 'all';
 
   // Category keys for internal use (not translated)
+  // NOTE: "General" category moved to bookbed.io website (business FAQs)
+  // This app focuses on operational/how-to FAQs only
   static const List<String> _categoryKeys = [
     'all',
-    'general',
     'bookings',
     'payments',
     'widget',
@@ -46,7 +47,6 @@ class _FAQScreenState extends State<FAQScreen> {
 
   String _getCategoryLabel(String key, AppLocalizations l10n) => switch (key) {
     'all' => l10n.ownerFaqCategoryAll,
-    'general' => l10n.ownerFaqCategoryGeneral,
     'bookings' => l10n.ownerFaqCategoryBookings,
     'payments' => l10n.ownerFaqCategoryPayments,
     'widget' => l10n.ownerFaqCategoryWidget,
@@ -56,23 +56,8 @@ class _FAQScreenState extends State<FAQScreen> {
   };
 
   List<FAQItem> _getAllFAQs(AppLocalizations l10n) {
+    // NOTE: General FAQs (What is BookBed?, Pricing, Mobile app?) moved to bookbed.io website
     return [
-      // General
-      FAQItem(
-        categoryKey: 'general',
-        question: l10n.ownerFaqGeneral1Q,
-        answer: l10n.ownerFaqGeneral1A,
-      ),
-      FAQItem(
-        categoryKey: 'general',
-        question: l10n.ownerFaqGeneral2Q,
-        answer: l10n.ownerFaqGeneral2A,
-      ),
-      FAQItem(
-        categoryKey: 'general',
-        question: l10n.ownerFaqGeneral3Q,
-        answer: l10n.ownerFaqGeneral3A,
-      ),
       // Bookings
       FAQItem(
         categoryKey: 'bookings',
@@ -459,7 +444,6 @@ class _FAQScreenState extends State<FAQScreen> {
   }
 
   IconData _getCategoryIcon(String categoryKey) => switch (categoryKey) {
-    'general' => Icons.info_outline,
     'bookings' => Icons.event,
     'payments' => Icons.payment,
     'widget' => Icons.widgets,

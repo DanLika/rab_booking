@@ -35,6 +35,10 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Default: 52 (compact height for better screen real estate)
   final double height;
 
+  /// Action widgets to display on the right side of the app bar
+  /// Common usage: help icon, settings icon, etc.
+  final List<Widget>? actions;
+
   const CommonAppBar({
     super.key,
     required this.title,
@@ -44,6 +48,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.titleColor = Colors.white,
     this.iconColor = Colors.white,
     this.height = 52.0,
+    this.actions,
   });
 
   @override
@@ -97,6 +102,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
               )
             : null,
         automaticallyImplyLeading: false,
+        actions: actions,
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light,

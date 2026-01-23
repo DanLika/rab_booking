@@ -4880,6 +4880,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Done! Widget is active and guests can see availability.';
 
   @override
+  String get embedGuideTestLinksTitle => 'Test Before Embedding';
+
+  @override
+  String get embedGuideTestWidgetTitle => 'Test Your Widget';
+
+  @override
+  String get embedGuideTestWidgetDesc =>
+      'Preview your unit\'s widget before embedding';
+
+  @override
+  String get embedGuideLiveExampleTitle => 'Live Demo';
+
+  @override
+  String get embedGuideLiveExampleDesc =>
+      'See a working example of the booking widget';
+
+  @override
+  String get errorOpeningLink => 'Could not open link';
+
+  @override
   String get embedGuideAdvResponsive => 'Responsive Widget';
 
   @override
@@ -4956,6 +4976,41 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get embedGuideLanguageNote =>
       'Widget has a built-in language selector. Users can switch between HR, EN, DE, IT.';
+
+  @override
+  String get embedGuideQuickHelp => 'Quick Help';
+
+  @override
+  String get embedGuideQuickHelpTitle => 'How to Embed the Widget';
+
+  @override
+  String get embedGuideQuickHelpStep1Title => '1. Copy the Code';
+
+  @override
+  String get embedGuideQuickHelpStep1Desc =>
+      'Find your unit in the list above and click \"Copy\" to copy the iframe code.';
+
+  @override
+  String get embedGuideQuickHelpStep2Title => '2. Paste on Your Website';
+
+  @override
+  String get embedGuideQuickHelpStep2Desc =>
+      'Open your website editor (WordPress, Wix, HTML file) and paste the code where you want the calendar to appear.';
+
+  @override
+  String get embedGuideQuickHelpStep3Title => '3. Save and Publish';
+
+  @override
+  String get embedGuideQuickHelpStep3Desc =>
+      'Save your changes and publish. The booking widget will now be visible to your visitors.';
+
+  @override
+  String get embedGuideQuickHelpTip =>
+      'The widget automatically updates when you change prices or availability in the app.';
+
+  @override
+  String get embedGuideQuickHelpMoreInfo =>
+      'For detailed instructions, check the help links below.';
 
   @override
   String get embedHelpTitle => 'Embed Widget Help';

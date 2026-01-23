@@ -9078,6 +9078,42 @@ abstract class AppLocalizations {
   /// **'Done! Widget is active and guests can see availability.'**
   String get embedGuideStep4Success;
 
+  /// No description provided for @embedGuideTestLinksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Before Embedding'**
+  String get embedGuideTestLinksTitle;
+
+  /// No description provided for @embedGuideTestWidgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Your Widget'**
+  String get embedGuideTestWidgetTitle;
+
+  /// No description provided for @embedGuideTestWidgetDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview your unit\'s widget before embedding'**
+  String get embedGuideTestWidgetDesc;
+
+  /// No description provided for @embedGuideLiveExampleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Demo'**
+  String get embedGuideLiveExampleTitle;
+
+  /// No description provided for @embedGuideLiveExampleDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'See a working example of the booking widget'**
+  String get embedGuideLiveExampleDesc;
+
+  /// No description provided for @errorOpeningLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open link'**
+  String get errorOpeningLink;
+
   /// No description provided for @embedGuideAdvResponsive.
   ///
   /// In en, this message translates to:
@@ -9215,6 +9251,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Widget has a built-in language selector. Users can switch between HR, EN, DE, IT.'**
   String get embedGuideLanguageNote;
+
+  /// No description provided for @embedGuideQuickHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Help'**
+  String get embedGuideQuickHelp;
+
+  /// No description provided for @embedGuideQuickHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to Embed the Widget'**
+  String get embedGuideQuickHelpTitle;
+
+  /// No description provided for @embedGuideQuickHelpStep1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Copy the Code'**
+  String get embedGuideQuickHelpStep1Title;
+
+  /// No description provided for @embedGuideQuickHelpStep1Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your unit in the list above and click \"Copy\" to copy the iframe code.'**
+  String get embedGuideQuickHelpStep1Desc;
+
+  /// No description provided for @embedGuideQuickHelpStep2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Paste on Your Website'**
+  String get embedGuideQuickHelpStep2Title;
+
+  /// No description provided for @embedGuideQuickHelpStep2Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open your website editor (WordPress, Wix, HTML file) and paste the code where you want the calendar to appear.'**
+  String get embedGuideQuickHelpStep2Desc;
+
+  /// No description provided for @embedGuideQuickHelpStep3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Save and Publish'**
+  String get embedGuideQuickHelpStep3Title;
+
+  /// No description provided for @embedGuideQuickHelpStep3Desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your changes and publish. The booking widget will now be visible to your visitors.'**
+  String get embedGuideQuickHelpStep3Desc;
+
+  /// No description provided for @embedGuideQuickHelpTip.
+  ///
+  /// In en, this message translates to:
+  /// **'The widget automatically updates when you change prices or availability in the app.'**
+  String get embedGuideQuickHelpTip;
+
+  /// No description provided for @embedGuideQuickHelpMoreInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'For detailed instructions, check the help links below.'**
+  String get embedGuideQuickHelpMoreInfo;
 
   /// No description provided for @embedHelpTitle.
   ///

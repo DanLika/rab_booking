@@ -4912,6 +4912,25 @@ class AppLocalizationsHr extends AppLocalizations {
       'Gotovo! Widget je aktivan i gosti mogu vidjeti dostupnost.';
 
   @override
+  String get embedGuideTestLinksTitle => 'Testirajte prije ugradnje';
+
+  @override
+  String get embedGuideTestWidgetTitle => 'Testirajte vaš widget';
+
+  @override
+  String get embedGuideTestWidgetDesc =>
+      'Pregledajte widget vašeg unita prije ugradnje';
+
+  @override
+  String get embedGuideLiveExampleTitle => 'Demo primjer';
+
+  @override
+  String get embedGuideLiveExampleDesc => 'Pogledajte kako radi booking widget';
+
+  @override
+  String get errorOpeningLink => 'Nije moguće otvoriti link';
+
+  @override
   String get embedGuideAdvResponsive => 'Responsive Widget';
 
   @override
@@ -4988,6 +5007,41 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get embedGuideLanguageNote =>
       'Widget ima ugrađen odabir jezika. Korisnici mogu birati između HR, EN, DE, IT.';
+
+  @override
+  String get embedGuideQuickHelp => 'Brza pomoć';
+
+  @override
+  String get embedGuideQuickHelpTitle => 'Kako ugraditi Widget';
+
+  @override
+  String get embedGuideQuickHelpStep1Title => '1. Kopirajte kod';
+
+  @override
+  String get embedGuideQuickHelpStep1Desc =>
+      'Pronađite vaš apartman u listi iznad i kliknite \"Kopiraj\" da biste kopirali iframe kod.';
+
+  @override
+  String get embedGuideQuickHelpStep2Title => '2. Zalijepite na web stranicu';
+
+  @override
+  String get embedGuideQuickHelpStep2Desc =>
+      'Otvorite uređivač vaše web stranice (WordPress, Wix, HTML datoteka) i zalijepite kod gdje želite da se kalendar prikaže.';
+
+  @override
+  String get embedGuideQuickHelpStep3Title => '3. Spremite i objavite';
+
+  @override
+  String get embedGuideQuickHelpStep3Desc =>
+      'Spremite promjene i objavite. Widget za rezervacije će sada biti vidljiv vašim posjetiteljima.';
+
+  @override
+  String get embedGuideQuickHelpTip =>
+      'Widget se automatski ažurira kada promijenite cijene ili dostupnost u aplikaciji.';
+
+  @override
+  String get embedGuideQuickHelpMoreInfo =>
+      'Za detaljne upute, pogledajte linkove za pomoć ispod.';
 
   @override
   String get embedHelpTitle => 'Pomoć za ugradnju widgeta';

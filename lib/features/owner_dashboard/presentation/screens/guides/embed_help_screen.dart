@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_color_extensions.dart';
@@ -30,11 +31,11 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
   late TabController _tabController;
 
   final String _exampleCode = '''
-<div id="bookbed-widget"
-     data-property-id="YOUR_PROPERTY_ID"
-     data-unit-id="YOUR_UNIT_ID">
-</div>
-<script src="https://bookbed.io/embed.js"></script>''';
+<iframe
+  src="https://view.bookbed.io/?property=YOUR_PROPERTY_ID&unit=YOUR_UNIT_ID&embed=true"
+  style="width: 100%; border: none; aspect-ratio: 1/1.4; min-height: 500px; max-height: 850px;"
+  title="Booking Widget"
+></iframe>''';
 
   @override
   void initState() {
@@ -126,7 +127,7 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
     );
   }
 
-  /// Installation Guide Tab
+  /// Installation Guide Tab - Simplified to 2 essential steps
   Widget _buildInstallationTab(bool isDark) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
@@ -135,81 +136,9 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
       physics: PlatformScrollPhysics.adaptive,
       padding: const EdgeInsets.all(16),
       children: [
-        // Step 1: Configure Widget Settings
+        // Step 1: Add to Website (was Step 3)
         _buildStep(
           stepNumber: 1,
-          title: l10n.embedGuideStep1Title,
-          icon: Icons.settings,
-          isDark: isDark,
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.embedGuideStep1Intro,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              _buildBulletPoint(l10n.embedGuideStep1Nav1),
-              _buildBulletPoint(l10n.embedGuideStep1Nav2),
-              _buildBulletPoint(l10n.embedGuideStep1Nav3),
-              const SizedBox(height: 16),
-              Text(
-                l10n.embedGuideStep1SelectMode,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              _buildWidgetModeCard(
-                title: l10n.embedGuideWidgetModeCalendar,
-                description: l10n.embedGuideWidgetModeCalendarDesc,
-                colorScheme: 'primary',
-                isDark: isDark,
-              ),
-              _buildWidgetModeCard(
-                title: l10n.embedGuideWidgetModeBooking,
-                description: l10n.embedGuideWidgetModeBookingDesc,
-                colorScheme: 'warning',
-                isDark: isDark,
-              ),
-              _buildWidgetModeCard(
-                title: l10n.embedGuideWidgetModePayment,
-                description: l10n.embedGuideWidgetModePaymentDesc,
-                colorScheme: 'success',
-                isDark: isDark,
-              ),
-            ],
-          ),
-        ),
-
-        // Step 2: Generate Embed Code
-        _buildStep(
-          stepNumber: 2,
-          title: l10n.embedGuideStep2Title,
-          icon: Icons.code,
-          isDark: isDark,
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.embedGuideStep2Intro),
-              const SizedBox(height: 12),
-              _buildBulletPoint(l10n.embedGuideStep2Nav1),
-              _buildBulletPoint(l10n.embedGuideStep2Nav2),
-              _buildBulletPoint(l10n.embedGuideStep2Nav3),
-              _buildBulletPoint(l10n.embedGuideStep2Nav4),
-              _buildBulletPoint(l10n.embedGuideStep2Nav5),
-              const SizedBox(height: 16),
-              Text(
-                l10n.embedGuideStep2ExampleCode,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              _buildCodeBlock(isDark),
-            ],
-          ),
-        ),
-
-        // Step 3: Add to Website
-        _buildStep(
-          stepNumber: 3,
           title: l10n.embedGuideStep3Title,
           icon: Icons.web,
           isDark: isDark,
@@ -240,13 +169,21 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
               _buildBulletPoint(l10n.embedGuideStep3HTML2),
               _buildBulletPoint(l10n.embedGuideStep3HTML3),
               _buildBulletPoint(l10n.embedGuideStep3HTML4),
+              const SizedBox(height: 16),
+              // Code example
+              Text(
+                l10n.embedGuideStep2ExampleCode,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              _buildCodeBlock(isDark),
             ],
           ),
         ),
 
-        // Step 4: Test Widget
+        // Step 2: Test Widget (was Step 4) - with test links
         _buildStep(
-          stepNumber: 4,
+          stepNumber: 2,
           title: l10n.embedGuideStep4Title,
           icon: Icons.check_circle,
           isDark: isDark,
@@ -259,6 +196,9 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
               _buildBulletPoint(l10n.embedGuideStep4Check2),
               _buildBulletPoint(l10n.embedGuideStep4Check3),
               _buildBulletPoint(l10n.embedGuideStep4Check4),
+              const SizedBox(height: 16),
+              // Test Links section
+              _buildTestLinksSection(isDark),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -306,6 +246,137 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
         const SizedBox(height: 24),
       ],
     );
+  }
+
+  /// Test Links section for testing widget before embedding
+  Widget _buildTestLinksSection(bool isDark) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? theme.colorScheme.primary.withAlpha((0.15 * 255).toInt())
+            : theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
+        border: Border.all(
+          color: isDark
+              ? theme.colorScheme.primary.withAlpha((0.4 * 255).toInt())
+              : theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.open_in_new,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l10n.embedGuideTestLinksTitle,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildTestLink(
+            title: l10n.embedGuideTestWidgetTitle,
+            description: l10n.embedGuideTestWidgetDesc,
+            url: 'https://view.bookbed.io/test',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 8),
+          _buildTestLink(
+            title: l10n.embedGuideLiveExampleTitle,
+            description: l10n.embedGuideLiveExampleDesc,
+            url: 'https://view.bookbed.io/demo',
+            isDark: isDark,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Individual test link item
+  Widget _buildTestLink({
+    required String title,
+    required String description,
+    required String url,
+    required bool isDark,
+  }) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: () => _launchUrl(url),
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(Icons.link, size: 16, color: theme.colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: theme.colorScheme.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? theme.colorScheme.onSurface.withAlpha(
+                              (0.7 * 255).toInt(),
+                            )
+                          : theme.colorScheme.onSurface.withAlpha(
+                              (0.6 * 255).toInt(),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 12,
+              color: theme.colorScheme.primary.withAlpha((0.6 * 255).toInt()),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Launch URL in browser
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ErrorDisplayUtils.showErrorSnackBar(
+          context,
+          AppLocalizations.of(context).errorOpeningLink,
+        );
+      }
+    }
   }
 
   /// Advanced Options Tab
@@ -572,66 +643,6 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
               fontSize: 12,
               fontFamily: 'monospace',
               height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWidgetModeCard({
-    required String title,
-    required String description,
-    required String colorScheme,
-    required bool isDark,
-  }) {
-    final theme = Theme.of(context);
-
-    Color mainColor;
-    switch (colorScheme) {
-      case 'warning':
-        mainColor = theme.colorScheme.warning;
-        break;
-      case 'success':
-        mainColor = theme.colorScheme.success;
-        break;
-      case 'primary':
-      default:
-        mainColor = theme.colorScheme.primary;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark
-            ? mainColor.withAlpha((0.2 * 255).toInt())
-            : mainColor.withAlpha((0.1 * 255).toInt()),
-        border: Border.all(
-          color: isDark
-              ? mainColor.withAlpha((0.5 * 255).toInt())
-              : mainColor.withAlpha((0.3 * 255).toInt()),
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isDark ? mainColor : theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            description,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark
-                  ? mainColor.withAlpha((0.8 * 255).toInt())
-                  : theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
             ),
           ),
         ],

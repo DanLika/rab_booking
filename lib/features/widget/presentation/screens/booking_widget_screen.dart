@@ -25,6 +25,7 @@ import '../providers/additional_services_provider.dart';
 import '../providers/submit_booking_provider.dart';
 import '../providers/subdomain_provider.dart';
 import '../providers/widget_context_provider.dart';
+import '../providers/widget_settings_provider.dart';
 import '../../domain/use_cases/submit_booking_use_case.dart';
 import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
@@ -1621,7 +1622,44 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
   }
 
+  /// Retry validation with cache invalidation.
+  ///
+  /// When retry button is clicked after an error, we must invalidate
+  /// all cached providers to ensure fresh data is fetched.
+  /// The `widgetContextProvider` uses `keepAlive: true` which caches
+  /// results for 5 minutes - without invalidation, retry returns
+  /// the same cached error!
+  void _retryValidation() {
+    // Invalidate all cached widget context providers
+    // This ensures fresh data is fetched on retry
+    if (_propertyId != null && _propertyId!.isNotEmpty && _unitId.isNotEmpty) {
+      // Invalidate the main widget context provider
+      ref.invalidate(
+        widgetContextProvider((propertyId: _propertyId!, unitId: _unitId)),
+      );
+
+      // Also invalidate the underlying data providers
+      ref.invalidate(widgetPropertyByIdProvider(_propertyId!));
+      ref.invalidate(unitByIdProvider((_propertyId!, _unitId)));
+      ref.invalidate(widgetSettingsProvider((_propertyId!, _unitId)));
+    }
+
+    // Invalidate slug-based provider if using slug URLs
+    if (widget.urlSlug != null && widget.urlSlug!.isNotEmpty) {
+      ref.invalidate(optimizedSlugWidgetContextProvider(widget.urlSlug!));
+    }
+
+    // Clear the error state before retrying
+    setState(() {
+      _validationError = null;
+    });
+
+    // Now retry the validation with fresh data
+    _validateUnitAndProperty();
+  }
+
   /// Set default payment method based on enabled payment options
+
   /// Priority: Stripe > Bank Transfer > Pay on Arrival
   void _setDefaultPaymentMethod() {
     // Only for bookingInstant mode (bookingPending has no payment)
@@ -1973,7 +2011,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   builder: (context) {
                     final tr = WidgetTranslations.of(context, ref);
                     return ElevatedButton.icon(
-                      onPressed: _validateUnitAndProperty,
+                      onPressed: _retryValidation,
                       icon: const Icon(Icons.refresh),
                       label: Text(tr.retry),
                       style: ElevatedButton.styleFrom(

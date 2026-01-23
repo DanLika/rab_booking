@@ -63,8 +63,9 @@ class DetailsReferenceCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
+    // Dark mode: pure black background matching parent, with visible border
     final cardBackground = isDark
-        ? colors.backgroundTertiary
+        ? ColorTokens.pureBlack
         : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 

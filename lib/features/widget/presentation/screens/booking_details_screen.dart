@@ -381,12 +381,11 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             ),
           ),
           const SizedBox(width: SpacingTokens.s),
-          // Language switcher button (right side)
+          // Language switcher button (right side) - shows current language flag
           IconButton(
-            icon: Icon(
-              Icons.language,
-              color: colors.textPrimary,
-              size: iconSize,
+            icon: Text(
+              _getFlagEmoji(ref.watch(languageProvider)),
+              style: const TextStyle(fontSize: iconSize - 4),
             ),
             onPressed: () => _showLanguageDialog(colors),
             tooltip: tr.tooltipChangeLanguage,
@@ -431,6 +430,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
   ) {
     final isSelected = current == code;
     return ListTile(
+      leading: Text(_getFlagEmoji(code), style: const TextStyle(fontSize: 24)),
       title: Text(
         name,
         style: TextStyle(
@@ -444,6 +444,22 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         Navigator.of(context).pop();
       },
     );
+  }
+
+  /// Get flag emoji for language code
+  String _getFlagEmoji(String languageCode) {
+    switch (languageCode) {
+      case 'hr':
+        return '🇭🇷';
+      case 'en':
+        return '🇬🇧';
+      case 'de':
+        return '🇩🇪';
+      case 'it':
+        return '🇮🇹';
+      default:
+        return '🌐';
+    }
   }
 
   /// Single column content cards

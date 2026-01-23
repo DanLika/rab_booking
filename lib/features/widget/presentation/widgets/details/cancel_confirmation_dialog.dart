@@ -87,9 +87,9 @@ class CancelConfirmationDialog extends ConsumerWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(SpacingTokens.m),
             decoration: BoxDecoration(
-              // Use backgroundTertiary in dark mode for better contrast
+              // Dark mode: pure black background matching dialog, with visible border
               color: isDarkMode
-                  ? colors.backgroundTertiary
+                  ? ColorTokens.pureBlack
                   : colors.backgroundSecondary,
               borderRadius: BorderTokens.circularMedium,
               border: Border.all(

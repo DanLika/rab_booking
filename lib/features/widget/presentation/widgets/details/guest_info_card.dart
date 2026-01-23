@@ -34,9 +34,9 @@ class GuestInfoCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
-    // Same styling as PropertyInfoCard
+    // Dark mode: pure black background matching parent, with visible border
     final cardBackground = isDarkMode
-        ? colors.backgroundTertiary
+        ? ColorTokens.pureBlack
         : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 

@@ -46,9 +46,9 @@ class PropertyInfoCard extends ConsumerWidget {
     }
 
     final tr = WidgetTranslations.of(context, ref);
-    // Use backgroundTertiary in dark mode for better contrast
+    // Dark mode: pure black background matching parent, with visible border
     final cardBackground = isDarkMode
-        ? colors.backgroundTertiary
+        ? ColorTokens.pureBlack
         : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 

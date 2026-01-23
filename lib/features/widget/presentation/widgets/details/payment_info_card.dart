@@ -65,8 +65,9 @@ class PaymentInfoCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
+    // Dark mode: pure black background matching parent, with visible border
     final cardBackground = isDark
-        ? colors.backgroundTertiary
+        ? ColorTokens.pureBlack
         : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
@@ -244,7 +245,8 @@ class PaymentInfoCard extends ConsumerWidget {
     final (statusColor, statusText) = switch (paymentStatus.toLowerCase()) {
       'paid' || 'completed' => (colors.success, tr.paid),
       'pending' => (colors.warning, tr.statusPending),
-      'failed' || 'refunded' => (colors.error, paymentStatus),
+      'failed' => (colors.error, tr.statusFailed),
+      'refunded' => (colors.error, tr.statusRefunded),
       _ => (colors.textSecondary, paymentStatus),
     };
 

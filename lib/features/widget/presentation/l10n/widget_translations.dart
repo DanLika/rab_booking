@@ -2451,6 +2451,34 @@ class WidgetTranslations {
     }
   }
 
+  String get statusFailed {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Neuspjelo';
+      case 'de':
+        return 'Fehlgeschlagen';
+      case 'it':
+        return 'Fallito';
+      case 'en':
+      default:
+        return 'Failed';
+    }
+  }
+
+  String get statusRefunded {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Vraćeno';
+      case 'de':
+        return 'Erstattet';
+      case 'it':
+        return 'Rimborsato';
+      case 'en':
+      default:
+        return 'Refunded';
+    }
+  }
+
   // ============================================================================
   // CANCEL CONFIRMATION DIALOG TRANSLATIONS
   // ============================================================================

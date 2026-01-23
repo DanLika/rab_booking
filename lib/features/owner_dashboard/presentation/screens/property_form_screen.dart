@@ -25,6 +25,7 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/services/analytics_service.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
 
 /// Modern Property form screen for add/edit with enhanced UI
 class PropertyFormScreen extends ConsumerStatefulWidget {
@@ -1220,6 +1221,11 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
       ref.invalidate(ownerPropertiesProvider);
       // Also invalidate calendar provider so timeline shows new property immediately
       ref.invalidate(ownerPropertiesCalendarProvider);
+
+      // Complete onboarding if this is user's first property
+      if (!_isEditing && ref.read(enhancedAuthProvider).requiresOnboarding) {
+        await ref.read(enhancedAuthProvider.notifier).completeOnboarding();
+      }
 
       if (mounted) {
         final l10nSuccess = AppLocalizations.of(context);

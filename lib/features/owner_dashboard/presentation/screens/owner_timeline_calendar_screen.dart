@@ -25,6 +25,7 @@ import '../../utils/calendar_grid_calculator.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/calendar/tutorial/calendar_tutorial_overlay.dart';
 
 /// Owner Timeline Calendar Screen
@@ -63,7 +64,15 @@ class _OwnerTimelineCalendarScreenState
   // Track if tutorial has been dismissed in current session or persisted
   bool _tutorialDismissed = true; // Default to true to hide until check is done
 
-  static const String _kTutorialDismissedKey = 'calendar_onboarding_dismissed';
+  // Key prefix - actual key includes user ID to be per-user, not per-device
+  static const String _kTutorialDismissedKeyPrefix =
+      'calendar_onboarding_dismissed_';
+
+  /// Get user-specific SharedPreferences key for tutorial dismissal
+  String get _tutorialDismissedKey {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+    return '$_kTutorialDismissedKeyPrefix$userId';
+  }
 
   @override
   void initState() {
@@ -78,14 +87,14 @@ class _OwnerTimelineCalendarScreenState
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _tutorialDismissed = prefs.getBool(_kTutorialDismissedKey) ?? false;
+        _tutorialDismissed = prefs.getBool(_tutorialDismissedKey) ?? false;
       });
     }
   }
 
   Future<void> _dismissTutorial() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kTutorialDismissedKey, true);
+    await prefs.setBool(_tutorialDismissedKey, true);
     if (mounted) {
       setState(() {
         _tutorialDismissed = true;

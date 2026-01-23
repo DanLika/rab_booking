@@ -345,7 +345,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       emailVerified:
           firebaseUser.emailVerified ||
           isSocialSignIn, // Social sign-in emails are verified
-      onboardingCompleted: true, // Skip onboarding for OAuth users
+      onboardingCompleted: false, // Show onboarding wizard for new users
       displayName: firebaseUser.displayName,
       phone: firebaseUser.phoneNumber,
       avatarUrl: firebaseUser.photoURL,
@@ -701,8 +701,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         phone: phone,
         avatarUrl: finalAvatarUrl,
         displayName: '$firstName $lastName',
-        onboardingCompleted:
-            true, // Skip onboarding - user will use Unit Hub instead
+        onboardingCompleted: false, // Show onboarding wizard for new users
         createdAt: DateTime.now(),
       );
 

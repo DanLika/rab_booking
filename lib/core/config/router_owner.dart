@@ -217,8 +217,19 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           return null; // Stay on root (shows LoadingOverlay)
         }
 
-        // Authenticated → overview
+        // Authenticated → check onboarding status
         if (isAuthenticated) {
+          // NEW: Check if user needs onboarding (new user without property)
+          if (authState.requiresOnboarding) {
+            if (kDebugMode) {
+              LoggingService.log(
+                '  → Redirecting / to property-new (new user needs to create first property)',
+                tag: 'ROUTER',
+              );
+            }
+            return OwnerRoutes.propertyNew;
+          }
+
           if (kDebugMode) {
             LoggingService.log(
               '  → Redirecting / to overview (authenticated)',

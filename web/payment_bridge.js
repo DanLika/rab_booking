@@ -333,6 +333,49 @@
     },
 
     /**
+     * Allowed origins for postMessage communication
+     * SECURITY: Only send messages to trusted BookBed origins
+     */
+    _trustedOrigins: [
+      'https://view.bookbed.io',
+      'https://app.bookbed.io',
+      'https://bookbed.io'
+    ],
+
+    /**
+     * Get the appropriate target origin for postMessage
+     * SECURITY: Uses specific origin when possible, falls back to '*' only for
+     * cross-origin iframe scenarios where parent origin is unknown
+     */
+    _getTargetOrigin: function(targetWindow) {
+      // For localhost development
+      if (window.location.hostname === 'localhost') {
+        return '*'; // Dev mode - allow any origin
+      }
+
+      // Try to determine if target is a BookBed origin
+      try {
+        // If we can access the origin, use it if trusted
+        var targetOrigin = targetWindow.location.origin;
+        if (this._trustedOrigins.indexOf(targetOrigin) !== -1 ||
+            targetOrigin.endsWith('.bookbed.io')) {
+          return targetOrigin;
+        }
+      } catch (e) {
+        // Cross-origin - can't access location
+        // For opener (popup -> widget), we know it's view.bookbed.io
+        if (targetWindow === window.opener) {
+          return 'https://view.bookbed.io';
+        }
+      }
+
+      // For parent/top in embedded iframe scenarios, parent could be any website
+      // We must use '*' but the data is not sensitive (just sessionId and status)
+      // The receiving widget validates the message source
+      return '*';
+    },
+
+    /**
      * Notify payment completion (called from payment success page)
      * Uses multiple methods for cross-origin reliability:
      * 1. postMessage to opener (popup -> iframe parent)
@@ -341,6 +384,7 @@
      * 4. localStorage (Safari fallback)
      *
      * PRIORITY: postMessage is tried first as it works across origins
+     * SECURITY: Uses specific target origin where known, '*' only when necessary
      */
     notifyComplete: function(sessionId, status) {
       const message = {
@@ -368,10 +412,12 @@
       // This is the primary method for popup -> iframe communication
       if (window.opener && !window.opener.closed) {
         try {
+          // SECURITY: Use specific origin for opener (known to be view.bookbed.io)
+          var openerOrigin = this._getTargetOrigin(window.opener);
           // Send both message formats for compatibility
-          window.opener.postMessage(message, '*');
-          window.opener.postMessage(flutterMessage, '*');
-          console.log('[PaymentBridge] Sent via postMessage to opener');
+          window.opener.postMessage(message, openerOrigin);
+          window.opener.postMessage(flutterMessage, openerOrigin);
+          console.log('[PaymentBridge] Sent via postMessage to opener (origin: ' + openerOrigin + ')');
           successCount++;
         } catch (e) {
           console.error('[PaymentBridge] postMessage to opener error:', e);
@@ -381,9 +427,11 @@
       // Method 2: postMessage to parent (for nested iframe scenarios)
       if (window.parent && window.parent !== window) {
         try {
-          window.parent.postMessage(message, '*');
-          window.parent.postMessage(flutterMessage, '*');
-          console.log('[PaymentBridge] Sent via postMessage to parent');
+          // SECURITY: Determine target origin (may be '*' for cross-origin iframes)
+          var parentOrigin = this._getTargetOrigin(window.parent);
+          window.parent.postMessage(message, parentOrigin);
+          window.parent.postMessage(flutterMessage, parentOrigin);
+          console.log('[PaymentBridge] Sent via postMessage to parent (origin: ' + parentOrigin + ')');
           successCount++;
         } catch (e) {
           console.error('[PaymentBridge] postMessage to parent error:', e);
@@ -393,9 +441,10 @@
       // Method 3: postMessage to top (for deeply nested iframes)
       try {
         if (window.top && window.top !== window && window.top !== window.parent) {
-          window.top.postMessage(message, '*');
-          window.top.postMessage(flutterMessage, '*');
-          console.log('[PaymentBridge] Sent via postMessage to top');
+          var topOrigin = this._getTargetOrigin(window.top);
+          window.top.postMessage(message, topOrigin);
+          window.top.postMessage(flutterMessage, topOrigin);
+          console.log('[PaymentBridge] Sent via postMessage to top (origin: ' + topOrigin + ')');
           successCount++;
         }
       } catch (e) {
@@ -430,6 +479,7 @@
       // Cross-origin messages can be lost if receiver isn't ready
       var retryCount = 0;
       var maxRetries = 3;
+      var self = this;
       var retryInterval = setInterval(function() {
         retryCount++;
         if (retryCount > maxRetries) {
@@ -441,14 +491,16 @@
 
         if (window.opener && !window.opener.closed) {
           try {
-            window.opener.postMessage(message, '*');
-            window.opener.postMessage(flutterMessage, '*');
+            var openerOrigin = self._getTargetOrigin(window.opener);
+            window.opener.postMessage(message, openerOrigin);
+            window.opener.postMessage(flutterMessage, openerOrigin);
           } catch (e) {}
         }
         if (window.parent && window.parent !== window) {
           try {
-            window.parent.postMessage(message, '*');
-            window.parent.postMessage(flutterMessage, '*');
+            var parentOrigin = self._getTargetOrigin(window.parent);
+            window.parent.postMessage(message, parentOrigin);
+            window.parent.postMessage(flutterMessage, parentOrigin);
           } catch (e) {}
         }
       }, 500);
@@ -489,9 +541,21 @@
 
       // postMessage listener
       window.addEventListener('message', function(event) {
+        // SECURITY: Verify origin is trusted before processing
+        var isLocalhost = event.origin.indexOf('localhost') !== -1 ||
+                          event.origin.indexOf('127.0.0.1') !== -1;
+        var isBookBedOrigin = event.origin === 'https://view.bookbed.io' ||
+                              event.origin === 'https://app.bookbed.io' ||
+                              event.origin === 'https://bookbed.io' ||
+                              (event.origin.indexOf('.bookbed.io') !== -1);
+
+        if (!isLocalhost && !isBookBedOrigin) {
+          // Ignore messages from untrusted origins
+          return;
+        }
+
         // Verify message structure
         if (event.data && event.data.type === 'PAYMENT_COMPLETE') {
-          // In production, you might want to verify event.origin
           this._handleResult(event.data);
         }
       }.bind(this));

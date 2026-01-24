@@ -59,7 +59,16 @@ self.addEventListener('notificationclick', (event) => {
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       // Check if there's already a window open
       for (const client of windowClients) {
-        if (client.url.includes('app.bookbed.io') && 'focus' in client) {
+        // Proper URL hostname check to prevent URL substring attacks (CWE-20)
+        let isBookBedWindow = false;
+        try {
+          const clientUrl = new URL(client.url);
+          isBookBedWindow = clientUrl.hostname === 'app.bookbed.io' ||
+                           clientUrl.hostname === 'localhost';
+        } catch (e) {
+          // Invalid URL, skip this client
+        }
+        if (isBookBedWindow && 'focus' in client) {
           // Navigate existing window to the booking
           client.postMessage({
             type: 'NOTIFICATION_CLICK',

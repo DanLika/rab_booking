@@ -105,7 +105,7 @@ dev_dependencies:
 
   # Testing
   mocktail: ^1.0.4
-  fake_cloud_firestore: ^4.0.0  # Moved from dependencies - test-only package
+  fake_cloud_firestore: ^4.0.1  # Moved from dependencies - test-only package
   # integration_test removed - was causing Android release build issues
   # (Flutter bug: dev_dependencies included in GeneratedPluginRegistrant.java)
   golden_toolkit: ^0.15.0

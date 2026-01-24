@@ -26,11 +26,11 @@ dependencies:
   firebase_core: ^4.2.1
   firebase_auth: ^6.1.2
   cloud_firestore: ^6.1.0
-  firebase_storage: ^13.0.4
+  firebase_storage: ^13.0.6
   cloud_functions: ^6.0.4
   firebase_analytics: ^12.0.4
   firebase_crashlytics: ^5.0.5
-  firebase_messaging: ^16.0.0  # Push notifications (hidden until mobile app release)
+  firebase_messaging: ^16.1.1  # Push notifications (hidden until mobile app release)
 
   # HTTP Client
   http: ^1.2.0
@@ -105,13 +105,13 @@ dev_dependencies:
 
   # Testing
   mocktail: ^1.0.4
-  fake_cloud_firestore: ^4.0.0  # Moved from dependencies - test-only package
+  fake_cloud_firestore: ^4.0.1  # Moved from dependencies - test-only package
   # integration_test removed - was causing Android release build issues
   # (Flutter bug: dev_dependencies included in GeneratedPluginRegistrant.java)
   golden_toolkit: ^0.15.0
 
   # Sentry source maps upload (for better error tracking)
-  sentry_dart_plugin: ^3.2.0
+  sentry_dart_plugin: ^3.2.1
 
   # Icon Generation
   flutter_launcher_icons: ^0.13.1

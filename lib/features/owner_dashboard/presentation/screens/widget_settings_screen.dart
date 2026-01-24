@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -665,7 +666,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                     icon: Icons.info_outline,
                     title: l10n.widgetSettingsBookingWithoutPayment,
                     message: l10n.widgetSettingsBookingWithoutPaymentDesc,
-                    color: Theme.of(context).colorScheme.tertiary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(height: 24),
 
@@ -1600,10 +1601,12 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
+                              child: AutoSizeText(
                                 l10nInner.widgetSettingsCancellationDeadline(
                                   _cancellationHours,
                                 ),
+                                maxLines: 1,
+                                minFontSize: 12,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: _allowCancellation
@@ -1788,42 +1791,34 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     );
   }
 
-  /// Build a days advance input field
+  /// Build a days advance input field with helper text below
   Widget _buildDaysAdvanceField({
     required String label,
     required String hint,
     required int value,
     required ValueChanged<int> onChanged,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.8),
-          ),
-        ),
-        const SizedBox(height: 4),
-        TextFormField(
-          initialValue: value.toString(),
-          keyboardType: TextInputType.number,
-          decoration: InputDecorationHelper.buildDecoration(
+    final theme = Theme.of(context);
+    return TextFormField(
+      initialValue: value.toString(),
+      keyboardType: TextInputType.number,
+      decoration:
+          InputDecorationHelper.buildDecoration(
             context: context,
             labelText: label,
-            hintText: hint,
             prefixIcon: const Icon(Icons.today),
+          ).copyWith(
+            // Show hint as helper text BELOW the field (stays visible while typing)
+            helperText: hint,
+            helperStyle: TextStyle(
+              fontSize: 12,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
           ),
-          onChanged: (text) {
-            final parsed = int.tryParse(text) ?? 0;
-            onChanged(parsed.clamp(0, 730));
-          },
-        ),
-      ],
+      onChanged: (text) {
+        final parsed = int.tryParse(text) ?? 0;
+        onChanged(parsed.clamp(0, 730));
+      },
     );
   }
 
@@ -1922,68 +1917,72 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
     required Color color,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: theme.brightness == Brightness.dark
+            color: isDark
                 ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.1),
+                : Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                color.withValues(alpha: 0.1),
-                color.withValues(alpha: 0.05),
-              ],
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? color.withValues(alpha: 0.15)
+              : color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withValues(alpha: isDark ? 0.4 : 0.25),
+            width: 1.5,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: color,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      message,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
-                ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: isDark ? 0.2 : 0.12),
+                borderRadius: BorderRadius.circular(10),
               ),
-            ],
-          ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    message,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 1.4,
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.75,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

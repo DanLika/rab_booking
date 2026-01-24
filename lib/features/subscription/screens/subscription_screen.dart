@@ -415,6 +415,9 @@ class SubscriptionScreen extends StatelessWidget {
     WidgetColorScheme colors,
     AppLocalizations l10n,
   ) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(SpacingTokens.xl),
@@ -425,13 +428,13 @@ class SubscriptionScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(SpacingTokens.l),
               decoration: BoxDecoration(
-                color: colors.accent.withValues(alpha: 0.1),
+                color: primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.language_rounded,
                 size: 64,
-                color: colors.accent,
+                color: primaryColor,
               ),
             ),
             const SizedBox(height: SpacingTokens.xl),
@@ -466,7 +469,7 @@ class SubscriptionScreen extends StatelessWidget {
               icon: const Icon(Icons.open_in_new),
               label: Text(l10n.subscriptionContinueToWeb),
               style: FilledButton.styleFrom(
-                backgroundColor: colors.accent,
+                backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: SpacingTokens.xl,

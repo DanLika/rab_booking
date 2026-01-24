@@ -13918,6 +13918,30 @@ abstract class AppLocalizations {
   /// **'Failed to delete account. Please try again or contact support.'**
   String get deleteAccountError;
 
+  /// No description provided for @deleteAccountReauthRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-authentication Required'**
+  String get deleteAccountReauthRequired;
+
+  /// No description provided for @deleteAccountReauthDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For security, please sign in again with {provider} to confirm account deletion.'**
+  String deleteAccountReauthDescription(String provider);
+
+  /// No description provided for @deleteAccountReauthButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with {provider}'**
+  String deleteAccountReauthButton(String provider);
+
+  /// No description provided for @deleteAccountReauthSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity verified. You can now delete your account.'**
+  String get deleteAccountReauthSuccess;
+
   /// No description provided for @subscriptionTitle.
   ///
   /// In en, this message translates to:

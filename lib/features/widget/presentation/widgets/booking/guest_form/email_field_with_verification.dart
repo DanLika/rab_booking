@@ -106,6 +106,9 @@ class EmailFieldWithVerification extends ConsumerWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.textPrimary,
           foregroundColor: colors.backgroundPrimary,
+          // Keep same colors when disabled (loading state)
+          disabledBackgroundColor: colors.textPrimary,
+          disabledForegroundColor: colors.backgroundPrimary,
           padding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
             borderRadius: BorderTokens.circularMedium,

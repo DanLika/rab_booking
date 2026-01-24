@@ -7765,6 +7765,23 @@ class AppLocalizationsHr extends AppLocalizations {
       'Brisanje računa nije uspjelo. Molimo pokušajte ponovno ili kontaktirajte podršku.';
 
   @override
+  String get deleteAccountReauthRequired => 'Potrebna ponovna prijava';
+
+  @override
+  String deleteAccountReauthDescription(String provider) {
+    return 'Iz sigurnosnih razloga, molimo prijavite se ponovo putem $provider kako biste potvrdili brisanje računa.';
+  }
+
+  @override
+  String deleteAccountReauthButton(String provider) {
+    return 'Prijava putem $provider';
+  }
+
+  @override
+  String get deleteAccountReauthSuccess =>
+      'Identitet potvrđen. Sada možete obrisati svoj račun.';
+
+  @override
   String get subscriptionTitle => 'Pretplata';
 
   @override

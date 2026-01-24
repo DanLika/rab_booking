@@ -7706,6 +7706,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to delete account. Please try again or contact support.';
 
   @override
+  String get deleteAccountReauthRequired => 'Re-authentication Required';
+
+  @override
+  String deleteAccountReauthDescription(String provider) {
+    return 'For security, please sign in again with $provider to confirm account deletion.';
+  }
+
+  @override
+  String deleteAccountReauthButton(String provider) {
+    return 'Sign in with $provider';
+  }
+
+  @override
+  String get deleteAccountReauthSuccess =>
+      'Identity verified. You can now delete your account.';
+
+  @override
   String get subscriptionTitle => 'Subscription';
 
   @override

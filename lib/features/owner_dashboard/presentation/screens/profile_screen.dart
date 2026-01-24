@@ -67,6 +67,12 @@ class ProfileScreen extends ConsumerWidget {
                 builder: (context) {
                   // OPTIMIZED: Use authState.userModel directly instead of separate Firestore query
                   final isAnonymous = authState.isAnonymous;
+                  // Check if user signed in with social provider (Google/Apple)
+                  // These users don't have a password to change
+                  final lastProvider = authState.userModel?.lastProvider;
+                  final isSocialSignIn =
+                      lastProvider == 'google.com' ||
+                      lastProvider == 'apple.com';
                   // Calculate effective account type (admin override takes precedence)
                   final effectiveAccountType =
                       authState.userModel?.adminOverrideAccountType ??
@@ -274,7 +280,7 @@ class ProfileScreen extends ConsumerWidget {
                                       ),
                                     ),
                                     // Profile completion widget (only for non-anonymous)
-                                    if (!isAnonymous && !isMobile) ...[
+                                    if (!isAnonymous) ...[
                                       const SizedBox(height: 16),
                                       _ProfileCompletionWidget(
                                         percentage:
@@ -328,7 +334,8 @@ class ProfileScreen extends ConsumerWidget {
                                     : () =>
                                           context.push(OwnerRoutes.profileEdit),
                               ),
-                              if (!isAnonymous) ...[
+                              // Hide password change for anonymous users and social sign-in users (Google/Apple)
+                              if (!isAnonymous && !isSocialSignIn) ...[
                                 Divider(
                                   height: 1,
                                   indent: 72,
@@ -460,14 +467,15 @@ class ProfileScreen extends ConsumerWidget {
                                           .currentUser
                                           ?.email ??
                                       '';
-                                  final Uri emailUri = Uri(
-                                    scheme: 'mailto',
-                                    path: 'support@bookbed.io',
-                                    queryParameters: {
-                                      'subject': 'BookBed Support Request',
-                                      'body':
-                                          'User Email: $userEmail\n\nDescribe your issue:\n\n',
-                                    },
+                                  // Build mailto URI manually to avoid ugly URL encoding
+                                  final subject = Uri.encodeComponent(
+                                    'BookBed Support Request',
+                                  );
+                                  final body = Uri.encodeComponent(
+                                    'User: $userEmail\n\n',
+                                  );
+                                  final Uri emailUri = Uri.parse(
+                                    'mailto:dusko@book-bed.com?subject=$subject&body=$body',
                                   );
                                   if (await canLaunchUrl(emailUri)) {
                                     await launchUrl(emailUri);

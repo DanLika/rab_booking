@@ -1393,31 +1393,33 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         Icons.sync,
                         color: theme.colorScheme.primary,
-                        size: 24,
+                        size: 20,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
+                      child: AutoSizeText(
                         widget.existingFeed == null
                             ? l10n.icalAddFeedTitle
                             : l10n.icalEditFeedTitle,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        minFontSize: 14,
                       ),
                     ),
+                    const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: const Icon(Icons.close, size: 20),
                       onPressed: () => Navigator.pop(context),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -1608,15 +1610,14 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                   ),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
+                            horizontal: 16,
+                            vertical: 14,
                           ),
                           side: BorderSide(
                             color: isDark
@@ -1630,71 +1631,53 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                         child: AutoSizeText(
                           l10n.cancel,
                           maxLines: 1,
-                          minFontSize: 10,
+                          minFontSize: 12,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      flex: 2,
                       child: Container(
                         decoration: BoxDecoration(
-                          gradient: _isSaving
-                              ? null
-                              : context.gradients.brandPrimary,
+                          gradient: context.gradients.brandPrimary,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: ElevatedButton(
                           onPressed: _isSaving ? null : _saveFeed,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _isSaving
-                                ? theme.colorScheme.surfaceContainerHighest
-                                : Colors.transparent,
-                            foregroundColor: _isSaving
-                                ? theme.colorScheme.onSurface
-                                : Colors.white,
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            // Keep same colors when disabled (loading state)
+                            disabledBackgroundColor: Colors.transparent,
+                            disabledForegroundColor: Colors.white,
                             shadowColor: Colors.transparent,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
+                              horizontal: 16,
+                              vertical: 14,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _isSaving
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : Icon(
-                                      widget.existingFeed == null
-                                          ? Icons.add
-                                          : Icons.save,
-                                      size: 18,
-                                    ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: AutoSizeText(
+                          child: _isSaving
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : AutoSizeText(
                                   widget.existingFeed == null
                                       ? l10n.icalAddFeedButton
                                       : l10n.save,
                                   maxLines: 1,
-                                  minFontSize: 10,
+                                  minFontSize: 12,
                                   style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
                         ),
                       ),
                     ),

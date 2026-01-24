@@ -1054,10 +1054,14 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   ///
   /// Required for Apple App Store compliance (mandatory since 2022).
   ///
-  /// [password] - Required for re-authentication before deletion (security measure)
+  /// For email/password users: provide [password]
+  /// For social sign-in users: provide [credential] from reauthenticateWithGoogle/Apple
   ///
   /// Throws [String] error message on failure.
-  Future<void> deleteAccount({required String password}) async {
+  Future<void> deleteAccount({
+    String? password,
+    AuthCredential? credential,
+  }) async {
     final user = _auth.currentUser;
     if (user == null) {
       throw 'No user is currently signed in';
@@ -1065,14 +1069,22 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
     // Re-authenticate user before deletion (security measure)
     try {
-      if (user.email == null) {
-        throw 'User email is missing';
+      if (credential != null) {
+        // Social sign-in re-authentication (Google/Apple)
+        await user.reauthenticateWithCredential(credential);
+      } else if (password != null) {
+        // Email/password re-authentication
+        if (user.email == null) {
+          throw 'User email is missing';
+        }
+        final emailCredential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(emailCredential);
+      } else {
+        throw 'Re-authentication required';
       }
-      final credential = EmailAuthProvider.credential(
-        email: user.email!,
-        password: password,
-      );
-      await user.reauthenticateWithCredential(credential);
     } on FirebaseAuthException catch (e) {
       throw _getAuthErrorMessage(e);
     }
@@ -1312,6 +1324,96 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       const errorMessage = 'Failed to sign in with Apple. Please try again.';
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message
+    }
+  }
+
+  /// Re-authenticate with Google for sensitive operations (e.g., account deletion)
+  ///
+  /// Returns [AuthCredential] that can be used with deleteAccount() or other
+  /// sensitive operations that require re-authentication.
+  ///
+  /// Throws [String] error message on failure.
+  Future<AuthCredential> reauthenticateWithGoogle() async {
+    try {
+      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+      googleProvider.addScope('email');
+      googleProvider.addScope('profile');
+
+      final UserCredential userCredential;
+      if (kIsWeb) {
+        // Web: Use popup for re-authentication
+        userCredential = await _auth.currentUser!.reauthenticateWithPopup(
+          googleProvider,
+        );
+      } else {
+        // Native: Use signInWithProvider for re-authentication
+        userCredential = await _auth.currentUser!.reauthenticateWithProvider(
+          googleProvider,
+        );
+      }
+
+      final credential = userCredential.credential;
+      if (credential == null) {
+        throw 'Re-authentication succeeded but no credential was returned.';
+      }
+      return credential;
+    } on FirebaseAuthException catch (e) {
+      LoggingService.log(
+        'Google re-auth error: ${e.code} - ${e.message}',
+        tag: 'AUTH_ERROR',
+      );
+      throw _getAuthErrorMessage(e);
+    } catch (e) {
+      LoggingService.log(
+        'Google re-auth unexpected error: $e',
+        tag: 'AUTH_ERROR',
+      );
+      throw 'Failed to re-authenticate with Google. Please try again.';
+    }
+  }
+
+  /// Re-authenticate with Apple for sensitive operations (e.g., account deletion)
+  ///
+  /// Returns [AuthCredential] that can be used with deleteAccount() or other
+  /// sensitive operations that require re-authentication.
+  ///
+  /// Throws [String] error message on failure.
+  Future<AuthCredential> reauthenticateWithApple() async {
+    try {
+      final appleProvider = AppleAuthProvider();
+      appleProvider.addScope('email');
+      appleProvider.addScope('name');
+
+      final UserCredential userCredential;
+      if (kIsWeb) {
+        // Web: Use popup for re-authentication
+        userCredential = await _auth.currentUser!.reauthenticateWithPopup(
+          appleProvider,
+        );
+      } else {
+        // Native: Use signInWithProvider for re-authentication
+        userCredential = await _auth.currentUser!.reauthenticateWithProvider(
+          appleProvider,
+        );
+      }
+
+      final credential = userCredential.credential;
+      if (credential == null) {
+        throw 'Re-authentication succeeded but no credential was returned.';
+      }
+      return credential;
+    } on FirebaseAuthException catch (e) {
+      LoggingService.log(
+        'Apple re-auth error: ${e.code} - ${e.message}',
+        tag: 'AUTH_ERROR',
+      );
+      throw _getAuthErrorMessage(e);
+    } catch (e) {
+      LoggingService.log(
+        'Apple re-auth unexpected error: $e',
+        tag: 'AUTH_ERROR',
+      );
+      throw 'Failed to re-authenticate with Apple. Please try again.';
     }
   }
 

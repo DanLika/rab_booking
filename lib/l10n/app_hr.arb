@@ -1676,12 +1676,12 @@
   "widgetSettingsCopyFromProfile": "Kopiraj iz profila vlasnika",
   "widgetSettingsCopiedFromProfile": "Kontakt podaci kopirani iz vašeg profila",
   "widgetSettingsBookingWithoutPaymentDesc": "U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.",
-  "widgetSettingsAdvanceBooking": "Rezerviranje Unaprijed",
-  "widgetSettingsAdvanceBookingDesc": "Kontrolirajte koliko unaprijed gosti mogu rezervirati",
-  "widgetSettingsMinDaysAdvance": "Minimalno dana unaprijed",
-  "widgetSettingsMinDaysAdvanceHint": "0 = rezervacija isti dan dopuštena",
-  "widgetSettingsMaxDaysAdvance": "Maksimalno dana unaprijed",
-  "widgetSettingsMaxDaysAdvanceHint": "365 = do godinu dana unaprijed",
+  "widgetSettingsAdvanceBooking": "Rok za rezervaciju",
+  "widgetSettingsAdvanceBookingDesc": "Zadani raspon za sve datume (može se podesiti pojedinačno u cjenovniku)",
+  "widgetSettingsMinDaysAdvance": "Min. dana unaprijed",
+  "widgetSettingsMinDaysAdvanceHint": "0 = isti dan",
+  "widgetSettingsMaxDaysAdvance": "Max. dana unaprijed",
+  "widgetSettingsMaxDaysAdvanceHint": "365 = godinu dana",
 
   "bookingCreateTitle": "Nova rezervacija",
   "bookingCreateClose": "Zatvori",
@@ -2438,16 +2438,16 @@
   "priceCalendarBlockCheckOut": "Blokiraj odjavu (check-out)",
   "priceCalendarBlockCheckOutDesc": "Gosti ne mogu završiti rezervaciju",
   "priceCalendarAdvancedOptions": "Napredne opcije",
-  "priceCalendarAdvancedOptionsDesc": "Vikend cijena, min/max noći, unaprijed",
+  "priceCalendarAdvancedOptionsDesc": "Override za ovaj datum (prazno = koristi zadane postavke)",
   "priceCalendarWeekendPrice": "Vikend cijena (€)",
   "priceCalendarMinNights": "Min. noći",
-  "priceCalendarMinNightsHint": "Minimalni broj noćenja za prijavu ovog datuma",
+  "priceCalendarMinNightsHint": "Najmanje noći za check-in ovaj datum",
   "priceCalendarMaxNights": "Max. noći",
-  "priceCalendarMaxNightsHint": "Maksimalni broj noćenja za prijavu ovog datuma",
+  "priceCalendarMaxNightsHint": "Najviše noći za check-in ovaj datum",
   "priceCalendarMinDaysAdvance": "Min. dana unaprijed",
-  "priceCalendarMinDaysAdvanceHint": "Rezervacija mora biti napravljena najmanje ovoliko dana prije prijave",
+  "priceCalendarMinDaysAdvanceHint": "Najranije kada gost može rezervirati ovaj datum",
   "priceCalendarMaxDaysAdvance": "Max. dana unaprijed",
-  "priceCalendarMaxDaysAdvanceHint": "Koliko unaprijed gosti mogu rezervirati za prijavu ovog datuma",
+  "priceCalendarMaxDaysAdvanceHint": "Najkasnije kada gost može rezervirati ovaj datum",
   "priceCalendarDeleteConfirmTitle": "Potvrda brisanja",
   "priceCalendarDeleteConfirmMessage": "Da li ste sigurni da želite obrisati custom cijenu? Datum će biti vraćen na osnovnu cijenu.",
   "priceCalendarRevertedToBasePrice": "Vraćeno na osnovnu cijenu",
@@ -3296,6 +3296,20 @@
   "deleteAccountPermanent": "Ova radnja se ne može poništiti. Nakon brisanja, nećete moći povratiti svoj račun ili podatke.",
   "deleteAccountSuccess": "Vaš račun je uspješno obrisan.",
   "deleteAccountError": "Brisanje računa nije uspjelo. Molimo pokušajte ponovno ili kontaktirajte podršku.",
+  "deleteAccountReauthRequired": "Potrebna ponovna prijava",
+  "deleteAccountReauthDescription": "Iz sigurnosnih razloga, molimo prijavite se ponovo putem {provider} kako biste potvrdili brisanje računa.",
+  "@deleteAccountReauthDescription": {
+    "placeholders": {
+      "provider": {"type": "String"}
+    }
+  },
+  "deleteAccountReauthButton": "Prijava putem {provider}",
+  "@deleteAccountReauthButton": {
+    "placeholders": {
+      "provider": {"type": "String"}
+    }
+  },
+  "deleteAccountReauthSuccess": "Identitet potvrđen. Sada možete obrisati svoj račun.",
 
   "subscriptionTitle": "Pretplata",
   "subscriptionErrorLoading": "Greška pri učitavanju statusa pretplate: {error}",

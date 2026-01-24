@@ -50,20 +50,15 @@ class _EmbedWidgetGuideScreenState
 ></iframe>''';
   }
 
-  /// Show quick help bottom sheet with embed instructions
+  /// Show quick help bottom sheet - simplified overview with link to full help
   void _showHelpBottomSheet(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
+      builder: (sheetContext) => Container(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -83,11 +78,11 @@ class _EmbedWidgetGuideScreenState
             ),
             // Header
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
@@ -95,103 +90,87 @@ class _EmbedWidgetGuideScreenState
                     child: Icon(
                       Icons.help_outline,
                       color: theme.colorScheme.primary,
-                      size: 24,
+                      size: 20,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      l10n.embedGuideQuickHelpTitle,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.embedGuideQuickHelpTitle,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.embedGuideSimpleStepsTitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: () => Navigator.of(sheetContext).pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1),
-            // Content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHelpStep(
-                      icon: Icons.content_copy,
-                      title: l10n.embedGuideQuickHelpStep1Title,
-                      description: l10n.embedGuideQuickHelpStep1Desc,
-                      theme: theme,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildHelpStep(
-                      icon: Icons.code,
-                      title: l10n.embedGuideQuickHelpStep2Title,
-                      description: l10n.embedGuideQuickHelpStep2Desc,
-                      theme: theme,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildHelpStep(
-                      icon: Icons.publish,
-                      title: l10n.embedGuideQuickHelpStep3Title,
-                      description: l10n.embedGuideQuickHelpStep3Desc,
-                      theme: theme,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: 20),
-                    // Tip box
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.3,
-                          ),
-                        ),
+            // Simplified steps as compact list
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  _buildCompactStep(
+                    number: '1',
+                    text: l10n.embedGuideSimpleStep1,
+                    theme: theme,
+                  ),
+                  _buildCompactStep(
+                    number: '2',
+                    text: l10n.embedGuideSimpleStep2,
+                    theme: theme,
+                  ),
+                  _buildCompactStep(
+                    number: '3',
+                    text: l10n.embedGuideSimpleStep3,
+                    theme: theme,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // CTA Button to full help
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const EmbedHelpScreen(),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.lightbulb_outline,
-                            color: theme.colorScheme.primary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              l10n.embedGuideQuickHelpTip,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: theme.colorScheme.onSurface,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.menu_book, size: 18),
+                  label: Text(l10n.embedGuideInstallationGuide),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(height: 16),
-                    // More info link
-                    Text(
-                      l10n.embedGuideQuickHelpMoreInfo,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -201,52 +180,37 @@ class _EmbedWidgetGuideScreenState
     );
   }
 
-  /// Build a help step item for the bottom sheet
-  Widget _buildHelpStep({
-    required IconData icon,
-    required String title,
-    required String description,
+  /// Build a compact step item for the quick help bottom sheet
+  Widget _buildCompactStep({
+    required String number,
+    required String text,
     required ThemeData theme,
-    required bool isDark,
   }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isDark
-                ? theme.colorScheme.surfaceContainerHighest
-                : Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 20, color: theme.colorScheme.primary),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              number,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  height: 1.4,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
+        ],
+      ),
     );
   }
 

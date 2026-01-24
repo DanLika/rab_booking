@@ -544,6 +544,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             foregroundColor: Colors.white,
+                            // Keep same colors when disabled (loading state)
+                            disabledBackgroundColor: Colors.transparent,
+                            disabledForegroundColor: Colors.white,
                             shadowColor: Colors.transparent,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,

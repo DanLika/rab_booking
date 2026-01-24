@@ -140,6 +140,9 @@ class _PwaInstallButtonState extends ConsumerState<PwaInstallButton> {
       style: ElevatedButton.styleFrom(
         backgroundColor: colors.textPrimary,
         foregroundColor: colors.backgroundPrimary,
+        // Keep same colors when disabled (loading state)
+        disabledBackgroundColor: colors.textPrimary,
+        disabledForegroundColor: colors.backgroundPrimary,
         padding: const EdgeInsets.symmetric(
           horizontal: SpacingTokens.m,
           vertical: SpacingTokens.s,

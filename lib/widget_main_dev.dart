@@ -88,6 +88,16 @@ class _BookingWidgetAppState extends ConsumerState<BookingWidgetApp> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Precache logo assets for loaders (prevents white square during load)
+    // logo-light.png = purple logo for light theme
+    // logo-dark.png = white logo for dark theme
+    precacheImage(const AssetImage('assets/images/logo-light.png'), context);
+    precacheImage(const AssetImage('assets/images/logo-dark.png'), context);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final router = ref.watch(widgetRouterProvider);
     final widgetConfig = ref.watch(widgetConfigProvider);

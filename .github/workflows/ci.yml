@@ -167,7 +167,10 @@ jobs:
           cache-dependency-path: functions/package-lock.json
 
       - name: Install dependencies
-        run: cd functions && npm ci
+        # TEMP: Use npm install because package-lock.json is out of sync
+        # TODO: Run `cd functions && npm install` locally, commit the updated lock file,
+        # then revert this back to `npm ci`
+        run: cd functions && npm install
 
       - name: Run npm audit
         run: cd functions && npm audit --audit-level=high

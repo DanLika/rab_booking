@@ -55,12 +55,15 @@ void main() async {
 
   await initializeDateFormatting();
 
-  final overrides = prefs != null
-      ? [sharedPreferencesProvider.overrideWithValue(prefs)]
-      : <Override>[];
-
   // Run app without Sentry for dev
-  runApp(ProviderScope(overrides: overrides, child: const BookingWidgetApp()));
+  runApp(
+    ProviderScope(
+      overrides: prefs != null
+          ? [sharedPreferencesProvider.overrideWithValue(prefs)]
+          : [],
+      child: const BookingWidgetApp(),
+    ),
+  );
 }
 
 class BookingWidgetApp extends ConsumerStatefulWidget {

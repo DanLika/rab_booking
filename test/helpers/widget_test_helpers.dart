@@ -18,7 +18,7 @@ import 'package:bookbed/features/widget/presentation/providers/language_provider
 Widget createTestWidget({
   required Widget child,
   bool isDarkMode = false,
-  List<Override>? overrides,
+  List<dynamic>? overrides,
 }) {
   return ProviderScope(
     overrides: [
@@ -39,7 +39,7 @@ Widget createTestWidget({
 Widget createTestWidgetHr({
   required Widget child,
   bool isDarkMode = false,
-  List<Override>? overrides,
+  List<dynamic>? overrides,
 }) {
   return ProviderScope(
     overrides: [languageProvider.overrideWith((ref) => 'hr'), ...?overrides],

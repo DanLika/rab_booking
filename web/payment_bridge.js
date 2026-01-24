@@ -542,12 +542,28 @@
       // postMessage listener
       window.addEventListener('message', function(event) {
         // SECURITY: Verify origin is trusted before processing
-        var isLocalhost = event.origin.indexOf('localhost') !== -1 ||
-                          event.origin.indexOf('127.0.0.1') !== -1;
-        var isBookBedOrigin = event.origin === 'https://view.bookbed.io' ||
-                              event.origin === 'https://app.bookbed.io' ||
-                              event.origin === 'https://bookbed.io' ||
-                              (event.origin.indexOf('.bookbed.io') !== -1);
+        // Use URL parsing for proper hostname validation (CWE-20)
+        var isLocalhost = false;
+        var isBookBedOrigin = false;
+
+        try {
+          var originUrl = new URL(event.origin);
+          var hostname = originUrl.hostname;
+
+          // Check for localhost
+          isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+
+          // Check for exact BookBed domains or proper subdomain matching
+          // SECURITY: hostname.endsWith() ensures the check is at the end,
+          // preventing attacks like "evil.bookbed.io.attacker.com"
+          isBookBedOrigin = hostname === 'view.bookbed.io' ||
+                            hostname === 'app.bookbed.io' ||
+                            hostname === 'bookbed.io' ||
+                            hostname.endsWith('.bookbed.io');
+        } catch (e) {
+          // Invalid origin URL - reject
+          return;
+        }
 
         if (!isLocalhost && !isBookBedOrigin) {
           // Ignore messages from untrusted origins

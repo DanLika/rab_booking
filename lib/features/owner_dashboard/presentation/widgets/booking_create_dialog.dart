@@ -19,6 +19,7 @@ import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../core/services/logging_service.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_calendar_provider.dart';
+import '../providers/unified_bookings_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
 
 /// Dialog za kreiranje nove rezervacije
@@ -822,8 +823,9 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
 
       LoggingService.logSuccess('[BookingCreate] Booking created successfully');
 
-      // FIX: Invalidate calendar provider BEFORE popping to ensure refresh
+      // FIX: Invalidate providers BEFORE popping to ensure refresh
       ref.invalidate(calendarBookingsProvider);
+      ref.invalidate(unifiedBookingsProvider); // Also refresh Bookings page
 
       if (mounted) {
         Navigator.of(context).pop(true); // Return true to indicate success

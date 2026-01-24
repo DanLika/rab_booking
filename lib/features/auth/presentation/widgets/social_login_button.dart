@@ -235,7 +235,7 @@ class _GoogleLogoPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Apple logo icon that adapts to theme
+/// Apple logo icon that adapts to theme using image asset
 class AppleBrandIcon extends StatelessWidget {
   final double size;
 
@@ -244,104 +244,15 @@ class AppleBrandIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SizedBox(
+    return Image.asset(
+      'assets/images/apple_icon.png',
       width: size,
       height: size,
-      child: CustomPaint(
-        painter: _AppleLogoPainter(color: theme.colorScheme.onSurface),
-      ),
+      filterQuality: FilterQuality.high,
+      // Apply color filter to adapt to theme if needed,
+      // but usually Apple logo is just black/white.
+      // Since our asset is black, we might want to invert it for dark mode.
+      color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
     );
   }
-}
-
-class _AppleLogoPainter extends CustomPainter {
-  final Color color;
-
-  const _AppleLogoPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final scale = size.width / 24;
-    final centerX = size.width / 2;
-    final centerY = size.height / 2 + scale;
-
-    // Apple body
-    final path = Path()
-      ..moveTo(centerX, centerY - 7 * scale)
-      ..cubicTo(
-        centerX + 6 * scale,
-        centerY - 7 * scale,
-        centerX + 8 * scale,
-        centerY - 4 * scale,
-        centerX + 8 * scale,
-        centerY + 2 * scale,
-      )
-      ..cubicTo(
-        centerX + 8 * scale,
-        centerY + 6 * scale,
-        centerX + 5 * scale,
-        centerY + 8 * scale,
-        centerX,
-        centerY + 8 * scale,
-      )
-      ..cubicTo(
-        centerX - 5 * scale,
-        centerY + 8 * scale,
-        centerX - 8 * scale,
-        centerY + 6 * scale,
-        centerX - 8 * scale,
-        centerY + 2 * scale,
-      )
-      ..cubicTo(
-        centerX - 8 * scale,
-        centerY - 4 * scale,
-        centerX - 6 * scale,
-        centerY - 7 * scale,
-        centerX,
-        centerY - 7 * scale,
-      )
-      ..close();
-
-    // Bite cutout
-    final bitePath = Path()
-      ..addOval(
-        Rect.fromCircle(
-          center: Offset(centerX + 5 * scale, centerY - 3 * scale),
-          radius: 2.5 * scale,
-        ),
-      );
-
-    final applePath = Path.combine(PathOperation.difference, path, bitePath);
-    canvas.drawPath(applePath, paint);
-
-    // Leaf
-    final leafPath = Path()
-      ..moveTo(centerX + scale, centerY - 7 * scale)
-      ..cubicTo(
-        centerX + 2 * scale,
-        centerY - 9 * scale,
-        centerX + 4 * scale,
-        centerY - 10 * scale,
-        centerX + 5 * scale,
-        centerY - 10 * scale,
-      )
-      ..cubicTo(
-        centerX + 4 * scale,
-        centerY - 9.5 * scale,
-        centerX + 3 * scale,
-        centerY - 8.5 * scale,
-        centerX + scale,
-        centerY - 7 * scale,
-      )
-      ..close();
-
-    canvas.drawPath(leafPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

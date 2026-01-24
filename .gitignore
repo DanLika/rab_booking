@@ -90,3 +90,7 @@ android/build/
 
 # Cloud Functions compiled output
 functions/lib/
+
+# Google Services configuration files - DO NOT COMMIT
+ios/Runner/GoogleService-Info.plist
+android/app/google-services.json

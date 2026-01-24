@@ -28,6 +28,7 @@
 import { Resend } from "resend";
 import { db } from "./firebase";
 import { logError, logSuccess } from "./logger";
+import { sanitizeText } from "./utils/inputSanitization";
 
 // Import new email templates (V2 - OPCIJA A: Refined Premium)
 import {
@@ -1214,7 +1215,7 @@ export async function sendTrialExpiringEmail(
       <!-- Content -->
       <div style="padding: 24px;">
         <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
-          Hi ${name},
+          Hi ${sanitizeText(name)},
         </p>
         
         <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">
@@ -1339,7 +1340,7 @@ export async function sendTrialExpiredEmail(
       <!-- Content -->
       <div style="padding: 24px;">
         <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
-          Hi ${name},
+          Hi ${sanitizeText(name)},
         </p>
         
         <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">

@@ -184,6 +184,10 @@ class FirebaseOwnerPropertiesRepository {
     bool isActive = false,
   }) async {
     try {
+      // FIX: Use Timestamp.now() instead of FieldValue.serverTimestamp()
+      // to avoid race condition where immediate read returns null timestamps
+      final now = Timestamp.now();
+
       final docRef = await _firestore.collection('properties').add({
         'owner_id': ownerId,
         'name': name,
@@ -202,8 +206,8 @@ class FirebaseOwnerPropertiesRepository {
         'is_active': isActive,
         'rating': 0.0,
         'review_count': 0,
-        'created_at': FieldValue.serverTimestamp(),
-        'updated_at': FieldValue.serverTimestamp(),
+        'created_at': now,
+        'updated_at': now,
       });
 
       final doc = await docRef.get();

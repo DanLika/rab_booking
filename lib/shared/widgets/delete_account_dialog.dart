@@ -52,9 +52,6 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
   /// Check if user signed in with Google
   bool get _isGoogleSignIn => _getLastProvider() == 'google.com';
 
-  /// Check if user signed in with Apple
-  bool get _isAppleSignIn => _getLastProvider() == 'apple.com';
-
   /// Handle re-authentication with Google
   Future<void> _handleGoogleReauth() async {
     setState(() {

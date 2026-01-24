@@ -101,7 +101,7 @@ class FirebaseWidgetSettingsRepository {
         // allowPayOnArrival field DEPRECATED - server validation uses widgetMode:
         // - booking_pending: No payment required (inherently "pay on arrival")
         // - booking_instant: Payment required (Stripe or Bank Transfer)
-        allowPayOnArrival: false,
+        // Default: false (not specified, uses model default)
         contactOptions: ContactOptions(
           emailAddress: ownerEmail,
           phoneNumber: ownerPhone,

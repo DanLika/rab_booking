@@ -1656,8 +1656,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
 
     // Invalidate slug-based provider if using slug URLs
-    if (widget.urlSlug != null && widget.urlSlug!.isNotEmpty) {
-      ref.invalidate(optimizedSlugWidgetContextProvider(widget.urlSlug!));
+    final slug = widget.urlSlug;
+    if (slug != null && slug.isNotEmpty) {
+      ref.invalidate(optimizedSlugWidgetContextProvider(slug));
     }
 
     // Clear the error state before retrying

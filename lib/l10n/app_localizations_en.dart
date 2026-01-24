@@ -4154,23 +4154,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'In this mode, guests can create a reservation but CANNOT pay online. You arrange payment privately after confirming the reservation.';
 
   @override
-  String get widgetSettingsAdvanceBooking => 'Advance Booking';
+  String get widgetSettingsAdvanceBooking => 'Booking window';
 
   @override
   String get widgetSettingsAdvanceBookingDesc =>
-      'Control how far in advance guests can book';
+      'Default range for all dates (can be adjusted per-date in pricing)';
 
   @override
-  String get widgetSettingsMinDaysAdvance => 'Minimum days in advance';
+  String get widgetSettingsMinDaysAdvance => 'Min. days ahead';
 
   @override
-  String get widgetSettingsMinDaysAdvanceHint => '0 = same-day booking allowed';
+  String get widgetSettingsMinDaysAdvanceHint => '0 = same day';
 
   @override
-  String get widgetSettingsMaxDaysAdvance => 'Maximum days in advance';
+  String get widgetSettingsMaxDaysAdvance => 'Max. days ahead';
 
   @override
-  String get widgetSettingsMaxDaysAdvanceHint => '365 = up to 1 year ahead';
+  String get widgetSettingsMaxDaysAdvanceHint => '365 = 1 year';
 
   @override
   String get bookingCreateTitle => 'New Booking';
@@ -5960,7 +5960,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get priceCalendarAdvancedOptionsDesc =>
-      'Weekend price, min/max nights, advance';
+      'Override for this date (empty = use default settings)';
 
   @override
   String get priceCalendarWeekendPrice => 'Weekend price (€)';
@@ -5970,28 +5970,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get priceCalendarMinNightsHint =>
-      'Minimum nights required for check-in on this date';
+      'Minimum nights for check-in on this date';
 
   @override
   String get priceCalendarMaxNights => 'Max. nights';
 
   @override
   String get priceCalendarMaxNightsHint =>
-      'Maximum nights allowed for check-in on this date';
+      'Maximum nights for check-in on this date';
 
   @override
   String get priceCalendarMinDaysAdvance => 'Min. days advance';
 
   @override
   String get priceCalendarMinDaysAdvanceHint =>
-      'Booking must be made at least this many days before check-in';
+      'Earliest when guests can book this date';
 
   @override
   String get priceCalendarMaxDaysAdvance => 'Max. days advance';
 
   @override
   String get priceCalendarMaxDaysAdvanceHint =>
-      'How far in advance guests can book for check-in on this date';
+      'Latest when guests can book this date';
 
   @override
   String get priceCalendarDeleteConfirmTitle => 'Delete confirmation';

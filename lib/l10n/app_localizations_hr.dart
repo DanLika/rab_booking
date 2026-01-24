@@ -4179,25 +4179,23 @@ class AppLocalizationsHr extends AppLocalizations {
       'U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.';
 
   @override
-  String get widgetSettingsAdvanceBooking => 'Rezerviranje Unaprijed';
+  String get widgetSettingsAdvanceBooking => 'Rok za rezervaciju';
 
   @override
   String get widgetSettingsAdvanceBookingDesc =>
-      'Kontrolirajte koliko unaprijed gosti mogu rezervirati';
+      'Zadani raspon za sve datume (može se podesiti pojedinačno u cjenovniku)';
 
   @override
-  String get widgetSettingsMinDaysAdvance => 'Minimalno dana unaprijed';
+  String get widgetSettingsMinDaysAdvance => 'Min. dana unaprijed';
 
   @override
-  String get widgetSettingsMinDaysAdvanceHint =>
-      '0 = rezervacija isti dan dopuštena';
+  String get widgetSettingsMinDaysAdvanceHint => '0 = isti dan';
 
   @override
-  String get widgetSettingsMaxDaysAdvance => 'Maksimalno dana unaprijed';
+  String get widgetSettingsMaxDaysAdvance => 'Max. dana unaprijed';
 
   @override
-  String get widgetSettingsMaxDaysAdvanceHint =>
-      '365 = do godinu dana unaprijed';
+  String get widgetSettingsMaxDaysAdvanceHint => '365 = godinu dana';
 
   @override
   String get bookingCreateTitle => 'Nova rezervacija';
@@ -5999,7 +5997,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get priceCalendarAdvancedOptionsDesc =>
-      'Vikend cijena, min/max noći, unaprijed';
+      'Override za ovaj datum (prazno = koristi zadane postavke)';
 
   @override
   String get priceCalendarWeekendPrice => 'Vikend cijena (€)';
@@ -6009,28 +6007,28 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get priceCalendarMinNightsHint =>
-      'Minimalni broj noćenja za prijavu ovog datuma';
+      'Najmanje noći za check-in ovaj datum';
 
   @override
   String get priceCalendarMaxNights => 'Max. noći';
 
   @override
   String get priceCalendarMaxNightsHint =>
-      'Maksimalni broj noćenja za prijavu ovog datuma';
+      'Najviše noći za check-in ovaj datum';
 
   @override
   String get priceCalendarMinDaysAdvance => 'Min. dana unaprijed';
 
   @override
   String get priceCalendarMinDaysAdvanceHint =>
-      'Rezervacija mora biti napravljena najmanje ovoliko dana prije prijave';
+      'Najranije kada gost može rezervirati ovaj datum';
 
   @override
   String get priceCalendarMaxDaysAdvance => 'Max. dana unaprijed';
 
   @override
   String get priceCalendarMaxDaysAdvanceHint =>
-      'Koliko unaprijed gosti mogu rezervirati za prijavu ovog datuma';
+      'Najkasnije kada gost može rezervirati ovaj datum';
 
   @override
   String get priceCalendarDeleteConfirmTitle => 'Potvrda brisanja';

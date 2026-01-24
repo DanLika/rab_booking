@@ -306,8 +306,23 @@
     }
 
     // Handle navigation
+    // SECURITY: Validate URL before navigation to prevent XSS (CWE-79)
     if (data.type === 'navigate' && data.url) {
-      window.location.href = data.url;
+      try {
+        const navUrl = new URL(data.url, window.location.origin);
+        // Only allow https URLs to bookbed.io domains or same origin
+        const isValidProtocol = navUrl.protocol === 'https:' || navUrl.protocol === 'http:';
+        const isBookBedDomain = navUrl.hostname === 'bookbed.io' ||
+                                navUrl.hostname.endsWith('.bookbed.io') ||
+                                navUrl.hostname === window.location.hostname;
+        if (isValidProtocol && isBookBedDomain) {
+          window.location.href = navUrl.href;
+        } else {
+          console.warn('[BookBed] Blocked navigation to untrusted URL:', data.url);
+        }
+      } catch (e) {
+        console.warn('[BookBed] Invalid navigation URL:', data.url);
+      }
     }
   });
 

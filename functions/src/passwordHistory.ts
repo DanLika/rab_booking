@@ -14,7 +14,7 @@
 
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
-import * as crypto from "crypto";
+import * as bcrypt from "bcrypt";
 import {logInfo, logWarn} from "./logger";
 import {setUser} from "./sentry";
 
@@ -26,13 +26,35 @@ const db = admin.firestore();
 const PASSWORD_HISTORY_SIZE = 5;
 
 /**
- * Hash a password using SHA-256
+ * Bcrypt salt rounds - 12 provides good security/performance balance
+ * Higher = more secure but slower (each +1 doubles computation time)
+ */
+const BCRYPT_SALT_ROUNDS = 12;
+
+/**
+ * Hash a password using bcrypt
+ *
+ * SECURITY: bcrypt is designed for password hashing with:
+ * - Built-in salt generation (prevents rainbow table attacks)
+ * - Configurable work factor (prevents brute force)
+ * - Constant-time comparison (prevents timing attacks)
  *
  * @param password - Plain text password
- * @returns SHA-256 hash as hex string
+ * @returns bcrypt hash string
  */
-function hashPassword(password: string): string {
-  return crypto.createHash("sha256").update(password).digest("hex");
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+}
+
+/**
+ * Compare a password against a stored hash
+ *
+ * @param password - Plain text password to check
+ * @param hash - Stored bcrypt hash
+ * @returns true if password matches hash
+ */
+async function comparePassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
 }
 
 /**
@@ -70,9 +92,6 @@ export const checkPasswordHistory = onCall(
       throw new HttpsError("invalid-argument", "Password is required");
     }
 
-    // Hash the new password
-    const passwordHash = hashPassword(password);
-
     // Get password history
     const historyRef = db
       .collection("users")
@@ -84,12 +103,16 @@ export const checkPasswordHistory = onCall(
     const history = doc.exists ? (doc.data()?.hashes || []) as string[] : [];
 
     // Check if password was recently used
-    if (history.includes(passwordHash)) {
-      logWarn("[PasswordHistory] Password reuse attempt", {userId});
-      throw new HttpsError(
-        "failed-precondition",
-        "You cannot reuse a recently used password. Please choose a different password."
-      );
+    // SECURITY: Must compare against each hash since bcrypt includes random salt
+    for (const storedHash of history) {
+      const isMatch = await comparePassword(password, storedHash);
+      if (isMatch) {
+        logWarn("[PasswordHistory] Password reuse attempt", {userId});
+        throw new HttpsError(
+          "failed-precondition",
+          "You cannot reuse a recently used password. Please choose a different password."
+        );
+      }
     }
 
     logInfo("[PasswordHistory] Password check passed", {userId});
@@ -130,8 +153,8 @@ export const savePasswordToHistory = onCall(
       throw new HttpsError("invalid-argument", "Password is required");
     }
 
-    // Hash the password
-    const passwordHash = hashPassword(password);
+    // Hash the password using bcrypt
+    const passwordHash = await hashPassword(password);
 
     // Get current history
     const historyRef = db

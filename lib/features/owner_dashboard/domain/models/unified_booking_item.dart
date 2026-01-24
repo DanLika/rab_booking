@@ -5,13 +5,16 @@ import 'ical_feed.dart';
 /// Unified wrapper for displaying both regular bookings and imported reservations
 /// in a single sorted list.
 ///
-/// This enables the "All" filter to show both types together, sorted by check-in date.
+/// This enables the "All" filter to show both types together, sorted by creation date.
 sealed class UnifiedBookingItem {
-  /// Check-in date for sorting
+  /// Check-in date
   DateTime get checkIn;
 
   /// Check-out date
   DateTime get checkOut;
+
+  /// Creation date for sorting (newest created first)
+  DateTime get createdAt;
 
   /// Unique identifier
   String get id;
@@ -41,6 +44,9 @@ class RegularBookingItem implements UnifiedBookingItem {
   DateTime get checkOut => booking.checkOut;
 
   @override
+  DateTime get createdAt => booking.createdAt;
+
+  @override
   String get id => booking.id;
 
   @override
@@ -64,6 +70,9 @@ class ImportedBookingItem implements UnifiedBookingItem {
 
   @override
   DateTime get checkOut => event.endDate;
+
+  @override
+  DateTime get createdAt => event.createdAt;
 
   @override
   String get id => 'ical_${event.id}';

@@ -13,7 +13,7 @@ part 'unified_bookings_provider.g.dart';
 /// Behavior:
 /// - When `showImportedOnly == true` → only imported reservations (IcalEvents)
 /// - When status filter is applied → only regular bookings (imported don't have status)
-/// - Otherwise → both merged and sorted by check-in date (descending)
+/// - Otherwise → both merged and sorted by creation date (newest first)
 @riverpod
 Future<List<UnifiedBookingItem>> unifiedBookings(Ref ref) async {
   final filters = ref.watch(bookingsFiltersNotifierProvider);
@@ -23,7 +23,7 @@ Future<List<UnifiedBookingItem>> unifiedBookings(Ref ref) async {
   if (filters.showImportedOnly) {
     final eventsAsync = await ref.watch(allOwnerIcalEventsProvider.future);
     return eventsAsync.map(ImportedBookingItem.new).toList()
-      ..sort((a, b) => b.checkIn.compareTo(a.checkIn));
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
   // Case 2: Status filter applied - only regular bookings (imported don't have status)
@@ -46,9 +46,9 @@ Future<List<UnifiedBookingItem>> unifiedBookings(Ref ref) async {
 
   final importedBookings = importedEvents.map(ImportedBookingItem.new).toList();
 
-  // Merge and sort by check-in date (newest first)
+  // Merge and sort by creation date (newest created first)
   final merged = <UnifiedBookingItem>[...regularBookings, ...importedBookings];
-  merged.sort((a, b) => b.checkIn.compareTo(a.checkIn));
+  merged.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
   return merged;
 }

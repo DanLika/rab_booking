@@ -12,6 +12,7 @@ import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../providers/owner_calendar_provider.dart';
+import '../../providers/calendar_filters_provider.dart';
 
 /// Bottom sheet with quick actions for a booking
 /// Shown on short tap of a booking block
@@ -672,14 +673,18 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                               onTap: _isProcessing
                                   ? null
                                   : () async {
-                                      // Close dialog first, then move booking
-                                      // Use widget.parentContext for snackbars (dialog context won't be valid)
-                                      Navigator.pop(context);
-                                      await _moveBookingToUnit(
+                                      // Move booking FIRST (while dialog is still open)
+                                      // Then close dialog after operation completes
+                                      // This ensures ref.invalidate() works before disposal
+                                      final success = await _moveBookingToUnit(
                                         widget.parentContext,
                                         unit,
                                         l10n,
                                       );
+                                      // Only close dialog if widget is still mounted
+                                      if (mounted && context.mounted) {
+                                        Navigator.pop(context, success);
+                                      }
                                     },
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
@@ -782,18 +787,18 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
     return Icons.hotel;
   }
 
-  Future<void> _moveBookingToUnit(
+  Future<bool> _moveBookingToUnit(
     BuildContext context,
     UnitModel targetUnit,
     AppLocalizations l10n,
   ) async {
-    if (_isProcessing) return; // Prevent double-tap
+    if (_isProcessing) return false; // Prevent double-tap
 
     setState(() => _isProcessing = true);
 
     try {
       // Show loading
-      if (!context.mounted) return;
+      if (!context.mounted) return false;
       ErrorDisplayUtils.showLoadingSnackBar(context, l10n.bookingActionMoving);
 
       // Check for conflicts in target unit
@@ -807,13 +812,13 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
 
       if (!hasConflict) {
         // Conflict detected - show error
-        if (!context.mounted) return;
+        if (!context.mounted) return false;
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           'Cannot move booking: ${targetUnit.name} already has a booking during these dates',
           userMessage: 'Cannot move: unit is already booked for these dates',
         );
-        return;
+        return false;
       }
 
       // Update booking with new unit, property AND owner
@@ -835,17 +840,20 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
         originalBooking: widget.booking,
       );
 
-      // Refresh calendar
+      // Refresh calendar providers to update UI
+      // MUST invalidate both: base provider AND filtered provider that UI watches
       ref.invalidate(calendarBookingsProvider);
+      ref.invalidate(timelineCalendarBookingsProvider);
 
       // Show success
-      if (!context.mounted) return;
+      if (!context.mounted) return true;
       ErrorDisplayUtils.showSuccessSnackBar(
         context,
         l10n.bookingActionMovedTo(targetUnit.name),
       );
+      return true;
     } catch (e) {
-      if (!context.mounted) return;
+      if (!context.mounted) return false;
       ErrorDisplayUtils.showErrorSnackBar(
         context,
         e,
@@ -853,6 +861,7 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
           LoggingService.safeErrorToString(e),
         ),
       );
+      return false;
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);

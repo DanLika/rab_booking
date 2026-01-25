@@ -8,6 +8,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../utils/booking_overlap_detector.dart';
 import 'owner_calendar_provider.dart';
+import 'calendar_filters_provider.dart';
 
 /// Drag-and-drop state for calendar
 class DragDropState {
@@ -194,8 +195,10 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
         originalBooking: booking,
       );
 
-      // Invalidate calendar to refresh
+      // Invalidate calendar providers to refresh UI
+      // MUST invalidate both: base provider AND filtered provider that UI watches
       _ref.invalidate(calendarBookingsProvider);
+      _ref.invalidate(timelineCalendarBookingsProvider);
 
       // Show success message with undo action
       if (context.mounted) {

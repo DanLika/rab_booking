@@ -171,8 +171,13 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       }
 
       // Update booking in Firestore
+      // CRITICAL: Must update both unitId AND propertyId because:
+      // 1. Firestore path is: properties/{propertyId}/units/{unitId}/bookings/{id}
+      // 2. When moving between units, the booking is DELETE from old path + CREATE at new path
+      // 3. Without correct propertyId, the batch operation fails with permission-denied
       final updatedBooking = booking.copyWith(
         unitId: targetUnit.id,
+        propertyId: targetUnit.propertyId,
         checkIn: dates.newCheckIn,
         checkOut: dates.newCheckOut,
         updatedAt: DateTime.now(),

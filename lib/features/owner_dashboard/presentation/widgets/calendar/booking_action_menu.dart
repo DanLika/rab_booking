@@ -815,8 +815,15 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
         return;
       }
 
-      // Update booking with new unit
-      final updatedBooking = widget.booking.copyWith(unitId: targetUnit.id);
+      // Update booking with new unit AND property
+      // CRITICAL: Must update both unitId AND propertyId because:
+      // 1. Firestore path is: properties/{propertyId}/units/{unitId}/bookings/{id}
+      // 2. When moving between units, the booking is DELETE from old path + CREATE at new path
+      // 3. Without correct propertyId, the batch operation fails with permission-denied
+      final updatedBooking = widget.booking.copyWith(
+        unitId: targetUnit.id,
+        propertyId: targetUnit.propertyId,
+      );
       await bookingRepo.updateBooking(updatedBooking);
 
       // Refresh calendar

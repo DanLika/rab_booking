@@ -9,7 +9,7 @@ import '../providers/owner_calendar_provider.dart';
 import '../providers/overbooking_detection_provider.dart';
 import '../../domain/models/overbooking_conflict.dart';
 import '../widgets/timeline_calendar_widget.dart';
-import '../widgets/booking_details_dialog.dart';
+import '../widgets/booking_details_dialog_v2.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/calendar/calendar_top_toolbar.dart';
 import '../widgets/calendar/multi_select_action_bar.dart';
@@ -64,6 +64,10 @@ class _OwnerTimelineCalendarScreenState
   // Track if tutorial has been dismissed in current session or persisted
   bool _tutorialDismissed = true; // Default to true to hide until check is done
 
+  // Solution 1: Track if initial scroll to first booking has been performed
+  // Prevents repeated scrolling on every provider update
+  bool _hasScrolledToFirstBooking = false;
+
   // Key prefix - actual key includes user ID to be per-user, not per-device
   static const String _kTutorialDismissedKeyPrefix =
       'calendar_onboarding_dismissed_';
@@ -72,6 +76,37 @@ class _OwnerTimelineCalendarScreenState
   String get _tutorialDismissedKey {
     final userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
     return '$_kTutorialDismissedKeyPrefix$userId';
+  }
+
+  /// Find the first upcoming booking (check-in date >= today)
+  /// Returns the check-in date of the first upcoming booking, or null if none found
+  DateTime? _findFirstUpcomingBooking(
+    Map<String, List<dynamic>> bookingsByUnit,
+  ) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    DateTime? firstUpcomingDate;
+
+    for (final bookings in bookingsByUnit.values) {
+      for (final booking in bookings) {
+        // Access check-in date (BookingModel has checkIn property)
+        final checkIn = booking.checkIn as DateTime?;
+        if (checkIn == null) continue;
+
+        // Only consider future bookings (check-in >= today)
+        final checkInDate = DateTime(checkIn.year, checkIn.month, checkIn.day);
+        if (checkInDate.isBefore(today)) continue;
+
+        // Track the earliest upcoming booking
+        if (firstUpcomingDate == null ||
+            checkInDate.isBefore(firstUpcomingDate)) {
+          firstUpcomingDate = checkInDate;
+        }
+      }
+    }
+
+    return firstUpcomingDate;
   }
 
   @override
@@ -136,6 +171,40 @@ class _OwnerTimelineCalendarScreenState
     // Activate auto-resolution of overbooking conflicts
     // Automatically rejects pending bookings when they conflict with confirmed bookings
     ref.watch(overbookingAutoResolverProvider);
+
+    // Solution 1: Scroll to first upcoming booking on initial load
+    // Uses ref.listen to detect when bookings first become available
+    ref.listen<
+      AsyncValue<Map<String, List<dynamic>>>
+    >(timelineCalendarBookingsProvider, (previous, next) {
+      // Only scroll once on initial load (not on every update)
+      if (_hasScrolledToFirstBooking) return;
+
+      // Wait for data to be available
+      if (!next.hasValue || next.value == null) return;
+
+      final bookingsByUnit = next.value!;
+      final firstUpcoming = _findFirstUpcomingBooking(bookingsByUnit);
+
+      if (firstUpcoming != null && mounted) {
+        _hasScrolledToFirstBooking = true;
+        // Small delay to ensure widget is fully built
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            setState(() {
+              _forceScrollKey++;
+              _currentRange = DateRangeSelection.days(
+                firstUpcoming,
+                _visibleDays,
+              );
+            });
+          }
+        });
+      } else if (bookingsByUnit.isNotEmpty) {
+        // No upcoming bookings found, mark as done to prevent repeated attempts
+        _hasScrolledToFirstBooking = true;
+      }
+    });
 
     // Check if owner has any units - hide toolbar and FAB if empty
     final unitsAsync = ref.watch(allOwnerUnitsProvider);
@@ -492,7 +561,7 @@ class _OwnerTimelineCalendarScreenState
         await showDialog(
           context: context,
           builder: (context) =>
-              BookingDetailsDialog(ownerBooking: ownerBooking),
+              BookingDetailsDialogV2(ownerBooking: ownerBooking),
         );
       }
     } catch (e) {
@@ -523,7 +592,9 @@ class _OwnerTimelineCalendarScreenState
       setState(() {
         _forceScrollKey++;
       });
-      _navigateTo(DateRangeSelection.days(picked, _visibleDays));
+
+      final newRange = DateRangeSelection.days(picked, _visibleDays);
+      _navigateTo(newRange);
     }
   }
 
@@ -593,22 +664,35 @@ class _OwnerTimelineCalendarScreenState
 
   /// Show create booking dialog
   /// ENHANCED: Now accepts optional initialCheckIn date and unitId for auto-fill
+  /// Returns DateTime (check-in date) on success, null on cancel
   void _showCreateBookingDialog({
     DateTime? initialCheckIn,
     String? unitId,
   }) async {
-    final result = await showDialog<bool>(
+    final result = await showDialog<DateTime?>(
       context: context,
       builder: (context) =>
           BookingCreateDialog(initialCheckIn: initialCheckIn, unitId: unitId),
     );
 
-    // If booking was created successfully, refresh calendar
-    if (result == true && mounted) {
+    // If booking was created successfully, refresh calendar and scroll to new booking
+    if (result != null && mounted) {
+      // CRITICAL: Refresh providers BEFORE scrolling to ensure new data is available
       await Future.wait([
         ref.refresh(calendarBookingsProvider.future),
         ref.refresh(allOwnerUnitsProvider.future),
       ]);
+
+      // Safety delay - ensures widget processes new data before scroll
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      if (mounted) {
+        // Scroll to the newly created booking's check-in date
+        setState(() {
+          _forceScrollKey++;
+          _currentRange = DateRangeSelection.days(result, _visibleDays);
+        });
+      }
     }
   }
 

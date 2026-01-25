@@ -303,9 +303,19 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
         startAfterDocument: state.lastDocument,
       );
 
-      // Append new bookings to existing list
+      // Append new bookings and re-sort entire list by status priority
+      // This ensures pending bookings always appear first, regardless of pagination
+      final allBookings = [...state.bookings, ...result.bookings];
+      allBookings.sort((a, b) {
+        final priorityCompare = b.booking.status.sortPriority.compareTo(
+          a.booking.status.sortPriority,
+        );
+        if (priorityCompare != 0) return priorityCompare;
+        return b.booking.createdAt.compareTo(a.booking.createdAt);
+      });
+
       state = state.copyWith(
-        bookings: [...state.bookings, ...result.bookings],
+        bookings: allBookings,
         lastDocument: result.lastDocument,
         hasMore: result.hasMore,
         isLoadingMore: false,
@@ -485,8 +495,16 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         _addToCache(result.lastDocument!);
       }
 
-      // Append new bookings
+      // Append new bookings and re-sort entire list by status priority
+      // This ensures pending bookings always appear first, regardless of pagination
       final newBookings = [...state.visibleBookings, ...result.bookings];
+      newBookings.sort((a, b) {
+        final priorityCompare = b.booking.status.sortPriority.compareTo(
+          a.booking.status.sortPriority,
+        );
+        if (priorityCompare != 0) return priorityCompare;
+        return b.booking.createdAt.compareTo(a.booking.createdAt);
+      });
 
       state = state.copyWith(
         visibleBookings: newBookings,
@@ -547,8 +565,16 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         _addToCache(result.firstDocument!);
       }
 
-      // Prepend new bookings
+      // Prepend new bookings and re-sort entire list by status priority
+      // This ensures pending bookings always appear first, regardless of pagination
       final newBookings = [...result.bookings, ...state.visibleBookings];
+      newBookings.sort((a, b) {
+        final priorityCompare = b.booking.status.sortPriority.compareTo(
+          a.booking.status.sortPriority,
+        );
+        if (priorityCompare != 0) return priorityCompare;
+        return b.booking.createdAt.compareTo(a.booking.createdAt);
+      });
 
       state = state.copyWith(
         visibleBookings: newBookings,

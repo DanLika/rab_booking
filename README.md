@@ -134,19 +134,6 @@ flutter build web --release
 firebase deploy --only hosting
 ```
 
-### Environment Variables
-
-```bash
-# Stripe
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Resend
-RESEND_API_KEY=re_...
-```
-
----
-
 ## 📚 Documentation
 
 - **[CLAUDE.md](./CLAUDE.md)** - Development standards & critical sections

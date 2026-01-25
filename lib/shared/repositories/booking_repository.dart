@@ -24,7 +24,13 @@ abstract class BookingRepository {
   Future<List<BookingModel>> fetchPropertyBookings(String propertyId);
 
   /// Update booking
-  Future<BookingModel> updateBooking(BookingModel booking);
+  /// [originalBooking] - optional, provide when moving between units to avoid
+  /// collection group query permission issues. Contains the booking's current
+  /// location (unitId, propertyId) before the update.
+  Future<BookingModel> updateBooking(
+    BookingModel booking, {
+    BookingModel? originalBooking,
+  });
 
   /// Update booking status
   Future<BookingModel> updateBookingStatus(String id, BookingStatus status);

@@ -134,9 +134,15 @@ class FirebaseBookingRepository implements BookingRepository {
   }
 
   @override
-  Future<BookingModel> updateBooking(BookingModel booking) async {
-    // First, fetch the existing booking to check if unit changed
-    final existingBooking = await fetchBookingById(booking.id);
+  Future<BookingModel> updateBooking(
+    BookingModel booking, {
+    BookingModel? originalBooking,
+  }) async {
+    // Use provided originalBooking OR fetch from Firestore
+    // IMPORTANT: Provide originalBooking when moving between units to avoid
+    // permission errors from unfiltered collectionGroup queries
+    final existingBooking =
+        originalBooking ?? await fetchBookingById(booking.id);
 
     if (existingBooking == null) {
       throw BookingException('Booking not found', code: 'booking/not-found');

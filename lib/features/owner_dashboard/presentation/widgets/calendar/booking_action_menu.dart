@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -821,12 +822,18 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
       // 2. When moving between units, the booking is DELETE from old path + CREATE at new path
       // 3. Security rule requires: request.resource.data.owner_id == request.auth.uid
       // 4. Without correct propertyId/ownerId, the batch operation fails with permission-denied
+      // 5. Fallback to current user ID if unit has no ownerId (legacy units)
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
       final updatedBooking = widget.booking.copyWith(
         unitId: targetUnit.id,
         propertyId: targetUnit.propertyId,
-        ownerId: targetUnit.ownerId,
+        ownerId: targetUnit.ownerId ?? currentUserId ?? widget.booking.ownerId,
       );
-      await bookingRepo.updateBooking(updatedBooking);
+      // Pass original booking to avoid collectionGroup permission error
+      await bookingRepo.updateBooking(
+        updatedBooking,
+        originalBooking: widget.booking,
+      );
 
       // Refresh calendar
       ref.invalidate(calendarBookingsProvider);

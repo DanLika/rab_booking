@@ -763,7 +763,28 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-23 | **Version**: 6.35
+**Last Updated**: 2026-01-25 | **Version**: 6.36
+
+**Changelog 6.36**: Calendar Timeline Booking Move Fixes:
+- **UI Not Refreshing After Booking Move** (main fix):
+  - **Problem**: After moving booking between units via drag-drop or menu, changes only visible after full app refresh
+  - **Root Cause**: Only `calendarBookingsProvider` was invalidated, but UI watches `timelineCalendarBookingsProvider` (filtered provider)
+  - **Fix** (`calendar_drag_drop_provider.dart`, `booking_action_menu.dart`):
+    - Added `ref.invalidate(timelineCalendarBookingsProvider)` alongside `calendarBookingsProvider`
+    - MUST invalidate BOTH: base provider AND filtered provider that UI watches
+- **"Cannot use ref after widget disposed" Error**:
+  - **Problem**: Error appeared after clicking "Move to" menu item
+  - **Root Cause**: `Navigator.pop(context)` called BEFORE `_moveBookingToUnit()`, so `ref.invalidate()` executed after widget disposal
+  - **Fix** (`booking_action_menu.dart`):
+    - Execute move operation FIRST (while dialog still open)
+    - Close dialog AFTER operation completes with `if (mounted && context.mounted)` check
+    - Changed `_moveBookingToUnit` return type from `void` to `bool` for proper flow control
+- **Provider Invalidation Pattern** (Important for future reference):
+  ```dart
+  // CORRECT - invalidate both base AND filtered providers
+  ref.invalidate(calendarBookingsProvider);        // base provider
+  ref.invalidate(timelineCalendarBookingsProvider); // filtered provider UI watches
+  ```
 
 **Changelog 6.35**: Web Push Notifications (FCM):
 - **NEW FEATURE**: Push notifications za Owner Dashboard (web)

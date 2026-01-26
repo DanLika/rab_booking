@@ -22,9 +22,10 @@ final pendingBookingIdProvider = StateProvider.autoDispose<String?>(
 
 // Note: OwnerBooking is defined in firebase_owner_bookings_repository.dart (already imported above)
 
-/// Updates a booking's status in a list and re-sorts by priority
+/// Updates a booking's status in a list and re-sorts
 ///
-/// Returns a new list with the updated booking and proper sorting
+/// Sorting: Pending bookings first (by check-in), then others by check-in (soonest first)
+/// This matches the repository sorting for "All" filter
 List<OwnerBooking> _updateBookingStatusInList(
   List<OwnerBooking> bookings,
   String bookingId,
@@ -44,13 +45,13 @@ List<OwnerBooking> _updateBookingStatusInList(
     return ownerBooking;
   }).toList();
 
-  // Re-sort by status priority, then by createdAt
+  // Re-sort: pending first, then all by check-in (soonest first)
   updatedBookings.sort((a, b) {
-    final priorityCompare = b.booking.status.sortPriority.compareTo(
-      a.booking.status.sortPriority,
-    );
-    if (priorityCompare != 0) return priorityCompare;
-    return b.booking.createdAt.compareTo(a.booking.createdAt);
+    final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
+    final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
+    if (aPending != bPending) return aPending.compareTo(bPending);
+    // Both pending and non-pending: sort by check-in (soonest first)
+    return a.booking.checkIn.compareTo(b.booking.checkIn);
   });
 
   return updatedBookings;
@@ -303,15 +304,13 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
         startAfterDocument: state.lastDocument,
       );
 
-      // Append new bookings and re-sort entire list by status priority
-      // This ensures pending bookings always appear first, regardless of pagination
+      // Append new bookings and re-sort: pending first, then all by check-in (soonest first)
       final allBookings = [...state.bookings, ...result.bookings];
       allBookings.sort((a, b) {
-        final priorityCompare = b.booking.status.sortPriority.compareTo(
-          a.booking.status.sortPriority,
-        );
-        if (priorityCompare != 0) return priorityCompare;
-        return b.booking.createdAt.compareTo(a.booking.createdAt);
+        final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
+        final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
+        if (aPending != bPending) return aPending.compareTo(bPending);
+        return a.booking.checkIn.compareTo(b.booking.checkIn);
       });
 
       state = state.copyWith(
@@ -495,15 +494,13 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         _addToCache(result.lastDocument!);
       }
 
-      // Append new bookings and re-sort entire list by status priority
-      // This ensures pending bookings always appear first, regardless of pagination
+      // Append new bookings and re-sort: pending first, then all by check-in (soonest first)
       final newBookings = [...state.visibleBookings, ...result.bookings];
       newBookings.sort((a, b) {
-        final priorityCompare = b.booking.status.sortPriority.compareTo(
-          a.booking.status.sortPriority,
-        );
-        if (priorityCompare != 0) return priorityCompare;
-        return b.booking.createdAt.compareTo(a.booking.createdAt);
+        final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
+        final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
+        if (aPending != bPending) return aPending.compareTo(bPending);
+        return a.booking.checkIn.compareTo(b.booking.checkIn);
       });
 
       state = state.copyWith(
@@ -565,15 +562,13 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         _addToCache(result.firstDocument!);
       }
 
-      // Prepend new bookings and re-sort entire list by status priority
-      // This ensures pending bookings always appear first, regardless of pagination
+      // Prepend new bookings and re-sort: pending first, then all by check-in (soonest first)
       final newBookings = [...result.bookings, ...state.visibleBookings];
       newBookings.sort((a, b) {
-        final priorityCompare = b.booking.status.sortPriority.compareTo(
-          a.booking.status.sortPriority,
-        );
-        if (priorityCompare != 0) return priorityCompare;
-        return b.booking.createdAt.compareTo(a.booking.createdAt);
+        final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
+        final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
+        if (aPending != bPending) return aPending.compareTo(bPending);
+        return a.booking.checkIn.compareTo(b.booking.checkIn);
       });
 
       state = state.copyWith(

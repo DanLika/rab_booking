@@ -699,57 +699,69 @@ class FirebaseOwnerBookingsRepository {
     );
 
     // Strategy 2: Fallback - check legacy top-level bookings collection
-    final legacyDoc = await _firestore
-        .collection('bookings')
-        .doc(bookingId)
-        .get();
-    if (legacyDoc.exists) {
-      // Verify ownership via property lookup
-      final data = legacyDoc.data()!;
-      final propertyId = data['property_id'] as String?;
-      if (propertyId != null) {
-        final propertyDoc = await _firestore
-            .collection('properties')
-            .doc(propertyId)
-            .get();
-        if (propertyDoc.exists && propertyDoc.data()?['owner_id'] == userId) {
-          return legacyDoc;
+    // Wrapped in try-catch because permission-denied is thrown if booking
+    // exists but belongs to another owner
+    try {
+      final legacyDoc = await _firestore
+          .collection('bookings')
+          .doc(bookingId)
+          .get();
+      if (legacyDoc.exists) {
+        // Verify ownership via property lookup
+        final data = legacyDoc.data()!;
+        final propertyId = data['property_id'] as String?;
+        if (propertyId != null) {
+          final propertyDoc = await _firestore
+              .collection('properties')
+              .doc(propertyId)
+              .get();
+          if (propertyDoc.exists && propertyDoc.data()?['owner_id'] == userId) {
+            return legacyDoc;
+          }
         }
       }
+    } catch (e) {
+      // Permission denied - booking exists but user doesn't have access
+      debugPrint('[_findBookingById] Strategy 2: Permission denied or error');
     }
 
     // Strategy 3: Last resort - search all bookings in owner's properties
     // This handles edge cases where owner_id might not be set on the booking
-    final propertiesSnapshot = await _firestore
-        .collection('properties')
-        .where('owner_id', isEqualTo: userId)
-        .get();
-
-    for (final propDoc in propertiesSnapshot.docs) {
-      // Check units subcollection
-      final unitsSnapshot = await _firestore
+    try {
+      final propertiesSnapshot = await _firestore
           .collection('properties')
-          .doc(propDoc.id)
-          .collection('units')
+          .where('owner_id', isEqualTo: userId)
           .get();
 
-      for (final unitDoc in unitsSnapshot.docs) {
-        // Check if booking exists in this unit's bookings subcollection
-        final bookingDoc = await _firestore
+      for (final propDoc in propertiesSnapshot.docs) {
+        // Check units subcollection
+        final unitsSnapshot = await _firestore
             .collection('properties')
             .doc(propDoc.id)
             .collection('units')
-            .doc(unitDoc.id)
-            .collection('bookings')
-            .doc(bookingId)
             .get();
 
-        if (bookingDoc.exists) {
-          return bookingDoc;
+        for (final unitDoc in unitsSnapshot.docs) {
+          // Check if booking exists in this unit's bookings subcollection
+          final bookingDoc = await _firestore
+              .collection('properties')
+              .doc(propDoc.id)
+              .collection('units')
+              .doc(unitDoc.id)
+              .collection('bookings')
+              .doc(bookingId)
+              .get();
+
+          if (bookingDoc.exists) {
+            return bookingDoc;
+          }
         }
       }
+    } catch (e) {
+      debugPrint('[_findBookingById] Strategy 3: Error during search: $e');
     }
 
+    debugPrint('[_findBookingById] Booking not found in any strategy');
     return null;
   }
 
@@ -987,8 +999,22 @@ class FirebaseOwnerBookingsRepository {
   }
 
   /// Permanently delete booking
-  Future<void> deleteBooking(String bookingId) async {
+  /// [booking] - optional, provide to avoid collection group query permission issues
+  Future<void> deleteBooking(String bookingId, {BookingModel? booking}) async {
     try {
+      // If booking is provided, use direct path (avoids permission issues)
+      if (booking != null) {
+        await _firestore
+            .collection('properties')
+            .doc(booking.propertyId)
+            .collection('units')
+            .doc(booking.unitId)
+            .collection('bookings')
+            .doc(bookingId)
+            .delete();
+        return;
+      }
+
       // Find booking using helper method (avoids FieldPath.documentId bug)
       final bookingDoc = await _findBookingById(bookingId);
 
@@ -1081,8 +1107,12 @@ class FirebaseOwnerBookingsRepository {
   /// Get paginated bookings for owner with Firestore cursor
   /// Uses server-side pagination - only fetches [limit] bookings per page
   ///
-  /// NOTE: Ordering is by created_at DESC (most recent first)
-  /// Status priority sorting is done client-side on each page
+  /// For "All" filter (status == null): Uses TWO queries to ensure pending
+  /// bookings always appear first, regardless of creation date:
+  /// 1. First query: Get ALL pending bookings (typically few)
+  /// 2. Second query: Get paginated non-pending bookings
+  ///
+  /// For specific status filter: Uses single paginated query
   Future<PaginatedBookingsResult> getOwnerBookingsPaginated({
     required String ownerId,
     required List<String> unitIds, // Pre-fetched unit IDs
@@ -1113,17 +1143,28 @@ class FirebaseOwnerBookingsRepository {
         }
       }
 
-      // NEW STRUCTURE: Single collection group query (no batching!)
+      // ========= SPECIAL HANDLING FOR "ALL" FILTER =========
+      // When showing all bookings, we want pending to always appear first
+      // regardless of their creation date. This requires two queries.
+      if (status == null) {
+        return _getOwnerBookingsPaginatedAllStatuses(
+          ownerId: ownerId,
+          filteredUnitIds: filteredUnitIds,
+          propertyId: propertyId,
+          startDate: startDate,
+          endDate: endDate,
+          limit: limit,
+          startAfterDocument: startAfterDocument,
+        );
+      }
+
+      // ========= SINGLE STATUS FILTER (original logic) =========
       Query<Map<String, dynamic>> query = _firestore
           .collectionGroup('bookings')
           .where('owner_id', isEqualTo: ownerId)
+          .where('status', isEqualTo: status.value)
           .orderBy('created_at', descending: true)
-          .limit(limit + 1); // Fetch limit + 1 to check if there are more
-
-      // Apply filters
-      if (status != null) {
-        query = query.where('status', isEqualTo: status.value);
-      }
+          .limit(limit + 1);
 
       // Apply cursor
       if (startAfterDocument != null) {
@@ -1166,14 +1207,10 @@ class FirebaseOwnerBookingsRepository {
       // Fetch related data for this page only
       final ownerBookings = await _enrichBookingsWithRelatedData(bookings);
 
-      // Sort by status priority (client-side for this page)
-      ownerBookings.sort((a, b) {
-        final priorityCompare = b.booking.status.sortPriority.compareTo(
-          a.booking.status.sortPriority,
-        );
-        if (priorityCompare != 0) return priorityCompare;
-        return b.booking.createdAt.compareTo(a.booking.createdAt);
-      });
+      // Sort by check-in date (soonest first) for single status filter
+      ownerBookings.sort(
+        (a, b) => a.booking.checkIn.compareTo(b.booking.checkIn),
+      );
 
       return PaginatedBookingsResult(
         bookings: ownerBookings,
@@ -1189,10 +1226,224 @@ class FirebaseOwnerBookingsRepository {
     }
   }
 
+  /// Helper for "All" status filter - ensures pending bookings appear first
+  /// Uses two separate queries:
+  /// 1. Get ALL pending bookings (limited to 100 for safety)
+  /// 2. Get paginated non-pending bookings
+  Future<PaginatedBookingsResult> _getOwnerBookingsPaginatedAllStatuses({
+    required String ownerId,
+    required List<String> filteredUnitIds,
+    String? propertyId,
+    DateTime? startDate,
+    DateTime? endDate,
+    required int limit,
+    DocumentSnapshot? startAfterDocument,
+  }) async {
+    // DEBUG: Log function parameters
+    debugPrint(
+      '[BookingsRepo] _getOwnerBookingsPaginatedAllStatuses called with:'
+      '\n  ownerId=$ownerId'
+      '\n  filteredUnitIds.length=${filteredUnitIds.length}'
+      '\n  filteredUnitIds=$filteredUnitIds'
+      '\n  limit=$limit'
+      '\n  hasCursor=${startAfterDocument != null}',
+    );
+
+    // ===== QUERY 1: Get ALL pending bookings (they should always be first) =====
+    // Pending bookings are typically few, so we fetch all (capped at 100)
+    final pendingQuery = _firestore
+        .collectionGroup('bookings')
+        .where('owner_id', isEqualTo: ownerId)
+        .where('status', isEqualTo: BookingStatus.pending.value)
+        .orderBy('check_in', descending: false) // Soonest check-in first
+        .limit(100); // Safety cap - no owner should have 100+ pending
+
+    late final QuerySnapshot<Map<String, dynamic>> pendingSnapshot;
+    try {
+      pendingSnapshot = await pendingQuery.get().withListFetchTimeout(
+        'getOwnerBookingsPaginated_pending',
+      );
+    } catch (e) {
+      debugPrint('[BookingsRepo] ERROR in pending query: $e');
+      rethrow;
+    }
+
+    // Parse pending bookings
+    final List<BookingModel> pendingBookings = [];
+    debugPrint(
+      '[BookingsRepo] Pending query returned ${pendingSnapshot.docs.length} docs',
+    );
+    for (final doc in pendingSnapshot.docs) {
+      try {
+        final booking = _bookingFromDoc(doc);
+        // Apply client-side filters
+        if (!filteredUnitIds.contains(booking.unitId)) {
+          debugPrint(
+            '[BookingsRepo] PENDING FILTERED: ${doc.id} - unitId ${booking.unitId} not in filteredUnitIds',
+          );
+          continue;
+        }
+        if (propertyId != null && booking.propertyId != propertyId) continue;
+        if (startDate != null && booking.checkIn.isBefore(startDate)) continue;
+        if (endDate != null && booking.checkOut.isAfter(endDate)) continue;
+        pendingBookings.add(booking);
+      } catch (e) {
+        debugPrint('[BookingsRepo] PARSE ERROR for pending doc ${doc.id}: $e');
+      }
+    }
+
+    // ===== QUERY 2: Get NON-pending bookings =====
+    // Run separate queries for each status to avoid whereIn + orderBy index issues
+    // Then merge and sort results client-side
+    final nonPendingStatuses = [
+      BookingStatus.confirmed,
+      BookingStatus.completed,
+      BookingStatus.cancelled,
+    ];
+
+    final List<QueryDocumentSnapshot<Map<String, dynamic>>> allNonPendingDocs =
+        [];
+
+    for (final status in nonPendingStatuses) {
+      try {
+        Query<Map<String, dynamic>> statusQuery = _firestore
+            .collectionGroup('bookings')
+            .where('owner_id', isEqualTo: ownerId)
+            .where('status', isEqualTo: status.value)
+            .orderBy('check_in', descending: false) // Soonest check-in first
+            .limit(limit + 1);
+
+        // Apply cursor for pagination (only applies to this status's results)
+        // Note: Cursor is less precise with merged queries, but still functional
+        if (startAfterDocument != null) {
+          statusQuery = statusQuery.startAfterDocument(startAfterDocument);
+        }
+
+        final snapshot = await statusQuery.get().withListFetchTimeout(
+          'getOwnerBookingsPaginated_${status.value}',
+        );
+
+        debugPrint(
+          '[BookingsRepo] ${status.value} query returned ${snapshot.docs.length} docs',
+        );
+
+        allNonPendingDocs.addAll(snapshot.docs);
+      } catch (e) {
+        debugPrint('[BookingsRepo] ERROR in ${status.value} query: $e');
+        // Continue with other statuses even if one fails
+      }
+    }
+
+    // Sort all non-pending docs by check_in date (soonest first)
+    allNonPendingDocs.sort((a, b) {
+      final aCheckIn = a.data()['check_in'];
+      final bCheckIn = b.data()['check_in'];
+      if (aCheckIn is Timestamp && bCheckIn is Timestamp) {
+        return aCheckIn.compareTo(bCheckIn); // Ascending (soonest first)
+      }
+      return 0;
+    });
+
+    // DEBUG: Log merged results
+    debugPrint(
+      '[BookingsRepo] Merged non-pending docs: ${allNonPendingDocs.length} total',
+    );
+    for (final doc in allNonPendingDocs.take(3)) {
+      debugPrint(
+        '[BookingsRepo] Doc: ${doc.id}, status: ${doc.data()['status']}, check_in: ${doc.data()['check_in']}',
+      );
+    }
+
+    // Check if there are more non-pending pages (approximation - we fetched limit+1 per status)
+    final hasMoreNonPending = allNonPendingDocs.length > limit;
+    final nonPendingDocs = allNonPendingDocs.take(limit).toList();
+    final lastDoc = nonPendingDocs.isNotEmpty ? nonPendingDocs.last : null;
+
+    // DEBUG: Log filtering
+    debugPrint('[BookingsRepo] filteredUnitIds: $filteredUnitIds');
+
+    // Parse non-pending bookings
+    final List<BookingModel> nonPendingBookings = [];
+    for (final doc in nonPendingDocs) {
+      try {
+        final booking = _bookingFromDoc(doc);
+        debugPrint(
+          '[BookingsRepo] Non-pending doc: ${doc.id}, status=${booking.status.value}, unitId=${booking.unitId}',
+        );
+        // Apply client-side filters
+        if (!filteredUnitIds.contains(booking.unitId)) {
+          debugPrint(
+            '[BookingsRepo] FILTERED OUT: ${doc.id} - unitId ${booking.unitId} not in filteredUnitIds',
+          );
+          continue;
+        }
+        if (propertyId != null && booking.propertyId != propertyId) continue;
+        if (startDate != null && booking.checkIn.isBefore(startDate)) continue;
+        if (endDate != null && booking.checkOut.isAfter(endDate)) continue;
+        nonPendingBookings.add(booking);
+        debugPrint('[BookingsRepo] ADDED: ${doc.id} to nonPendingBookings');
+      } catch (e) {
+        debugPrint(
+          '[BookingsRepo] PARSE ERROR for non-pending doc ${doc.id}: $e',
+        );
+      }
+    }
+
+    // ===== MERGE: Pending first, then non-pending =====
+    // On first page (no cursor), include pending + non-pending up to limit
+    // On subsequent pages, only non-pending (pending already shown)
+    final List<BookingModel> allBookings;
+    final bool hasMore;
+
+    if (startAfterDocument == null) {
+      // First page: pending bookings first, then fill with non-pending
+      allBookings = [...pendingBookings];
+      final remainingSlots = limit - pendingBookings.length;
+      if (remainingSlots > 0) {
+        allBookings.addAll(nonPendingBookings.take(remainingSlots));
+      }
+      // hasMore = true if we have more non-pending OR pending filled the page
+      hasMore = hasMoreNonPending || pendingBookings.length >= limit;
+    } else {
+      // Subsequent pages: only non-pending (pending was on first page)
+      allBookings = nonPendingBookings;
+      hasMore = hasMoreNonPending;
+    }
+
+    // DEBUG: Log final counts
+    debugPrint(
+      '[BookingsRepo] MERGE: pending=${pendingBookings.length}, nonPending=${nonPendingBookings.length}, total=${allBookings.length}',
+    );
+
+    if (allBookings.isEmpty) {
+      return const PaginatedBookingsResult(bookings: [], hasMore: false);
+    }
+
+    // Fetch related data
+    final ownerBookings = await _enrichBookingsWithRelatedData(allBookings);
+
+    // Sort: pending first (by check-in), then others by check-in (soonest first)
+    ownerBookings.sort((a, b) {
+      final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
+      final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
+      if (aPending != bPending) return aPending.compareTo(bPending);
+      // Both pending and non-pending: sort by check-in (soonest first)
+      return a.booking.checkIn.compareTo(b.booking.checkIn);
+    });
+
+    return PaginatedBookingsResult(
+      bookings: ownerBookings,
+      lastDocument: lastDoc,
+      hasMore: hasMore,
+    );
+  }
+
   /// Get bookings BEFORE a cursor (for scrolling up / loading previous items)
-  /// Returns items ordered by created_at DESC, ending before the cursor
+  /// Returns items ordered by check_in ASC, ending before the cursor
   ///
   /// Used for bidirectional windowing when user scrolls back up
+  /// NOTE: For "All" filter, pending bookings are always at the top (first page)
+  /// so scrolling up from non-pending will load more non-pending, not pending
   Future<BidirectionalBookingsResult> getOwnerBookingsBefore({
     required String ownerId,
     required List<String> unitIds,
@@ -1231,16 +1482,34 @@ class FirebaseOwnerBookingsRepository {
         }
       }
 
-      // NEW STRUCTURE: Use collection group query with endBeforeDocument cursor
-      Query<Map<String, dynamic>> query = _firestore
-          .collectionGroup('bookings')
-          .where('owner_id', isEqualTo: ownerId)
-          .orderBy('created_at', descending: true)
-          .endBeforeDocument(endBeforeDocument)
-          .limitToLast(limit + 1); // Fetch limit + 1 to check if there are more
+      // Build query based on status filter
+      Query<Map<String, dynamic>> query;
 
-      if (status != null) {
-        query = query.where('status', isEqualTo: status.value);
+      if (status == null) {
+        // "All" filter: query non-pending only (pending is always on first page)
+        query = _firestore
+            .collectionGroup('bookings')
+            .where('owner_id', isEqualTo: ownerId)
+            .where(
+              'status',
+              whereIn: [
+                BookingStatus.confirmed.value,
+                BookingStatus.completed.value,
+                BookingStatus.cancelled.value,
+              ],
+            )
+            .orderBy('check_in', descending: false)
+            .endBeforeDocument(endBeforeDocument)
+            .limitToLast(limit + 1);
+      } else {
+        // Single status filter
+        query = _firestore
+            .collectionGroup('bookings')
+            .where('owner_id', isEqualTo: ownerId)
+            .where('status', isEqualTo: status.value)
+            .orderBy('check_in', descending: false)
+            .endBeforeDocument(endBeforeDocument)
+            .limitToLast(limit + 1);
       }
 
       final snapshot = await query.get();
@@ -1280,14 +1549,10 @@ class FirebaseOwnerBookingsRepository {
       // Fetch related data
       final ownerBookings = await _enrichBookingsWithRelatedData(bookings);
 
-      // Sort by status priority (client-side)
-      ownerBookings.sort((a, b) {
-        final priorityCompare = b.booking.status.sortPriority.compareTo(
-          a.booking.status.sortPriority,
-        );
-        if (priorityCompare != 0) return priorityCompare;
-        return b.booking.createdAt.compareTo(a.booking.createdAt);
-      });
+      // Sort by check-in date (soonest first)
+      ownerBookings.sort(
+        (a, b) => a.booking.checkIn.compareTo(b.booking.checkIn),
+      );
 
       return BidirectionalBookingsResult(
         bookings: ownerBookings,

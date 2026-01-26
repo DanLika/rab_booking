@@ -436,6 +436,29 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       style: theme.textTheme.titleMedium,
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Molimo osvježite aplikaciju ili pokušajte ponovno.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        ref.invalidate(ownerPropertiesProvider);
+                        ref.invalidate(ownerUnitsProvider);
+                      },
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: Text(l10n.tryAgain),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -481,7 +504,33 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ),
       error: (error, stack) {
         final l10n = AppLocalizations.of(context);
-        return Center(child: Text(l10n.unitHubError(error.toString())));
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 48,
+                  color: theme.colorScheme.error.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.unitHubError(error.toString()),
+                  style: theme.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () => ref.invalidate(ownerUnitsProvider),
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: Text(l10n.tryAgain),
+                ),
+              ],
+            ),
+          ),
+        );
       },
       data: (allUnits) {
         // Group units by property

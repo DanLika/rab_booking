@@ -230,6 +230,7 @@ class UnitFutureBookingsDialog extends StatelessWidget {
                 fontSize: 16,
                 color: theme.colorScheme.onSurface,
               ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppDimensions.spaceXS),
             Text(

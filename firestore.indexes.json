@@ -451,6 +451,20 @@
       ]
     },
     {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "check_in",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "booking_services",
       "queryScope": "COLLECTION_GROUP",
       "fields": [

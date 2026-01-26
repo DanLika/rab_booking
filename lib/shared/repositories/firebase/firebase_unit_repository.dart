@@ -3,6 +3,7 @@ import '../unit_repository.dart';
 import '../../models/unit_model.dart';
 import '../../../core/exceptions/app_exceptions.dart';
 import '../../../core/utils/timestamp_converter.dart';
+import '../../../core/services/logging_service.dart';
 
 class FirebaseUnitRepository implements UnitRepository {
   final FirebaseFirestore _firestore;
@@ -280,5 +281,55 @@ class FirebaseUnitRepository implements UnitRepository {
     }
 
     return false;
+  }
+
+  @override
+  Future<UnitModel?> fetchUnitByIdFresh({
+    required String unitId,
+    required String propertyId,
+  }) async {
+    // PRICE MISMATCH FIX: Use direct path query with Source.server
+    // This bypasses Firestore cache and ensures fresh pricing data
+    // Critical for booking submissions where stale prices cause 50% mismatches
+    try {
+      final docSnapshot = await _firestore
+          .collection('properties')
+          .doc(propertyId)
+          .collection('units')
+          .doc(unitId)
+          .get(const GetOptions(source: Source.server));
+
+      if (!docSnapshot.exists) {
+        LoggingService.log(
+          '⚠️ [PRICE_FIX] Unit not found with fresh fetch: $unitId',
+          tag: 'UNIT_REPOSITORY',
+        );
+        return null;
+      }
+
+      final unit = UnitModel.fromJson({
+        ...docSnapshot.data()!,
+        'id': docSnapshot.id,
+        'property_id': propertyId,
+      });
+
+      LoggingService.log(
+        '✅ [PRICE_FIX] Fresh unit fetch: unitId=$unitId, '
+        'pricePerNight=${unit.pricePerNight}, '
+        'weekendBasePrice=${unit.weekendBasePrice}',
+        tag: 'UNIT_REPOSITORY',
+      );
+
+      return unit;
+    } on FirebaseException catch (e) {
+      // If server is unavailable, fall back to cache with warning
+      if (e.code == 'unavailable') {
+        LoggingService.logWarning(
+          '[PRICE_FIX] Server unavailable, falling back to cache for unit $unitId',
+        );
+        return fetchUnitById(unitId);
+      }
+      rethrow;
+    }
   }
 }

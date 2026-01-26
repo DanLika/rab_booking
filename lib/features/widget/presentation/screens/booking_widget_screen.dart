@@ -3425,6 +3425,144 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       return;
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRICE MISMATCH FIX: Revalidate price with fresh server data before submission
+    // This prevents 50% price mismatch errors caused by stale cached unit data.
+    // ═══════════════════════════════════════════════════════════════════════
+    try {
+      final unitRepo = ref.read(unitRepositoryProvider);
+      final freshUnit = await unitRepo.fetchUnitByIdFresh(
+        unitId: _unitId,
+        propertyId: _propertyId!,
+      );
+
+      if (freshUnit != null) {
+        final freshBasePrice = freshUnit.pricePerNight;
+        final currentAvgPrice = finalCalculation.nights > 0
+            ? finalCalculation.roomPrice / finalCalculation.nights
+            : 0.0;
+
+        // Log the comparison for debugging
+        LoggingService.log(
+          '🔄 [PRICE_FIX] Pre-submission validation: '
+          'freshBasePrice=$freshBasePrice, '
+          'currentAvgPrice=$currentAvgPrice, '
+          'totalPrice=${finalCalculation.totalPrice}',
+          tag: 'PRICE_VALIDATION',
+        );
+
+        // Check if base price differs significantly (> €1 difference per night)
+        // This indicates stale cache - need to recalculate
+        final priceDiff = (freshBasePrice - currentAvgPrice).abs();
+        if (priceDiff > 1.0) {
+          LoggingService.logWarning(
+            '[PRICE_FIX] Significant price difference detected! '
+            'freshBase=$freshBasePrice, currentAvg=$currentAvgPrice, diff=$priceDiff',
+          );
+
+          // Recalculate with fresh data using the repository
+          final repository = ref.read(bookingCalendarRepositoryProvider);
+          final freshRoomPrice = await repository.calculateBookingPrice(
+            unitId: _unitId,
+            checkIn: _checkIn!,
+            checkOut: _checkOut!,
+            basePrice: freshBasePrice,
+            weekendBasePrice: freshUnit.weekendBasePrice,
+            weekendDays: freshUnit.weekendDays,
+          );
+
+          // Calculate the new total (room price + services)
+          final freshTotal =
+              freshRoomPrice + finalCalculation.additionalServicesTotal;
+          final oldTotal = finalCalculation.totalPrice;
+          final totalDiff = (freshTotal - oldTotal).abs();
+
+          LoggingService.log(
+            '🔄 [PRICE_FIX] Price recalculated: '
+            'old=$oldTotal, fresh=$freshTotal, diff=$totalDiff',
+            tag: 'PRICE_VALIDATION',
+          );
+
+          // If total differs by more than €0.50, confirm with user
+          if (totalDiff > 0.50 && mounted) {
+            final shouldProceed = await showDialog<bool>(
+              context: context,
+              barrierDismissible: false,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Price Updated'),
+                content: Text(
+                  'The price has been updated since you started booking.\n\n'
+                  'Previous price: €${oldTotal.toStringAsFixed(2)}\n'
+                  'Current price: €${freshTotal.toStringAsFixed(2)}\n\n'
+                  'Would you like to continue with the updated price?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    child: const Text('Continue'),
+                  ),
+                ],
+              ),
+            );
+
+            if (shouldProceed != true) {
+              LoggingService.log(
+                '❌ [PRICE_FIX] User cancelled booking due to price change',
+                tag: 'PRICE_VALIDATION',
+              );
+              return;
+            }
+
+            // Update finalCalculation with fresh price
+            final depositPercentage =
+                _widgetSettings?.globalDepositPercentage ?? 20;
+            final newDeposit =
+                (depositPercentage == 0 || depositPercentage == 100)
+                ? freshTotal
+                : (freshTotal * depositPercentage).roundToDouble() / 100;
+            final newRemaining =
+                (depositPercentage == 0 || depositPercentage == 100)
+                ? 0.0
+                : (freshTotal * (100 - depositPercentage)).roundToDouble() /
+                      100;
+
+            finalCalculation = BookingPriceCalculation(
+              roomPrice: freshRoomPrice,
+              additionalServicesTotal: finalCalculation.additionalServicesTotal,
+              depositAmount: newDeposit,
+              remainingAmount: newRemaining,
+              nights: finalCalculation.nights,
+              priceLockTimestamp: DateTime.now(),
+              lockedTotalPrice: freshTotal,
+            );
+
+            LoggingService.log(
+              '✅ [PRICE_FIX] User accepted updated price: €$freshTotal',
+              tag: 'PRICE_VALIDATION',
+            );
+          }
+        }
+      }
+    } catch (e, stackTrace) {
+      // Non-blocking: if fresh fetch fails, proceed with existing price
+      // Server will do final validation anyway
+      LoggingService.logWarning(
+        '[PRICE_FIX] Fresh price validation failed, proceeding with cached price: $e',
+      );
+      unawaited(
+        LoggingService.logError(
+          'Price revalidation failed before booking submission',
+          e,
+          stackTrace,
+        ),
+      );
+    }
+    // ═══════════════════════════════════════════════════════════════════════
+
     if (mounted) {
       setState(() {
         _isProcessing = true;

@@ -99,6 +99,10 @@ class BookingPriceCalculation {
 ///
 /// OPTIMIZED: Now accepts optional [propertyId] to reuse cached unit data
 /// from [widgetContextProvider], eliminating duplicate Firestore queries.
+///
+/// PRICE MISMATCH FIX: When [forceServerFetch] is true, bypasses all caches
+/// and fetches fresh unit data directly from Firestore server. Use this
+/// before booking submission to prevent stale price errors.
 @riverpod
 Future<BookingPriceCalculation?> bookingPrice(
   Ref ref, {
@@ -108,6 +112,8 @@ Future<BookingPriceCalculation?> bookingPrice(
   String?
   propertyId, // Optional: enables cache reuse from widgetContextProvider
   int depositPercentage = 20, // Configurable deposit percentage (0-100)
+  bool forceServerFetch =
+      false, // PRICE FIX: Force fresh server fetch for booking submission
 }) async {
   // Return null if dates not selected
   if (checkIn == null || checkOut == null) {
@@ -123,7 +129,30 @@ Future<BookingPriceCalculation?> bookingPrice(
   double? weekendBasePrice;
   List<int>? weekendDays;
 
-  if (propertyId != null) {
+  // PRICE MISMATCH FIX: Force fresh fetch from server before booking submission
+  // This prevents 50% price mismatch errors caused by stale cached unit data
+  if (forceServerFetch && propertyId != null) {
+    final unitRepo = ref.watch(unitRepositoryProvider);
+    final unit = await unitRepo.fetchUnitByIdFresh(
+      unitId: unitId,
+      propertyId: propertyId,
+    );
+    if (unit != null) {
+      basePrice = unit.pricePerNight;
+      weekendBasePrice = unit.weekendBasePrice;
+      weekendDays = unit.weekendDays;
+
+      LoggingService.log(
+        '🔄 [PRICE_FIX] Fresh price fetch for booking: '
+        'basePrice=$basePrice, weekendPrice=$weekendBasePrice',
+        tag: 'BOOKING_PRICE',
+      );
+    } else {
+      LoggingService.logWarning(
+        '[PRICE_FIX] Fresh fetch failed for unit $unitId, using fallback',
+      );
+    }
+  } else if (propertyId != null) {
     // Try to get unit from cached context (no additional query)
     try {
       final context = await ref.read(

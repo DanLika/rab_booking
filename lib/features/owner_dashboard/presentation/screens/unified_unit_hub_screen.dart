@@ -1280,9 +1280,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     // Build individual cards as widgets for flex layout
     final l10n = AppLocalizations.of(context);
 
-    // Check if unit has photos
-    final hasPhotos = _selectedUnit!.images.isNotEmpty;
-
     // Capacity section - compact, fixed height
     final kapacitetCard = _buildInfoCard(
       theme,
@@ -1363,22 +1360,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ],
     );
 
-    // Photos section - only build if photos exist
-    Widget? photosCard;
-    if (hasPhotos) {
-      photosCard = _buildInfoCard(
-        theme,
-        title: l10n.unitHubPhotosSection,
-        icon: Icons.photo_library_outlined,
-        isMobile: isMobile,
-        children: _buildImageGridContent(
-          theme,
-          imageSize: isDesktop ? 80 : 100,
-          l10n: l10n,
-        ),
-      );
-    }
-
     return ListView(
       // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
       physics: PlatformScrollPhysics.adaptive,
@@ -1445,7 +1426,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         const SizedBox(height: 24),
 
         // Unit Details Cards - Layout based on screen size
-        // Order: Information → Capacity → Pricing → Photos (matches Unit Wizard flow)
+        // Order: Information → Capacity → Pricing
         if (isDesktop) ...[
           // Desktop: Row 1: Information (Basic Info) + Capacity
           Row(
@@ -1457,18 +1438,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             ],
           ),
           const SizedBox(height: 14),
-          // Desktop: Row 2: Pricing + Photos (or full-width if no photos)
-          if (hasPhotos)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: cijenaCard),
-                const SizedBox(width: 14),
-                Expanded(child: photosCard!),
-              ],
-            )
-          else
-            cijenaCard,
+          cijenaCard,
         ] else if (isTablet) ...[
           // Tablet (800-900px): Information + Capacity side by side, then stacked
           Row(
@@ -1481,7 +1451,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ),
           const SizedBox(height: 14),
           cijenaCard,
-          if (hasPhotos) ...[const SizedBox(height: 14), photosCard!],
         ] else ...[
           // Mobile (<800px): All stacked in wizard order
           informacijeCard,
@@ -1489,7 +1458,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           kapacitetCard,
           const SizedBox(height: 14),
           cijenaCard,
-          if (hasPhotos) ...[const SizedBox(height: 14), photosCard!],
         ],
       ],
     );
@@ -1670,86 +1638,5 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ],
       ),
     );
-  }
-
-  /// Builds the image grid for unit photos
-  /// [imageSize] - Size of each image thumbnail (desktop: 80, mobile: 100)
-  List<Widget> _buildImageGridContent(
-    ThemeData theme, {
-    required double imageSize,
-    required AppLocalizations l10n,
-  }) {
-    if (_selectedUnit == null) return [];
-
-    final images = _selectedUnit!.images;
-    if (images.isEmpty) {
-      return [
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.photo_library_outlined,
-                  size: 32,
-                  color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                    (0.4 * 255).toInt(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.unitHubNoPhotos,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                      (0.6 * 255).toInt(),
-                    ),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ];
-    }
-
-    return [
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: images.take(6).map((imageUrl) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              imageUrl,
-              width: imageSize,
-              height: imageSize,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: imageSize,
-                  height: imageSize,
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                );
-              },
-            ),
-          );
-        }).toList(),
-      ),
-      if (images.length > 6)
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(
-            l10n.unitHubMorePhotos(images.length - 6),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-    ];
   }
 }

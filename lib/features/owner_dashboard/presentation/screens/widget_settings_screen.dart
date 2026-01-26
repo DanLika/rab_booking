@@ -1566,7 +1566,10 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
 
                   // Build cancellation deadline card (only shown when cancellation is enabled)
                   final deadlineCard = Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: _allowCancellation
                           ? Theme.of(context).colorScheme.primaryContainer
@@ -1619,7 +1622,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 4),
                         SliderTheme(
                           data: SliderTheme.of(context).copyWith(
                             activeTrackColor: _allowCancellation

@@ -1,3 +1,4 @@
+import 'package:bookbed/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,7 +6,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../data/admin_users_repository.dart';
 
-/// User detail screen with edit functionality
+/// Responsive breakpoint for mobile layout
+const double _mobileBreakpoint = 900.0;
+
+/// User detail screen with edit functionality and modern UI
 class UserDetailScreen extends ConsumerStatefulWidget {
   final String userId;
 
@@ -16,678 +20,561 @@ class UserDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
+  // Form state
   AccountType? _selectedAccountType;
-  bool _isSaving = false;
-  String? _successMessage;
-
-  // Admin control states
   bool? _hideSubscription;
-  AccountType? _selectedOverrideType;
-  bool _isSavingAdminFlags = false;
-  String? _adminFlagsSuccessMessage;
-
-  // Lifetime license states
-  bool _isSettingLifetime = false;
-  String? _lifetimeSuccessMessage;
-  String? _lifetimeErrorMessage;
+  bool? _adminOverrideAccountType;
+  bool _isLoading = false;
+  String? _errorMessage;
+  String? _successMessage;
 
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(userDetailProvider(widget.userId));
-    final isMobile = MediaQuery.of(context).size.width < 600;
-    final padding = isMobile ? 12.0 : 24.0;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < _mobileBreakpoint;
 
     return Scaffold(
-      // No AppBar - shell provides it
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Back button and title row
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: 'Back to Users',
-                  onPressed: () => context.go('/users'),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'User Details',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            SizedBox(height: isMobile ? 12 : 16),
-            // Content
-            userAsync.when(
-              data: (user) {
-                if (user == null) {
-                  return const Center(child: Text('User not found'));
-                }
-                return _buildUserDetails(context, user);
-              },
-              loading: () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(48),
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-              error: (err, _) => Center(child: SelectableText('Error: $err')),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+      backgroundColor: Colors.transparent, // Uses shell background
+      body: userAsync.when(
+        data: (user) {
+          if (user == null) return const _ErrorState(message: 'User not found');
 
-  Widget _buildUserDetails(BuildContext context, UserModel user) {
-    _selectedAccountType ??= user.accountType;
-    _hideSubscription ??= user.hideSubscription;
-    _selectedOverrideType ??= user.adminOverrideAccountType;
+          // Initialize state if needed
+          _selectedAccountType ??= user.adminOverrideAccountType != null
+              ? AccountType.values.firstWhere(
+                  (e) => e.name == user.adminOverrideAccountType,
+                  orElse: () => user.accountType,
+                )
+              : user.accountType;
 
-    final isMobile = MediaQuery.of(context).size.width < 600;
-    final cardPadding = isMobile ? 16.0 : 24.0;
-    final sectionSpacing = isMobile ? 12.0 : 20.0;
+          _hideSubscription ??= user.hideSubscription;
+          _adminOverrideAccountType ??= user.adminOverrideAccountType != null;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // User info card
-        Card(
-          child: Padding(
-            padding: EdgeInsets.all(cardPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: isMobile ? 24 : 32,
-                      backgroundColor: Colors.deepPurple.shade100,
-                      child: Text(
-                        (user.displayName ?? user.fullName).isNotEmpty
-                            ? (user.displayName ?? user.fullName)[0]
-                                  .toUpperCase()
-                            : '?',
-                        style: TextStyle(
-                          fontSize: isMobile ? 18 : 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SelectableText(
-                            user.displayName ?? user.fullName,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          SelectableText(
-                            user.email,
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                Divider(height: isMobile ? 24 : 32),
-                _buildInfoRow('User ID', user.id),
-                _buildInfoRow('Role', user.role.displayName),
-                _buildInfoRow(
-                  'Created',
-                  '${user.createdAt.day}.${user.createdAt.month}.${user.createdAt.year}',
-                ),
-                _buildInfoRow('Phone', user.phone ?? 'Not provided'),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: sectionSpacing),
+          return Column(
+            children: [
+              // Header
+              _buildHeader(context, user),
 
-        // User Statistics Card
-        _buildStatisticsCard(context, cardPadding),
-        SizedBox(height: sectionSpacing),
-
-        // Account type editor
-        Card(
-          child: Padding(
-            padding: EdgeInsets.all(cardPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Account Type',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<AccountType>(
-                  initialValue: _selectedAccountType,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Account Type',
-                  ),
-                  items: AccountType.values.map((type) {
-                    return DropdownMenuItem(
-                      value: type,
-                      child: Text(type.name.toUpperCase()),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedAccountType = value;
-                      _successMessage = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                if (_successMessage != null) ...[
-                  _buildSuccessMessage(_successMessage!),
-                  const SizedBox(height: 16),
-                ],
-                FilledButton(
-                  onPressed:
-                      _selectedAccountType != user.accountType && !_isSaving
-                      ? () => _saveAccountType(user)
-                      : null,
-                  child: _isSaving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Save Changes'),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: sectionSpacing),
-
-        // Admin Controls Card
-        Card(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.orange.shade900.withValues(alpha: 0.3)
-              : Colors.orange.shade50,
-          child: Padding(
-            padding: EdgeInsets.all(cardPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.admin_panel_settings,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.orange.shade300
-                          : Colors.orange.shade700,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Admin Controls',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.orange.shade300
-                            : Colors.orange.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Hide Subscription Checkbox
-                CheckboxListTile(
-                  value: _hideSubscription ?? false,
-                  onChanged: (value) {
-                    setState(() {
-                      _hideSubscription = value;
-                      _adminFlagsSuccessMessage = null;
-                    });
-                  },
-                  title: const Text('Hide Subscription'),
-                  subtitle: const Text('Hide subscription page from this user'),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                const Divider(),
-
-                // Override Account Type Dropdown
-                const SizedBox(height: 8),
-                const Text(
-                  'Override Account Status',
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Force a specific account type for this user (overrides calculated status)',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<AccountType?>(
-                  initialValue: _selectedOverrideType,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Override Account Type',
-                  ),
-                  items: [
-                    const DropdownMenuItem<AccountType?>(
-                      child: Text('No Override (use calculated)'),
-                    ),
-                    ...AccountType.values.map((type) {
-                      return DropdownMenuItem<AccountType?>(
-                        value: type,
-                        child: Text(type.name.toUpperCase()),
-                      );
-                    }),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedOverrideType = value;
-                      _adminFlagsSuccessMessage = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                if (_adminFlagsSuccessMessage != null) ...[
-                  _buildSuccessMessage(_adminFlagsSuccessMessage!),
-                  const SizedBox(height: 16),
-                ],
-
-                FilledButton.tonal(
-                  onPressed: _hasAdminFlagsChanged(user) && !_isSavingAdminFlags
-                      ? () => _saveAdminFlags(user)
-                      : null,
-                  child: _isSavingAdminFlags
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save Admin Controls'),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: sectionSpacing),
-
-        // Lifetime License Card
-        _buildLifetimeLicenseCard(context, user, cardPadding),
-      ],
-    );
-  }
-
-  Widget _buildLifetimeLicenseCard(
-    BuildContext context,
-    UserModel user,
-    double cardPadding,
-  ) {
-    final isLifetime = user.isLifetimeLicense;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Card(
-      color: isDark
-          ? Colors.purple.shade900.withValues(alpha: 0.3)
-          : Colors.purple.shade50,
-      child: Padding(
-        padding: EdgeInsets.all(cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.workspace_premium,
-                  color: isDark
-                      ? Colors.purple.shade300
-                      : Colors.purple.shade700,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Lifetime License',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: isDark
-                          ? Colors.purple.shade300
-                          : Colors.purple.shade700,
-                    ),
-                  ),
-                ),
-                if (isLifetime)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'ACTIVE',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Status info
-            if (isLifetime) ...[
-              _buildInfoRow('Status', 'Lifetime license granted'),
-              if (user.lifetimeLicenseGrantedAt != null)
-                _buildInfoRow(
-                  'Granted',
-                  '${user.lifetimeLicenseGrantedAt!.day}.${user.lifetimeLicenseGrantedAt!.month}.${user.lifetimeLicenseGrantedAt!.year}',
-                ),
-              if (user.lifetimeLicenseGrantedBy != null)
-                _buildInfoRow('Granted By', user.lifetimeLicenseGrantedBy!),
-              const Divider(height: 24),
-            ],
-
-            Text(
-              isLifetime
-                  ? 'This user has permanent premium access without requiring a subscription.'
-                  : 'Grant this user permanent premium access without requiring a subscription.',
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Success/Error messages
-            if (_lifetimeSuccessMessage != null) ...[
-              _buildSuccessMessage(_lifetimeSuccessMessage!),
-              const SizedBox(height: 16),
-            ],
-            if (_lifetimeErrorMessage != null) ...[
-              _buildErrorMessage(_lifetimeErrorMessage!),
-              const SizedBox(height: 16),
-            ],
-
-            // Action button
-            isLifetime
-                ? OutlinedButton.icon(
-                    onPressed: _isSettingLifetime
-                        ? null
-                        : () => _showRevokeConfirmation(user),
-                    icon: _isSettingLifetime
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.remove_circle_outline),
-                    label: const Text('Revoke Lifetime License'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                    ),
-                  )
-                : FilledButton.icon(
-                    onPressed: _isSettingLifetime
-                        ? null
-                        : () => _grantLifetimeLicense(user),
-                    icon: _isSettingLifetime
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: isMobile
+                      ? Column(
+                          children: [
+                            _InfoCard(user: user),
+                            const SizedBox(height: 16),
+                            _StatisticsCard(user: user),
+                            const SizedBox(height: 16),
+                            _AdminControlsCard(
+                              user: user,
+                              selectedAccountType: _selectedAccountType!,
+                              hideSubscription: _hideSubscription ?? false,
+                              adminOverride: _adminOverrideAccountType ?? false,
+                              isLoading: _isLoading,
+                              onAccountTypeChanged: (val) =>
+                                  setState(() => _selectedAccountType = val),
+                              onHideSubscriptionChanged: (val) =>
+                                  setState(() => _hideSubscription = val),
+                              onAdminOverrideChanged: (val) => setState(
+                                () => _adminOverrideAccountType = val,
+                              ),
+                              onSave: () => _saveChanges(user),
                             ),
-                          )
-                        : const Icon(Icons.workspace_premium),
-                    label: const Text('Grant Lifetime License'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                    ),
-                  ),
-          ],
-        ),
+                            const SizedBox(height: 16),
+                            _LifetimeLicenseCard(
+                              user: user,
+                              isLoading: _isLoading,
+                              onGrant: () => _grantLifetimeLicense(user),
+                              onRevoke: () => _revokeLifetimeLicense(user),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Left Column (Info & Stats)
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                children: [
+                                  _InfoCard(user: user),
+                                  const SizedBox(height: 24),
+                                  _StatisticsCard(user: user),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            // Right Column (Admin Controls)
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                children: [
+                                  _AdminControlsCard(
+                                    user: user,
+                                    selectedAccountType: _selectedAccountType!,
+                                    hideSubscription:
+                                        _hideSubscription ?? false,
+                                    adminOverride:
+                                        _adminOverrideAccountType ?? false,
+                                    isLoading: _isLoading,
+                                    onAccountTypeChanged: (val) => setState(
+                                      () => _selectedAccountType = val,
+                                    ),
+                                    onHideSubscriptionChanged: (val) =>
+                                        setState(() => _hideSubscription = val),
+                                    onAdminOverrideChanged: (val) => setState(
+                                      () => _adminOverrideAccountType = val,
+                                    ),
+                                    onSave: () => _saveChanges(user),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  _LifetimeLicenseCard(
+                                    user: user,
+                                    isLoading: _isLoading,
+                                    onGrant: () => _grantLifetimeLicense(user),
+                                    onRevoke: () =>
+                                        _revokeLifetimeLicense(user),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => _ErrorState(message: err.toString()),
       ),
     );
   }
 
-  Widget _buildErrorMessage(String message) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildHeader(BuildContext context, UserModel user) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.red.shade900.withValues(alpha: 0.3)
-            : Colors.red.shade50,
-        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: Theme.of(context).dividerColor, width: 0.5),
+        ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Icon(
-            Icons.error_outline,
-            color: isDark ? Colors.red.shade300 : Colors.red.shade700,
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/users'),
+              ),
+              const SizedBox(width: 16),
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: AppColors.primary,
+                child: Text(
+                  (user.displayName ?? user.fullName).isNotEmpty
+                      ? (user.displayName ?? user.fullName)[0].toUpperCase()
+                      : '?',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.displayName ?? user.fullName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      user.email,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                color: isDark ? Colors.red.shade300 : Colors.red.shade700,
+          // Messages
+          if (_errorMessage != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error, color: AppColors.error, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(color: AppColors.error),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, size: 16, color: AppColors.error),
+                    onPressed: () => setState(() => _errorMessage = null),
+                  ),
+                ],
               ),
             ),
-          ),
+          ],
+          if (_successMessage != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _successMessage!,
+                      style: const TextStyle(color: Colors.green),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: Colors.green,
+                    ),
+                    onPressed: () => setState(() => _successMessage = null),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Future<void> _grantLifetimeLicense(UserModel user) async {
+  Future<void> _saveChanges(UserModel user) async {
     setState(() {
-      _isSettingLifetime = true;
-      _lifetimeSuccessMessage = null;
-      _lifetimeErrorMessage = null;
+      _isLoading = true;
+      _errorMessage = null;
+      _successMessage = null;
     });
 
     try {
       final repo = ref.read(adminUsersRepositoryProvider);
-      final message = await repo.setLifetimeLicense(
-        userId: user.id,
-        grant: true,
-      );
 
-      // Refresh user data
-      ref.invalidate(userDetailProvider(widget.userId));
+      // Update account type / override
+      if (_adminOverrideAccountType == true ||
+          user.adminOverrideAccountType != null) {
+        // If override is enabled (or was enabled), update it
+        // Check if we need to clear it (if _adminOverrideAccountType is false)
+        await repo.updateAdminFlags(
+          user.id,
+          adminOverrideAccountType: _adminOverrideAccountType!
+              ? _selectedAccountType
+              : null,
+          clearOverride: !_adminOverrideAccountType!,
+          hideSubscription: _hideSubscription,
+        );
+      } else {
+        // Just regular settings update
+        await repo.updateAdminFlags(
+          user.id,
+          hideSubscription: _hideSubscription,
+        );
+      }
+
+      // Also update regular account type if not overridden
+      if (!_adminOverrideAccountType! &&
+          _selectedAccountType != user.accountType) {
+        await repo.updateAccountType(user.id, _selectedAccountType!);
+      }
+
+      ref.invalidate(userDetailProvider(user.id));
       ref.invalidate(ownersListProvider);
-      ref.invalidate(dashboardStatsProvider);
 
       setState(() {
-        _lifetimeSuccessMessage = message;
-        _isSettingLifetime = false;
+        _successMessage = 'Changes saved successfully';
+        _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _lifetimeErrorMessage = 'Failed to grant license: $e';
-        _isSettingLifetime = false;
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _grantLifetimeLicense(UserModel user) async {
+    if (!await _showConfirmation(
+      context,
+      'Grant Lifetime License',
+      'Are you sure you want to grant a lifetime license to this user?',
+    ))
+      return;
+
+    setState(() => _isLoading = true);
+    try {
+      await ref
+          .read(adminUsersRepositoryProvider)
+          .setLifetimeLicense(userId: user.id, grant: true);
+      ref.invalidate(userDetailProvider(user.id));
+      setState(() {
+        _successMessage = 'Lifetime license granted successfully';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
       });
     }
   }
 
   Future<void> _revokeLifetimeLicense(UserModel user) async {
-    setState(() {
-      _isSettingLifetime = true;
-      _lifetimeSuccessMessage = null;
-      _lifetimeErrorMessage = null;
-    });
+    if (!await _showConfirmation(
+      context,
+      'Revoke Lifetime License',
+      'Are you sure you want to revoke the lifetime license from this user?',
+    ))
+      return;
 
+    setState(() => _isLoading = true);
     try {
-      final repo = ref.read(adminUsersRepositoryProvider);
-      final message = await repo.setLifetimeLicense(
-        userId: user.id,
-        grant: false,
-      );
-
-      // Refresh user data
-      ref.invalidate(userDetailProvider(widget.userId));
-      ref.invalidate(ownersListProvider);
-      ref.invalidate(dashboardStatsProvider);
-
+      await ref
+          .read(adminUsersRepositoryProvider)
+          .setLifetimeLicense(userId: user.id, grant: false);
+      ref.invalidate(userDetailProvider(user.id));
       setState(() {
-        _lifetimeSuccessMessage = message;
-        _isSettingLifetime = false;
+        _successMessage = 'Lifetime license revoked successfully';
+        _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _lifetimeErrorMessage = 'Failed to revoke license: $e';
-        _isSettingLifetime = false;
+        _errorMessage = e.toString();
+        _isLoading = false;
       });
     }
   }
 
-  void _showRevokeConfirmation(UserModel user) {
-    showDialog(
+  Future<bool> _showConfirmation(
+    BuildContext context,
+    String title,
+    String content,
+  ) async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Revoke Lifetime License?'),
-        content: Text(
-          'Are you sure you want to revoke the lifetime license for ${user.fullName}? '
-          'They will be reverted to trial status.',
-        ),
+        title: Text(title),
+        content: Text(content),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _revokeLifetimeLicense(user);
-            },
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Revoke'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirm'),
           ),
         ],
       ),
     );
+    return result ?? false;
   }
+}
 
-  Widget _buildSuccessMessage(String message) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.green.shade900.withValues(alpha: 0.3)
-            : Colors.green.shade50,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.check_circle,
-            color: isDark ? Colors.green.shade300 : Colors.green.shade700,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                color: isDark ? Colors.green.shade300 : Colors.green.shade700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+class _InfoCard extends StatelessWidget {
+  final UserModel user;
 
-  bool _hasAdminFlagsChanged(UserModel user) {
-    return _hideSubscription != user.hideSubscription ||
-        _selectedOverrideType != user.adminOverrideAccountType;
-  }
+  const _InfoCard({required this.user});
 
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          Expanded(child: SelectableText(value)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatisticsCard(BuildContext context, double cardPadding) {
-    final propertiesCountAsync = ref.watch(
-      userPropertiesCountProvider(widget.userId),
-    );
-    final bookingsCountAsync = ref.watch(
-      userBookingsCountProvider(widget.userId),
-    );
-
+  @override
+  Widget build(BuildContext context) {
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).dividerColor),
+      ),
       child: Padding(
-        padding: EdgeInsets.all(cardPadding),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'User Statistics',
-              style: Theme.of(context).textTheme.titleLarge,
+              'User Information',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            _InfoRow(
+              icon: Icons.badge_outlined,
+              label: 'User ID',
+              value: user.id,
+              copyable: true,
+            ),
+            _InfoRow(
+              icon: Icons.email_outlined,
+              label: 'Email',
+              value: user.email,
+            ),
+            _InfoRow(
+              icon: Icons.person_outline,
+              label: 'Role',
+              value: user.role.name.toUpperCase(),
+            ),
+            _InfoRow(
+              icon: Icons.calendar_today,
+              label: 'Created At',
+              value:
+                  '${user.createdAt?.day}.${user.createdAt?.month}.${user.createdAt?.year}',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool copyable;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.copyable = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        value,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (copyable) ...[
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () {
+                          // Clipboard logic
+                        },
+                        child: Icon(
+                          Icons.copy,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatisticsCard extends ConsumerWidget {
+  final UserModel user;
+
+  const _StatisticsCard({required this.user});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final propertiesAsync = ref.watch(userPropertiesCountProvider(user.id));
+    final bookingsAsync = ref.watch(userBookingsCountProvider(user.id));
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).dividerColor),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Statistics',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
-                  child: _buildStatItem(
-                    context,
-                    icon: Icons.home_work,
+                  child: _StatBox(
                     label: 'Properties',
-                    value: propertiesCountAsync.when(
-                      data: (count) => count.toString(),
+                    value: propertiesAsync.when(
+                      data: (d) => d.toString(),
                       loading: () => '...',
-                      error: (_, _) => '-',
+                      error: (_, __) => '-',
                     ),
+                    icon: Icons.home_work_outlined,
                     color: Colors.blue,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildStatItem(
-                    context,
-                    icon: Icons.calendar_today,
+                  child: _StatBox(
                     label: 'Bookings',
-                    value: bookingsCountAsync.when(
-                      data: (count) => count.toString(),
+                    value: bookingsAsync.when(
+                      data: (d) => d.toString(),
                       loading: () => '...',
-                      error: (_, _) => '-',
+                      error: (_, __) => '-',
                     ),
-                    color: Colors.green,
+                    icon: Icons.calendar_month_outlined,
+                    color: Colors.orange,
                   ),
                 ),
               ],
@@ -697,14 +584,23 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
       ),
     );
   }
+}
 
-  Widget _buildStatItem(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
+class _StatBox extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _StatBox({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -712,95 +608,276 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 32),
+          Icon(icon, size: 24, color: color),
           const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          const SizedBox(height: 4),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: color.withValues(alpha: 0.8),
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Future<void> _saveAccountType(UserModel user) async {
-    if (_selectedAccountType == null) return;
+class _AdminControlsCard extends StatelessWidget {
+  final UserModel user;
+  final AccountType selectedAccountType;
+  final bool hideSubscription;
+  final bool adminOverride;
+  final bool isLoading;
+  final ValueChanged<AccountType> onAccountTypeChanged;
+  final ValueChanged<bool> onHideSubscriptionChanged;
+  final ValueChanged<bool> onAdminOverrideChanged;
+  final VoidCallback onSave;
 
-    setState(() {
-      _isSaving = true;
-      _successMessage = null;
-    });
+  const _AdminControlsCard({
+    required this.user,
+    required this.selectedAccountType,
+    required this.hideSubscription,
+    required this.adminOverride,
+    required this.isLoading,
+    required this.onAccountTypeChanged,
+    required this.onHideSubscriptionChanged,
+    required this.onAdminOverrideChanged,
+    required this.onSave,
+  });
 
-    try {
-      final repo = ref.read(adminUsersRepositoryProvider);
-      await repo.updateAccountType(user.id, _selectedAccountType!);
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).dividerColor),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.admin_panel_settings, color: AppColors.primary),
+                const SizedBox(width: 12),
+                Text(
+                  'Admin Controls',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-      // Refresh user data
-      ref.invalidate(userDetailProvider(widget.userId));
-      ref.invalidate(ownersListProvider);
-      ref.invalidate(dashboardStatsProvider);
+            // Account Type Selector
+            Text(
+              'Account Type',
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Theme.of(context).dividerColor),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<AccountType>(
+                  value: selectedAccountType,
+                  isExpanded: true,
+                  items: AccountType.values.map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Text(type.name.toUpperCase()),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) onAccountTypeChanged(val);
+                  },
+                ),
+              ),
+            ),
 
-      setState(() {
-        _successMessage = 'Account type updated successfully';
-        _isSaving = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isSaving = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    }
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+
+            // Switches
+            SwitchListTile(
+              title: const Text('Hide Subscription'),
+              subtitle: const Text('Hide subscription UI from user dashboard'),
+              value: hideSubscription,
+              onChanged: onHideSubscriptionChanged,
+              contentPadding: EdgeInsets.zero,
+            ),
+
+            SwitchListTile(
+              title: const Text('Admin Override Account Type'),
+              subtitle: const Text(
+                'Force specific account type regardless of payment status',
+              ),
+              value: adminOverride,
+              onChanged: onAdminOverrideChanged,
+              contentPadding: EdgeInsets.zero,
+              activeColor: Colors.orange,
+            ),
+
+            const SizedBox(height: 24),
+
+            // Save Button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton(
+                onPressed: isLoading ? null : onSave,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Save Changes'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
+}
 
-  Future<void> _saveAdminFlags(UserModel user) async {
-    setState(() {
-      _isSavingAdminFlags = true;
-      _adminFlagsSuccessMessage = null;
-    });
+class _LifetimeLicenseCard extends StatelessWidget {
+  final UserModel user;
+  final bool isLoading;
+  final VoidCallback onGrant;
+  final VoidCallback onRevoke;
 
-    try {
-      final repo = ref.read(adminUsersRepositoryProvider);
-      await repo.updateAdminFlags(
-        user.id,
-        hideSubscription: _hideSubscription,
-        adminOverrideAccountType: _selectedOverrideType,
-        clearOverride:
-            _selectedOverrideType == null &&
-            user.adminOverrideAccountType != null,
-      );
+  const _LifetimeLicenseCard({
+    required this.user,
+    required this.isLoading,
+    required this.onGrant,
+    required this.onRevoke,
+  });
 
-      // Refresh user data
-      ref.invalidate(userDetailProvider(widget.userId));
-      ref.invalidate(ownersListProvider);
+  @override
+  Widget build(BuildContext context) {
+    // Only show if user is not already lifetime (for grant) or IS lifetime (for revoke)
+    // Actually typically we want to show actions available.
+    final hasLifetime = user.accountType == AccountType.lifetime;
 
-      setState(() {
-        _adminFlagsSuccessMessage = 'Admin controls updated successfully';
-        _isSavingAdminFlags = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isSavingAdminFlags = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    }
+    return Card(
+      elevation: 0,
+      color: hasLifetime
+          ? Colors.red.withValues(alpha: 0.05)
+          : Colors.purple.withValues(alpha: 0.05),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: hasLifetime
+              ? Colors.red.withValues(alpha: 0.2)
+              : Colors.purple.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.verified,
+                  color: hasLifetime ? Colors.red : Colors.purple,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  hasLifetime
+                      ? 'Revoke Lifetime License'
+                      : 'Grant Lifetime License',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: hasLifetime ? Colors.red : Colors.purple,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              hasLifetime
+                  ? 'This will remove the lifetime license and revert the user to Trial status.'
+                  : 'This will grant the user permanent access to all Premium features without recurring payments.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton(
+                onPressed: isLoading
+                    ? null
+                    : (hasLifetime ? onRevoke : onGrant),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: hasLifetime ? Colors.red : Colors.purple,
+                  side: BorderSide(
+                    color: hasLifetime ? Colors.red : Colors.purple,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(hasLifetime ? 'Revoke License' : 'Grant License'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+
+  const _ErrorState({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(message, style: const TextStyle(color: Colors.grey)),
+        ],
+      ),
+    );
   }
 }

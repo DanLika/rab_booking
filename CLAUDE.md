@@ -763,7 +763,41 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-25 | **Version**: 6.36
+**Last Updated**: 2026-01-26 | **Version**: 6.37
+
+**Changelog 6.37**: Timeline Calendar TELEPORT Bug Fixes:
+- **Problem 1**: Clicking dates more than ~3 months away in date picker didn't work reliably
+  - Sometimes jumped correctly, sometimes stayed in place or jumped to wrong date
+- **Root Cause 1**: Timeline calendar uses 90-day "windowed" view for performance
+  - When target date is outside visible window, animated scroll couldn't reach it
+  - Recursive `_scrollToDate` calls caused race conditions
+  - `_extendDateRangeIfNeeded` during scroll caused additional conflicts
+- **Fix 1** (`timeline_calendar_widget.dart`):
+  - **TELEPORT approach**: For far jumps (target outside visible window):
+    1. Set `_isProgrammaticScroll = true` to block scroll listener updates
+    2. Rebuild window around target date (set `_visibleStartIndex`, `_forceVisibleStartIndex = true`)
+    3. Use `jumpTo()` (instant) instead of `animateTo()` (no race conditions)
+    4. Reset flag after 500ms via Timer
+  - Two TELEPORT blocks: one for range extension (past/future dates), one for far jumps within existing range
+  - **Disabled `_extendDateRangeIfNeeded`**: No longer needed - TELEPORT handles range extension
+- **Problem 2**: After TELEPORTing to distant dates and manually scrolling back, reservations disappeared
+  - User reported: TELEPORT to May, scroll back towards January → reservations vanish
+- **Root Cause 2**: TELEPORT scroll position calculation was missing `offsetWidth`
+  - Content structure: `[SizedBox(offsetWidth)] + [day cells]`
+  - TELEPORT calculated: `(newWindowTargetDay * dayWidth) - (viewport * 0.25)` ≈ 1550px
+  - Should have been: `offsetWidth + (newWindowTargetDay * dayWidth) - (viewport * 0.25)` ≈ 19550px
+  - Without `offsetWidth`, scroll landed in the spacer instead of the actual day cells
+- **Fix 2** (`timeline_calendar_widget.dart` lines ~860 and ~970):
+  ```dart
+  // BUG FIX: Must include offsetWidth in scroll calculation!
+  final offsetWidth = _visibleStartIndex * dimensions.dayWidth;
+  final scrollInNewWindow =
+      offsetWidth +
+      (newWindowTargetDay * dimensions.dayWidth) -
+      (dimensions.visibleContentWidth * 0.25);
+  ```
+- **Key insight**: Flag-based protection (`_isProgrammaticScroll`) must be set BEFORE `setState()` and reset AFTER scroll completes
+- **Testing**: Confirmed working - TELEPORT + manual scroll back no longer causes reservations to disappear
 
 **Changelog 6.36**: Calendar Timeline Booking Move Fixes:
 - **UI Not Refreshing After Booking Move** (main fix):

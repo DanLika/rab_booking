@@ -39,7 +39,9 @@ abstract class BookingRepository {
   Future<BookingModel> cancelBooking(String id, String reason);
 
   /// Delete booking (admin only)
-  Future<void> deleteBooking(String id);
+  /// [booking] - optional, provide to avoid collection group query permission issues
+  /// When provided, uses booking.propertyId and booking.unitId for direct path access
+  Future<void> deleteBooking(String id, {BookingModel? booking});
 
   /// Check if dates are available for unit
   Future<bool> areDatesAvailable({

@@ -191,18 +191,18 @@ class FirebaseBookingRepository implements BookingRepository {
   }
 
   @override
-  Future<void> deleteBooking(String id) async {
-    // NEW STRUCTURE: First find the booking to get propertyId and unitId
-    final booking = await fetchBookingById(id);
-    if (booking == null) {
+  Future<void> deleteBooking(String id, {BookingModel? booking}) async {
+    // Use provided booking or fetch it (fetch may fail due to permission issues)
+    final targetBooking = booking ?? await fetchBookingById(id);
+    if (targetBooking == null) {
       throw BookingException('Booking not found', code: 'booking/not-found');
     }
 
     await _firestore
         .collection('properties')
-        .doc(booking.propertyId)
+        .doc(targetBooking.propertyId)
         .collection('units')
-        .doc(booking.unitId)
+        .doc(targetBooking.unitId)
         .collection('bookings')
         .doc(id)
         .delete();
@@ -304,25 +304,24 @@ class FirebaseBookingRepository implements BookingRepository {
     required DateTime checkIn,
     required DateTime checkOut,
   }) async {
-    // NEW STRUCTURE: Use collection group query
+    // Query pending and confirmed bookings - completed/cancelled don't block dates
     final snapshot = await _firestore
         .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
         .where(
           'status',
-          whereIn: [
-            BookingStatus.pending.value,
-            BookingStatus.confirmed.value,
-            BookingStatus.completed.value,
-          ],
+          whereIn: [BookingStatus.pending.value, BookingStatus.confirmed.value],
         )
         .get();
 
     final bookings = snapshot.docs.map(_bookingFromDoc).toList();
 
-    return bookings.where((booking) {
-      return booking.overlapsWithDates(checkIn, checkOut);
-    }).toList();
+    // Filter to only overlapping bookings
+    // Note: overlapsWithDates uses strict inequality (isBefore/isAfter)
+    // which allows same-day turnover (checkout == checkin is NOT an overlap)
+    return bookings
+        .where((b) => b.overlapsWithDates(checkIn, checkOut))
+        .toList();
   }
 
   @override

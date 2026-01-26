@@ -308,13 +308,27 @@ class BookingModel with _$BookingModel {
   }
 
   /// Check if two date ranges overlap
+  ///
+  /// SAME-DAY TURNOVER SUPPORT:
+  /// - Uses isBefore/isAfter (not <=/>= comparisons)
+  /// - Dates are normalized to midnight to ignore time components
+  /// - This allows check-out date to equal check-in date of next booking
+  /// - Example: Booking A (May 1-5) does NOT overlap with Booking B (May 5-10)
   static bool datesOverlap({
     required DateTime start1,
     required DateTime end1,
     required DateTime start2,
     required DateTime end2,
   }) {
-    return start1.isBefore(end2) && end1.isAfter(start2);
+    // Normalize all dates to midnight to avoid time component issues
+    final s1 = DateTime(start1.year, start1.month, start1.day);
+    final e1 = DateTime(end1.year, end1.month, end1.day);
+    final s2 = DateTime(start2.year, start2.month, start2.day);
+    final e2 = DateTime(end2.year, end2.month, end2.day);
+
+    // Two date ranges overlap if start1 < end2 AND end1 > start2
+    // Using strict inequality (isBefore/isAfter) allows same-day turnover
+    return s1.isBefore(e2) && e1.isAfter(s2);
   }
 
   /// Check if this booking overlaps with given dates

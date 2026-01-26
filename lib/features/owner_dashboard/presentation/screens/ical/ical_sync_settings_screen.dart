@@ -19,7 +19,9 @@ import '../../../domain/models/ical_feed.dart';
 import '../../providers/ical_feeds_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
 import '../../providers/owner_properties_provider.dart';
+
 import '../../widgets/owner_app_drawer.dart';
+import '../../widgets/ical/ical_feed_delete_dialog.dart';
 
 /// Status indicator colors
 const Color _kStatusActiveColor = Color(0xFF66BB6A);
@@ -1288,57 +1290,40 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
 
   void _confirmDeleteFeed(BuildContext context, IcalFeed feed) {
     final l10n = AppLocalizations.of(context);
-    showDialog(
+    // Use custom styled dialog for deletion confirmation
+    showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.icalDeleteFeedTitle),
-        content: Text(
-          l10n.icalDeleteFeedMessage(
-            feed.platform.displayName,
-            feed.eventCount,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final navigator = Navigator.of(dialogContext);
-              navigator.pop();
-              try {
-                final repository = ref.read(icalRepositoryProvider);
-                // Delete feed and all associated events
-                await repository.deleteIcalFeed(feed.id, feed.propertyId);
-                // FIXED: Check mounted before using ref (widget may be disposed during async call)
-                if (mounted) {
-                  // Invalidate providers to refresh UI immediately
-                  ref.invalidate(icalFeedsStreamProvider);
-                  ref.invalidate(icalStatisticsProvider);
-                  ErrorDisplayUtils.showSuccessSnackBar(
-                    this.context,
-                    l10n.icalFeedDeleted,
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ErrorDisplayUtils.showErrorSnackBar(
-                    this.context,
-                    e,
-                    userMessage: l10n.icalFeedDeleteError,
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-            ),
-            child: Text(l10n.delete),
-          ),
-        ],
+      builder: (dialogContext) => IcalFeedDeleteDialog(
+        platformName: feed.platform.displayName,
+        eventCount: feed.eventCount,
       ),
-    );
+    ).then((confirmed) async {
+      if (confirmed == true && mounted) {
+        try {
+          final repository = ref.read(icalRepositoryProvider);
+          // Delete feed and all associated events
+          await repository.deleteIcalFeed(feed.id, feed.propertyId);
+
+          if (mounted) {
+            // Invalidate providers to refresh UI immediately
+            ref.invalidate(icalFeedsStreamProvider);
+            ref.invalidate(icalStatisticsProvider);
+            ErrorDisplayUtils.showSuccessSnackBar(
+              context,
+              l10n.icalFeedDeleted,
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ErrorDisplayUtils.showErrorSnackBar(
+              context,
+              e,
+              userMessage: l10n.icalFeedDeleteError,
+            );
+          }
+        }
+      }
+    });
   }
 
   void _showAddFeedDialog(BuildContext context) {

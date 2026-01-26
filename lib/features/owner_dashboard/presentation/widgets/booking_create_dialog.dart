@@ -1129,7 +1129,7 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                               backgroundColor: AppColors.error,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                                horizontal: 41,
                                 vertical: 12,
                               ),
                             ),

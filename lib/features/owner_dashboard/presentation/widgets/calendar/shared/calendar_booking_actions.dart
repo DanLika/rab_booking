@@ -10,6 +10,7 @@ import '../../../../../../shared/providers/repository_providers.dart';
 import '../../send_email_dialog.dart';
 import '../../../providers/owner_calendar_provider.dart';
 import '../../../providers/calendar_filters_provider.dart';
+import '../../booking_actions/booking_delete_dialog.dart';
 
 /// Shared Calendar Booking Actions
 /// Contains common booking operations used across calendar views
@@ -20,26 +21,10 @@ class CalendarBookingActions {
     WidgetRef ref,
     BookingModel booking,
   ) async {
-    final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.calendarActionsDeleteTitle),
-        content: Text(
-          l10n.calendarActionsDeleteConfirm(booking.guestName ?? 'N/A'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.calendarActionsCancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(l10n.calendarActionsDelete),
-          ),
-        ],
-      ),
+      builder: (dialogContext) =>
+          BookingDeleteDialog(guestName: booking.guestName ?? 'N/A'),
     );
 
     if (confirm == true && context.mounted) {

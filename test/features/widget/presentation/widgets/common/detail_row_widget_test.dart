@@ -70,7 +70,9 @@ void main() {
         ),
       );
 
-      final valueText = tester.widget<SelectableText>(find.text('€500.00'));
+      final valueText = tester.widget<SelectableText>(
+        find.widgetWithText(SelectableText, '€500.00'),
+      );
       expect(valueText.style?.fontWeight, FontWeight.w700);
     });
 
@@ -89,7 +91,9 @@ void main() {
         ),
       );
 
-      final valueText = tester.widget<SelectableText>(find.text('5'));
+      final valueText = tester.widget<SelectableText>(
+        find.widgetWithText(SelectableText, '5'),
+      );
       expect(valueText.style?.fontWeight, FontWeight.w600);
     });
 
@@ -144,7 +148,9 @@ void main() {
         ),
       );
 
-      final valueText = tester.widget<SelectableText>(find.text('Jane Doe'));
+      final valueText = tester.widget<SelectableText>(
+        find.widgetWithText(SelectableText, 'Jane Doe'),
+      );
       expect(valueText.style?.fontWeight, FontWeight.w400);
     });
 
@@ -163,7 +169,9 @@ void main() {
         ),
       );
 
-      final valueText = tester.widget<SelectableText>(find.text('€1000.00'));
+      final valueText = tester.widget<SelectableText>(
+        find.widgetWithText(SelectableText, '€1000.00'),
+      );
       // Highlighted always uses bold (w700), not custom weight
       expect(valueText.style?.fontWeight, FontWeight.w700);
     });

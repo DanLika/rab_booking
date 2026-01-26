@@ -42,7 +42,7 @@ dependencies:
   go_router: ^17.0.0
 
   # UI & Styling
-  google_fonts: ^6.2.1
+  google_fonts: ^8.0.0
 
   # Internationalization
   intl: ^0.20.1

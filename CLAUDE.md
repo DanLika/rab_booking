@@ -763,7 +763,18 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-26 | **Version**: 6.40
+**Last Updated**: 2026-01-26 | **Version**: 6.41
+
+**Changelog 6.41**: Platform Icons & Booking Details Dialog v2:
+- **Platform Logo Images** (`lib/shared/widgets/platform_icon.dart`):
+  - Added actual logo images for Booking.com, Airbnb, and other platforms
+  - Images stored in `assets/images/platforms/`
+  - Circular clipped images with fallback to letters if image fails to load
+  - Better visual recognition of booking sources in timeline calendar
+- **Booking Details Dialog v2** (`booking_details_dialog_v2.dart`):
+  - New improved booking details dialog with better UX
+  - Enhanced layout and information display
+- **Social Login Icons**: Updated Apple and Google login button icons
 
 **Changelog 6.40**: iCal Import Date Fix & Booking Sorting Improvements:
 - **iCal Import Date Fix** (`functions/src/icalSync.ts`):

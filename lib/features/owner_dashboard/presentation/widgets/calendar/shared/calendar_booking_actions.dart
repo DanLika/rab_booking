@@ -8,6 +8,8 @@ import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../shared/models/booking_model.dart';
 import '../../../../../../shared/providers/repository_providers.dart';
 import '../../send_email_dialog.dart';
+import '../../../providers/owner_calendar_provider.dart';
+import '../../../providers/calendar_filters_provider.dart';
 
 /// Shared Calendar Booking Actions
 /// Contains common booking operations used across calendar views
@@ -67,7 +69,12 @@ class CalendarBookingActions {
 
       try {
         final repository = ref.read(bookingRepositoryProvider);
-        await repository.deleteBooking(booking.id);
+        // Pass full booking to avoid permission issues with collection group query
+        await repository.deleteBooking(booking.id, booking: booking);
+
+        // Invalidate calendar providers to refresh UI
+        ref.invalidate(calendarBookingsProvider);
+        ref.invalidate(timelineCalendarBookingsProvider);
 
         // Close loading dialog
         if (context.mounted) {

@@ -2351,12 +2351,21 @@ class _TimelineCalendarWidgetState
     // Store parent context before showing bottom sheet
     // (bottom sheet context becomes invalid after closing)
     final parentContext = context;
-    await showModalBottomSheet(
+    final targetDate = await showModalBottomSheet<DateTime?>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (sheetContext) =>
           BookingMoveToUnitMenu(booking: booking, parentContext: parentContext),
     );
+
+    // If booking was successfully moved, scroll to its new location
+    if (targetDate != null && mounted) {
+      // Small delay to allow provider refresh to complete
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) {
+        _scrollToDate(targetDate, forceScroll: true);
+      }
+    }
   }
 }

@@ -763,7 +763,30 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-26 | **Version**: 6.39
+**Last Updated**: 2026-01-26 | **Version**: 6.40
+
+**Changelog 6.40**: iCal Import Date Fix & Booking Sorting Improvements:
+- **iCal Import Date Fix** (`functions/src/icalSync.ts`):
+  - **Problem**: Imported bookings showed as "new" because `created_at` was set to import time
+  - **Fix**: Extract original booking date from iCal CREATED/DTSTAMP fields
+  - Priority: CREATED > DTSTAMP > startDate (fallback)
+  - Imported bookings now sort correctly by their original creation date
+- **Navigator Context Fix** (`ical_sync_settings_screen.dart`):
+  - **Problem**: "Navigator context not ready" error when editing Airbnb iCal events
+  - **Root Cause**: `_checkPlatformMismatch()` called during `initState()` before widget mounted
+  - **Fix**: Wrapped call in `WidgetsBinding.instance.addPostFrameCallback()`
+- **Booking Sorting Change** (All filter):
+  - Changed from `created_at DESC` to `check_in ASC` (soonest first)
+  - More operationally relevant: owner sees upcoming bookings first
+  - Pending bookings still appear first, then sorted by check-in date
+  - Files: `firebase_owner_bookings_repository.dart`, `owner_bookings_provider.dart`, `unified_bookings_provider.dart`
+- **Permission-Denied Fix** (`_findBookingById`):
+  - Added try-catch for Strategy 2 and 3 to handle permission errors gracefully
+  - Prevents crashes when booking not found in expected collections
+- **UI Improvements**:
+  - Month names in pricing calendar dropdown now localized (Croatian)
+  - Embed widget guide header matches export reservations page style
+  - Send email dialog buttons use AutoSizeText with maxLines=1
 
 **Changelog 6.39**: Lifetime License Admin Feature:
 - **NEW FEATURE**: Admin can grant/revoke lifetime licenses from Admin Dashboard

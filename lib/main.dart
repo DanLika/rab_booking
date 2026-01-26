@@ -28,6 +28,7 @@ import 'shared/widgets/offline_indicator.dart';
 
 import 'shared/widgets/global_navigation_loader.dart';
 import 'core/widgets/fcm_navigation_handler.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Sentry DSN loaded from EnvironmentConfig (eliminates hardcoded constant)
 
@@ -74,6 +75,11 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // CRITICAL: Disable Google Fonts runtime fetching to prevent crashes when offline
+  // When false, the package uses system fonts as fallback instead of attempting network download
+  // This prevents: "Failed to load font with url: https://fonts.gstatic.com/..." crash
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Start Flutter UI IMMEDIATELY - don't wait for Firebase
   // This allows the splash screen to show while initialization happens

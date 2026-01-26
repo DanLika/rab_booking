@@ -42,9 +42,21 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
   }
 
   /// Get the user's sign-in provider
+  /// Falls back to Firebase Auth if userModel is null (parsing errors)
   String? _getLastProvider() {
     final authState = ref.read(enhancedAuthProvider);
-    return authState.userModel?.lastProvider;
+    final lastProvider = authState.userModel?.lastProvider;
+
+    // Fallback: check Firebase Auth directly if userModel failed to parse
+    if (lastProvider == null) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.providerData.isNotEmpty) {
+        final providerId = user.providerData.first.providerId;
+        return providerId; // e.g., 'google.com', 'apple.com', 'password'
+      }
+    }
+
+    return lastProvider;
   }
 
   /// Check if user signed in with social provider (Google/Apple)
@@ -240,13 +252,6 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        l10n.deleteAccountWarning,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isDark ? Colors.white70 : Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,6 +71,10 @@ void main() async {
   usePathUrlStrategy();
 
   WidgetsFlutterBinding.ensureInitialized();
+
+  // CRITICAL: Disable Google Fonts runtime fetching to prevent crashes when offline
+  // When false, the package uses system fonts as fallback instead of attempting network download
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // PERFORMANCE OPTIMIZATION: Run heavy initializations in parallel
   // This reduces startup time by ~100-200ms compared to sequential await

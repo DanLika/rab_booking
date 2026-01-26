@@ -1198,7 +1198,7 @@ PODS:
     - Firebase/Firestore (= 12.8.0)
     - firebase_core
     - Flutter
-  - cloud_functions (6.0.4):
+  - cloud_functions (6.0.6):
     - Firebase/Functions (= 12.8.0)
     - firebase_core
     - Flutter
@@ -1224,18 +1224,18 @@ PODS:
   - Firebase/Storage (12.8.0):
     - Firebase/CoreOnly
     - FirebaseStorage (~> 12.8.0)
-  - firebase_analytics (12.0.4):
+  - firebase_analytics (12.1.1):
     - firebase_core
     - FirebaseAnalytics (= 12.8.0)
     - Flutter
-  - firebase_auth (6.1.2):
+  - firebase_auth (6.1.4):
     - Firebase/Auth (= 12.8.0)
     - firebase_core
     - Flutter
   - firebase_core (4.4.0):
     - Firebase/CoreOnly (= 12.8.0)
     - Flutter
-  - firebase_crashlytics (5.0.5):
+  - firebase_crashlytics (5.0.7):
     - Firebase/Crashlytics (= 12.8.0)
     - firebase_core
     - Flutter
@@ -1652,13 +1652,13 @@ SPEC CHECKSUMS:
   abseil: a05cc83bf02079535e17169a73c5be5ba47f714b
   BoringSSL-GRPC: dded2a44897e45f28f08ae87a55ee4bcd19bc508
   cloud_firestore: 284664fc11ca15df78d81628f394b5b8fbd06bfe
-  cloud_functions: 9cd4d45e8295acc7e53db6bede522ebd26f8479a
+  cloud_functions: 20f0d60aa8a30d7bb3dc3c796665e2d9de828b61
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   Firebase: 9a58fdbc9d8655ed7b79a19cf9690bb007d3d46d
-  firebase_analytics: 14d62763b7f5315a4c74bb9c21b6421d72e75e76
-  firebase_auth: 2ebdb4dbe0da3a75585694dcba711f7a8a926601
+  firebase_analytics: b5a19eaf3e4bf4187b0815ef4850b8916e2bc549
+  firebase_auth: e9031a1dbe04a90d98e8d11ff2302352a1c6d9e8
   firebase_core: ee30637e6744af8e0c12a6a1e8a9718506ec2398
-  firebase_crashlytics: 47862bc2be212dc310bb963a360c39c2d65797be
+  firebase_crashlytics: 28b8f39df8104131376393e6af658b8b77dd120f
   firebase_messaging: 343de01a8d3e18b60df0c6d37f7174c44ae38e02
   firebase_storage: 74ebe330dac8084b22991cd1e1abd4a49bc14daf
   FirebaseAnalytics: f20bbad8cb7f65d8a5eaefeb424ae8800a31bdfc

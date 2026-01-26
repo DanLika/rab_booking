@@ -41,12 +41,8 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
           if (user == null) return const _ErrorState(message: 'User not found');
 
           // Initialize state if needed
-          _selectedAccountType ??= user.adminOverrideAccountType != null
-              ? AccountType.values.firstWhere(
-                  (e) => e.name == user.adminOverrideAccountType,
-                  orElse: () => user.accountType,
-                )
-              : user.accountType;
+          _selectedAccountType ??=
+              user.adminOverrideAccountType ?? user.accountType;
 
           _hideSubscription ??= user.hideSubscription;
           _adminOverrideAccountType ??= user.adminOverrideAccountType != null;
@@ -189,13 +185,13 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SelectableText(
                       user.displayName ?? user.fullName,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
+                    SelectableText(
                       user.email,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -443,7 +439,7 @@ class _InfoCard extends StatelessWidget {
               icon: Icons.calendar_today,
               label: 'Created At',
               value:
-                  '${user.createdAt?.day}.${user.createdAt?.month}.${user.createdAt?.year}',
+                  '${user.createdAt.day}.${user.createdAt.month}.${user.createdAt.year}',
             ),
           ],
         ),
@@ -490,12 +486,12 @@ class _InfoRow extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: SelectableText(
                         value,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                     if (copyable) ...[

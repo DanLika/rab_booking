@@ -241,10 +241,9 @@ class ProfileScreen extends ConsumerWidget {
                                             ? double.infinity
                                             : 400,
                                       ),
-                                      child: Text(
+                                      child: SelectableText(
                                         displayName,
                                         maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: isMobile ? 20 : 22,
@@ -265,10 +264,9 @@ class ProfileScreen extends ConsumerWidget {
                                         ),
                                         borderRadius: BorderRadius.circular(16),
                                       ),
-                                      child: Text(
+                                      child: SelectableText(
                                         email,
                                         maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: isMobile ? 12 : 13,

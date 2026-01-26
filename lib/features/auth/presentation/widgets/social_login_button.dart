@@ -135,124 +135,40 @@ class _SocialLoginButtonState extends State<SocialLoginButton> {
   }
 }
 
-/// Google "G" Icon with proper brand colors
+/// Google "G" Icon using image asset with circular white background
 class GoogleBrandIcon extends StatelessWidget {
   final double size;
 
-  const GoogleBrandIcon({super.key, this.size = 22});
+  const GoogleBrandIcon({super.key, this.size = 26});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(painter: _GoogleLogoPainter()),
-    );
-  }
-}
-
-class _GoogleLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final outerRadius = size.width * 0.45;
-    final innerRadius = size.width * 0.30;
-    final strokeWidth = outerRadius - innerRadius;
-    final arcRadius = (outerRadius + innerRadius) / 2;
-    final arcRect = Rect.fromCircle(center: center, radius: arcRadius);
-
-    // Blue arc (top-right quadrant)
-    canvas.drawArc(
-      arcRect,
-      -1.5708, // -π/2
-      1.5708, // π/2
-      false,
-      Paint()
-        ..color = const Color(0xFF4285F4)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.butt,
-    );
-
-    // Green arc
-    canvas.drawArc(
-      arcRect,
-      0.0,
-      1.1,
-      false,
-      Paint()
-        ..color = const Color(0xFF34A853)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round,
-    );
-
-    // Yellow arc
-    canvas.drawArc(
-      arcRect,
-      1.5708, // π/2
-      1.5708,
-      false,
-      Paint()
-        ..color = const Color(0xFFFBBC04)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round,
-    );
-
-    // Red arc
-    canvas.drawArc(
-      arcRect,
-      3.1416, // π
-      1.37,
-      false,
-      Paint()
-        ..color = const Color(0xFFEA4335)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round,
-    );
-
-    // Blue bar (horizontal)
-    final barWidth = outerRadius * 0.85;
-    final barHeight = strokeWidth * 0.6;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(center.dx + barWidth / 4, center.dy),
-          width: barWidth,
-          height: barHeight,
-        ),
-        Radius.circular(barHeight / 2),
+    return ClipOval(
+      child: Image.asset(
+        'assets/images/google_icon.png',
+        width: size,
+        height: size,
+        filterQuality: FilterQuality.high,
       ),
-      Paint()
-        ..color = const Color(0xFF4285F4)
-        ..style = PaintingStyle.fill,
     );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Apple logo icon that adapts to theme using image asset
+/// Apple logo icon with circular white background
 class AppleBrandIcon extends StatelessWidget {
   final double size;
 
-  const AppleBrandIcon({super.key, this.size = 22});
+  const AppleBrandIcon({super.key, this.size = 26});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Image.asset(
-      'assets/images/apple_icon.png',
-      width: size,
-      height: size,
-      filterQuality: FilterQuality.high,
-      // Apply color filter to adapt to theme if needed,
-      // but usually Apple logo is just black/white.
-      // Since our asset is black, we might want to invert it for dark mode.
-      color: theme.brightness == Brightness.dark ? Colors.white : Colors.black,
+    return ClipOval(
+      child: Image.asset(
+        'assets/images/apple_icon.png',
+        width: size,
+        height: size,
+        filterQuality: FilterQuality.high,
+      ),
     );
   }
 }

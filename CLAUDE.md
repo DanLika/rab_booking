@@ -763,7 +763,28 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-26 | **Version**: 6.41
+**Last Updated**: 2026-01-26 | **Version**: 6.42
+
+**Changelog 6.42**: Dialog UI Standardization (Delete Account & Booking Overlap Warning):
+- **Delete Account Dialog** (`delete_account_dialog.dart`):
+  - Migrated from `AlertDialog` to custom `Dialog` widget matching app design system
+  - Added gradient background using `context.gradients.sectionBackground`
+  - New header with red (`AppColors.error`) background, warning icon, and close button
+  - Footer with `AppColors.dialogFooterDark/Light` and section dividers
+  - Proper shadows using `AppShadows.elevation4Dark/elevation4`
+  - Responsive sizing using `ResponsiveDialogUtils`
+  - Works correctly in both light and dark mode
+- **Booking Overlap Warning Dialog** (`booking_create_dialog.dart`):
+  - Same migration from `AlertDialog` to custom `Dialog` widget
+  - Consistent red header for warning state
+  - Theme-aware conflict cards that adapt to dark/light mode
+  - Uses `AppColors.error` with proper opacity for conflict highlighting
+  - Responsive sizing and proper footer styling
+- **Pattern for Warning/Error Dialogs**:
+  - Header: `AppColors.error` background with white icon and text
+  - Content: `context.gradients.sectionBackground` with theme-aware elements
+  - Footer: `AppColors.dialogFooterDark/Light` with section divider border
+  - Use `ResponsiveDialogUtils` for width, padding, and height constraints
 
 **Changelog 6.41**: Platform Icons & Booking Details Dialog v2:
 - **Platform Logo Images** (`lib/shared/widgets/platform_icon.dart`):

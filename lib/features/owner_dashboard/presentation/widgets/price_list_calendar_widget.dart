@@ -269,9 +269,10 @@ class _PriceListCalendarWidgetState
               context: context,
             ),
             items: _cachedMonthList.map((month) {
+              final locale = Localizations.localeOf(context).languageCode;
               return DropdownMenuItem(
                 value: month,
-                child: Text(DateFormat('MMMM yyyy').format(month)),
+                child: Text(DateFormat('MMMM yyyy', locale).format(month)),
               );
             }).toList(),
             onChanged: (value) {
@@ -360,9 +361,10 @@ class _PriceListCalendarWidgetState
                 context: context,
               ),
               items: _cachedMonthList.map((month) {
+                final locale = Localizations.localeOf(context).languageCode;
                 return DropdownMenuItem(
                   value: month,
-                  child: Text(DateFormat('MMMM yyyy').format(month)),
+                  child: Text(DateFormat('MMMM yyyy', locale).format(month)),
                 );
               }).toList(),
               onChanged: (value) {

@@ -763,7 +763,32 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-26 | **Version**: 6.38
+**Last Updated**: 2026-01-26 | **Version**: 6.39
+
+**Changelog 6.39**: Lifetime License Admin Feature:
+- **NEW FEATURE**: Admin can grant/revoke lifetime licenses from Admin Dashboard
+- **UserModel Changes** (`user_model.dart`):
+  - Added `AccountType.lifetime` enum value (trial, premium, enterprise, **lifetime**)
+  - Added `lifetimeLicenseGrantedAt` and `lifetimeLicenseGrantedBy` audit fields
+  - Added helper getters: `isLifetimeLicense`, `effectiveAccountType`, `hasPremiumAccess`
+- **Cloud Function** (`functions/src/admin/setLifetimeLicense.ts`):
+  - Callable function for granting/revoking lifetime licenses
+  - Security: Checks `isAdmin` custom claim on Firebase Auth token
+  - Auditing: Logs all changes to `security_events` collection
+  - Validation: Checks user exists, validates boolean `grant` parameter
+- **Firestore Security Rules** (`firestore.rules`):
+  - Protected fields: `lifetime_license_granted_at`, `lifetime_license_granted_by`
+  - Users cannot modify these fields directly (only via Cloud Function)
+- **Admin Dashboard UI** (`user_detail_screen.dart`):
+  - New "Lifetime License" card with purple theme
+  - Shows "ACTIVE" badge when license is granted
+  - Displays grant date and admin who granted
+  - Grant/Revoke buttons with confirmation dialog
+  - Success/error message display
+- **Dashboard Stats** (`admin_users_repository.dart`):
+  - Added `lifetimeUsers` count to dashboard stats
+- **Bug Fix** (`users_list_screen.dart`):
+  - Added `AccountType.lifetime` case to switch statement (was causing non-exhaustive error)
 
 **Changelog 6.38**: Timeline Calendar Visual Centering & Same-Day Turnover Support:
 - **Visual Centering Fix** (`timeline_grid_widget.dart`):

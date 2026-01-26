@@ -839,7 +839,7 @@ class _StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusColor.withValues(alpha: 0.4), width: 1),
+        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
       ),
       child: Text(
         statusText,

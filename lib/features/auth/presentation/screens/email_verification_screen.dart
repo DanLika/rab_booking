@@ -124,10 +124,14 @@ class _EmailVerificationScreenState
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          '${AppLocalizations.of(context).error}: $e',
-        );
+        String errorMessage = '${AppLocalizations.of(context).error}: $e';
+        final errorString = e.toString();
+
+        if (errorString.contains('too-many-requests')) {
+          errorMessage = AppLocalizations.of(context).authErrorTooManyRequests;
+        }
+
+        ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
       }
     } finally {
       if (mounted) {

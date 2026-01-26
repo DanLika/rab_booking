@@ -524,7 +524,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
         // - bookingPending: No payment required (server allows paymentMethod='none')
         // - bookingInstant: Payment required (Stripe or Bank Transfer only)
         // Field kept for backward compatibility but always set to false
-        allowPayOnArrival: false,
         // For bookingPending mode, approval is ALWAYS required (hardcoded true)
         // For bookingInstant mode, use the user's selection
         requireOwnerApproval: _selectedMode == WidgetMode.bookingPending
@@ -1181,38 +1180,23 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                         items: [
                           DropdownMenuItem(
                             value: 1,
-                            child: Text(
-                              '1 ${l10n.widgetSettingsDay}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: Text('1 ${l10n.widgetSettingsDay}'),
                           ),
                           DropdownMenuItem(
                             value: 3,
-                            child: Text(
-                              '3 ${l10n.widgetSettingsDays}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: Text('3 ${l10n.widgetSettingsDays}'),
                           ),
                           DropdownMenuItem(
                             value: 5,
-                            child: Text(
-                              '5 ${l10n.widgetSettingsDays}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: Text('5 ${l10n.widgetSettingsDays}'),
                           ),
                           DropdownMenuItem(
                             value: 7,
-                            child: Text(
-                              '7 ${l10n.widgetSettingsDays}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: Text('7 ${l10n.widgetSettingsDays}'),
                           ),
                           DropdownMenuItem(
                             value: 14,
-                            child: Text(
-                              '14 ${l10n.widgetSettingsDays}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            child: Text('14 ${l10n.widgetSettingsDays}'),
                           ),
                         ],
                         onChanged: (value) {
@@ -1609,7 +1593,6 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                                   _cancellationHours,
                                 ),
                                 maxLines: 1,
-                                minFontSize: 12,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: _allowCancellation

@@ -445,8 +445,9 @@ class _InfoCard extends StatelessWidget {
             _InfoRow(
               icon: Icons.calendar_today,
               label: 'Created At',
-              value:
-                  '${user.createdAt.day}.${user.createdAt.month}.${user.createdAt.year}',
+              value: user.createdAt != null
+                  ? '${user.createdAt!.day}.${user.createdAt!.month}.${user.createdAt!.year}'
+                  : '-',
             ),
           ],
         ),

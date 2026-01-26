@@ -148,6 +148,7 @@ flutter:
   # Assets
   assets:
     - assets/translations/
+    - assets/google_fonts/
     - assets/images/
     - assets/images/platforms/
 

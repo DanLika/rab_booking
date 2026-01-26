@@ -790,11 +790,7 @@ class _TimelineCalendarWidgetState
           'target': clampedTarget.toIso8601String().substring(0, 10),
         },
       );
-      _fixedStartDate = DateTime.utc(
-        clampedTarget.year,
-        clampedTarget.month,
-        1,
-      );
+      _fixedStartDate = DateTime.utc(clampedTarget.year, clampedTarget.month);
       rangeExtended = true;
     } else if (clampedTarget.isAfter(_fixedEndDate)) {
       _timelineLog(
@@ -806,11 +802,7 @@ class _TimelineCalendarWidgetState
         },
       );
       // Extend to end of target month + 1 month buffer
-      _fixedEndDate = DateTime.utc(
-        clampedTarget.year,
-        clampedTarget.month + 2,
-        1,
-      );
+      _fixedEndDate = DateTime.utc(clampedTarget.year, clampedTarget.month + 2);
       rangeExtended = true;
     }
 
@@ -1178,7 +1170,7 @@ class _TimelineCalendarWidgetState
           'target': targetDate.toIso8601String().substring(0, 10),
         },
       );
-      _fixedStartDate = DateTime.utc(targetDate.year, targetDate.month, 1);
+      _fixedStartDate = DateTime.utc(targetDate.year, targetDate.month);
       rangeExtended = true;
     } else if (targetDate.isAfter(_fixedEndDate)) {
       _timelineLog(
@@ -1190,7 +1182,7 @@ class _TimelineCalendarWidgetState
         },
       );
       // Extend to end of target month + 1 month buffer
-      _fixedEndDate = DateTime.utc(targetDate.year, targetDate.month + 2, 1);
+      _fixedEndDate = DateTime.utc(targetDate.year, targetDate.month + 2);
       rangeExtended = true;
     }
 

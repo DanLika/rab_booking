@@ -301,8 +301,20 @@ class _TimelineUnitRow extends StatelessWidget {
 
       // Calculate absolute left position using daysSinceFixedStart
       // This positions the booking correctly in the full scrollable area
-      // FIX: Use floorToDouble() for consistent positioning with day cells
-      final left = (daysSinceFixedStart * dayWidth).floorToDouble();
+      //
+      // VISUAL CENTERING FIX:
+      // The parallelogram shape has skewOffset ≈ dayWidth, meaning the top-left
+      // corner starts almost one full day right of the container's left edge.
+      // This makes bookings APPEAR shifted right by ~half a day.
+      // To fix: shift left by half the skewOffset so the visual center aligns
+      // with day column boundaries.
+      //
+      // skewOffset = dayWidth - turnoverGap (from SkewedBookingPainter)
+      // Shift = skewOffset / 2 = (dayWidth - 4) / 2
+      final turnoverGap = 4.0; // Must match SkewedBookingPainter.turnoverGap
+      final skewOffset = dayWidth - turnoverGap;
+      final left = (daysSinceFixedStart * dayWidth - skewOffset / 2)
+          .floorToDouble();
       final width = ((nights + 1) * dayWidth).floorToDouble();
 
       // Ensure left and width are valid

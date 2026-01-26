@@ -55,13 +55,18 @@ service cloud.firestore {
 
       // Users can update their own data, but NOT protected status fields.
       // Admins can update anything.
+      // Protected fields: subscription status, trial dates, account type, lifetime license
       allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
-          'statusChangedAt', 'statusChangedBy'
+          'statusChangedAt', 'statusChangedBy',
+          'account_type', 'admin_override_account_type',
+          'lifetime_license_granted_at', 'lifetime_license_granted_by'
         ])) || isAdmin() || isAdminFromFirestore();
       allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
-          'statusChangedAt', 'statusChangedBy'
+          'statusChangedAt', 'statusChangedBy',
+          'account_type', 'admin_override_account_type',
+          'lifetime_license_granted_at', 'lifetime_license_granted_by'
         ])) || isAdmin() || isAdminFromFirestore();
       allow delete: if isAdmin() || isAdminFromFirestore(); // Users cannot delete themselves directly, must use Cloud Function
 
@@ -71,11 +76,15 @@ service cloud.firestore {
         // Same logic as parent document: user can't change status fields.
         allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
             'accountStatus', 'trialStartDate', 'trialExpiresAt',
-            'statusChangedAt', 'statusChangedBy'
+            'statusChangedAt', 'statusChangedBy',
+            'account_type', 'admin_override_account_type',
+            'lifetime_license_granted_at', 'lifetime_license_granted_by'
           ])) || isAdmin();
         allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
             'accountStatus', 'trialStartDate', 'trialExpiresAt',
-            'statusChangedAt', 'statusChangedBy'
+            'statusChangedAt', 'statusChangedBy',
+            'account_type', 'admin_override_account_type',
+            'lifetime_license_granted_at', 'lifetime_license_granted_by'
           ])) || isAdmin();
         allow delete: if isOwner(userId) || isAdmin();
       }

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/logging_service.dart';
 import '../../../shared/models/user_model.dart';
 
 /// Repository for admin user management operations
@@ -81,10 +83,19 @@ class AdminUsersRepository {
         .count()
         .get();
 
+    // Lifetime users count
+    final lifetimeSnapshot = await _firestore
+        .collection('users')
+        .where('role', isEqualTo: 'owner')
+        .where('accountType', isEqualTo: 'lifetime')
+        .count()
+        .get();
+
     return {
       'totalOwners': ownersSnapshot.count ?? 0,
       'trialUsers': trialSnapshot.count ?? 0,
       'premiumUsers': premiumSnapshot.count ?? 0,
+      'lifetimeUsers': lifetimeSnapshot.count ?? 0,
     };
   }
 
@@ -132,6 +143,41 @@ class AdminUsersRepository {
     }
 
     await _firestore.collection('users').doc(userId).update(updates);
+  }
+
+  /// Set or revoke lifetime license for a user via Cloud Function
+  /// Returns success message or throws exception on error
+  Future<String> setLifetimeLicense({
+    required String userId,
+    required bool grant,
+  }) async {
+    try {
+      final callable = FirebaseFunctions.instanceFor(
+        region: 'europe-west1',
+      ).httpsCallable('setLifetimeLicense');
+
+      final result = await callable.call<Map<String, dynamic>>({
+        'userId': userId,
+        'grant': grant,
+      });
+
+      final data = result.data;
+      return data['message'] as String? ?? 'Operation completed';
+    } on FirebaseFunctionsException catch (e) {
+      await LoggingService.logError(
+        'setLifetimeLicense failed: userId=$userId, grant=$grant, code=${e.code}',
+        e,
+        StackTrace.current,
+      );
+      rethrow;
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        'setLifetimeLicense unexpected error: userId=$userId, grant=$grant',
+        e,
+        stackTrace,
+      );
+      rethrow;
+    }
   }
 }
 

@@ -130,6 +130,10 @@ _$UserModelImpl _$$UserModelImplFromJson(
       const {},
   profileCompleted: json['profile_completed'] as bool? ?? true,
   lastProvider: json['last_provider'] as String?,
+  lifetimeLicenseGrantedAt: const NullableTimestampConverter().fromJson(
+    json['lifetime_license_granted_at'],
+  ),
+  lifetimeLicenseGrantedBy: json['lifetime_license_granted_by'] as String?,
 );
 
 Map<String, dynamic> _$$UserModelImplToJson(
@@ -168,6 +172,10 @@ Map<String, dynamic> _$$UserModelImplToJson(
   'featureFlags': instance.featureFlags,
   'profile_completed': instance.profileCompleted,
   'last_provider': instance.lastProvider,
+  'lifetime_license_granted_at': const NullableTimestampConverter().toJson(
+    instance.lifetimeLicenseGrantedAt,
+  ),
+  'lifetime_license_granted_by': instance.lifetimeLicenseGrantedBy,
 };
 
 const _$UserRoleEnumMap = {
@@ -180,4 +188,5 @@ const _$AccountTypeEnumMap = {
   AccountType.trial: 'trial',
   AccountType.premium: 'premium',
   AccountType.enterprise: 'enterprise',
+  AccountType.lifetime: 'lifetime',
 };

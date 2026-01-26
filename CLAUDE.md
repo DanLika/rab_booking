@@ -763,7 +763,26 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-26 | **Version**: 6.37
+**Last Updated**: 2026-01-26 | **Version**: 6.38
+
+**Changelog 6.38**: Timeline Calendar Visual Centering & Same-Day Turnover Support:
+- **Visual Centering Fix** (`timeline_grid_widget.dart`):
+  - **Problem**: Booking blocks appeared shifted right by ~half a day on timeline calendar
+  - **Root Cause**: Parallelogram shape has `skewOffset ≈ dayWidth`, meaning top-left corner starts almost one full day right of container edge
+  - **Fix**: Shift bookings left by `skewOffset / 2` so visual center aligns with day column boundaries
+  - **Code**: `final left = (daysSinceFixedStart * dayWidth - skewOffset / 2).floorToDouble();`
+- **Same-Day Turnover Support** (booking move operations):
+  - **Problem**: Admin bookings couldn't be moved to turnover days (checkout == checkin), but Widget bookings could
+  - **Root Cause**: Dates weren't normalized to midnight before overlap comparison, causing time component differences
+  - **Fix** (`booking_model.dart`, `booking_action_menu.dart`, `timeline_booking_stacker.dart`):
+    - `datesOverlap()` now normalizes all dates to midnight before comparison
+    - Uses strict inequality (`isBefore`/`isAfter`) which allows checkout == checkin
+    - `booking_action_menu` normalizes dates before calling `areDatesAvailable()`
+    - `timeline_booking_stacker` uses normalized dates for stack level assignment
+  - **Example**: Booking A (May 1-5) does NOT overlap with Booking B (May 5-10)
+- **Repository Improvements** (`firebase_booking_repository.dart`):
+  - `getOverlappingBookings()` now excludes completed bookings (only pending/confirmed block dates)
+  - `deleteBooking()` accepts optional `booking` param to avoid permission issues with collectionGroup queries
 
 **Changelog 6.37**: Timeline Calendar TELEPORT Bug Fixes:
 - **Problem 1**: Clicking dates more than ~3 months away in date picker didn't work reliably

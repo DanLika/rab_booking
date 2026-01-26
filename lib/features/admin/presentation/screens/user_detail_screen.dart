@@ -26,6 +26,11 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
   bool _isSavingAdminFlags = false;
   String? _adminFlagsSuccessMessage;
 
+  // Lifetime license states
+  bool _isSettingLifetime = false;
+  String? _lifetimeSuccessMessage;
+  String? _lifetimeErrorMessage;
+
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(userDetailProvider(widget.userId));
@@ -317,7 +322,266 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
             ),
           ),
         ),
+        SizedBox(height: sectionSpacing),
+
+        // Lifetime License Card
+        _buildLifetimeLicenseCard(context, user, cardPadding),
       ],
+    );
+  }
+
+  Widget _buildLifetimeLicenseCard(
+    BuildContext context,
+    UserModel user,
+    double cardPadding,
+  ) {
+    final isLifetime = user.isLifetimeLicense;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Card(
+      color: isDark
+          ? Colors.purple.shade900.withValues(alpha: 0.3)
+          : Colors.purple.shade50,
+      child: Padding(
+        padding: EdgeInsets.all(cardPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.workspace_premium,
+                  color: isDark
+                      ? Colors.purple.shade300
+                      : Colors.purple.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Lifetime License',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: isDark
+                          ? Colors.purple.shade300
+                          : Colors.purple.shade700,
+                    ),
+                  ),
+                ),
+                if (isLifetime)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      'ACTIVE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Status info
+            if (isLifetime) ...[
+              _buildInfoRow('Status', 'Lifetime license granted'),
+              if (user.lifetimeLicenseGrantedAt != null)
+                _buildInfoRow(
+                  'Granted',
+                  '${user.lifetimeLicenseGrantedAt!.day}.${user.lifetimeLicenseGrantedAt!.month}.${user.lifetimeLicenseGrantedAt!.year}',
+                ),
+              if (user.lifetimeLicenseGrantedBy != null)
+                _buildInfoRow('Granted By', user.lifetimeLicenseGrantedBy!),
+              const Divider(height: 24),
+            ],
+
+            Text(
+              isLifetime
+                  ? 'This user has permanent premium access without requiring a subscription.'
+                  : 'Grant this user permanent premium access without requiring a subscription.',
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Success/Error messages
+            if (_lifetimeSuccessMessage != null) ...[
+              _buildSuccessMessage(_lifetimeSuccessMessage!),
+              const SizedBox(height: 16),
+            ],
+            if (_lifetimeErrorMessage != null) ...[
+              _buildErrorMessage(_lifetimeErrorMessage!),
+              const SizedBox(height: 16),
+            ],
+
+            // Action button
+            isLifetime
+                ? OutlinedButton.icon(
+                    onPressed: _isSettingLifetime
+                        ? null
+                        : () => _showRevokeConfirmation(user),
+                    icon: _isSettingLifetime
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.remove_circle_outline),
+                    label: const Text('Revoke Lifetime License'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                    ),
+                  )
+                : FilledButton.icon(
+                    onPressed: _isSettingLifetime
+                        ? null
+                        : () => _grantLifetimeLicense(user),
+                    icon: _isSettingLifetime
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.workspace_premium),
+                    label: const Text('Grant Lifetime License'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                    ),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorMessage(String message) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.red.shade900.withValues(alpha: 0.3)
+            : Colors.red.shade50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.error_outline,
+            color: isDark ? Colors.red.shade300 : Colors.red.shade700,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: isDark ? Colors.red.shade300 : Colors.red.shade700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _grantLifetimeLicense(UserModel user) async {
+    setState(() {
+      _isSettingLifetime = true;
+      _lifetimeSuccessMessage = null;
+      _lifetimeErrorMessage = null;
+    });
+
+    try {
+      final repo = ref.read(adminUsersRepositoryProvider);
+      final message = await repo.setLifetimeLicense(
+        userId: user.id,
+        grant: true,
+      );
+
+      // Refresh user data
+      ref.invalidate(userDetailProvider(widget.userId));
+      ref.invalidate(ownersListProvider);
+      ref.invalidate(dashboardStatsProvider);
+
+      setState(() {
+        _lifetimeSuccessMessage = message;
+        _isSettingLifetime = false;
+      });
+    } catch (e) {
+      setState(() {
+        _lifetimeErrorMessage = 'Failed to grant license: $e';
+        _isSettingLifetime = false;
+      });
+    }
+  }
+
+  Future<void> _revokeLifetimeLicense(UserModel user) async {
+    setState(() {
+      _isSettingLifetime = true;
+      _lifetimeSuccessMessage = null;
+      _lifetimeErrorMessage = null;
+    });
+
+    try {
+      final repo = ref.read(adminUsersRepositoryProvider);
+      final message = await repo.setLifetimeLicense(
+        userId: user.id,
+        grant: false,
+      );
+
+      // Refresh user data
+      ref.invalidate(userDetailProvider(widget.userId));
+      ref.invalidate(ownersListProvider);
+      ref.invalidate(dashboardStatsProvider);
+
+      setState(() {
+        _lifetimeSuccessMessage = message;
+        _isSettingLifetime = false;
+      });
+    } catch (e) {
+      setState(() {
+        _lifetimeErrorMessage = 'Failed to revoke license: $e';
+        _isSettingLifetime = false;
+      });
+    }
+  }
+
+  void _showRevokeConfirmation(UserModel user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Revoke Lifetime License?'),
+        content: Text(
+          'Are you sure you want to revoke the lifetime license for ${user.fullName}? '
+          'They will be reverted to trial status.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _revokeLifetimeLicense(user);
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Revoke'),
+          ),
+        ],
+      ),
     );
   }
 

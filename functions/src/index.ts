@@ -126,6 +126,7 @@ export * from "./trial/sendTrialExpirationWarning";
 
 // Export admin functions
 export * from "./admin/updateUserStatus";
+export * from "./admin/setLifetimeLicense";
 
 // Export scheduled push notifications
 export * from "./scheduledPushNotifications";

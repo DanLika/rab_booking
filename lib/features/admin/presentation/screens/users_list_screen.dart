@@ -223,7 +223,8 @@ class _AccountTypeBadge extends StatelessWidget {
     final color = switch (type) {
       AccountType.trial => Colors.orange,
       AccountType.premium => Colors.green,
-      AccountType.enterprise => Colors.purple,
+      AccountType.enterprise => Colors.blue,
+      AccountType.lifetime => Colors.purple,
     };
 
     return Container(

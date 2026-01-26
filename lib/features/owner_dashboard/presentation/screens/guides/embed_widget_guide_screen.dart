@@ -242,8 +242,13 @@ class _EmbedWidgetGuideScreenState
             physics: PlatformScrollPhysics.adaptive,
             padding: const EdgeInsets.all(16),
             children: [
-              // Hero Section - Simplified
+              // Hero Section - Premium
               _buildHeroSection(isDark),
+
+              const SizedBox(height: 16),
+
+              // Getting Started - Visual Steps
+              _buildInstallationStepsSection(),
 
               const SizedBox(height: 24),
 
@@ -260,7 +265,7 @@ class _EmbedWidgetGuideScreenState
               // Help Links
               _buildHelpLinks(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -270,51 +275,214 @@ class _EmbedWidgetGuideScreenState
 
   Widget _buildHeroSection(bool isDark) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
 
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: context.gradients.brandPrimary,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.code, size: 32, color: Colors.white),
+      child: Stack(
+        children: [
+          // Background pattern/decoration
+          Positioned(
+            right: -10,
+            top: -10,
+            child: Icon(
+              Icons.code,
+              size: 100,
+              color: Colors.white.withValues(alpha: 0.08),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.embedGuideHeaderTitle,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.integration_instructions_outlined,
+                        size: 24,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.embedGuideHeaderSubtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.embedGuideHeaderTitle,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.embedGuideHeaderSubtitle,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontWeight: FontWeight.w400,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// New: Installation Steps Section directly in the main UI
+  Widget _buildInstallationStepsSection() {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          child: Text(
+            l10n.embedGuideQuickHelpTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
         ),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: context.gradients.cardBackground,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: context.gradients.sectionBorder),
+            boxShadow: AppShadows.getElevation(
+              1,
+              isDark: theme.brightness == Brightness.dark,
+            ),
+          ),
+          child: Column(
+            children: [
+              _buildModernStep(
+                number: '1',
+                text: l10n.embedGuideSimpleStep1,
+                theme: theme,
+                isLast: false,
+              ),
+              _buildModernStep(
+                number: '2',
+                text: l10n.embedGuideSimpleStep2,
+                theme: theme,
+                isLast: false,
+              ),
+              _buildModernStep(
+                number: '3',
+                text: l10n.embedGuideSimpleStep3,
+                theme: theme,
+                isLast: true,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build a modern step item with a connecting line
+  Widget _buildModernStep({
+    required String number,
+    required String text,
+    required ThemeData theme,
+    required bool isLast,
+  }) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  gradient: context.gradients.brandPrimary,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  number,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, bottom: 20),
+                  child: Text(
+                    text,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -328,35 +496,50 @@ class _EmbedWidgetGuideScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
+        boxShadow: AppShadows.getElevation(2, isDark: isDark),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.play_circle_outline,
-                color: theme.colorScheme.success,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l10n.embedGuideTestLinksTitle,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.success.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.play_circle_outline_rounded,
                   color: theme.colorScheme.success,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.embedGuideTestLinksTitle,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: theme.colorScheme.success,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           _buildTestLinkCard(
-            icon: Icons.visibility,
+            icon: Icons.visibility_outlined,
             title: l10n.embedGuideTestWidgetTitle,
             description: l10n.embedGuideTestWidgetDesc,
             url: 'https://bookbed.io/test-widget',
@@ -364,7 +547,7 @@ class _EmbedWidgetGuideScreenState
           ),
           const SizedBox(height: 12),
           _buildTestLinkCard(
-            icon: Icons.apartment,
+            icon: Icons.apartment_outlined,
             title: l10n.embedGuideLiveExampleTitle,
             description: l10n.embedGuideLiveExampleDesc,
             url: 'https://bookbed.io/widget',
@@ -386,63 +569,65 @@ class _EmbedWidgetGuideScreenState
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _launchUrl(url, l10n),
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isDark
-                ? theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  )
-                : Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
+            : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _launchUrl(url, l10n),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.success.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, size: 22, color: theme.colorScheme.success),
                 ),
-                child: Icon(icon, size: 20, color: theme.colorScheme.success),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Icon(
-                Icons.open_in_new,
-                size: 18,
-                color: theme.colorScheme.success,
-              ),
-            ],
+                Icon(
+                  Icons.arrow_outward_rounded,
+                  size: 20,
+                  color: theme.colorScheme.success.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -469,11 +654,11 @@ class _EmbedWidgetGuideScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation1Dark : AppShadows.elevation1,
+        boxShadow: AppShadows.getElevation(2, isDark: isDark),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -481,25 +666,26 @@ class _EmbedWidgetGuideScreenState
             l10n.embedGuideNeedHelp,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              letterSpacing: 1.0,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           _buildHelpLinkButton(
-            icon: Icons.menu_book,
+            icon: Icons.menu_book_rounded,
             label: l10n.embedGuideInstallationGuide,
             tab: EmbedHelpTab.installation,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           _buildHelpLinkButton(
-            icon: Icons.tune,
+            icon: Icons.tune_rounded,
             label: l10n.embedGuideAdvancedOptions,
             tab: EmbedHelpTab.advanced,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           _buildHelpLinkButton(
-            icon: Icons.build,
+            icon: Icons.build_circle_outlined,
             label: l10n.embedGuideTroubleshooting,
             tab: EmbedHelpTab.troubleshooting,
           ),
@@ -516,47 +702,55 @@ class _EmbedWidgetGuideScreenState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => EmbedHelpScreen(initialTab: tab),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isDark
-                ? theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  )
-                : Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: theme.colorScheme.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.onSurface,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 2),
+      decoration: BoxDecoration(
+        color: isDark
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
+            : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => EmbedHelpScreen(initialTab: tab),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 20, color: theme.colorScheme.primary),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                 ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ],
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 22,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -575,12 +769,12 @@ class _EmbedWidgetGuideScreenState
     return Container(
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+        boxShadow: AppShadows.getElevation(2, isDark: isDark),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -588,18 +782,18 @@ class _EmbedWidgetGuideScreenState
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.code,
+                    Icons.code_rounded,
                     color: theme.colorScheme.primary,
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -607,15 +801,17 @@ class _EmbedWidgetGuideScreenState
                       Text(
                         l10n.embedGuideYourEmbedCodes,
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
                           color: theme.colorScheme.primary,
+                          letterSpacing: -0.5,
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         l10n.embedGuideCopyIframe,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: theme.colorScheme.onSurface.withValues(
                             alpha: 0.6,
                           ),
@@ -631,12 +827,12 @@ class _EmbedWidgetGuideScreenState
 
             // Language info note
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha(20),
-                borderRadius: BorderRadius.circular(8),
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: theme.colorScheme.primary.withAlpha(50),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
                 ),
               ),
               child: Row(
@@ -715,14 +911,12 @@ class _EmbedWidgetGuideScreenState
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.surfaceContainerHighest
-            : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
+        color: isDark ? const Color(0xFF1E1E26) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? theme.colorScheme.outline : Colors.grey.shade300,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       child: Column(
@@ -730,13 +924,11 @@ class _EmbedWidgetGuideScreenState
         children: [
           // Property header
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark
-                  ? theme.colorScheme.surfaceContainerHigh
-                  : Colors.grey.shade100,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(11),
+                top: Radius.circular(15),
               ),
             ),
             child: Column(
@@ -811,11 +1003,11 @@ class _EmbedWidgetGuideScreenState
     final embedCode = _generateEmbedCode(propertyId, unit, subdomain);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: isDark ? theme.colorScheme.outline : Colors.grey.shade300,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
           ),
         ),
       ),
@@ -825,31 +1017,58 @@ class _EmbedWidgetGuideScreenState
           // Unit name and copy button
           Row(
             children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   unit.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ),
-              TextButton.icon(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: embedCode));
-                  ErrorDisplayUtils.showSuccessSnackBar(
-                    context,
-                    l10n.embedGuideCodeCopied,
-                  );
-                },
-                icon: const Icon(Icons.copy, size: 16),
-                label: Text(l10n.embedCodeCopy),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: TextButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: embedCode));
+                    ErrorDisplayUtils.showSuccessSnackBar(
+                      context,
+                      l10n.embedGuideCodeCopied,
+                    );
+                  },
+                  icon: Icon(
+                    Icons.copy_rounded,
+                    size: 14,
+                    color: theme.colorScheme.primary,
                   ),
-                  visualDensity: VisualDensity.compact,
+                  label: Text(
+                    l10n.embedCodeCopy,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
               ),
             ],
@@ -860,14 +1079,12 @@ class _EmbedWidgetGuideScreenState
           // Code block - with highlighted IDs for easy identification
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.3,
-              ),
-              borderRadius: BorderRadius.circular(6),
+              color: isDark ? const Color(0xFF12121A) : const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
               ),
             ),
             child: _buildHighlightedEmbedCode(
@@ -891,19 +1108,19 @@ class _EmbedWidgetGuideScreenState
     required ThemeData theme,
   }) {
     final normalStyle = TextStyle(
-      fontSize: 11,
+      fontSize: 12,
       fontFamily: 'monospace',
-      color: theme.colorScheme.primary,
-      height: 1.4,
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+      height: 1.5,
     );
 
     final boldStyle = TextStyle(
-      fontSize: 11,
+      fontSize: 12,
       fontFamily: 'monospace',
       color: theme.colorScheme.primary,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.w900,
       backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.15),
-      height: 1.4,
+      height: 1.5,
     );
 
     // Split embed code around property and unit IDs to create highlighted spans

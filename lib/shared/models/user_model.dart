@@ -149,9 +149,11 @@ class UserModel with _$UserModel {
     DateTime? stripeDisconnectedAt,
 
     /// Account creation timestamp
-    @TimestampConverter()
+    /// Nullable for race condition when Google sign-in creates profile
+    /// before Cloud Function sets timestamps
+    @NullableTimestampConverter()
     @JsonKey(name: 'created_at')
-    required DateTime createdAt,
+    DateTime? createdAt,
 
     /// Last update timestamp
     @NullableTimestampConverter()

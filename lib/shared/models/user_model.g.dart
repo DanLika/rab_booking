@@ -106,7 +106,7 @@ _$UserModelImpl _$$UserModelImplFromJson(
   stripeDisconnectedAt: const NullableTimestampConverter().fromJson(
     json['stripe_disconnected_at'],
   ),
-  createdAt: const TimestampConverter().fromJson(json['created_at']),
+  createdAt: const NullableTimestampConverter().fromJson(json['created_at']),
   updatedAt: const NullableTimestampConverter().fromJson(json['updated_at']),
   devices:
       (json['devices'] as List<dynamic>?)
@@ -162,7 +162,7 @@ Map<String, dynamic> _$$UserModelImplToJson(
   'stripe_disconnected_at': const NullableTimestampConverter().toJson(
     instance.stripeDisconnectedAt,
   ),
-  'created_at': const TimestampConverter().toJson(instance.createdAt),
+  'created_at': const NullableTimestampConverter().toJson(instance.createdAt),
   'updated_at': const NullableTimestampConverter().toJson(instance.updatedAt),
   'devices': instance.devices,
   'recentSecurityEvents': instance.recentSecurityEvents,

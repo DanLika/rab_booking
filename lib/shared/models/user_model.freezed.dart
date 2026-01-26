@@ -787,9 +787,11 @@ mixin _$UserModel {
   DateTime? get stripeDisconnectedAt => throw _privateConstructorUsedError;
 
   /// Account creation timestamp
-  @TimestampConverter()
+  /// Nullable for race condition when Google sign-in creates profile
+  /// before Cloud Function sets timestamps
+  @NullableTimestampConverter()
   @JsonKey(name: 'created_at')
-  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Last update timestamp
   @NullableTimestampConverter()
@@ -875,7 +877,9 @@ abstract class $UserModelCopyWith<$Res> {
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_disconnected_at')
     DateTime? stripeDisconnectedAt,
-    @TimestampConverter() @JsonKey(name: 'created_at') DateTime createdAt,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'created_at')
+    DateTime? createdAt,
     @NullableTimestampConverter()
     @JsonKey(name: 'updated_at')
     DateTime? updatedAt,
@@ -929,7 +933,7 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? stripeAccountId = freezed,
     Object? stripeConnectedAt = freezed,
     Object? stripeDisconnectedAt = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
     Object? updatedAt = freezed,
     Object? devices = null,
     Object? recentSecurityEvents = null,
@@ -1011,10 +1015,10 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
                 ? _value.stripeDisconnectedAt
                 : stripeDisconnectedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
-            createdAt: null == createdAt
+            createdAt: freezed == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
+                      as DateTime?,
             updatedAt: freezed == updatedAt
                 ? _value.updatedAt
                 : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -1106,7 +1110,9 @@ abstract class _$$UserModelImplCopyWith<$Res>
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_disconnected_at')
     DateTime? stripeDisconnectedAt,
-    @TimestampConverter() @JsonKey(name: 'created_at') DateTime createdAt,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'created_at')
+    DateTime? createdAt,
     @NullableTimestampConverter()
     @JsonKey(name: 'updated_at')
     DateTime? updatedAt,
@@ -1160,7 +1166,7 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? stripeAccountId = freezed,
     Object? stripeConnectedAt = freezed,
     Object? stripeDisconnectedAt = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
     Object? updatedAt = freezed,
     Object? devices = null,
     Object? recentSecurityEvents = null,
@@ -1242,10 +1248,10 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value.stripeDisconnectedAt
             : stripeDisconnectedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
-        createdAt: null == createdAt
+        createdAt: freezed == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
+                  as DateTime?,
         updatedAt: freezed == updatedAt
             ? _value.updatedAt
             : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -1316,7 +1322,7 @@ class _$UserModelImpl extends _UserModel {
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_disconnected_at')
     this.stripeDisconnectedAt,
-    @TimestampConverter() @JsonKey(name: 'created_at') required this.createdAt,
+    @NullableTimestampConverter() @JsonKey(name: 'created_at') this.createdAt,
     @NullableTimestampConverter() @JsonKey(name: 'updated_at') this.updatedAt,
     final List<DeviceInfo> devices = const [],
     final List<SecurityEvent> recentSecurityEvents = const [],
@@ -1418,10 +1424,12 @@ class _$UserModelImpl extends _UserModel {
   final DateTime? stripeDisconnectedAt;
 
   /// Account creation timestamp
+  /// Nullable for race condition when Google sign-in creates profile
+  /// before Cloud Function sets timestamps
   @override
-  @TimestampConverter()
+  @NullableTimestampConverter()
   @JsonKey(name: 'created_at')
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   /// Last update timestamp
   @override
@@ -1651,9 +1659,9 @@ abstract class _UserModel extends UserModel {
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_disconnected_at')
     final DateTime? stripeDisconnectedAt,
-    @TimestampConverter()
+    @NullableTimestampConverter()
     @JsonKey(name: 'created_at')
-    required final DateTime createdAt,
+    final DateTime? createdAt,
     @NullableTimestampConverter()
     @JsonKey(name: 'updated_at')
     final DateTime? updatedAt,
@@ -1754,10 +1762,12 @@ abstract class _UserModel extends UserModel {
   DateTime? get stripeDisconnectedAt;
 
   /// Account creation timestamp
+  /// Nullable for race condition when Google sign-in creates profile
+  /// before Cloud Function sets timestamps
   @override
-  @TimestampConverter()
+  @NullableTimestampConverter()
   @JsonKey(name: 'created_at')
-  DateTime get createdAt;
+  DateTime? get createdAt;
 
   /// Last update timestamp
   @override

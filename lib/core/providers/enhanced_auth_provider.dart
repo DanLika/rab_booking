@@ -357,7 +357,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       emailVerified:
           firebaseUser.emailVerified ||
           isSocialSignIn, // Social sign-in emails are verified
-      onboardingCompleted: false, // Show onboarding wizard for new users
       displayName: firebaseUser.displayName,
       phone: firebaseUser.phoneNumber,
       avatarUrl: firebaseUser.photoURL,
@@ -374,13 +373,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
     // Set isLoading to false when user profile is created (initial check complete)
     // For social sign-in, set requiresProfileCompletion flag
+    // Note: requiresEmailVerification defaults to false (social sign-in emails are pre-verified)
     state = EnhancedAuthState(
       firebaseUser: firebaseUser,
       userModel: userModel,
       isLoading: false,
       requiresProfileCompletion: isSocialSignIn,
-      // Social sign-in emails are pre-verified by the provider
-      requiresEmailVerification: false,
     );
   }
 
@@ -704,6 +702,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       }
 
       // Create user profile
+      // Note: onboardingCompleted defaults to false (show onboarding wizard for new users)
       final userModel = UserModel(
         id: user.uid,
         email: email,
@@ -713,7 +712,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         phone: phone,
         avatarUrl: finalAvatarUrl,
         displayName: '$firstName $lastName',
-        onboardingCompleted: false, // Show onboarding wizard for new users
         createdAt: DateTime.now(),
       );
 

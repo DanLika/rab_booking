@@ -1,4 +1,4 @@
-import 'package:bookbed/core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -321,8 +321,9 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
       context,
       'Grant Lifetime License',
       'Are you sure you want to grant a lifetime license to this user?',
-    ))
+    )) {
       return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -347,8 +348,9 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
       context,
       'Revoke Lifetime License',
       'Are you sure you want to revoke the lifetime license from this user?',
-    ))
+    )) {
       return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -554,7 +556,7 @@ class _StatisticsCard extends ConsumerWidget {
                     value: propertiesAsync.when(
                       data: (d) => d.toString(),
                       loading: () => '...',
-                      error: (_, __) => '-',
+                      error: (_, _) => '-',
                     ),
                     icon: Icons.home_work_outlined,
                     color: Colors.blue,
@@ -567,7 +569,7 @@ class _StatisticsCard extends ConsumerWidget {
                     value: bookingsAsync.when(
                       data: (d) => d.toString(),
                       loading: () => '...',
-                      error: (_, __) => '-',
+                      error: (_, _) => '-',
                     ),
                     icon: Icons.calendar_month_outlined,
                     color: Colors.orange,
@@ -727,7 +729,13 @@ class _AdminControlsCard extends StatelessWidget {
               value: adminOverride,
               onChanged: onAdminOverrideChanged,
               contentPadding: EdgeInsets.zero,
-              activeColor: Colors.orange,
+              activeTrackColor: Colors.orange.withValues(alpha: 0.5),
+              thumbColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return Colors.orange;
+                }
+                return null;
+              }),
             ),
 
             const SizedBox(height: 24),

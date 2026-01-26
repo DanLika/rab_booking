@@ -75,7 +75,7 @@ class PlatformIcon extends StatelessWidget {
     Widget icon = Container(
       width: size,
       height: size,
-      decoration: showBackground
+      decoration: showBackground && config.assetPath == null
           ? BoxDecoration(
               color: config.backgroundColor,
               shape: BoxShape.circle,
@@ -89,7 +89,28 @@ class PlatformIcon extends StatelessWidget {
             )
           : null,
       child: Center(
-        child: config.isEmoji
+        child: config.assetPath != null
+            ? ClipOval(
+                child: Image.asset(
+                  config.assetPath!,
+                  width: size,
+                  height: size,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Fallback to letter if image fails to load
+                    return Text(
+                      config.letter,
+                      style: TextStyle(
+                        color: config.textColor,
+                        fontSize: size * 0.55,
+                        fontWeight: FontWeight.bold,
+                        height: 1,
+                      ),
+                    );
+                  },
+                ),
+              )
+            : config.isEmoji
             ? Text(config.letter, style: TextStyle(fontSize: size * 0.6))
             : Text(
                 config.letter,
@@ -134,6 +155,7 @@ class PlatformIcon extends StatelessWidget {
           letter: 'B',
           backgroundColor: const Color(0xFF003580),
           textColor: Colors.white,
+          assetPath: 'assets/images/platforms/booking_icon.png',
         );
 
       case 'airbnb':
@@ -142,6 +164,7 @@ class PlatformIcon extends StatelessWidget {
           letter: 'A',
           backgroundColor: const Color(0xFFFF5A5F),
           textColor: Colors.white,
+          assetPath: 'assets/images/platforms/airbnb_icon.png',
         );
 
       case 'widget':
@@ -163,6 +186,7 @@ class PlatformIcon extends StatelessWidget {
           backgroundColor: Colors.orange,
           textColor: Colors.white,
           isEmoji: true,
+          assetPath: 'assets/images/platforms/other_sync_icon.png',
         );
 
       case 'admin':
@@ -191,11 +215,13 @@ class _PlatformConfig {
   final Color backgroundColor;
   final Color textColor;
   final bool isEmoji;
+  final String? assetPath;
 
   _PlatformConfig({
     required this.letter,
     required this.backgroundColor,
     required this.textColor,
     this.isEmoji = false,
+    this.assetPath,
   });
 }

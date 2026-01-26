@@ -610,6 +610,7 @@
   "ownerDrawerCardProcessing": "Obrada kartica",
   "ownerDrawerBankAccount": "Bankovni Račun",
   "ownerDrawerBankAccountData": "Podaci za uplate",
+  "ownerDrawerWidgetSection": "Widget",
   "ownerDrawerGuides": "Uputstva",
   "ownerDrawerEmbedWidget": "Ugradnja widgeta",
   "ownerDrawerAddToSite": "Dodavanje na sajt",
@@ -2409,7 +2410,7 @@
   "priceCalendarSetPrice": "Postavi cijenu",
   "priceCalendarAvailability": "Dostupnost",
   "priceCalendarSelectMonth": "Odaberi mjesec",
-  "priceCalendarBulkEdit": "Bulk Edit",
+  "priceCalendarBulkEdit": "Uredi više",
   "priceCalendarDaysSelected": "{count} {count, plural, =1{dan} few{dana} other{dana}} odabrano",
   "@priceCalendarDaysSelected": {
     "placeholders": {

@@ -1669,6 +1669,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerDrawerBankAccountData => 'Payment data';
 
   @override
+  String get ownerDrawerWidgetSection => 'Widget';
+
+  @override
   String get ownerDrawerGuides => 'Guides';
 
   @override

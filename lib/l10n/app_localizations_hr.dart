@@ -1683,6 +1683,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerDrawerBankAccountData => 'Podaci za uplate';
 
   @override
+  String get ownerDrawerWidgetSection => 'Widget';
+
+  @override
   String get ownerDrawerGuides => 'Uputstva';
 
   @override
@@ -5913,7 +5916,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get priceCalendarSelectMonth => 'Odaberi mjesec';
 
   @override
-  String get priceCalendarBulkEdit => 'Bulk Edit';
+  String get priceCalendarBulkEdit => 'Uredi više';
 
   @override
   String priceCalendarDaysSelected(int count) {

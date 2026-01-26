@@ -3188,6 +3188,12 @@ abstract class AppLocalizations {
   /// **'Payment data'**
   String get ownerDrawerBankAccountData;
 
+  /// No description provided for @ownerDrawerWidgetSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget'**
+  String get ownerDrawerWidgetSection;
+
   /// No description provided for @ownerDrawerGuides.
   ///
   /// In en, this message translates to:

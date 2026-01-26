@@ -610,6 +610,7 @@
   "ownerDrawerCardProcessing": "Card processing",
   "ownerDrawerBankAccount": "Bank Account",
   "ownerDrawerBankAccountData": "Payment data",
+  "ownerDrawerWidgetSection": "Widget",
   "ownerDrawerGuides": "Guides",
   "ownerDrawerEmbedWidget": "Embed Widget",
   "ownerDrawerAddToSite": "Adding to website",

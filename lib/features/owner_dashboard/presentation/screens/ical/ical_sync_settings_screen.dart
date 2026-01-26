@@ -345,7 +345,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(statusIcon, size: 32, color: Colors.white),
+                      child: Icon(statusIcon, size: 24, color: Colors.white),
                     ),
                     const SizedBox(width: 16),
                     // Status info
@@ -702,21 +702,61 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             horizontal: 20,
             vertical: 8,
           ),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              _getStatusIcon(feed.status),
-              color: statusColor,
-              size: 20,
+          leading: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              _getPlatformIconPath(feed.platform),
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to letter icon
+                return Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      feed.platform.displayName[0],
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-          title: Text(
-            feed.platform.displayName,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+          title: Row(
+            children: [
+              Text(
+                feed.platform.displayName,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: statusColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _getStatusLabel(feed.status, l10n),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: statusColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -802,6 +842,21 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     );
   }
 
+  /// Get asset path for platform illustrated icon
+  String _getPlatformIconPath(IcalPlatform platform) => switch (platform) {
+    IcalPlatform.bookingCom => 'assets/images/platforms/booking_icon.png',
+    IcalPlatform.airbnb => 'assets/images/platforms/airbnb_icon.png',
+    IcalPlatform.other => 'assets/images/platforms/other_sync_icon.png',
+  };
+
+  /// Get localized status label
+  String _getStatusLabel(IcalStatus status, AppLocalizations l10n) =>
+      switch (status) {
+        IcalStatus.active => 'Aktivan',
+        IcalStatus.paused => 'Pauziran',
+        IcalStatus.error => 'Greška',
+      };
+
   Widget _buildFeedsLoading(BuildContext context) {
     final theme = Theme.of(context);
     // Minimalistic: Use black in light mode, white in dark mode
@@ -877,12 +932,18 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 ? AppColors.sectionDividerDark
                 : AppColors.sectionDividerLight,
           ),
-          _buildPlatformItem(context, 0, 'Booking.com', Icons.hotel, [
-            l10n.icalGuideBookingCom1,
-            l10n.icalGuideBookingCom2,
-            l10n.icalGuideBookingCom3,
-            l10n.icalGuideBookingCom4,
-          ]),
+          _buildPlatformItem(
+            context,
+            0,
+            'Booking.com',
+            IcalPlatform.bookingCom,
+            [
+              l10n.icalGuideBookingCom1,
+              l10n.icalGuideBookingCom2,
+              l10n.icalGuideBookingCom3,
+              l10n.icalGuideBookingCom4,
+            ],
+          ),
           Divider(
             height: 1,
             indent: 20,
@@ -891,7 +952,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 ? AppColors.sectionDividerDark
                 : AppColors.sectionDividerLight,
           ),
-          _buildPlatformItem(context, 1, 'Airbnb', Icons.home, [
+          _buildPlatformItem(context, 1, 'Airbnb', IcalPlatform.airbnb, [
             l10n.icalGuideAirbnb1,
             l10n.icalGuideAirbnb2,
             l10n.icalGuideAirbnb3,
@@ -907,7 +968,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     BuildContext context,
     int index,
     String name,
-    IconData icon,
+    IcalPlatform platform,
     List<String> steps,
   ) {
     final theme = Theme.of(context);
@@ -922,7 +983,22 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: theme.colorScheme.primary),
+                ClipOval(
+                  child: Image.asset(
+                    _getPlatformIconPath(platform),
+                    width: 24,
+                    height: 24,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to generic icon if image fails to load
+                      return Icon(
+                        Icons.sync,
+                        size: 24,
+                        color: theme.colorScheme.primary,
+                      );
+                    },
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -1085,12 +1161,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     IcalStatus.active => _kStatusActiveColor,
     IcalStatus.error => _kStatusErrorColor,
     IcalStatus.paused => _kStatusPausedColor,
-  };
-
-  IconData _getStatusIcon(IcalStatus status) => switch (status) {
-    IcalStatus.active => Icons.check_circle,
-    IcalStatus.error => Icons.error,
-    IcalStatus.paused => Icons.pause_circle,
   };
 
   void _handleFeedAction(String action, IcalFeed feed) {
@@ -1316,8 +1386,11 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
       _selectedPropertyId = widget.existingFeed!.propertyId;
       _selectedPlatform = widget.existingFeed!.platform;
     }
-    // Check initial URL for platform mismatch
-    _checkPlatformMismatch();
+    // Check initial URL for platform mismatch AFTER first frame
+    // (context is not ready during initState)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _checkPlatformMismatch();
+    });
   }
 
   /// Check if URL matches selected platform and show warning if not

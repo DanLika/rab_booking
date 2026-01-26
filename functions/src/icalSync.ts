@@ -465,12 +465,23 @@ async function parseIcalData(icalData: string): Promise<any[]> {
             continue;
           }
 
+          // Extract original creation date from iCal event
+          // Priority: CREATED > DTSTAMP > startDate (fallback)
+          let originalCreatedAt: Date | null = null;
+          if (vevent.created) {
+            originalCreatedAt = new Date(vevent.created);
+          } else if (vevent.dtstamp) {
+            originalCreatedAt = new Date(vevent.dtstamp);
+          }
+
           events.push({
             externalId: uid,
             startDate: startDate,
             endDate: endDate,
             summary: vevent.summary || 'Rezervacija',
             description: vevent.description || null,
+            // Use original booking date, fallback to check-in date
+            createdAt: originalCreatedAt || startDate,
           });
         }
       }
@@ -560,7 +571,8 @@ async function insertNewEvents(
         end_date: admin.firestore.Timestamp.fromDate(event.endDate),
         guest_name: event.summary || `${capitalizeFirstLetter(platform)} Gost`,
         description: event.description,
-        created_at: admin.firestore.Timestamp.now(),
+        // Use original booking date from iCal (CREATED/DTSTAMP), not import time
+        created_at: admin.firestore.Timestamp.fromDate(event.createdAt),
         updated_at: admin.firestore.Timestamp.now(),
       });
     });

@@ -154,10 +154,26 @@ export const sendPasswordResetEmail = onCall(
         );
       }
 
-      // Wrap other errors
+      // Handle unauthorized domain error
+      // This happens when the redirect URL domain is not in Firebase's authorized domains list
+      if (error.code === "auth/unauthorized-continue-uri" ||
+          error.message?.includes("INTERNAL ASSERT FAILED") ||
+          error.message?.includes("Unable to create the email action link")) {
+        logError(
+          "Password reset failed - domain not authorized. " +
+          "Add the domain to Firebase Console > Authentication > Settings > Authorized domains",
+          error
+        );
+        throw new HttpsError(
+          "internal",
+          "Password reset is temporarily unavailable. Please try again later."
+        );
+      }
+
+      // Wrap other errors - don't expose internal details to client
       throw new HttpsError(
         "internal",
-        `Failed to send password reset email: ${error.message}`
+        "Failed to send password reset email. Please try again later."
       );
     }
   }

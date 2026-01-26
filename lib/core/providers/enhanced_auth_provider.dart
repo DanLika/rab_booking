@@ -77,6 +77,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   final IpGeolocationService _geolocation;
   StreamSubscription<User?>? _authSubscription;
   String? _loadingUserId; // Prevents concurrent profile loads for same user
+  Timer?
+  _signOutGraceTimer; // Grace period before treating null user as sign-out
 
   EnhancedAuthNotifier(
     this._auth,
@@ -92,16 +94,36 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         tag: 'ENHANCED_AUTH',
       );
       if (user != null) {
+        // Cancel any pending sign-out grace timer
+        _signOutGraceTimer?.cancel();
+        _signOutGraceTimer = null;
         _loadUserProfile(user);
       } else {
-        LoggingService.log(
-          'User signed out, clearing state',
-          tag: 'ENHANCED_AUTH',
-        );
-        // Clear user context for Sentry/Crashlytics
-        LoggingService.clearUser();
-        // Set isLoading to false when no user (initial check complete)
-        state = const EnhancedAuthState(isLoading: false);
+        // GRACE PERIOD: Don't immediately clear state when user becomes null.
+        // This handles token refresh race conditions (e.g., after email change via
+        // verifyBeforeUpdateEmail). The auth listener may briefly fire with null
+        // during token refresh, then fire again with user once refresh completes.
+        // Without this grace period, the router would redirect to login during
+        // the brief null state, causing "dashboard for 3 seconds then login" bug.
+        _signOutGraceTimer?.cancel();
+        _signOutGraceTimer = Timer(const Duration(seconds: 2), () {
+          // After grace period, if still no user, treat as real sign-out
+          if (_auth.currentUser == null) {
+            LoggingService.log(
+              'User signed out (confirmed after grace period)',
+              tag: 'ENHANCED_AUTH',
+            );
+            // Clear user context for Sentry/Crashlytics
+            LoggingService.clearUser();
+            // Set isLoading to false when no user (initial check complete)
+            state = const EnhancedAuthState(isLoading: false);
+          } else {
+            LoggingService.log(
+              'User recovered after grace period (token refresh)',
+              tag: 'ENHANCED_AUTH',
+            );
+          }
+        });
       }
     });
   }
@@ -109,6 +131,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _signOutGraceTimer?.cancel();
     super.dispose();
   }
 
@@ -366,10 +389,24 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       lastProvider: providerId,
     );
 
-    await _firestore
-        .collection('users')
-        .doc(firebaseUser.uid)
-        .set(userModel.toJson());
+    // SECURITY FIX: Don't use toJson() - it includes protected fields
+    // that are blocked by Firestore security rules on user creation.
+    await _firestore.collection('users').doc(firebaseUser.uid).set({
+      'id': userModel.id,
+      'email': userModel.email,
+      'first_name': userModel.firstName,
+      'last_name': userModel.lastName,
+      'role': userModel.role.name,
+      'accountType': userModel.accountType.name,
+      'emailVerified': userModel.emailVerified,
+      'phone': userModel.phone,
+      'avatar_url': userModel.avatarUrl,
+      'displayName': userModel.displayName,
+      'onboardingCompleted': userModel.onboardingCompleted,
+      'createdAt': FieldValue.serverTimestamp(),
+      'profileCompleted': userModel.profileCompleted,
+      'lastProvider': userModel.lastProvider,
+    });
 
     // Set isLoading to false when user profile is created (initial check complete)
     // For social sign-in, set requiresProfileCompletion flag
@@ -715,8 +752,24 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         createdAt: DateTime.now(),
       );
 
+      // SECURITY FIX: Don't use toJson() spread - it includes protected fields
+      // like admin_override_account_type, lifetime_license_granted_at, etc.
+      // which are blocked by Firestore security rules on user creation.
+      // Explicitly list only the fields allowed for new user registration.
       await _firestore.collection('users').doc(user.uid).set({
-        ...userModel.toJson(),
+        'id': userModel.id,
+        'email': userModel.email,
+        'first_name': userModel.firstName,
+        'last_name': userModel.lastName,
+        'role': userModel.role.name,
+        'accountType': userModel.accountType.name,
+        'emailVerified': userModel.emailVerified,
+        'phone': userModel.phone,
+        'avatar_url': userModel.avatarUrl,
+        'displayName': userModel.displayName,
+        'onboardingCompleted': userModel.onboardingCompleted,
+        'createdAt': FieldValue.serverTimestamp(),
+        'profileCompleted': userModel.profileCompleted,
         'newsletterOptIn': newsletterOptIn,
       });
 
@@ -868,8 +921,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         // Log verification success
         await _security.logEmailVerification(user.uid);
 
-        // Reload profile
-        await _loadUserProfile(refreshedUser);
+        // Reload profile with forceRefresh to update requiresEmailVerification state
+        // Without forceRefresh, the optimization at line 122 would skip the update
+        // because the profile is already loaded, leaving requiresEmailVerification=true
+        await _loadUserProfile(refreshedUser, forceRefresh: true);
       }
     } catch (e, stackTrace) {
       // Network errors during reload are non-critical - user can retry
@@ -906,20 +961,20 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       if (isNewUser) {
         // Create anonymous user profile
-        final userModel = UserModel(
-          id: user.uid,
-          email: 'anonymous@demo.com',
-          firstName: 'Demo',
-          lastName: 'User',
-          role: UserRole.owner,
-          displayName: 'Demo User',
-          createdAt: DateTime.now(),
-        );
-
-        await _firestore
-            .collection('users')
-            .doc(user.uid)
-            .set(userModel.toJson());
+        // SECURITY FIX: Don't use toJson() - it includes protected fields
+        await _firestore.collection('users').doc(user.uid).set({
+          'id': user.uid,
+          'email': 'anonymous@demo.com',
+          'first_name': 'Demo',
+          'last_name': 'User',
+          'role': UserRole.owner.name,
+          'accountType': AccountType.trial.name,
+          'emailVerified': false,
+          'displayName': 'Demo User',
+          'onboardingCompleted': false,
+          'createdAt': FieldValue.serverTimestamp(),
+          'profileCompleted': true,
+        });
       } else {
         // Update last login for existing users
         await _updateLastLogin(user.uid);

@@ -1,5 +1,6 @@
-import '../../../../core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -213,16 +214,20 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.error, color: AppColors.error, size: 20),
+                  const Icon(Icons.error, color: AppColors.error, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       _errorMessage!,
-                      style: TextStyle(color: AppColors.error),
+                      style: const TextStyle(color: AppColors.error),
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close, size: 16, color: AppColors.error),
+                    icon: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: AppColors.error,
+                    ),
                     onPressed: () => setState(() => _errorMessage = null),
                   ),
                 ],
@@ -502,7 +507,7 @@ class _InfoRow extends StatelessWidget {
                         onTap: () {
                           // Clipboard logic
                         },
-                        child: Icon(
+                        child: const Icon(
                           Icons.copy,
                           size: 14,
                           color: AppColors.primary,
@@ -667,7 +672,10 @@ class _AdminControlsCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.admin_panel_settings, color: AppColors.primary),
+                const Icon(
+                  Icons.admin_panel_settings,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 12),
                 Text(
                   'Admin Controls',

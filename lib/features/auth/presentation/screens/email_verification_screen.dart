@@ -26,6 +26,7 @@ class _EmailVerificationScreenState
   bool _isResending = false;
   int _resendCooldown = 0;
   Timer? _cooldownTimer;
+  bool _hasShownNetworkError = false; // Prevent repeated error snackbars
 
   @override
   void initState() {
@@ -48,6 +49,8 @@ class _EmailVerificationScreenState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      // Reset error flag when returning to app - network may have been restored
+      _hasShownNetworkError = false;
       _checkVerificationStatus();
     }
   }
@@ -58,6 +61,9 @@ class _EmailVerificationScreenState
           .read(enhancedAuthProvider.notifier)
           .refreshEmailVerificationStatus();
 
+      // Reset error flag on success
+      _hasShownNetworkError = false;
+
       final authState = ref.read(enhancedAuthProvider);
       if (!authState.requiresEmailVerification && mounted) {
         // Email verified! Navigate to owner overview
@@ -65,14 +71,25 @@ class _EmailVerificationScreenState
         context.go(OwnerRoutes.overview);
       }
     } catch (e) {
-      // Network error during verification check - show user-friendly message
-      // Don't crash, user can try again manually
-      if (mounted) {
+      // Only show network error ONCE to avoid spamming user every 3 seconds
+      // Permission-denied errors (e.g., Firestore token refresh race condition)
+      // are silently retried - they usually resolve on next attempt
+      final errorString = e.toString().toLowerCase();
+      final isNetworkError =
+          errorString.contains('network') ||
+          errorString.contains('socket') ||
+          errorString.contains('timeout') ||
+          errorString.contains('connection');
+
+      if (isNetworkError && !_hasShownNetworkError && mounted) {
+        _hasShownNetworkError = true;
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           AppLocalizations.of(context).errorNetworkFailed,
         );
       }
+      // For non-network errors (permission-denied, etc.), silently retry
+      // The timer will try again in 3 seconds
     }
   }
 

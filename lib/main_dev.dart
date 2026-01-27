@@ -14,7 +14,17 @@ void main() async {
   EnvironmentConfig.setEnvironment(Environment.development);
 
   // Initialize Firebase with dev options
-  await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
+  // Initialize Firebase with dev options
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
+    }
+  } catch (e) {
+    // Ignore duplicate app error which can happen during hot restart
+    if (!e.toString().contains('duplicate-app')) {
+      rethrow;
+    }
+  }
 
   // Connect to emulators in development
   // await _connectToEmulators();

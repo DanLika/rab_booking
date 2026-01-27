@@ -148,7 +148,14 @@ flutter:
   # Assets
   assets:
     - assets/translations/
-    - assets/google_fonts/
+    - assets/google_fonts/Inter-Black.ttf
+    - assets/google_fonts/Inter-Bold.ttf
+    - assets/google_fonts/Inter-ExtraLight.ttf
+    - assets/google_fonts/Inter-Light.ttf
+    - assets/google_fonts/Inter-Medium.ttf
+    - assets/google_fonts/Inter-Regular.ttf
+    - assets/google_fonts/Inter-SemiBold.ttf
+    - assets/google_fonts/Inter-Thin.ttf
     - assets/images/
     - assets/images/platforms/
 

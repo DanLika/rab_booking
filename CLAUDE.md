@@ -763,7 +763,40 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-28 | **Version**: 6.43
+**Last Updated**: 2026-01-28 | **Version**: 6.44
+
+**Changelog 6.44**: Email Verification Flow Fixes:
+- **Email Verification Bypass Fix** (`enhanced_auth_provider.dart`):
+  - **Problem**: After registration, user was redirected to dashboard instead of email verification page
+  - **Root Cause**: `_createUserProfile()` overwrote auth state without `requiresEmailVerification` flag
+  - **Fix**: Added email verification check in `_createUserProfile()`:
+    ```dart
+    final requiresVerification = !isSocialSignIn &&
+        AuthFeatureFlags.requireEmailVerification &&
+        !firebaseUser.emailVerified;
+    state = state.copyWith(
+      userModel: userModel,
+      requiresEmailVerification: requiresVerification,
+    );
+    ```
+- **Email Change Resend Fix** (`email_verification_screen.dart`, `enhanced_auth_provider.dart`):
+  - **Problem**: After changing email, "Resend" button sent verification to OLD email
+  - **Root Cause**: `updateEmail()` updated Firestore but not `userModel` in memory
+  - **Fix**: `updateEmail()` now also updates `userModel.email` in state
+  - Added `resendEmailChangeVerification()` method for re-sending to new email
+- **Password Dialog for Email Change Resend** (`email_verification_screen.dart`):
+  - **Problem**: `verifyBeforeUpdateEmail()` requires recent authentication
+  - **Fix**: Added `_showResendPasswordDialog()` that prompts for password before resending
+  - Extracted `_startCooldown()` helper method for code reuse
+- **Initial Cooldown on Email Verification Screen**:
+  - Added 30-second initial cooldown when screen opens
+  - Prevents Firebase rate limit errors when user immediately clicks resend after registration
+- **RenderFlex Overflow Fix** (`logout_tile.dart`, `premium_list_tile.dart`):
+  - Added `maxLines: 1` and `overflow: TextOverflow.ellipsis` to title and subtitle Text widgets
+  - Fixes overflow on iOS simulator with long text
+- **Button Color Fix** (`email_verification_screen.dart`):
+  - Added `foregroundColor: Colors.white` to ElevatedButton style in change email dialog
+  - Fixes dark text on dark theme
 
 **Changelog 6.43**: Security Hardening & CI Upgrades:
 - **Security Fix - Encryption Key Validation** (`functions/src/bookingComApi.ts`):

@@ -433,8 +433,8 @@ export const onBookingStatusChange = onDocumentUpdated(
             email: emailTracking.cancellation.email,
           });
           // Don't return here - we still need to create owner notification
-        } else {
-          // Send cancellation email to guest (only if not sent before)
+        } else if (after.guest_email) {
+          // Send cancellation email to guest (only if not sent before and guest email exists)
           try {
             const booking = after as any;
 
@@ -511,6 +511,11 @@ export const onBookingStatusChange = onDocumentUpdated(
             );
             // Don't throw - cancellation should succeed even if email fails
           }
+        } else if (!emailTracking?.cancellation) {
+          // No guest email and no previous email sent - skip email silently
+          logInfo("Skipping cancellation email - no guest email on booking", {
+            bookingId: event.params.bookingId,
+          });
         }
 
         // Create in-app notification for owner about cancellation

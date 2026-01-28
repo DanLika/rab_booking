@@ -775,6 +775,16 @@
           console.error('[FCM-SW] Service worker registration failed:', error);
           console.error('[FCM-SW] Make sure firebase-messaging-sw.js exists in web/ folder');
         });
+
+      // Listen for NOTIFICATION_CLICK messages from the Service Worker.
+      // When user clicks a background notification while the app tab is already open,
+      // the SW sends this message to navigate to the booking.
+      navigator.serviceWorker.addEventListener('message', function (event) {
+        if (event.data && event.data.type === 'NOTIFICATION_CLICK' && event.data.bookingId) {
+          console.log('[FCM-SW] Notification click received, navigating to booking:', event.data.bookingId);
+          window.location.href = '/owner/bookings?booking=' + event.data.bookingId;
+        }
+      });
     }
   </script>
 

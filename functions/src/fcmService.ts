@@ -160,8 +160,8 @@ export async function sendPushNotification(
       // Web push config
       webpush: {
         notification: {
-          icon: "/icons/icon-192.png",
-          badge: "/icons/badge-72.png",
+          icon: "/icons/Icon-192.png",
+          badge: "/icons/Icon-192.png",
         },
         fcmOptions: {
           link: "https://app.bookbed.io/owner/notifications",

@@ -506,6 +506,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
     );
 
     if (confirmed == true && mounted) {
+      setState(() => _isLoading = true);
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
         await repository.deleteBooking(
@@ -530,6 +531,10 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
             e,
             userMessage: l10n.error,
           );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
         }
       }
     }

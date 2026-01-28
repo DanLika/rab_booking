@@ -117,6 +117,14 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"]}, async (r
       .get();
     const propertyData = propertyDoc.data();
 
+    // Validate guest email exists before attempting to send
+    if (!booking.guest_email) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Cannot send email - booking has no guest email address"
+      );
+    }
+
     // Generate new access token
     const {token: accessToken, hashedToken} = generateBookingAccessToken();
     const checkOutDate = toDate(booking.check_out);

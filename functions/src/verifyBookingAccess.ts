@@ -62,7 +62,8 @@ export const verifyBookingAccess = onCall(async (request) => {
     const booking = bookingDoc.data();
 
     // Verify email matches (case-insensitive)
-    if (booking.guest_email.toLowerCase() !== email.toLowerCase()) {
+    // Guard against null guest_email (e.g., admin-created bookings without guest email)
+    if (!booking.guest_email || booking.guest_email.toLowerCase() !== email.toLowerCase()) {
       logWarn("[VerifyBookingAccess] Email mismatch", {
         bookingReference,
         attemptedEmail: email.substring(0, 3) + "***",

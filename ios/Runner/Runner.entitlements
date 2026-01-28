@@ -15,5 +15,8 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<!-- Push Notifications (APNs) -->
+	<key>aps-environment</key>
+	<string>production</string>
 </dict>
 </plist>

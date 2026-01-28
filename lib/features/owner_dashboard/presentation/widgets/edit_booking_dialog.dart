@@ -374,8 +374,20 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                   ),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    // Delete button on the left
+                    IconButton(
+                      onPressed: _isLoading ? null : _deleteBooking,
+                      icon: const Icon(Icons.delete_outline),
+                      color: AppColors.error,
+                      tooltip: l10n.ownerTableDeleteBooking,
+                      style: IconButton.styleFrom(
+                        padding: const EdgeInsets.all(8),
+                        minimumSize: Size.zero,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Cancel and Save on the right
                     Flexible(
                       child: TextButton(
                         onPressed: _isLoading
@@ -466,6 +478,60 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
           }
         }
       });
+    }
+  }
+
+  Future<void> _deleteBooking() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: Text(dialogL10n.ownerTableDeleteBooking),
+          content: Text(dialogL10n.ownerTableDeleteBookingMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(dialogL10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+              child: Text(dialogL10n.delete),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        final repository = ref.read(ownerBookingsRepositoryProvider);
+        await repository.deleteBooking(
+          widget.booking.id,
+          booking: widget.booking,
+        );
+
+        if (mounted) {
+          ref
+              .read(windowedBookingsNotifierProvider.notifier)
+              .removeBooking(widget.booking.id);
+          Navigator.of(context).pop();
+          ErrorDisplayUtils.showSuccessSnackBar(
+            context,
+            l10n.ownerTableBookingDeleted,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            e,
+            userMessage: l10n.error,
+          );
+        }
+      }
     }
   }
 

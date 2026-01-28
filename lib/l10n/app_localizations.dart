@@ -10389,19 +10389,19 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportStep1.
   ///
   /// In en, this message translates to:
-  /// **'Select a unit from the list below'**
+  /// **'Each unit has an automatically generated iCal URL'**
   String get icalExportStep1;
 
   /// No description provided for @icalExportStep2.
   ///
   /// In en, this message translates to:
-  /// **'Click \'Generate\' to create the iCal URL'**
+  /// **'Click the link icon to copy the URL or download the .ics file'**
   String get icalExportStep2;
 
   /// No description provided for @icalExportStep3.
   ///
   /// In en, this message translates to:
-  /// **'Copy the URL and add it to your calendar app'**
+  /// **'Add the URL to your calendar app (Google Calendar, Apple Calendar, Outlook)'**
   String get icalExportStep3;
 
   /// No description provided for @icalExportStep4.

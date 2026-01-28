@@ -5606,13 +5606,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalExportHowItWorks => 'How It Works';
 
   @override
-  String get icalExportStep1 => 'Select a unit from the list below';
+  String get icalExportStep1 =>
+      'Each unit has an automatically generated iCal URL';
 
   @override
-  String get icalExportStep2 => 'Click \'Generate\' to create the iCal URL';
+  String get icalExportStep2 =>
+      'Click the link icon to copy the URL or download the .ics file';
 
   @override
-  String get icalExportStep3 => 'Copy the URL and add it to your calendar app';
+  String get icalExportStep3 =>
+      'Add the URL to your calendar app (Google Calendar, Apple Calendar, Outlook)';
 
   @override
   String get icalExportStep4 =>

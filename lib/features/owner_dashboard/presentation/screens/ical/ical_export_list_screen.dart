@@ -209,6 +209,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         showDialog(
           context: context,
           builder: (dialogContext) => AlertDialog(
+            backgroundColor: theme.colorScheme.surface,
             title: Row(
               children: [
                 Icon(Icons.link, color: theme.colorScheme.primary),
@@ -863,8 +864,8 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                   icon: const Icon(Icons.link, size: 22),
                   tooltip: l10n.icalExportCopyLink,
                   style: IconButton.styleFrom(
-                    backgroundColor: theme.colorScheme.secondaryContainer,
-                    foregroundColor: theme.colorScheme.onSecondaryContainer,
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    foregroundColor: theme.colorScheme.onPrimaryContainer,
                   ),
                 ),
                 const SizedBox(width: 8),

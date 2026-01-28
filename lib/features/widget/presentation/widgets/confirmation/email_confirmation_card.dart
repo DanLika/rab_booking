@@ -175,49 +175,46 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                 const SizedBox(height: SpacingTokens.xxs),
                 // Bug #54 Fix: Check for empty email string
                 // Bug #57 Fix: Add Semantics for accessibility
+                // SelectableText fix: Use Wrap to allow email selection
                 Semantics(
                   label: widget.guestEmail.isEmpty
                       ? '${tr.checkYourEmailAt} ${tr.forBookingDetails}'
                       : '${tr.checkYourEmailAt} ${widget.guestEmail} ${tr.forBookingDetails}',
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: tr.checkYourEmailAt,
+                  child: widget.guestEmail.isEmpty
+                      ? Text(
+                          '${tr.checkYourEmailAt} ${tr.forBookingDetails}',
                           style: TextStyle(
                             fontSize: TypographyTokens.fontSizeS,
                             color: colors.textSecondary,
+                            fontStyle: FontStyle.italic,
                           ),
+                        )
+                      : Wrap(
+                          children: [
+                            Text(
+                              tr.checkYourEmailAt,
+                              style: TextStyle(
+                                fontSize: TypographyTokens.fontSizeS,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                            SelectableText(
+                              ' ${widget.guestEmail} ',
+                              style: TextStyle(
+                                fontSize: TypographyTokens.fontSizeS,
+                                fontWeight: FontWeight.w600,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              tr.forBookingDetails,
+                              style: TextStyle(
+                                fontSize: TypographyTokens.fontSizeS,
+                                color: colors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
-                        if (widget.guestEmail.isEmpty)
-                          TextSpan(
-                            text: tr.forBookingDetails,
-                            style: TextStyle(
-                              fontSize: TypographyTokens.fontSizeS,
-                              color: colors.textSecondary,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          )
-                        else ...[
-                          TextSpan(
-                            text: ' ${widget.guestEmail} ',
-                            style: TextStyle(
-                              fontSize: TypographyTokens.fontSizeS,
-                              fontWeight: FontWeight.w600,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                          TextSpan(
-                            text: tr.forBookingDetails,
-                            style: TextStyle(
-                              fontSize: TypographyTokens.fontSizeS,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
                 ),
                 if (canResend) ...[
                   const SizedBox(height: SpacingTokens.s),

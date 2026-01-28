@@ -325,7 +325,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    Text(
+                                    SelectableText(
                                       widget.booking.guestEmail ?? '',
                                       style: TextStyle(
                                         fontSize: 13,

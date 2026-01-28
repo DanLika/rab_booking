@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_shadows.dart';
@@ -104,10 +107,163 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
+        ErrorDisplayUtils.showErrorSnackBar(context, e);
       }
+    }
+  }
+
+  Future<void> _showDynamicLinkDialog(dynamic unit, String propertyId) async {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Direct Firestore access to bypass model limitations
+      final docRef = FirebaseFirestore.instance
+          .collection('properties')
+          .doc(propertyId)
+          .collection('widget_settings')
+          .doc(unit.id);
+
+      final doc = await docRef.get();
+      String? token;
+
+      if (doc.exists && doc.data() != null) {
+        token = doc.data()!['ical_export_token'] as String?;
+      }
+
+      // If token is missing, generate one and enable export
+      if (token == null || token.isEmpty) {
+        token = const Uuid().v4();
+
+        // Ensure we have ownerId (required for security rules)
+        final String ownerId = unit.ownerId ?? '';
+
+        // Merge with existing or create new with minimal fields
+        await docRef.set({
+          'ical_export_token': token,
+          'ical_export_enabled': true,
+          'updated_at': FieldValue.serverTimestamp(),
+          // Ensure required fields for new doc
+          'property_id': propertyId,
+          'owner_id': ownerId.isNotEmpty ? ownerId : null,
+          'id': unit.id,
+        }, SetOptions(merge: true));
+      }
+
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context); // Close loading
+      }
+
+      // Construct URL
+      // TODO: Get project ID dynamically if possible, or use constant
+      const projectId = 'rab-booking-248fc';
+      const region = 'us-central1';
+      final url =
+          'https://$region-$projectId.cloudfunctions.net/getUnitIcalFeed/$propertyId/${unit.id}/$token';
+
+      if (!mounted) return;
+
+      // Show URL dialog
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.link, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(child: Text(l10n.icalExportDynamicLinkTitle)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.icalExportDynamicLinkDescription,
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.icalExportSyncTimeNote,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SelectableText(
+                        url,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                        ),
+                        maxLines: 3,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy, size: 20),
+                      tooltip: l10n.icalExportCopyLink,
+                      onPressed: () async {
+                        try {
+                          await Clipboard.setData(ClipboardData(text: url));
+                          if (dialogContext.mounted) {
+                            ErrorDisplayUtils.showSuccessSnackBar(
+                              dialogContext,
+                              l10n.icalExportLinkCopied,
+                            );
+                          }
+                        } catch (e) {
+                          // Clipboard API can fail on some browsers (e.g., Safari in iframe)
+                          if (dialogContext.mounted) {
+                            ErrorDisplayUtils.showErrorSnackBar(
+                              dialogContext,
+                              e,
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.icalExportTokenWarning,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.close),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+      if (mounted) ErrorDisplayUtils.showErrorSnackBar(context, e);
     }
   }
 
@@ -616,9 +772,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: _generatingUnitId == null
-              ? () => _generateAndDownloadIcal(unit, property.id)
-              : null,
+          onTap: null, // Disable card tap to prevent accidental actions
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -661,6 +815,18 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                     ],
                   ),
                 ),
+                // Copy Link Button
+                IconButton(
+                  onPressed: () => _showDynamicLinkDialog(unit, property.id),
+                  icon: const Icon(Icons.link, size: 22),
+                  tooltip: l10n.icalExportCopyLink,
+                  style: IconButton.styleFrom(
+                    backgroundColor: theme.colorScheme.secondaryContainer,
+                    foregroundColor: theme.colorScheme.onSecondaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Download Button
                 if (_generatingUnitId == unit.id)
                   const SizedBox(
                     width: 24,
@@ -668,16 +834,14 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 else
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.download_rounded,
-                      size: 20,
-                      color: theme.colorScheme.primary,
+                  IconButton(
+                    onPressed: () =>
+                        _generateAndDownloadIcal(unit, property.id),
+                    icon: const Icon(Icons.download_rounded, size: 22),
+                    tooltip: 'Download',
+                    style: IconButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      foregroundColor: theme.colorScheme.onPrimaryContainer,
                     ),
                   ),
               ],

@@ -10425,7 +10425,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportFaq1A.
   ///
   /// In en, this message translates to:
-  /// **'Most calendar apps sync every 5-15 minutes. You can also manually refresh in your calendar app.'**
+  /// **'Calendar apps sync every 5-15 minutes. Booking.com syncs every 15-60 minutes. Airbnb syncs every 3-6 hours.'**
   String get icalExportFaq1A;
 
   /// No description provided for @icalExportFaq2Q.
@@ -10493,6 +10493,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generate an iCal URL to sync your bookings with external calendars.'**
   String get icalExportNoUrlDesc;
+
+  /// No description provided for @icalExportDynamicLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic iCal Link'**
+  String get icalExportDynamicLinkTitle;
+
+  /// No description provided for @icalExportDynamicLinkDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this link to Booking.com, Airbnb, or other OTAs. Your availability will sync automatically.'**
+  String get icalExportDynamicLinkDescription;
+
+  /// No description provided for @icalExportLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied to clipboard'**
+  String get icalExportLinkCopied;
+
+  /// No description provided for @icalExportTokenWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: This link contains a secret token. Do not share it publicly.'**
+  String get icalExportTokenWarning;
+
+  /// No description provided for @icalExportSyncTimeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking.com syncs every 15-60 min. Airbnb syncs every 3-6 hours.'**
+  String get icalExportSyncTimeNote;
+
+  /// No description provided for @icalExportCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Link'**
+  String get icalExportCopyLink;
 
   /// No description provided for @errorWithMessage.
   ///

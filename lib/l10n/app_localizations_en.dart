@@ -5626,7 +5626,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportFaq1A =>
-      'Most calendar apps sync every 5-15 minutes. You can also manually refresh in your calendar app.';
+      'Calendar apps sync every 5-15 minutes. Booking.com syncs every 15-60 minutes. Airbnb syncs every 3-6 hours.';
 
   @override
   String get icalExportFaq2Q => 'Will deleted bookings be removed?';
@@ -5665,6 +5665,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get icalExportNoUrlDesc =>
       'Generate an iCal URL to sync your bookings with external calendars.';
+
+  @override
+  String get icalExportDynamicLinkTitle => 'Dynamic iCal Link';
+
+  @override
+  String get icalExportDynamicLinkDescription =>
+      'Copy this link to Booking.com, Airbnb, or other OTAs. Your availability will sync automatically.';
+
+  @override
+  String get icalExportLinkCopied => 'Link copied to clipboard';
+
+  @override
+  String get icalExportTokenWarning =>
+      'Note: This link contains a secret token. Do not share it publicly.';
+
+  @override
+  String get icalExportSyncTimeNote =>
+      'Booking.com syncs every 15-60 min. Airbnb syncs every 3-6 hours.';
+
+  @override
+  String get icalExportCopyLink => 'Copy Link';
 
   @override
   String errorWithMessage(String message) {

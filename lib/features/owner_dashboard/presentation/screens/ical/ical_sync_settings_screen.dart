@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import '../../../../../core/services/logging_service.dart';
 import '../../../../../core/utils/async_utils.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';

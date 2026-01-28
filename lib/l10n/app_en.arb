@@ -2284,7 +2284,7 @@
   "icalExportStep4": "Your calendar will automatically sync bookings",
   "icalExportFaqTitle": "Frequently Asked Questions",
   "icalExportFaq1Q": "How often does the calendar sync?",
-  "icalExportFaq1A": "Most calendar apps sync every 5-15 minutes. You can also manually refresh in your calendar app.",
+  "icalExportFaq1A": "Calendar apps sync every 5-15 minutes. Booking.com syncs every 15-60 minutes. Airbnb syncs every 3-6 hours.",
   "icalExportFaq2Q": "Will deleted bookings be removed?",
   "icalExportFaq2A": "Yes, when you regenerate the export, cancelled bookings will be removed from your calendar.",
   "icalExportFaq3Q": "Can I share this URL with others?",
@@ -2296,6 +2296,13 @@
   "icalExportRegenerate": "Regenerate URL",
   "icalExportNoUrl": "No URL Generated",
   "icalExportNoUrlDesc": "Generate an iCal URL to sync your bookings with external calendars.",
+
+  "icalExportDynamicLinkTitle": "Dynamic iCal Link",
+  "icalExportDynamicLinkDescription": "Copy this link to Booking.com, Airbnb, or other OTAs. Your availability will sync automatically.",
+  "icalExportLinkCopied": "Link copied to clipboard",
+  "icalExportTokenWarning": "Note: This link contains a secret token. Do not share it publicly.",
+  "icalExportSyncTimeNote": "Booking.com syncs every 15-60 min. Airbnb syncs every 3-6 hours.",
+  "icalExportCopyLink": "Copy Link",
 
   "errorWithMessage": "Error: {message}",
   "@errorWithMessage": {

@@ -111,6 +111,24 @@
       ]
     },
     {
+      "collectionGroup": "daily_prices",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
+          "fieldPath": "unit_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "available",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "bookings",
       "queryScope": "COLLECTION_GROUP",
       "fields": [

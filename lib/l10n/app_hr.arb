@@ -2290,7 +2290,7 @@
   "icalExportStep4": "Vaš kalendar će automatski sinkronizirati rezervacije",
   "icalExportFaqTitle": "Često Postavljana Pitanja",
   "icalExportFaq1Q": "Koliko često se kalendar sinkronizira?",
-  "icalExportFaq1A": "Većina kalendarskih aplikacija sinkronizira svakih 5-15 minuta. Možete i ručno osvježiti u svojoj aplikaciji.",
+  "icalExportFaq1A": "Kalendarske aplikacije sinkroniziraju svakih 5-15 minuta. Booking.com sinkronizira svakih 15-60 minuta. Airbnb sinkronizira svakih 3-6 sati.",
   "icalExportFaq2Q": "Hoće li obrisane rezervacije biti uklonjene?",
   "icalExportFaq2A": "Da, kada regenerirate export, otkazane rezervacije će biti uklonjene iz vašeg kalendara.",
   "icalExportFaq3Q": "Mogu li podijeliti ovaj URL s drugima?",
@@ -2302,6 +2302,13 @@
   "icalExportRegenerate": "Regeneriraj URL",
   "icalExportNoUrl": "URL Nije Generiran",
   "icalExportNoUrlDesc": "Generirajte iCal URL za sinkronizaciju rezervacija s vanjskim kalendarima.",
+
+  "icalExportDynamicLinkTitle": "Dinamički iCal Link",
+  "icalExportDynamicLinkDescription": "Kopirajte ovaj link na Booking.com, Airbnb ili druge OTA platforme. Vaša dostupnost će se automatski sinkronizirati.",
+  "icalExportLinkCopied": "Link kopiran u međuspremnik",
+  "icalExportTokenWarning": "Napomena: Ovaj link sadrži tajni token. Ne dijelite ga javno.",
+  "icalExportSyncTimeNote": "Booking.com sinkronizira svakih 15-60 min. Airbnb sinkronizira svakih 3-6 sati.",
+  "icalExportCopyLink": "Kopiraj Link",
 
   "errorWithMessage": "Greška: {message}",
   "@errorWithMessage": {

@@ -5658,7 +5658,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportFaq1A =>
-      'Većina kalendarskih aplikacija sinkronizira svakih 5-15 minuta. Možete i ručno osvježiti u svojoj aplikaciji.';
+      'Kalendarske aplikacije sinkroniziraju svakih 5-15 minuta. Booking.com sinkronizira svakih 15-60 minuta. Airbnb sinkronizira svakih 3-6 sati.';
 
   @override
   String get icalExportFaq2Q => 'Hoće li obrisane rezervacije biti uklonjene?';
@@ -5697,6 +5697,27 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get icalExportNoUrlDesc =>
       'Generirajte iCal URL za sinkronizaciju rezervacija s vanjskim kalendarima.';
+
+  @override
+  String get icalExportDynamicLinkTitle => 'Dinamički iCal Link';
+
+  @override
+  String get icalExportDynamicLinkDescription =>
+      'Kopirajte ovaj link na Booking.com, Airbnb ili druge OTA platforme. Vaša dostupnost će se automatski sinkronizirati.';
+
+  @override
+  String get icalExportLinkCopied => 'Link kopiran u međuspremnik';
+
+  @override
+  String get icalExportTokenWarning =>
+      'Napomena: Ovaj link sadrži tajni token. Ne dijelite ga javno.';
+
+  @override
+  String get icalExportSyncTimeNote =>
+      'Booking.com sinkronizira svakih 15-60 min. Airbnb sinkronizira svakih 3-6 sati.';
+
+  @override
+  String get icalExportCopyLink => 'Kopiraj Link';
 
   @override
   String errorWithMessage(String message) {

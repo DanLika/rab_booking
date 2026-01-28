@@ -433,8 +433,8 @@ export const onBookingStatusChange = onDocumentUpdated(
             email: emailTracking.cancellation.email,
           });
           // Don't return here - we still need to create owner notification
-        } else {
-          // Send cancellation email to guest (only if not sent before)
+        } else if (after.guest_email) {
+          // Send cancellation email to guest (only if not sent before and email exists)
           try {
             const booking = after as any;
 
@@ -475,7 +475,7 @@ export const onBookingStatusChange = onDocumentUpdated(
               async () => {
                 await sendBookingCancellationEmail(
                   booking.guest_email,
-                  booking.guest_name,
+                  booking.guest_name || "Guest",
                   booking.booking_reference || `ERR-${event.params.bookingId}`,
                   propertyName,
                   unitName,

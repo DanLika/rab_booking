@@ -349,14 +349,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           context: context,
                         ),
                         textCapitalization: TextCapitalization.words,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreateGuestNameError;
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 12),
 
@@ -371,12 +363,10 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreateEmailError;
-                          }
-                          if (!_isValidEmail(value.trim())) {
+                          // Only validate format if email is provided
+                          if (value != null &&
+                              value.trim().isNotEmpty &&
+                              !_isValidEmail(value.trim())) {
                             return AppLocalizations.of(
                               context,
                             ).bookingCreateEmailInvalid;
@@ -396,14 +386,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           context: context,
                         ),
                         keyboardType: TextInputType.phone,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePhoneError;
-                          }
-                          return null;
-                        },
                       ),
 
                       const SizedBox(height: 24),
@@ -430,20 +412,6 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreateGuestCountError;
-                          }
-                          final count = int.tryParse(value.trim());
-                          if (count == null || count <= 0) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreateGuestCountInvalid;
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 12),
 
@@ -461,26 +429,19 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                           decimal: true,
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePriceError;
-                          }
-                          final price = double.tryParse(value.trim());
-                          if (price == null) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePriceInvalid;
-                          }
-                          if (price < 0) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePriceNegative;
-                          }
-                          if (price == 0) {
-                            return AppLocalizations.of(
-                              context,
-                            ).bookingCreatePriceZero;
+                          // Only validate format if price is provided
+                          if (value != null && value.trim().isNotEmpty) {
+                            final price = double.tryParse(value.trim());
+                            if (price == null) {
+                              return AppLocalizations.of(
+                                context,
+                              ).bookingCreatePriceInvalid;
+                            }
+                            if (price < 0) {
+                              return AppLocalizations.of(
+                                context,
+                              ).bookingCreatePriceNegative;
+                            }
                           }
                           return null;
                         },
@@ -790,8 +751,13 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         setState(() => _isSaving = true);
       }
 
-      final totalPrice = double.parse(_totalPriceController.text.trim());
-      final guestCount = int.parse(_guestCountController.text.trim());
+      // Safely parse optional numeric fields (default to 0.0 / 1 if empty)
+      final totalPrice = _totalPriceController.text.trim().isEmpty
+          ? 0.0
+          : double.tryParse(_totalPriceController.text.trim()) ?? 0.0;
+      final guestCount = _guestCountController.text.trim().isEmpty
+          ? 1
+          : int.tryParse(_guestCountController.text.trim()) ?? 1;
 
       // Create booking with guaranteed non-null ownerId
       // IMPORTANT: Normalize dates to midnight (strip time component)
@@ -808,16 +774,25 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         _checkOutDate.day,
       );
 
+      // Null-safe guest fields: empty string → null
+      final guestName = _guestNameController.text.trim().isEmpty
+          ? null
+          : _guestNameController.text.trim();
+      final guestEmail = _guestEmailController.text.trim().isEmpty
+          ? null
+          : _guestEmailController.text.trim();
+      final guestPhone = _guestPhoneController.text.trim().isEmpty
+          ? null
+          : _guestPhoneController.text.trim();
+
       final booking = BookingModel(
         id: '', // Will be generated by Firestore
         unitId: _selectedUnitId!,
         propertyId: selectedUnit.propertyId,
         ownerId: ownerId, // FIX: Use validated non-null ownerId
-        guestName: _guestNameController.text.trim(),
-        guestEmail: _guestEmailController.text.trim(),
-        guestPhone: _guestPhoneController.text.trim().isEmpty
-            ? null
-            : _guestPhoneController.text.trim(),
+        guestName: guestName,
+        guestEmail: guestEmail,
+        guestPhone: guestPhone,
         checkIn: normalizedCheckIn,
         checkOut: normalizedCheckOut,
         guestCount: guestCount,

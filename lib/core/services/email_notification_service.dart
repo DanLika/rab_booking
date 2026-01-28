@@ -64,6 +64,14 @@ class EmailNotificationService {
         return;
       }
 
+      // Skip if no guest email (e.g., admin-created bookings without guest email)
+      if (booking.guestEmail == null || booking.guestEmail!.isEmpty) {
+        LoggingService.logWarning(
+          '[EmailNotificationService] No guest email - skipping booking confirmation',
+        );
+        return;
+      }
+
       LoggingService.logOperation(
         '[EmailNotificationService] Sending booking confirmation email...',
       );
@@ -127,6 +135,14 @@ class EmailNotificationService {
       if (!emailConfig.isConfigured) {
         LoggingService.logWarning(
           '[EmailNotificationService] Email config incomplete - skipping payment receipt',
+        );
+        return;
+      }
+
+      // Skip if no guest email
+      if (booking.guestEmail == null || booking.guestEmail!.isEmpty) {
+        LoggingService.logWarning(
+          '[EmailNotificationService] No guest email - skipping payment receipt',
         );
         return;
       }
@@ -398,7 +414,7 @@ class EmailNotificationService {
             <p>$propertyName</p>
         </div>
 
-        <p>Poštovani ${HtmlUtils.escapeHtml(booking.guestName)},</p>
+        <p>Poštovani ${HtmlUtils.escapeHtml(booking.guestName ?? 'Guest')},</p>
 
         <p>Hvala Vam što ste odabrali naš smještaj! Vaša rezervacija je uspješno primljena.</p>
 
@@ -631,7 +647,7 @@ class EmailNotificationService {
             <div class="success-badge">✓ Plaćanje uspješno primljeno</div>
         </div>
 
-        <p>Poštovani ${HtmlUtils.escapeHtml(booking.guestName)},</p>
+        <p>Poštovani ${HtmlUtils.escapeHtml(booking.guestName ?? 'Guest')},</p>
 
         <p>Potvrđujemo da smo primili Vašu uplatu. Vaša rezervacija je sada u potpunosti potvrđena!</p>
 
@@ -821,15 +837,15 @@ class EmailNotificationService {
             <h3 style="margin-top: 0; color: #0066cc;">Informacije o gostu</h3>
             <div class="detail-row" style="border: none;">
                 <span class="detail-label">Ime:</span>
-                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestName)}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestName ?? '-')}</span>
             </div>
             <div class="detail-row" style="border: none;">
                 <span class="detail-label">Email:</span>
-                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestEmail)}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestEmail ?? '-')}</span>
             </div>
             <div class="detail-row" style="border: none;">
                 <span class="detail-label">Telefon:</span>
-                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestPhone)}</span>
+                <span class="detail-value">${HtmlUtils.escapeHtml(booking.guestPhone ?? '-')}</span>
             </div>
         </div>
 

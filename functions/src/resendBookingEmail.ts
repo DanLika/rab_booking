@@ -111,6 +111,14 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"]}, async (r
       );
     }
 
+    // Guard: Cannot resend email if booking has no guest email
+    if (!booking.guest_email) {
+      throw new HttpsError(
+        "failed-precondition",
+        "This booking has no guest email address. Cannot send email."
+      );
+    }
+
     // Get property details
     const propertyDoc = await db.collection("properties")
       .doc(booking.property_id)

@@ -148,14 +148,18 @@ flutter:
   # Assets
   assets:
     - assets/translations/
-    - assets/google_fonts/Inter-Black.ttf
-    - assets/google_fonts/Inter-Bold.ttf
-    - assets/google_fonts/Inter-ExtraLight.ttf
+    # Inter fonts (5 weights - used in body text, titles, buttons)
     - assets/google_fonts/Inter-Light.ttf
-    - assets/google_fonts/Inter-Medium.ttf
     - assets/google_fonts/Inter-Regular.ttf
+    - assets/google_fonts/Inter-Medium.ttf
     - assets/google_fonts/Inter-SemiBold.ttf
-    - assets/google_fonts/Inter-Thin.ttf
+    - assets/google_fonts/Inter-Bold.ttf
+    # PlayfairDisplay fonts (5 weights - used in headings, quotes)
+    - assets/google_fonts/PlayfairDisplay-Regular.ttf
+    - assets/google_fonts/PlayfairDisplay-SemiBold.ttf
+    - assets/google_fonts/PlayfairDisplay-Bold.ttf
+    - assets/google_fonts/PlayfairDisplay-ExtraBold.ttf
+    - assets/google_fonts/PlayfairDisplay-Italic.ttf
     - assets/images/
     - assets/images/platforms/
 

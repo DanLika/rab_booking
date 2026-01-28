@@ -401,27 +401,30 @@ class AppTypography {
   );
 
   /// Quote text style (testimonials, blockquotes) - ENHANCED with italic elegance
+  /// Note: PlayfairDisplay doesn't have light weights, using Regular (400)
   static TextStyle get quote => GoogleFonts.playfairDisplay(
     fontSize: 24, // Increased from 20px for more impact
-    fontWeight: weightLight, // Lighter for elegance
+    fontWeight: weightRegular, // PlayfairDisplay min weight is 400
     letterSpacing: letterSpacingNormal,
     height: lineHeightRelaxed,
     fontStyle: FontStyle.italic,
   );
 
   /// Testimonial text style - Italic Playfair for emotional impact
+  /// Note: PlayfairDisplay doesn't have light weights, using Regular (400)
   static TextStyle get testimonial => GoogleFonts.playfairDisplay(
     fontSize: 20,
-    fontWeight: weightLight,
+    fontWeight: weightRegular, // PlayfairDisplay min weight is 400
     letterSpacing: 0.15,
     height: 1.7,
     fontStyle: FontStyle.italic,
   );
 
   /// Pull quote style - Large italic for featured quotes
+  /// Note: PlayfairDisplay doesn't have light weights, using Regular (400)
   static TextStyle get pullQuote => GoogleFonts.playfairDisplay(
     fontSize: 32,
-    fontWeight: weightExtraLight, // Ultra-light for drama
+    fontWeight: weightRegular, // PlayfairDisplay min weight is 400
     letterSpacing: -0.5,
     height: 1.3,
     fontStyle: FontStyle.italic,

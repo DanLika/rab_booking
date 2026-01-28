@@ -62,12 +62,10 @@ export const verifyBookingAccess = onCall(async (request) => {
     const booking = bookingDoc.data();
 
     // Verify email matches (case-insensitive)
-    // Guard against null/undefined guest_email (e.g., admin-created bookings without guest data)
-    if (!booking.guest_email || booking.guest_email.toLowerCase() !== email.toLowerCase()) {
+    if (booking.guest_email.toLowerCase() !== email.toLowerCase()) {
       logWarn("[VerifyBookingAccess] Email mismatch", {
         bookingReference,
         attemptedEmail: email.substring(0, 3) + "***",
-        hasGuestEmail: !!booking.guest_email,
       });
       throw new HttpsError(
         "permission-denied",
@@ -174,8 +172,8 @@ export const verifyBookingAccess = onCall(async (request) => {
       unitId: booking.unit_id || null,
       propertyName: property?.name || "Property",
       unitName: unit?.name || "Unit",
-      guestName: booking.guest_name || "Guest",
-      guestEmail: booking.guest_email || "",
+      guestName: booking.guest_name,
+      guestEmail: booking.guest_email,
       guestPhone: booking.guest_phone || null,
       checkIn: checkIn.toISOString(),
       checkOut: checkOut.toISOString(),
@@ -184,7 +182,7 @@ export const verifyBookingAccess = onCall(async (request) => {
       guestCount: typeof booking.guest_count === "number" ?
         {adults: booking.guest_count, children: 0} :
         (booking.guest_count || {adults: 1, children: 0}),
-      totalPrice: booking.total_price || 0,
+      totalPrice: booking.total_price,
       depositAmount: booking.deposit_amount || booking.advance_amount || 0,
       remainingAmount: booking.remaining_amount || 0,
       paidAmount: booking.paid_amount || 0,

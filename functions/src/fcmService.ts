@@ -1,6 +1,7 @@
 import {admin} from "./firebase";
 import {logInfo, logError, logWarn} from "./logger";
 import {shouldSendPushNotification} from "./notificationPreferences";
+import {captureException, captureMessage, setUser, addBreadcrumb} from "./sentry";
 
 /**
  * FCM Push Notification Service
@@ -70,12 +71,18 @@ async function getUserFcmTokens(userId: string): Promise<string[]> {
           userId,
           tokenLength: typeof token === "string" ? token.length : 0,
         });
+        // Track invalid token formats - might indicate client-side bug
+        captureMessage("[FCM] Invalid token format detected", "warning", {
+          userId,
+          tokenLength: typeof token === "string" ? token.length : 0,
+        });
       }
     }
 
     return tokens;
   } catch (error) {
     logError("[FCM] Error fetching user FCM tokens", {userId, error});
+    captureException(error, {userId, context: "getUserFcmTokens"});
     return [];
   }
 }
@@ -89,11 +96,16 @@ export async function sendPushNotification(
 ): Promise<boolean> {
   const {userId, title, body, category, data: notificationData} = data;
 
+  // Set Sentry user context for error tracking
+  setUser(userId);
+  addBreadcrumb("Sending push notification", "fcm", {userId, category, title});
+
   try {
     // Check if user wants push notifications for this category
     const shouldSend = await shouldSendPushNotification(userId, category);
     if (!shouldSend) {
       logInfo("[FCM] User opted out of push notifications", {userId, category});
+      addBreadcrumb("User opted out", "fcm", {userId, category});
       return false;
     }
 
@@ -101,6 +113,12 @@ export async function sendPushNotification(
     const tokens = await getUserFcmTokens(userId);
     if (tokens.length === 0) {
       logInfo("[FCM] No FCM tokens available for user", {userId});
+      // Track users without tokens - might indicate registration bug
+      captureMessage("[FCM] No tokens available for user", "warning", {
+        userId,
+        category,
+        title,
+      });
       return false;
     }
 
@@ -161,14 +179,44 @@ export async function sendPushNotification(
       failureCount: response.failureCount,
     });
 
-    // Clean up invalid tokens
+    // Track delivery metrics in Sentry
+    addBreadcrumb("Push notification delivered", "fcm", {
+      userId,
+      category,
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      tokenCount: tokens.length,
+    });
+
+    // Clean up invalid tokens and track failures
     if (response.failureCount > 0) {
+      // Log partial failures to Sentry for monitoring
+      if (response.successCount === 0) {
+        // Complete failure - all tokens failed
+        captureMessage("[FCM] All tokens failed for user", "error", {
+          userId,
+          category,
+          title,
+          failureCount: response.failureCount,
+          errors: response.responses
+            .filter((r) => !r.success)
+            .map((r) => r.error?.code)
+            .slice(0, 5), // Limit to first 5 errors
+        });
+      }
       await cleanupInvalidTokens(userId, tokens, response.responses);
     }
 
     return response.successCount > 0;
   } catch (error) {
     logError("[FCM] Error sending push notification", {userId, category, error});
+    // Capture exception to Sentry for debugging
+    captureException(error, {
+      userId,
+      category,
+      title,
+      context: "sendPushNotification",
+    });
     return false;
   }
 }
@@ -220,8 +268,15 @@ async function cleanupInvalidTokens(
       userId,
       removedCount: invalidTokens.length,
     });
+
+    // Track token cleanup for monitoring device churn
+    addBreadcrumb("Cleaned up invalid FCM tokens", "fcm", {
+      userId,
+      removedCount: invalidTokens.length,
+    });
   } catch (error) {
     logWarn("[FCM] Error cleaning up invalid tokens", {userId, error});
+    captureException(error, {userId, context: "cleanupInvalidTokens"});
   }
 }
 
@@ -247,14 +302,14 @@ async function getUnreadNotificationCount(userId: string): Promise<number> {
 }
 
 /**
- * Helper function to format date range for notification body
+ * Helper function to format date range for notification body (Croatian locale)
  */
 function formatDateRange(checkInDate: Date, checkOutDate: Date): string {
-  const formattedCheckIn = checkInDate.toLocaleDateString("en-GB", {
+  const formattedCheckIn = checkInDate.toLocaleDateString("hr-HR", {
     day: "2-digit",
     month: "short",
   });
-  const formattedCheckOut = checkOutDate.toLocaleDateString("en-GB", {
+  const formattedCheckOut = checkOutDate.toLocaleDateString("hr-HR", {
     day: "2-digit",
     month: "short",
   });
@@ -262,89 +317,8 @@ function formatDateRange(checkInDate: Date, checkOutDate: Date): string {
 }
 
 /**
- * Send booking notification via push
- * Supports optional date parameters for enhanced messages with date range
- */
-export async function sendBookingPushNotification(
-  userId: string,
-  bookingId: string,
-  guestName: string,
-  action: "created" | "updated" | "cancelled",
-  checkInDate?: Date,
-  checkOutDate?: Date
-): Promise<boolean> {
-  const titles: Record<string, string> = {
-    created: "New Booking",
-    updated: "Booking Updated",
-    cancelled: "Booking Cancelled",
-  };
-
-  // If dates provided, include date range in message
-  const dateRange = (checkInDate && checkOutDate) ?
-    ` (${formatDateRange(checkInDate, checkOutDate)})` :
-    "";
-
-  const bodies: Record<string, string> = {
-    created: `${guestName} made a new booking${dateRange}.`,
-    updated: `Booking for ${guestName} has been updated${dateRange}.`,
-    cancelled: `Booking for ${guestName} has been cancelled${dateRange}.`,
-  };
-
-  return sendPushNotification({
-    userId,
-    title: titles[action] || "Booking Notification",
-    body: bodies[action] || "There's an update on a booking.",
-    category: "bookings",
-    data: {
-      bookingId,
-      action,
-    },
-  });
-}
-
-/**
- * Send booking notification via push (enhanced version with date range)
- */
-export async function sendBookingPushNotificationEnhanced(
-  userId: string,
-  bookingId: string,
-  guestName: string,
-  action: "created" | "updated" | "cancelled",
-  checkInDate: Date,
-  checkOutDate: Date,
-  cancellationReason?: string
-): Promise<boolean> {
-  const titles: Record<string, string> = {
-    created: "New Booking",
-    updated: "Booking Updated",
-    cancelled: "Booking Cancelled",
-  };
-
-  const dateRange = formatDateRange(checkInDate, checkOutDate);
-
-  const bodies: Record<string, string> = {
-    created: `${guestName} has booked for ${dateRange}.`,
-    updated: `Booking for ${guestName} (${dateRange}) has been updated.`,
-    cancelled: `Booking for ${guestName} (${dateRange}) has been cancelled.${
-      cancellationReason ? ` Reason: ${cancellationReason}` : ""
-    }`,
-  };
-
-  return sendPushNotification({
-    userId,
-    title: titles[action] || "Booking Notification",
-    body: bodies[action] || "There's an update on a booking.",
-    category: "bookings",
-    data: {
-      bookingId,
-      action,
-      cancellationReason: cancellationReason || "",
-    },
-  });
-}
-
-/**
- * Send payment notification via push
+ * Send payment notification via push (Croatian localized)
+ * Notifies owner when a guest completes Stripe payment
  */
 export async function sendPaymentPushNotification(
   userId: string,
@@ -353,16 +327,16 @@ export async function sendPaymentPushNotification(
   amount: number,
   currency: string = "EUR"
 ): Promise<boolean> {
-  const formattedAmount = new Intl.NumberFormat("en-EU", {
+  const formattedAmount = new Intl.NumberFormat("hr-HR", {
     style: "currency",
     currency,
   }).format(amount);
 
   return sendPushNotification({
     userId,
-    title: "New Paid Booking",
-    body: `${guestName} paid ${formattedAmount} for their booking.`,
-    category: "bookings", // Changed from payments - this IS a booking notification
+    title: "Plaćena rezervacija",
+    body: `${guestName} je platio/la ${formattedAmount} za rezervaciju.`,
+    category: "bookings",
     data: {
       bookingId,
       amount: amount.toString(),
@@ -372,45 +346,8 @@ export async function sendPaymentPushNotification(
 }
 
 /**
- * Send payment deadline reminder notification via push
- */
-export async function sendPaymentDeadlinePushNotification(
-  userId: string,
-  bookingId: string,
-  guestName: string
-): Promise<boolean> {
-  return sendPushNotification({
-    userId,
-    title: "Payment Deadline Approaching",
-    body: `The payment deadline for the booking from ${guestName} is approaching.`,
-    category: "payments",
-    data: {
-      bookingId,
-    },
-  });
-}
-
-/**
- * Send payment failed notification via push
- */
-export async function sendPaymentFailedPushNotification(
-  userId: string,
-  bookingId: string,
-  guestName: string
-): Promise<boolean> {
-  return sendPushNotification({
-    userId,
-    title: "Payment Failed",
-    body: `A payment from ${guestName} failed. Please check Stripe and contact the guest.`,
-    category: "payments",
-    data: {
-      bookingId,
-    },
-  });
-}
-
-/**
- * Send pending booking notification via push
+ * Send pending booking notification via push (Croatian localized)
+ * Notifies owner when a new booking request comes in from widget
  */
 export async function sendPendingBookingPushNotification(
   userId: string,
@@ -423,8 +360,8 @@ export async function sendPendingBookingPushNotification(
 
   return sendPushNotification({
     userId,
-    title: "Booking Awaiting Approval",
-    body: `${guestName} has requested a booking for ${dateRange}.`,
+    title: "Nova rezervacija",
+    body: `${guestName} je zatražio/la rezervaciju za ${dateRange}.`,
     category: "bookings",
     data: {
       bookingId,
@@ -434,7 +371,7 @@ export async function sendPendingBookingPushNotification(
 }
 
 /**
- * Send guest cancellation notification via push
+ * Send guest cancellation notification via push (Croatian localized)
  * Notifies owner when a guest cancels their booking via booking lookup page
  */
 export async function sendGuestCancellationPushNotification(
@@ -448,8 +385,8 @@ export async function sendGuestCancellationPushNotification(
 
   return sendPushNotification({
     userId,
-    title: "Booking Cancelled by Guest",
-    body: `${guestName} cancelled their booking for ${dateRange}.`,
+    title: "Otkazana rezervacija",
+    body: `${guestName} je otkazao/la rezervaciju za ${dateRange}.`,
     category: "bookings",
     data: {
       bookingId,
@@ -459,20 +396,22 @@ export async function sendGuestCancellationPushNotification(
 }
 
 /**
- * Send trial expiring notification via push
+ * Send trial expiring notification via push (Croatian localized)
  * Notifies owner when their trial is about to expire
  */
 export async function sendTrialExpiringPushNotification(
   userId: string,
   daysRemaining: number
 ): Promise<boolean> {
-  const dayText = daysRemaining === 1 ? "day" : "days";
-  const urgency = daysRemaining === 1 ? "expires tomorrow" : `expires in ${daysRemaining} ${dayText}`;
+  const dayText = daysRemaining === 1 ? "dan" : "dana";
+  const urgency = daysRemaining === 1
+    ? "ističe sutra"
+    : `ističe za ${daysRemaining} ${dayText}`;
 
   return sendPushNotification({
     userId,
-    title: "Trial Expiring Soon",
-    body: `Your free trial ${urgency}. Upgrade to keep managing your bookings.`,
+    title: "Probni period ističe",
+    body: `Vaš besplatni probni period ${urgency}. Nadogradite kako biste nastavili upravljati rezervacijama.`,
     category: "marketing",
     data: {
       action: "trial_expiring",

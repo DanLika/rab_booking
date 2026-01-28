@@ -3,14 +3,13 @@ import {logInfo, logError, logSuccess} from "./logger";
 import {sendPushNotification} from "./fcmService";
 import {createNotification} from "./notificationService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
-import {sendSms} from "./smsService";
 import {sendOverbookingDetectedEmailV2} from "./email";
 import {getResendClient} from "./emailService";
 
 /**
  * Overbooking Notifications Service
  *
- * Sends notifications (email, SMS, push, Firestore) when overbooking is detected
+ * Sends notifications (email, push, Firestore) when overbooking is detected
  */
 
 interface OverbookingConflictData {
@@ -59,7 +58,6 @@ export async function sendOverbookingNotifications(
     const ownerData = ownerDoc.data()!;
     const ownerEmail = ownerData.email;
     const ownerName = ownerData.name || "Owner";
-    const ownerPhone = ownerData.phone;
 
     // Generate deep links
     const viewInAppUrl = `https://app.bookbed.io/owner/calendar?unit=${conflict.unitId}&conflict=${conflict.conflictId}`;
@@ -80,12 +78,6 @@ export async function sendOverbookingNotifications(
         viewInAppUrl,
       }),
       createOverbookingFirestoreNotification(conflict),
-      ownerPhone ?
-        sendOverbookingSmsNotification(conflict, {
-          ownerPhone,
-          viewInAppUrl,
-        }) :
-        Promise.resolve(),
     ]);
 
     logSuccess("[Overbooking Notifications] All notifications sent", {
@@ -162,7 +154,7 @@ async function sendOverbookingEmailNotification(
 }
 
 /**
- * Send push notification for overbooking
+ * Send push notification for overbooking (Croatian localized)
  */
 async function sendOverbookingPushNotification(
   conflict: OverbookingConflictData,
@@ -174,8 +166,8 @@ async function sendOverbookingPushNotification(
   try {
     await sendPushNotification({
       userId: options.ownerId,
-      title: "Overbooking Detected",
-      body: `${conflict.unitName}: Conflict between ${conflict.booking1.guestName} and ${conflict.booking2.guestName}`,
+      title: "⚠️ Overbooking detektiran",
+      body: `${conflict.unitName}: Konflikt između ${conflict.booking1.guestName} i ${conflict.booking2.guestName}. Riješite odmah!`,
       category: "calendar",
       data: {
         conflictId: conflict.conflictId,
@@ -196,7 +188,7 @@ async function sendOverbookingPushNotification(
 }
 
 /**
- * Create Firestore notification for overbooking
+ * Create Firestore notification for overbooking (Croatian localized)
  */
 async function createOverbookingFirestoreNotification(
   conflict: OverbookingConflictData
@@ -205,8 +197,8 @@ async function createOverbookingFirestoreNotification(
     await createNotification({
       ownerId: conflict.ownerId,
       type: "overbooking_detected",
-      title: "⚠️ Overbooking Detected",
-      message: `Conflict detected for ${conflict.unitName}: ${conflict.booking1.guestName} vs ${conflict.booking2.guestName}`,
+      title: "⚠️ Overbooking detektiran",
+      message: `Konflikt za ${conflict.unitName}: ${conflict.booking1.guestName} vs ${conflict.booking2.guestName}. Otkažite jednu rezervaciju.`,
       bookingId: conflict.booking1.id, // Use first booking ID
       metadata: {
         conflictId: conflict.conflictId,
@@ -223,43 +215,6 @@ async function createOverbookingFirestoreNotification(
     });
   } catch (error) {
     logError("[Overbooking Notifications] Failed to create Firestore notification", error, {
-      conflictId: conflict.conflictId,
-    });
-  }
-}
-
-/**
- * Send SMS notification for overbooking
- */
-async function sendOverbookingSmsNotification(
-  conflict: OverbookingConflictData,
-  options: {
-    ownerPhone: string;
-    viewInAppUrl: string;
-  }
-): Promise<void> {
-  try {
-    const conflictDateRange =
-      conflict.conflictDates.length > 0 ?
-        `${conflict.conflictDates[0].toLocaleDateString()} - ${conflict.conflictDates[conflict.conflictDates.length - 1].toLocaleDateString()}` :
-        "Unknown dates";
-
-    const message = `⚠️ Overbooking: ${conflict.unitName}, ${conflictDateRange}\n` +
-      `Conflict: ${conflict.booking1.guestName} vs ${conflict.booking2.guestName}\n` +
-      `View: ${options.viewInAppUrl}`;
-
-    await sendSms({
-      to: options.ownerPhone,
-      message,
-      ownerId: conflict.ownerId,
-      category: "calendar",
-    });
-
-    logSuccess("[Overbooking Notifications] SMS sent", {
-      conflictId: conflict.conflictId,
-    });
-  } catch (error) {
-    logError("[Overbooking Notifications] Failed to send SMS", error, {
       conflictId: conflict.conflictId,
     });
   }

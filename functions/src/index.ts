@@ -79,20 +79,12 @@ export * from "./bookingComApi";
 // Export Airbnb API integration functions
 export * from "./airbnbApi";
 
-// Export two-way sync engine
-export * from "./twoWaySync";
-
 // Export overbooking notifications
 export * from "./overbookingNotifications";
 
 // Export SMS service
+// TODO: SMS feature not yet implemented - requires Twilio/SMS provider setup
 export * from "./smsService";
-
-// Export external booking notifications
-export * from "./externalBookingNotifications";
-
-// Export sync reminders
-export * from "./syncReminders";
 
 // Export authentication rate limiting (IP-based)
 export * from "./authRateLimit";

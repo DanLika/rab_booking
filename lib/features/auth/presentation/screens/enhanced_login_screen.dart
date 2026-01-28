@@ -690,58 +690,28 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return const SizedBox.shrink();
     }
 
-    // If only one provider is enabled, show it full width
+    final googleButton = SocialLoginButton(
+      customIcon: const GoogleBrandIcon(),
+      label: 'Google',
+      enabled: !_isLoading,
+      onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
+    );
+
+    final appleButton = SocialLoginButton(
+      customIcon: const AppleBrandIcon(),
+      label: 'Apple',
+      enabled: !_isLoading,
+      onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
+    );
+
+    // Android: Only Google (Apple Sign-In not supported on Android)
     if (isGoogleEnabled && !isAppleEnabled) {
-      return SocialLoginButton(
-        customIcon: const GoogleBrandIcon(),
-        label: l10n.continueWithGoogle,
-        enabled: !_isLoading,
-        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
-      );
+      return googleButton;
     }
 
-    if (!isGoogleEnabled && isAppleEnabled) {
-      return SocialLoginButton(
-        customIcon: const AppleBrandIcon(),
-        label: l10n.continueWithApple,
-        enabled: !_isLoading,
-        onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
-      );
-    }
-
-    // Both enabled - check available space
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final googleButton = SocialLoginButton(
-          customIcon: const GoogleBrandIcon(),
-          label: l10n.continueWithGoogle,
-          enabled: !_isLoading,
-          onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
-        );
-
-        final appleButton = SocialLoginButton(
-          customIcon: const AppleBrandIcon(),
-          label: l10n.continueWithApple,
-          enabled: !_isLoading,
-          onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
-        );
-
-        // RESPONSIVE: If width is very constrained (<280px), stack vertically
-        if (constraints.maxWidth < 280) {
-          return Column(
-            children: [googleButton, const SizedBox(height: 10), appleButton],
-          );
-        }
-
-        // Otherwise show side by side
-        return Row(
-          children: [
-            Expanded(child: googleButton),
-            const SizedBox(width: 10),
-            Expanded(child: appleButton),
-          ],
-        );
-      },
+    // iOS/Web: Both Google and Apple - stack vertically
+    return Column(
+      children: [googleButton, const SizedBox(height: 10), appleButton],
     );
   }
 

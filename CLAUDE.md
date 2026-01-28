@@ -763,7 +763,27 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-28 | **Version**: 6.44
+**Last Updated**: 2026-01-28 | **Version**: 6.45
+
+**Changelog 6.45**: Android Property Form Navigation Crash Fix:
+- **Problem**: App crashed on Android (release mode) when clicking "Add Property" after completing registration
+- **Root Cause**: `Navigator.of(context).pop()` used in `property_form_screen.dart` crashes when:
+  - User is directed to property form directly after registration (no previous route on stack)
+  - Navigation was managed by GoRouter, not Navigator
+- **Fix** (`property_form_screen.dart:1229-1239`):
+  ```dart
+  // OLD (crashes):
+  Navigator.of(context).pop();
+
+  // NEW (safe):
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go('/owner/properties');
+  }
+  ```
+- **Android-specific**: Issue only appeared in Android release mode, not iOS
+- **Pattern**: Always use `context.canPop()` check with GoRouter fallback instead of raw `Navigator.pop()`
 
 **Changelog 6.44**: Email Verification Flow Fixes:
 - **Email Verification Bypass Fix** (`enhanced_auth_provider.dart`):

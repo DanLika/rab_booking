@@ -81,6 +81,8 @@ class _PremiumListTileState extends State<PremiumListTile> {
             ),
             title: Text(
               widget.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: isMobile ? 14 : 15,
                 fontWeight: FontWeight.w600,
@@ -90,6 +92,8 @@ class _PremiumListTileState extends State<PremiumListTile> {
             subtitle: widget.subtitle is String
                 ? Text(
                     widget.subtitle as String,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: isMobile ? 12 : 13,
                       color: theme.colorScheme.onSurface.withValues(

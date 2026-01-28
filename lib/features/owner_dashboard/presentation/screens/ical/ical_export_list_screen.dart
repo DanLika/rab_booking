@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../../core/services/logging_service.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_shadows.dart';
@@ -41,6 +44,11 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
   Future<void> _generateAndDownloadIcal(dynamic unit, String propertyId) async {
     setState(() => _generatingUnitId = unit.id);
 
+    LoggingService.log(
+      'Generating iCal export for unit: ${unit.id} (property: $propertyId)',
+      tag: 'ICAL_EXPORT',
+    );
+
     final l10n = AppLocalizations.of(context);
     try {
       // Generate iCal content and get download URL
@@ -59,10 +67,22 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
 
+      LoggingService.log(
+        'iCal export generated successfully for unit: ${unit.id}',
+        tag: 'ICAL_EXPORT',
+      );
+
       if (mounted) {
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalExportSuccess);
       }
-    } catch (e) {
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError(
+          'iCal export failed for unit: ${unit.id}',
+          e,
+          stack,
+        ),
+      );
       if (mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
           context,
@@ -105,7 +125,14 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError(
+          'Failed to load units for iCal export',
+          e,
+          stack,
+        ),
+      );
       if (mounted) {
         setState(() => _isLoading = false);
         ErrorDisplayUtils.showErrorSnackBar(context, e);
@@ -117,11 +144,18 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
+    LoggingService.log(
+      'Generating dynamic iCal link for unit: ${unit.id}',
+      tag: 'ICAL_EXPORT',
+    );
+
     // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      ),
     );
 
     try {
@@ -162,8 +196,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
         Navigator.pop(context); // Close loading
       }
 
-      // Construct URL
-      // TODO: Get project ID dynamically if possible, or use constant
+      // Construct Cloud Function URL
       const projectId = 'rab-booking-248fc';
       const region = 'us-central1';
       final url =
@@ -172,96 +205,105 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       if (!mounted) return;
 
       // Show URL dialog
-      showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.link, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Expanded(child: Text(l10n.icalExportDynamicLinkTitle)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.icalExportDynamicLinkDescription,
-                style: theme.textTheme.bodySmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.icalExportSyncTimeNote,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: theme.colorScheme.outlineVariant),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SelectableText(
-                        url,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                        ),
-                        maxLines: 3,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.copy, size: 20),
-                      tooltip: l10n.icalExportCopyLink,
-                      onPressed: () async {
-                        try {
-                          await Clipboard.setData(ClipboardData(text: url));
-                          if (dialogContext.mounted) {
-                            ErrorDisplayUtils.showSuccessSnackBar(
-                              dialogContext,
-                              l10n.icalExportLinkCopied,
-                            );
-                          }
-                        } catch (e) {
-                          // Clipboard API can fail on some browsers (e.g., Safari in iframe)
-                          if (dialogContext.mounted) {
-                            ErrorDisplayUtils.showErrorSnackBar(
-                              dialogContext,
-                              e,
-                            );
-                          }
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.icalExportTokenWarning,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.close),
+      unawaited(
+        showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.link, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(child: Text(l10n.icalExportDynamicLinkTitle)),
+              ],
             ),
-          ],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.icalExportDynamicLinkDescription,
+                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.icalExportSyncTimeNote,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SelectableText(
+                          url,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontFamily: 'monospace',
+                          ),
+                          maxLines: 3,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy, size: 20),
+                        tooltip: l10n.icalExportCopyLink,
+                        onPressed: () async {
+                          try {
+                            await Clipboard.setData(ClipboardData(text: url));
+                            if (dialogContext.mounted) {
+                              ErrorDisplayUtils.showSuccessSnackBar(
+                                dialogContext,
+                                l10n.icalExportLinkCopied,
+                              );
+                            }
+                          } catch (e) {
+                            // Clipboard API can fail on some browsers (e.g., Safari in iframe)
+                            if (dialogContext.mounted) {
+                              ErrorDisplayUtils.showErrorSnackBar(
+                                dialogContext,
+                                e,
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.icalExportTokenWarning,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
         ),
       );
-    } catch (e) {
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError(
+          'Failed to generate dynamic iCal link for unit: ${unit.id}',
+          e,
+          stack,
+        ),
+      );
       if (mounted && Navigator.canPop(context)) Navigator.pop(context);
       if (mounted) ErrorDisplayUtils.showErrorSnackBar(context, e);
     }
@@ -771,8 +813,8 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       ),
       child: Material(
         color: Colors.transparent,
+        // InkWell without onTap disables card tap to prevent accidental actions
         child: InkWell(
-          onTap: null, // Disable card tap to prevent accidental actions
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),

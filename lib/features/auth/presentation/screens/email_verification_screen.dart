@@ -36,6 +36,28 @@ class _EmailVerificationScreenState
     _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       _checkVerificationStatus();
     });
+
+    // Start with initial cooldown to prevent immediate resend after registration
+    // Email was already sent during registration, so user must wait before resending
+    _startInitialCooldown();
+  }
+
+  /// Start initial 30-second cooldown when screen opens
+  /// This prevents Firebase rate limit errors when user immediately clicks resend
+  void _startInitialCooldown() {
+    _resendCooldown = 30;
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _resendCooldown--;
+        if (_resendCooldown == 0) {
+          timer.cancel();
+        }
+      });
+    });
   }
 
   @override
@@ -96,9 +118,23 @@ class _EmailVerificationScreenState
   Future<void> _resendVerificationEmail() async {
     if (_resendCooldown > 0) return;
 
+    final authState = ref.read(enhancedAuthProvider);
+    final firebaseEmail = authState.firebaseUser?.email;
+    final firestoreEmail = authState.userModel?.email;
+
+    // If emails differ, user has a pending email change
+    // Need to show password dialog because verifyBeforeUpdateEmail requires recent auth
+    if (firestoreEmail != null &&
+        firebaseEmail != null &&
+        firestoreEmail.toLowerCase() != firebaseEmail.toLowerCase()) {
+      await _showResendPasswordDialog(firestoreEmail);
+      return;
+    }
+
     setState(() => _isResending = true);
 
     try {
+      // Normal case: send verification to current Firebase Auth email
       await ref.read(enhancedAuthProvider.notifier).sendEmailVerification();
 
       if (mounted) {
@@ -107,20 +143,7 @@ class _EmailVerificationScreenState
           AppLocalizations.of(context).authVerifyEmailSuccess,
           duration: const Duration(seconds: 3),
         );
-
-        // Start 60 second cooldown
-        setState(() {
-          _resendCooldown = 60;
-        });
-
-        _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          setState(() {
-            _resendCooldown--;
-            if (_resendCooldown == 0) {
-              timer.cancel();
-            }
-          });
-        });
+        _startCooldown();
       }
     } catch (e) {
       if (mounted) {
@@ -138,6 +161,119 @@ class _EmailVerificationScreenState
         setState(() => _isResending = false);
       }
     }
+  }
+
+  /// Show password dialog for resending email change verification
+  /// Required because verifyBeforeUpdateEmail is a sensitive operation
+  Future<void> _showResendPasswordDialog(String newEmail) async {
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.authResendVerificationEmail),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.authPasswordHelper,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Builder(
+                  builder: (ctx) => TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: InputDecorationHelper.buildDecoration(
+                      labelText: l10n.authPasswordLabel,
+                      prefixIcon: const Icon(Icons.lock),
+                      context: ctx,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.passwordRequired;
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+
+                final navigator = Navigator.of(context);
+                navigator.pop();
+
+                setState(() => _isResending = true);
+
+                try {
+                  // Re-authenticate and resend verification
+                  await ref
+                      .read(enhancedAuthProvider.notifier)
+                      .updateEmail(
+                        newEmail: newEmail,
+                        currentPassword: passwordController.text,
+                      );
+
+                  if (mounted) {
+                    ErrorDisplayUtils.showSuccessSnackBar(
+                      this.context,
+                      l10n.authVerifyEmailSuccess,
+                      duration: const Duration(seconds: 3),
+                    );
+                    _startCooldown();
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() => _isResending = false);
+                  }
+                }
+              },
+              child: Text(l10n.submit),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Start 60 second cooldown after sending verification email
+  void _startCooldown() {
+    _cooldownTimer?.cancel();
+    setState(() {
+      _resendCooldown = 60;
+    });
+
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _resendCooldown--;
+        if (_resendCooldown == 0) {
+          timer.cancel();
+        }
+      });
+    });
   }
 
   /// Show dialog to change email address (Phase 3 feature)
@@ -252,6 +388,7 @@ class _EmailVerificationScreenState
               child: Text(l10n.cancel),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
 
@@ -290,7 +427,12 @@ class _EmailVerificationScreenState
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(enhancedAuthProvider);
-    final email = authState.firebaseUser?.email ?? 'your email';
+    // Prefer Firestore email (userModel) which is updated immediately after email change
+    // Firebase Auth email only updates AFTER user clicks verification link
+    final email =
+        authState.userModel?.email ??
+        authState.firebaseUser?.email ??
+        'your email';
     final theme = Theme.of(context);
 
     return Scaffold(

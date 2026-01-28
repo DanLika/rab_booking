@@ -1,4 +1,4 @@
-import 'package:bookbed/core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -173,7 +173,7 @@ class _UserCard extends StatelessWidget {
                       (user.displayName ?? user.fullName).isNotEmpty
                           ? (user.displayName ?? user.fullName)[0].toUpperCase()
                           : '?',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
                       ),
@@ -298,7 +298,7 @@ class _UsersTable extends StatelessWidget {
                               ? (user.displayName ?? user.fullName)[0]
                                     .toUpperCase()
                               : '?',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: AppColors.primary,

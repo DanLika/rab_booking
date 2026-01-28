@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -1188,6 +1190,10 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
 
   void _syncFeedNow(IcalFeed feed) async {
     final l10n = AppLocalizations.of(context);
+    LoggingService.log(
+      'Manual sync triggered for feed: ${feed.id} (${feed.platform.displayName})',
+      tag: 'ICAL_SYNC',
+    );
     ErrorDisplayUtils.showInfoSnackBar(
       context,
       l10n.icalSyncStarted(feed.platform.displayName),
@@ -1237,6 +1243,10 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
 
   void _pauseFeed(IcalFeed feed) async {
     final l10n = AppLocalizations.of(context);
+    LoggingService.log(
+      'Pausing iCal feed: ${feed.id} (${feed.platform.displayName})',
+      tag: 'ICAL_SYNC',
+    );
     try {
       final repository = ref.read(icalRepositoryProvider);
       await repository.updateFeedStatus(
@@ -1264,6 +1274,10 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
 
   void _resumeFeed(IcalFeed feed) async {
     final l10n = AppLocalizations.of(context);
+    LoggingService.log(
+      'Resuming iCal feed: ${feed.id} (${feed.platform.displayName})',
+      tag: 'ICAL_SYNC',
+    );
     try {
       final repository = ref.read(icalRepositoryProvider);
       await repository.updateFeedStatus(
@@ -1300,12 +1314,16 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       ),
     ).then((confirmed) async {
       if (confirmed == true && mounted) {
+        LoggingService.log(
+          'Deleting iCal feed: ${feed.id} (${feed.platform.displayName})',
+          tag: 'ICAL_SYNC',
+        );
         try {
           final repository = ref.read(icalRepositoryProvider);
           // Delete feed and all associated events
           await repository.deleteIcalFeed(feed.id, feed.propertyId);
 
-          if (mounted) {
+          if (mounted && context.mounted) {
             // Invalidate providers to refresh UI immediately
             ref.invalidate(icalFeedsStreamProvider);
             ref.invalidate(icalStatisticsProvider);
@@ -1315,7 +1333,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             );
           }
         } catch (e) {
-          if (mounted) {
+          if (mounted && context.mounted) {
             ErrorDisplayUtils.showErrorSnackBar(
               context,
               e,
@@ -1690,7 +1708,6 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                         child: AutoSizeText(
                           l10n.cancel,
                           maxLines: 1,
-                          minFontSize: 12,
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ),
@@ -1732,7 +1749,6 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                                       ? l10n.icalAddFeedButton
                                       : l10n.save,
                                   maxLines: 1,
-                                  minFontSize: 12,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -1760,6 +1776,12 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
       return;
     }
     setState(() => _isSaving = true);
+
+    final isNewFeed = widget.existingFeed == null;
+    LoggingService.log(
+      '${isNewFeed ? "Creating" : "Updating"} iCal feed for unit: $_selectedUnitId (platform: ${_selectedPlatform.displayName})',
+      tag: 'ICAL_SYNC',
+    );
 
     try {
       final repository = ref.read(icalRepositoryProvider);
@@ -1839,17 +1861,16 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     String propertyId,
     IcalPlatform platform,
   ) async {
-    debugPrint('[AutoSync] Starting auto-sync for feed: $feedId');
+    LoggingService.log(
+      'Starting auto-sync for feed: $feedId (platform: ${platform.displayName})',
+      tag: 'ICAL_SYNC',
+    );
 
     // CRITICAL: Capture these BEFORE any async/await operations
     // After Navigator.pop(), context becomes invalid but messenger still works
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
-
-    debugPrint(
-      '[AutoSync] Captured messenger, showing "sync started" snackbar',
-    );
 
     // Show sync started notification (immediate, before pop)
     messenger.showSnackBar(
@@ -1861,14 +1882,20 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     );
 
     try {
-      debugPrint('[AutoSync] Calling syncIcalFeedNow Cloud Function...');
+      LoggingService.log(
+        'Calling syncIcalFeedNow Cloud Function for feed: $feedId',
+        tag: 'ICAL_SYNC',
+      );
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('syncIcalFeedNow');
       final result = await callable
           .call({'feedId': feedId, 'propertyId': propertyId})
           .withCloudFunctionTimeout('syncIcalFeedNow');
 
-      debugPrint('[AutoSync] Cloud Function returned: ${result.data}');
+      LoggingService.log(
+        'Cloud Function syncIcalFeedNow returned successfully',
+        tag: 'ICAL_SYNC',
+      );
 
       // Invalidate providers to refresh UI after sync
       // FIXED: Check mounted before using ref (widget may be disposed during async call)
@@ -1884,8 +1911,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
       final message = data?['message'] as String?;
       final bookingsCreated = data?['bookingsCreated'] as int? ?? 0;
 
-      debugPrint(
-        '[AutoSync] Success: $success, bookingsCreated: $bookingsCreated',
+      LoggingService.log(
+        'Auto-sync completed: success=$success, bookingsCreated=$bookingsCreated',
+        tag: 'ICAL_SYNC',
       );
 
       // Use captured messenger - works even after widget disposed
@@ -1907,8 +1935,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         );
       }
     } catch (e, stack) {
-      debugPrint('[AutoSync] ERROR: $e');
-      debugPrint('[AutoSync] Stack: $stack');
+      unawaited(
+        LoggingService.logError('Auto-sync failed for feed: $feedId', e, stack),
+      );
       // Use captured messenger for error display
       messenger.showSnackBar(
         SnackBar(

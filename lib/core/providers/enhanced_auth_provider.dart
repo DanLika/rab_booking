@@ -410,12 +410,30 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
     // Set isLoading to false when user profile is created (initial check complete)
     // For social sign-in, set requiresProfileCompletion flag
-    // Note: requiresEmailVerification defaults to false (social sign-in emails are pre-verified)
+    // For email/password sign-in, check if email verification is required
+    final requiresVerification =
+        !isSocialSignIn &&
+        AuthFeatureFlags.requireEmailVerification &&
+        !firebaseUser.emailVerified;
+
     state = EnhancedAuthState(
       firebaseUser: firebaseUser,
       userModel: userModel,
       isLoading: false,
+      requiresEmailVerification: requiresVerification,
       requiresProfileCompletion: isSocialSignIn,
+    );
+
+    // BUG FIX: Initialize FCM for newly created users (Google/Apple sign-in)
+    // The authStateChanges listener calls _loadUserProfile() but the optimization
+    // skips it because userModel is already set above.
+    unawaited(
+      fcmService.initialize().catchError((e) {
+        LoggingService.log(
+          'FCM initialization failed during profile creation (non-critical): $e',
+          tag: 'FCM_INIT',
+        );
+      }),
     );
   }
 
@@ -903,6 +921,20 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         userModel: userModel,
         requiresEmailVerification: AuthFeatureFlags.requireEmailVerification,
       );
+
+      // BUG FIX: Initialize FCM for newly registered users
+      // The authStateChanges listener calls _loadUserProfile() but the optimization
+      // at line 145-152 skips it because userModel is already set above.
+      // This means fcmService.initialize() (line 305) never gets called for new users.
+      // We need to initialize FCM explicitly here.
+      unawaited(
+        fcmService.initialize().catchError((e) {
+          LoggingService.log(
+            'FCM initialization failed during registration (non-critical): $e',
+            tag: 'FCM_INIT',
+          );
+        }),
+      );
     } on FirebaseAuthException catch (e) {
       // SENTRY: Log registration failure with error code
       LoggingService.log('REGISTER_FAILED: code=${e.code}', tag: 'AUTH_ERROR');
@@ -1025,6 +1057,42 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       // SENTRY: Log verification email failure
       unawaited(LoggingService.logError('EMAIL_VERIFICATION_SEND_FAILED', e));
       throw 'Failed to send verification email: $e';
+    }
+  }
+
+  /// Resend email change verification
+  ///
+  /// Used when user changed their email and needs to verify the NEW email.
+  /// This calls verifyBeforeUpdateEmail which sends a verification link
+  /// to the new email address.
+  Future<void> resendEmailChangeVerification(String newEmail) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw 'No user logged in';
+    }
+
+    LoggingService.log(
+      'EMAIL_CHANGE_VERIFICATION_REQUESTED: uid=${user.uid}, newEmail=$newEmail',
+      tag: 'AUTH_SECURITY',
+    );
+
+    try {
+      await user.verifyBeforeUpdateEmail(newEmail);
+      await _security.logEvent(
+        userId: user.uid,
+        type: SecurityEventType.emailVerification,
+        metadata: {'action': 'resent_email_change', 'newEmail': newEmail},
+      );
+
+      LoggingService.log(
+        'EMAIL_CHANGE_VERIFICATION_SENT: uid=${user.uid}, newEmail=$newEmail',
+        tag: 'AUTH_SECURITY',
+      );
+    } catch (e) {
+      unawaited(
+        LoggingService.logError('EMAIL_CHANGE_VERIFICATION_SEND_FAILED', e),
+      );
+      throw 'Failed to send email change verification: $e';
     }
   }
 
@@ -1853,8 +1921,15 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       LoggingService.log('Email updated successfully!', tag: 'ENHANCED_AUTH');
 
+      // Update userModel with new email so resend works correctly
+      final updatedUserModel = state.userModel?.copyWith(
+        email: newEmail,
+        emailVerified: false,
+      );
+
       // Reload state to reflect changes
       state = state.copyWith(
+        userModel: updatedUserModel,
         requiresEmailVerification: AuthFeatureFlags.requireEmailVerification,
       );
     } on FirebaseAuthException catch (e) {

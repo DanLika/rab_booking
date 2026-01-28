@@ -60,6 +60,8 @@ class _LogoutTileState extends State<LogoutTile> {
           ),
           title: Text(
             widget.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: isMobile ? 14 : 15,
               fontWeight: FontWeight.w600,
@@ -68,6 +70,8 @@ class _LogoutTileState extends State<LogoutTile> {
           ),
           subtitle: Text(
             widget.subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: isMobile ? 12 : 13,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.55),

@@ -9,6 +9,8 @@ import {logInfo, logError} from "./logger";
 const ICAL_CONFIG = {
   // DoS Protection: Maximum bookings to include in feed
   MAX_BOOKINGS: 500,
+  // DoS Protection: Maximum blocked days to include in feed
+  MAX_BLOCKED_DAYS: 1000,
   // Date range: How far back to include past bookings (days)
   PAST_DAYS: 90,
   // Date range: How far ahead to include future bookings (days)
@@ -70,15 +72,15 @@ function setCacheHeaders(
 
 /**
  * Public iCal Feed Endpoint
- * 
+ *
  * GET /api/ical/{propertyId}/{unitId}/{token}
- * 
+ *
  * Returns iCal feed for a specific unit with all bookings.
  * Secured by secret token stored in widget_settings.
- * 
+ *
  * Compatible with:
  * - Google Calendar
- * - Apple Calendar  
+ * - Apple Calendar
  * - Outlook
  * - Any RFC 5545 compatible calendar app
  */
@@ -100,7 +102,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
   try {
     // Extract parameters from URL path
     // Expected format: /getUnitIcalFeed/{propertyId}/{unitId}/{token}
-    const pathParts = request.path.split("/").filter(p => p);
+    const pathParts = request.path.split("/").filter((p) => p);
 
     if (pathParts.length < 3) {
       response.status(400).send("Invalid URL format. Expected: /{propertyId}/{unitId}/{token}");
@@ -151,9 +153,9 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     const cachedETag = widgetSettings.ical_cache_etag;
 
     const now = new Date();
-    const cacheExpiry = cachedAt
-      ? new Date(cachedAt.getTime() + ICAL_CONFIG.CACHE_TTL_SECONDS * 1000)
-      : null;
+    const cacheExpiry = cachedAt ?
+      new Date(cachedAt.getTime() + ICAL_CONFIG.CACHE_TTL_SECONDS * 1000) :
+      null;
     const cacheValid = cacheExpiry && now < cacheExpiry && cachedContent;
 
     // 3. Handle ETag/If-None-Match for bandwidth optimization
@@ -197,7 +199,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + ICAL_CONFIG.FUTURE_DAYS);
 
-    // NEW STRUCTURE: Fetch bookings using collection group query (unitId filter works across all properties)
+    // 7a. Fetch bookings using collection group query
     const bookingsSnapshot = await db
       .collectionGroup("bookings")
       .where("unit_id", "==", unitId)
@@ -208,13 +210,39 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       .limit(ICAL_CONFIG.MAX_BOOKINGS)
       .get();
 
-    // 8. Generate iCal content
+    // 7b. Fetch blocked days (available = false) from daily_prices
+    // CRITICAL: Without this, Booking.com/Airbnb will show blocked days as available!
+    const blockedDaysSnapshot = await db
+      .collectionGroup("daily_prices")
+      .where("unit_id", "==", unitId)
+      .where("available", "==", false)
+      .where("date", ">=", admin.firestore.Timestamp.fromDate(pastDate))
+      .where("date", "<=", admin.firestore.Timestamp.fromDate(futureDate))
+      .orderBy("date", "asc")
+      .limit(ICAL_CONFIG.MAX_BLOCKED_DAYS)
+      .get();
+
+    // 7c. Group consecutive blocked days into ranges for efficiency
+    const blockedRanges = groupConsecutiveBlockedDays(
+      blockedDaysSnapshot.docs.map((doc) => doc.data().date?.toDate() || new Date())
+    );
+
+    logInfo("[iCal Feed] Fetched data", {
+      propertyId,
+      unitId,
+      bookingCount: bookingsSnapshot.size,
+      blockedDaysCount: blockedDaysSnapshot.size,
+      blockedRangesCount: blockedRanges.length,
+    });
+
+    // 8. Generate iCal content (bookings + blocked days)
     const icalContent = generateIcalCalendar(
       unitName,
-      bookingsSnapshot.docs.map(doc => ({
+      bookingsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }))
+      })),
+      blockedRanges
     );
 
     // 9. Generate ETag from content hash
@@ -239,6 +267,8 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       propertyId,
       unitId,
       bookingCount: bookingsSnapshot.size,
+      blockedDaysCount: blockedDaysSnapshot.size,
+      blockedRangesCount: blockedRanges.length,
       cacheTTL: ICAL_CONFIG.CACHE_TTL_SECONDS,
     });
   } catch (error) {
@@ -248,9 +278,64 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 });
 
 /**
- * Generate iCal calendar content (RFC 5545)
+ * Represents a range of consecutive blocked days
  */
-function generateIcalCalendar(unitName: string, bookings: any[]): string {
+interface BlockedRange {
+  startDate: Date;
+  endDate: Date; // Inclusive
+}
+
+/**
+ * Group consecutive blocked days into ranges
+ * This creates fewer VEVENT entries (more efficient for OTAs to parse)
+ *
+ * Example: [Jan 1, Jan 2, Jan 3, Jan 10, Jan 11]
+ *       -> [{Jan 1 - Jan 3}, {Jan 10 - Jan 11}]
+ */
+function groupConsecutiveBlockedDays(dates: Date[]): BlockedRange[] {
+  if (dates.length === 0) return [];
+
+  // Sort dates chronologically
+  const sortedDates = [...dates].sort((a, b) => a.getTime() - b.getTime());
+
+  const ranges: BlockedRange[] = [];
+  let rangeStart = sortedDates[0];
+  let rangeEnd = sortedDates[0];
+
+  for (let i = 1; i < sortedDates.length; i++) {
+    const currentDate = sortedDates[i];
+    const prevDate = sortedDates[i - 1];
+
+    // Check if current date is consecutive (next day)
+    const diffMs = currentDate.getTime() - prevDate.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    if (diffDays <= 1.5) {
+      // Consecutive - extend the range (allow small tolerance for timezone issues)
+      rangeEnd = currentDate;
+    } else {
+      // Gap found - save current range and start new one
+      ranges.push({startDate: rangeStart, endDate: rangeEnd});
+      rangeStart = currentDate;
+      rangeEnd = currentDate;
+    }
+  }
+
+  // Don't forget the last range
+  ranges.push({startDate: rangeStart, endDate: rangeEnd});
+
+  return ranges;
+}
+
+/**
+ * Generate iCal calendar content (RFC 5545)
+ * Includes both bookings AND blocked days
+ */
+function generateIcalCalendar(
+  unitName: string,
+  bookings: any[],
+  blockedRanges: BlockedRange[] = []
+): string {
   const lines: string[] = [];
 
   // Calendar header
@@ -265,7 +350,13 @@ function generateIcalCalendar(unitName: string, bookings: any[]): string {
 
   // Add each booking as an event
   for (const booking of bookings) {
-    lines.push(...generateEvent(booking, unitName));
+    lines.push(...generateBookingEvent(booking, unitName));
+  }
+
+  // Add blocked day ranges as events
+  // CRITICAL: This ensures Booking.com/Airbnb see these dates as unavailable!
+  for (let i = 0; i < blockedRanges.length; i++) {
+    lines.push(...generateBlockedEvent(blockedRanges[i], unitName, i));
   }
 
   // Calendar footer
@@ -275,54 +366,112 @@ function generateIcalCalendar(unitName: string, bookings: any[]): string {
 }
 
 /**
- * Generate single event (VEVENT)
+ * Generate VEVENT for a booking
  */
-function generateEvent(booking: any, unitName: string): string[] {
+function generateBookingEvent(booking: any, unitName: string): string[] {
   const lines: string[] = [];
 
   lines.push("BEGIN:VEVENT");
-  
+
   // UID - Unique identifier
   lines.push(`UID:booking-${booking.id}@bookbed.io`);
-  
+
   // DTSTAMP - Creation timestamp
   const created = booking.created_at?.toDate() || new Date();
   lines.push(`DTSTAMP:${formatTimestamp(created)}`);
-  
+
   // DTSTART - Start date (all-day event)
   const checkIn = booking.check_in?.toDate() || new Date();
   lines.push(`DTSTART;VALUE=DATE:${formatDate(checkIn)}`);
-  
+
   // DTEND - End date (exclusive, day after checkout)
   const checkOut = booking.check_out?.toDate() || new Date();
   const endDate = new Date(checkOut);
   endDate.setDate(endDate.getDate() + 1);
   lines.push(`DTEND;VALUE=DATE:${formatDate(endDate)}`);
-  
+
   // SUMMARY - Event title
   const guestName = booking.guest_name || "Guest";
   lines.push(`SUMMARY:${escapeIcal(`Booking: ${guestName} - ${unitName}`)}`);
-  
+
   // DESCRIPTION - Event details
   const description = buildDescription(booking, unitName);
   lines.push(`DESCRIPTION:${escapeIcal(description)}`);
-  
+
   // STATUS - Booking status
   const status = mapBookingStatus(booking.status);
   lines.push(`STATUS:${status}`);
-  
+
   // LOCATION - Unit name
   lines.push(`LOCATION:${escapeIcal(unitName)}`);
-  
+
   // LAST-MODIFIED
   if (booking.updated_at) {
     const updated = booking.updated_at.toDate();
     lines.push(`LAST-MODIFIED:${formatTimestamp(updated)}`);
   }
-  
+
   // CREATED
   lines.push(`CREATED:${formatTimestamp(created)}`);
-  
+
+  lines.push("END:VEVENT");
+
+  return lines;
+}
+
+/**
+ * Generate VEVENT for blocked days
+ * Creates a "Not Available" event that OTAs (Booking.com, Airbnb) will respect
+ */
+function generateBlockedEvent(
+  range: BlockedRange,
+  unitName: string,
+  index: number
+): string[] {
+  const lines: string[] = [];
+
+  lines.push("BEGIN:VEVENT");
+
+  // UID - Unique identifier (includes date range to ensure uniqueness)
+  const startStr = formatDate(range.startDate);
+  const endStr = formatDate(range.endDate);
+  lines.push(`UID:blocked-${startStr}-${endStr}-${index}@bookbed.io`);
+
+  // DTSTAMP - Creation timestamp (now)
+  lines.push(`DTSTAMP:${formatTimestamp(new Date())}`);
+
+  // DTSTART - Start date (all-day event)
+  lines.push(`DTSTART;VALUE=DATE:${startStr}`);
+
+  // DTEND - End date (exclusive in iCal, so add 1 day)
+  const endDateExclusive = new Date(range.endDate);
+  endDateExclusive.setDate(endDateExclusive.getDate() + 1);
+  lines.push(`DTEND;VALUE=DATE:${formatDate(endDateExclusive)}`);
+
+  // SUMMARY - Event title (standard "Not Available" format recognized by OTAs)
+  lines.push(`SUMMARY:${escapeIcal("Not Available")}`);
+
+  // DESCRIPTION - Additional context
+  const dayCount = Math.round(
+    (range.endDate.getTime() - range.startDate.getTime()) / (1000 * 60 * 60 * 24)
+  ) + 1;
+  const description = `Blocked dates for ${unitName}\\n` +
+    `${dayCount} day${dayCount > 1 ? "s" : ""} unavailable\\n` +
+    "Managed by BookBed";
+  lines.push(`DESCRIPTION:${escapeIcal(description)}`);
+
+  // STATUS - CONFIRMED means these dates are definitely blocked
+  lines.push("STATUS:CONFIRMED");
+
+  // TRANSP - OPAQUE means this blocks out time (important for availability!)
+  lines.push("TRANSP:OPAQUE");
+
+  // LOCATION - Unit name
+  lines.push(`LOCATION:${escapeIcal(unitName)}`);
+
+  // CREATED
+  lines.push(`CREATED:${formatTimestamp(new Date())}`);
+
   lines.push("END:VEVENT");
 
   return lines;
@@ -335,25 +484,25 @@ function buildDescription(booking: any, unitName: string): string {
   const parts: string[] = [];
 
   parts.push(`Unit: ${unitName}`);
-  
+
   // SECURITY: Only include guest name (not email/phone) in public iCal feed
   if (booking.guest_name) parts.push(`Guest: ${booking.guest_name}`);
-  
+
   parts.push(`Guests: ${booking.guest_count || 1}`);
-  
+
   if (booking.check_in_time) parts.push(`Check-in: ${booking.check_in_time}`);
   if (booking.check_out_time) parts.push(`Check-out: ${booking.check_out_time}`);
-  
+
   if (booking.total_price) {
     parts.push(`Total: €${booking.total_price.toFixed(2)}`);
   }
-  
+
   if (booking.payment_status) {
     parts.push(`Payment: ${booking.payment_status}`);
   }
-  
+
   if (booking.notes) parts.push(`Notes: ${booking.notes}`);
-  
+
   parts.push(`Booking ID: ${booking.id}`);
 
   return parts.join("\\n");
@@ -364,11 +513,11 @@ function buildDescription(booking: any, unitName: string): string {
  */
 function mapBookingStatus(status: string): string {
   switch (status) {
-    case "confirmed": return "CONFIRMED";
-    case "pending": return "TENTATIVE";
-    case "cancelled": return "CANCELLED";
-    case "completed": return "CONFIRMED";
-    default: return "TENTATIVE";
+  case "confirmed": return "CONFIRMED";
+  case "pending": return "TENTATIVE";
+  case "cancelled": return "CANCELLED";
+  case "completed": return "CONFIRMED";
+  default: return "TENTATIVE";
   }
 }
 

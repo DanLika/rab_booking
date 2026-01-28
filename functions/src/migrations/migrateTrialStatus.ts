@@ -4,7 +4,7 @@ import {logInfo, logError, logSuccess} from "../logger";
 
 /**
  * Migration: Trial Status
- * 
+ *
  * Callable Cloud Function for migrating existing users to the new trial system.
  *
  * @remarks
@@ -129,7 +129,7 @@ export const migrateTrialStatus = onCall(
         };
 
         if (dryRun) {
-          logInfo(`[Migration] [Dry Run] Would migrate user`, {
+          logInfo("[Migration] [Dry Run] Would migrate user", {
             userId,
             accountStatus,
             trialExpiresAt: trialExpiresAt.toDate().toISOString(),
@@ -141,7 +141,7 @@ export const migrateTrialStatus = onCall(
           // Commit batch when full
           if (batchCount >= batchSize) {
             await batch.commit();
-            logInfo(`[Migration] Committed batch`, {batchCount});
+            logInfo("[Migration] Committed batch", {batchCount});
             batch = db.batch();
             batchCount = 0;
             batchesProcessed++;

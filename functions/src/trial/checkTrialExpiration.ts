@@ -5,7 +5,7 @@ import {sendTrialExpiredEmail} from "../emailService";
 
 /**
  * Check Trial Expiration
- * 
+ *
  * Scheduled Cloud Function that runs daily to check for expired trials.
  *
  * @remarks

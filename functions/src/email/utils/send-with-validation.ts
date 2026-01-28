@@ -22,7 +22,7 @@ export interface SendEmailOptions {
  * Send email via Resend with proper result validation
  *
  * @throws Error if Resend returns an error in the response
- * @returns The email ID from Resend on success
+ * @return The email ID from Resend on success
  */
 export async function sendEmailWithValidation(
   resendClient: Resend,

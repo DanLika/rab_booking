@@ -138,9 +138,9 @@ export const setLifetimeLicense = onCall(
 
       return {
         success: true,
-        message: grant
-          ? `Lifetime license granted to user ${userId}.`
-          : `Lifetime license revoked from user ${userId}.`,
+        message: grant ?
+          `Lifetime license granted to user ${userId}.` :
+          `Lifetime license revoked from user ${userId}.`,
         action: result.action,
       };
     } catch (error) {

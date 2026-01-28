@@ -25,10 +25,10 @@
  * TODO: Suspicious Activity Email (deferred for future implementation)
  */
 
-import { Resend } from "resend";
-import { db } from "./firebase";
-import { logError, logSuccess } from "./logger";
-import { sanitizeText } from "./utils/inputSanitization";
+import {Resend} from "resend";
+import {db} from "./firebase";
+import {logError, logSuccess} from "./logger";
+import {sanitizeText} from "./utils/inputSanitization";
 
 // Import new email templates (V2 - OPCIJA A: Refined Premium)
 import {
@@ -174,7 +174,7 @@ interface PropertyData {
  *
  * @param propertyId - The property document ID
  * @param operation - Operation name for logging context
- * @returns PropertyData with contactEmail and subdomain, or empty object on error
+ * @return PropertyData with contactEmail and subdomain, or empty object on error
  */
 async function fetchPropertyData(
   propertyId: string | undefined,
@@ -320,9 +320,9 @@ function generateViewBookingUrl(
   params.set("ref", bookingReference);
   params.set("email", guestEmail);
   params.set("token", accessToken);
-  
+
   // Add language if provided and valid
-  if (language && ['hr', 'en', 'de', 'it'].includes(language.toLowerCase())) {
+  if (language && ["hr", "en", "de", "it"].includes(language.toLowerCase())) {
     params.set("lang", language.toLowerCase());
   }
 
@@ -431,7 +431,7 @@ export async function sendBookingConfirmationEmail(
       ownerEmail
     );
 
-    logSuccess("Booking confirmation email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Booking confirmation email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending booking confirmation email", error);
     throw error;
@@ -501,7 +501,7 @@ export async function sendBookingApprovedEmail(
       ownerEmail
     );
 
-    logSuccess("Booking approved email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Booking approved email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending booking approved email", error);
     throw error;
@@ -567,7 +567,7 @@ export async function sendOwnerNotificationEmail(
       FROM_NAME()
     );
 
-    logSuccess("Owner notification email sent (V2 - Refined Premium)", { email: ownerEmail });
+    logSuccess("Owner notification email sent (V2 - Refined Premium)", {email: ownerEmail});
   } catch (error) {
     logError("Error sending owner notification email", error);
     throw error;
@@ -627,7 +627,7 @@ export async function sendGuestCancellationEmail(
       FROM_NAME()
     );
 
-    logSuccess("Guest cancellation email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Guest cancellation email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending guest cancellation email", error);
     throw error;
@@ -685,7 +685,7 @@ export async function sendOwnerCancellationNotificationEmail(
       FROM_NAME()
     );
 
-    logSuccess("Owner cancellation notification sent (V2 - Refined Premium)", { email: ownerEmail });
+    logSuccess("Owner cancellation notification sent (V2 - Refined Premium)", {email: ownerEmail});
   } catch (error) {
     logError("Error sending owner cancellation notification", error);
     throw error;
@@ -733,7 +733,7 @@ export async function sendRefundNotificationEmail(
       FROM_NAME()
     );
 
-    logSuccess("Refund notification email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Refund notification email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending refund notification email", error);
     throw error;
@@ -779,7 +779,7 @@ export async function sendCustomGuestEmail(
       FROM_NAME()
     );
 
-    logSuccess("Custom guest email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Custom guest email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending custom guest email", error);
     throw error;
@@ -845,7 +845,7 @@ export async function sendPaymentReminderEmail(
       FROM_NAME()
     );
 
-    logSuccess("Payment reminder email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Payment reminder email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending payment reminder email", error);
     throw error;
@@ -909,7 +909,7 @@ export async function sendCheckInReminderEmail(
       FROM_NAME()
     );
 
-    logSuccess("Check-in reminder email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Check-in reminder email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending check-in reminder email", error);
     throw error;
@@ -961,7 +961,7 @@ export async function sendCheckOutReminderEmail(
       FROM_NAME()
     );
 
-    logSuccess("Check-out reminder email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Check-out reminder email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending check-out reminder email", error);
     throw error;
@@ -1077,7 +1077,7 @@ export async function sendPendingBookingOwnerNotification(
       FROM_NAME()
     );
 
-    logSuccess("Pending booking owner notification sent (V2 - Refined Premium)", { email: ownerEmail });
+    logSuccess("Pending booking owner notification sent (V2 - Refined Premium)", {email: ownerEmail});
   } catch (error) {
     logError("Error sending pending booking owner notification", error);
     throw error;
@@ -1122,7 +1122,7 @@ export async function sendBookingRejectedEmail(
       ownerEmail
     );
 
-    logSuccess("Booking rejected email sent (V2 - Refined Premium)", { email: guestEmail });
+    logSuccess("Booking rejected email sent (V2 - Refined Premium)", {email: guestEmail});
   } catch (error) {
     logError("Error sending booking rejected email", error);
     throw error;
@@ -1156,7 +1156,7 @@ export async function sendEmailVerificationCode(
       FROM_NAME()
     );
 
-    logSuccess("Email verification code sent (V2 - Refined Premium)", { email });
+    logSuccess("Email verification code sent (V2 - Refined Premium)", {email});
   } catch (error) {
     logError("Error sending email verification code", error);
     throw error;
@@ -1312,7 +1312,7 @@ export async function sendTrialExpiredEmail(
   try {
     const resend = getResendClient();
 
-    const upgradeUrl = `https://app.bookbed.io/subscription?utm_source=trial_expired&utm_medium=email`;
+    const upgradeUrl = "https://app.bookbed.io/subscription?utm_source=trial_expired&utm_medium=email";
 
     const html = `
 <!DOCTYPE html>

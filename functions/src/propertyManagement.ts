@@ -129,7 +129,7 @@ export const onPropertyDeleted = onDocumentDeleted(
  * - daily_prices
  * - widget_settings
  *
- * @returns Number of units deleted
+ * @return Number of units deleted
  */
 async function deleteUnitsWithTrigger(
   propertyRef: FirebaseFirestore.DocumentReference,
@@ -183,7 +183,7 @@ async function deleteUnitsWithTrigger(
 /**
  * Delete all documents in a subcollection using batched writes
  *
- * @returns Number of documents deleted
+ * @return Number of documents deleted
  */
 async function deleteSubcollection(
   parentRef: FirebaseFirestore.DocumentReference,

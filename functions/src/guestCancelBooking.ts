@@ -24,7 +24,7 @@ function createStripeClient(secretKey: string): Stripe {
 /**
  * Validates email configuration to ensure all required fields are present
  * @param emailConfig - Email configuration from widget settings
- * @returns Validation result with isValid flag and optional reason
+ * @return Validation result with isValid flag and optional reason
  */
 function validateEmailConfig(emailConfig: any): {
   isValid: boolean;
@@ -234,7 +234,7 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
       if (hoursUntilCheckIn < cancellationDeadlineHours) {
         throw new HttpsError(
           "failed-precondition",
-          `Cancellation deadline has passed during processing.`
+          "Cancellation deadline has passed during processing."
         );
       }
 
@@ -408,7 +408,7 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
           safeToDate(booking.check_out, "check_out")
         ).catch((e) => logError("Failed to send guest cancellation push notification", e));
 
-        logInfo(`Owner push notification sent for guest cancellation`, {
+        logInfo("Owner push notification sent for guest cancellation", {
           ownerId,
           bookingId,
         });

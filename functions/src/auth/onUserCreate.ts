@@ -4,7 +4,7 @@ import {logInfo, logError, logSuccess} from "../logger";
 
 /**
  * Free Trial Initialization
- * 
+ *
  * Cloud Function trigger for new user creation.
  * Initializes the trial period and account status for new users.
  *
@@ -58,7 +58,7 @@ export const onUserCreate = onDocumentCreated(
         trialExpiresAt: trialExpiresAt,
         statusChangedAt: trialStartDate,
         statusChangedBy: "system",
-        
+
         // Warning flags (to prevent duplicate emails)
         trialWarning7DaysSent: false,
         trialWarning3DaysSent: false,

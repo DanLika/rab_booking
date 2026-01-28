@@ -6,7 +6,7 @@ import {sendTrialExpiringPushNotification} from "../fcmService";
 
 /**
  * Send Trial Expiration Warnings
- * 
+ *
  * Scheduled Cloud Function that runs daily to send trial expiration warnings.
  *
  * @remarks
@@ -76,7 +76,7 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
       return;
     }
 
-    logInfo(`[Trial Warning] Found users to warn`, {
+    logInfo("[Trial Warning] Found users to warn", {
       days,
       count: usersToWarnSnapshot.docs.length,
     });

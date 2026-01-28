@@ -8,7 +8,7 @@
  */
 
 // Initialize Sentry for error tracking (must be first)
-import { initSentry } from "./sentry";
+import {initSentry} from "./sentry";
 initSentry();
 
 // Export booking management functions

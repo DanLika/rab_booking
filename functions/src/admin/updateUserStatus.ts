@@ -4,7 +4,7 @@ import {logError, logSuccess} from "../logger";
 
 /**
  * Admin: Update User Status
- * 
+ *
  * Callable Cloud Function for admins to update a user's account status.
  *
  * @remarks

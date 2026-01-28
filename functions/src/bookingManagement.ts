@@ -1,4 +1,4 @@
-import { onSchedule } from "firebase-functions/v2/scheduler";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 import {
   onDocumentUpdated,
   onDocumentCreated,
@@ -8,20 +8,20 @@ import {
   sendBookingCancellationEmail,
   sendBookingRejectedEmail,
 } from "./emailService";
-import { sendEmailWithRetry } from "./utils/emailRetry";
-import { admin, db } from "./firebase";
-import { logInfo, logError, logSuccess, logWarn } from "./logger";
-import { createBookingNotification } from "./notificationService";
+import {sendEmailWithRetry} from "./utils/emailRetry";
+import {admin, db} from "./firebase";
+import {logInfo, logError, logSuccess, logWarn} from "./logger";
+import {createBookingNotification} from "./notificationService";
 import {
   fetchPropertyAndUnitDetails,
   BookingEmailTracking,
 } from "./utils/bookingHelpers";
-import { safeToDate } from "./utils/dateValidation";
+import {safeToDate} from "./utils/dateValidation";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
 } from "./bookingAccessToken";
-import { generateBookingReference } from "./utils/bookingReferenceGenerator";
+import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 
 // ==========================================
 // EMAIL ERROR TRACKING
@@ -103,7 +103,7 @@ export const autoCancelExpiredBookings = onSchedule(
         if (booking.guest_email) {
           try {
             // Fetch property and unit names using shared utility
-            const { propertyName, unitName } = await fetchPropertyAndUnitDetails(
+            const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
               booking.property_id,
               booking.unit_id,
               "autoCancelExpired"
@@ -129,7 +129,7 @@ export const autoCancelExpiredBookings = onSchedule(
               booking.guest_email
             );
           } catch (error) {
-            logError("Failed to send cancellation email after retries", error, { bookingId: doc.id });
+            logError("Failed to send cancellation email after retries", error, {bookingId: doc.id});
             // Track failure for monitoring/alerting
             trackEmailFailure(
               doc.id,
@@ -140,12 +140,12 @@ export const autoCancelExpiredBookings = onSchedule(
           }
         }
 
-        logInfo("Auto-cancelled booking due to payment timeout", { bookingId: doc.id });
+        logInfo("Auto-cancelled booking due to payment timeout", {bookingId: doc.id});
       });
 
       await Promise.all(cancelPromises);
 
-      logSuccess("Auto-cancelled expired bookings", { count: expiredBookings.size });
+      logSuccess("Auto-cancelled expired bookings", {count: expiredBookings.size});
     } catch (error) {
       logError("Error auto-cancelling bookings", error);
     }
@@ -180,7 +180,7 @@ export const onBookingCreated = onDocumentCreated(
       logInfo("Booking uses Stripe or other instant method, skipping initial email", {
         bookingId: event.params.bookingId,
         paymentMethod: booking.payment_method,
-        requiresApproval
+        requiresApproval,
       });
       return;
     }
@@ -190,13 +190,13 @@ export const onBookingCreated = onDocumentCreated(
       bookingId: event.params.bookingId,
       reference: booking.booking_reference,
       guest: booking.guest_name,
-      email: booking.guest_email
+      email: booking.guest_email,
     });
 
     try {
       // Fetch property details for owner_id (we only need propertyData here)
       // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
-      const { propertyData } = await fetchPropertyAndUnitDetails(
+      const {propertyData} = await fetchPropertyAndUnitDetails(
         booking.property_id,
         booking.unit_id,
         "onBookingCreated",
@@ -237,14 +237,14 @@ export const onBookingCreated = onDocumentCreated(
             booking.guest_name || "Guest",
             "created"
           );
-          logSuccess("In-app notification created for owner", { ownerId });
+          logSuccess("In-app notification created for owner", {ownerId});
         } catch (notificationError) {
-          logError("Failed to create in-app notification", notificationError, { ownerId });
+          logError("Failed to create in-app notification", notificationError, {ownerId});
           // Continue - notification failure shouldn't break the flow
         }
       }
     } catch (error) {
-      logError("Failed to send booking emails", error, { bookingId: event.params.bookingId });
+      logError("Failed to send booking emails", error, {bookingId: event.params.bookingId});
       // Don't throw - we don't want to fail booking creation if email fails
       // The booking is already created, email is just a notification
     }
@@ -271,7 +271,7 @@ export const onBookingStatusChange = onDocumentUpdated(
       logInfo("Booking status changed", {
         bookingId: event.params.bookingId,
         from: before.status,
-        to: after.status
+        to: after.status,
       });
 
       // If booking was approved (pending -> confirmed with approved_at timestamp)
@@ -300,7 +300,7 @@ export const onBookingStatusChange = onDocumentUpdated(
           // Generate new access token for "View my reservation" link
           // The plaintext token is only available at generation time,
           // so we must create a new one when approving the booking
-          const { token: accessToken, hashedToken } = generateBookingAccessToken();
+          const {token: accessToken, hashedToken} = generateBookingAccessToken();
           const checkOutDate = safeToDate(after.check_out, "check_out");
           const tokenExpiration = calculateTokenExpiration(checkOutDate);
 
@@ -335,7 +335,7 @@ export const onBookingStatusChange = onDocumentUpdated(
             after.guest_email || ""
           );
 
-          logSuccess("Booking approval email sent to guest", { email: after.guest_email });
+          logSuccess("Booking approval email sent to guest", {email: after.guest_email});
 
           // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
           await event.data?.after.ref.update({
@@ -397,7 +397,7 @@ export const onBookingStatusChange = onDocumentUpdated(
             after.guest_email || ""
           );
 
-          logSuccess("Booking rejection email sent to guest", { email: after.guest_email });
+          logSuccess("Booking rejection email sent to guest", {email: after.guest_email});
 
           // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
           await event.data?.after.ref.update({
@@ -460,7 +460,7 @@ export const onBookingStatusChange = onDocumentUpdated(
             }
 
             // Fetch property and unit names using shared utility
-            const { propertyName, unitName } = await fetchPropertyAndUnitDetails(
+            const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
               booking.property_id,
               booking.unit_id,
               "onStatusChange"
@@ -490,7 +490,7 @@ export const onBookingStatusChange = onDocumentUpdated(
               "Booking Cancellation",
               booking.guest_email || ""
             );
-            logSuccess("Cancellation email sent", { email: booking.guest_email });
+            logSuccess("Cancellation email sent", {email: booking.guest_email});
 
             // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
             await event.data?.after.ref.update({
@@ -525,7 +525,7 @@ export const onBookingStatusChange = onDocumentUpdated(
               after.guest_name || "Guest",
               "cancelled"
             );
-            logSuccess("In-app cancellation notification created for owner", { ownerId });
+            logSuccess("In-app cancellation notification created for owner", {ownerId});
           }
         } catch (notificationError) {
           logError("Failed to create in-app cancellation notification", notificationError);

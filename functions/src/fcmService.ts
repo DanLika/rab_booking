@@ -57,9 +57,9 @@ async function getUserFcmTokens(userId: string): Promise<string[]> {
     for (const key of Object.keys(data)) {
       const tokenData = data[key];
       // The token string is stored both as the key and in the 'token' field
-      const token = typeof tokenData === "object" && tokenData?.token
-        ? tokenData.token
-        : key;
+      const token = typeof tokenData === "object" && tokenData?.token ?
+        tokenData.token :
+        key;
 
       // Basic validation: must be a non-empty string of reasonable length
       // FCM tokens are typically 150+ characters
@@ -280,9 +280,9 @@ export async function sendBookingPushNotification(
   };
 
   // If dates provided, include date range in message
-  const dateRange = (checkInDate && checkOutDate)
-    ? ` (${formatDateRange(checkInDate, checkOutDate)})`
-    : "";
+  const dateRange = (checkInDate && checkOutDate) ?
+    ` (${formatDateRange(checkInDate, checkOutDate)})` :
+    "";
 
   const bodies: Record<string, string> = {
     created: `${guestName} made a new booking${dateRange}.`,

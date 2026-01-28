@@ -64,7 +64,7 @@ export function escapeHtml(text: string | null | undefined): string {
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
-    '"': "&quot;",
+    "\"": "&quot;",
     "'": "&#39;",
   };
   return String(text).replace(/[&<>"']/g, (char) => map[char]);
@@ -119,7 +119,7 @@ export interface HeaderOptions {
 }
 
 export function generateHeader(options: HeaderOptions): string {
-  const { icon, emoji, title, subtitle, bookingReference } = options;
+  const {icon, emoji, title, subtitle, bookingReference} = options;
 
   // Use emoji if provided, otherwise use icon HTML, or default to clipboard emoji
   const iconContent = emoji ?
@@ -278,7 +278,7 @@ export interface ButtonOptions {
 }
 
 export function generateButton(options: ButtonOptions): string {
-  const { text, url, secondary } = options;
+  const {text, url, secondary} = options;
 
   const bgColor = secondary ? COLORS.cardBg : COLORS.buttonPrimary;
   const textColor = secondary ? COLORS.textPrimary : "#FFFFFF";
@@ -316,7 +316,7 @@ export interface AlertOptions {
 }
 
 export function generateAlert(options: AlertOptions): string {
-  const { type, title, message } = options;
+  const {type, title, message} = options;
 
   const emojiMap = {
     info: "ℹ️",
@@ -326,10 +326,10 @@ export function generateAlert(options: AlertOptions): string {
   };
 
   const colorMap = {
-    info: { bg: COLORS.infoBg, border: COLORS.infoBorder, text: COLORS.info },
-    success: { bg: COLORS.successBg, border: COLORS.successBorder, text: COLORS.success },
-    warning: { bg: COLORS.warningBg, border: COLORS.warningBorder, text: COLORS.warning },
-    error: { bg: COLORS.errorBg, border: COLORS.errorBorder, text: COLORS.error },
+    info: {bg: COLORS.infoBg, border: COLORS.infoBorder, text: COLORS.info},
+    success: {bg: COLORS.successBg, border: COLORS.successBorder, text: COLORS.success},
+    warning: {bg: COLORS.warningBg, border: COLORS.warningBorder, text: COLORS.warning},
+    error: {bg: COLORS.errorBg, border: COLORS.errorBorder, text: COLORS.error},
   };
 
   const colors = colorMap[type];
@@ -381,11 +381,11 @@ export type BadgeType = "success" | "warning" | "error" | "info" | "neutral";
 
 export function generateBadge(text: string, type: BadgeType = "neutral"): string {
   const colorMap = {
-    success: { bg: COLORS.successBg, text: COLORS.success },
-    warning: { bg: COLORS.warningBg, text: COLORS.warning },
-    error: { bg: COLORS.errorBg, text: COLORS.error },
-    info: { bg: COLORS.infoBg, text: COLORS.info },
-    neutral: { bg: COLORS.cardBgSubtle, text: COLORS.textSecondary },
+    success: {bg: COLORS.successBg, text: COLORS.success},
+    warning: {bg: COLORS.warningBg, text: COLORS.warning},
+    error: {bg: COLORS.errorBg, text: COLORS.error},
+    info: {bg: COLORS.infoBg, text: COLORS.info},
+    neutral: {bg: COLORS.cardBgSubtle, text: COLORS.textSecondary},
   };
 
   const colors = colorMap[type];
@@ -428,7 +428,7 @@ export interface FooterOptions {
 }
 
 export function generateFooter(options: FooterOptions = {}): string {
-  const { contactEmail, contactPhone, additionalText } = options;
+  const {contactEmail, contactPhone, additionalText} = options;
 
   let contactHtml = "";
   if (contactEmail || contactPhone) {
@@ -546,12 +546,12 @@ export function generateBookingDetailsCard(details: BookingDetails): string {
   const nights = calculateNights(details.checkIn, details.checkOut);
 
   const rows: DetailRow[] = [
-    { label: "Nekretnina", value: details.propertyName },
-    { label: "Jedinica", value: details.unitName },
-    { label: "Prijava", value: formatDate(details.checkIn) },
-    { label: "Odjava", value: formatDate(details.checkOut) },
-    { label: "Broj noćenja", value: `${nights} ${nights === 1 ? "noć" : "noći"}` },
-    { label: "Broj gostiju", value: details.guests.toString() },
+    {label: "Nekretnina", value: details.propertyName},
+    {label: "Jedinica", value: details.unitName},
+    {label: "Prijava", value: formatDate(details.checkIn)},
+    {label: "Odjava", value: formatDate(details.checkOut)},
+    {label: "Broj noćenja", value: `${nights} ${nights === 1 ? "noć" : "noći"}`},
+    {label: "Broj gostiju", value: details.guests.toString()},
   ];
 
   return generateCard("📅 Detalji rezervacije", generateDetailsTable(rows));
@@ -572,11 +572,11 @@ export function generatePaymentDetailsCard(details: PaymentDetails): string {
   const rows: DetailRow[] = [];
 
   if (details.depositAmount !== undefined && details.depositAmount > 0) {
-    rows.push({ label: "Kapara", value: formatCurrency(details.depositAmount) });
+    rows.push({label: "Kapara", value: formatCurrency(details.depositAmount)});
   }
 
   if (details.remainingAmount !== undefined && details.remainingAmount > 0) {
-    rows.push({ label: "Preostalo za platiti", value: formatCurrency(details.remainingAmount) });
+    rows.push({label: "Preostalo za platiti", value: formatCurrency(details.remainingAmount)});
   }
 
   rows.push({
@@ -589,7 +589,7 @@ export function generatePaymentDetailsCard(details: PaymentDetails): string {
     const methodText = details.paymentMethod === "stripe" ? "Kartica" :
       details.paymentMethod === "bank_transfer" ? "Bankovni prijenos" :
         "Plaćanje na mjestu";
-    rows.push({ label: "Način plaćanja", value: methodText });
+    rows.push({label: "Način plaćanja", value: methodText});
   }
 
   return generateCard("💳 Detalji plaćanja", generateDetailsTable(rows));
@@ -644,19 +644,19 @@ export function generateBankTransferCard(details: BankDetails): string {
   const rows: DetailRow[] = [];
 
   if (details.bankName) {
-    rows.push({ label: "Banka", value: details.bankName });
+    rows.push({label: "Banka", value: details.bankName});
   }
   if (details.accountHolder) {
-    rows.push({ label: "Primatelj", value: details.accountHolder });
+    rows.push({label: "Primatelj", value: details.accountHolder});
   }
   if (details.iban) {
-    rows.push({ label: "IBAN", value: details.iban });
+    rows.push({label: "IBAN", value: details.iban});
   }
   if (details.swift) {
-    rows.push({ label: "SWIFT/BIC", value: details.swift });
+    rows.push({label: "SWIFT/BIC", value: details.swift});
   }
-  rows.push({ label: "Poziv na broj", value: details.reference, highlight: true });
-  rows.push({ label: "Iznos", value: formatCurrency(details.amount), highlight: true });
+  rows.push({label: "Poziv na broj", value: details.reference, highlight: true});
+  rows.push({label: "Iznos", value: formatCurrency(details.amount), highlight: true});
 
   return generateCard("🏦 Podaci za uplatu", generateDetailsTable(rows));
 }

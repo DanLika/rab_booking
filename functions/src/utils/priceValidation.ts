@@ -11,10 +11,10 @@
  * @module priceValidation
  */
 
-import { admin, db } from "../firebase";
-import { HttpsError } from "firebase-functions/v2/https";
-import { logInfo, logWarn, logError } from "../logger";
-import { logPriceMismatch } from "./securityMonitoring";
+import {admin, db} from "../firebase";
+import {HttpsError} from "firebase-functions/v2/https";
+import {logInfo, logWarn, logError} from "../logger";
+import {logPriceMismatch} from "./securityMonitoring";
 
 /**
  * Price calculation result
@@ -43,7 +43,7 @@ interface PriceCalculationResult {
  * @param checkOutDate - Check-out date (Firestore Timestamp)
  * @param propertyId - The property ID (REQUIRED for subcollection path)
  * @param transaction - Optional Firestore transaction for atomic reads
- * @returns Price calculation result with total and breakdown
+ * @return Price calculation result with total and breakdown
  * @throws HttpsError if pricing not configured or invalid
  */
 export async function calculateBookingPrice(
@@ -152,8 +152,8 @@ export async function calculateBookingPrice(
         weekendBasePrice,
         weekendDays,
         rawUnitData: {
-          base_price: unitData?.base_price,  // Flutter stores pricePerNight here
-          price_per_night: unitData?.price_per_night,  // Legacy field name
+          base_price: unitData?.base_price, // Flutter stores pricePerNight here
+          price_per_night: unitData?.price_per_night, // Legacy field name
           weekend_base_price: unitData?.weekend_base_price,
           weekend_days: unitData?.weekend_days,
         },
@@ -231,7 +231,7 @@ export async function calculateBookingPrice(
     }
 
     totalPrice += nightPrice;
-    breakdown.push({ date: dateStr, price: nightPrice });
+    breakdown.push({date: dateStr, price: nightPrice});
 
     // Move to next day
     currentDate.setDate(currentDate.getDate() + 1);
@@ -380,7 +380,7 @@ export async function validateBookingPrice(
     throw new HttpsError(
       "invalid-argument",
       `Price mismatch. Expected €${serverExpectedTotal.toFixed(2)}, received €${clientTotalPrice.toFixed(2)}. ` +
-      `Please refresh the page to see current pricing.`
+      "Please refresh the page to see current pricing."
     );
   }
 

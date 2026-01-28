@@ -25,10 +25,10 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
   if (!checkRateLimit(`stripe_connect:${request.auth.uid}`, 5, 300)) {
     logSecurityEvent(
       SecurityEventType.RATE_LIMIT_EXCEEDED,
-      { userId: request.auth.uid, action: "stripe_connect", ip: clientIp },
+      {userId: request.auth.uid, action: "stripe_connect", ip: clientIp},
       "medium"
     ).catch(() => {});
-    logWarn("createStripeConnectAccount: Rate limit exceeded", { userId: request.auth.uid });
+    logWarn("createStripeConnectAccount: Rate limit exceeded", {userId: request.auth.uid});
     throw new HttpsError("resource-exhausted", "Too many attempts. Please try again later.");
   }
 

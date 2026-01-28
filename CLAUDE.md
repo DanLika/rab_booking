@@ -763,7 +763,34 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-26 | **Version**: 6.42
+**Last Updated**: 2026-01-28 | **Version**: 6.43
+
+**Changelog 6.43**: Security Hardening & CI Upgrades:
+- **Security Fix - Encryption Key Validation** (`functions/src/bookingComApi.ts`):
+  - **Problem**: Hardcoded fallback encryption key could be used if `ENCRYPTION_KEY` env var not set
+  - **Fix**: New `getEncryptionKey()` helper function with fail-fast validation
+  - Throws `HttpsError("internal")` if key is missing or uses default value
+  - Prevents accidental use of insecure fallback in production
+  ```typescript
+  function getEncryptionKey(): string {
+    const encryptionKey = process.env.ENCRYPTION_KEY;
+    if (!encryptionKey || encryptionKey === "default-key-change-in-production") {
+      throw new HttpsError("internal", "ENCRYPTION_KEY is not configured.");
+    }
+    return encryptionKey;
+  }
+  ```
+- **GitHub Actions Upgrades** (`.github/workflows/ci.yml`, `deploy-widget.yml`):
+  - `actions/checkout@v4` → `@v6`
+  - `actions/upload-artifact@v4` → `@v6`
+  - `actions/setup-node@v4` → `@v6`
+  - `codecov/codecov-action@v4` → `@v5`
+  - All versions tested compatible with `ubuntu-latest` runners
+- **iCal Two-Way Sync Verification**:
+  - Confirmed `icalExport.ts` correctly exports both bookings AND blocked days
+  - Firestore index exists for `daily_prices` collection group query (`unit_id` + `available` + `date`)
+  - Blocked days from `daily_prices` where `available=false` are exported as "Not Available" VEVENT entries
+  - This prevents Booking.com/Airbnb from showing manually blocked days as available
 
 **Changelog 6.42**: Dialog UI Standardization (Delete Account & Booking Overlap Warning):
 - **Delete Account Dialog** (`delete_account_dialog.dart`):

@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
-import '../../../../shared/models/user_model.dart' show AccountType;
+import '../../../../shared/models/user_model.dart' show AccountType, UserModel;
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/config/router_owner.dart';
@@ -22,6 +22,28 @@ import '../../../../shared/widgets/premium_list_tile.dart';
 import '../../../../shared/widgets/logout_tile.dart';
 import '../../../../shared/widgets/delete_account_dialog.dart';
 import '../providers/user_profile_provider.dart';
+
+/// Calculate profile completion from UserModel (fallback when UserProfile doesn't exist)
+/// This handles existing users who registered before profile subdocument was created
+int _calculateCompletionFromUserModel(UserModel? userModel) {
+  if (userModel == null) return 0;
+
+  int filled = 0;
+  const total = 7; // Same fields as UserProfile.completionPercentage
+
+  // Check fields that map to UserProfile fields
+  final hasName =
+      userModel.firstName.isNotEmpty || userModel.lastName.isNotEmpty;
+  if (hasName) filled++; // displayName
+  if (userModel.email.isNotEmpty) filled++; // emailContact
+  if (userModel.phone?.isNotEmpty == true) filled++; // phoneE164
+  // address.city - not available in UserModel, skip
+  // address.country - not available in UserModel, skip
+  // propertyType - not available in UserModel, skip
+  // logoUrl - not available in UserModel, skip
+
+  return ((filled / total) * 100).round();
+}
 
 /// Profile screen for owner dashboard
 class ProfileScreen extends ConsumerWidget {
@@ -286,7 +308,9 @@ class ProfileScreen extends ConsumerWidget {
                                                 .value
                                                 ?.profile
                                                 .completionPercentage ??
-                                            0,
+                                            _calculateCompletionFromUserModel(
+                                              authState.userModel,
+                                            ),
                                         isDark: isDark,
                                       ),
                                     ],

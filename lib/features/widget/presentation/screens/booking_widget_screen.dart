@@ -3777,8 +3777,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         pets: _pets,
         totalPrice: finalCalculation
             .totalPrice, // Use final calculation (locked or current)
-        servicesTotal: finalCalculation
-            .additionalServicesTotal, // For server-side validation
+        servicesTotal:
+            finalCalculation.petFees +
+            finalCalculation.extraGuestFees +
+            finalCalculation
+                .additionalServicesTotal, // All non-nightly fees for server validation
         paymentMethod: widgetMode == WidgetMode.bookingPending
             ? 'none'
             : (_selectedPaymentMethod.isEmpty

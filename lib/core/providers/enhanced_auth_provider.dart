@@ -4,6 +4,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/constants/auth_feature_flags.dart';
 import '../../core/exceptions/app_exceptions.dart';
 import '../../core/services/rate_limit_service.dart';
@@ -1131,7 +1132,21 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         e,
         stackTrace,
       );
-      // Rethrow so caller knows refresh failed (for UI feedback)
+
+      // If email is already verified in Firebase Auth (reload succeeded but
+      // subsequent Firestore/token operations failed), try to complete the flow
+      // rather than showing an error to the user
+      final refreshedUser = _auth.currentUser;
+      if (refreshedUser != null && refreshedUser.emailVerified) {
+        try {
+          await _loadUserProfile(refreshedUser, forceRefresh: true);
+          return; // Email IS verified - don't rethrow
+        } catch (_) {
+          // Profile load also failed - fall through to rethrow
+        }
+      }
+
+      // Rethrow only if verification status is unknown or not verified
       rethrow;
     }
   }
@@ -1479,26 +1494,34 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Set persistence to LOCAL for Google sign in (web only)
-      if (kIsWeb) {
-        await _auth.setPersistence(Persistence.LOCAL);
-      }
-
-      // Create Google Auth Provider
-      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-
-      // Add scopes if needed
-      googleProvider.addScope('email');
-      googleProvider.addScope('profile');
-
-      // Sign in with popup for web, native SDK for mobile
       final UserCredential userCredential;
       if (kIsWeb) {
-        // Web: Use signInWithPopup (signInWithProvider is not implemented for web)
+        // Web: Use signInWithPopup with Generic IDP flow
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        await _auth.setPersistence(Persistence.LOCAL);
         userCredential = await _auth.signInWithPopup(googleProvider);
       } else {
-        // Mobile: Use signInWithProvider
-        userCredential = await _auth.signInWithProvider(googleProvider);
+        // Mobile (Android/iOS): Use native Google Sign-In SDK
+        final GoogleSignIn googleSignIn = GoogleSignIn(
+          scopes: ['email', 'profile'],
+        );
+        // Clear cached account to always show account picker
+        await googleSignIn.signOut();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          // User cancelled the sign-in flow
+          state = state.copyWith(isLoading: false);
+          return;
+        }
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        userCredential = await _auth.signInWithCredential(credential);
       }
 
       if (userCredential.user == null) {
@@ -1698,28 +1721,39 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   /// Throws [String] error message on failure.
   Future<AuthCredential> reauthenticateWithGoogle() async {
     try {
-      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-      googleProvider.addScope('email');
-      googleProvider.addScope('profile');
-
-      final UserCredential userCredential;
       if (kIsWeb) {
         // Web: Use popup for re-authentication
-        userCredential = await _auth.currentUser!.reauthenticateWithPopup(
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        final userCredential = await _auth.currentUser!.reauthenticateWithPopup(
           googleProvider,
         );
+        final credential = userCredential.credential;
+        if (credential == null) {
+          throw 'Re-authentication succeeded but no credential was returned.';
+        }
+        return credential;
       } else {
-        // Native: Use signInWithProvider for re-authentication
-        userCredential = await _auth.currentUser!.reauthenticateWithProvider(
-          googleProvider,
+        // Mobile (Android/iOS): Use native Google Sign-In SDK
+        final GoogleSignIn googleSignIn = GoogleSignIn(
+          scopes: ['email', 'profile'],
         );
+        // Clear cached account to always show account picker
+        await googleSignIn.signOut();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          throw 'Google re-authentication was cancelled.';
+        }
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        await _auth.currentUser!.reauthenticateWithCredential(credential);
+        return credential;
       }
-
-      final credential = userCredential.credential;
-      if (credential == null) {
-        throw 'Re-authentication succeeded but no credential was returned.';
-      }
-      return credential;
     } on FirebaseAuthException catch (e) {
       LoggingService.log(
         'Google re-auth error: ${e.code} - ${e.message}',

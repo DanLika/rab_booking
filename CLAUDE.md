@@ -764,7 +764,34 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-29 | **Version**: 6.46
+**Last Updated**: 2026-01-29 | **Version**: 6.47
+
+**Changelog 6.47**: Google Sign-In Native SDK & Email Verification Fixes:
+- **Google Sign-In Native SDK** (`enhanced_auth_provider.dart`):
+  - **Problem**: Error "Failed to generate/retrieve public encryption key for Generic IDP flow" na Android native app
+  - **Root Cause**: App koristio `signInWithProvider(GoogleAuthProvider())` - Generic IDP flow koji ne radi na Android native
+  - **Fix**: Dodan `google_sign_in: ^6.2.2` paket za native mobile Google Sign-In
+  - `signInWithGoogle()` sada koristi `GoogleSignIn().signIn()` za mobile (Android/iOS)
+  - Web flow NEPROMIJENJEN - i dalje koristi `signInWithPopup(GoogleAuthProvider())`
+  - Apple Sign-In NEPROMIJENJEN - i dalje koristi `signInWithProvider(OAuthProvider('apple.com'))`
+  - **Files**: `pubspec.yaml`, `ios/Runner/Info.plist` (reversed client ID URL scheme), `enhanced_auth_provider.dart`
+- **Email Verification Resend Network Error** (`email_verification_screen.dart`):
+  - **Problem**: Resend dugme pokazivalo raw exception umjesto user-friendly poruke za network errore
+  - **Fix**: Dodan network/socket/timeout/connection check u catch blok - sada prikazuje `errorNetworkFailed`
+- **Email Verification Polling Error** (`enhanced_auth_provider.dart`):
+  - **Problem**: Nakon verifikacije emaila, background polling pokazivao "Greska u mrezi" iako je email vec verified
+  - **Root Cause**: `user.reload()` uspije (emailVerified=true), ali `getIdToken(true)` ili Firestore update fail-a, exception se rethrow-a
+  - **Fix**: U catch bloku `refreshEmailVerificationStatus()`, ako je email vec verified, pokusaj `_loadUserProfile()` i vrati se bez errora
+- **Google Reauth Native Fix** (`enhanced_auth_provider.dart`):
+  - **Problem**: `reauthenticateWithGoogle()` koristio Generic IDP flow - ne radi na Android za brisanje accounta
+  - **Fix**: `reauthenticateWithGoogle()` sada koristi native `GoogleSignIn` SDK na mobilnim platformama
+- **Google Sign-In Account Picker** (`enhanced_auth_provider.dart`):
+  - **Problem**: Google Sign-In automatski birao zadnji koristen account bez prikaza account pickera
+  - **Fix**: Dodan `googleSignIn.signOut()` prije `signIn()` u `signInWithGoogle()` i `reauthenticateWithGoogle()`
+  - `signOut()` briše kesirani account iz Google SDK-a, ali NE odlogovava iz Firebase Auth
+- **Change Email Dialog Button Overlap** (`email_verification_screen.dart`):
+  - **Problem**: Gumbi "Odustani" i "Promijeni e-poštu" se preklapali na manjim ekranima
+  - **Fix**: Omotan `content` u `SingleChildScrollView` - sadržaj se scroll-a umjesto da se gumbi preklapaju
 
 **Changelog 6.46**: Timeline Calendar Fixed Dimensions & UI Fixes:
 - **Timeline Calendar — Fixed Cell Dimensions** (`timeline_dimensions.dart`):

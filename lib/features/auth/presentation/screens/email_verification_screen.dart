@@ -148,7 +148,7 @@ class _EmailVerificationScreenState
       }
     } catch (e) {
       if (mounted) {
-        final errorString = e.toString();
+        final errorString = e.toString().toLowerCase();
 
         if (errorString.contains('too-many-requests')) {
           // Firebase rate limit hit - start cooldown so user knows when to retry
@@ -156,6 +156,15 @@ class _EmailVerificationScreenState
           ErrorDisplayUtils.showErrorSnackBar(
             context,
             AppLocalizations.of(context).authErrorTooManyRequests,
+          );
+        } else if (errorString.contains('network') ||
+            errorString.contains('socket') ||
+            errorString.contains('timeout') ||
+            errorString.contains('connection')) {
+          // Network error - show user-friendly message
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            AppLocalizations.of(context).errorNetworkFailed,
           );
         } else {
           ErrorDisplayUtils.showErrorSnackBar(
@@ -302,92 +311,94 @@ class _EmailVerificationScreenState
               Text(l10n.authChangeEmailTitle),
             ],
           ),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l10n.authChangeEmailDesc,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 20),
-                Builder(
-                  builder: (ctx) => TextFormField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.authNewEmailLabel,
-                      prefixIcon: const Icon(Icons.email),
-                      context: ctx,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.emailRequired;
-                      }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return l10n.validEmailRequired;
-                      }
-                      return null;
-                    },
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.authChangeEmailDesc,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                ),
-                const SizedBox(height: 16),
-                Builder(
-                  builder: (ctx) => TextFormField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.authPasswordLabel,
-                      prefixIcon: const Icon(Icons.lock),
-                      helperText: l10n.authPasswordHelper,
-                      context: ctx,
+                  const SizedBox(height: 20),
+                  Builder(
+                    builder: (ctx) => TextFormField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.authNewEmailLabel,
+                        prefixIcon: const Icon(Icons.email),
+                        context: ctx,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return l10n.emailRequired;
+                        }
+                        if (!value.contains('@') || !value.contains('.')) {
+                          return l10n.validEmailRequired;
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.passwordRequired;
-                      }
-                      return null;
-                    },
                   ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
+                  const SizedBox(height: 16),
+                  Builder(
+                    builder: (ctx) => TextFormField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.authPasswordLabel,
+                        prefixIcon: const Icon(Icons.lock),
+                        helperText: l10n.authPasswordHelper,
+                        context: ctx,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.passwordRequired;
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
                       color: Theme.of(
                         context,
-                      ).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.tertiary,
+                      ).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          l10n.authLogoutHint,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.tertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.authLogoutHint,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           actions: [

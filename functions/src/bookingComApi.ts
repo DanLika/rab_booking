@@ -28,7 +28,7 @@ import { setUser } from "./sentry";
 
 // Configuration
 const BOOKING_COM_CLIENT_ID = process.env.BOOKING_COM_CLIENT_ID || "";
-const BOOKING_COM_CLIENT_SECRET = process.env.BOOKING_COM_CLIENT_SECRET || "";
+const BOOKING_COM_CLIENT_SECRET = process.env.BOOKING_COM_CLIENT_SECRET;
 const BOOKING_COM_REDIRECT_URI = process.env.BOOKING_COM_REDIRECT_URI || "";
 // TODO: Update with actual API base URL after getting API access
 // Placeholder - replace with actual Booking.com API endpoint
@@ -170,6 +170,10 @@ export const handleBookingComOAuthCallback = onRequest(
       if (expiresAt < new Date()) {
         res.status(400).send("State expired");
         return;
+      }
+
+      if (!BOOKING_COM_CLIENT_SECRET) {
+        throw new HttpsError("failed-precondition", "BOOKING_COM_CLIENT_SECRET not configured");
       }
 
       // Use the Machine Account 'exchange' endpoint as per Connectivity API docs

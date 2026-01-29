@@ -29,7 +29,7 @@ import { setUser } from "./sentry";
 
 // Configuration
 const AIRBNB_CLIENT_ID = process.env.AIRBNB_CLIENT_ID || "";
-const AIRBNB_CLIENT_SECRET = process.env.AIRBNB_CLIENT_SECRET || "";
+const AIRBNB_CLIENT_SECRET = process.env.AIRBNB_CLIENT_SECRET;
 const AIRBNB_REDIRECT_URI = process.env.AIRBNB_REDIRECT_URI || "";
 // TODO: Update with actual API base URL after getting API access
 // Placeholder - replace with actual Airbnb API endpoint
@@ -136,6 +136,10 @@ export const handleAirbnbOAuthCallback = onRequest(
       if (expiresAt < new Date()) {
         res.status(400).send("State expired");
         return;
+      }
+
+      if (!AIRBNB_CLIENT_SECRET) {
+        throw new HttpsError("failed-precondition", "AIRBNB_CLIENT_SECRET not configured");
       }
 
       // TODO: Update with actual OAuth token URL after getting API access

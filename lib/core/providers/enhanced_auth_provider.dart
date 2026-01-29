@@ -1630,10 +1630,14 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       appleProvider.addScope('email');
       appleProvider.addScope('name');
 
-      // Sign in with popup for web, native SDK for mobile
-      final UserCredential userCredential = await _auth.signInWithProvider(
-        appleProvider,
-      );
+      // Web: signInWithPopup (signInWithProvider not implemented on web)
+      // Mobile: signInWithProvider (uses native iOS ASAuthorizationController)
+      final UserCredential userCredential;
+      if (kIsWeb) {
+        userCredential = await _auth.signInWithPopup(appleProvider);
+      } else {
+        userCredential = await _auth.signInWithProvider(appleProvider);
+      }
 
       if (userCredential.user == null) {
         throw AuthException.noUserReturned('Apple');

@@ -41,7 +41,6 @@ void main() {
       const config = AppConfig(
         minRequiredVersion: '2.0.0',
         latestVersion: '2.1.0',
-        forceUpdateEnabled: true,
         updateMessage: 'Update now',
         storeUrl: 'https://example.com',
       );

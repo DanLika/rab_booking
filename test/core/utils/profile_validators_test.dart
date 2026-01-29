@@ -258,7 +258,7 @@ void main() {
       });
 
       test('returns error for too long', () {
-        expect(ProfileValidators.validateIban('HR' + '1' * 33), isNotNull);
+        expect(ProfileValidators.validateIban('HR${'1' * 33}'), isNotNull);
       });
 
       test('returns error for missing country code', () {

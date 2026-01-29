@@ -4,7 +4,7 @@ import 'package:bookbed/core/constants/enums.dart';
 
 void main() {
   group('BookingModel', () {
-    BookingModel _createBooking({
+    BookingModel createBooking({
       String id = 'test-booking-123',
       String unitId = 'unit-1',
       DateTime? checkIn,
@@ -31,13 +31,13 @@ void main() {
         guestCount: guestCount,
         guestName: guestName,
         guestEmail: guestEmail,
-        createdAt: DateTime.utc(2025, 1, 1),
+        createdAt: DateTime.utc(2025, 1),
       );
     }
 
     group('numberOfNights', () {
       test('calculates correct nights for multi-day stay', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 6, 15),
           checkOut: DateTime.utc(2025, 6, 20),
         );
@@ -45,7 +45,7 @@ void main() {
       });
 
       test('returns 1 for single night stay', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 6, 15),
           checkOut: DateTime.utc(2025, 6, 16),
         );
@@ -53,7 +53,7 @@ void main() {
       });
 
       test('handles month boundary correctly', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 1, 29),
           checkOut: DateTime.utc(2025, 2, 3),
         );
@@ -61,7 +61,7 @@ void main() {
       });
 
       test('handles year boundary correctly', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 12, 29),
           checkOut: DateTime.utc(2026, 1, 3),
         );
@@ -71,37 +71,37 @@ void main() {
 
     group('payment calculations', () {
       test('remainingBalance returns correct value', () {
-        final booking = _createBooking(totalPrice: 500.0, paidAmount: 100.0);
+        final booking = createBooking(paidAmount: 100.0);
         expect(booking.remainingBalance, 400.0);
       });
 
       test('remainingBalance returns 0 when fully paid', () {
-        final booking = _createBooking(totalPrice: 500.0, paidAmount: 500.0);
+        final booking = createBooking(paidAmount: 500.0);
         expect(booking.remainingBalance, 0.0);
       });
 
       test('isFullyPaid returns true when paid >= total', () {
-        final booking = _createBooking(totalPrice: 500.0, paidAmount: 500.0);
+        final booking = createBooking(paidAmount: 500.0);
         expect(booking.isFullyPaid, isTrue);
       });
 
       test('isFullyPaid returns true when overpaid', () {
-        final booking = _createBooking(totalPrice: 500.0, paidAmount: 600.0);
+        final booking = createBooking(paidAmount: 600.0);
         expect(booking.isFullyPaid, isTrue);
       });
 
       test('isFullyPaid returns false when partially paid', () {
-        final booking = _createBooking(totalPrice: 500.0, paidAmount: 100.0);
+        final booking = createBooking(paidAmount: 100.0);
         expect(booking.isFullyPaid, isFalse);
       });
 
       test('paymentPercentage calculates correctly', () {
-        final booking = _createBooking(totalPrice: 500.0, paidAmount: 100.0);
+        final booking = createBooking(paidAmount: 100.0);
         expect(booking.paymentPercentage, 20.0);
       });
 
       test('paymentPercentage returns 0 when totalPrice is 0', () {
-        final booking = _createBooking(totalPrice: 0.0, paidAmount: 0.0);
+        final booking = createBooking(totalPrice: 0.0, paidAmount: 0.0);
         expect(booking.paymentPercentage, 0.0);
       });
 
@@ -114,22 +114,22 @@ void main() {
 
     group('formatted strings', () {
       test('formattedTotalPrice formats with euro symbol', () {
-        final booking = _createBooking(totalPrice: 500.0);
+        final booking = createBooking();
         expect(booking.formattedTotalPrice, '€500.00');
       });
 
       test('formattedPaidAmount formats with euro symbol', () {
-        final booking = _createBooking(paidAmount: 100.0);
+        final booking = createBooking();
         expect(booking.formattedPaidAmount, '€100.00');
       });
 
       test('formattedRemainingBalance formats with euro symbol', () {
-        final booking = _createBooking(totalPrice: 500.0, paidAmount: 100.0);
+        final booking = createBooking(paidAmount: 100.0);
         expect(booking.formattedRemainingBalance, '€400.00');
       });
 
       test('nightsLabel singular', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 6, 15),
           checkOut: DateTime.utc(2025, 6, 16),
         );
@@ -137,7 +137,7 @@ void main() {
       });
 
       test('nightsLabel plural', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 6, 15),
           checkOut: DateTime.utc(2025, 6, 20),
         );
@@ -145,17 +145,17 @@ void main() {
       });
 
       test('guestsLabel singular', () {
-        final booking = _createBooking(guestCount: 1);
+        final booking = createBooking(guestCount: 1);
         expect(booking.guestsLabel, '1 guest');
       });
 
       test('guestsLabel plural', () {
-        final booking = _createBooking(guestCount: 3);
+        final booking = createBooking(guestCount: 3);
         expect(booking.guestsLabel, '3 guests');
       });
 
       test('summary combines nights and guests', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 6, 15),
           checkOut: DateTime.utc(2025, 6, 20),
           guestCount: 3,
@@ -166,7 +166,7 @@ void main() {
 
     group('dateRangeFormatted', () {
       test('same month same year', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 6, 15),
           checkOut: DateTime.utc(2025, 6, 20),
         );
@@ -174,7 +174,7 @@ void main() {
       });
 
       test('different months same year', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 6, 28),
           checkOut: DateTime.utc(2025, 7, 5),
         );
@@ -182,7 +182,7 @@ void main() {
       });
 
       test('different years', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 12, 28),
           checkOut: DateTime.utc(2026, 1, 3),
         );
@@ -192,94 +192,94 @@ void main() {
 
     group('isExternalBooking', () {
       test('returns true for ical_ prefix ID', () {
-        final booking = _createBooking(id: 'ical_abc123');
+        final booking = createBooking(id: 'ical_abc123');
         expect(booking.isExternalBooking, isTrue);
       });
 
       test('returns true for booking_com source', () {
-        final booking = _createBooking(source: 'booking_com');
+        final booking = createBooking(source: 'booking_com');
         expect(booking.isExternalBooking, isTrue);
       });
 
       test('returns true for airbnb source', () {
-        final booking = _createBooking(source: 'airbnb');
+        final booking = createBooking(source: 'airbnb');
         expect(booking.isExternalBooking, isTrue);
       });
 
       test('returns true for ical source', () {
-        final booking = _createBooking(source: 'ical');
+        final booking = createBooking(source: 'ical');
         expect(booking.isExternalBooking, isTrue);
       });
 
       test('returns true for external source', () {
-        final booking = _createBooking(source: 'external');
+        final booking = createBooking(source: 'external');
         expect(booking.isExternalBooking, isTrue);
       });
 
       test('returns true for external payment method', () {
-        final booking = _createBooking(paymentMethod: 'external');
+        final booking = createBooking(paymentMethod: 'external');
         expect(booking.isExternalBooking, isTrue);
       });
 
       test('returns false for widget source', () {
-        final booking = _createBooking(source: 'widget');
+        final booking = createBooking(source: 'widget');
         expect(booking.isExternalBooking, isFalse);
       });
 
       test('returns false for manual source', () {
-        final booking = _createBooking(source: 'manual');
+        final booking = createBooking(source: 'manual');
         expect(booking.isExternalBooking, isFalse);
       });
 
       test('returns false for null source with normal ID', () {
-        final booking = _createBooking(id: 'normal-id');
+        final booking = createBooking(id: 'normal-id');
         expect(booking.isExternalBooking, isFalse);
       });
 
       test('case insensitive source matching', () {
-        final booking = _createBooking(source: 'BOOKING_COM');
+        final booking = createBooking(source: 'BOOKING_COM');
         expect(booking.isExternalBooking, isTrue);
       });
     });
 
     group('sourceDisplayName', () {
       test('returns Booking.com for booking_com', () {
-        final booking = _createBooking(source: 'booking_com');
+        final booking = createBooking(source: 'booking_com');
         expect(booking.sourceDisplayName, 'Booking.com');
       });
 
       test('returns Airbnb for airbnb', () {
-        final booking = _createBooking(source: 'airbnb');
+        final booking = createBooking(source: 'airbnb');
         expect(booking.sourceDisplayName, 'Airbnb');
       });
 
       test('returns iCal Import for ical', () {
-        final booking = _createBooking(source: 'ical');
+        final booking = createBooking(source: 'ical');
         expect(booking.sourceDisplayName, 'iCal Import');
       });
 
       test('returns Website Widget for widget', () {
-        final booking = _createBooking(source: 'widget');
+        final booking = createBooking(source: 'widget');
         expect(booking.sourceDisplayName, 'Website Widget');
       });
 
       test('returns Direct for null source', () {
-        final booking = _createBooking();
+        final booking = createBooking();
         expect(booking.sourceDisplayName, 'Direct');
       });
 
       test('returns Direct for manual source', () {
-        final booking = _createBooking(source: 'manual');
+        final booking = createBooking(source: 'manual');
         expect(booking.sourceDisplayName, 'Direct');
       });
 
       test('returns Admin for admin source', () {
-        final booking = _createBooking(source: 'admin');
+        final booking = createBooking(source: 'admin');
         expect(booking.sourceDisplayName, 'Admin');
       });
 
       test('returns raw source for unknown value', () {
-        final booking = _createBooking(source: 'custom_platform');
+        final booking = createBooking(source: 'custom_platform');
         expect(booking.sourceDisplayName, 'custom_platform');
       });
     });
@@ -327,7 +327,7 @@ void main() {
           BookingModel.datesOverlap(
             start1: DateTime.utc(2025, 2, 15),
             end1: DateTime.utc(2025, 2, 20),
-            start2: DateTime.utc(2025, 3, 1),
+            start2: DateTime.utc(2025, 3),
             end2: DateTime.utc(2025, 3, 5),
           ),
           isFalse,
@@ -338,8 +338,8 @@ void main() {
         expect(
           BookingModel.datesOverlap(
             start1: DateTime(2025, 2, 15, 14, 30),
-            end1: DateTime(2025, 2, 20, 10, 0),
-            start2: DateTime(2025, 2, 18, 9, 0),
+            end1: DateTime(2025, 2, 20, 10),
+            start2: DateTime(2025, 2, 18, 9),
             end2: DateTime(2025, 2, 22, 16, 45),
           ),
           isTrue,
@@ -373,7 +373,7 @@ void main() {
 
     group('overlapsWithDates', () {
       test('delegates to static datesOverlap method', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           checkIn: DateTime.utc(2025, 6, 15),
           checkOut: DateTime.utc(2025, 6, 20),
         );
@@ -398,8 +398,7 @@ void main() {
 
     group('canBeCancelled', () {
       test('confirmed upcoming booking can be cancelled', () {
-        final booking = _createBooking(
-          status: BookingStatus.confirmed,
+        final booking = createBooking(
           checkIn: DateTime.now().add(const Duration(days: 30)),
           checkOut: DateTime.now().add(const Duration(days: 35)),
         );
@@ -407,7 +406,7 @@ void main() {
       });
 
       test('pending booking cannot be cancelled', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           status: BookingStatus.pending,
           checkIn: DateTime.now().add(const Duration(days: 30)),
           checkOut: DateTime.now().add(const Duration(days: 35)),
@@ -416,7 +415,7 @@ void main() {
       });
 
       test('already cancelled booking cannot be cancelled', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           status: BookingStatus.cancelled,
           checkIn: DateTime.now().add(const Duration(days: 30)),
           checkOut: DateTime.now().add(const Duration(days: 35)),
@@ -425,7 +424,7 @@ void main() {
       });
 
       test('completed booking cannot be cancelled', () {
-        final booking = _createBooking(
+        final booking = createBooking(
           status: BookingStatus.completed,
           checkIn: DateTime.now().add(const Duration(days: 30)),
           checkOut: DateTime.now().add(const Duration(days: 35)),

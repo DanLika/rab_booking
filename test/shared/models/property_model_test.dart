@@ -4,7 +4,7 @@ import 'package:bookbed/core/constants/enums.dart';
 
 void main() {
   group('PropertyModel', () {
-    PropertyModel _createProperty({
+    PropertyModel createProperty({
       String id = 'prop-123',
       String name = 'Villa Marija',
       String description = 'Beautiful villa',
@@ -35,13 +35,13 @@ void main() {
         rating: rating,
         amenities: amenities,
         isActive: isActive,
-        createdAt: DateTime.utc(2025, 1, 1),
+        createdAt: DateTime.utc(2025, 1),
       );
     }
 
     group('primaryImage', () {
       test('returns coverImage when set', () {
-        final property = _createProperty(
+        final property = createProperty(
           coverImage: 'cover.jpg',
           images: ['img1.jpg', 'img2.jpg'],
         );
@@ -49,59 +49,59 @@ void main() {
       });
 
       test('returns first image when no cover', () {
-        final property = _createProperty(images: ['img1.jpg', 'img2.jpg']);
+        final property = createProperty(images: ['img1.jpg', 'img2.jpg']);
         expect(property.primaryImage, 'img1.jpg');
       });
 
       test('returns null when no images', () {
-        final property = _createProperty();
+        final property = createProperty();
         expect(property.primaryImage, isNull);
       });
 
       test('returns null for empty coverImage', () {
-        final property = _createProperty(coverImage: '');
+        final property = createProperty(coverImage: '');
         expect(property.primaryImage, isNull);
       });
     });
 
     group('hasImages', () {
       test('returns true with coverImage', () {
-        final property = _createProperty(coverImage: 'cover.jpg');
+        final property = createProperty(coverImage: 'cover.jpg');
         expect(property.hasImages, isTrue);
       });
 
       test('returns true with images list', () {
-        final property = _createProperty(images: ['img1.jpg']);
+        final property = createProperty(images: ['img1.jpg']);
         expect(property.hasImages, isTrue);
       });
 
       test('returns false with no images', () {
-        final property = _createProperty();
+        final property = createProperty();
         expect(property.hasImages, isFalse);
       });
     });
 
     group('rating', () {
       test('formattedRating formats to 1 decimal', () {
-        final property = _createProperty(rating: 4.567);
+        final property = createProperty(rating: 4.567);
         expect(property.formattedRating, '4.6');
       });
 
       test('hasGoodRating true for >= 4.0', () {
-        expect(_createProperty(rating: 4.0).hasGoodRating, isTrue);
-        expect(_createProperty(rating: 4.5).hasGoodRating, isTrue);
-        expect(_createProperty(rating: 5.0).hasGoodRating, isTrue);
+        expect(createProperty(rating: 4.0).hasGoodRating, isTrue);
+        expect(createProperty(rating: 4.5).hasGoodRating, isTrue);
+        expect(createProperty(rating: 5.0).hasGoodRating, isTrue);
       });
 
       test('hasGoodRating false for < 4.0', () {
-        expect(_createProperty(rating: 3.9).hasGoodRating, isFalse);
-        expect(_createProperty(rating: 0.0).hasGoodRating, isFalse);
+        expect(createProperty(rating: 3.9).hasGoodRating, isFalse);
+        expect(createProperty().hasGoodRating, isFalse);
       });
     });
 
     group('amenities', () {
       test('amenityCount returns correct count', () {
-        final property = _createProperty(
+        final property = createProperty(
           amenities: [
             PropertyAmenity.wifi,
             PropertyAmenity.pool,
@@ -112,17 +112,17 @@ void main() {
       });
 
       test('hasAmenity returns true for existing amenity', () {
-        final property = _createProperty(amenities: [PropertyAmenity.wifi]);
+        final property = createProperty(amenities: [PropertyAmenity.wifi]);
         expect(property.hasAmenity(PropertyAmenity.wifi), isTrue);
       });
 
       test('hasAmenity returns false for missing amenity', () {
-        final property = _createProperty(amenities: [PropertyAmenity.wifi]);
+        final property = createProperty(amenities: [PropertyAmenity.wifi]);
         expect(property.hasAmenity(PropertyAmenity.pool), isFalse);
       });
 
       test('essentialAmenities filters correctly', () {
-        final property = _createProperty(
+        final property = createProperty(
           amenities: [
             PropertyAmenity.wifi,
             PropertyAmenity.pool,
@@ -140,39 +140,39 @@ void main() {
 
     group('pricing', () {
       test('formattedPrice with price', () {
-        final property = _createProperty(pricePerNight: 120.0);
+        final property = createProperty(pricePerNight: 120.0);
         expect(property.formattedPrice, '€120');
       });
 
       test('formattedPrice without price', () {
-        final property = _createProperty();
+        final property = createProperty();
         expect(property.formattedPrice, 'Cijena na upit');
       });
 
       test('formattedPricePerNight with price', () {
-        final property = _createProperty(pricePerNight: 120.0);
+        final property = createProperty(pricePerNight: 120.0);
         expect(property.formattedPricePerNight, '€120/noć');
       });
     });
 
     group('subdomain', () {
       test('hasSubdomain returns true when set', () {
-        final property = _createProperty(subdomain: 'jasko-rab');
+        final property = createProperty(subdomain: 'jasko-rab');
         expect(property.hasSubdomain, isTrue);
       });
 
       test('hasSubdomain returns false when null', () {
-        final property = _createProperty();
+        final property = createProperty();
         expect(property.hasSubdomain, isFalse);
       });
 
       test('hasSubdomain returns false when empty', () {
-        final property = _createProperty(subdomain: '');
+        final property = createProperty(subdomain: '');
         expect(property.hasSubdomain, isFalse);
       });
 
       test('getSubdomainTestUrl returns URL with subdomain', () {
-        final property = _createProperty(subdomain: 'jasko-rab');
+        final property = createProperty(subdomain: 'jasko-rab');
         expect(
           property.getSubdomainTestUrl('https://view.bookbed.io'),
           'https://view.bookbed.io?subdomain=jasko-rab',
@@ -180,14 +180,14 @@ void main() {
       });
 
       test('getSubdomainTestUrl returns null without subdomain', () {
-        final property = _createProperty();
+        final property = createProperty();
         expect(property.getSubdomainTestUrl('https://view.bookbed.io'), isNull);
       });
     });
 
     group('hasCompleteInfo', () {
       test('returns true when all info present', () {
-        final property = _createProperty(
+        final property = createProperty(
           maxGuests: 6,
           bedrooms: 3,
           bathrooms: 2,
@@ -196,17 +196,17 @@ void main() {
       });
 
       test('returns false when maxGuests missing', () {
-        final property = _createProperty(bedrooms: 3, bathrooms: 2);
+        final property = createProperty(bedrooms: 3, bathrooms: 2);
         expect(property.hasCompleteInfo, isFalse);
       });
 
       test('returns false when bedrooms missing', () {
-        final property = _createProperty(maxGuests: 6, bathrooms: 2);
+        final property = createProperty(maxGuests: 6, bathrooms: 2);
         expect(property.hasCompleteInfo, isFalse);
       });
 
       test('returns false when bathrooms missing', () {
-        final property = _createProperty(maxGuests: 6, bedrooms: 3);
+        final property = createProperty(maxGuests: 6, bedrooms: 3);
         expect(property.hasCompleteInfo, isFalse);
       });
     });

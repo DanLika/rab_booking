@@ -1,4 +1,4 @@
-import 'package:bookbed/core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -193,7 +193,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.error_outline,
                                         color: AppColors.error,
                                         size: 20,
@@ -202,7 +202,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                       Expanded(
                                         child: Text(
                                           _error!,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: AppColors.error,
                                             fontSize: 13,
                                             fontWeight: FontWeight.w500,

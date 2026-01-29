@@ -117,7 +117,9 @@ void main() {
         ),
       );
 
-      final valueText = tester.widget<Text>(find.text('HR1234567890123456789'));
+      final valueText = tester.widget<SelectableText>(
+        find.byType(SelectableText),
+      );
       expect(valueText.style?.fontFamily, 'monospace');
     });
 
@@ -136,7 +138,9 @@ void main() {
         ),
       );
 
-      final valueText = tester.widget<Text>(find.text('Some Bank'));
+      final valueText = tester.widget<SelectableText>(
+        find.byType(SelectableText),
+      );
       expect(valueText.style?.fontFamily, isNot('monospace'));
     });
   });

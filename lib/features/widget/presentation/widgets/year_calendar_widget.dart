@@ -831,20 +831,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
           return;
         }
 
-        // Year calendar specific: Check orphan gap
-        if (_wouldCreateOrphanGap(start, end, data, validationMinNights)) {
-          _rangeStart = null;
-          _rangeEnd = null;
-          SnackBarHelper.showError(
-            context: context,
-            message: WidgetTranslations.of(
-              context,
-              ref,
-            ).errorOrphanGap(validationMinNights),
-          );
-          return;
-        }
-
         // Year calendar specific: Check blocked dates in range
         if (_hasBlockedDatesInRange(start, end, data)) {
           _rangeStart = null;
@@ -978,78 +964,6 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       current = current.add(const Duration(days: 1));
     }
     return false; // No blocked dates found
-  }
-
-  /// Check if this selection would create an orphan gap (gap < minNights)
-  /// An orphan gap occurs when the selection leaves a small gap before or after
-  /// that is smaller than minNights, preventing future bookings
-  bool _wouldCreateOrphanGap(
-    DateTime start,
-    DateTime end,
-    Map<String, CalendarDateInfo> data,
-    int minNights,
-  ) {
-    // Find the next booked/blocked date after the end date
-    DateTime current = end.add(const Duration(days: 1));
-    DateTime? nextBlockedDate;
-
-    // Search up to 1 year ahead for the next blocked date
-    final maxSearchDate = end.add(const Duration(days: 365));
-    while (current.isBefore(maxSearchDate)) {
-      final key = CalendarDateUtils.getDateKey(current);
-      final dateInfo = data[key];
-
-      if (dateInfo != null &&
-          (dateInfo.status == DateStatus.booked ||
-              dateInfo.status == DateStatus.pending ||
-              dateInfo.status == DateStatus.blocked ||
-              dateInfo.status == DateStatus.partialCheckIn ||
-              dateInfo.status == DateStatus.partialBoth)) {
-        nextBlockedDate = current;
-        break;
-      }
-      current = current.add(const Duration(days: 1));
-    }
-
-    // If there's a blocked date after the selection, check the gap size
-    if (nextBlockedDate != null) {
-      final gapAfter = nextBlockedDate.difference(end).inDays - 1;
-      if (gapAfter > 0 && gapAfter < minNights) {
-        return true; // Would create orphan gap after selection
-      }
-    }
-
-    // Find the previous booked/blocked date before the start date
-    current = start.subtract(const Duration(days: 1));
-    DateTime? prevBlockedDate;
-
-    // Search up to 1 year back for the previous blocked date
-    final minSearchDate = start.subtract(const Duration(days: 365));
-    while (current.isAfter(minSearchDate)) {
-      final key = CalendarDateUtils.getDateKey(current);
-      final dateInfo = data[key];
-
-      if (dateInfo != null &&
-          (dateInfo.status == DateStatus.booked ||
-              dateInfo.status == DateStatus.pending ||
-              dateInfo.status == DateStatus.blocked ||
-              dateInfo.status == DateStatus.partialCheckOut ||
-              dateInfo.status == DateStatus.partialBoth)) {
-        prevBlockedDate = current;
-        break;
-      }
-      current = current.subtract(const Duration(days: 1));
-    }
-
-    // If there's a blocked date before the selection, check the gap size
-    if (prevBlockedDate != null) {
-      final gapBefore = start.difference(prevBlockedDate).inDays - 1;
-      if (gapBefore > 0 && gapBefore < minNights) {
-        return true; // Would create orphan gap before selection
-      }
-    }
-
-    return false; // No orphan gaps would be created
   }
 
   /// Builds the year calendar cell content (day number + price) with weekend pricing logic

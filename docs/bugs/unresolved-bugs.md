@@ -5494,3 +5494,45 @@ void adjustGuestCountToCapacity(int maxGuests) {
 - Business logic bugovi mogu uzrokovati gubitak bookingova ili neočekivano ponašanje (Bug #15 - checkout day dokumentacija dodana, Bug #16 - price lock je riješen)
 - Null safety bugovi mogu uzrokovati crash-ove u produkciji (Bug #27 - riješen)
 - Provider bugovi (#20-25) mogu uzrokovati probleme s state managementom i UI-om (Bug #19 - riješen)
+
+---
+
+## Orphan Gap Validation - UKLONJENA (2026-01-29)
+
+**Fajl:** `year_calendar_widget.dart`, metoda `_wouldCreateOrphanGap()`
+**Status:** VALIDACIJA UKLONJENA. Cijela metoda i njen poziv obrisani.
+
+### Sta je radila
+Sprjecavala goste da selektuju datume koji bi ostavili prazninu (gap) manju od `minNights` izmedju nove i postojecih rezervacija.
+
+### Pronadjeni logicki bugovi
+
+**1. Off-by-one u formuli:**
+Formula `nextBlockedDate.difference(end).inDays - 1` koristi `-1` koji broji samo potpuno slobodne dane, ali NE racuna da gost moze koristiti turnover dane (checkout/checkin isti dan). Rezultat: gap od tacno `minNights` bookable noci (ukljucujuci turnover) se pogresno blokira jer formula daje `minNights - 1`.
+
+**2. Mrtva zona (minNights=7):**
+
+| Gap (noci) | Validne pozicije | Komentar |
+|---|---|---|
+| 7 | 1 | Tacan fit |
+| 8 | 2 | Flush na obje strane |
+| 9 | 1 | Samo sredina |
+| **10-13** | **0** | **Potpuno neupotrebljiv!** |
+| 14+ | 2+ | Dovoljno za 2 bookinga |
+
+Gapovi od 10-13 noci su POTPUNO neupotrebljivi - nijedna 7-night pozicija ne prolazi validaciju, iako gap fizicki moze primiti jednu 7-night rezervaciju.
+
+**3. UX problem:**
+Cak i kad validacija radi korektno (npr. gap od 9 noci), gost mora pogoditi TACNO jednu validnu poziciju (npr. July 2-9) inace dobija nejasnu poruku koja ne objasnjava sta je problem.
+
+### Razlog uklanjanja
+- Prekompleksno za goste i ownere da razumiju
+- Off-by-one bug u formuli
+- Mrtva zona za gapove 10-13 noci (sa minNights=7)
+- Month calendar NIKAD nije imao ovu validaciju - ponasanje je sada konzistentno
+
+### Buduce
+Ako se orphan gap problem pojavi u praksi, reimplementirati sa:
+1. Ispravnom formulom koja racuna turnover dane (bez `-1` za partialCheckIn/partialCheckOut statuse)
+2. Boljom UX porukom koja objasnjava problem i predlaze konkretne datume
+3. Vizualnim oznacavanjem dana koji bi kreirali orphan gap (npr. sivom bojom)

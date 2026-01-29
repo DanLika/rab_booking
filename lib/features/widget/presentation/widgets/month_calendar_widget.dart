@@ -695,7 +695,20 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
           return;
         }
 
-        // Month calendar specific: Use backend availability check for cross-month validation
+        // Check for blocked/booked dates within the selected range
+        if (_hasBlockedDatesInRange(start, end, data)) {
+          SnackBarHelper.showError(
+            context: context,
+            message: WidgetTranslations.of(
+              context,
+              ref,
+            ).errorCannotSelectBookedDates,
+            duration: const Duration(seconds: 3),
+          );
+          return;
+        }
+
+        // Use backend availability check for cross-month validation
         _validateAndSetRange(start, end, colors);
       }
     });
@@ -707,6 +720,45 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       context: context,
       message: translations.calendarOnlyTapMessage,
     );
+  }
+
+  /// Check if there are any booked, pending, or blocked dates between start and end
+  /// Partial dates (partialCheckIn/partialCheckOut) are allowed at endpoints (turnover)
+  bool _hasBlockedDatesInRange(
+    DateTime start,
+    DateTime end,
+    Map<String, CalendarDateInfo> data,
+  ) {
+    DateTime current = start;
+    while (current.isBefore(end) || CalendarDateUtils.isSameDay(current, end)) {
+      final key = CalendarDateUtils.getDateKey(current);
+      final dateInfo = data[key];
+
+      if (dateInfo != null) {
+        final isBlocked =
+            dateInfo.status == DateStatus.booked ||
+            dateInfo.status == DateStatus.pending ||
+            dateInfo.status == DateStatus.partialCheckIn ||
+            dateInfo.status == DateStatus.partialCheckOut ||
+            dateInfo.status == DateStatus.blocked;
+
+        if (isBlocked) {
+          final isEndpoint =
+              CalendarDateUtils.isSameDay(current, start) ||
+              CalendarDateUtils.isSameDay(current, end);
+          final isPartialDate =
+              dateInfo.status == DateStatus.partialCheckIn ||
+              dateInfo.status == DateStatus.partialCheckOut;
+
+          if (!isEndpoint || !isPartialDate) {
+            return true;
+          }
+        }
+      }
+
+      current = current.add(const Duration(days: 1));
+    }
+    return false;
   }
 
   /// Bug #72 Fix: Async validation using backend availability check

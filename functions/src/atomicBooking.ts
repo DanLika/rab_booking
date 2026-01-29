@@ -561,8 +561,25 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
       serverPetFees = Math.round(numericPetCount * unitPetFeeRate * bookingNightsForFees * 100) / 100;
     }
 
-    // Combined extras = additional services + extra guest fees + pet fees
-    const totalExtras = Math.round((numericServicesTotal + serverExtraGuestFees + serverPetFees) * 100) / 100;
+    // Client now sends ALL non-nightly fees (pet + guest + additional services) in servicesTotal.
+    // Server independently calculates pet + guest fees for security validation.
+    // Use max(client, server) to prevent BOTH:
+    //   1. Underpaying (malicious client sends lower extras) → server value wins
+    //   2. Lost fees (server can't calculate, e.g. pet_fee null) → client value wins
+    const serverCalculatedExtras = Math.round((serverExtraGuestFees + serverPetFees) * 100) / 100;
+    const totalExtras = Math.round(Math.max(numericServicesTotal, serverCalculatedExtras) * 100) / 100;
+
+    // Security: warn if client extras differ significantly from server extras
+    const extrasDifference = Math.abs(numericServicesTotal - serverCalculatedExtras);
+    if (extrasDifference > 10) {
+      logWarn("[AtomicBooking] Extras mismatch between client and server", {
+        unitId,
+        clientExtras: numericServicesTotal,
+        serverCalculatedExtras,
+        difference: extrasDifference,
+        note: "Using max() - higher value wins for price integrity",
+      });
+    }
 
     logInfo("[AtomicBooking] Server-side fee calculation", {
       unitId,
@@ -574,7 +591,8 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
       nights: bookingNightsForFees,
       serverExtraGuestFees,
       serverPetFees,
-      servicesTotal: numericServicesTotal,
+      clientServicesTotal: numericServicesTotal,
+      serverCalculatedExtras,
       totalExtras,
     });
 
@@ -1064,6 +1082,11 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
         guest_count: numericGuestCount, // Use validated numeric value
         pet_count: numericPetCount, // Number of pets
         total_price: finalTotalPrice, // Use server-validated price (may differ from client)
+        // Price breakdown for confirmation/lookup display
+        room_price: Math.round((finalTotalPrice - totalExtras) * 100) / 100,
+        extra_guest_fees: serverExtraGuestFees,
+        pet_fees: serverPetFees,
+        services_total: totalExtras,
         advance_amount: finalDepositAmount,
         deposit_amount: finalDepositAmount, // For Stripe Cloud Function
         remaining_amount: calculateRemainingAmount(finalTotalPrice, finalDepositAmount),

@@ -458,8 +458,22 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
       serverPetFees = Math.round(numericPetCount * unitPetFeeRate * bookingNights * 100) / 100;
     }
 
-    // Combined extras = additional services + extra guest fees + pet fees
-    const totalExtras = Math.round((numericServicesTotal + serverExtraGuestFees + serverPetFees) * 100) / 100;
+    // Client now sends ALL non-nightly fees (pet + guest + additional services) in servicesTotal.
+    // Server independently calculates pet + guest fees for security validation.
+    // Use max(client, server) to prevent BOTH underpaying AND lost fees.
+    const serverCalculatedExtras = Math.round((serverExtraGuestFees + serverPetFees) * 100) / 100;
+    const totalExtras = Math.round(Math.max(numericServicesTotal, serverCalculatedExtras) * 100) / 100;
+
+    // Security: warn if client extras differ significantly from server extras
+    const extrasDifference = Math.abs(numericServicesTotal - serverCalculatedExtras);
+    if (extrasDifference > 10) {
+      logWarn("Stripe: Extras mismatch between client and server", {
+        unitId,
+        clientExtras: numericServicesTotal,
+        serverCalculatedExtras,
+        difference: extrasDifference,
+      });
+    }
 
     // Fee anomaly detection: catch NaN, negative, or unreasonably large values
     if (!Number.isFinite(serverExtraGuestFees) || serverExtraGuestFees < 0 ||
@@ -492,7 +506,8 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
         nights: bookingNights,
         serverExtraGuestFees,
         serverPetFees,
-        servicesTotal: numericServicesTotal,
+        clientServicesTotal: numericServicesTotal,
+        serverCalculatedExtras,
         totalExtras,
       });
     }
@@ -650,6 +665,11 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
         guest_count: Number(guestCount),
         pet_count: Number(petCount),
         total_price: Number(totalPrice),
+        // Price breakdown for confirmation/lookup display
+        room_price: Math.round((Number(totalPrice) - totalExtras) * 100) / 100,
+        extra_guest_fees: serverExtraGuestFees,
+        pet_fees: serverPetFees,
+        services_total: totalExtras,
         advance_amount: Number(depositAmount),
         deposit_amount: Number(depositAmount),
         remaining_amount: Number(totalPrice) - Number(depositAmount),

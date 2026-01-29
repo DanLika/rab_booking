@@ -27,6 +27,15 @@ class PaymentInfoCard extends ConsumerWidget {
   /// Total booking price
   final double totalPrice;
 
+  /// Nightly accommodation price (optional, for breakdown)
+  final double? roomPrice;
+
+  /// Extra guest fees (optional, for breakdown)
+  final double? extraGuestFees;
+
+  /// Pet fees (optional, for breakdown)
+  final double? petFees;
+
   /// Deposit amount
   final double depositAmount;
 
@@ -51,6 +60,9 @@ class PaymentInfoCard extends ConsumerWidget {
   const PaymentInfoCard({
     super.key,
     required this.totalPrice,
+    this.roomPrice,
+    this.extraGuestFees,
+    this.petFees,
     required this.depositAmount,
     required this.paidAmount,
     required this.remainingAmount,
@@ -91,6 +103,18 @@ class PaymentInfoCard extends ConsumerWidget {
           ),
           const SizedBox(height: SpacingTokens.m),
           _buildPaymentRow(tr.total, totalPrice, bold: true),
+          if (roomPrice != null && roomPrice! > 0) ...[
+            const SizedBox(height: SpacingTokens.xs),
+            _buildPaymentRow(tr.room, roomPrice!),
+          ],
+          if (extraGuestFees != null && extraGuestFees! > 0) ...[
+            const SizedBox(height: SpacingTokens.xs),
+            _buildPaymentRow(tr.extraGuestFees, extraGuestFees!),
+          ],
+          if (petFees != null && petFees! > 0) ...[
+            const SizedBox(height: SpacingTokens.xs),
+            _buildPaymentRow(tr.petFees, petFees!),
+          ],
           const SizedBox(height: SpacingTokens.xs),
           _buildPaymentRow(tr.deposit, depositAmount),
           const SizedBox(height: SpacingTokens.xs),

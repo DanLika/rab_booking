@@ -24,6 +24,7 @@ class CompactPillSummary extends StatelessWidget {
   final String formattedDeposit;
   final int depositPercentage;
   final bool isDarkMode;
+  final bool showDeposit;
   final bool showReserveButton;
   final VoidCallback onClose;
   final VoidCallback onReserve;
@@ -45,6 +46,7 @@ class CompactPillSummary extends StatelessWidget {
     required this.formattedDeposit,
     required this.depositPercentage,
     required this.isDarkMode,
+    this.showDeposit = true,
     required this.showReserveButton,
     required this.onClose,
     required this.onReserve,
@@ -97,6 +99,7 @@ class CompactPillSummary extends StatelessWidget {
           formattedTotal: formattedTotal,
           formattedDeposit: formattedDeposit,
           depositPercentage: depositPercentage,
+          showDeposit: showDeposit,
           translations: translations,
         ),
         const SizedBox(height: SpacingTokens.m),

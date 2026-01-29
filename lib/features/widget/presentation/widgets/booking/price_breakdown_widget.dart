@@ -64,6 +64,9 @@ class PriceBreakdownWidget extends StatelessWidget {
   /// Deposit percentage (e.g., 20 for 20%)
   final int depositPercentage;
 
+  /// Whether to show the deposit line (hide for no-payment mode)
+  final bool showDeposit;
+
   /// Translations for localization
   final WidgetTranslations translations;
 
@@ -81,6 +84,7 @@ class PriceBreakdownWidget extends StatelessWidget {
     required this.formattedTotal,
     required this.formattedDeposit,
     required this.depositPercentage,
+    this.showDeposit = true,
     required this.translations,
   });
 
@@ -153,19 +157,21 @@ class PriceBreakdownWidget extends StatelessWidget {
             isBold: true,
           ),
 
-          // Deposit info
-          const SizedBox(height: SpacingTokens.s),
-          Text(
-            translations.depositWithPercentage(
-              formattedDeposit,
-              depositPercentage,
+          // Deposit info (hidden in no-payment mode)
+          if (showDeposit) ...[
+            const SizedBox(height: SpacingTokens.s),
+            Text(
+              translations.depositWithPercentage(
+                formattedDeposit,
+                depositPercentage,
+              ),
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeS,
+                color: colors.textSecondary,
+                fontFamily: TypographyTokens.primaryFont,
+              ),
             ),
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
-              color: colors.textSecondary,
-              fontFamily: TypographyTokens.primaryFont,
-            ),
-          ),
+          ],
         ],
       ),
     );

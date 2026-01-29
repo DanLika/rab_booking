@@ -184,6 +184,10 @@ export const verifyBookingAccess = onCall(async (request) => {
         {adults: booking.guest_count, children: 0} :
         (booking.guest_count || {adults: 1, children: 0}),
       totalPrice: booking.total_price,
+      roomPrice: booking.room_price ?? null,
+      extraGuestFees: booking.extra_guest_fees ?? null,
+      petFees: booking.pet_fees ?? null,
+      servicesTotal: booking.services_total ?? null,
       depositAmount: booking.deposit_amount || booking.advance_amount || 0,
       remainingAmount: booking.remaining_amount || 0,
       paidAmount: booking.paid_amount || 0,

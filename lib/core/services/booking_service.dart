@@ -155,7 +155,13 @@ class BookingService {
         '     guestCount: ${requestData['guestCount']} (${requestData['guestCount']?.runtimeType})',
       );
       LoggingService.logDebug(
+        '     petCount: ${requestData['petCount']} (${requestData['petCount']?.runtimeType})',
+      );
+      LoggingService.logDebug(
         '     totalPrice: ${requestData['totalPrice']} (${requestData['totalPrice']?.runtimeType})',
+      );
+      LoggingService.logDebug(
+        '     servicesTotal: ${requestData['servicesTotal']} (${requestData['servicesTotal']?.runtimeType})',
       );
       LoggingService.logDebug(
         '     paymentOption: ${requestData['paymentOption']} (${requestData['paymentOption']?.runtimeType})',

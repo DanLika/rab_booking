@@ -417,7 +417,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                               const SizedBox(width: 4),
                               Flexible(
                                 child: AutoSizeText(
-                                  l10n.ownerTableDeleteBooking,
+                                  l10n.delete,
                                   maxLines: 1,
                                   minFontSize: 8,
                                   overflow: TextOverflow.ellipsis,

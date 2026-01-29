@@ -1428,6 +1428,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               checkOut: confirmedBooking.checkOut,
               totalPrice: confirmedBooking.totalPrice,
               roomPrice: _lockedPriceCalculation?.roomPrice,
+              extraGuestFees: _lockedPriceCalculation?.extraGuestFees,
+              petFees: _lockedPriceCalculation?.petFees,
               additionalServicesTotal:
                   _lockedPriceCalculation?.additionalServicesTotal,
               nights: confirmedBooking.checkOut
@@ -2705,6 +2707,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 : 20,
             isDarkMode: isDarkMode,
             showGuestForm: _showGuestForm,
+            showDeposit:
+                _widgetSettings?.widgetMode != WidgetMode.bookingPending,
             isWideScreen: () {
               final mediaQuery = MediaQuery.maybeOf(context);
               if (mediaQuery == null) return false;
@@ -3901,6 +3905,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           checkOut: booking.checkOut,
           totalPrice: booking.totalPrice,
           roomPrice: _lockedPriceCalculation?.roomPrice,
+          extraGuestFees: _lockedPriceCalculation?.extraGuestFees,
+          petFees: _lockedPriceCalculation?.petFees,
           additionalServicesTotal:
               _lockedPriceCalculation?.additionalServicesTotal,
           nights: booking.checkOut.difference(booking.checkIn).inDays,
@@ -4391,6 +4397,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               checkOut: confirmedBooking.checkOut,
               totalPrice: confirmedBooking.totalPrice,
               roomPrice: _lockedPriceCalculation?.roomPrice,
+              extraGuestFees: _lockedPriceCalculation?.extraGuestFees,
+              petFees: _lockedPriceCalculation?.petFees,
               additionalServicesTotal:
                   _lockedPriceCalculation?.additionalServicesTotal,
               nights: confirmedBooking.checkOut

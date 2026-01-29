@@ -3,6 +3,7 @@ import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 import '../../theme/minimalist_colors.dart';
 import 'compact_pill_summary.dart';
+import 'price_breakdown_widget.dart';
 
 /// Content widget for the booking pill bar.
 ///
@@ -24,6 +25,7 @@ class PillBarContent extends StatelessWidget {
   final bool isDarkMode;
   final bool showGuestForm;
   final bool isWideScreen;
+  final bool showDeposit;
   final VoidCallback onClose;
   final VoidCallback onReserve;
   final Widget Function() guestFormBuilder;
@@ -50,6 +52,7 @@ class PillBarContent extends StatelessWidget {
     required this.isDarkMode,
     required this.showGuestForm,
     required this.isWideScreen,
+    this.showDeposit = true,
     required this.onClose,
     required this.onReserve,
     required this.guestFormBuilder,
@@ -125,7 +128,29 @@ class PillBarContent extends StatelessWidget {
                 const SizedBox(width: SpacingTokens.m),
                 Expanded(
                   flex: _rightColumnFlex,
-                  child: paymentSectionBuilder(),
+                  child: Column(
+                    children: [
+                      PriceBreakdownWidget(
+                        isDarkMode: isDarkMode,
+                        nights: nights,
+                        formattedRoomPrice: formattedRoomPrice,
+                        additionalServicesTotal: additionalServicesTotal,
+                        formattedAdditionalServices:
+                            formattedAdditionalServices,
+                        extraGuestFees: extraGuestFees,
+                        formattedExtraGuestFees: formattedExtraGuestFees,
+                        petFees: petFees,
+                        formattedPetFees: formattedPetFees,
+                        formattedTotal: formattedTotal,
+                        formattedDeposit: formattedDeposit,
+                        depositPercentage: depositPercentage,
+                        showDeposit: showDeposit,
+                        translations: translations,
+                      ),
+                      const SizedBox(height: SpacingTokens.m),
+                      paymentSectionBuilder(),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -154,6 +179,7 @@ class PillBarContent extends StatelessWidget {
           formattedDeposit: formattedDeposit,
           depositPercentage: depositPercentage,
           isDarkMode: isDarkMode,
+          showDeposit: showDeposit,
           showReserveButton: !showGuestForm,
           onClose: onClose,
           onReserve: onReserve,

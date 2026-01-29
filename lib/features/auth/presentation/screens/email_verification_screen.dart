@@ -42,10 +42,11 @@ class _EmailVerificationScreenState
     _startInitialCooldown();
   }
 
-  /// Start initial 30-second cooldown when screen opens
-  /// This prevents Firebase rate limit errors when user immediately clicks resend
+  /// Start initial 60-second cooldown when screen opens
+  /// Firebase Auth has an internal rate limit (~60s) on sendEmailVerification()
+  /// Since email is already sent during registration, we must wait before allowing resend
   void _startInitialCooldown() {
-    _resendCooldown = 30;
+    _resendCooldown = 60;
     _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -147,14 +148,21 @@ class _EmailVerificationScreenState
       }
     } catch (e) {
       if (mounted) {
-        String errorMessage = '${AppLocalizations.of(context).error}: $e';
         final errorString = e.toString();
 
         if (errorString.contains('too-many-requests')) {
-          errorMessage = AppLocalizations.of(context).authErrorTooManyRequests;
+          // Firebase rate limit hit - start cooldown so user knows when to retry
+          _startCooldown();
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            AppLocalizations.of(context).authErrorTooManyRequests,
+          );
+        } else {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            '${AppLocalizations.of(context).error}: $e',
+          );
         }
-
-        ErrorDisplayUtils.showErrorSnackBar(context, errorMessage);
       }
     } finally {
       if (mounted) {

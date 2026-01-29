@@ -79,7 +79,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   String? _loadingUserId; // Prevents concurrent profile loads for same user
   Timer?
   _signOutGraceTimer; // Grace period before treating null user as sign-out
-
   EnhancedAuthNotifier(
     this._auth,
     this._firestore,
@@ -106,6 +105,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         // Without this grace period, the router would redirect to login during
         // the brief null state, causing "dashboard for 3 seconds then login" bug.
         _signOutGraceTimer?.cancel();
+
         _signOutGraceTimer = Timer(const Duration(seconds: 2), () {
           // After grace period, if still no user, treat as real sign-out
           if (_auth.currentUser == null) {

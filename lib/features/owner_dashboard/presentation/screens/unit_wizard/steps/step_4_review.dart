@@ -102,6 +102,24 @@ class Step4Review extends ConsumerWidget {
                   ? l10n.unitWizardStep5MinStayNights(draft.minStayNights!)
                   : '-',
             ),
+            if (draft.maxTotalCapacity != null)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5MaxTotalCapacity,
+                '${draft.maxTotalCapacity}',
+              ),
+            if (draft.extraBedFee != null)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5ExtraBedFee,
+                '€${draft.extraBedFee}/night',
+              ),
+            if (draft.petFee != null)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5PetFee,
+                '€${draft.petFee}/night',
+              ),
           ],
         );
 

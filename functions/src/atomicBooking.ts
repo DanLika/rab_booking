@@ -34,7 +34,7 @@ import {sendEmailWithRetry} from "./utils/emailRetry";
 import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
-import {setUser} from "./sentry";
+import {setUser, captureMessage} from "./sentry";
 // NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
@@ -107,6 +107,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
     guestEmail,
     guestPhone,
     guestCount,
+    petCount = 0, // Number of pets (0 = no pets)
     totalPrice,
     servicesTotal = 0, // Additional services total for price validation
     paymentOption, // 'deposit', 'full', or 'none'
@@ -203,6 +204,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
   // ========================================================================
   const numericTotalPrice = Number(totalPrice);
   const numericGuestCount = Number(guestCount);
+  const numericPetCount = Number(petCount);
 
   if (!Number.isFinite(numericTotalPrice) || numericTotalPrice < 0) {
     throw new HttpsError(
@@ -215,6 +217,13 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
     throw new HttpsError(
       "invalid-argument",
       "Invalid guest count. Must be between 1 and 50."
+    );
+  }
+
+  if (!Number.isInteger(numericPetCount) || numericPetCount < 0 || numericPetCount > 10) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid pet count. Must be between 0 and 10."
     );
   }
 
@@ -483,6 +492,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
           guestEmail: sanitizedGuestEmail,
           guestPhone: finalGuestPhone,
           guestCount: numericGuestCount, // Use validated numeric value
+          petCount: numericPetCount, // Number of pets
           totalPrice: numericTotalPrice, // Use validated numeric value (includes services)
           servicesTotal, // Additional services total for price validation in stripePayment.ts
           depositAmount,
@@ -515,14 +525,86 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
       servicesTotal >= 0
     ) ? servicesTotal : 0;
 
+    // ========================================================================
+    // SERVER-SIDE EXTRA GUEST & PET FEE CALCULATION
+    // Fees are calculated from unit data to prevent client-side manipulation.
+    // Formula: extraGuestFees = max(0, guestCount - maxGuests) * extraBedFee * nights
+    //          petFees = petCount * petFee * nights
+    // These fees are added to servicesTotal for price validation.
+    // ========================================================================
+    const checkInMs = checkInDate.toMillis();
+    const checkOutMs = checkOutDate.toMillis();
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const bookingNightsForFees = Math.round((checkOutMs - checkInMs) / msPerDay);
+
+    // Fetch unit data for fee rates (outside transaction - used for validation only)
+    const unitDocForFees = await db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("units")
+      .doc(unitId)
+      .get();
+
+    const unitFeeData = unitDocForFees.data();
+    const unitMaxGuests = unitFeeData?.max_guests ?? 10;
+    const unitExtraBedFee = unitFeeData?.extra_bed_fee ?? null;
+    const unitPetFeeRate = unitFeeData?.pet_fee ?? null;
+
+    let serverExtraGuestFees = 0;
+    if (unitExtraBedFee !== null && numericGuestCount > unitMaxGuests) {
+      const extraGuests = numericGuestCount - unitMaxGuests;
+      serverExtraGuestFees = Math.round(extraGuests * unitExtraBedFee * bookingNightsForFees * 100) / 100;
+    }
+
+    let serverPetFees = 0;
+    if (unitPetFeeRate !== null && numericPetCount > 0) {
+      serverPetFees = Math.round(numericPetCount * unitPetFeeRate * bookingNightsForFees * 100) / 100;
+    }
+
+    // Combined extras = additional services + extra guest fees + pet fees
+    const totalExtras = Math.round((numericServicesTotal + serverExtraGuestFees + serverPetFees) * 100) / 100;
+
+    logInfo("[AtomicBooking] Server-side fee calculation", {
+      unitId,
+      guestCount: numericGuestCount,
+      petCount: numericPetCount,
+      maxGuests: unitMaxGuests,
+      extraBedFee: unitExtraBedFee,
+      petFeeRate: unitPetFeeRate,
+      nights: bookingNightsForFees,
+      serverExtraGuestFees,
+      serverPetFees,
+      servicesTotal: numericServicesTotal,
+      totalExtras,
+    });
+
+    // Fee anomaly detection: catch NaN, negative, or unreasonably large values
+    if (!Number.isFinite(serverExtraGuestFees) || serverExtraGuestFees < 0 ||
+        !Number.isFinite(serverPetFees) || serverPetFees < 0 ||
+        !Number.isFinite(totalExtras) || totalExtras < 0 ||
+        serverExtraGuestFees > 10000 || serverPetFees > 10000) {
+      captureMessage("AtomicBooking: Fee calculation anomaly detected", "error", {
+        unitId,
+        serverExtraGuestFees,
+        serverPetFees,
+        totalExtras,
+        guestCount: numericGuestCount,
+        petCount: numericPetCount,
+        maxGuests: unitMaxGuests,
+        extraBedFee: unitExtraBedFee,
+        petFeeRate: unitPetFeeRate,
+        nights: bookingNightsForFees,
+      });
+    }
+
     try {
       await validateBookingPrice(
         unitId,
         checkInDate,
         checkOutDate,
-        numericTotalPrice, // Use validated numeric price (includes services)
+        numericTotalPrice, // Use validated numeric price (includes all fees)
         propertyId, // Pass propertyId for fallback to unit base price
-        numericServicesTotal // Pass services total for accurate validation
+        totalExtras // Pass all extras (services + guest fees + pet fees) for validation
       );
 
       logInfo("[AtomicBooking] Price validated against server calculation", {
@@ -538,7 +620,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
           error: priceError.message,
         });
 
-        // Calculate server-side nightly price and add services total
+        // Calculate server-side nightly price and add all extras
         const {totalPrice: serverNightlyPrice} = await calculateBookingPrice(
           unitId,
           checkInDate,
@@ -546,14 +628,14 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
           propertyId
         );
 
-        // Server total = nightly prices + services (services from client are trusted)
-        const serverTotalPrice = Math.round((serverNightlyPrice + numericServicesTotal) * 100) / 100;
+        // Server total = nightly prices + all extras (services + guest fees + pet fees)
+        const serverTotalPrice = Math.round((serverNightlyPrice + totalExtras) * 100) / 100;
 
         logInfo("[AtomicBooking] Using server-calculated price for booking", {
           unitId,
           oldPrice: numericTotalPrice,
           serverNightlyPrice,
-          servicesTotal: numericServicesTotal,
+          totalExtras,
           newPrice: serverTotalPrice,
         });
 
@@ -909,6 +991,8 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
         // RACE CONDITION FIX: Validate guest count INSIDE transaction
         // This prevents owner from changing max_guests between validation and booking
         const maxGuestsInTransaction = unitData?.max_guests ?? 10;
+        // max_total_capacity = hard limit including extra beds (falls back to max_guests)
+        const maxTotalCapacity = unitData?.max_total_capacity ?? maxGuestsInTransaction;
         const guestCountNum = Number(guestCount);
 
         // FIX: Validate that guestCount is a valid positive integer (prevents NaN)
@@ -925,23 +1009,43 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
           );
         }
 
-        if (guestCountNum > maxGuestsInTransaction) {
-          logError("[AtomicBooking] Guest count exceeds unit capacity", null, {
+        // Validate against max_total_capacity (hard limit including extra beds)
+        if (guestCountNum > maxTotalCapacity) {
+          logError("[AtomicBooking] Guest count exceeds unit total capacity", null, {
             unitId,
             maxGuests: maxGuestsInTransaction,
+            maxTotalCapacity,
             requestedGuests: guestCountNum,
           });
 
           throw new HttpsError(
             "invalid-argument",
-            `Maximum ${maxGuestsInTransaction} guests allowed for this unit. You requested ${guestCountNum}.`
+            `Maximum ${maxTotalCapacity} guests allowed for this unit. You requested ${guestCountNum}.`
           );
         }
 
-        logInfo("[AtomicBooking] Guest count validated", {
+        // Validate pet count: if pet_fee is null/undefined, pets are NOT allowed
+        const unitPetFee = unitData?.pet_fee ?? null;
+        const petCountNum = Number(petCount);
+        if (petCountNum > 0 && unitPetFee === null) {
+          logError("[AtomicBooking] Pets not allowed for this unit", null, {
+            unitId,
+            petCount: petCountNum,
+          });
+
+          throw new HttpsError(
+            "invalid-argument",
+            "Pets are not allowed for this unit."
+          );
+        }
+
+        logInfo("[AtomicBooking] Guest and pet count validated", {
           unitId,
           maxGuests: maxGuestsInTransaction,
+          maxTotalCapacity,
           requestedGuests: guestCountNum,
+          petCount: petCountNum,
+          petsAllowed: unitPetFee !== null,
         });
       }
 
@@ -958,6 +1062,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
         check_in: checkInDate,
         check_out: checkOutDate,
         guest_count: numericGuestCount, // Use validated numeric value
+        pet_count: numericPetCount, // Number of pets
         total_price: finalTotalPrice, // Use server-validated price (may differ from client)
         advance_amount: finalDepositAmount,
         deposit_amount: finalDepositAmount, // For Stripe Cloud Function

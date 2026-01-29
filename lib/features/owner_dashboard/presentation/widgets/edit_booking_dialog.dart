@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -375,59 +376,148 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                 ),
                 child: Row(
                   children: [
-                    // Delete button on the left
-                    IconButton(
-                      onPressed: _isLoading ? null : _deleteBooking,
-                      icon: const Icon(Icons.delete_outline),
-                      color: AppColors.error,
-                      tooltip: l10n.ownerTableDeleteBooking,
-                      style: IconButton.styleFrom(
-                        padding: const EdgeInsets.all(8),
-                        minimumSize: Size.zero,
-                      ),
-                    ),
-                    const Spacer(),
-                    // Cancel and Save on the right
-                    Flexible(
-                      child: TextButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () => Navigator.of(context).pop(),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 12,
+                    // Delete button
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.error.withAlpha(
+                                (0.3 * 255).toInt(),
+                              ),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _deleteBooking,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: Colors.transparent,
+                            disabledForegroundColor: Colors.white.withAlpha(
+                              150,
+                            ),
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                          minimumSize: Size.zero,
-                        ),
-                        child: Text(
-                          l10n.cancel,
-                          overflow: TextOverflow.ellipsis,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.delete_outline, size: 16),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: AutoSizeText(
+                                  l10n.ownerTableDeleteBooking,
+                                  maxLines: 1,
+                                  minFontSize: 8,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Flexible(
+                    const SizedBox(width: 6),
+                    // Cancel button
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: isDark
+                                ? AppColors.sectionDividerDark
+                                : AppColors.sectionDividerLight,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _isLoading
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: isDark
+                                ? Colors.white70
+                                : Colors.black87,
+                            disabledBackgroundColor: Colors.transparent,
+                            disabledForegroundColor: isDark
+                                ? Colors.white38
+                                : Colors.black38,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.close, size: 16),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: AutoSizeText(
+                                  l10n.cancel,
+                                  maxLines: 1,
+                                  minFontSize: 8,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    // Save button
+                    Expanded(
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: context.gradients.brandPrimary,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.primary
+                                  .withAlpha((0.3 * 255).toInt()),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _saveChanges,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             foregroundColor: Colors.white,
-                            // Keep same colors when disabled (loading state)
                             disabledBackgroundColor: Colors.transparent,
                             disabledForegroundColor: Colors.white,
                             shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
+                              horizontal: 6,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                           child: _isLoading
@@ -439,9 +529,24 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : Text(
-                                  l10n.editBookingSaveChanges,
-                                  overflow: TextOverflow.ellipsis,
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.save_outlined, size: 16),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: AutoSizeText(
+                                        l10n.editBookingSaveChanges,
+                                        maxLines: 1,
+                                        minFontSize: 8,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                         ),
                       ),

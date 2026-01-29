@@ -11,6 +11,9 @@ part 'booking_price_provider.g.dart';
 /// Model for booking price calculation with price locking support
 class BookingPriceCalculation {
   final double roomPrice; // Base room price (formerly totalPrice)
+  final double
+  extraGuestFees; // Extra guest fees (extraGuests * extraBedFee * nights)
+  final double petFees; // Pet fees (petCount * petFee * nights)
   final double additionalServicesTotal; // Total from additional services
   final double depositAmount; // 20% avans (of total)
   final double remainingAmount; // 80% preostalo (of total)
@@ -21,6 +24,8 @@ class BookingPriceCalculation {
 
   BookingPriceCalculation({
     required this.roomPrice,
+    this.extraGuestFees = 0.0,
+    this.petFees = 0.0,
     this.additionalServicesTotal = 0.0,
     required this.depositAmount,
     required this.remainingAmount,
@@ -29,13 +34,18 @@ class BookingPriceCalculation {
     this.lockedTotalPrice,
   });
 
-  // Total price = room price + additional services
-  double get totalPrice => roomPrice + additionalServicesTotal;
+  // Total price = room price + extra guest fees + pet fees + additional services
+  double get totalPrice =>
+      roomPrice + extraGuestFees + petFees + additionalServicesTotal;
 
   /// Format price with currency symbol
   /// Multi-currency support: use currencySymbol from WidgetTranslations
   String formatRoomPrice(String currency) =>
       '$currency${roomPrice.toStringAsFixed(2)}';
+  String formatExtraGuestFees(String currency) =>
+      '$currency${extraGuestFees.toStringAsFixed(2)}';
+  String formatPetFees(String currency) =>
+      '$currency${petFees.toStringAsFixed(2)}';
   String formatAdditionalServices(String currency) =>
       '$currency${additionalServicesTotal.toStringAsFixed(2)}';
   String formatTotal(String currency) =>
@@ -60,6 +70,8 @@ class BookingPriceCalculation {
   BookingPriceCalculation copyWithLock() {
     return BookingPriceCalculation(
       roomPrice: roomPrice,
+      extraGuestFees: extraGuestFees,
+      petFees: petFees,
       additionalServicesTotal: additionalServicesTotal,
       depositAmount: depositAmount,
       remainingAmount: remainingAmount,
@@ -69,12 +81,40 @@ class BookingPriceCalculation {
     );
   }
 
+  // Copy with method for updating extra guest & pet fees (sync, no async re-fetch)
+  BookingPriceCalculation copyWithFees(
+    double newExtraGuestFees,
+    double newPetFees,
+    int depositPercentage,
+  ) {
+    final newTotal =
+        roomPrice + newExtraGuestFees + newPetFees + additionalServicesTotal;
+    final newDeposit = (depositPercentage == 0 || depositPercentage == 100)
+        ? newTotal
+        : (newTotal * depositPercentage).roundToDouble() / 100;
+    final newRemaining = (depositPercentage == 0 || depositPercentage == 100)
+        ? 0.0
+        : (newTotal * (100 - depositPercentage)).roundToDouble() / 100;
+
+    return BookingPriceCalculation(
+      roomPrice: roomPrice,
+      extraGuestFees: newExtraGuestFees,
+      petFees: newPetFees,
+      additionalServicesTotal: additionalServicesTotal,
+      depositAmount: newDeposit,
+      remainingAmount: newRemaining,
+      nights: nights,
+      priceLockTimestamp: priceLockTimestamp,
+      lockedTotalPrice: lockedTotalPrice,
+    );
+  }
+
   // Copy with method for updating additional services
   BookingPriceCalculation copyWithServices(
     double servicesTotal,
     int depositPercentage,
   ) {
-    final newTotal = roomPrice + servicesTotal;
+    final newTotal = roomPrice + extraGuestFees + petFees + servicesTotal;
     // Bug Fix: Use integer multiplication for precise rounding instead of toStringAsFixed
     final newDeposit = (depositPercentage == 0 || depositPercentage == 100)
         ? newTotal
@@ -85,6 +125,8 @@ class BookingPriceCalculation {
 
     return BookingPriceCalculation(
       roomPrice: roomPrice,
+      extraGuestFees: extraGuestFees,
+      petFees: petFees,
       additionalServicesTotal: servicesTotal,
       depositAmount: newDeposit,
       remainingAmount: newRemaining,
@@ -114,6 +156,12 @@ Future<BookingPriceCalculation?> bookingPrice(
   int depositPercentage = 20, // Configurable deposit percentage (0-100)
   bool forceServerFetch =
       false, // PRICE FIX: Force fresh server fetch for booking submission
+  // Extra guest & pet fee parameters
+  int guestCount = 1, // Total guests (adults + children)
+  int petCount = 0, // Number of pets
+  int? maxGuests, // Base capacity (fees apply above this)
+  double? extraBedFee, // Per extra person per night
+  double? petFee, // Per pet per night
 }) async {
   // Return null if dates not selected
   if (checkIn == null || checkOut == null) {
@@ -129,6 +177,12 @@ Future<BookingPriceCalculation?> bookingPrice(
   double? weekendBasePrice;
   List<int>? weekendDays;
 
+  // Mutable fee params: use fresh values from server when forceServerFetch is true,
+  // otherwise fall back to caller-provided values (from cached _unit object).
+  int? effectiveMaxGuests = maxGuests;
+  double? effectiveExtraBedFee = extraBedFee;
+  double? effectivePetFee = petFee;
+
   // PRICE MISMATCH FIX: Force fresh fetch from server before booking submission
   // This prevents 50% price mismatch errors caused by stale cached unit data
   if (forceServerFetch && propertyId != null) {
@@ -141,10 +195,16 @@ Future<BookingPriceCalculation?> bookingPrice(
       basePrice = unit.pricePerNight;
       weekendBasePrice = unit.weekendBasePrice;
       weekendDays = unit.weekendDays;
+      // Also refresh fee params to prevent stale extra guest/pet fee calculations
+      effectiveMaxGuests = unit.maxGuests;
+      effectiveExtraBedFee = unit.extraBedFee;
+      effectivePetFee = unit.petFee;
 
       LoggingService.log(
         '🔄 [PRICE_FIX] Fresh price fetch for booking: '
-        'basePrice=$basePrice, weekendPrice=$weekendBasePrice',
+        'basePrice=$basePrice, weekendPrice=$weekendBasePrice, '
+        'maxGuests=$effectiveMaxGuests, extraBedFee=$effectiveExtraBedFee, '
+        'petFee=$effectivePetFee',
         tag: 'BOOKING_PRICE',
       );
     } else {
@@ -205,20 +265,42 @@ Future<BookingPriceCalculation?> bookingPrice(
   // Bug Fix: Use DateNormalizer for consistent night calculation across timezones
   final nights = DateNormalizer.nightsBetween(checkIn, checkOut);
 
+  // Calculate extra guest fees: extraGuests * extraBedFee * nights
+  // Extra guests = guests beyond base capacity (maxGuests)
+  // Uses effectiveMaxGuests/effectiveExtraBedFee which are fresh when forceServerFetch=true
+  double extraGuestFees = 0.0;
+  if (effectiveMaxGuests != null &&
+      effectiveExtraBedFee != null &&
+      guestCount > effectiveMaxGuests) {
+    final extraGuests = guestCount - effectiveMaxGuests;
+    extraGuestFees = extraGuests * effectiveExtraBedFee * nights;
+  }
+
+  // Calculate pet fees: petCount * petFee * nights
+  // Uses effectivePetFee which is fresh when forceServerFetch=true
+  double petFeesTotal = 0.0;
+  if (effectivePetFee != null && petCount > 0) {
+    petFeesTotal = petCount * effectivePetFee * nights;
+  }
+
   // Calculate deposit and remaining amount based on configurable percentage
+  // Total includes room price + extra guest fees + pet fees
   // Note: Additional services total will be 0 initially, can be updated with copyWithServices()
   // If depositPercentage is 0 or 100, treat as full payment (no split)
   // Bug Fix: Use integer multiplication for precise rounding instead of toStringAsFixed
   // This avoids floating point representation errors (e.g., 0.1 + 0.2 != 0.3)
+  final baseTotal = roomPrice + extraGuestFees + petFeesTotal;
   final depositAmount = (depositPercentage == 0 || depositPercentage == 100)
-      ? roomPrice
-      : (roomPrice * depositPercentage).roundToDouble() / 100;
+      ? baseTotal
+      : (baseTotal * depositPercentage).roundToDouble() / 100;
   final remainingAmount = (depositPercentage == 0 || depositPercentage == 100)
       ? 0.0
-      : (roomPrice * (100 - depositPercentage)).roundToDouble() / 100;
+      : (baseTotal * (100 - depositPercentage)).roundToDouble() / 100;
 
   return BookingPriceCalculation(
     roomPrice: roomPrice,
+    extraGuestFees: extraGuestFees,
+    petFees: petFeesTotal,
     depositAmount: depositAmount,
     remainingAmount: remainingAmount,
     nights: nights,

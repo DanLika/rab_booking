@@ -29,7 +29,7 @@ import {
   logWebhookSignatureFailure,
   SecurityEventType,
 } from "./utils/securityMonitoring";
-import {setUser} from "./sentry";
+import {setUser, captureMessage} from "./sentry";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
@@ -168,6 +168,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
     guestEmail,
     guestPhone,
     guestCount,
+    petCount = 0,
     totalPrice,
     servicesTotal = 0, // Additional services total for price validation
     depositAmount: initialDepositAmount,
@@ -357,7 +358,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
     // If deposit is below minimum, use the minimum amount
     const STRIPE_MINIMUM_CENTS = 50; // €0.50
     const rawDepositCents = Math.round(depositAmount * 100);
-    const depositAmountInCents = Math.max(rawDepositCents, STRIPE_MINIMUM_CENTS);
+    let depositAmountInCents = Math.max(rawDepositCents, STRIPE_MINIMUM_CENTS);
 
     // If we had to adjust the deposit, log it for debugging
     if (rawDepositCents < STRIPE_MINIMUM_CENTS) {
@@ -434,6 +435,68 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
       servicesTotal >= 0
     ) ? servicesTotal : 0;
 
+    // ========================================================================
+    // SERVER-SIDE EXTRA GUEST & PET FEE CALCULATION
+    // Must match atomicBooking.ts logic to prevent price mismatch errors.
+    // Fees are calculated from unit data to prevent client-side manipulation.
+    // Reuses unitData already fetched at line ~258 (no extra Firestore read).
+    // ========================================================================
+    const unitMaxGuests = unitData?.max_guests ?? 10;
+    const unitExtraBedFee = unitData?.extra_bed_fee ?? null;
+    const unitPetFeeRate = unitData?.pet_fee ?? null;
+    const numericGuestCount = Number(guestCount) || 1;
+    const numericPetCount = Number(petCount) || 0;
+
+    let serverExtraGuestFees = 0;
+    if (unitExtraBedFee !== null && numericGuestCount > unitMaxGuests) {
+      const extraGuests = numericGuestCount - unitMaxGuests;
+      serverExtraGuestFees = Math.round(extraGuests * unitExtraBedFee * bookingNights * 100) / 100;
+    }
+
+    let serverPetFees = 0;
+    if (unitPetFeeRate !== null && numericPetCount > 0) {
+      serverPetFees = Math.round(numericPetCount * unitPetFeeRate * bookingNights * 100) / 100;
+    }
+
+    // Combined extras = additional services + extra guest fees + pet fees
+    const totalExtras = Math.round((numericServicesTotal + serverExtraGuestFees + serverPetFees) * 100) / 100;
+
+    // Fee anomaly detection: catch NaN, negative, or unreasonably large values
+    if (!Number.isFinite(serverExtraGuestFees) || serverExtraGuestFees < 0 ||
+        !Number.isFinite(serverPetFees) || serverPetFees < 0 ||
+        !Number.isFinite(totalExtras) || totalExtras < 0 ||
+        serverExtraGuestFees > 10000 || serverPetFees > 10000) {
+      captureMessage("Stripe: Fee calculation anomaly detected", "error", {
+        unitId,
+        serverExtraGuestFees,
+        serverPetFees,
+        totalExtras,
+        guestCount: numericGuestCount,
+        petCount: numericPetCount,
+        maxGuests: unitMaxGuests,
+        extraBedFee: unitExtraBedFee,
+        petFeeRate: unitPetFeeRate,
+        nights: bookingNights,
+      });
+    }
+
+    // Log fee breakdown for monitoring (non-zero fees only)
+    if (serverExtraGuestFees > 0 || serverPetFees > 0) {
+      logInfo("createStripeCheckoutSession: Fee calculation breakdown", {
+        unitId,
+        guestCount: numericGuestCount,
+        petCount: numericPetCount,
+        maxGuests: unitMaxGuests,
+        extraBedFee: unitExtraBedFee,
+        petFeeRate: unitPetFeeRate,
+        nights: bookingNights,
+        serverExtraGuestFees,
+        serverPetFees,
+        servicesTotal: numericServicesTotal,
+        totalExtras,
+      });
+    }
+
     try {
       await validateBookingPrice(
         unitId,
@@ -441,12 +504,15 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
         checkOutDate,
         Number(totalPrice),
         propertyId,
-        numericServicesTotal // Pass services total for accurate validation
+        totalExtras // Pass ALL extras (services + guest fees + pet fees) for validation
       );
       logInfo("createStripeCheckoutSession: Price validated successfully", {
         unitId,
         clientPrice: totalPrice,
         servicesTotal: numericServicesTotal,
+        serverExtraGuestFees,
+        serverPetFees,
+        totalExtras,
       });
     } catch (priceError: any) {
       // If price mismatch, use server-calculated price instead of client's locked price
@@ -457,7 +523,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
           error: priceError.message,
         });
 
-        // Calculate server-side nightly price and add services total
+        // Calculate server-side nightly price and add all extras
         const {totalPrice: serverNightlyPrice} = await calculateBookingPrice(
           unitId,
           checkInDate,
@@ -465,14 +531,14 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
           propertyId
         );
 
-        // Server total = nightly prices + services (services from client are trusted)
-        const serverTotalPrice = Math.round((serverNightlyPrice + numericServicesTotal) * 100) / 100;
+        // Server total = nightly prices + all extras (services + guest fees + pet fees)
+        const serverTotalPrice = Math.round((serverNightlyPrice + totalExtras) * 100) / 100;
 
         logInfo("createStripeCheckoutSession: Using server-calculated price", {
           unitId,
           oldPrice: totalPrice,
           serverNightlyPrice,
-          servicesTotal: numericServicesTotal,
+          totalExtras,
           newPrice: serverTotalPrice,
         });
 
@@ -484,6 +550,8 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
         } else {
           depositAmount = serverTotalPrice;
         }
+        // Recalculate Stripe charge amount after price adjustment
+        depositAmountInCents = Math.max(Math.round(depositAmount * 100), STRIPE_MINIMUM_CENTS);
       } else {
         // Other validation errors - rethrow
         throw priceError;
@@ -580,6 +648,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
         check_in: checkInDate,
         check_out: checkOutDate,
         guest_count: Number(guestCount),
+        pet_count: Number(petCount),
         total_price: Number(totalPrice),
         advance_amount: Number(depositAmount),
         deposit_amount: Number(depositAmount),
@@ -717,6 +786,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
         guest_email: sanitizedGuestEmail,
         guest_phone: sanitizedGuestPhone || "",
         guest_count: String(guestCount),
+        pet_count: String(petCount),
         // Payment info
         total_price: String(totalPrice),
         deposit_amount: String(depositAmount),

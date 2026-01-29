@@ -40,8 +40,17 @@ class UnitModel with _$UnitModel {
     /// Currency code (default: EUR)
     @Default('EUR') String? currency,
 
-    /// Maximum number of guests
+    /// Maximum number of guests (base capacity, included in base price)
     @JsonKey(name: 'max_guests') required int maxGuests,
+
+    /// Maximum total capacity including extra beds (null = no extra beds)
+    @JsonKey(name: 'max_total_capacity') int? maxTotalCapacity,
+
+    /// Extra bed fee per person per night (null = extra beds not offered)
+    @JsonKey(name: 'extra_bed_fee') double? extraBedFee,
+
+    /// Pet fee per pet per night (null = pets not allowed)
+    @JsonKey(name: 'pet_fee') double? petFee,
 
     /// Number of bedrooms
     @Default(1) int bedrooms,
@@ -104,8 +113,20 @@ class UnitModel with _$UnitModel {
     return '€${total.toStringAsFixed(0)}';
   }
 
-  /// Check if unit can accommodate guests
-  bool canAccommodate(int guestCount) => guestCount <= maxGuests;
+  /// Effective max capacity (includes extra beds if offered)
+  int get effectiveMaxCapacity => maxTotalCapacity ?? maxGuests;
+
+  /// Check if unit can accommodate guests (uses total capacity including extra beds)
+  bool canAccommodate(int guestCount) => guestCount <= effectiveMaxCapacity;
+
+  /// Whether extra beds are offered
+  bool get hasExtraBeds =>
+      maxTotalCapacity != null &&
+      maxTotalCapacity! > maxGuests &&
+      extraBedFee != null;
+
+  /// Whether pets are allowed
+  bool get allowsPets => petFee != null;
 
   /// Check if stay duration meets minimum requirement
   bool meetsMinimumStay(int nights) => nights >= minStayNights;

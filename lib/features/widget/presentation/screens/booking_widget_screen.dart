@@ -188,6 +188,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   set _adults(int value) => _formState.adults = value;
   int get _children => _formState.children;
   set _children(int value) => _formState.children = value;
+  int get _pets => _formState.pets;
+  set _pets(int value) => _formState.pets = value;
   bool get _showGuestForm => _formState.showGuestForm;
   set _showGuestForm(bool value) => _formState.showGuestForm = value;
   String get _selectedPaymentMethod => _formState.selectedPaymentMethod;
@@ -1523,13 +1525,18 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         _widgetSettings = widgetCtx.settings;
 
         // Adjust default guest count to respect property capacity
-        final maxGuests = widgetCtx.unit.maxGuests;
-        if (maxGuests > 0) {
+        // Use effectiveMaxCapacity (maxTotalCapacity ?? maxGuests)
+        final effectiveMax = widgetCtx.unit.effectiveMaxCapacity;
+        if (effectiveMax > 0) {
           final totalGuests = _adults + _children;
-          if (totalGuests > maxGuests) {
-            _adults = maxGuests.clamp(1, maxGuests);
+          if (totalGuests > effectiveMax) {
+            _adults = effectiveMax.clamp(1, effectiveMax);
             _children = 0;
           }
+        }
+        // Reset pets if the unit doesn't allow them
+        if (!widgetCtx.unit.allowsPets) {
+          _pets = 0;
         }
 
         // PRE-WARM widgetContextProvider cache so calendar has immediate access
@@ -1595,15 +1602,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _widgetSettings = widgetCtx.settings;
 
       // Adjust default guest count to respect property capacity
-      // Defensive null check: maxGuests is required but handle edge cases
-      final maxGuests = widgetCtx.unit.maxGuests;
-      if (maxGuests > 0) {
+      // Use effectiveMaxCapacity (maxTotalCapacity ?? maxGuests)
+      final effectiveMax = widgetCtx.unit.effectiveMaxCapacity;
+      if (effectiveMax > 0) {
         final totalGuests = _adults + _children;
-        if (totalGuests > maxGuests) {
+        if (totalGuests > effectiveMax) {
           // If default exceeds capacity, set to max allowed
-          _adults = maxGuests.clamp(1, maxGuests);
+          _adults = effectiveMax.clamp(1, effectiveMax);
           _children = 0;
         }
+      }
+      // Reset pets if the unit doesn't allow them
+      if (!widgetCtx.unit.allowsPets) {
+        _pets = 0;
       }
 
       // Set default payment method based on what's enabled
@@ -1784,15 +1795,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Bug Fix: Clamp restored guest count to maxGuests
         // Saved form data may have higher guest count if:
         // 1. User previously booked a property with higher capacity
-        // 2. Owner changed the maxGuests setting since last visit
-        final maxGuests = _unit?.maxGuests ?? 0;
-        if (maxGuests > 0) {
+        // 2. Owner changed the capacity setting since last visit
+        // Use effectiveMaxCapacity (maxTotalCapacity ?? maxGuests)
+        final effectiveMax = _unit?.effectiveMaxCapacity ?? 0;
+        if (effectiveMax > 0) {
           final totalGuests = _adults + _children;
-          if (totalGuests > maxGuests) {
+          if (totalGuests > effectiveMax) {
             // Prioritize adults, reduce children first
             _children = 0;
-            _adults = maxGuests.clamp(1, maxGuests);
+            _adults = effectiveMax.clamp(1, effectiveMax);
           }
+        }
+        // Reset pets if the unit doesn't allow them
+        if (_unit != null && !_unit!.allowsPets) {
+          _pets = 0;
         }
       });
 
@@ -1936,6 +1952,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           checkOut: _checkOut,
           propertyId: _propertyId, // OPTIMIZED: enables cache reuse
           depositPercentage: _widgetSettings?.globalDepositPercentage ?? 20,
+          // NOTE: guestCount/petCount NOT passed here — fees calculated locally
+          // to avoid async re-fetch flicker when user changes guest/pet count
         ),
         (previous, next) {
           // Defensive check: ensure widget is still mounted
@@ -2472,6 +2490,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         checkOut: checkOut,
         propertyId: _propertyId, // OPTIMIZED: enables cache reuse
         depositPercentage: depositPercentage,
+        // NOTE: guestCount/petCount NOT passed here — fees calculated locally
+        // to avoid async re-fetch flicker when user changes guest/pet count
       ),
     );
 
@@ -2535,6 +2555,28 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         } catch (e) {
           // If copyWithServices fails, return empty widget
           return const SizedBox.shrink();
+        }
+
+        // Apply extra guest & pet fees locally (sync, no async re-fetch)
+        // This avoids form flicker when user changes guest/pet count
+        final totalGuests = _adults + _children;
+        double localExtraGuestFees = 0.0;
+        if (_unit?.extraBedFee != null &&
+            totalGuests > (_unit?.maxGuests ?? 10)) {
+          final extraGuests = totalGuests - _unit!.maxGuests;
+          localExtraGuestFees =
+              extraGuests * _unit!.extraBedFee! * calculationBase.nights;
+        }
+        double localPetFees = 0.0;
+        if (_unit?.petFee != null && _pets > 0) {
+          localPetFees = _pets * _unit!.petFee! * calculationBase.nights;
+        }
+        if (localExtraGuestFees > 0 || localPetFees > 0) {
+          calculation = calculation.copyWithFees(
+            localExtraGuestFees,
+            localPetFees,
+            depositPercentage,
+          );
         }
 
         // Calculate responsive width and height based on screen size
@@ -2647,6 +2689,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             formattedAdditionalServices: calculation.formatAdditionalServices(
               currency,
             ),
+            extraGuestFees: calculation.extraGuestFees,
+            formattedExtraGuestFees: calculation.extraGuestFees > 0
+                ? calculation.formatExtraGuestFees(currency)
+                : null,
+            petFees: calculation.petFees,
+            formattedPetFees: calculation.petFees > 0
+                ? calculation.formatPetFees(currency)
+                : null,
             formattedTotal: calculation.formatTotal(currency),
             formattedDeposit: calculation.formatDeposit(currency),
             depositPercentage: calculation.totalPrice > 0
@@ -3200,6 +3250,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             adults: _adults,
             children: _children,
             maxGuests: _unit?.maxGuests ?? 10,
+            maxTotalCapacity: _unit?.maxTotalCapacity,
+            petFee: _unit?.petFee,
+            pets: _pets,
             isDarkMode: ref.watch(themeProvider),
             onAdultsChanged: (value) {
               if (mounted) {
@@ -3211,6 +3264,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 setState(() => _children = value);
               }
             },
+            onPetsChanged: _unit?.petFee != null
+                ? (value) {
+                    if (mounted) {
+                      setState(() => _pets = value);
+                    }
+                  }
+                : null,
           ),
           const SizedBox(height: SpacingTokens.s),
 
@@ -3353,6 +3413,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     BookingPriceCalculation finalCalculation = calculation;
     PriceLockResult? priceLockResult;
     if (mounted) {
+      final isDarkForDialog = ref.read(themeProvider);
       priceLockResult = await PriceLockService.checkAndConfirmPriceChange(
         context: context,
         currentCalculation: calculation,
@@ -3364,6 +3425,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             });
           }
         },
+        dialogConfig: PriceChangeDialogConfig.minimalist(dark: isDarkForDialog),
       );
 
       if (priceLockResult == PriceLockResult.cancelled) {
@@ -3471,38 +3533,114 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             weekendDays: freshUnit.weekendDays,
           );
 
-          // Calculate the new total (room price + services)
+          // Recalculate extra guest & pet fees with fresh unit data
+          // (owner may have changed maxGuests, extraBedFee, or petFee)
+          LoggingService.addBreadcrumb(
+            'Fresh fee recalculation starting',
+            category: 'booking',
+            data: {
+              'unitId': freshUnit.id,
+              'guests': _adults + _children,
+              'pets': _pets,
+              'maxGuests': freshUnit.maxGuests,
+            },
+          );
+          double freshExtraGuestFees = 0.0;
+          final freshMaxGuests = freshUnit.maxGuests;
+          final freshExtraBedFee = freshUnit.extraBedFee;
+          final totalGuests = _adults + _children;
+          if (freshExtraBedFee != null && totalGuests > freshMaxGuests) {
+            final extraGuests = totalGuests - freshMaxGuests;
+            freshExtraGuestFees =
+                extraGuests * freshExtraBedFee * finalCalculation.nights;
+          }
+
+          double freshPetFees = 0.0;
+          final freshPetFee = freshUnit.petFee;
+          if (freshPetFee != null && _pets > 0) {
+            freshPetFees = _pets * freshPetFee * finalCalculation.nights;
+          }
+
+          // Calculate the new total (room price + extra guest fees + pet fees + services)
           final freshTotal =
-              freshRoomPrice + finalCalculation.additionalServicesTotal;
+              freshRoomPrice +
+              freshExtraGuestFees +
+              freshPetFees +
+              finalCalculation.additionalServicesTotal;
           final oldTotal = finalCalculation.totalPrice;
           final totalDiff = (freshTotal - oldTotal).abs();
 
           LoggingService.log(
             '🔄 [PRICE_FIX] Price recalculated: '
-            'old=$oldTotal, fresh=$freshTotal, diff=$totalDiff',
+            'old=$oldTotal, fresh=$freshTotal, diff=$totalDiff, '
+            'extraGuestFees=$freshExtraGuestFees, petFees=$freshPetFees',
             tag: 'PRICE_VALIDATION',
           );
 
+          // Fee anomaly detection: catch NaN, negative, or unreasonably large
+          if (freshExtraGuestFees.isNaN ||
+              freshExtraGuestFees < 0 ||
+              freshPetFees.isNaN ||
+              freshPetFees < 0 ||
+              freshTotal.isNaN ||
+              freshTotal < 0 ||
+              freshExtraGuestFees > 10000 ||
+              freshPetFees > 10000) {
+            unawaited(
+              LoggingService.logError(
+                'Fee calculation anomaly: '
+                'extraGuestFees=$freshExtraGuestFees, petFees=$freshPetFees, '
+                'total=$freshTotal, guests=${_adults + _children}, '
+                'pets=$_pets, maxGuests=${freshUnit.maxGuests}, '
+                'extraBedFee=${freshUnit.extraBedFee}, petFee=${freshUnit.petFee}',
+                Exception('Fee anomaly detected'),
+                StackTrace.current,
+              ),
+            );
+          }
+
           // If total differs by more than €0.50, confirm with user
           if (totalDiff > 0.50 && mounted) {
+            final isDark = ref.read(themeProvider);
+            final dialogColors = MinimalistColorSchemeAdapter(dark: isDark);
             final shouldProceed = await showDialog<bool>(
               context: context,
               barrierDismissible: false,
               builder: (dialogContext) => AlertDialog(
-                title: const Text('Price Updated'),
+                backgroundColor: dialogColors.backgroundPrimary,
+                surfaceTintColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: dialogColors.borderDefault),
+                ),
+                title: Text(
+                  'Price Updated',
+                  style: TextStyle(
+                    color: dialogColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 content: Text(
                   'The price has been updated since you started booking.\n\n'
                   'Previous price: €${oldTotal.toStringAsFixed(2)}\n'
                   'Current price: €${freshTotal.toStringAsFixed(2)}\n\n'
                   'Would you like to continue with the updated price?',
+                  style: TextStyle(color: dialogColors.textSecondary),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(false),
+                    style: TextButton.styleFrom(
+                      foregroundColor: dialogColors.textSecondary,
+                    ),
                     child: const Text('Cancel'),
                   ),
                   FilledButton(
                     onPressed: () => Navigator.of(dialogContext).pop(true),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: dialogColors.buttonPrimary,
+                      foregroundColor: dialogColors.buttonPrimaryText,
+                    ),
                     child: const Text('Continue'),
                   ),
                 ],
@@ -3532,6 +3670,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
             finalCalculation = BookingPriceCalculation(
               roomPrice: freshRoomPrice,
+              extraGuestFees: freshExtraGuestFees,
+              petFees: freshPetFees,
               additionalServicesTotal: finalCalculation.additionalServicesTotal,
               depositAmount: newDeposit,
               remainingAmount: newRemaining,
@@ -3601,6 +3741,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       } catch (_) {}
       // #endregion
 
+      // Breadcrumb: fee breakdown at submission time
+      LoggingService.addBreadcrumb(
+        'Booking submission with fees',
+        category: 'booking',
+        data: {
+          'totalPrice': finalCalculation.totalPrice,
+          'roomPrice': finalCalculation.roomPrice,
+          'extraGuestFees': finalCalculation.extraGuestFees,
+          'petFees': finalCalculation.petFees,
+          'servicesTotal': finalCalculation.additionalServicesTotal,
+          'guests': _adults + _children,
+          'pets': _pets,
+        },
+      );
+
       final params = SubmitBookingParams(
         unitId: _unitId,
         propertyId: _propertyId!,
@@ -3619,6 +3774,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             : _notesController.text.trim(),
         adults: _adults,
         children: _children,
+        pets: _pets,
         totalPrice: finalCalculation
             .totalPrice, // Use final calculation (locked or current)
         servicesTotal: finalCalculation

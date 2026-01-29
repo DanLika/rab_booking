@@ -87,6 +87,9 @@ class BookingModel with _$BookingModel {
     /// Number of guests
     @JsonKey(name: 'guest_count') @Default(1) int guestCount,
 
+    /// Number of pets
+    @JsonKey(name: 'pet_count') @Default(0) int petCount,
+
     /// Special requests or notes
     String? notes,
 

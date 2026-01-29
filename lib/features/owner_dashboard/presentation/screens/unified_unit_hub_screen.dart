@@ -1360,7 +1360,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ],
     );
 
-    // Price section - compact, fixed height
+    // Price section
     final cijenaCard = _buildInfoCard(
       theme,
       title: l10n.unitHubPriceSection,
@@ -1373,11 +1373,41 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           '€${_selectedUnit!.pricePerNight.toStringAsFixed(0)}',
           valueColor: theme.colorScheme.primary,
         ),
+        if (_selectedUnit!.weekendBasePrice != null)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep3WeekendPrice,
+            '€${_selectedUnit!.weekendBasePrice!.toStringAsFixed(0)}',
+          ),
         _buildDetailRow(
           theme,
           l10n.unitHubMinNights,
           '${_selectedUnit!.minStayNights}',
         ),
+        if (_selectedUnit!.maxStayNights != null)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep3MaxStay,
+            '${_selectedUnit!.maxStayNights}',
+          ),
+        if (_selectedUnit!.maxTotalCapacity != null)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep5MaxTotalCapacity,
+            '${_selectedUnit!.maxTotalCapacity}',
+          ),
+        if (_selectedUnit!.extraBedFee != null)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep5ExtraBedFee,
+            '€${_selectedUnit!.extraBedFee!.toStringAsFixed(0)}/night',
+          ),
+        if (_selectedUnit!.petFee != null)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep5PetFee,
+            '€${_selectedUnit!.petFee!.toStringAsFixed(0)}/night',
+          ),
       ],
     );
 

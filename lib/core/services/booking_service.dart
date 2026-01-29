@@ -81,6 +81,7 @@ class BookingService {
     required String guestEmail,
     required String guestPhone,
     required int guestCount,
+    int petCount = 0,
     required double totalPrice,
     double servicesTotal =
         0.0, // Additional services total for server-side validation
@@ -114,6 +115,7 @@ class BookingService {
         'guestEmail': guestEmail,
         'guestPhone': guestPhone,
         'guestCount': guestCount,
+        'petCount': petCount,
         'totalPrice': totalPrice,
         'servicesTotal': servicesTotal,
         'paymentOption': paymentOption,
@@ -280,6 +282,7 @@ class BookingService {
         paymentStatus: paymentStatusValue,
         source: 'widget',
         guestCount: guestCount,
+        petCount: petCount,
         notes: notes,
         taxLegalAccepted: taxLegalAccepted,
         createdAt: DateTime.now(),

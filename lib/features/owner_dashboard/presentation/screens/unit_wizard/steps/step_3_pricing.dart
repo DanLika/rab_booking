@@ -24,6 +24,9 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
   final _weekendPriceController = TextEditingController();
   final _minStayController = TextEditingController();
   final _maxStayController = TextEditingController();
+  final _maxTotalCapacityController = TextEditingController();
+  final _extraBedFeeController = TextEditingController();
+  final _petFeeController = TextEditingController();
 
   bool _isInitialized = false;
 
@@ -35,6 +38,9 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
     _weekendPriceController.addListener(_onWeekendPriceChanged);
     _minStayController.addListener(_onMinStayChanged);
     _maxStayController.addListener(_onMaxStayChanged);
+    _maxTotalCapacityController.addListener(_onMaxTotalCapacityChanged);
+    _extraBedFeeController.addListener(_onExtraBedFeeChanged);
+    _petFeeController.addListener(_onPetFeeChanged);
   }
 
   @override
@@ -44,10 +50,16 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
     _weekendPriceController.removeListener(_onWeekendPriceChanged);
     _minStayController.removeListener(_onMinStayChanged);
     _maxStayController.removeListener(_onMaxStayChanged);
+    _maxTotalCapacityController.removeListener(_onMaxTotalCapacityChanged);
+    _extraBedFeeController.removeListener(_onExtraBedFeeChanged);
+    _petFeeController.removeListener(_onPetFeeChanged);
     _priceController.dispose();
     _weekendPriceController.dispose();
     _minStayController.dispose();
     _maxStayController.dispose();
+    _maxTotalCapacityController.dispose();
+    _extraBedFeeController.dispose();
+    _petFeeController.dispose();
     super.dispose();
   }
 
@@ -59,12 +71,18 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
     _weekendPriceController.removeListener(_onWeekendPriceChanged);
     _minStayController.removeListener(_onMinStayChanged);
     _maxStayController.removeListener(_onMaxStayChanged);
+    _maxTotalCapacityController.removeListener(_onMaxTotalCapacityChanged);
+    _extraBedFeeController.removeListener(_onExtraBedFeeChanged);
+    _petFeeController.removeListener(_onPetFeeChanged);
 
     // Set initial values
     _priceController.text = draft.pricePerNight?.toString() ?? '';
     _weekendPriceController.text = draft.weekendBasePrice?.toString() ?? '';
     _minStayController.text = draft.minStayNights?.toString() ?? '';
     _maxStayController.text = draft.maxStayNights?.toString() ?? '';
+    _maxTotalCapacityController.text = draft.maxTotalCapacity?.toString() ?? '';
+    _extraBedFeeController.text = draft.extraBedFee?.toString() ?? '';
+    _petFeeController.text = draft.petFee?.toString() ?? '';
     _isInitialized = true;
 
     // Re-attach listeners after setting initial values
@@ -72,6 +90,9 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
     _weekendPriceController.addListener(_onWeekendPriceChanged);
     _minStayController.addListener(_onMinStayChanged);
     _maxStayController.addListener(_onMaxStayChanged);
+    _maxTotalCapacityController.addListener(_onMaxTotalCapacityChanged);
+    _extraBedFeeController.addListener(_onExtraBedFeeChanged);
+    _petFeeController.addListener(_onPetFeeChanged);
   }
 
   void _onPriceChanged() {
@@ -100,6 +121,27 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
     ref
         .read(unitWizardNotifierProvider(widget.unitId).notifier)
         .updateField('maxStayNights', value);
+  }
+
+  void _onMaxTotalCapacityChanged() {
+    final value = int.tryParse(_maxTotalCapacityController.text);
+    ref
+        .read(unitWizardNotifierProvider(widget.unitId).notifier)
+        .updateField('maxTotalCapacity', value);
+  }
+
+  void _onExtraBedFeeChanged() {
+    final value = double.tryParse(_extraBedFeeController.text);
+    ref
+        .read(unitWizardNotifierProvider(widget.unitId).notifier)
+        .updateField('extraBedFee', value);
+  }
+
+  void _onPetFeeChanged() {
+    final value = double.tryParse(_petFeeController.text);
+    ref
+        .read(unitWizardNotifierProvider(widget.unitId).notifier)
+        .updateField('petFee', value);
   }
 
   @override
@@ -612,6 +654,149 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
                   ),
                   const SizedBox(height: AppDimensions.spaceL),
 
+                  // Extra Guest & Pet Fees Card
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.black.withValues(alpha: 0.3)
+                              : Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: context.gradients.cardBackground,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: context.gradients.sectionBorder,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(isMobile ? 16 : 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header with icon
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.person_add,
+                                      color: theme.colorScheme.primary,
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      l10n.unitWizardStep3ExtraFeesTitle,
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.unitWizardStep3ExtraFeesDesc,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Extra fees fields
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final isVerySmall =
+                                      constraints.maxWidth < 500;
+
+                                  if (isVerySmall) {
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        _buildMaxTotalCapacityField(
+                                          l10n,
+                                          isMobile,
+                                          draft,
+                                        ),
+                                        const SizedBox(
+                                          height: AppDimensions.spaceM,
+                                        ),
+                                        _buildExtraBedFeeField(l10n, isMobile),
+                                        const SizedBox(
+                                          height: AppDimensions.spaceM,
+                                        ),
+                                        _buildPetFeeField(l10n, isMobile),
+                                      ],
+                                    );
+                                  }
+
+                                  return Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildMaxTotalCapacityField(
+                                              l10n,
+                                              isMobile,
+                                              draft,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            child: _buildExtraBedFeeField(
+                                              l10n,
+                                              isMobile,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: AppDimensions.spaceM,
+                                      ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildPetFeeField(
+                                              l10n,
+                                              isMobile,
+                                            ),
+                                          ),
+                                          const Expanded(child: SizedBox()),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.spaceL),
+
                   // Availability Card - Year-round toggle
                   Container(
                     decoration: BoxDecoration(
@@ -781,6 +966,96 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
+    );
+  }
+
+  Widget _buildMaxTotalCapacityField(
+    AppLocalizations l10n,
+    bool isMobile,
+    dynamic draft,
+  ) {
+    return TextFormField(
+      controller: _maxTotalCapacityController,
+      decoration: InputDecorationHelper.buildDecoration(
+        labelText: l10n.unitWizardStep3MaxTotalCapacity,
+        hintText: l10n.unitWizardStep3MaxTotalCapacityHint,
+        helperText: l10n.unitWizardStep3MaxTotalCapacityHelper,
+        prefixIcon: const Icon(Icons.people_outline),
+        isMobile: isMobile,
+        context: context,
+      ),
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return null; // Optional field
+        }
+        final number = int.tryParse(value);
+        if (number == null || number < 1) {
+          return l10n.unitWizardStep3MaxTotalCapacityInvalid;
+        }
+        final maxGuests = draft.maxGuests ?? 1;
+        if (number <= maxGuests) {
+          return l10n.unitWizardStep3MaxTotalCapacityInvalid;
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildExtraBedFeeField(AppLocalizations l10n, bool isMobile) {
+    return TextFormField(
+      controller: _extraBedFeeController,
+      decoration: InputDecorationHelper.buildDecoration(
+        labelText: l10n.unitWizardStep3ExtraBedFee,
+        hintText: l10n.unitWizardStep3ExtraBedFeeHint,
+        helperText: l10n.unitWizardStep3ExtraBedFeeHelper,
+        prefixIcon: const Icon(Icons.hotel),
+        isMobile: isMobile,
+        context: context,
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+      ],
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return null; // Optional field
+        }
+        final number = double.tryParse(value);
+        if (number == null || number <= 0) {
+          return l10n.unitWizardStep3ExtraBedFeeInvalid;
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPetFeeField(AppLocalizations l10n, bool isMobile) {
+    return TextFormField(
+      controller: _petFeeController,
+      decoration: InputDecorationHelper.buildDecoration(
+        labelText: l10n.unitWizardStep3PetFee,
+        hintText: l10n.unitWizardStep3PetFeeHint,
+        helperText: l10n.unitWizardStep3PetFeeHelper,
+        prefixIcon: const Icon(Icons.pets),
+        isMobile: isMobile,
+        context: context,
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+      ],
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return null; // Optional field
+        }
+        final number = double.tryParse(value);
+        if (number == null || number <= 0) {
+          return l10n.unitWizardStep3PetFeeInvalid;
+        }
+        return null;
+      },
     );
   }
 }

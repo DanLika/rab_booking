@@ -9798,6 +9798,108 @@ abstract class AppLocalizations {
   /// **'Max must be >= min ({min})'**
   String unitWizardStep3MaxStayMinError(int min);
 
+  /// No description provided for @unitWizardStep3ExtraFeesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra Guest & Pet Fees'**
+  String get unitWizardStep3ExtraFeesTitle;
+
+  /// No description provided for @unitWizardStep3ExtraFeesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Set fees for extra guests and pets (optional)'**
+  String get unitWizardStep3ExtraFeesDesc;
+
+  /// No description provided for @unitWizardStep3MaxTotalCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Total Capacity'**
+  String get unitWizardStep3MaxTotalCapacity;
+
+  /// No description provided for @unitWizardStep3MaxTotalCapacityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 6'**
+  String get unitWizardStep3MaxTotalCapacityHint;
+
+  /// No description provided for @unitWizardStep3MaxTotalCapacityHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Total guests including extra beds'**
+  String get unitWizardStep3MaxTotalCapacityHelper;
+
+  /// No description provided for @unitWizardStep3MaxTotalCapacityInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be greater than base capacity'**
+  String get unitWizardStep3MaxTotalCapacityInvalid;
+
+  /// No description provided for @unitWizardStep3ExtraBedFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra Bed Fee (€/night)'**
+  String get unitWizardStep3ExtraBedFee;
+
+  /// No description provided for @unitWizardStep3ExtraBedFeeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 10'**
+  String get unitWizardStep3ExtraBedFeeHint;
+
+  /// No description provided for @unitWizardStep3ExtraBedFeeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Per extra person per night'**
+  String get unitWizardStep3ExtraBedFeeHelper;
+
+  /// No description provided for @unitWizardStep3PetFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet Fee (€/night)'**
+  String get unitWizardStep3PetFee;
+
+  /// No description provided for @unitWizardStep3PetFeeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 10'**
+  String get unitWizardStep3PetFeeHint;
+
+  /// No description provided for @unitWizardStep3PetFeeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Per pet per night'**
+  String get unitWizardStep3PetFeeHelper;
+
+  /// No description provided for @unitWizardStep3ExtraBedFeeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount'**
+  String get unitWizardStep3ExtraBedFeeInvalid;
+
+  /// No description provided for @unitWizardStep3PetFeeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount'**
+  String get unitWizardStep3PetFeeInvalid;
+
+  /// No description provided for @unitWizardStep5ExtraBedFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra Bed Fee'**
+  String get unitWizardStep5ExtraBedFee;
+
+  /// No description provided for @unitWizardStep5PetFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet Fee'**
+  String get unitWizardStep5PetFee;
+
+  /// No description provided for @unitWizardStep5MaxTotalCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Capacity'**
+  String get unitWizardStep5MaxTotalCapacity;
+
   /// No description provided for @unitWizardStep3Availability.
   ///
   /// In en, this message translates to:

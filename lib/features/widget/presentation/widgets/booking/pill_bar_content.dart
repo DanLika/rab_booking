@@ -14,6 +14,10 @@ class PillBarContent extends StatelessWidget {
   final String formattedRoomPrice;
   final double additionalServicesTotal;
   final String formattedAdditionalServices;
+  final double extraGuestFees;
+  final String? formattedExtraGuestFees;
+  final double petFees;
+  final String? formattedPetFees;
   final String formattedTotal;
   final String formattedDeposit;
   final int depositPercentage;
@@ -36,6 +40,10 @@ class PillBarContent extends StatelessWidget {
     required this.formattedRoomPrice,
     required this.additionalServicesTotal,
     required this.formattedAdditionalServices,
+    this.extraGuestFees = 0,
+    this.formattedExtraGuestFees,
+    this.petFees = 0,
+    this.formattedPetFees,
     required this.formattedTotal,
     required this.formattedDeposit,
     required this.depositPercentage,
@@ -138,6 +146,10 @@ class PillBarContent extends StatelessWidget {
           formattedRoomPrice: formattedRoomPrice,
           additionalServicesTotal: additionalServicesTotal,
           formattedAdditionalServices: formattedAdditionalServices,
+          extraGuestFees: extraGuestFees,
+          formattedExtraGuestFees: formattedExtraGuestFees,
+          petFees: petFees,
+          formattedPetFees: formattedPetFees,
           formattedTotal: formattedTotal,
           formattedDeposit: formattedDeposit,
           depositPercentage: depositPercentage,

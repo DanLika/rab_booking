@@ -5306,6 +5306,61 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
+  String get unitWizardStep3ExtraFeesTitle =>
+      'Naknade za dodatne goste i ljubimce';
+
+  @override
+  String get unitWizardStep3ExtraFeesDesc =>
+      'Postavite naknade za dodatne goste i ljubimce (opcionalno)';
+
+  @override
+  String get unitWizardStep3MaxTotalCapacity => 'Maks. ukupni kapacitet';
+
+  @override
+  String get unitWizardStep3MaxTotalCapacityHint => 'npr. 6';
+
+  @override
+  String get unitWizardStep3MaxTotalCapacityHelper =>
+      'Ukupno gostiju uključujući pomoćne ležajeve';
+
+  @override
+  String get unitWizardStep3MaxTotalCapacityInvalid =>
+      'Mora biti veće od osnovnog kapaciteta';
+
+  @override
+  String get unitWizardStep3ExtraBedFee => 'Naknada za pomoćni ležaj (€/noć)';
+
+  @override
+  String get unitWizardStep3ExtraBedFeeHint => 'npr. 10';
+
+  @override
+  String get unitWizardStep3ExtraBedFeeHelper => 'Po osobi po noćenju';
+
+  @override
+  String get unitWizardStep3PetFee => 'Naknada za ljubimce (€/noć)';
+
+  @override
+  String get unitWizardStep3PetFeeHint => 'npr. 10';
+
+  @override
+  String get unitWizardStep3PetFeeHelper => 'Po ljubimcu po noćenju';
+
+  @override
+  String get unitWizardStep3ExtraBedFeeInvalid => 'Unesite ispravni iznos';
+
+  @override
+  String get unitWizardStep3PetFeeInvalid => 'Unesite ispravni iznos';
+
+  @override
+  String get unitWizardStep5ExtraBedFee => 'Naknada za pomoćni ležaj';
+
+  @override
+  String get unitWizardStep5PetFee => 'Naknada za ljubimce';
+
+  @override
+  String get unitWizardStep5MaxTotalCapacity => 'Maks. kapacitet';
+
+  @override
   String get unitWizardStep3Availability => 'Dostupnost';
 
   @override

@@ -5276,6 +5276,60 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get unitWizardStep3ExtraFeesTitle => 'Extra Guest & Pet Fees';
+
+  @override
+  String get unitWizardStep3ExtraFeesDesc =>
+      'Set fees for extra guests and pets (optional)';
+
+  @override
+  String get unitWizardStep3MaxTotalCapacity => 'Max Total Capacity';
+
+  @override
+  String get unitWizardStep3MaxTotalCapacityHint => 'e.g. 6';
+
+  @override
+  String get unitWizardStep3MaxTotalCapacityHelper =>
+      'Total guests including extra beds';
+
+  @override
+  String get unitWizardStep3MaxTotalCapacityInvalid =>
+      'Must be greater than base capacity';
+
+  @override
+  String get unitWizardStep3ExtraBedFee => 'Extra Bed Fee (€/night)';
+
+  @override
+  String get unitWizardStep3ExtraBedFeeHint => 'e.g. 10';
+
+  @override
+  String get unitWizardStep3ExtraBedFeeHelper => 'Per extra person per night';
+
+  @override
+  String get unitWizardStep3PetFee => 'Pet Fee (€/night)';
+
+  @override
+  String get unitWizardStep3PetFeeHint => 'e.g. 10';
+
+  @override
+  String get unitWizardStep3PetFeeHelper => 'Per pet per night';
+
+  @override
+  String get unitWizardStep3ExtraBedFeeInvalid => 'Enter a valid amount';
+
+  @override
+  String get unitWizardStep3PetFeeInvalid => 'Enter a valid amount';
+
+  @override
+  String get unitWizardStep5ExtraBedFee => 'Extra Bed Fee';
+
+  @override
+  String get unitWizardStep5PetFee => 'Pet Fee';
+
+  @override
+  String get unitWizardStep5MaxTotalCapacity => 'Max Capacity';
+
+  @override
   String get unitWizardStep3Availability => 'Availability';
 
   @override

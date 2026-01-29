@@ -1203,6 +1203,90 @@ class WidgetTranslations {
     }
   }
 
+  String get pets {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ljubimci';
+      case 'de':
+        return 'Haustiere';
+      case 'it':
+        return 'Animali';
+      case 'en':
+      default:
+        return 'Pets';
+    }
+  }
+
+  String get petsNotAllowed {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ljubimci nisu dozvoljeni';
+      case 'de':
+        return 'Haustiere nicht erlaubt';
+      case 'it':
+        return 'Animali non ammessi';
+      case 'en':
+      default:
+        return 'Pets not allowed';
+    }
+  }
+
+  String extraGuestFeeLabel(String amount) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Dodatni gosti ($amount/noć po osobi)';
+      case 'de':
+        return 'Zusätzliche Gäste ($amount/Nacht pro Person)';
+      case 'it':
+        return 'Ospiti extra ($amount/notte per persona)';
+      case 'en':
+      default:
+        return 'Extra guests ($amount/night per person)';
+    }
+  }
+
+  String petFeeLabel(String amount) {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ljubimci ($amount/noć po ljubimcu)';
+      case 'de':
+        return 'Haustiere ($amount/Nacht pro Tier)';
+      case 'it':
+        return 'Animali ($amount/notte per animale)';
+      case 'en':
+      default:
+        return 'Pets ($amount/night per pet)';
+    }
+  }
+
+  String get extraGuestFees {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Naknada za dodatne goste';
+      case 'de':
+        return 'Zusatzgäste-Gebühr';
+      case 'it':
+        return 'Supplemento ospiti extra';
+      case 'en':
+      default:
+        return 'Extra guest fees';
+    }
+  }
+
+  String get petFees {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Naknada za ljubimce';
+      case 'de':
+        return 'Haustiergebühr';
+      case 'it':
+        return 'Supplemento animali';
+      case 'en':
+      default:
+        return 'Pet fees';
+    }
+  }
+
   // ============================================================================
   // RESERVE BUTTON TRANSLATIONS
   // ============================================================================

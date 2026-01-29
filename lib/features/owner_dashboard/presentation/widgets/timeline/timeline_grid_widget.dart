@@ -300,17 +300,14 @@ class _TimelineUnitRow extends StatelessWidget {
       if (!dayWidth.isFinite || dayWidth <= 0) continue;
 
       // Calculate absolute left position using daysSinceFixedStart
-      // This positions the booking correctly in the full scrollable area
+      // Container left = check-in day's left column boundary.
       //
-      // PARALLELOGRAM POSITIONING:
-      // The Positioned widget's left edge aligns with the check-in day column boundary.
-      // The parallelogram shape (painted by SkewedBookingPainter) naturally creates
-      // the diagonal check-in/check-out visual:
-      //   - Bottom-left corner at x=0 (left edge of check-in day column)
-      //   - Top-left corner at x=skewOffset (near right edge of check-in day column)
-      //   - Top-right corner at x=width (right edge of check-out day column)
-      //   - Bottom-right at x=width-skewOffset (near left edge of check-out day column)
-      // On turnover days, diagonals meet at the center of the shared cell with a gap.
+      // The parallelogram's bottom-left corner (0, height) sits at this boundary,
+      // and the check-in diagonal fills the check-in day column from bottom-left
+      // to top-right (skewOffset, 0). No horizontal shift needed.
+      //
+      // Turnover alignment: adjacent bookings' diagonals meet in the shared day
+      // column with a 4px gap (turnoverGap) between them at mid-height.
       final left = (daysSinceFixedStart * dayWidth).floorToDouble();
       final width = ((nights + 1) * dayWidth).floorToDouble();
 

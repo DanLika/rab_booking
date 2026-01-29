@@ -208,10 +208,14 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
                     const SizedBox(height: 32),
 
                     // Action buttons
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
                       children: [
                         // Go Home button (guaranteed to work)
-                        Expanded(
+                        SizedBox(
+                          width: 170,
                           child: OutlinedButton.icon(
                             onPressed: () => _navigateToHome(context),
                             icon: const Icon(Icons.home_outlined, size: 20),
@@ -224,9 +228,9 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
                         // Try Again button
-                        Expanded(
+                        SizedBox(
+                          width: 170,
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: context.gradients.brandPrimary,
@@ -346,19 +350,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
   }
 
   void _navigateToHome(BuildContext context) {
-    // Use global navigator key for reliable navigation during error recovery
-    try {
-      final navigator = rootNavigatorKey.currentState;
-      if (navigator != null) {
-        // Clear all routes and go to dashboard
-        navigator.pushNamedAndRemoveUntil('/owner/dashboard', (_) => false);
-        return;
-      }
-    } catch (e) {
-      debugPrint('Global navigator failed: ${_safeExceptionToString(e)}');
-    }
-
-    // Fallback: try GoRouter context
+    // Primary: GoRouter (most reliable with GoRouter-based apps)
     try {
       final router = GoRouter.maybeOf(context);
       if (router != null) {
@@ -366,35 +358,25 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint('GoRouter fallback failed: ${_safeExceptionToString(e)}');
+      debugPrint('GoRouter failed: ${_safeExceptionToString(e)}');
     }
 
-    // Last resort: try Navigator.of(context)
-    try {
-      Navigator.of(
-        context,
-        rootNavigator: true,
-      ).pushNamedAndRemoveUntil('/owner/dashboard', (_) => false);
-    } catch (navError) {
-      debugPrint(
-        'All navigation methods failed: ${_safeExceptionToString(navError)}',
-      );
-    }
-  }
-
-  void _tryAgain(BuildContext context) {
-    // Use global navigator key for reliable navigation during error recovery
+    // Fallback: global navigator key
     try {
       final navigator = rootNavigatorKey.currentState;
-      if (navigator != null && navigator.canPop()) {
-        navigator.pop();
+      if (navigator != null) {
+        navigator.pushNamedAndRemoveUntil('/owner/dashboard', (_) => false);
         return;
       }
     } catch (e) {
-      debugPrint('Global navigator pop failed: ${_safeExceptionToString(e)}');
+      debugPrint('Global navigator failed: ${_safeExceptionToString(e)}');
     }
 
-    // Fallback: try GoRouter context
+    debugPrint('All navigation methods failed');
+  }
+
+  void _tryAgain(BuildContext context) {
+    // Primary: GoRouter pop
     try {
       final router = GoRouter.maybeOf(context);
       if (router != null && context.canPop()) {
@@ -403,6 +385,17 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
       }
     } catch (e) {
       debugPrint('GoRouter pop failed: ${_safeExceptionToString(e)}');
+    }
+
+    // Fallback: global navigator key
+    try {
+      final navigator = rootNavigatorKey.currentState;
+      if (navigator != null && navigator.canPop()) {
+        navigator.pop();
+        return;
+      }
+    } catch (e) {
+      debugPrint('Global navigator pop failed: ${_safeExceptionToString(e)}');
     }
 
     // Can't go back, go home instead

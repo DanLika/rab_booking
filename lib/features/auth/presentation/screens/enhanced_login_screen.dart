@@ -627,7 +627,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Expanded(
+                    Flexible(
                       child: Text(
                         l10n.authRememberMe,
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -642,19 +642,21 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
             ),
           ),
         ),
-        Flexible(
-          child: TextButton(
-            onPressed: () => context.push(OwnerRoutes.forgotPassword),
-            child: Text(
-              l10n.authForgotPassword,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 13,
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
+        TextButton(
+          onPressed: () => context.push(OwnerRoutes.forgotPassword),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            l10n.authForgotPassword,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 13,
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

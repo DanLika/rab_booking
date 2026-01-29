@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/models/unit_model.dart';
-import '../../../../../core/constants/app_dimensions.dart';
-import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../l10n/app_localizations.dart';
 
 /// Timeline unit name cell widget
@@ -28,22 +26,16 @@ class TimelineUnitNameCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < AppDimensions.mobile;
-    final isLandscape = ResponsiveSpacingHelper.isLandscapeMobile(context);
 
-    // Landscape mobile needs more compact layout
-    final cellPadding = isLandscape
-        ? const EdgeInsets.symmetric(horizontal: 4, vertical: 2)
-        : EdgeInsets.all(
-            isMobile ? AppDimensions.spaceXS : AppDimensions.spaceS,
-          );
-    final iconPadding = isLandscape ? 3.0 : (isMobile ? 4.0 : 6.0);
-    final iconSize = isLandscape ? 12.0 : (isMobile ? 14.0 : 16.0);
-    final nameFontSize = isLandscape ? 11.0 : (isMobile ? 12.0 : 13.0);
-    final guestsFontSize = isLandscape ? 9.0 : (isMobile ? 10.0 : 11.0);
-    final spacingBetween = isLandscape ? 2.0 : 1.0;
-    final iconSpacing = isLandscape ? 4.0 : (isMobile ? 6.0 : 8.0);
+    // Fixed compact values — matches fixed 42px row height from TimelineDimensions.
+    // Same on all devices (mobile cell size is the standard).
+    const cellPadding = EdgeInsets.symmetric(horizontal: 6, vertical: 2);
+    const iconPadding = 4.0;
+    const iconSize = 14.0;
+    const nameFontSize = 12.0;
+    const guestsFontSize = 10.0;
+    const spacingBetween = 1.0;
+    const iconSpacing = 6.0;
 
     return InkWell(
       onTap: onTap,
@@ -61,7 +53,7 @@ class TimelineUnitNameCell extends StatelessWidget {
           children: [
             // Bed icon - smaller and more subtle
             Container(
-              padding: EdgeInsets.all(iconPadding),
+              padding: const EdgeInsets.all(iconPadding),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(6),
@@ -72,7 +64,7 @@ class TimelineUnitNameCell extends StatelessWidget {
                 color: theme.colorScheme.primary.withValues(alpha: 0.8),
               ),
             ),
-            SizedBox(width: iconSpacing),
+            const SizedBox(width: iconSpacing),
             // Unit info - more space for text
             Expanded(
               child: Column(
@@ -90,7 +82,7 @@ class TimelineUnitNameCell extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: spacingBetween),
+                  const SizedBox(height: spacingBetween),
                   Builder(
                     builder: (context) {
                       final l10n = AppLocalizations.of(context);

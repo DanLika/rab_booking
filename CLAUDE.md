@@ -24,6 +24,7 @@ an |
 | Subdomain validation regex | `/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/` (3-30 chars) |
 | `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |
 | Navigator.push za confirmation | NE vraaj state-based navigaciju |
+| Timeline Calendar fixed dimensions (`timeline_dimensions.dart`) | FIXED 50/42/100/60px za SVE uređaje — NE vraćaj responsive breakpoints |
 
 ---
 
@@ -763,7 +764,33 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-28 | **Version**: 6.45
+**Last Updated**: 2026-01-29 | **Version**: 6.46
+
+**Changelog 6.46**: Timeline Calendar Fixed Dimensions & UI Fixes:
+- **Timeline Calendar — Fixed Cell Dimensions** (`timeline_dimensions.dart`):
+  - **Problem**: Parallelogram booking blocks don't align correctly across different screen sizes. Responsive breakpoint-based sizing creates different cell widths per device, making positioning impossible to fix for all breakpoints simultaneously.
+  - **Solution**: Replaced ALL responsive dimension calculations with fixed constants based on mobile 360px values. Timeline is horizontally scrollable, so wider screens simply show more days with the same cell size.
+  - **Fixed values**: dayWidth=50px, rowHeight=42px, columnWidth=100px, headerHeight=60px
+  - **Result**: Mobile ~5 days visible, Tablet ~12 days, Desktop ~25 days (scroll for more)
+  - **Files**: `timeline_dimensions.dart` (single source of truth for all 11 timeline consumer files)
+- **Booking Block Positioning Fix** (`timeline_grid_widget.dart`):
+  - **Problem**: Parallelogram left edge bled into previous day (e.g., booking starting Feb 1 visible in Jan 31)
+  - **Root Cause**: `- skewOffset/2` shift (23px) pushed bottom-left corner of parallelogram into previous day
+  - **Fix**: Removed the shift — container left = `daysSinceFixedStart * dayWidth` (no offset)
+  - Bottom-left corner now aligns with check-in day's left column boundary
+  - Turnover gaps between adjacent bookings remain correct (4px)
+- **Timeline Components — Fixed Compact Sizing**:
+  - `timeline_unit_name_cell.dart`: Replaced responsive font/padding with fixed compact values (12px/10px fonts, 6px horizontal padding). Fixes 2px overflow from 42px row height.
+  - `timeline_date_header.dart`: Month header font fixed at 11px, day header circle 24px, font 12px, padding 6px. No more responsive breakpoints.
+  - `timeline_summary_cell.dart`: Hardcoded narrow layout (`isNarrow: true`) since dayWidth is always 50px.
+- **Login Screen RenderFlex Overflow Fix** (`enhanced_login_screen.dart`):
+  - **Problem**: 6.1px overflow in Remember Me row on narrow screens
+  - **Fix**: Changed inner text to `Flexible`, compact padding on forgot password button
+- **Error Boundary Fixes** (`error_boundary.dart`):
+  - Fixed 25px button overflow: Changed `Row` with `Expanded` to `Wrap` with fixed-width `SizedBox(170)`
+  - Fixed Navigator error: GoRouter as primary navigation, global navigator key as fallback
+- **Social Login Icon Fallback** (`social_login_button.dart`):
+  - Added `errorBuilder` to Google and Apple brand icons — shows Material icon if asset fails to load
 
 **Changelog 6.45**: Android Property Form Navigation Crash Fix:
 - **Problem**: App crashed on Android (release mode) when clicking "Add Property" after completing registration

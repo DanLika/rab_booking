@@ -149,6 +149,11 @@ class GoogleBrandIcon extends StatelessWidget {
         width: size,
         height: size,
         filterQuality: FilterQuality.high,
+        errorBuilder: (context, error, stackTrace) => Icon(
+          Icons.g_mobiledata,
+          size: size,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
     );
   }
@@ -168,6 +173,11 @@ class AppleBrandIcon extends StatelessWidget {
         width: size,
         height: size,
         filterQuality: FilterQuality.high,
+        errorBuilder: (context, error, stackTrace) => Icon(
+          Icons.apple,
+          size: size,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
     );
   }

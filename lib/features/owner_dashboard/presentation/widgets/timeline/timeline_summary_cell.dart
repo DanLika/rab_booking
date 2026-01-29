@@ -35,10 +35,6 @@ class TimelineSummaryCell extends StatelessWidget {
     // Calculate statistics using shared DailyStats
     final stats = DailyStats.calculate(date, bookingsByUnit);
 
-    // Responsive sizing
-    final isNarrow = dayWidth < 60;
-    final isVeryNarrow = dayWidth < 45;
-
     return Container(
       width: dayWidth,
       decoration: BoxDecoration(
@@ -55,15 +51,8 @@ class TimelineSummaryCell extends StatelessWidget {
           ),
         ),
       ),
-      padding: EdgeInsets.symmetric(
-        vertical: isVeryNarrow ? 3 : 6,
-        horizontal: isVeryNarrow ? 2 : 4,
-      ),
-      child: DailyStatsColumn(
-        stats: stats,
-        isNarrow: isNarrow,
-        isVeryNarrow: isVeryNarrow,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: DailyStatsColumn(stats: stats, isNarrow: true),
     );
   }
 }

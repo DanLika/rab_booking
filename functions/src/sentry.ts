@@ -6,11 +6,11 @@
  */
 
 import * as Sentry from "@sentry/node";
+import {defineSecret} from "firebase-functions/params";
 import {logInfo, logError} from "./logger";
 
-// Sentry DSN for Cloud Functions error tracking
-const SENTRY_DSN =
-  "https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144";
+// Define the secret
+const sentryDsn = defineSecret("SENTRY_DSN");
 
 // Track initialization state
 let isInitialized = false;
@@ -26,7 +26,7 @@ export function initSentry(): void {
 
   try {
     Sentry.init({
-      dsn: SENTRY_DSN,
+      dsn: sentryDsn.value(),
       environment: process.env.FUNCTIONS_EMULATOR ? "development" : "production",
       tracesSampleRate: 0.1, // 10% of transactions for performance monitoring
       // Tag all events as coming from cloud functions

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'logging_service.dart';
 
 /// Rate limiting model for login attempts
 class LoginAttempt {
@@ -129,6 +131,9 @@ class RateLimitService {
 
       return attempt;
     } catch (e) {
+      unawaited(LoggingService.logError(
+        'Failed to check rate limit for $sanitizedEmail', e,
+      ));
       // If we can't check rate limit, allow the attempt (fail open)
       return null;
     }
@@ -205,6 +210,9 @@ class RateLimitService {
       await _attemptsCollection.doc(sanitizedEmail).delete();
       _memoryCache.remove(sanitizedEmail); // Clear cache
     } catch (e) {
+      unawaited(LoggingService.logError(
+        'Failed to reset login attempts for $sanitizedEmail', e,
+      ));
       // Ignore deletion errors
     }
   }

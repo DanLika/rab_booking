@@ -18,7 +18,6 @@ import '../providers/unified_bookings_provider.dart';
 import '../../domain/models/bookings_view_mode.dart';
 import '../../domain/models/overbooking_conflict.dart';
 import '../../domain/models/unified_booking_item.dart';
-import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../core/theme/theme_extensions.dart';

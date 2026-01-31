@@ -843,9 +843,10 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
     });
 
     // Return user-friendly error message
+    // SECURITY: Don't expose internal error details to client
     throw new HttpsError(
       "internal",
-      error.message || "Failed to create checkout session. Please try again."
+      "Failed to create checkout session. Please try again."
     );
   }
 });
@@ -1363,7 +1364,8 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       });
     } catch (error: any) {
       logError("Error processing webhook", error);
-      res.status(500).send(`Error: ${error.message}`);
+      // SECURITY: Don't expose internal error details to client
+      res.status(500).send("Internal server error");
     }
   } else {
     // Unexpected event type

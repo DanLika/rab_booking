@@ -4,12 +4,14 @@
  * @param {string} userName - The display name of the user.
  * @return {object} An object containing the email subject and html content.
  */
+import {escapeHtml} from "../utils/template-helpers";
+
 export const getTrialExpiredTemplate = (userName: string) => {
   const subject = "Vaš BookBed probni period je istekao";
 
   // TODO: Create a visually appealing HTML template
   const html = `
-    <p>Poštovani ${userName},</p>
+    <p>Poštovani ${escapeHtml(userName)},</p>
     <p>
       Vaš besplatni probni period za BookBed je istekao.
     </p>

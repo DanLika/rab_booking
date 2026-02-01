@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'logging_service.dart';
 
 /// Rate limiting model for login attempts
 class LoginAttempt {
@@ -135,78 +137,48 @@ class RateLimitService {
   }
 
   /// Record a failed login attempt
-  Future<LoginAttempt> recordFailedAttempt(String email) async {
+  /// SECURITY: Calls Cloud Function instead of writing directly to Firestore
+  Future<LoginAttempt?> recordFailedAttempt(String email) async {
     final sanitizedEmail = _sanitizeEmail(email);
-    final docRef = _attemptsCollection.doc(sanitizedEmail);
 
     try {
-      final doc = await docRef.get();
+      final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+      final callable = functions.httpsCallable('recordFailedLoginAttempt');
+      await callable.call({'email': email});
 
-      LoginAttempt attempt;
-
-      if (!doc.exists || doc.data() == null) {
-        // First failed attempt
-        attempt = LoginAttempt(
-          email: email,
-          attemptCount: 1,
-          lastAttemptAt: DateTime.now(),
-        );
-      } else {
-        final existing = LoginAttempt.fromFirestore(
-          doc.data() as Map<String, dynamic>,
-        );
-
-        // Reset if last attempt was > 1 hour ago
-        if (DateTime.now().difference(existing.lastAttemptAt) >
-            attemptResetDuration) {
-          attempt = LoginAttempt(
-            email: email,
-            attemptCount: 1,
-            lastAttemptAt: DateTime.now(),
-          );
-        } else {
-          // Increment attempt count
-          final newCount = existing.attemptCount + 1;
-          final lockedUntil = newCount >= maxAttempts
-              ? DateTime.now().add(lockoutDuration)
-              : null;
-
-          attempt = LoginAttempt(
-            email: email,
-            attemptCount: newCount,
-            lockedUntil: lockedUntil,
-            lastAttemptAt: DateTime.now(),
-          );
-        }
-      }
-
-      // Save to Firestore
-      await docRef.set(attempt.toFirestore());
-
-      // Update cache if locked
-      if (attempt.isLocked) {
-        _memoryCache[sanitizedEmail] = attempt;
-      }
-
-      return attempt;
+      // After recording on server, fetch updated status
+      return await checkRateLimit(email);
     } catch (e) {
-      rethrow;
+      LoggingService.log(
+        'Failed to record failed login attempt via Cloud Function: $e',
+        tag: 'SECURITY_WARNING',
+      );
+      // Fallback: fetch current status anyway
+      return await checkRateLimit(email);
     }
   }
 
   /// Reset attempts after successful login
+  /// SECURITY: Calls Cloud Function instead of writing directly to Firestore
   Future<void> resetAttempts(String email) async {
-    await _resetAttempts(email);
-  }
-
-  Future<void> _resetAttempts(String email) async {
     final sanitizedEmail = _sanitizeEmail(email);
     try {
-      await _attemptsCollection.doc(sanitizedEmail).delete();
-      _memoryCache.remove(sanitizedEmail); // Clear cache
+      final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+      final callable = functions.httpsCallable('resetLoginAttempts');
+      await callable.call({'email': email});
+
+      _memoryCache.remove(sanitizedEmail); // Clear local cache
     } catch (e) {
-      // Ignore deletion errors
+      LoggingService.log(
+        'Failed to reset login attempts via Cloud Function: $e',
+        tag: 'SECURITY_WARNING',
+      );
     }
+  }
+
+  @Deprecated('Use resetAttempts instead')
+  Future<void> _resetAttempts(String email) async {
+    await resetAttempts(email);
   }
 
   /// Sanitize email for use as Firestore document ID

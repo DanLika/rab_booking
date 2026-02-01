@@ -109,7 +109,8 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
     };
   } catch (error: any) {
     logError("Error creating subscription checkout session", error);
-    throw new HttpsError("internal", error.message || "Failed to create checkout session.");
+    // SECURITY: Return generic message to client, log details internally
+    throw new HttpsError("internal", "Failed to create checkout session. Please try again later.");
   }
 });
 
@@ -144,6 +145,7 @@ export const createCustomerPortalSession = onCall({secrets: [stripeSecretKey]}, 
     return {url: session.url};
   } catch (error: any) {
     logError("Error creating portal session", error);
-    throw new HttpsError("internal", error.message);
+    // SECURITY: Return generic message to client
+    throw new HttpsError("internal", "Failed to create customer portal session. Please try again later.");
   }
 });

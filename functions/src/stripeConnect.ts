@@ -95,7 +95,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
     logError("Error creating Stripe Connect account", error);
     throw new HttpsError(
       "internal",
-      error.message || "Failed to create Stripe account"
+      "Failed to create Stripe account."
     );
   }
 });
@@ -179,7 +179,7 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
     logError("Error getting Stripe account status", error);
     throw new HttpsError(
       "internal",
-      error.message || "Failed to get account status"
+      "Failed to get account status."
     );
   }
 });
@@ -235,7 +235,7 @@ export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey]}, asyn
     logError("Error disconnecting Stripe account", error);
     throw new HttpsError(
       "internal",
-      error.message || "Failed to disconnect account"
+      "Failed to disconnect account."
     );
   }
 });

@@ -1,12 +1,39 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/enhanced_auth_provider.dart';
+import '../presentation/screens/activity_log_screen.dart';
 import '../presentation/screens/admin_dashboard_screen.dart';
 import '../presentation/screens/admin_login_screen.dart';
 import '../presentation/screens/admin_shell_screen.dart';
 import '../presentation/screens/user_detail_screen.dart';
 import '../presentation/screens/users_list_screen.dart';
+
+/// Fade transition for tab-like navigation (dashboard, users, activity log)
+CustomTransitionPage<void> _fadePage(LocalKey key, Widget child) =>
+    CustomTransitionPage(
+      key: key,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 200),
+      transitionsBuilder: (_, animation, _, child) =>
+          FadeTransition(opacity: animation, child: child),
+    );
+
+/// Slide transition for drill-down navigation (user detail)
+CustomTransitionPage<void> _slidePage(LocalKey key, Widget child) =>
+    CustomTransitionPage(
+      key: key,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 250),
+      transitionsBuilder: (_, animation, _, child) => SlideTransition(
+        position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+            .animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            ),
+        child: child,
+      ),
+    );
 
 /// Admin router provider
 final adminRouterProvider = Provider<GoRouter>((ref) {
@@ -39,30 +66,39 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/login',
-        builder: (context, state) =>
-            AdminLoginScreen(errorMessage: state.uri.queryParameters['error']),
+        pageBuilder: (context, state) => _fadePage(
+          state.pageKey,
+          AdminLoginScreen(errorMessage: state.uri.queryParameters['error']),
+        ),
       ),
       ShellRoute(
-        builder: (context, state, child) => AdminShellScreen(child: child),
+        builder: (context, state, child) =>
+            AdminShellScreen(currentPath: state.matchedLocation, child: child),
         routes: [
           GoRoute(
             path: '/dashboard',
-            builder: (context, state) => const AdminDashboardScreen(),
+            pageBuilder: (context, state) =>
+                _fadePage(state.pageKey, const AdminDashboardScreen()),
           ),
           GoRoute(
             path: '/users',
-            builder: (context, state) => const UsersListScreen(),
+            pageBuilder: (context, state) =>
+                _fadePage(state.pageKey, const UsersListScreen()),
           ),
           GoRoute(
             path: '/users/:userId',
-            builder: (context, state) =>
-                UserDetailScreen(userId: state.pathParameters['userId']!),
+            pageBuilder: (context, state) => _slidePage(
+              state.pageKey,
+              UserDetailScreen(userId: state.pathParameters['userId']!),
+            ),
+          ),
+          GoRoute(
+            path: '/activity-log',
+            pageBuilder: (context, state) =>
+                _fadePage(state.pageKey, const ActivityLogScreen()),
           ),
         ],
       ),
     ],
   );
 });
-
-/// Admin navigation state
-final adminNavIndexProvider = StateProvider<int>((ref) => 0);

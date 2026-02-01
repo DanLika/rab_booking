@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,12 +25,61 @@ class UserDetailScreen extends ConsumerStatefulWidget {
 
 class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
   // Form state
-  AccountType? _selectedAccountType;
   bool? _hideSubscription;
-  bool? _adminOverrideAccountType;
   bool _isLoading = false;
   String? _errorMessage;
   String? _successMessage;
+  Timer? _successDismissTimer;
+
+  @override
+  void didUpdateWidget(covariant UserDetailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userId != widget.userId) {
+      _hideSubscription = null;
+      _errorMessage = null;
+      _successMessage = null;
+      _successDismissTimer?.cancel();
+    }
+  }
+
+  @override
+  void dispose() {
+    _successDismissTimer?.cancel();
+    super.dispose();
+  }
+
+  void _showSuccess(String message) {
+    _successDismissTimer?.cancel();
+    setState(() {
+      _successMessage = message;
+      _errorMessage = null;
+    });
+    _successDismissTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) {
+        setState(() => _successMessage = null);
+      }
+    });
+  }
+
+  String _sanitizeError(Object error) {
+    String message = error.toString();
+    // Handle Cloud Functions exceptions - extract human-readable message
+    final cfMatch = RegExp(
+      r'\[cloud_functions/[^\]]+\]\s*(.*)',
+    ).firstMatch(message);
+    if (cfMatch != null && cfMatch.group(1)!.isNotEmpty) {
+      return cfMatch.group(1)!;
+    }
+    // Strip common prefixes
+    message = message
+        .replaceAll('Exception: ', '')
+        .replaceAll(RegExp(r'^\[.*?\]\s*'), '')
+        .trim();
+    if (message.isEmpty || message.length > 200) {
+      return 'An error occurred. Please try again.';
+    }
+    return message;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,11 +94,7 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
           if (user == null) return const _ErrorState(message: 'User not found');
 
           // Initialize state if needed
-          _selectedAccountType ??=
-              user.adminOverrideAccountType ?? user.accountType;
-
           _hideSubscription ??= user.hideSubscription;
-          _adminOverrideAccountType ??= user.adminOverrideAccountType != null;
 
           return Column(
             children: [
@@ -64,19 +112,18 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                             const SizedBox(height: 16),
                             _StatisticsCard(user: user),
                             const SizedBox(height: 16),
-                            _AdminControlsCard(
+                            _UserStatusCard(
                               user: user,
-                              selectedAccountType: _selectedAccountType!,
-                              hideSubscription: _hideSubscription ?? false,
-                              adminOverride: _adminOverrideAccountType ?? false,
                               isLoading: _isLoading,
-                              onAccountTypeChanged: (val) =>
-                                  setState(() => _selectedAccountType = val),
+                              onStatusChange: (status) =>
+                                  _updateUserStatus(user, status),
+                            ),
+                            const SizedBox(height: 16),
+                            _AdminControlsCard(
+                              hideSubscription: _hideSubscription ?? false,
+                              isLoading: _isLoading,
                               onHideSubscriptionChanged: (val) =>
                                   setState(() => _hideSubscription = val),
-                              onAdminOverrideChanged: (val) => setState(
-                                () => _adminOverrideAccountType = val,
-                              ),
                               onSave: () => _saveChanges(user),
                             ),
                             const SizedBox(height: 16),
@@ -108,22 +155,19 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
                               flex: 3,
                               child: Column(
                                 children: [
-                                  _AdminControlsCard(
+                                  _UserStatusCard(
                                     user: user,
-                                    selectedAccountType: _selectedAccountType!,
+                                    isLoading: _isLoading,
+                                    onStatusChange: (status) =>
+                                        _updateUserStatus(user, status),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  _AdminControlsCard(
                                     hideSubscription:
                                         _hideSubscription ?? false,
-                                    adminOverride:
-                                        _adminOverrideAccountType ?? false,
                                     isLoading: _isLoading,
-                                    onAccountTypeChanged: (val) => setState(
-                                      () => _selectedAccountType = val,
-                                    ),
                                     onHideSubscriptionChanged: (val) =>
                                         setState(() => _hideSubscription = val),
-                                    onAdminOverrideChanged: (val) => setState(
-                                      () => _adminOverrideAccountType = val,
-                                    ),
                                     onSave: () => _saveChanges(user),
                                   ),
                                   const SizedBox(height: 24),
@@ -279,43 +323,57 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
     try {
       final repo = ref.read(adminUsersRepositoryProvider);
 
-      // Update account type / override
-      if (_adminOverrideAccountType == true ||
-          user.adminOverrideAccountType != null) {
-        // If override is enabled (or was enabled), update it
-        // Check if we need to clear it (if _adminOverrideAccountType is false)
-        await repo.updateAdminFlags(
-          user.id,
-          adminOverrideAccountType: _adminOverrideAccountType!
-              ? _selectedAccountType
-              : null,
-          clearOverride: !_adminOverrideAccountType!,
-          hideSubscription: _hideSubscription,
-        );
-      } else {
-        // Just regular settings update
-        await repo.updateAdminFlags(
-          user.id,
-          hideSubscription: _hideSubscription,
-        );
-      }
-
-      // Also update regular account type if not overridden
-      if (!_adminOverrideAccountType! &&
-          _selectedAccountType != user.accountType) {
-        await repo.updateAccountType(user.id, _selectedAccountType!);
-      }
+      await repo.updateAdminFlags(user.id, hideSubscription: _hideSubscription);
 
       ref.invalidate(userDetailProvider(user.id));
       ref.invalidate(ownersListProvider);
 
-      setState(() {
-        _successMessage = 'Changes saved successfully';
-        _isLoading = false;
-      });
+      // Clear form state so it re-initializes from fresh provider data
+      _hideSubscription = null;
+
+      _isLoading = false;
+      _showSuccess('Changes saved successfully');
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = _sanitizeError(e);
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _updateUserStatus(UserModel user, String newStatus) async {
+    final label = switch (newStatus) {
+      'active' => 'Activate',
+      'suspended' => 'Suspend',
+      'trial' => 'Reset to Trial',
+      'trial_expired' => 'Expire Trial',
+      _ => 'Update',
+    };
+
+    if (!await _showConfirmation(
+      context,
+      '$label User',
+      'Are you sure you want to set this user\'s status to "$newStatus"?',
+    )) {
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await ref
+          .read(adminUsersRepositoryProvider)
+          .updateUserStatus(userId: user.id, newStatus: newStatus);
+      ref.invalidate(userDetailProvider(user.id));
+      ref.invalidate(userAccountStatusProvider(user.id));
+      ref.invalidate(ownersListProvider);
+
+      _hideSubscription = null;
+
+      _isLoading = false;
+      _showSuccess('User status changed to $newStatus');
+    } catch (e) {
+      setState(() {
+        _errorMessage = _sanitizeError(e);
         _isLoading = false;
       });
     }
@@ -336,13 +394,15 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
           .read(adminUsersRepositoryProvider)
           .setLifetimeLicense(userId: user.id, grant: true);
       ref.invalidate(userDetailProvider(user.id));
-      setState(() {
-        _successMessage = 'Lifetime license granted successfully';
-        _isLoading = false;
-      });
+
+      // Clear form state so it re-initializes from fresh provider data
+      _hideSubscription = null;
+
+      _isLoading = false;
+      _showSuccess('Lifetime license granted successfully');
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = _sanitizeError(e);
         _isLoading = false;
       });
     }
@@ -363,13 +423,15 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
           .read(adminUsersRepositoryProvider)
           .setLifetimeLicense(userId: user.id, grant: false);
       ref.invalidate(userDetailProvider(user.id));
-      setState(() {
-        _successMessage = 'Lifetime license revoked successfully';
-        _isLoading = false;
-      });
+
+      // Clear form state so it re-initializes from fresh provider data
+      _hideSubscription = null;
+
+      _isLoading = false;
+      _showSuccess('Lifetime license revoked successfully');
     } catch (e) {
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = _sanitizeError(e);
         _isLoading = false;
       });
     }
@@ -436,6 +498,7 @@ class _InfoCard extends StatelessWidget {
               icon: Icons.email_outlined,
               label: 'Email',
               value: user.email,
+              copyable: true,
             ),
             _InfoRow(
               icon: Icons.person_outline,
@@ -505,8 +568,20 @@ class _InfoRow extends StatelessWidget {
                     if (copyable) ...[
                       const SizedBox(width: 8),
                       InkWell(
-                        onTap: () {
-                          // Clipboard logic
+                        onTap: () async {
+                          try {
+                            await Clipboard.setData(ClipboardData(text: value));
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Copied to clipboard'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          } catch (_) {
+                            // Clipboard API can fail on some browsers
+                          }
                         },
                         child: const Icon(
                           Icons.copy,
@@ -635,26 +710,153 @@ class _StatBox extends StatelessWidget {
   }
 }
 
-class _AdminControlsCard extends StatelessWidget {
+class _UserStatusCard extends ConsumerWidget {
   final UserModel user;
-  final AccountType selectedAccountType;
-  final bool hideSubscription;
-  final bool adminOverride;
   final bool isLoading;
-  final ValueChanged<AccountType> onAccountTypeChanged;
+  final ValueChanged<String> onStatusChange;
+
+  const _UserStatusCard({
+    required this.user,
+    required this.isLoading,
+    required this.onStatusChange,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statusAsync = ref.watch(userAccountStatusProvider(user.id));
+    final currentStatus = statusAsync.valueOrNull ?? 'trial';
+
+    final statusColor = switch (currentStatus) {
+      'active' => Colors.green,
+      'suspended' => Colors.red,
+      'trial_expired' => Colors.orange,
+      _ => Colors.blue, // trial
+    };
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).dividerColor),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.shield_outlined, color: AppColors.primary),
+                const SizedBox(width: 12),
+                Text(
+                  'Account Status',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Text(
+                    currentStatus.toUpperCase().replaceAll('_', ' '),
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (currentStatus != 'active')
+                  _StatusButton(
+                    label: 'Activate',
+                    icon: Icons.check_circle_outline,
+                    color: Colors.green,
+                    isLoading: isLoading,
+                    onPressed: () => onStatusChange('active'),
+                  ),
+                if (currentStatus != 'suspended')
+                  _StatusButton(
+                    label: 'Suspend',
+                    icon: Icons.block,
+                    color: Colors.red,
+                    isLoading: isLoading,
+                    onPressed: () => onStatusChange('suspended'),
+                  ),
+                if (currentStatus != 'trial')
+                  _StatusButton(
+                    label: 'Reset to Trial',
+                    icon: Icons.restart_alt,
+                    color: Colors.blue,
+                    isLoading: isLoading,
+                    onPressed: () => onStatusChange('trial'),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  const _StatusButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: isLoading ? null : onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: color,
+        side: BorderSide(color: color.withValues(alpha: 0.5)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      ),
+    );
+  }
+}
+
+class _AdminControlsCard extends StatelessWidget {
+  final bool hideSubscription;
+  final bool isLoading;
   final ValueChanged<bool> onHideSubscriptionChanged;
-  final ValueChanged<bool> onAdminOverrideChanged;
   final VoidCallback onSave;
 
   const _AdminControlsCard({
-    required this.user,
-    required this.selectedAccountType,
     required this.hideSubscription,
-    required this.adminOverride,
     required this.isLoading,
-    required this.onAccountTypeChanged,
     required this.onHideSubscriptionChanged,
-    required this.onAdminOverrideChanged,
     required this.onSave,
   });
 
@@ -688,63 +890,12 @@ class _AdminControlsCard extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Account Type Selector
-            Text(
-              'Account Type',
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Theme.of(context).dividerColor),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<AccountType>(
-                  value: selectedAccountType,
-                  isExpanded: true,
-                  items: AccountType.values.map((type) {
-                    return DropdownMenuItem(
-                      value: type,
-                      child: Text(type.name.toUpperCase()),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) onAccountTypeChanged(val);
-                  },
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 16),
-
-            // Switches
             SwitchListTile(
               title: const Text('Hide Subscription'),
               subtitle: const Text('Hide subscription UI from user dashboard'),
               value: hideSubscription,
               onChanged: onHideSubscriptionChanged,
               contentPadding: EdgeInsets.zero,
-            ),
-
-            SwitchListTile(
-              title: const Text('Admin Override Account Type'),
-              subtitle: const Text(
-                'Force specific account type regardless of payment status',
-              ),
-              value: adminOverride,
-              onChanged: onAdminOverrideChanged,
-              contentPadding: EdgeInsets.zero,
-              activeTrackColor: Colors.orange.withValues(alpha: 0.5),
-              thumbColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return Colors.orange;
-                }
-                return null;
-              }),
             ),
 
             const SizedBox(height: 24),

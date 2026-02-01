@@ -16,12 +16,13 @@ class AdminDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(dashboardStatsProvider);
+    final signupsAsync = ref.watch(recentSignupsProvider);
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < _mobileBreakpoint;
     final isTablet = width >= _mobileBreakpoint && width < _tabletBreakpoint;
 
     return Scaffold(
-      backgroundColor: Colors.transparent, // Uses shell background
+      backgroundColor: Colors.transparent,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -47,112 +48,131 @@ class AdminDashboardScreen extends ConsumerWidget {
             // Stats Grid
             statsAsync.when(
               data: (stats) {
+                final totalOwners = stats['totalOwners'] ?? 0;
+                final trialUsers = stats['trialUsers'] ?? 0;
+                final premiumUsers = stats['premiumUsers'] ?? 0;
+                final lifetimeUsers = stats['lifetimeUsers'] ?? 0;
+
                 final statsItems = [
                   _StatItem(
                     title: 'Total Owners',
-                    value: stats['totalOwners']?.toString() ?? '0',
+                    value: totalOwners.toString(),
                     icon: Icons.people,
                     color: Colors.blue,
-                    trend: '+12%', // Mock trend
                   ),
                   _StatItem(
                     title: 'Trial Users',
-                    value: stats['trialUsers']?.toString() ?? '0',
+                    value: trialUsers.toString(),
                     icon: Icons.timer,
                     color: Colors.orange,
-                    trend: '-5%', // Mock trend
                   ),
                   _StatItem(
                     title: 'Premium Users',
-                    value: stats['premiumUsers']?.toString() ?? '0',
+                    value: premiumUsers.toString(),
                     icon: Icons.star,
                     color: Colors.green,
-                    trend: '+8%', // Mock trend
                   ),
                   _StatItem(
                     title: 'Lifetime Licenses',
-                    value: stats['lifetimeUsers']?.toString() ?? '0',
+                    value: lifetimeUsers.toString(),
                     icon: Icons.verified,
                     color: Colors.purple,
-                    trend: '0%', // Mock trend
                   ),
                 ];
 
-                if (isMobile) {
-                  return Column(
-                    children: statsItems
-                        .map(
-                          (item) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _StatsCard(item: item),
+                // Responsive grid: 2 cols mobile/tablet, 4 cols desktop
+                final availableWidth = width - 48;
+                final columns = (isMobile || isTablet) ? 2 : 4;
+                final totalSpacing = (columns - 1) * 16.0;
+                final itemWidth = (availableWidth - totalSpacing) / columns;
+
+                // Conversion rate
+                final paidUsers = premiumUsers + lifetimeUsers;
+                final conversionRate = totalOwners > 0
+                    ? (paidUsers / totalOwners * 100)
+                    : 0.0;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: statsItems.map((item) {
+                        return SizedBox(
+                          width: itemWidth < 140 ? 140 : itemWidth,
+                          child: _StatsCard(item: item),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Analytics Section
+                    Text(
+                      'Analytics',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: [
+                        // Conversion rate card
+                        SizedBox(
+                          width: isMobile ? availableWidth : 280,
+                          child: _AnalyticsCard(
+                            title: 'Conversion Rate',
+                            subtitle: 'Trial to Paid',
+                            value: '${conversionRate.toStringAsFixed(1)}%',
+                            detail: '$paidUsers of $totalOwners owners',
+                            icon: Icons.trending_up,
+                            color: Colors.teal,
                           ),
-                        )
-                        .toList(),
-                  );
-                }
-
-                // Grid Layout
-                return Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: statsItems.map((item) {
-                    // Calculate width based on available space
-                    // Desktop: 4 items per row (approx 25%)
-                    // Tablet: 2 items per row (approx 50%)
-                    final availableWidth =
-                        width -
-                        48 -
-                        (isMobile ? 0 : 260); // Subtract padding and sidebar
-                    final itemWidth = isTablet
-                        ? (availableWidth - 16) / 2
-                        : (availableWidth - 48) / 4;
-
-                    // Ensure minimum width
-                    return SizedBox(
-                      width: itemWidth < 200 ? 200 : itemWidth,
-                      child: _StatsCard(item: item),
-                    );
-                  }).toList(),
+                        ),
+                        // Recent signups
+                        signupsAsync.when(
+                          data: (signups) => SizedBox(
+                            width: isMobile ? availableWidth : 280,
+                            child: _AnalyticsCard(
+                              title: 'New Signups',
+                              subtitle: 'Last 7 days',
+                              value: signups['last7Days']?.toString() ?? '0',
+                              detail:
+                                  '${signups['last30Days'] ?? 0} in last 30 days',
+                              icon: Icons.person_add,
+                              color: Colors.indigo,
+                            ),
+                          ),
+                          loading: () => SizedBox(
+                            width: isMobile ? availableWidth : 280,
+                            height: 140,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          error: (_, _) => const SizedBox.shrink(),
+                        ),
+                        // Account type distribution
+                        SizedBox(
+                          width: isMobile ? availableWidth : 280,
+                          child: _DistributionCard(
+                            totalOwners: totalOwners,
+                            trialUsers: trialUsers,
+                            premiumUsers: premiumUsers,
+                            lifetimeUsers: lifetimeUsers,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 );
               },
               loading: () => const _StatsLoading(),
               error: (err, _) => _StatsError(
                 error: err.toString(),
                 onRetry: () => ref.invalidate(dashboardStatsProvider),
-              ),
-            ),
-
-            // Future placeholder for charts/activity
-            const SizedBox(height: 48),
-            Container(
-              height: 300,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainer,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
-                ),
-              ),
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.bar_chart,
-                    size: 48,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Activity Charts Coming Soon',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
               ),
             ),
           ],
@@ -167,14 +187,12 @@ class _StatItem {
   final String value;
   final IconData icon;
   final Color color;
-  final String trend;
 
   _StatItem({
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
-    required this.trend,
   });
 }
 
@@ -204,19 +222,13 @@ class _StatsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: item.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(item.icon, color: item.color, size: 24),
-              ),
-              _TrendBadge(trend: item.trend, color: item.color),
-            ],
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: item.color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(item.icon, color: item.color, size: 24),
           ),
           const SizedBox(height: 16),
           Text(
@@ -240,42 +252,232 @@ class _StatsCard extends StatelessWidget {
   }
 }
 
-class _TrendBadge extends StatelessWidget {
-  final String trend;
+class _AnalyticsCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String value;
+  final String detail;
+  final IconData icon;
   final Color color;
 
-  const _TrendBadge({required this.trend, required this.color});
+  const _AnalyticsCard({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.detail,
+    required this.icon,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isPositive = !trend.startsWith('-');
-    final trendColor = isPositive ? Colors.green : Colors.red;
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: trendColor.withValues(alpha: 0.1),
+        color: Theme.of(context).colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-            size: 12,
-            color: trendColor,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 4),
+          const SizedBox(height: 16),
           Text(
-            trend,
-            style: TextStyle(
-              color: trendColor,
-              fontSize: 12,
+            value,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            detail,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DistributionCard extends StatelessWidget {
+  final int totalOwners;
+  final int trialUsers;
+  final int premiumUsers;
+  final int lifetimeUsers;
+
+  const _DistributionCard({
+    required this.totalOwners,
+    required this.trialUsers,
+    required this.premiumUsers,
+    required this.lifetimeUsers,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.pie_chart,
+                  color: Colors.blue,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Account Distribution',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Distribution bar
+          if (totalOwners > 0)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                height: 8,
+                child: Row(
+                  children: [
+                    if (trialUsers > 0)
+                      Expanded(
+                        flex: trialUsers,
+                        child: Container(color: Colors.orange),
+                      ),
+                    if (premiumUsers > 0)
+                      Expanded(
+                        flex: premiumUsers,
+                        child: Container(color: Colors.green),
+                      ),
+                    if (lifetimeUsers > 0)
+                      Expanded(
+                        flex: lifetimeUsers,
+                        child: Container(color: Colors.purple),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          const SizedBox(height: 12),
+          // Legend
+          _DistLegendRow(
+            color: Colors.orange,
+            label: 'Trial',
+            count: trialUsers,
+            total: totalOwners,
+          ),
+          const SizedBox(height: 4),
+          _DistLegendRow(
+            color: Colors.green,
+            label: 'Premium',
+            count: premiumUsers,
+            total: totalOwners,
+          ),
+          const SizedBox(height: 4),
+          _DistLegendRow(
+            color: Colors.purple,
+            label: 'Lifetime',
+            count: lifetimeUsers,
+            total: totalOwners,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DistLegendRow extends StatelessWidget {
+  final Color color;
+  final String label;
+  final int count;
+  final int total;
+
+  const _DistLegendRow({
+    required this.color,
+    required this.label,
+    required this.count,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = total > 0 ? (count / total * 100).toStringAsFixed(0) : '0';
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        const Spacer(),
+        Text(
+          '$count ($pct%)',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+        ),
+      ],
     );
   }
 }

@@ -78,13 +78,13 @@ export const setLifetimeLicense = onCall(
         }
 
         const userData = userDoc.data();
-        const currentAccountType = userData?.account_type || "trial";
+        const currentAccountType = userData?.accountType || "trial";
         const userEmail = userData?.email || "unknown";
 
         if (grant) {
           // Grant lifetime license
           const updatePayload = {
-            account_type: "lifetime",
+            accountType: "lifetime",
             lifetime_license_granted_at: admin.firestore.FieldValue.serverTimestamp(),
             lifetime_license_granted_by: adminUid,
             updated_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -100,7 +100,7 @@ export const setLifetimeLicense = onCall(
         } else {
           // Revoke lifetime license - revert to trial
           const updatePayload = {
-            account_type: "trial",
+            accountType: "trial",
             lifetime_license_granted_at: admin.firestore.FieldValue.delete(),
             lifetime_license_granted_by: admin.firestore.FieldValue.delete(),
             updated_at: admin.firestore.FieldValue.serverTimestamp(),

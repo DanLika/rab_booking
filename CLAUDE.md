@@ -1890,6 +1890,34 @@ AccountType get effectiveAccountType =>
 
 ---
 
+## 📝 TODO: Security Branch Fixes (Za Kasnije)
+
+**Prioritet:** Medium
+**Branchevi:** Pregledani 2026-02-01, sadrže korisne security fixeve za budući deploy.
+
+### Branch 1: `security-audit-2026-01-29-9611837304482000277`
+**Šta radi**: Premješta `loginAttempts` Firestore write sa klijenta na Cloud Functions.
+- `firestore.rules`: `loginAttempts` write → `allow write: if false`
+- `authRateLimit.ts`: Nove CF `recordFailedLoginAttempt` + `resetLoginAttempts`
+- `rate_limit_service.dart`: Poziva CF umjesto direktnog Firestore write-a
+- `stripeSubscription.ts`: Generičke error poruke (ne leaka `error.message`)
+
+**⚠️ Zahtijeva koordiniran deploy** (ovim redoslijedom):
+1. Deploy Cloud Functions prvo
+2. Deploy Flutter app
+3. Deploy Firestore rules zadnje
+
+### Branch 2: `security-audit-2025-05-22-13396931281884778762`
+**Šta radi**: XSS fix u email template-ima + Stripe error sanitizacija.
+- `trial-expired.ts`: `${userName}` → `${escapeHtml(userName)}`
+- `trial-expiring-soon.ts`: isto `escapeHtml`
+- `stripePayment.ts`: `error.message` → generička poruka
+- `stripeSubscription.ts`: `error.message` → generička poruka
+
+**Jednostavan za cherry-pick** - samo 4 fajla, mali fixevi.
+
+---
+
 ## ⚠️ OBAVEZNO PRIJE COMMITA
 
 **Dart formatiranje** - CI će odbiti PR ako kod nije formatiran:

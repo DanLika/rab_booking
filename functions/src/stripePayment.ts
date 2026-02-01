@@ -845,7 +845,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
     // Return user-friendly error message
     throw new HttpsError(
       "internal",
-      error.message || "Failed to create checkout session. Please try again."
+      "Failed to create checkout session. Please try again."
     );
   }
 });
@@ -893,7 +893,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
     ).catch(() => { }); // Fire-and-forget
 
     logError("Webhook signature verification failed", error);
-    res.status(400).send(`Webhook Error: ${error.message}`);
+    res.status(400).send("Webhook signature verification failed");
     return;
   }
 
@@ -954,7 +954,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       res.json({received: true, booking_id: bookingId, status: "refund_synced"});
     } catch (error: any) {
       logError("Error processing charge.refunded", error);
-      res.status(500).send(`Error: ${error.message}`);
+      res.status(500).send("Internal server error");
     }
   } else if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -1045,7 +1045,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       res.json({received: true, status: "subscription_canceled"});
     } catch (error: any) {
       logError("Error processing customer.subscription.deleted", error);
-      res.status(500).send(`Error: ${error.message}`);
+      res.status(500).send("Internal server error");
     }
   } else if (event.type === "invoice.paid") {
     // ========================================================================
@@ -1095,7 +1095,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       res.json({received: true, status: "subscription_renewed"});
     } catch (error: any) {
       logError("Error processing invoice.paid", error);
-      res.status(500).send(`Error: ${error.message}`);
+      res.status(500).send("Internal server error");
     }
   } else if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -1134,7 +1134,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         return;
       } catch (error: any) {
         logError("Error activating subscription", error);
-        res.status(500).send(`Error: ${error.message}`);
+        res.status(500).send("Internal server error");
         return;
       }
     }
@@ -1363,7 +1363,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       });
     } catch (error: any) {
       logError("Error processing webhook", error);
-      res.status(500).send(`Error: ${error.message}`);
+      res.status(500).send("Internal server error");
     }
   } else {
     // Unexpected event type

@@ -109,6 +109,23 @@ export const updateUserStatus = onCall(
         transaction.update(userRef, updatePayload);
       });
 
+      // 5. Log to security_events collection for audit trail
+      const userDoc = await userRef.get();
+      const userEmail = userDoc.data()?.email || "";
+      const previousStatus = userDoc.data()?.previousStatus || "";
+
+      await db.collection("security_events").add({
+        type: "status_change",
+        action: newStatus,
+        target_user_id: userId,
+        target_user_email: userEmail,
+        admin_uid: adminUid,
+        previous_account_type: previousStatus,
+        new_account_type: newStatus,
+        reason: reason || null,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
       logSuccess("[Admin] User status updated", {
         userId,
         newStatus,

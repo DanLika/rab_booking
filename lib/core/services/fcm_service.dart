@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import '../services/logging_service.dart';
+
 /// FCM Push Notification Service
 ///
 /// Handles Firebase Cloud Messaging for push notifications.
@@ -85,10 +87,20 @@ class FcmService {
           '[FCM] Service initialized successfully (platform: ${_getPlatform()})',
         );
       } else {
+        // Log permission denial to Sentry for tracking
         debugPrint('[FCM] Permission denied');
+        await LoggingService.logWarningToSentry(
+          'FCM permission denied by user',
+          data: {
+            'platform': _getPlatform(),
+            'authorization_status': settings.authorizationStatus.name,
+          },
+        );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('[FCM] Error initializing: $e');
+      // Log to Sentry - this is critical because it means NO push notifications will work
+      await LoggingService.logError('FCM initialization failed', e, stackTrace);
     }
   }
 
@@ -125,8 +137,14 @@ class FcmService {
         _currentToken = await _messagingInstance.getToken();
       }
       return _currentToken;
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('[FCM] Error getting token: $e');
+      // Log to Sentry - token retrieval failure is critical
+      await LoggingService.logError(
+        'FCM failed to get device token',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -151,6 +169,7 @@ class FcmService {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       debugPrint('[FCM] No user logged in, skipping token save');
+      // This is expected if user logs out during initialization
       return;
     }
 
@@ -172,8 +191,14 @@ class FcmService {
           }, SetOptions(merge: true));
 
       debugPrint('[FCM] Token saved for $platform');
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('[FCM] Error saving token: $e');
+      // Log to Sentry - Firestore write failure prevents notifications
+      await LoggingService.logError(
+        'FCM failed to save token to Firestore',
+        e,
+        stackTrace,
+      );
     }
   }
 

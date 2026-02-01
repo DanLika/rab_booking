@@ -1624,7 +1624,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       }
 
       // Create Apple Auth Provider
-      final OAuthProvider appleProvider = OAuthProvider('apple.com');
+      // IMPORTANT: Use AppleAuthProvider(), NOT OAuthProvider('apple.com')
+      // OAuthProvider triggers Generic IDP flow which fails on iPad/iOS native
+      // AppleAuthProvider triggers native ASAuthorizationController (correct path)
+      final appleProvider = AppleAuthProvider();
 
       // Request email and full name scopes
       appleProvider.addScope('email');
@@ -1680,9 +1683,18 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         state = state.copyWith(isLoading: false);
       }
     } on FirebaseAuthException catch (e) {
+      // User cancelled the Apple Sign-In sheet - not an error
+      if (e.code == 'canceled' ||
+          e.code == 'web-context-canceled' ||
+          e.code == 'web-context-cancelled') {
+        LoggingService.log('Apple Sign-In cancelled by user', tag: 'AUTH_INFO');
+        state = state.copyWith(isLoading: false);
+        return; // Silent return - no error shown
+      }
+
       // SENTRY: Enhanced logging for Apple Sign-In errors
       LoggingService.log(
-        'APPLE_SIGNIN_FAILED: code=${e.code}',
+        'APPLE_SIGNIN_FAILED: code=${e.code}, message=${e.message}',
         tag: 'AUTH_ERROR',
       );
       unawaited(LoggingService.logError('APPLE_SIGNIN_FAILED: ${e.code}', e));
@@ -1705,6 +1717,20 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
+      // Check if user cancelled (may come as PlatformException on some iOS versions)
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('cancel') ||
+          errorString.contains(
+            'com.apple.authenticationservices.authorizationerror error 1001',
+          )) {
+        LoggingService.log(
+          'Apple Sign-In cancelled by user (non-Firebase exception)',
+          tag: 'AUTH_INFO',
+        );
+        state = state.copyWith(isLoading: false);
+        return; // Silent return - no error shown
+      }
+
       // SENTRY: Log unexpected Apple Sign-In error
       unawaited(LoggingService.logError('APPLE_SIGNIN_UNEXPECTED_ERROR', e));
       LoggingService.log(

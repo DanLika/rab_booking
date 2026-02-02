@@ -764,7 +764,48 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-29 | **Version**: 6.47
+**Last Updated**: 2026-02-02 | **Version**: 6.48
+
+**Changelog 6.48**: Unit Wizard Reorganization, Services Display, Live Preview & UI Cleanup:
+- **Unit Wizard Step 2 — Extra Beds, Pets & Additional Services**:
+  - Extra Beds and Pets expandable sections moved from Step 3 (Pricing) to Step 2 (Capacity)
+  - New "Additional Services" expandable section in Step 2 with full CRUD (add/edit/delete)
+  - Services stored in Firestore via `AdditionalServiceModel` + `firebase_additional_services_repository`
+  - Add service dialog: name, price, pricing type (per booking/per night/per guest/per guest per night), availability toggle
+  - Services only available after unit is saved (unitId required for Firestore path)
+- **Step 4 Review — Additional Services Display**:
+  - New `_buildServicesCard()` using `FutureBuilder` to load services from Firestore
+  - Shows service name + formatted price (e.g., "€5.00 per night")
+  - Only appears when `unitId != null` and services exist
+  - Displayed in both desktop (2x2 grid) and mobile (stacked) layouts
+- **Unit Hub Basic Tab — Additional Services Section**:
+  - Same `FutureBuilder` pattern with `ValueKey('services_${unitId}')` for unit change rebuild
+  - Uses existing `_buildInfoCard` + `_buildDetailRow` helpers for consistent styling
+- **Per-Day Override Fields Removed from Pricing Calendar**:
+  - Removed 4 per-day override TextFormFields: `minNightsOnArrival`, `maxNightsOnArrival`, `minDaysAdvance`, `maxDaysAdvance`
+  - Removed "Advanced Options" ExpansionTile, controllers, validation, parsing, disposal
+  - Model fields kept nullable for backward compatibility — existing Firestore data won't break
+  - Server/widget validation code unchanged — gracefully falls back to global settings when null
+  - Removed ~16 localization keys (labels, hints, validation errors)
+- **Embed Widget Guide — Live Preview Feature**:
+  - Replaced "Test Your Widget" link with unit dropdown + "Preview Live" button
+  - Dropdown uses `DropdownButtonFormField<UnitModel>` with property grouping for multi-property owners
+  - Auto-selects first unit, opens `https://view.bookbed.io/?property={id}&unit={id}` directly
+  - Dark theme dropdown fix: uses `InputDecorationHelper` for consistent `dropdownColor`, `borderRadius`, `fillColor`
+  - New localization keys: `embedGuideSelectUnitHint`, `embedGuidePreviewLive` (EN + HR)
+- **Drawer Cleanup** (`owner_app_drawer.dart`):
+  - Removed `imagePath` property from `_DrawerItem`, `_DrawerItemWithBadge`, `_DrawerSubItem`
+  - Deleted 6 drawer icon PNG assets (`assets/images/drawer_icons/`)
+  - Removed `assets/images/drawer_icons/` from `pubspec.yaml` assets list
+  - All drawer items now use Material Icons exclusively (simpler, consistent)
+- **Offline Indicator Improvement** (`offline_indicator.dart`):
+  - Converted from `ConsumerWidget` to `ConsumerStatefulWidget`
+  - New "Ponovo povezano" (Back online) green banner on reconnection
+  - Auto-hides after 2 seconds via `Timer`
+  - Tracks `_wasOffline` / `_showReconnected` states
+- **Booking Confirmation Timestamp**:
+  - Added `approved_at: FieldValue.serverTimestamp()` when owner confirms a booking
+  - Stored alongside existing `updated_at` field
 
 **Changelog 6.47**: Google Sign-In Native SDK & Email Verification Fixes:
 - **Google Sign-In Native SDK** (`enhanced_auth_provider.dart`):

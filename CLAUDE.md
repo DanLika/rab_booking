@@ -764,7 +764,26 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-02 | **Version**: 6.48
+**Last Updated**: 2026-02-02 | **Version**: 6.49
+
+**Changelog 6.49**: iCal Export Compatibility & Booking.com Restriction FAQ:
+- **iCal Export — `.ics` URL support** (`icalExport.ts`):
+  - Token parsing now strips `.ics` extension: `pathParts[2].replace(/\.ics$/i, "")`
+  - Allows calendar apps that require URL ending in `.ics` to work correctly
+- **iCal Export — Pending → CONFIRMED** (`icalExport.ts`):
+  - `mapBookingStatus("pending")` now returns `CONFIRMED` instead of `TENTATIVE`
+  - Pending bookings block dates in our system — exporting as TENTATIVE allowed OTAs to ignore them
+  - Airbnb only reliably imports CONFIRMED events; TENTATIVE may cause double-bookings
+- **Booking.com iCal Restriction (March 2025)**:
+  - Booking.com only accepts iCal imports from recognized OTAs (Airbnb, VRBO, TripAdvisor, Expedia)
+  - Custom PMS URLs (including ours on `cloudfunctions.net`) are **rejected**
+  - **Workaround**: BookBed → Airbnb (direct iCal import) → Booking.com (accepts Airbnb calendar)
+  - This affects ALL small PMS platforms, not just BookBed
+- **New FAQ entries** (EN + HR):
+  - `icalExportFaq4Q/4A`: "Can I add this URL directly to Booking.com?" → Explains restriction + workaround
+  - `ownerFaqIcal5Q/5A`: "Can I export BookBed calendar to Booking.com?" → Same info in main FAQ
+  - Fixed `icalExportFaq1A`: Removed misleading "Booking.com syncs every 15-60 min"
+- **FAQ Screen** (`faq_screen.dart`): Added both new FAQ items to iCalSync category
 
 **Changelog 6.48**: Unit Wizard Reorganization, Services Display, Live Preview & UI Cleanup:
 - **Unit Wizard Step 2 — Extra Beds, Pets & Additional Services**:

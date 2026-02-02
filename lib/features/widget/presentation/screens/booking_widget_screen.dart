@@ -1527,12 +1527,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         _widgetSettings = widgetCtx.settings;
 
         // Adjust default guest count to respect property capacity
-        // Use effectiveMaxCapacity (maxTotalCapacity ?? maxGuests)
-        final effectiveMax = widgetCtx.unit.effectiveMaxCapacity;
-        if (effectiveMax > 0) {
+        final maxG = widgetCtx.unit.maxGuests;
+        if (maxG > 0) {
           final totalGuests = _adults + _children;
-          if (totalGuests > effectiveMax) {
-            _adults = effectiveMax.clamp(1, effectiveMax);
+          if (totalGuests > maxG) {
+            _adults = maxG.clamp(1, maxG);
             _children = 0;
           }
         }
@@ -1604,13 +1603,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _widgetSettings = widgetCtx.settings;
 
       // Adjust default guest count to respect property capacity
-      // Use effectiveMaxCapacity (maxTotalCapacity ?? maxGuests)
-      final effectiveMax = widgetCtx.unit.effectiveMaxCapacity;
-      if (effectiveMax > 0) {
+      final maxG = widgetCtx.unit.maxGuests;
+      if (maxG > 0) {
         final totalGuests = _adults + _children;
-        if (totalGuests > effectiveMax) {
-          // If default exceeds capacity, set to max allowed
-          _adults = effectiveMax.clamp(1, effectiveMax);
+        if (totalGuests > maxG) {
+          _adults = maxG.clamp(1, maxG);
           _children = 0;
         }
       }
@@ -1798,14 +1795,13 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Saved form data may have higher guest count if:
         // 1. User previously booked a property with higher capacity
         // 2. Owner changed the capacity setting since last visit
-        // Use effectiveMaxCapacity (maxTotalCapacity ?? maxGuests)
-        final effectiveMax = _unit?.effectiveMaxCapacity ?? 0;
-        if (effectiveMax > 0) {
+        final maxG = _unit?.maxGuests ?? 0;
+        if (maxG > 0) {
           final totalGuests = _adults + _children;
-          if (totalGuests > effectiveMax) {
+          if (totalGuests > maxG) {
             // Prioritize adults, reduce children first
             _children = 0;
-            _adults = effectiveMax.clamp(1, effectiveMax);
+            _adults = maxG.clamp(1, maxG);
           }
         }
         // Reset pets if the unit doesn't allow them
@@ -3254,7 +3250,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             adults: _adults,
             children: _children,
             maxGuests: _unit?.maxGuests ?? 10,
-            maxTotalCapacity: _unit?.maxTotalCapacity,
             petFee: _unit?.petFee,
             maxPets: _unit?.maxPets,
             pets: _pets,
@@ -3397,7 +3392,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       widgetSettings: _widgetSettings,
       adults: _adults,
       children: _children,
-      maxGuests: _unit?.effectiveMaxCapacity ?? 10,
+      maxGuests: _unit?.maxGuests ?? 10,
     );
 
     if (!validationResult.isValid) {

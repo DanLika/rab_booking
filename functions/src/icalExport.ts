@@ -111,7 +111,8 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 
     const propertyId = pathParts[0];
     const unitId = pathParts[1];
-    const token = pathParts[2];
+    // Strip .ics extension if present (some calendar apps require URL to end in .ics)
+    const token = pathParts[2].replace(/\.ics$/i, "");
 
     logInfo("[iCal Feed] Request received", {propertyId, unitId});
 
@@ -510,14 +511,19 @@ function buildDescription(booking: any, unitName: string): string {
 
 /**
  * Map booking status to iCal STATUS
+ *
+ * NOTE: Pending bookings are exported as CONFIRMED (not TENTATIVE) because:
+ * 1. In our system, pending bookings DO block dates (prevent overbooking)
+ * 2. Airbnb only reliably imports CONFIRMED events — TENTATIVE may be ignored
+ * 3. If we export pending as TENTATIVE, OTAs might allow double-bookings
  */
 function mapBookingStatus(status: string): string {
   switch (status) {
   case "confirmed": return "CONFIRMED";
-  case "pending": return "TENTATIVE";
+  case "pending": return "CONFIRMED";
   case "cancelled": return "CANCELLED";
   case "completed": return "CONFIRMED";
-  default: return "TENTATIVE";
+  default: return "CONFIRMED";
   }
 }
 

@@ -5732,7 +5732,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportFaq1A =>
-      'Calendar apps sync every 5-15 minutes. Booking.com syncs every 15-60 minutes. Airbnb syncs every 3-6 hours.';
+      'Calendar apps (Google Calendar, Apple, Outlook) sync every 5-15 minutes. Airbnb syncs every 3-6 hours.';
 
   @override
   String get icalExportFaq2Q => 'Will deleted bookings be removed?';
@@ -5747,6 +5747,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get icalExportFaq3A =>
       'Yes, but be careful - anyone with the URL can see your booking schedule.';
+
+  @override
+  String get icalExportFaq4Q => 'Can I add this URL directly to Booking.com?';
+
+  @override
+  String get icalExportFaq4A =>
+      'No. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.). Workaround: Add our iCal URL to Airbnb first, then connect Airbnb calendar to Booking.com. This way BookBed bookings reach Booking.com via Airbnb.';
 
   @override
   String get icalExportUrlReady => 'URL Ready';
@@ -7240,6 +7247,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ownerFaqIcal4A =>
       'Yes! You can add iCal feeds from Booking.com, Airbnb or any other platform that supports iCal format for the same apartment. All reservations will be displayed.';
+
+  @override
+  String get ownerFaqIcal5Q =>
+      'Can I export my BookBed calendar to Booking.com?';
+
+  @override
+  String get ownerFaqIcal5A =>
+      'Not directly. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.) — not from third-party PMS systems. Workaround: Export your BookBed calendar to Airbnb first, then connect your Airbnb calendar to Booking.com.';
 
   @override
   String get ownerFaqSupport1Q => 'Widget is not loading on my site';

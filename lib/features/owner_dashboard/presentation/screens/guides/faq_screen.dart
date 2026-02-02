@@ -154,6 +154,11 @@ class _FAQScreenState extends State<FAQScreen> {
       ),
       FAQItem(
         categoryKey: 'icalSync',
+        question: l10n.ownerFaqIcal5Q,
+        answer: l10n.ownerFaqIcal5A,
+      ),
+      FAQItem(
+        categoryKey: 'icalSync',
         question: l10n.icalGuideFaq5Q,
         answer: l10n.icalGuideFaq5A,
       ),
@@ -172,6 +177,11 @@ class _FAQScreenState extends State<FAQScreen> {
         categoryKey: 'icalSync',
         question: l10n.icalExportFaq3Q,
         answer: l10n.icalExportFaq3A,
+      ),
+      FAQItem(
+        categoryKey: 'icalSync',
+        question: l10n.icalExportFaq4Q,
+        answer: l10n.icalExportFaq4A,
       ),
       // Technical Support
       FAQItem(

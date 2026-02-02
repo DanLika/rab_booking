@@ -10617,7 +10617,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportFaq1A.
   ///
   /// In en, this message translates to:
-  /// **'Calendar apps sync every 5-15 minutes. Booking.com syncs every 15-60 minutes. Airbnb syncs every 3-6 hours.'**
+  /// **'Calendar apps (Google Calendar, Apple, Outlook) sync every 5-15 minutes. Airbnb syncs every 3-6 hours.'**
   String get icalExportFaq1A;
 
   /// No description provided for @icalExportFaq2Q.
@@ -10643,6 +10643,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yes, but be careful - anyone with the URL can see your booking schedule.'**
   String get icalExportFaq3A;
+
+  /// No description provided for @icalExportFaq4Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I add this URL directly to Booking.com?'**
+  String get icalExportFaq4Q;
+
+  /// No description provided for @icalExportFaq4A.
+  ///
+  /// In en, this message translates to:
+  /// **'No. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.). Workaround: Add our iCal URL to Airbnb first, then connect Airbnb calendar to Booking.com. This way BookBed bookings reach Booking.com via Airbnb.'**
+  String get icalExportFaq4A;
 
   /// No description provided for @icalExportUrlReady.
   ///
@@ -13160,6 +13172,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yes! You can add iCal feeds from Booking.com, Airbnb or any other platform that supports iCal format for the same apartment. All reservations will be displayed.'**
   String get ownerFaqIcal4A;
+
+  /// No description provided for @ownerFaqIcal5Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I export my BookBed calendar to Booking.com?'**
+  String get ownerFaqIcal5Q;
+
+  /// No description provided for @ownerFaqIcal5A.
+  ///
+  /// In en, this message translates to:
+  /// **'Not directly. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.) — not from third-party PMS systems. Workaround: Export your BookBed calendar to Airbnb first, then connect your Airbnb calendar to Booking.com.'**
+  String get ownerFaqIcal5A;
 
   /// No description provided for @ownerFaqSupport1Q.
   ///

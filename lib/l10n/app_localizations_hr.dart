@@ -5766,7 +5766,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportFaq1A =>
-      'Kalendarske aplikacije sinkroniziraju svakih 5-15 minuta. Booking.com sinkronizira svakih 15-60 minuta. Airbnb sinkronizira svakih 3-6 sati.';
+      'Kalendarske aplikacije (Google Calendar, Apple, Outlook) sinkroniziraju svakih 5-15 minuta. Airbnb sinkronizira svakih 3-6 sati.';
 
   @override
   String get icalExportFaq2Q => 'Hoće li obrisane rezervacije biti uklonjene?';
@@ -5781,6 +5781,14 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get icalExportFaq3A =>
       'Da, ali budite oprezni - svatko s URL-om može vidjeti vaš raspored rezervacija.';
+
+  @override
+  String get icalExportFaq4Q =>
+      'Mogu li dodati ovaj URL direktno na Booking.com?';
+
+  @override
+  String get icalExportFaq4A =>
+      'Ne. Booking.com prihvata iCal linkove samo od velikih platformi (Airbnb, VRBO, itd.). Zaobilazno rješenje: Prvo dodajte naš iCal URL na Airbnb, zatim povežite Airbnb kalendar sa Booking.com. Na taj način BookBed rezervacije stižu na Booking.com preko Airbnb-a.';
 
   @override
   String get icalExportUrlReady => 'URL Spreman';
@@ -7296,6 +7304,14 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get ownerFaqIcal4A =>
       'Da! Možete dodati iCal feed-ove sa Booking.com, Airbnb ili bilo koje druge platforme koja podržava iCal format za isti apartman. Sve rezervacije će biti prikazane.';
+
+  @override
+  String get ownerFaqIcal5Q =>
+      'Mogu li exportovati BookBed kalendar na Booking.com?';
+
+  @override
+  String get ownerFaqIcal5A =>
+      'Ne direktno. Booking.com prihvata iCal linkove samo od velikih platformi (Airbnb, VRBO, itd.) — ne od PMS sistema trećih strana. Zaobilazno rješenje: Prvo exportujte BookBed kalendar na Airbnb, a zatim povežite Airbnb kalendar sa Booking.com.';
 
   @override
   String get ownerFaqSupport1Q => 'Widget se ne učitava na mom sajtu';

@@ -3494,5 +3494,6 @@
   "additionalServicePricingPerItem": "Po komadu",
   "additionalServiceDeleteConfirm": "Obrisati ovu uslugu?",
   "additionalServiceDeleteHint": "Ova akcija se ne može poništiti",
+  "additionalServiceSaveUnitFirst": "Prvo spremite unit da biste dodali usluge",
   "add": "Dodaj"
 }

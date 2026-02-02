@@ -551,7 +551,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
                             Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: Text(
-                                'Save the unit first to add services',
+                                l10n.additionalServiceSaveUnitFirst,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,

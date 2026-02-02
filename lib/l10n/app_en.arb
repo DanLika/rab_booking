@@ -3487,5 +3487,6 @@
   "additionalServicePricingPerItem": "Per Item",
   "additionalServiceDeleteConfirm": "Delete this service?",
   "additionalServiceDeleteHint": "This action cannot be undone",
+  "additionalServiceSaveUnitFirst": "Save the unit first to add services",
   "add": "Add"
 }

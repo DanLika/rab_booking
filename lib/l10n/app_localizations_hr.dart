@@ -8261,5 +8261,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get additionalServiceDeleteHint => 'Ova akcija se ne može poništiti';
 
   @override
+  String get additionalServiceSaveUnitFirst =>
+      'Prvo spremite unit da biste dodali usluge';
+
+  @override
   String get add => 'Dodaj';
 }

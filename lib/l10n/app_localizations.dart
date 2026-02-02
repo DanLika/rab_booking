@@ -14806,6 +14806,12 @@ abstract class AppLocalizations {
   /// **'This action cannot be undone'**
   String get additionalServiceDeleteHint;
 
+  /// No description provided for @additionalServiceSaveUnitFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the unit first to add services'**
+  String get additionalServiceSaveUnitFirst;
+
   /// No description provided for @add.
   ///
   /// In en, this message translates to:

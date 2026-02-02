@@ -8195,5 +8195,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get additionalServiceDeleteHint => 'This action cannot be undone';
 
   @override
+  String get additionalServiceSaveUnitFirst =>
+      'Save the unit first to add services';
+
+  @override
   String get add => 'Add';
 }

@@ -239,8 +239,7 @@ export function generateDetailsTable(rows: DetailRow[]): string {
           color: ${COLORS.textSecondary};
           border-bottom: 1px solid ${COLORS.borderLight};
           vertical-align: top;
-          word-break: break-word;
-          overflow-wrap: break-word;
+          white-space: nowrap;
         ">${escapeHtml(row.label)}</td>
         <td style="
           padding: 10px 0;
@@ -250,7 +249,6 @@ export function generateDetailsTable(rows: DetailRow[]): string {
           vertical-align: top;
           word-break: break-word;
           overflow-wrap: break-word;
-          white-space: nowrap;
         ">${escapeHtml(row.value)}</td>
       </tr>
     `;
@@ -259,8 +257,8 @@ export function generateDetailsTable(rows: DetailRow[]): string {
   return `
     <table style="width: 100%; border-collapse: collapse;">
       <colgroup>
-        <col style="width: 55%;">
-        <col style="width: 45%;">
+        <col style="width: 40%;">
+        <col style="width: 60%;">
       </colgroup>
       ${rowsHtml}
     </table>

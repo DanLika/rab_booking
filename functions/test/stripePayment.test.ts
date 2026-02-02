@@ -448,7 +448,7 @@ describe("Stripe Payment Functions", () => {
       await handleStripeWebhook(req as any, res as any);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith("Webhook Error: Invalid signature");
+      expect(res.send).toHaveBeenCalledWith("Webhook signature verification failed");
     });
   });
 });

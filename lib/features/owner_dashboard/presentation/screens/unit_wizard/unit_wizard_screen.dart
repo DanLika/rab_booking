@@ -306,6 +306,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
         maxTotalCapacity: draft.maxTotalCapacity,
         extraBedFee: draft.extraBedFee,
         petFee: draft.petFee,
+        maxPets: draft.maxPets,
         bedrooms: draft.bedrooms ?? 1,
         bathrooms: draft.bathrooms ?? 1,
         areaSqm: draft.areaSqm,

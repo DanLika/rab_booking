@@ -16,6 +16,7 @@ class GuestCountPicker extends ConsumerWidget {
   final int maxGuests;
   final int? maxTotalCapacity;
   final double? petFee;
+  final int? maxPets;
   final int pets;
   final bool isDarkMode;
   final ValueChanged<int> onAdultsChanged;
@@ -29,6 +30,7 @@ class GuestCountPicker extends ConsumerWidget {
     required this.maxGuests,
     this.maxTotalCapacity,
     this.petFee,
+    this.maxPets,
     this.pets = 0,
     required this.isDarkMode,
     required this.onAdultsChanged,
@@ -37,7 +39,7 @@ class GuestCountPicker extends ConsumerWidget {
   });
 
   static const _countDisplayWidth = 40.0;
-  static const _maxPets = 10;
+  static const _defaultMaxPets = 10;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -91,7 +93,8 @@ class GuestCountPicker extends ConsumerWidget {
               label: tr.pets,
               count: pets,
               canDecrement: pets > 0,
-              canIncrement: pets < GuestCountPicker._maxPets,
+              canIncrement:
+                  pets < (maxPets ?? GuestCountPicker._defaultMaxPets),
               onDecrement: () => onPetsChanged!(pets - 1),
               onIncrement: () => onPetsChanged!(pets + 1),
               colors: colors,

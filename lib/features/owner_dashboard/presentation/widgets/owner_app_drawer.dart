@@ -40,6 +40,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Navigation items
             _DrawerItem(
               icon: Icons.dashboard_outlined,
+              imagePath: 'assets/images/drawer_icons/overview.png',
               title: l10n.ownerDrawerOverview,
               isSelected: currentRoute == 'overview',
               onTap: () => context.go(OwnerRoutes.overview),
@@ -50,6 +51,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Kalendar
             _DrawerItem(
               icon: Icons.calendar_today_outlined,
+              imagePath: 'assets/images/drawer_icons/calendar.png',
               title: l10n.ownerDrawerCalendar,
               isSelected: currentRoute.startsWith('calendar'),
               onTap: () => context.go(OwnerRoutes.calendarTimeline),
@@ -60,6 +62,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Rezervacije with pending count badge
             _DrawerItemWithBadge(
               icon: Icons.receipt_long_outlined,
+              imagePath: 'assets/images/drawer_icons/bookings.png',
               title: l10n.ownerDrawerBookings,
               isSelected: currentRoute == 'bookings',
               onTap: () => context.go(OwnerRoutes.bookings),
@@ -70,6 +73,7 @@ class OwnerAppDrawer extends ConsumerWidget {
             // Smještajne Jedinice
             _DrawerItem(
               icon: Icons.bed_outlined,
+              imagePath: 'assets/images/drawer_icons/units.png',
               title: l10n.ownerDrawerUnits,
               isSelected: currentRoute == 'unit-hub',
               onTap: () => context.go(OwnerRoutes.unitHub),
@@ -89,6 +93,7 @@ class OwnerAppDrawer extends ConsumerWidget {
                   title: l10n.ownerDrawerImportBookings,
                   subtitle: l10n.ownerDrawerSyncBookingCom,
                   icon: Icons.system_update_alt_rounded,
+                  imagePath: 'assets/images/drawer_icons/ical_import.png',
                   isSelected: currentRoute == 'integrations/ical/import',
                   onTap: () => context.go(OwnerRoutes.icalImport),
                 ),
@@ -96,6 +101,7 @@ class OwnerAppDrawer extends ConsumerWidget {
                   title: l10n.ownerDrawerExportCalendar,
                   subtitle: l10n.ownerDrawerIcalFeedUrl,
                   icon: Icons.ios_share_rounded,
+                  imagePath: 'assets/images/drawer_icons/ical_export.png',
                   isSelected: currentRoute == 'integrations/ical/export-list',
                   onTap: () => context.go(OwnerRoutes.icalExportList),
                 ),
@@ -140,6 +146,16 @@ class OwnerAppDrawer extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Divider(height: 1, color: context.gradients.sectionBorder),
             ),
+
+            // FAQ & Support - Placed here for better visibility
+            _DrawerItem(
+              icon: Icons.quiz_outlined,
+              title: l10n.ownerDrawerFaq,
+              isSelected: currentRoute == 'guides/faq',
+              onTap: () => context.go(OwnerRoutes.guideFaq),
+            ),
+
+            const SizedBox(height: 4),
 
             // Settings & Profile
             _DrawerItemWithNotificationBadge(
@@ -292,12 +308,14 @@ class OwnerAppDrawer extends ConsumerWidget {
 /// Premium Drawer Item with hover effect
 class _DrawerItem extends StatefulWidget {
   final IconData icon;
+  final String? imagePath;
   final String title;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _DrawerItem({
     required this.icon,
+    this.imagePath,
     required this.title,
     required this.isSelected,
     required this.onTap,
@@ -343,22 +361,37 @@ class _DrawerItemState extends State<_DrawerItem> {
                 : Colors.transparent,
           ),
           child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: widget.isSelected
-                    ? selectedTextColor.withValues(alpha: 0.12)
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                widget.icon,
-                color: widget.isSelected
-                    ? selectedTextColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.75),
-                size: 20,
-              ),
-            ),
+            leading: widget.imagePath != null
+                ? Container(
+                    width: 40,
+                    height: 40,
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset(
+                      widget.imagePath!,
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.contain,
+                      color: widget.isSelected
+                          ? selectedTextColor
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                    ),
+                  )
+                : Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: widget.isSelected
+                          ? selectedTextColor.withValues(alpha: 0.12)
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      color: widget.isSelected
+                          ? selectedTextColor
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                      size: 20,
+                    ),
+                  ),
             title: Text(
               widget.title,
               style: TextStyle(
@@ -385,12 +418,14 @@ class _DrawerItemState extends State<_DrawerItem> {
 /// Premium Drawer Item with Badge (for showing pending count)
 class _DrawerItemWithBadge extends ConsumerStatefulWidget {
   final IconData icon;
+  final String? imagePath;
   final String title;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _DrawerItemWithBadge({
     required this.icon,
+    this.imagePath,
     required this.title,
     required this.isSelected,
     required this.onTap,
@@ -445,22 +480,37 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
                 : Colors.transparent,
           ),
           child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: widget.isSelected
-                    ? selectedTextColor.withValues(alpha: 0.12)
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                widget.icon,
-                color: widget.isSelected
-                    ? selectedTextColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.75),
-                size: 20,
-              ),
-            ),
+            leading: widget.imagePath != null
+                ? Container(
+                    width: 40,
+                    height: 40,
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset(
+                      widget.imagePath!,
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.contain,
+                      color: widget.isSelected
+                          ? selectedTextColor
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                    ),
+                  )
+                : Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: widget.isSelected
+                          ? selectedTextColor.withValues(alpha: 0.12)
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      color: widget.isSelected
+                          ? selectedTextColor
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                      size: 20,
+                    ),
+                  ),
             title: Row(
               children: [
                 Expanded(
@@ -693,6 +743,7 @@ class _DrawerSubItem extends StatefulWidget {
   final String title;
   final String? subtitle;
   final IconData? icon;
+  final String? imagePath;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -700,6 +751,7 @@ class _DrawerSubItem extends StatefulWidget {
     required this.title,
     this.subtitle,
     this.icon,
+    this.imagePath,
     required this.isSelected,
     required this.onTap,
   });
@@ -745,7 +797,22 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
           ),
           child: ListTile(
             dense: true,
-            leading: widget.icon != null
+            leading: widget.imagePath != null
+                ? Container(
+                    width: 32,
+                    height: 32,
+                    padding: const EdgeInsets.all(6),
+                    child: Image.asset(
+                      widget.imagePath!,
+                      width: 16,
+                      height: 16,
+                      fit: BoxFit.contain,
+                      color: widget.isSelected
+                          ? selectedTextColor
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  )
+                : widget.icon != null
                 ? Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(

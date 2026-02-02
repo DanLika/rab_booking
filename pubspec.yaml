@@ -164,6 +164,7 @@ flutter:
     - assets/google_fonts/PlayfairDisplay-ExtraBold.ttf
     - assets/google_fonts/PlayfairDisplay-Italic.ttf
     - assets/images/
+    - assets/images/drawer_icons/
     - assets/images/platforms/
 
   # Custom Fonts

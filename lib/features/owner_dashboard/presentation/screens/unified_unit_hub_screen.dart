@@ -1406,11 +1406,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             l10n.unitWizardStep3MaxStay,
             '${_selectedUnit!.maxStayNights}',
           ),
-        if (_selectedUnit!.maxTotalCapacity != null)
+        if (_selectedUnit!.maxTotalCapacity != null &&
+            _selectedUnit!.maxTotalCapacity! > _selectedUnit!.maxGuests)
           _buildDetailRow(
             theme,
-            l10n.unitWizardStep5MaxTotalCapacity,
-            '${_selectedUnit!.maxTotalCapacity}',
+            l10n.unitWizardStep5ExtraBeds,
+            '${_selectedUnit!.maxTotalCapacity! - _selectedUnit!.maxGuests}',
           ),
         if (_selectedUnit!.extraBedFee != null)
           _buildDetailRow(

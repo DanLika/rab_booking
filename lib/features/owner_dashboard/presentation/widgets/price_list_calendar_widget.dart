@@ -889,18 +889,6 @@ class _PriceListCalendarWidgetState
         0,
       ),
     );
-    final minNightsController = TextEditingController(
-      text: existingPrice?.minNightsOnArrival?.toString() ?? '',
-    );
-    final maxNightsController = TextEditingController(
-      text: existingPrice?.maxNightsOnArrival?.toString() ?? '',
-    );
-    final minDaysAdvanceController = TextEditingController(
-      text: existingPrice?.minDaysAdvance?.toString() ?? '',
-    );
-    final maxDaysAdvanceController = TextEditingController(
-      text: existingPrice?.maxDaysAdvance?.toString() ?? '',
-    );
     bool available = existingPrice?.available ?? true;
     bool blockCheckIn = existingPrice?.blockCheckIn ?? false;
     bool blockCheckOut = existingPrice?.blockCheckOut ?? false;
@@ -1145,103 +1133,6 @@ class _PriceListCalendarWidgetState
                                   setState(() => blockCheckOut = value),
                               contentPadding: EdgeInsets.zero,
                             ),
-
-                            SizedBox(height: isMobile ? 16 : 24),
-
-                            // Advanced options in ExpansionTile (collapsed by default)
-                            Theme(
-                              data: theme.copyWith(
-                                dividerColor: Colors.transparent,
-                              ),
-                              child: ExpansionTile(
-                                iconColor: theme.colorScheme.primary,
-                                collapsedIconColor: theme.colorScheme.primary,
-                                tilePadding: EdgeInsets.zero,
-                                childrenPadding: EdgeInsets.only(
-                                  top: isMobile ? 8 : 12,
-                                  bottom: isMobile ? 8 : 12,
-                                ),
-                                leading: Icon(
-                                  Icons.tune,
-                                  size: 18,
-                                  color: theme.colorScheme.tertiary,
-                                ),
-                                title: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  ).priceCalendarAdvancedOptions,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.tertiary,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  ).priceCalendarAdvancedOptionsDesc,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                children: [
-                                  // Min nights field with explanation
-                                  _buildAdvancedOptionField(
-                                    controller: minNightsController,
-                                    label: AppLocalizations.of(
-                                      context,
-                                    ).priceCalendarMinNights,
-                                    hint: AppLocalizations.of(
-                                      context,
-                                    ).priceCalendarMinNightsHint,
-                                    example: '2',
-                                    isMobile: isMobile,
-                                    theme: theme,
-                                  ),
-                                  SizedBox(height: isMobile ? 12 : 16),
-                                  // Max nights field with explanation
-                                  _buildAdvancedOptionField(
-                                    controller: maxNightsController,
-                                    label: AppLocalizations.of(
-                                      context,
-                                    ).priceCalendarMaxNights,
-                                    hint: AppLocalizations.of(
-                                      context,
-                                    ).priceCalendarMaxNightsHint,
-                                    example: '14',
-                                    isMobile: isMobile,
-                                    theme: theme,
-                                  ),
-                                  SizedBox(height: isMobile ? 12 : 16),
-                                  // Min days advance field with explanation
-                                  _buildAdvancedOptionField(
-                                    controller: minDaysAdvanceController,
-                                    label: AppLocalizations.of(
-                                      context,
-                                    ).priceCalendarMinDaysAdvance,
-                                    hint: AppLocalizations.of(
-                                      context,
-                                    ).priceCalendarMinDaysAdvanceHint,
-                                    example: '1',
-                                    isMobile: isMobile,
-                                    theme: theme,
-                                  ),
-                                  SizedBox(height: isMobile ? 12 : 16),
-                                  // Max days advance field with explanation
-                                  _buildAdvancedOptionField(
-                                    controller: maxDaysAdvanceController,
-                                    label: AppLocalizations.of(
-                                      context,
-                                    ).priceCalendarMaxDaysAdvance,
-                                    hint: AppLocalizations.of(
-                                      context,
-                                    ).priceCalendarMaxDaysAdvanceHint,
-                                    example: '365',
-                                    isMobile: isMobile,
-                                    theme: theme,
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -1417,117 +1308,6 @@ class _PriceListCalendarWidgetState
                                       return;
                                     }
 
-                                    // Validate optional fields
-                                    final minNightsText = minNightsController
-                                        .text
-                                        .trim();
-                                    if (minNightsText.isNotEmpty) {
-                                      final minNights = int.tryParse(
-                                        minNightsText,
-                                      );
-                                      if (minNights == null || minNights <= 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(
-                                          context,
-                                          l10nValidation
-                                              .priceCalendarMinNightsMustBeGreaterThanZero,
-                                        );
-                                        return;
-                                      }
-                                    }
-
-                                    final maxNightsText = maxNightsController
-                                        .text
-                                        .trim();
-                                    if (maxNightsText.isNotEmpty) {
-                                      final maxNights = int.tryParse(
-                                        maxNightsText,
-                                      );
-                                      if (maxNights == null || maxNights <= 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(
-                                          context,
-                                          l10nValidation
-                                              .priceCalendarMaxNightsMustBeGreaterThanZero,
-                                        );
-                                        return;
-                                      }
-                                    }
-
-                                    final minDaysAdvanceText =
-                                        minDaysAdvanceController.text.trim();
-                                    if (minDaysAdvanceText.isNotEmpty) {
-                                      final minDaysAdvance = int.tryParse(
-                                        minDaysAdvanceText,
-                                      );
-                                      if (minDaysAdvance == null ||
-                                          minDaysAdvance < 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(
-                                          context,
-                                          l10nValidation
-                                              .priceCalendarMinDaysAdvanceMustBeZeroOrMore,
-                                        );
-                                        return;
-                                      }
-                                    }
-
-                                    final maxDaysAdvanceText =
-                                        maxDaysAdvanceController.text.trim();
-                                    if (maxDaysAdvanceText.isNotEmpty) {
-                                      final maxDaysAdvance = int.tryParse(
-                                        maxDaysAdvanceText,
-                                      );
-                                      if (maxDaysAdvance == null ||
-                                          maxDaysAdvance <= 0) {
-                                        ErrorDisplayUtils.showWarningSnackBar(
-                                          context,
-                                          l10nValidation
-                                              .priceCalendarMaxDaysAdvanceMustBeGreaterThanZero,
-                                        );
-                                        return;
-                                      }
-                                    }
-
-                                    // Cross-validation: min nights must be <= max nights
-                                    if (minNightsText.isNotEmpty &&
-                                        maxNightsText.isNotEmpty) {
-                                      final minNights = int.tryParse(
-                                        minNightsText,
-                                      );
-                                      final maxNights = int.tryParse(
-                                        maxNightsText,
-                                      );
-                                      if (minNights != null &&
-                                          maxNights != null &&
-                                          minNights > maxNights) {
-                                        ErrorDisplayUtils.showWarningSnackBar(
-                                          context,
-                                          l10nValidation
-                                              .priceCalendarMinNightsCannotExceedMax,
-                                        );
-                                        return;
-                                      }
-                                    }
-
-                                    // Cross-validation: min days advance must be <= max days advance
-                                    if (minDaysAdvanceText.isNotEmpty &&
-                                        maxDaysAdvanceText.isNotEmpty) {
-                                      final minDaysAdvance = int.tryParse(
-                                        minDaysAdvanceText,
-                                      );
-                                      final maxDaysAdvance = int.tryParse(
-                                        maxDaysAdvanceText,
-                                      );
-                                      if (minDaysAdvance != null &&
-                                          maxDaysAdvance != null &&
-                                          minDaysAdvance > maxDaysAdvance) {
-                                        ErrorDisplayUtils.showWarningSnackBar(
-                                          context,
-                                          l10nValidation
-                                              .priceCalendarMinAdvanceCannotExceedMax,
-                                        );
-                                        return;
-                                      }
-                                    }
-
                                     setState(() => isProcessing = true);
 
                                     try {
@@ -1535,23 +1315,7 @@ class _PriceListCalendarWidgetState
                                         dailyPriceRepositoryProvider,
                                       );
 
-                                      // Parse optional fields after validation
-                                      final minNights = minNightsText.isEmpty
-                                          ? null
-                                          : int.tryParse(minNightsText);
-                                      final maxNights = maxNightsText.isEmpty
-                                          ? null
-                                          : int.tryParse(maxNightsText);
-                                      final minDaysAdvance =
-                                          minDaysAdvanceText.isEmpty
-                                          ? null
-                                          : int.tryParse(minDaysAdvanceText);
-                                      final maxDaysAdvance =
-                                          maxDaysAdvanceText.isEmpty
-                                          ? null
-                                          : int.tryParse(maxDaysAdvanceText);
-
-                                      // Create price model with all fields
+                                      // Create price model (per-day night/advance overrides removed - use global settings)
                                       final priceModel = DailyPriceModel(
                                         id: existingPrice?.id ?? '',
                                         unitId: widget.unit.id,
@@ -1560,10 +1324,6 @@ class _PriceListCalendarWidgetState
                                         available: available,
                                         blockCheckIn: blockCheckIn,
                                         blockCheckOut: blockCheckOut,
-                                        minNightsOnArrival: minNights,
-                                        maxNightsOnArrival: maxNights,
-                                        minDaysAdvance: minDaysAdvance,
-                                        maxDaysAdvance: maxDaysAdvance,
                                         createdAt:
                                             existingPrice?.createdAt ??
                                             DateTime.now(),
@@ -1684,10 +1444,6 @@ class _PriceListCalendarWidgetState
         // animation takes multiple frames, not just one
         Future.delayed(const Duration(milliseconds: 350), () {
           priceController.dispose();
-          minNightsController.dispose();
-          maxNightsController.dispose();
-          minDaysAdvanceController.dispose();
-          maxDaysAdvanceController.dispose();
         });
       }),
     );
@@ -2807,43 +2563,6 @@ class _PriceListCalendarWidgetState
           );
         },
       ),
-    );
-  }
-
-  /// Build an advanced option field with label, hint explanation, and input
-  Widget _buildAdvancedOptionField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required String example,
-    required bool isMobile,
-    required ThemeData theme,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: controller,
-          decoration: InputDecorationHelper.buildDecoration(
-            labelText: label,
-            hintText: AppLocalizations.of(
-              context,
-            ).priceCalendarHintExample(example),
-            isMobile: isMobile,
-            context: context,
-          ),
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          hint,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontStyle: FontStyle.italic,
-          ),
-        ),
-      ],
     );
   }
 

@@ -3256,6 +3256,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             maxGuests: _unit?.maxGuests ?? 10,
             maxTotalCapacity: _unit?.maxTotalCapacity,
             petFee: _unit?.petFee,
+            maxPets: _unit?.maxPets,
             pets: _pets,
             isDarkMode: ref.watch(themeProvider),
             onAdultsChanged: (value) {

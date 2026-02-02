@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -223,20 +225,20 @@ Future<List<String>> ownerUnitIds(Ref ref) async {
 class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
   static const int pageSize = 20;
 
-  // PERFORMANCE FIX: Prevents duplicate loadFirstPage() calls from rapid build() cycles
-  int _buildGeneration = 0;
+  Timer? _debounceTimer;
 
   @override
   PaginatedBookingsState build() {
-    // Auto-load first page when provider is created
-    final generation = ++_buildGeneration;
-    Future.microtask(() {
-      if (generation == _buildGeneration) {
-        loadFirstPage();
-      }
-    });
+    // Debounce: Riverpod provider graph stabilization causes multiple rapid
+    // build() calls when dependencies load in cascade. Timer ensures only
+    // the last rebuild triggers the Firestore query (~150ms is imperceptible).
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 150), loadFirstPage);
+    ref.onDispose(_cancelDebounce);
     return PaginatedBookingsState.initial;
   }
+
+  void _cancelDebounce() => _debounceTimer?.cancel();
 
   /// Load first page of bookings
   Future<void> loadFirstPage() async {
@@ -370,9 +372,7 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
   final Map<String, DocumentSnapshot> _documentCache = {};
   static const int _maxCacheSize = 100;
 
-  // PERFORMANCE FIX: Prevents duplicate loadFirstPage() calls from rapid build() cycles.
-  // Each build() increments this counter; only the latest microtask executes.
-  int _buildGeneration = 0;
+  Timer? _debounceTimer;
 
   /// Add document to cache with size limit (FIFO eviction)
   void _addToCache(DocumentSnapshot doc) {
@@ -384,22 +384,19 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
     _documentCache[doc.id] = doc;
   }
 
+  void _cancelDebounce() => _debounceTimer?.cancel();
+
   @override
   WindowedBookingsState build() {
     // Watch filters - when they change, the provider rebuilds and reloads
     ref.watch(bookingsFiltersNotifierProvider);
 
-    // Auto-load first page when provider is created (or filters change)
-    // PERFORMANCE FIX: Use generation counter to deduplicate microtasks.
-    // If build() runs multiple times before microtasks execute (e.g. during
-    // navigation transitions or provider graph stabilization), only the
-    // last microtask will actually fire the Firestore query.
-    final generation = ++_buildGeneration;
-    Future.microtask(() {
-      if (generation == _buildGeneration) {
-        loadFirstPage();
-      }
-    });
+    // Debounce: Riverpod provider graph stabilization causes multiple rapid
+    // build() calls when dependencies load in cascade. Timer ensures only
+    // the last rebuild triggers the Firestore query (~150ms is imperceptible).
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 150), loadFirstPage);
+    ref.onDispose(_cancelDebounce);
     return WindowedBookingsState.cardViewInitial;
   }
 

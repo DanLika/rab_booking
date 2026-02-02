@@ -80,6 +80,32 @@ class Step4Review extends ConsumerWidget {
                 l10n.unitWizardStep5Area,
                 '${draft.areaSqm} m²',
               ),
+            if (draft.maxTotalCapacity != null &&
+                draft.maxGuests != null &&
+                draft.maxTotalCapacity! > draft.maxGuests!)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5ExtraBeds,
+                '${draft.maxTotalCapacity! - draft.maxGuests!}',
+              ),
+            if (draft.extraBedFee != null)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5ExtraBedFee,
+                '€${draft.extraBedFee}/night',
+              ),
+            if (draft.maxPets != null)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5MaxPets,
+                '${draft.maxPets}',
+              ),
+            if (draft.petFee != null)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5PetFee,
+                '€${draft.petFee}/night',
+              ),
           ],
         );
 
@@ -102,24 +128,6 @@ class Step4Review extends ConsumerWidget {
                   ? l10n.unitWizardStep5MinStayNights(draft.minStayNights!)
                   : '-',
             ),
-            if (draft.maxTotalCapacity != null)
-              _buildSummaryRow(
-                theme,
-                l10n.unitWizardStep5MaxTotalCapacity,
-                '${draft.maxTotalCapacity}',
-              ),
-            if (draft.extraBedFee != null)
-              _buildSummaryRow(
-                theme,
-                l10n.unitWizardStep5ExtraBedFee,
-                '€${draft.extraBedFee}/night',
-              ),
-            if (draft.petFee != null)
-              _buildSummaryRow(
-                theme,
-                l10n.unitWizardStep5PetFee,
-                '€${draft.petFee}/night',
-              ),
           ],
         );
 

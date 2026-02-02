@@ -52,6 +52,9 @@ class UnitModel with _$UnitModel {
     /// Pet fee per pet per night (null = pets not allowed)
     @JsonKey(name: 'pet_fee') double? petFee,
 
+    /// Maximum number of pets allowed per booking (null = use default 10)
+    @JsonKey(name: 'max_pets') int? maxPets,
+
     /// Number of bedrooms
     @Default(1) int bedrooms,
 
@@ -127,6 +130,9 @@ class UnitModel with _$UnitModel {
 
   /// Whether pets are allowed
   bool get allowsPets => petFee != null;
+
+  /// Effective max pets (uses maxPets if set, default 10 for backward compat)
+  int get effectiveMaxPets => maxPets ?? (petFee != null ? 10 : 0);
 
   /// Check if stay duration meets minimum requirement
   bool meetsMinimumStay(int nights) => nights >= minStayNights;

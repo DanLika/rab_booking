@@ -32,7 +32,6 @@ class IcalExportListScreen extends ConsumerStatefulWidget {
 class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
   List<Map<String, dynamic>> _allUnits = [];
   bool _isLoading = true;
-  bool _showFaq = false;
   String? _generatingUnitId; // Track which unit is currently generating
 
   @override
@@ -380,19 +379,8 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                                 ],
                               ),
                               const SizedBox(height: 24),
-                              // Show FAQ only if has units
-                              if (_allUnits.isNotEmpty) ...[
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: _buildHowItWorksSection(context),
-                                    ),
-                                    const SizedBox(width: 24),
-                                    Expanded(child: _buildFaqSection(context)),
-                                  ],
-                                ),
-                              ],
+                              if (_allUnits.isNotEmpty)
+                                _buildHowItWorksSection(context),
                             ] else ...[
                               // Mobile/Tablet: Stack vertically
                               _buildBenefitsSection(context),
@@ -402,9 +390,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                                 const SizedBox(height: 24),
                               ],
                               _buildHowItWorksSection(context),
-                              const SizedBox(height: 24),
-                              if (_allUnits.isNotEmpty)
-                                _buildFaqSection(context),
                             ],
                             const SizedBox(height: 32),
                           ],
@@ -986,127 +971,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFaqSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
-
-    final faqs = [
-      (l10n.icalExportFaq1Q, l10n.icalExportFaq1A),
-      (l10n.icalExportFaq2Q, l10n.icalExportFaq2A),
-      (l10n.icalExportFaq3Q, l10n.icalExportFaq3A),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: AppShadows.getElevation(2, isDark: isDark),
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () => setState(() => _showFaq = !_showFaq),
-            borderRadius: BorderRadius.circular(24),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.question_answer_rounded,
-                      color: theme.colorScheme.primary,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      l10n.icalExportFaqTitle,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    _showFaq
-                        ? Icons.expand_less_rounded
-                        : Icons.expand_more_rounded,
-                    color: theme.colorScheme.primary,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_showFaq) ...[
-            Divider(
-              height: 1,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: faqs
-                    .map(
-                      (faq) => Padding(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.help_outline_rounded,
-                                  size: 18,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    faq.$1,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 30),
-                              child: Text(
-                                faq.$2,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.6,
-                                  ),
-                                  height: 1.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ],
         ],
       ),
     );

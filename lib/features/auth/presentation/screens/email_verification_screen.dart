@@ -89,11 +89,19 @@ class _EmailVerificationScreenState
 
       final authState = ref.read(enhancedAuthProvider);
       if (!authState.requiresEmailVerification && mounted) {
-        // Email verified! Navigate to owner overview
-        // Router will handle onboarding redirect if needed
+        // Email verified! Cancel timers BEFORE navigating to prevent
+        // overlapping calls from showing errors after redirect
+        _refreshTimer?.cancel();
+        _cooldownTimer?.cancel();
         context.go(OwnerRoutes.overview);
       }
     } catch (e) {
+      // If email is already verified in Firebase Auth, the error is from a
+      // race condition (e.g., overlapping resumed + timer calls where one
+      // succeeded but the other failed on token refresh). Silently ignore.
+      final authState = ref.read(enhancedAuthProvider);
+      if (authState.firebaseUser?.emailVerified == true) return;
+
       // Only show network error ONCE to avoid spamming user every 3 seconds
       // Permission-denied errors (e.g., Firestore token refresh race condition)
       // are silently retried - they usually resolve on next attempt

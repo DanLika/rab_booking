@@ -517,17 +517,6 @@ class ProfileScreen extends ConsumerWidget {
                                 color: theme.dividerColor,
                               ),
                               PremiumListTile(
-                                icon: Icons.quiz_outlined,
-                                title: l10n.ownerDrawerFaq,
-                                subtitle: l10n.ownerDrawerFaqSubtitle,
-                                onTap: () => context.push(OwnerRoutes.guideFaq),
-                              ),
-                              Divider(
-                                height: 1,
-                                indent: 56,
-                                color: theme.dividerColor,
-                              ),
-                              PremiumListTile(
                                 icon: Icons.info_outline,
                                 title: l10n.ownerProfileAbout,
                                 subtitle: l10n.ownerProfileAboutSubtitle,

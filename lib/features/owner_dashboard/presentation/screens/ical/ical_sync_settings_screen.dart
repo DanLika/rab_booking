@@ -47,7 +47,6 @@ class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
 
 class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     with AndroidKeyboardDismissFixApproach1<IcalSyncSettingsScreen> {
-  bool _showFaq = false;
   int? _expandedPlatform;
 
   @override
@@ -164,24 +163,8 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                                       ],
                                     ),
                                     const SizedBox(height: 24),
-                                    // Show FAQ only if has feeds, otherwise show Platform Instructions
-                                    if (hasFeeds) ...[
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: _buildPlatformInstructions(
-                                              context,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 24),
-                                          Expanded(
-                                            child: _buildFaqSection(context),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                    if (hasFeeds)
+                                      _buildPlatformInstructions(context),
                                   ] else ...[
                                     // Mobile/Tablet: Stack vertically
                                     _buildBenefitsSection(context),
@@ -198,8 +181,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                                       const SizedBox(height: 24),
                                     ],
                                     _buildPlatformInstructions(context),
-                                    const SizedBox(height: 24),
-                                    if (hasFeeds) _buildFaqSection(context),
                                   ],
                                   const SizedBox(height: 32),
                                 ],
@@ -1064,101 +1045,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildFaqSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
-
-    final faqs = [
-      (l10n.icalGuideFaq1Q, l10n.icalGuideFaq1A),
-      (l10n.icalGuideFaq2Q, l10n.icalGuideFaq2A),
-      (l10n.icalGuideFaq3Q, l10n.icalGuideFaq3A),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: () => setState(() => _showFaq = !_showFaq),
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.question_answer,
-                    color: theme.colorScheme.primary,
-                    size: 22,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.icalGuideFaqTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    _showFaq ? Icons.expand_less : Icons.expand_more,
-                    color: theme.colorScheme.primary,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_showFaq) ...[
-            Divider(
-              height: 1,
-              color: isDark
-                  ? AppColors.sectionDividerDark
-                  : AppColors.sectionDividerLight,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: faqs
-                    .map(
-                      (faq) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '❓ ${faq.$1}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              faq.$2,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.7,
-                                ),
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 

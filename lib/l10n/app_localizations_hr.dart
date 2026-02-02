@@ -1662,7 +1662,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerDrawerSyncBookingCom => 'Sync sa booking.com';
 
   @override
-  String get ownerDrawerExportCalendar => 'Export Kalendara';
+  String get ownerDrawerExportCalendar => 'Export Rezervacija';
 
   @override
   String get ownerDrawerIcalFeedUrl => 'iCal feed URL';
@@ -5234,6 +5234,71 @@ class AppLocalizationsHr extends AppLocalizations {
       'Ove informacije pomažu gostima da odaberu odgovarajući smještaj';
 
   @override
+  String get unitWizardStep2ExtraBedsTitle => 'Dodatni kreveti';
+
+  @override
+  String get unitWizardStep2ExtraBedsDesc =>
+      'Automatska naknada po gostu po noći';
+
+  @override
+  String get unitWizardStep2MaxExtraBeds => 'Maks. dodatnih kreveta';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsHint => 'npr. 2';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsHelper =>
+      'Koliko dodatnih kreveta možete ponuditi';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsInvalid => 'Unesite ispravni broj';
+
+  @override
+  String get unitWizardStep2ExtraBedFee => 'Cijena po krevetu (€/noć)';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeHint => 'npr. 15';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeHelper =>
+      'Po dodatnom krevetu po noćenju';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeInvalid => 'Unesite ispravni iznos';
+
+  @override
+  String get unitWizardStep2PetsTitle => 'Kućni ljubimci';
+
+  @override
+  String get unitWizardStep2PetsDesc =>
+      'Automatska naknada po ljubimcu po noći';
+
+  @override
+  String get unitWizardStep2MaxPets => 'Maks. broj ljubimaca';
+
+  @override
+  String get unitWizardStep2MaxPetsHint => 'npr. 2';
+
+  @override
+  String get unitWizardStep2MaxPetsHelper =>
+      'Maksimalan broj ljubimaca po rezervaciji';
+
+  @override
+  String get unitWizardStep2MaxPetsInvalid => 'Unesite ispravni broj';
+
+  @override
+  String get unitWizardStep2PetFee => 'Cijena po ljubimcu (€/noć)';
+
+  @override
+  String get unitWizardStep2PetFeeHint => 'npr. 10';
+
+  @override
+  String get unitWizardStep2PetFeeHelper => 'Po ljubimcu po noćenju';
+
+  @override
+  String get unitWizardStep2PetFeeInvalid => 'Unesite ispravni iznos';
+
+  @override
   String get unitWizardStep3Title => 'Cijena i Dostupnost';
 
   @override
@@ -5306,59 +5371,16 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
-  String get unitWizardStep3ExtraFeesTitle =>
-      'Naknade za dodatne goste i ljubimce';
+  String get unitWizardStep5ExtraBeds => 'Dodatni kreveti';
 
   @override
-  String get unitWizardStep3ExtraFeesDesc =>
-      'Postavite naknade za dodatne goste i ljubimce (opcionalno)';
+  String get unitWizardStep5ExtraBedFee => 'Cijena kreveta';
 
   @override
-  String get unitWizardStep3MaxTotalCapacity => 'Maks. ukupni kapacitet';
+  String get unitWizardStep5MaxPets => 'Maks. ljubimaca';
 
   @override
-  String get unitWizardStep3MaxTotalCapacityHint => 'npr. 6';
-
-  @override
-  String get unitWizardStep3MaxTotalCapacityHelper =>
-      'Ukupno gostiju uključujući pomoćne ležajeve';
-
-  @override
-  String get unitWizardStep3MaxTotalCapacityInvalid =>
-      'Mora biti veće od osnovnog kapaciteta';
-
-  @override
-  String get unitWizardStep3ExtraBedFee => 'Naknada za pomoćni ležaj (€/noć)';
-
-  @override
-  String get unitWizardStep3ExtraBedFeeHint => 'npr. 10';
-
-  @override
-  String get unitWizardStep3ExtraBedFeeHelper => 'Po osobi po noćenju';
-
-  @override
-  String get unitWizardStep3PetFee => 'Naknada za ljubimce (€/noć)';
-
-  @override
-  String get unitWizardStep3PetFeeHint => 'npr. 10';
-
-  @override
-  String get unitWizardStep3PetFeeHelper => 'Po ljubimcu po noćenju';
-
-  @override
-  String get unitWizardStep3ExtraBedFeeInvalid => 'Unesite ispravni iznos';
-
-  @override
-  String get unitWizardStep3PetFeeInvalid => 'Unesite ispravni iznos';
-
-  @override
-  String get unitWizardStep5ExtraBedFee => 'Naknada za pomoćni ležaj';
-
-  @override
-  String get unitWizardStep5PetFee => 'Naknada za ljubimce';
-
-  @override
-  String get unitWizardStep5MaxTotalCapacity => 'Maks. kapacitet';
+  String get unitWizardStep5PetFee => 'Cijena ljubimca';
 
   @override
   String get unitWizardStep3Availability => 'Dostupnost';
@@ -6073,42 +6095,7 @@ class AppLocalizationsHr extends AppLocalizations {
       'Gosti ne mogu završiti rezervaciju';
 
   @override
-  String get priceCalendarAdvancedOptions => 'Napredne opcije';
-
-  @override
-  String get priceCalendarAdvancedOptionsDesc =>
-      'Override za ovaj datum (prazno = koristi zadane postavke)';
-
-  @override
   String get priceCalendarWeekendPrice => 'Vikend cijena (€)';
-
-  @override
-  String get priceCalendarMinNights => 'Min. noći';
-
-  @override
-  String get priceCalendarMinNightsHint =>
-      'Najmanje noći za check-in ovaj datum';
-
-  @override
-  String get priceCalendarMaxNights => 'Max. noći';
-
-  @override
-  String get priceCalendarMaxNightsHint =>
-      'Najviše noći za check-in ovaj datum';
-
-  @override
-  String get priceCalendarMinDaysAdvance => 'Min. dana unaprijed';
-
-  @override
-  String get priceCalendarMinDaysAdvanceHint =>
-      'Najranije kada gost može rezervirati ovaj datum';
-
-  @override
-  String get priceCalendarMaxDaysAdvance => 'Max. dana unaprijed';
-
-  @override
-  String get priceCalendarMaxDaysAdvanceHint =>
-      'Najkasnije kada gost može rezervirati ovaj datum';
 
   @override
   String get priceCalendarDeleteConfirmTitle => 'Potvrda brisanja';
@@ -6130,30 +6117,6 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get priceCalendarWeekendPriceMustBeGreaterThanZero =>
       'Vikend cijena mora biti veća od 0';
-
-  @override
-  String get priceCalendarMinNightsMustBeGreaterThanZero =>
-      'Min. noći mora biti veće od 0';
-
-  @override
-  String get priceCalendarMaxNightsMustBeGreaterThanZero =>
-      'Max. noći mora biti veće od 0';
-
-  @override
-  String get priceCalendarMinDaysAdvanceMustBeZeroOrMore =>
-      'Min. dana unaprijed mora biti 0 ili više';
-
-  @override
-  String get priceCalendarMaxDaysAdvanceMustBeGreaterThanZero =>
-      'Max. dana unaprijed mora biti veće od 0';
-
-  @override
-  String get priceCalendarMinNightsCannotExceedMax =>
-      'Min. noći ne može biti veće od max. noći';
-
-  @override
-  String get priceCalendarMinAdvanceCannotExceedMax =>
-      'Min. dana unaprijed ne može biti veće od max. dana unaprijed';
 
   @override
   String get priceCalendarPriceSaved => 'Cijena spremljena';
@@ -8187,4 +8150,110 @@ class AppLocalizationsHr extends AppLocalizations {
   String optionalUpdateVersion(String version) {
     return 'Najnovija verzija: $version';
   }
+
+  @override
+  String get additionalServicesTitle => 'Dodatne usluge';
+
+  @override
+  String get additionalServicesSubtitle =>
+      'Dodatne opcije koje gosti mogu rezervirati';
+
+  @override
+  String get additionalServicesEmpty => 'Nema konfiguriranih dodatnih usluga';
+
+  @override
+  String get additionalServicesEmptyHint =>
+      'Dodajte usluge poput parkinga, doručka, itd.';
+
+  @override
+  String get additionalServiceAddTitle => 'Dodaj uslugu';
+
+  @override
+  String get additionalServiceEditTitle => 'Uredi uslugu';
+
+  @override
+  String get additionalServiceType => 'Vrsta usluge';
+
+  @override
+  String get additionalServiceName => 'Naziv usluge';
+
+  @override
+  String get additionalServiceNameHint => 'npr. Privatni parking';
+
+  @override
+  String get additionalServiceNameRequired => 'Molimo unesite naziv usluge';
+
+  @override
+  String get additionalServicePrice => 'Cijena (EUR)';
+
+  @override
+  String get additionalServicePriceRequired => 'Molimo unesite cijenu';
+
+  @override
+  String get additionalServicePriceInvalid => 'Molimo unesite ispravnu cijenu';
+
+  @override
+  String get additionalServicePricingUnit => 'Jedinica naplate';
+
+  @override
+  String get additionalServiceMaxQuantity => 'Max količina';
+
+  @override
+  String get additionalServiceMaxQuantityHint =>
+      'Ostavite prazno za neograničeno';
+
+  @override
+  String get additionalServiceMaxQuantityHelper =>
+      'Opcionalno - ograniči koliko se može rezervirati';
+
+  @override
+  String get additionalServiceDescription => 'Opis';
+
+  @override
+  String get additionalServiceDescriptionHint => 'Opcionalni detalji o usluzi';
+
+  @override
+  String get additionalServiceTypeParking => 'Parking';
+
+  @override
+  String get additionalServiceTypeBreakfast => 'Doručak';
+
+  @override
+  String get additionalServiceTypeLateCheckin => 'Kasni check-in';
+
+  @override
+  String get additionalServiceTypeEarlyCheckout => 'Rani check-out';
+
+  @override
+  String get additionalServiceTypeCleaning => 'Čišćenje';
+
+  @override
+  String get additionalServiceTypeBabyCot => 'Dječji krevetić';
+
+  @override
+  String get additionalServiceTypeTransfer => 'Aerodromski transfer';
+
+  @override
+  String get additionalServiceTypeOther => 'Ostalo';
+
+  @override
+  String get additionalServicePricingPerBooking => 'Po rezervaciji';
+
+  @override
+  String get additionalServicePricingPerNight => 'Po noći';
+
+  @override
+  String get additionalServicePricingPerPerson => 'Po osobi';
+
+  @override
+  String get additionalServicePricingPerItem => 'Po komadu';
+
+  @override
+  String get additionalServiceDeleteConfirm => 'Obrisati ovu uslugu?';
+
+  @override
+  String get additionalServiceDeleteHint => 'Ova akcija se ne može poništiti';
+
+  @override
+  String get add => 'Dodaj';
 }

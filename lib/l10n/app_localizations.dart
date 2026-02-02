@@ -3149,7 +3149,7 @@ abstract class AppLocalizations {
   /// No description provided for @ownerDrawerExportCalendar.
   ///
   /// In en, this message translates to:
-  /// **'Export Calendar'**
+  /// **'Export Bookings'**
   String get ownerDrawerExportCalendar;
 
   /// No description provided for @ownerDrawerIcalFeedUrl.
@@ -9666,6 +9666,126 @@ abstract class AppLocalizations {
   /// **'This information helps guests choose appropriate accommodation'**
   String get unitWizardStep2InfoTip;
 
+  /// No description provided for @unitWizardStep2ExtraBedsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra Beds'**
+  String get unitWizardStep2ExtraBedsTitle;
+
+  /// No description provided for @unitWizardStep2ExtraBedsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic fee per extra guest per night'**
+  String get unitWizardStep2ExtraBedsDesc;
+
+  /// No description provided for @unitWizardStep2MaxExtraBeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Max extra beds'**
+  String get unitWizardStep2MaxExtraBeds;
+
+  /// No description provided for @unitWizardStep2MaxExtraBedsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 2'**
+  String get unitWizardStep2MaxExtraBedsHint;
+
+  /// No description provided for @unitWizardStep2MaxExtraBedsHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'How many extra beds can you provide'**
+  String get unitWizardStep2MaxExtraBedsHelper;
+
+  /// No description provided for @unitWizardStep2MaxExtraBedsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get unitWizardStep2MaxExtraBedsInvalid;
+
+  /// No description provided for @unitWizardStep2ExtraBedFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per extra bed (€/night)'**
+  String get unitWizardStep2ExtraBedFee;
+
+  /// No description provided for @unitWizardStep2ExtraBedFeeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 15'**
+  String get unitWizardStep2ExtraBedFeeHint;
+
+  /// No description provided for @unitWizardStep2ExtraBedFeeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Per extra bed per night'**
+  String get unitWizardStep2ExtraBedFeeHelper;
+
+  /// No description provided for @unitWizardStep2ExtraBedFeeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount'**
+  String get unitWizardStep2ExtraBedFeeInvalid;
+
+  /// No description provided for @unitWizardStep2PetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pets'**
+  String get unitWizardStep2PetsTitle;
+
+  /// No description provided for @unitWizardStep2PetsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic fee per pet per night'**
+  String get unitWizardStep2PetsDesc;
+
+  /// No description provided for @unitWizardStep2MaxPets.
+  ///
+  /// In en, this message translates to:
+  /// **'Max pets allowed'**
+  String get unitWizardStep2MaxPets;
+
+  /// No description provided for @unitWizardStep2MaxPetsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 2'**
+  String get unitWizardStep2MaxPetsHint;
+
+  /// No description provided for @unitWizardStep2MaxPetsHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum number of pets per booking'**
+  String get unitWizardStep2MaxPetsHelper;
+
+  /// No description provided for @unitWizardStep2MaxPetsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get unitWizardStep2MaxPetsInvalid;
+
+  /// No description provided for @unitWizardStep2PetFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per pet (€/night)'**
+  String get unitWizardStep2PetFee;
+
+  /// No description provided for @unitWizardStep2PetFeeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 10'**
+  String get unitWizardStep2PetFeeHint;
+
+  /// No description provided for @unitWizardStep2PetFeeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Per pet per night'**
+  String get unitWizardStep2PetFeeHelper;
+
+  /// No description provided for @unitWizardStep2PetFeeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount'**
+  String get unitWizardStep2PetFeeInvalid;
+
   /// No description provided for @unitWizardStep3Title.
   ///
   /// In en, this message translates to:
@@ -9798,107 +9918,29 @@ abstract class AppLocalizations {
   /// **'Max must be >= min ({min})'**
   String unitWizardStep3MaxStayMinError(int min);
 
-  /// No description provided for @unitWizardStep3ExtraFeesTitle.
+  /// No description provided for @unitWizardStep5ExtraBeds.
   ///
   /// In en, this message translates to:
-  /// **'Extra Guest & Pet Fees'**
-  String get unitWizardStep3ExtraFeesTitle;
-
-  /// No description provided for @unitWizardStep3ExtraFeesDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Set fees for extra guests and pets (optional)'**
-  String get unitWizardStep3ExtraFeesDesc;
-
-  /// No description provided for @unitWizardStep3MaxTotalCapacity.
-  ///
-  /// In en, this message translates to:
-  /// **'Max Total Capacity'**
-  String get unitWizardStep3MaxTotalCapacity;
-
-  /// No description provided for @unitWizardStep3MaxTotalCapacityHint.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. 6'**
-  String get unitWizardStep3MaxTotalCapacityHint;
-
-  /// No description provided for @unitWizardStep3MaxTotalCapacityHelper.
-  ///
-  /// In en, this message translates to:
-  /// **'Total guests including extra beds'**
-  String get unitWizardStep3MaxTotalCapacityHelper;
-
-  /// No description provided for @unitWizardStep3MaxTotalCapacityInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Must be greater than base capacity'**
-  String get unitWizardStep3MaxTotalCapacityInvalid;
-
-  /// No description provided for @unitWizardStep3ExtraBedFee.
-  ///
-  /// In en, this message translates to:
-  /// **'Extra Bed Fee (€/night)'**
-  String get unitWizardStep3ExtraBedFee;
-
-  /// No description provided for @unitWizardStep3ExtraBedFeeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. 10'**
-  String get unitWizardStep3ExtraBedFeeHint;
-
-  /// No description provided for @unitWizardStep3ExtraBedFeeHelper.
-  ///
-  /// In en, this message translates to:
-  /// **'Per extra person per night'**
-  String get unitWizardStep3ExtraBedFeeHelper;
-
-  /// No description provided for @unitWizardStep3PetFee.
-  ///
-  /// In en, this message translates to:
-  /// **'Pet Fee (€/night)'**
-  String get unitWizardStep3PetFee;
-
-  /// No description provided for @unitWizardStep3PetFeeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. 10'**
-  String get unitWizardStep3PetFeeHint;
-
-  /// No description provided for @unitWizardStep3PetFeeHelper.
-  ///
-  /// In en, this message translates to:
-  /// **'Per pet per night'**
-  String get unitWizardStep3PetFeeHelper;
-
-  /// No description provided for @unitWizardStep3ExtraBedFeeInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a valid amount'**
-  String get unitWizardStep3ExtraBedFeeInvalid;
-
-  /// No description provided for @unitWizardStep3PetFeeInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a valid amount'**
-  String get unitWizardStep3PetFeeInvalid;
+  /// **'Extra Beds'**
+  String get unitWizardStep5ExtraBeds;
 
   /// No description provided for @unitWizardStep5ExtraBedFee.
   ///
   /// In en, this message translates to:
-  /// **'Extra Bed Fee'**
+  /// **'Bed Fee'**
   String get unitWizardStep5ExtraBedFee;
+
+  /// No description provided for @unitWizardStep5MaxPets.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Pets'**
+  String get unitWizardStep5MaxPets;
 
   /// No description provided for @unitWizardStep5PetFee.
   ///
   /// In en, this message translates to:
   /// **'Pet Fee'**
   String get unitWizardStep5PetFee;
-
-  /// No description provided for @unitWizardStep5MaxTotalCapacity.
-  ///
-  /// In en, this message translates to:
-  /// **'Max Capacity'**
-  String get unitWizardStep5MaxTotalCapacity;
 
   /// No description provided for @unitWizardStep3Availability.
   ///
@@ -11136,71 +11178,11 @@ abstract class AppLocalizations {
   /// **'Guests cannot end reservation'**
   String get priceCalendarBlockCheckOutDesc;
 
-  /// No description provided for @priceCalendarAdvancedOptions.
-  ///
-  /// In en, this message translates to:
-  /// **'Advanced options'**
-  String get priceCalendarAdvancedOptions;
-
-  /// No description provided for @priceCalendarAdvancedOptionsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Override for this date (empty = use default settings)'**
-  String get priceCalendarAdvancedOptionsDesc;
-
   /// No description provided for @priceCalendarWeekendPrice.
   ///
   /// In en, this message translates to:
   /// **'Weekend price (€)'**
   String get priceCalendarWeekendPrice;
-
-  /// No description provided for @priceCalendarMinNights.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. nights'**
-  String get priceCalendarMinNights;
-
-  /// No description provided for @priceCalendarMinNightsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Minimum nights for check-in on this date'**
-  String get priceCalendarMinNightsHint;
-
-  /// No description provided for @priceCalendarMaxNights.
-  ///
-  /// In en, this message translates to:
-  /// **'Max. nights'**
-  String get priceCalendarMaxNights;
-
-  /// No description provided for @priceCalendarMaxNightsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum nights for check-in on this date'**
-  String get priceCalendarMaxNightsHint;
-
-  /// No description provided for @priceCalendarMinDaysAdvance.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. days advance'**
-  String get priceCalendarMinDaysAdvance;
-
-  /// No description provided for @priceCalendarMinDaysAdvanceHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Earliest when guests can book this date'**
-  String get priceCalendarMinDaysAdvanceHint;
-
-  /// No description provided for @priceCalendarMaxDaysAdvance.
-  ///
-  /// In en, this message translates to:
-  /// **'Max. days advance'**
-  String get priceCalendarMaxDaysAdvance;
-
-  /// No description provided for @priceCalendarMaxDaysAdvanceHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Latest when guests can book this date'**
-  String get priceCalendarMaxDaysAdvanceHint;
 
   /// No description provided for @priceCalendarDeleteConfirmTitle.
   ///
@@ -11237,42 +11219,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weekend price must be greater than 0'**
   String get priceCalendarWeekendPriceMustBeGreaterThanZero;
-
-  /// No description provided for @priceCalendarMinNightsMustBeGreaterThanZero.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. nights must be greater than 0'**
-  String get priceCalendarMinNightsMustBeGreaterThanZero;
-
-  /// No description provided for @priceCalendarMaxNightsMustBeGreaterThanZero.
-  ///
-  /// In en, this message translates to:
-  /// **'Max. nights must be greater than 0'**
-  String get priceCalendarMaxNightsMustBeGreaterThanZero;
-
-  /// No description provided for @priceCalendarMinDaysAdvanceMustBeZeroOrMore.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. days advance must be 0 or more'**
-  String get priceCalendarMinDaysAdvanceMustBeZeroOrMore;
-
-  /// No description provided for @priceCalendarMaxDaysAdvanceMustBeGreaterThanZero.
-  ///
-  /// In en, this message translates to:
-  /// **'Max. days advance must be greater than 0'**
-  String get priceCalendarMaxDaysAdvanceMustBeGreaterThanZero;
-
-  /// No description provided for @priceCalendarMinNightsCannotExceedMax.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. nights cannot exceed max. nights'**
-  String get priceCalendarMinNightsCannotExceedMax;
-
-  /// No description provided for @priceCalendarMinAdvanceCannotExceedMax.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. days advance cannot exceed max. days advance'**
-  String get priceCalendarMinAdvanceCannotExceedMax;
 
   /// No description provided for @priceCalendarPriceSaved.
   ///
@@ -14649,6 +14595,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Latest version: {version}'**
   String optionalUpdateVersion(String version);
+
+  /// No description provided for @additionalServicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Services'**
+  String get additionalServicesTitle;
+
+  /// No description provided for @additionalServicesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional extras guests can book'**
+  String get additionalServicesSubtitle;
+
+  /// No description provided for @additionalServicesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No additional services configured'**
+  String get additionalServicesEmpty;
+
+  /// No description provided for @additionalServicesEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add services like parking, breakfast, etc.'**
+  String get additionalServicesEmptyHint;
+
+  /// No description provided for @additionalServiceAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Service'**
+  String get additionalServiceAddTitle;
+
+  /// No description provided for @additionalServiceEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Service'**
+  String get additionalServiceEditTitle;
+
+  /// No description provided for @additionalServiceType.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Type'**
+  String get additionalServiceType;
+
+  /// No description provided for @additionalServiceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Name'**
+  String get additionalServiceName;
+
+  /// No description provided for @additionalServiceNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Private Parking'**
+  String get additionalServiceNameHint;
+
+  /// No description provided for @additionalServiceNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter service name'**
+  String get additionalServiceNameRequired;
+
+  /// No description provided for @additionalServicePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (EUR)'**
+  String get additionalServicePrice;
+
+  /// No description provided for @additionalServicePriceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter price'**
+  String get additionalServicePriceRequired;
+
+  /// No description provided for @additionalServicePriceInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid price'**
+  String get additionalServicePriceInvalid;
+
+  /// No description provided for @additionalServicePricingUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing Unit'**
+  String get additionalServicePricingUnit;
+
+  /// No description provided for @additionalServiceMaxQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Quantity'**
+  String get additionalServiceMaxQuantity;
+
+  /// No description provided for @additionalServiceMaxQuantityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for unlimited'**
+  String get additionalServiceMaxQuantityHint;
+
+  /// No description provided for @additionalServiceMaxQuantityHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional - limit how many can be booked'**
+  String get additionalServiceMaxQuantityHelper;
+
+  /// No description provided for @additionalServiceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get additionalServiceDescription;
+
+  /// No description provided for @additionalServiceDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional details about the service'**
+  String get additionalServiceDescriptionHint;
+
+  /// No description provided for @additionalServiceTypeParking.
+  ///
+  /// In en, this message translates to:
+  /// **'Parking'**
+  String get additionalServiceTypeParking;
+
+  /// No description provided for @additionalServiceTypeBreakfast.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakfast'**
+  String get additionalServiceTypeBreakfast;
+
+  /// No description provided for @additionalServiceTypeLateCheckin.
+  ///
+  /// In en, this message translates to:
+  /// **'Late Check-in'**
+  String get additionalServiceTypeLateCheckin;
+
+  /// No description provided for @additionalServiceTypeEarlyCheckout.
+  ///
+  /// In en, this message translates to:
+  /// **'Early Check-out'**
+  String get additionalServiceTypeEarlyCheckout;
+
+  /// No description provided for @additionalServiceTypeCleaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning'**
+  String get additionalServiceTypeCleaning;
+
+  /// No description provided for @additionalServiceTypeBabyCot.
+  ///
+  /// In en, this message translates to:
+  /// **'Baby Cot'**
+  String get additionalServiceTypeBabyCot;
+
+  /// No description provided for @additionalServiceTypeTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Airport Transfer'**
+  String get additionalServiceTypeTransfer;
+
+  /// No description provided for @additionalServiceTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get additionalServiceTypeOther;
+
+  /// No description provided for @additionalServicePricingPerBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Per Booking'**
+  String get additionalServicePricingPerBooking;
+
+  /// No description provided for @additionalServicePricingPerNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Per Night'**
+  String get additionalServicePricingPerNight;
+
+  /// No description provided for @additionalServicePricingPerPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Per Person'**
+  String get additionalServicePricingPerPerson;
+
+  /// No description provided for @additionalServicePricingPerItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Per Item'**
+  String get additionalServicePricingPerItem;
+
+  /// No description provided for @additionalServiceDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this service?'**
+  String get additionalServiceDeleteConfirm;
+
+  /// No description provided for @additionalServiceDeleteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone'**
+  String get additionalServiceDeleteHint;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
 }
 
 class _AppLocalizationsDelegate

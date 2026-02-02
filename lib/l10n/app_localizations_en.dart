@@ -1648,7 +1648,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerDrawerSyncBookingCom => 'Sync with booking.com';
 
   @override
-  String get ownerDrawerExportCalendar => 'Export Calendar';
+  String get ownerDrawerExportCalendar => 'Export Bookings';
 
   @override
   String get ownerDrawerIcalFeedUrl => 'iCal feed URL';
@@ -5206,6 +5206,69 @@ class AppLocalizationsEn extends AppLocalizations {
       'This information helps guests choose appropriate accommodation';
 
   @override
+  String get unitWizardStep2ExtraBedsTitle => 'Extra Beds';
+
+  @override
+  String get unitWizardStep2ExtraBedsDesc =>
+      'Automatic fee per extra guest per night';
+
+  @override
+  String get unitWizardStep2MaxExtraBeds => 'Max extra beds';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsHint => 'e.g. 2';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsHelper =>
+      'How many extra beds can you provide';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsInvalid => 'Enter a valid number';
+
+  @override
+  String get unitWizardStep2ExtraBedFee => 'Price per extra bed (€/night)';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeHint => 'e.g. 15';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeHelper => 'Per extra bed per night';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeInvalid => 'Enter a valid amount';
+
+  @override
+  String get unitWizardStep2PetsTitle => 'Pets';
+
+  @override
+  String get unitWizardStep2PetsDesc => 'Automatic fee per pet per night';
+
+  @override
+  String get unitWizardStep2MaxPets => 'Max pets allowed';
+
+  @override
+  String get unitWizardStep2MaxPetsHint => 'e.g. 2';
+
+  @override
+  String get unitWizardStep2MaxPetsHelper =>
+      'Maximum number of pets per booking';
+
+  @override
+  String get unitWizardStep2MaxPetsInvalid => 'Enter a valid number';
+
+  @override
+  String get unitWizardStep2PetFee => 'Price per pet (€/night)';
+
+  @override
+  String get unitWizardStep2PetFeeHint => 'e.g. 10';
+
+  @override
+  String get unitWizardStep2PetFeeHelper => 'Per pet per night';
+
+  @override
+  String get unitWizardStep2PetFeeInvalid => 'Enter a valid amount';
+
+  @override
   String get unitWizardStep3Title => 'Price and Availability';
 
   @override
@@ -5276,58 +5339,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get unitWizardStep3ExtraFeesTitle => 'Extra Guest & Pet Fees';
+  String get unitWizardStep5ExtraBeds => 'Extra Beds';
 
   @override
-  String get unitWizardStep3ExtraFeesDesc =>
-      'Set fees for extra guests and pets (optional)';
+  String get unitWizardStep5ExtraBedFee => 'Bed Fee';
 
   @override
-  String get unitWizardStep3MaxTotalCapacity => 'Max Total Capacity';
-
-  @override
-  String get unitWizardStep3MaxTotalCapacityHint => 'e.g. 6';
-
-  @override
-  String get unitWizardStep3MaxTotalCapacityHelper =>
-      'Total guests including extra beds';
-
-  @override
-  String get unitWizardStep3MaxTotalCapacityInvalid =>
-      'Must be greater than base capacity';
-
-  @override
-  String get unitWizardStep3ExtraBedFee => 'Extra Bed Fee (€/night)';
-
-  @override
-  String get unitWizardStep3ExtraBedFeeHint => 'e.g. 10';
-
-  @override
-  String get unitWizardStep3ExtraBedFeeHelper => 'Per extra person per night';
-
-  @override
-  String get unitWizardStep3PetFee => 'Pet Fee (€/night)';
-
-  @override
-  String get unitWizardStep3PetFeeHint => 'e.g. 10';
-
-  @override
-  String get unitWizardStep3PetFeeHelper => 'Per pet per night';
-
-  @override
-  String get unitWizardStep3ExtraBedFeeInvalid => 'Enter a valid amount';
-
-  @override
-  String get unitWizardStep3PetFeeInvalid => 'Enter a valid amount';
-
-  @override
-  String get unitWizardStep5ExtraBedFee => 'Extra Bed Fee';
+  String get unitWizardStep5MaxPets => 'Max Pets';
 
   @override
   String get unitWizardStep5PetFee => 'Pet Fee';
-
-  @override
-  String get unitWizardStep5MaxTotalCapacity => 'Max Capacity';
 
   @override
   String get unitWizardStep3Availability => 'Availability';
@@ -6037,42 +6058,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get priceCalendarBlockCheckOutDesc => 'Guests cannot end reservation';
 
   @override
-  String get priceCalendarAdvancedOptions => 'Advanced options';
-
-  @override
-  String get priceCalendarAdvancedOptionsDesc =>
-      'Override for this date (empty = use default settings)';
-
-  @override
   String get priceCalendarWeekendPrice => 'Weekend price (€)';
-
-  @override
-  String get priceCalendarMinNights => 'Min. nights';
-
-  @override
-  String get priceCalendarMinNightsHint =>
-      'Minimum nights for check-in on this date';
-
-  @override
-  String get priceCalendarMaxNights => 'Max. nights';
-
-  @override
-  String get priceCalendarMaxNightsHint =>
-      'Maximum nights for check-in on this date';
-
-  @override
-  String get priceCalendarMinDaysAdvance => 'Min. days advance';
-
-  @override
-  String get priceCalendarMinDaysAdvanceHint =>
-      'Earliest when guests can book this date';
-
-  @override
-  String get priceCalendarMaxDaysAdvance => 'Max. days advance';
-
-  @override
-  String get priceCalendarMaxDaysAdvanceHint =>
-      'Latest when guests can book this date';
 
   @override
   String get priceCalendarDeleteConfirmTitle => 'Delete confirmation';
@@ -6094,30 +6080,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get priceCalendarWeekendPriceMustBeGreaterThanZero =>
       'Weekend price must be greater than 0';
-
-  @override
-  String get priceCalendarMinNightsMustBeGreaterThanZero =>
-      'Min. nights must be greater than 0';
-
-  @override
-  String get priceCalendarMaxNightsMustBeGreaterThanZero =>
-      'Max. nights must be greater than 0';
-
-  @override
-  String get priceCalendarMinDaysAdvanceMustBeZeroOrMore =>
-      'Min. days advance must be 0 or more';
-
-  @override
-  String get priceCalendarMaxDaysAdvanceMustBeGreaterThanZero =>
-      'Max. days advance must be greater than 0';
-
-  @override
-  String get priceCalendarMinNightsCannotExceedMax =>
-      'Min. nights cannot exceed max. nights';
-
-  @override
-  String get priceCalendarMinAdvanceCannotExceedMax =>
-      'Min. days advance cannot exceed max. days advance';
 
   @override
   String get priceCalendarPriceSaved => 'Price saved';
@@ -8123,4 +8085,109 @@ class AppLocalizationsEn extends AppLocalizations {
   String optionalUpdateVersion(String version) {
     return 'Latest version: $version';
   }
+
+  @override
+  String get additionalServicesTitle => 'Additional Services';
+
+  @override
+  String get additionalServicesSubtitle => 'Optional extras guests can book';
+
+  @override
+  String get additionalServicesEmpty => 'No additional services configured';
+
+  @override
+  String get additionalServicesEmptyHint =>
+      'Add services like parking, breakfast, etc.';
+
+  @override
+  String get additionalServiceAddTitle => 'Add Service';
+
+  @override
+  String get additionalServiceEditTitle => 'Edit Service';
+
+  @override
+  String get additionalServiceType => 'Service Type';
+
+  @override
+  String get additionalServiceName => 'Service Name';
+
+  @override
+  String get additionalServiceNameHint => 'e.g. Private Parking';
+
+  @override
+  String get additionalServiceNameRequired => 'Please enter service name';
+
+  @override
+  String get additionalServicePrice => 'Price (EUR)';
+
+  @override
+  String get additionalServicePriceRequired => 'Please enter price';
+
+  @override
+  String get additionalServicePriceInvalid => 'Please enter a valid price';
+
+  @override
+  String get additionalServicePricingUnit => 'Pricing Unit';
+
+  @override
+  String get additionalServiceMaxQuantity => 'Max Quantity';
+
+  @override
+  String get additionalServiceMaxQuantityHint => 'Leave empty for unlimited';
+
+  @override
+  String get additionalServiceMaxQuantityHelper =>
+      'Optional - limit how many can be booked';
+
+  @override
+  String get additionalServiceDescription => 'Description';
+
+  @override
+  String get additionalServiceDescriptionHint =>
+      'Optional details about the service';
+
+  @override
+  String get additionalServiceTypeParking => 'Parking';
+
+  @override
+  String get additionalServiceTypeBreakfast => 'Breakfast';
+
+  @override
+  String get additionalServiceTypeLateCheckin => 'Late Check-in';
+
+  @override
+  String get additionalServiceTypeEarlyCheckout => 'Early Check-out';
+
+  @override
+  String get additionalServiceTypeCleaning => 'Cleaning';
+
+  @override
+  String get additionalServiceTypeBabyCot => 'Baby Cot';
+
+  @override
+  String get additionalServiceTypeTransfer => 'Airport Transfer';
+
+  @override
+  String get additionalServiceTypeOther => 'Other';
+
+  @override
+  String get additionalServicePricingPerBooking => 'Per Booking';
+
+  @override
+  String get additionalServicePricingPerNight => 'Per Night';
+
+  @override
+  String get additionalServicePricingPerPerson => 'Per Person';
+
+  @override
+  String get additionalServicePricingPerItem => 'Per Item';
+
+  @override
+  String get additionalServiceDeleteConfirm => 'Delete this service?';
+
+  @override
+  String get additionalServiceDeleteHint => 'This action cannot be undone';
+
+  @override
+  String get add => 'Add';
 }

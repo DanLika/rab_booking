@@ -131,7 +131,7 @@ class _FAQScreenState extends State<FAQScreen> {
         question: l10n.ownerFaqWidget5Q,
         answer: l10n.ownerFaqWidget5A,
       ),
-      // iCal Sync
+      // iCal Sync (Import)
       FAQItem(
         categoryKey: 'icalSync',
         question: l10n.ownerFaqIcal1Q,
@@ -151,6 +151,27 @@ class _FAQScreenState extends State<FAQScreen> {
         categoryKey: 'icalSync',
         question: l10n.ownerFaqIcal4Q,
         answer: l10n.ownerFaqIcal4A,
+      ),
+      FAQItem(
+        categoryKey: 'icalSync',
+        question: l10n.icalGuideFaq5Q,
+        answer: l10n.icalGuideFaq5A,
+      ),
+      // iCal Sync (Export)
+      FAQItem(
+        categoryKey: 'icalSync',
+        question: l10n.icalExportFaq1Q,
+        answer: l10n.icalExportFaq1A,
+      ),
+      FAQItem(
+        categoryKey: 'icalSync',
+        question: l10n.icalExportFaq2Q,
+        answer: l10n.icalExportFaq2A,
+      ),
+      FAQItem(
+        categoryKey: 'icalSync',
+        question: l10n.icalExportFaq3Q,
+        answer: l10n.icalExportFaq3A,
       ),
       // Technical Support
       FAQItem(
@@ -348,14 +369,6 @@ class _FAQScreenState extends State<FAQScreen> {
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           iconColor: theme.colorScheme.primary,
           collapsedIconColor: theme.colorScheme.primary,
-          leading: CircleAvatar(
-            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-            child: Icon(
-              _getCategoryIcon(faq.categoryKey),
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
-          ),
           title: Text(
             faq.question,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),

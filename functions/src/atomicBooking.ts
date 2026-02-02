@@ -1472,7 +1472,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
 
     throw new HttpsError(
       "internal",
-      error.message || "Failed to create booking. Please try again."
+      "Failed to create booking. Please try again later."
     );
   }
 });

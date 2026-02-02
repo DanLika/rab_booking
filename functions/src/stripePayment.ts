@@ -845,7 +845,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
     // Return user-friendly error message
     throw new HttpsError(
       "internal",
-      error.message || "Failed to create checkout session. Please try again."
+      "Failed to create checkout session. Please try again later."
     );
   }
 });

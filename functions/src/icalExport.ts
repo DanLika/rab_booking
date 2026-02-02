@@ -1,7 +1,8 @@
 import {onRequest} from "firebase-functions/v2/https";
 import * as crypto from "crypto";
 import {admin} from "./firebase";
-import {logInfo, logError} from "./logger";
+import {logInfo, logError, logWarn} from "./logger";
+import {checkRateLimit} from "./utils/rateLimit";
 
 // =============================================================================
 // CONFIGURATION
@@ -85,6 +86,19 @@ function setCacheHeaders(
  * - Any RFC 5545 compatible calendar app
  */
 export const getUnitIcalFeed = onRequest(async (request, response) => {
+  // ========================================================================
+  // SECURITY: Rate Limiting
+  // ========================================================================
+  const clientIp = request.ip ||
+    (request.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+    "unknown";
+
+  if (!checkRateLimit(`ical_feed:${clientIp}`, 30, 60)) { // 30 requests per minute
+    logWarn("[iCal Feed] Rate limit exceeded", {ip: clientIp});
+    response.status(429).send("Too many requests. Please try again later.");
+    return;
+  }
+
   // Set CORS headers
   response.set("Access-Control-Allow-Origin", "*");
   response.set("Access-Control-Allow-Methods", "GET");
@@ -501,7 +515,7 @@ function buildDescription(booking: any, unitName: string): string {
     parts.push(`Payment: ${booking.payment_status}`);
   }
 
-  if (booking.notes) parts.push(`Notes: ${booking.notes}`);
+  // SECURITY: Removed booking.notes from public iCal feed to prevent sensitive data leakage
 
   parts.push(`Booking ID: ${booking.id}`);
 

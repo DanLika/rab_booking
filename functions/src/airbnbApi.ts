@@ -1,7 +1,8 @@
 import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
-import {logInfo, logError, logSuccess} from "./logger";
+import {logInfo, logError, logSuccess, logWarn} from "./logger";
 import * as crypto from "crypto";
+import {checkRateLimit} from "./utils/rateLimit";
 import {encryptToken, decryptToken} from "./bookingComApi"; // Reuse encryption functions
 import {setUser} from "./sentry";
 
@@ -108,6 +109,17 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
 export const handleAirbnbOAuthCallback = onRequest(
   {cors: true},
   async (req, res) => {
+    // SECURITY: Rate Limiting
+    const clientIp = req.ip ||
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+      "unknown";
+
+    if (!checkRateLimit(`oauth_callback_airbnb:${clientIp}`, 10, 600)) { // 10 per 10 minutes
+      logWarn("[Airbnb OAuth] Rate limit exceeded", {ip: clientIp});
+      res.status(429).send("Too many requests. Please try again later.");
+      return;
+    }
+
     try {
       const {code, state, error} = req.query;
 

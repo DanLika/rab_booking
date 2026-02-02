@@ -272,8 +272,7 @@ export const syncIcalFeedNow = onCall(async (request) => {
     };
   } catch (error) {
     logError("[iCal Sync] Error in manual sync", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    throw new HttpsError("internal", "Sync failed: " + errorMessage);
+    throw new HttpsError("internal", "Sync failed. Please try again later.");
   }
 });
 

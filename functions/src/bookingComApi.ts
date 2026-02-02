@@ -1,7 +1,8 @@
 import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
-import {logInfo, logError, logSuccess} from "./logger";
+import {logInfo, logError, logSuccess, logWarn} from "./logger";
 import * as crypto from "crypto";
+import {checkRateLimit} from "./utils/rateLimit";
 import {setUser} from "./sentry";
 
 /**
@@ -60,16 +61,17 @@ function getEncryptionKey(): string {
  */
 export function encryptToken(token: string): string {
   // In production, use proper encryption (e.g., Google Cloud KMS)
-  // For now, we'll use a simple base64 encoding (NOT secure for production)
+  // SECURITY: Uses AES-256-CBC with a random IV per encryption
   // TODO: Implement proper encryption with KMS
   const encryptionKey = getEncryptionKey();
-  // Generate a consistent IV from the key (not secure, but matches deprecated createCipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
-  const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
+  const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
   let encrypted = cipher.update(token, "utf8", "hex");
   encrypted += cipher.final("hex");
-  return encrypted;
+
+  // Prepend IV for decryption (iv:ciphertext)
+  return `${iv.toString("hex")}:${encrypted}`;
 }
 
 /**
@@ -79,13 +81,24 @@ export function decryptToken(encryptedToken: string): string {
   // In production, use proper decryption (e.g., Google Cloud KMS)
   // TODO: Implement proper decryption with KMS
   const encryptionKey = getEncryptionKey();
-  // Generate a consistent IV from the key (not secure, but matches deprecated createDecipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
-  const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
-  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
-  let decrypted = decipher.update(encryptedToken, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
+
+  // Handle legacy format (no IV prepended) and new format (iv:ciphertext)
+  if (encryptedToken.includes(":")) {
+    const [ivHex, ciphertext] = encryptedToken.split(":");
+    const iv = Buffer.from(ivHex, "hex");
+    const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+    let decrypted = decipher.update(ciphertext, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+    return decrypted;
+  } else {
+    // Legacy format fallback: uses consistent IV derived from key
+    const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
+    const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+    let decrypted = decipher.update(encryptedToken, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+    return decrypted;
+  }
 }
 
 /**
@@ -163,6 +176,17 @@ export const initiateBookingComOAuth = onCall(async (request) => {
 export const handleBookingComOAuthCallback = onRequest(
   {cors: true},
   async (req, res) => {
+    // SECURITY: Rate Limiting
+    const clientIp = req.ip ||
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+      "unknown";
+
+    if (!checkRateLimit(`oauth_callback_booking_com:${clientIp}`, 10, 600)) { // 10 per 10 minutes
+      logWarn("[Booking.com OAuth] Rate limit exceeded", {ip: clientIp});
+      res.status(429).send("Too many requests. Please try again later.");
+      return;
+    }
+
     try {
       const {code, state, error} = req.query;
 

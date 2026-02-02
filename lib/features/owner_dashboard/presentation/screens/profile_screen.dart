@@ -499,9 +499,9 @@ class ProfileScreen extends ConsumerWidget {
                                   final Uri emailUri = Uri.parse(
                                     'mailto:dusko@book-bed.com?subject=$subject&body=$body',
                                   );
-                                  if (await canLaunchUrl(emailUri)) {
+                                  try {
                                     await launchUrl(emailUri);
-                                  } else {
+                                  } catch (e) {
                                     if (context.mounted) {
                                       ErrorDisplayUtils.showErrorSnackBar(
                                         context,

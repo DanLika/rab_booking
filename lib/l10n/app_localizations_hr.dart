@@ -2801,17 +2801,18 @@ class AppLocalizationsHr extends AppLocalizations {
   String get notificationSettingsTitle => 'Postavke Obavijesti';
 
   @override
-  String get notificationSettingsEnableAll => 'Omogući Sve Obavijesti';
+  String get notificationSettingsEnableAll => 'Omogući Opcionalne Obavijesti';
 
   @override
   String get notificationSettingsMasterSwitch =>
-      'Isključite da zaustavite sve email obavijesti. Emailovi gostima nisu zahvaćeni.';
+      'Kontrolirajte marketing i podsjetnik emailove. Kritične obavijesti o rezervacijama se uvijek šalju.';
 
   @override
   String get notificationSettingsEnabled => 'Obavijesti uspješno omogućene';
 
   @override
-  String get notificationSettingsDisabled => 'Obavijesti uspješno onemogućene';
+  String get notificationSettingsDisabled =>
+      'Opcionalne obavijesti onemogućene';
 
   @override
   String get notificationSettingsUpdateError =>
@@ -2819,10 +2820,33 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get notificationSettingsDisabledWarning =>
-      'Sve email obavijesti su pauzirane. Potvrdni emailovi gostima i dalje se šalju. Omogućite za primanje upozorenja o rezervacijama.';
+      'Opcionalne email obavijesti su pauzirane. I dalje ćete primati kritične emailove: nove rezervacije, potvrde i otkazivanja.';
 
   @override
-  String get notificationSettingsCategories => 'Email Obavijesti';
+  String get notificationSettingsCategories => 'Opcionalne Obavijesti';
+
+  @override
+  String get notificationSettingsCategoriesDesc =>
+      'Možete isključiti ove nekritične obavijesti';
+
+  @override
+  String get notificationSettingsAlwaysSent => 'Uvijek se šalju';
+
+  @override
+  String get notificationSettingsAlwaysSentDesc =>
+      'Ove kritične obavijesti se ne mogu onemogućiti';
+
+  @override
+  String get notificationSettingsAlwaysSentBookings =>
+      'Novi zahtjevi za rezervaciju i čekanja na odobrenje';
+
+  @override
+  String get notificationSettingsAlwaysSentConfirmations =>
+      'Potvrde rezervacija';
+
+  @override
+  String get notificationSettingsAlwaysSentCancellations =>
+      'Otkazivanja rezervacija';
 
   @override
   String get notificationSettingsBookings => 'Rezervacije';
@@ -2832,21 +2856,21 @@ class AppLocalizationsHr extends AppLocalizations {
       'Emailovi kada gosti naprave instant rezervacije. Rezervacije na čekanju koje zahtijevaju odobrenje uvijek se šalju.';
 
   @override
-  String get notificationSettingsPayments => 'Plaćanja';
+  String get notificationSettingsPayments => 'Podsjetnici za plaćanje';
 
   @override
   String get notificationSettingsPaymentsDesc =>
-      'Emailovi kada primite Stripe uplatu od gostiju.';
+      'Opcionalni emailovi o plaćanjima. Početne Stripe potvrde plaćanja se uvijek šalju.';
 
   @override
-  String get notificationSettingsCalendar => 'Kalendar';
+  String get notificationSettingsCalendar => 'Sinkronizacija kalendara';
 
   @override
   String get notificationSettingsCalendarDesc =>
       'Upozorenja iCal sinkronizacije i konflikti u kalendaru.';
 
   @override
-  String get notificationSettingsMarketing => 'Marketing';
+  String get notificationSettingsMarketing => 'Marketing i ažuriranja';
 
   @override
   String get notificationSettingsMarketingDesc =>

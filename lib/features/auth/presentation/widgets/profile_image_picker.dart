@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/services/logging_service.dart';
 
 /// Profile Image Picker Widget
 /// Displays a circular avatar with option to upload/change image
@@ -52,7 +53,12 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
         if (!mounted) return;
         setState(() => _isUploading = false);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        'ProfileImagePicker: Failed to pick image',
+        e,
+        stackTrace,
+      );
       if (!mounted) return;
       setState(() => _isUploading = false);
       ScaffoldMessenger.of(context).showSnackBar(

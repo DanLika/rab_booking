@@ -570,7 +570,7 @@ export function generatePaymentDetailsCard(details: PaymentDetails): string {
   const rows: DetailRow[] = [];
 
   if (details.depositAmount !== undefined && details.depositAmount > 0) {
-    rows.push({label: "Kapara", value: formatCurrency(details.depositAmount)});
+    rows.push({label: "Avans", value: formatCurrency(details.depositAmount)});
   }
 
   if (details.remainingAmount !== undefined && details.remainingAmount > 0) {

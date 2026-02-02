@@ -365,9 +365,13 @@ class _NotificationSettingsBottomSheetState
                           ),
                         const SizedBox(height: 12),
 
-                        // Categories Header
+                        // Always Sent Section (critical - cannot disable)
+                        _buildAlwaysSentSection(context, theme, l10n),
+                        const SizedBox(height: 20),
+
+                        // Categories Header (optional notifications)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
                             l10n.notificationSettingsCategories,
                             style: TextStyle(
@@ -376,6 +380,33 @@ class _NotificationSettingsBottomSheetState
                               color: theme.colorScheme.onSurface,
                             ),
                           ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            l10n.notificationSettingsCategoriesDesc,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Marketing Category (most commonly toggled)
+                        _buildCategoryCard(
+                          context: context,
+                          theme: theme,
+                          isDark: isDark,
+                          title: l10n.notificationSettingsMarketing,
+                          description: l10n.notificationSettingsMarketingDesc,
+                          icon: Icons.campaign_outlined,
+                          iconColor: theme.colorScheme.tertiary,
+                          channels: categories.marketing,
+                          enabled: masterEnabled,
+                          onChanged: (channels) =>
+                              _updateCategory('marketing', channels),
                         ),
 
                         // Payments Category
@@ -646,6 +677,147 @@ class _NotificationSettingsBottomSheetState
             endIndent: 16,
           ),
         if (isLast) const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  /// Build the "Always Sent" section showing critical notifications that cannot be disabled
+  Widget _buildAlwaysSentSection(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.gradients.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha(
+                      (0.12 * 255).toInt(),
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.verified_user_outlined,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.notificationSettingsAlwaysSent,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.notificationSettingsAlwaysSentDesc,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: theme.colorScheme.outline.withAlpha((0.1 * 255).toInt()),
+          ),
+          // List of always-sent notifications
+          _buildAlwaysSentItem(
+            theme: theme,
+            icon: Icons.add_alert_outlined,
+            text: l10n.notificationSettingsAlwaysSentBookings,
+          ),
+          _buildAlwaysSentItem(
+            theme: theme,
+            icon: Icons.check_circle_outline,
+            text: l10n.notificationSettingsAlwaysSentConfirmations,
+          ),
+          _buildAlwaysSentItem(
+            theme: theme,
+            icon: Icons.cancel_outlined,
+            text: l10n.notificationSettingsAlwaysSentCancellations,
+            isLast: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build individual always-sent item row
+  Widget _buildAlwaysSentItem({
+    required ThemeData theme,
+    required IconData icon,
+    required String text,
+    bool isLast = false,
+  }) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                size: 18,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.lock_outline,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+        if (!isLast)
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: theme.colorScheme.outline.withAlpha((0.08 * 255).toInt()),
+            indent: 46,
+            endIndent: 16,
+          ),
       ],
     );
   }

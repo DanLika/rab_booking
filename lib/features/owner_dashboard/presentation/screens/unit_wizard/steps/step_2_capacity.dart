@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../../../core/services/logging_service.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
@@ -106,11 +107,29 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
     );
 
     if (result != null && mounted) {
-      final repo = ref.read(additionalServicesRepositoryProvider);
-      final created = await repo.create(result);
-      setState(() {
-        _services.add(created);
-      });
+      try {
+        final repo = ref.read(additionalServicesRepositoryProvider);
+        final created = await repo.create(result);
+        if (mounted) {
+          setState(() {
+            _services.add(created);
+          });
+        }
+      } catch (e, stackTrace) {
+        await LoggingService.logError(
+          'Step2: Failed to create additional service',
+          e,
+          stackTrace,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context).error),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -129,12 +148,30 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
     );
 
     if (result != null && mounted) {
-      final repo = ref.read(additionalServicesRepositoryProvider);
-      await repo.update(result);
-      setState(() {
-        final idx = _services.indexWhere((s) => s.id == result.id);
-        if (idx >= 0) _services[idx] = result;
-      });
+      try {
+        final repo = ref.read(additionalServicesRepositoryProvider);
+        await repo.update(result);
+        if (mounted) {
+          setState(() {
+            final idx = _services.indexWhere((s) => s.id == result.id);
+            if (idx >= 0) _services[idx] = result;
+          });
+        }
+      } catch (e, stackTrace) {
+        await LoggingService.logError(
+          'Step2: Failed to update additional service',
+          e,
+          stackTrace,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context).error),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -159,11 +196,29 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
     );
 
     if (confirmed == true && mounted) {
-      final repo = ref.read(additionalServicesRepositoryProvider);
-      await repo.delete(service.id);
-      setState(() {
-        _services.removeWhere((s) => s.id == service.id);
-      });
+      try {
+        final repo = ref.read(additionalServicesRepositoryProvider);
+        await repo.delete(service.id);
+        if (mounted) {
+          setState(() {
+            _services.removeWhere((s) => s.id == service.id);
+          });
+        }
+      } catch (e, stackTrace) {
+        await LoggingService.logError(
+          'Step2: Failed to delete additional service',
+          e,
+          stackTrace,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context).error),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
     }
   }
 

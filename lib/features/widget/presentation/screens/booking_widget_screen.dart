@@ -3397,7 +3397,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       widgetSettings: _widgetSettings,
       adults: _adults,
       children: _children,
-      maxGuests: _unit?.maxGuests ?? 10,
+      maxGuests: _unit?.effectiveMaxCapacity ?? 10,
     );
 
     if (!validationResult.isValid) {

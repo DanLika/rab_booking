@@ -2782,29 +2782,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationSettingsTitle => 'Notification Settings';
 
   @override
-  String get notificationSettingsEnableAll => 'Enable All Notifications';
+  String get notificationSettingsEnableAll => 'Enable Optional Notifications';
 
   @override
   String get notificationSettingsMasterSwitch =>
-      'Turn off to stop all email notifications to you. Guest emails are not affected.';
+      'Control marketing and payment reminder emails. Critical booking notifications are always sent.';
 
   @override
   String get notificationSettingsEnabled =>
       'Notifications enabled successfully';
 
   @override
-  String get notificationSettingsDisabled =>
-      'Notifications disabled successfully';
+  String get notificationSettingsDisabled => 'Optional notifications disabled';
 
   @override
   String get notificationSettingsUpdateError => 'Error updating settings';
 
   @override
   String get notificationSettingsDisabledWarning =>
-      'All email notifications to you are paused. Guest confirmation emails will still be sent. Enable to receive booking alerts.';
+      'Optional email notifications are paused. You will still receive critical emails: new bookings, confirmations, and cancellations.';
 
   @override
-  String get notificationSettingsCategories => 'Email Notifications';
+  String get notificationSettingsCategories => 'Optional Notifications';
+
+  @override
+  String get notificationSettingsCategoriesDesc =>
+      'You can turn off these non-critical notifications';
+
+  @override
+  String get notificationSettingsAlwaysSent => 'Always Sent';
+
+  @override
+  String get notificationSettingsAlwaysSentDesc =>
+      'These critical notifications cannot be disabled';
+
+  @override
+  String get notificationSettingsAlwaysSentBookings =>
+      'New booking requests and pending approvals';
+
+  @override
+  String get notificationSettingsAlwaysSentConfirmations =>
+      'Booking confirmations';
+
+  @override
+  String get notificationSettingsAlwaysSentCancellations =>
+      'Booking cancellations';
 
   @override
   String get notificationSettingsBookings => 'Bookings';
@@ -2814,21 +2836,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Emails when guests make instant bookings. Pending bookings requiring your approval are always sent.';
 
   @override
-  String get notificationSettingsPayments => 'Payments';
+  String get notificationSettingsPayments => 'Payment Reminders';
 
   @override
   String get notificationSettingsPaymentsDesc =>
-      'Emails when you receive Stripe payments from guests.';
+      'Optional payment notification emails. Initial Stripe payment confirmations are always sent.';
 
   @override
-  String get notificationSettingsCalendar => 'Calendar';
+  String get notificationSettingsCalendar => 'Calendar Sync';
 
   @override
   String get notificationSettingsCalendarDesc =>
       'iCal sync alerts and calendar conflict warnings.';
 
   @override
-  String get notificationSettingsMarketing => 'Marketing';
+  String get notificationSettingsMarketing => 'Marketing & Updates';
 
   @override
   String get notificationSettingsMarketingDesc =>

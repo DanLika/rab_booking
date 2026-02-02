@@ -140,7 +140,6 @@ class PriceBreakdownWidget extends StatelessWidget {
               label: translations.additionalServices,
               amount: formattedAdditionalServices!,
               isDarkMode: isDarkMode,
-              color: colors.statusAvailableBorder,
             ),
           ],
 

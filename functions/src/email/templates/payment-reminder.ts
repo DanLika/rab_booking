@@ -66,7 +66,7 @@ export function generatePaymentReminderEmailV2(
   const warningAlert = generateAlert({
     type: "warning",
     title: "Uplata potrebna",
-    message: "Molimo vas da što prije uplatite kaparu kako bi rezervacija bila potvrđena.",
+    message: "Molimo vas da što prije uplatite avans kako bi rezervacija bila potvrđena.",
   });
 
   // Booking details card
@@ -84,7 +84,7 @@ export function generatePaymentReminderEmailV2(
 
   // Payment details card
   const paymentDetailsRows: DetailRow[] = [
-    {label: "Kapara za uplatu", value: formatCurrency(depositAmount)},
+    {label: "Avans za uplatu", value: formatCurrency(depositAmount)},
     {label: "Referenca", value: escapeHtml(bookingReference)},
   ];
   const paymentDetailsCard = generateCard(
@@ -107,7 +107,7 @@ export function generatePaymentReminderEmailV2(
   // Combine all content
   const content = `
     ${generateGreeting(escapeHtml(guestName))}
-    ${generateIntro("Ovo je prijateljski podsjetnik da vaša rezervacija čeka uplatu kapare.")}
+    ${generateIntro("Ovo je prijateljski podsjetnik da vaša rezervacija čeka uplatu avansa.")}
     ${warningAlert}
     ${bookingDetailsCard}
     ${paymentDetailsCard}

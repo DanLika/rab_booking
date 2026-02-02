@@ -5289,13 +5289,13 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsEnableAll.
   ///
   /// In en, this message translates to:
-  /// **'Enable All Notifications'**
+  /// **'Enable Optional Notifications'**
   String get notificationSettingsEnableAll;
 
   /// No description provided for @notificationSettingsMasterSwitch.
   ///
   /// In en, this message translates to:
-  /// **'Turn off to stop all email notifications to you. Guest emails are not affected.'**
+  /// **'Control marketing and payment reminder emails. Critical booking notifications are always sent.'**
   String get notificationSettingsMasterSwitch;
 
   /// No description provided for @notificationSettingsEnabled.
@@ -5307,7 +5307,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsDisabled.
   ///
   /// In en, this message translates to:
-  /// **'Notifications disabled successfully'**
+  /// **'Optional notifications disabled'**
   String get notificationSettingsDisabled;
 
   /// No description provided for @notificationSettingsUpdateError.
@@ -5319,14 +5319,50 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsDisabledWarning.
   ///
   /// In en, this message translates to:
-  /// **'All email notifications to you are paused. Guest confirmation emails will still be sent. Enable to receive booking alerts.'**
+  /// **'Optional email notifications are paused. You will still receive critical emails: new bookings, confirmations, and cancellations.'**
   String get notificationSettingsDisabledWarning;
 
   /// No description provided for @notificationSettingsCategories.
   ///
   /// In en, this message translates to:
-  /// **'Email Notifications'**
+  /// **'Optional Notifications'**
   String get notificationSettingsCategories;
+
+  /// No description provided for @notificationSettingsCategoriesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can turn off these non-critical notifications'**
+  String get notificationSettingsCategoriesDesc;
+
+  /// No description provided for @notificationSettingsAlwaysSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Always Sent'**
+  String get notificationSettingsAlwaysSent;
+
+  /// No description provided for @notificationSettingsAlwaysSentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'These critical notifications cannot be disabled'**
+  String get notificationSettingsAlwaysSentDesc;
+
+  /// No description provided for @notificationSettingsAlwaysSentBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'New booking requests and pending approvals'**
+  String get notificationSettingsAlwaysSentBookings;
+
+  /// No description provided for @notificationSettingsAlwaysSentConfirmations.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking confirmations'**
+  String get notificationSettingsAlwaysSentConfirmations;
+
+  /// No description provided for @notificationSettingsAlwaysSentCancellations.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking cancellations'**
+  String get notificationSettingsAlwaysSentCancellations;
 
   /// No description provided for @notificationSettingsBookings.
   ///
@@ -5343,19 +5379,19 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsPayments.
   ///
   /// In en, this message translates to:
-  /// **'Payments'**
+  /// **'Payment Reminders'**
   String get notificationSettingsPayments;
 
   /// No description provided for @notificationSettingsPaymentsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Emails when you receive Stripe payments from guests.'**
+  /// **'Optional payment notification emails. Initial Stripe payment confirmations are always sent.'**
   String get notificationSettingsPaymentsDesc;
 
   /// No description provided for @notificationSettingsCalendar.
   ///
   /// In en, this message translates to:
-  /// **'Calendar'**
+  /// **'Calendar Sync'**
   String get notificationSettingsCalendar;
 
   /// No description provided for @notificationSettingsCalendarDesc.
@@ -5367,7 +5403,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsMarketing.
   ///
   /// In en, this message translates to:
-  /// **'Marketing'**
+  /// **'Marketing & Updates'**
   String get notificationSettingsMarketing;
 
   /// No description provided for @notificationSettingsMarketingDesc.

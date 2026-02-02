@@ -35,13 +35,15 @@ class StorageService {
   /// Maximum file size: 10MB (matches storage.rules SEC-002)
   static const int _maxFileSizeBytes = 10 * 1024 * 1024;
 
-  /// Allowed image extensions
+  /// Allowed image extensions (includes iOS HEIC/HEIF)
   static const List<String> _allowedExtensions = [
     'jpg',
     'jpeg',
     'png',
     'webp',
     'gif',
+    'heic',
+    'heif',
   ];
 
   /// Validate file before upload (client-side check for better UX)
@@ -67,6 +69,9 @@ class StorageService {
 
   /// Upload profile image for a user
   /// Returns the download URL of the uploaded image
+  ///
+  /// Uses a fixed filename (profile.jpg) so the old image is always overwritten.
+  /// image_picker converts to JPEG when imageQuality is set, so content is always JPEG.
   Future<String> uploadProfileImage({
     required String userId,
     required Uint8List imageBytes,
@@ -75,8 +80,10 @@ class StorageService {
     try {
       // SEC-002: Validate file before upload
       _validateImageFile(imageBytes, fileName);
-      // Create a reference to the file location
-      final String path = 'users/$userId/profile/$fileName';
+      // Use fixed filename - image_picker always outputs JPEG when imageQuality is set,
+      // and this avoids iOS HEIC filenames causing path issues.
+      // Also overwrites old profile image instead of accumulating files.
+      final String path = 'users/$userId/profile/profile.jpg';
       final Reference ref = _storage.ref().child(path);
 
       // Set metadata

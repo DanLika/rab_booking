@@ -87,7 +87,7 @@ export function generateBookingConfirmationEmailV2(
   const paymentDetailsRows: DetailRow[] = [];
 
   if (depositAmount > 0) {
-    paymentDetailsRows.push({label: "Kapara", value: formatCurrency(depositAmount)});
+    paymentDetailsRows.push({label: "Avans", value: formatCurrency(depositAmount)});
   }
 
   if (remainingAmount > 0) {
@@ -113,7 +113,7 @@ export function generateBookingConfirmationEmailV2(
     generateAlert({
       type: "warning",
       title: "Upute za plaćanje",
-      message: `Molimo uplatite kaparu od ${formatCurrency(depositAmount)} u roku od 3 dana. VAŽNO: Obavezno navedite referencu rezervacije ${escapeHtml(bookingReference)} u opisu uplate!`,
+      message: `Molimo uplatite avans od ${formatCurrency(depositAmount)} u roku od 7 dana. VAŽNO: Obavezno navedite referencu rezervacije ${escapeHtml(bookingReference)} u opisu uplate!`,
     }) : "";
 
   // View booking button

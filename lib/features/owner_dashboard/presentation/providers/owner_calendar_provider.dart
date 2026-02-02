@@ -152,8 +152,9 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
     });
   }
 
-  /// Setup real-time subscription for ALL owner's bookings with batched listeners
-  /// Handles >10 units by creating multiple listeners (Firestore whereIn limit is 10)
+  /// Setup real-time subscription for ALL owner's bookings
+  /// Uses owner_id query for bookings (matches security rules) and
+  /// batched unit_id whereIn for iCal events (public read rules)
   ///
   /// OPTIMIZED: Uses cached unitIds from allOwnerUnitsProvider
   /// Saves 1 + N queries (properties + units) per setup
@@ -190,7 +191,41 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
 
       if (unitIdsToWatch.isEmpty) return;
 
-      // BATCHED LISTENING: Split unit IDs into chunks of 10 (Firestore whereIn limit)
+      LoggingService.log(
+        'Setting up realtime listeners for ${unitIdsToWatch.length} units (until: ${endDate.toIso8601String()})',
+        tag: 'CALENDAR_REALTIME',
+      );
+
+      // Listener 1: Single owner-based bookings listener
+      // SECURITY FIX: Uses owner_id filter to satisfy Firestore security rules
+      // (rules require resource.data.owner_id == request.auth.uid for collection group)
+      // Uses existing composite index: owner_id ASC + check_in ASC
+      // No batching needed - one listener covers ALL owner's bookings
+      final bookingsSubscription = firestore
+          .collectionGroup('bookings')
+          .where('owner_id', isEqualTo: userId)
+          .where('check_in', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+          .snapshots()
+          .listen(
+            (snapshot) {
+              LoggingService.log(
+                'Received ${snapshot.docs.length} booking updates',
+                tag: 'CALENDAR_REALTIME',
+              );
+              ref.invalidate(calendarBookingsProvider);
+            },
+            onError: (error) {
+              LoggingService.logError(
+                'Error in bookings realtime subscription',
+                error,
+              );
+            },
+          );
+      _allSubscriptions.add(bookingsSubscription);
+
+      // Listener 2: OPTIONAL - Batched iCal events (Booking.com, Airbnb, etc.)
+      // iCal events use public read rules (allow read: if true) so unit_id whereIn works
+      // Still needs batching due to Firestore whereIn limit of 10
       final batches = <List<String>>[];
       for (int i = 0; i < unitIdsToWatch.length; i += 10) {
         final end = (i + 10 < unitIdsToWatch.length)
@@ -199,47 +234,9 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
         batches.add(unitIdsToWatch.sublist(i, end));
       }
 
-      LoggingService.log(
-        'Setting up ${batches.length} batched listeners for ${unitIdsToWatch.length} units (until: ${endDate.toIso8601String()})',
-        tag: 'CALENDAR_REALTIME',
-      );
-
-      // FIXED: Create multiple listeners for all batches and store them ALL
-      // All batches will trigger the same invalidation
       for (int i = 0; i < batches.length; i++) {
         final batch = batches[i];
 
-        // Listener 1: Regular bookings
-        // PERFORMANCE FIX: Add date filter to prevent unbounded data download
-        // Filter by check_in <= endDate (server-side) - Firestore only allows one inequality
-        // Bookings with check_out before startDate will be ignored via provider filtering
-        // NEW STRUCTURE: Use collection group query for subcollection
-        final bookingsSubscription = firestore
-            .collectionGroup('bookings')
-            .where('unit_id', whereIn: batch)
-            .where('check_in', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
-            .snapshots()
-            .listen(
-              (snapshot) {
-                LoggingService.log(
-                  'Batch $i received ${snapshot.docs.length} booking updates',
-                  tag: 'CALENDAR_REALTIME',
-                );
-                // When bookings change in any batch, invalidate the calendar
-                ref.invalidate(calendarBookingsProvider);
-              },
-              onError: (error) {
-                LoggingService.logError(
-                  'Error in batch $i realtime subscription',
-                  error,
-                );
-              },
-            );
-        _allSubscriptions.add(bookingsSubscription);
-
-        // Listener 2: OPTIONAL - iCal events (Booking.com, Airbnb, etc.)
-        // Gracefully fails if ical_events collection doesn't exist or has no data
-        // NEW STRUCTURE: Use collection group query for subcollection
         try {
           final icalSubscription = firestore
               .collectionGroup('ical_events')
@@ -248,10 +245,9 @@ class OwnerCalendarRealtimeManager extends _$OwnerCalendarRealtimeManager {
               .listen(
                 (snapshot) {
                   LoggingService.log(
-                    'Batch $i received ${snapshot.docs.length} iCal event updates',
+                    'iCal batch $i received ${snapshot.docs.length} event updates',
                     tag: 'CALENDAR_REALTIME_ICAL',
                   );
-                  // When iCal events change, also invalidate the calendar
                   ref.invalidate(calendarBookingsProvider);
                 },
                 onError: (error) {

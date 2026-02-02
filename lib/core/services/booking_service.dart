@@ -286,6 +286,7 @@ class BookingService {
         advanceAmount: createdDepositAmount,
         paymentMethod: paymentMethod,
         paymentStatus: paymentStatusValue,
+        bookingReference: createdBookingRef,
         source: 'widget',
         guestCount: guestCount,
         petCount: petCount,

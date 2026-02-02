@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -78,6 +79,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   final IpGeolocationService _geolocation;
   StreamSubscription<User?>? _authSubscription;
   String? _loadingUserId; // Prevents concurrent profile loads for same user
+  Completer<void>?
+  _profileLoadCompleter; // Allows callers to await in-progress load
   Timer?
   _signOutGraceTimer; // Grace period before treating null user as sign-out
   EnhancedAuthNotifier(
@@ -153,16 +156,22 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       return;
     }
 
-    // Prevent concurrent loads for the same user
+    // If loading is in progress for the same user, wait for it to complete
+    // instead of silently returning. This fixes the race condition where
+    // signInWithEmail() returns before the profile is loaded (the auth listener
+    // starts loading, the explicit call skips, and the login screen navigates
+    // to dashboard with null userModel).
     if (_loadingUserId == firebaseUser.uid) {
       LoggingService.log(
-        'User profile load already in progress for ${firebaseUser.uid}, skipping duplicate request',
+        'User profile load already in progress for ${firebaseUser.uid}, waiting for completion...',
         tag: 'ENHANCED_AUTH',
       );
+      await _profileLoadCompleter?.future;
       return;
     }
 
     _loadingUserId = firebaseUser.uid;
+    _profileLoadCompleter = Completer<void>();
     LoggingService.log(
       'Loading user profile for ${firebaseUser.uid}...',
       tag: 'ENHANCED_AUTH',
@@ -345,6 +354,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       );
     } finally {
       _loadingUserId = null;
+      if (_profileLoadCompleter != null &&
+          !_profileLoadCompleter!.isCompleted) {
+        _profileLoadCompleter!.complete();
+      }
+      _profileLoadCompleter = null;
     }
   }
 

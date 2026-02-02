@@ -223,10 +223,18 @@ Future<List<String>> ownerUnitIds(Ref ref) async {
 class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
   static const int pageSize = 20;
 
+  // PERFORMANCE FIX: Prevents duplicate loadFirstPage() calls from rapid build() cycles
+  int _buildGeneration = 0;
+
   @override
   PaginatedBookingsState build() {
     // Auto-load first page when provider is created
-    Future.microtask(loadFirstPage);
+    final generation = ++_buildGeneration;
+    Future.microtask(() {
+      if (generation == _buildGeneration) {
+        loadFirstPage();
+      }
+    });
     return PaginatedBookingsState.initial;
   }
 
@@ -362,6 +370,10 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
   final Map<String, DocumentSnapshot> _documentCache = {};
   static const int _maxCacheSize = 100;
 
+  // PERFORMANCE FIX: Prevents duplicate loadFirstPage() calls from rapid build() cycles.
+  // Each build() increments this counter; only the latest microtask executes.
+  int _buildGeneration = 0;
+
   /// Add document to cache with size limit (FIFO eviction)
   void _addToCache(DocumentSnapshot doc) {
     if (_documentCache.length >= _maxCacheSize) {
@@ -378,7 +390,16 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
     ref.watch(bookingsFiltersNotifierProvider);
 
     // Auto-load first page when provider is created (or filters change)
-    Future.microtask(loadFirstPage);
+    // PERFORMANCE FIX: Use generation counter to deduplicate microtasks.
+    // If build() runs multiple times before microtasks execute (e.g. during
+    // navigation transitions or provider graph stabilization), only the
+    // last microtask will actually fire the Firestore query.
+    final generation = ++_buildGeneration;
+    Future.microtask(() {
+      if (generation == _buildGeneration) {
+        loadFirstPage();
+      }
+    });
     return WindowedBookingsState.cardViewInitial;
   }
 

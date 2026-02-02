@@ -14,9 +14,10 @@
 /// ```
 ///
 /// The implementation is automatically selected at compile-time based on
-/// the availability of dart:html library (web-only).
+/// the availability of dart:js_interop library (web-only).
 library;
 
 // Default export: Mobile/Desktop implementation (stub)
-// Override: If dart:html is available (web), use web implementation
-export 'ics_download_stub.dart' if (dart.library.html) 'ics_download_web.dart';
+// Override: If dart:js_interop is available (web), use web implementation
+export 'ics_download_stub.dart'
+    if (dart.library.js_interop) 'ics_download_web.dart';

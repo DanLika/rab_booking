@@ -3887,7 +3887,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Add URL params for browser history support (back button works)
     // NOTE: Email is NOT included in URL for security/privacy
-    final bookingRef = booking.id.substring(0, 8).toUpperCase();
+    // Use server-generated booking reference (BK-XXXXXXXXXXXX format)
+    // to match what's stored in Firestore for resend email lookup
+    final bookingRef =
+        booking.bookingReference ?? booking.id.substring(0, 8).toUpperCase();
     BookingUrlStateService.addConfirmationParams(
       bookingRef: bookingRef,
       bookingId: booking.id,
@@ -4390,7 +4393,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => BookingConfirmationScreen(
-              bookingReference: bookingReference,
+              // Prefer Firestore value over URL-stored reference
+              // URL may have old truncated format from before fix
+              bookingReference:
+                  confirmedBooking.bookingReference ?? bookingReference,
               guestEmail: confirmedBooking.guestEmail ?? '',
               guestName: confirmedBooking.guestName ?? 'Guest',
               checkIn: confirmedBooking.checkIn,

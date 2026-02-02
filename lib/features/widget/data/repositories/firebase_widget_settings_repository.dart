@@ -115,11 +115,6 @@ class FirebaseWidgetSettingsRepository {
       );
 
       await _settingsDocRef(propertyId, unitId).set(settings.toFirestore());
-
-      LoggingService.log(
-        'Default settings created for unit: $unitId',
-        tag: _logTag,
-      );
     } catch (e) {
       LoggingService.log('Error creating default settings: $e', tag: _logTag);
       rethrow;
@@ -133,23 +128,10 @@ class FirebaseWidgetSettingsRepository {
         updatedAt: DateTime.now().toUtc(),
       );
 
-      // DEBUG: Log the exact path being used
-      final docPath =
-          'properties/${settings.propertyId}/widget_settings/${settings.id}';
-      LoggingService.logInfo('updateWidgetSettings: Saving to path: $docPath');
-      LoggingService.logInfo(
-        'updateWidgetSettings: settings.id=${settings.id}, propertyId=${settings.propertyId}',
-      );
-
       await _settingsDocRef(
         settings.propertyId,
         settings.id,
       ).set(updatedSettings.toFirestore(), SetOptions(merge: true));
-
-      LoggingService.logSuccess(
-        'Settings updated for unit: ${settings.id}',
-        tag: _logTag,
-      );
     } catch (e) {
       LoggingService.log('Error updating settings: $e', tag: _logTag);
       rethrow;
@@ -167,11 +149,6 @@ class FirebaseWidgetSettingsRepository {
         'widget_mode': widgetMode.toStringValue(),
         'updated_at': Timestamp.now(),
       });
-
-      LoggingService.log(
-        'Widget mode updated to: ${widgetMode.toStringValue()}',
-        tag: _logTag,
-      );
     } catch (e) {
       LoggingService.log('Error updating widget mode: $e', tag: _logTag);
       rethrow;
@@ -189,8 +166,6 @@ class FirebaseWidgetSettingsRepository {
         'stripe_config': config.toMap(),
         'updated_at': Timestamp.now(),
       });
-
-      LoggingService.log('Stripe config updated', tag: _logTag);
     } catch (e) {
       LoggingService.log('Error updating Stripe config: $e', tag: _logTag);
       rethrow;
@@ -208,8 +183,6 @@ class FirebaseWidgetSettingsRepository {
         'bank_transfer_config': config.toMap(),
         'updated_at': Timestamp.now(),
       });
-
-      LoggingService.log('Bank transfer config updated', tag: _logTag);
     } catch (e) {
       LoggingService.log(
         'Error updating bank transfer config: $e',
@@ -230,8 +203,6 @@ class FirebaseWidgetSettingsRepository {
         'contact_options': contactOptions.toMap(),
         'updated_at': Timestamp.now(),
       });
-
-      LoggingService.log('Contact options updated', tag: _logTag);
     } catch (e) {
       LoggingService.log('Error updating contact options: $e', tag: _logTag);
       rethrow;
@@ -245,8 +216,6 @@ class FirebaseWidgetSettingsRepository {
   }) async {
     try {
       await _settingsDocRef(propertyId, unitId).delete();
-
-      LoggingService.log('Settings deleted for unit: $unitId', tag: _logTag);
     } catch (e) {
       LoggingService.log('Error deleting settings: $e', tag: _logTag);
       rethrow;
@@ -306,17 +275,10 @@ class FirebaseWidgetSettingsRepository {
     try {
       final snapshot = await _settingsCollectionRef(propertyId).get();
 
-      if (snapshot.docs.isEmpty) {
-        LoggingService.log(
-          'No widget settings found for property: $propertyId',
-          tag: _logTag,
-        );
-        return;
-      }
+      if (snapshot.docs.isEmpty) return;
 
       WriteBatch batch = _firestore.batch();
       int updateCount = 0;
-      int totalUpdated = 0;
 
       for (final doc in snapshot.docs) {
         // Update email_config with new require_email_verification value
@@ -325,7 +287,6 @@ class FirebaseWidgetSettingsRepository {
           'updated_at': Timestamp.now(),
         });
         updateCount++;
-        totalUpdated++;
 
         // Commit batch when reaching max size and create new batch
         if (updateCount >= _maxBatchSize) {
@@ -339,11 +300,6 @@ class FirebaseWidgetSettingsRepository {
       if (updateCount > 0) {
         await batch.commit();
       }
-
-      LoggingService.log(
-        'Email verification updated for $totalUpdated units in property: $propertyId',
-        tag: _logTag,
-      );
     } catch (e) {
       LoggingService.log(
         'Error updating email verification for all units: $e',

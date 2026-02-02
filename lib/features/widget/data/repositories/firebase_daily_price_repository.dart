@@ -72,39 +72,23 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
   /// requires full document path for documentId queries on collection groups.
   /// Instead, we fetch all units and find by document ID.
   Future<DocumentSnapshot?> _findUnitDocument(String unitId) async {
-    LoggingService.logInfo('_findUnitDocument called for unitId=$unitId');
-
     // Check cache first
     if (_unitDocumentCache.containsKey(unitId)) {
-      LoggingService.logInfo('_findUnitDocument: Found in cache');
       return _unitDocumentCache[unitId];
     }
 
     try {
       // Query all units and find the one with matching document ID
       // Using simple collectionGroup without filter (single-field index auto-created)
-      LoggingService.logInfo(
-        '_findUnitDocument: Querying collectionGroup(units)...',
-      );
       final snapshot = await _firestore.collectionGroup('units').get();
-      LoggingService.logInfo(
-        '_findUnitDocument: Got ${snapshot.docs.length} units',
-      );
 
       for (final doc in snapshot.docs) {
         if (doc.id == unitId) {
           _unitDocumentCache[unitId] = doc;
-          final propertyId = doc.reference.parent.parent!.id;
-          LoggingService.logInfo(
-            '_findUnitDocument: Found unit! propertyId=$propertyId',
-          );
           return doc;
         }
       }
 
-      LoggingService.logWarning(
-        '_findUnitDocument: Unit not found in ${snapshot.docs.length} units!',
-      );
       return null;
     } catch (e) {
       unawaited(LoggingService.logError('Error finding unit document', e));
@@ -500,17 +484,8 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required List<DateTime> dates,
     required Map<String, dynamic> partialData,
   }) async {
-    LoggingService.logInfo(
-      'bulkPartialUpdate called: unitId=$unitId, dates=${dates.length}, partialData=$partialData',
-    );
-
     // Early return if no dates provided
-    if (dates.isEmpty) {
-      LoggingService.logWarning(
-        'bulkPartialUpdate: No dates provided, returning empty list',
-      );
-      return [];
-    }
+    if (dates.isEmpty) return [];
 
     // NEW STRUCTURE: Need propertyId to build path
     final unitDoc = await _findUnitDocument(unitId);
@@ -520,9 +495,6 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
       );
       throw Exception('Unit not found: $unitId');
     }
-    LoggingService.logInfo(
-      'bulkPartialUpdate: Found unit document, propertyId=${unitDoc.reference.parent.parent!.id}',
-    );
 
     final propertyId = unitDoc.reference.parent.parent!.id;
     final List<DailyPriceModel> updatedPrices = [];
@@ -539,7 +511,6 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
     for (final date in normalizedDates) {
       final dateStr = _formatDateAsId(date);
-      LoggingService.logInfo('bulkPartialUpdate: Processing date $dateStr');
       final docRef = _firestore
           .collection('properties')
           .doc(propertyId)
@@ -550,16 +521,12 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
       // Check if document exists
       final existingDoc = await docRef.get();
-      LoggingService.logInfo(
-        'bulkPartialUpdate: Doc $dateStr exists=${existingDoc.exists}',
-      );
 
       if (existingDoc.exists) {
         // Document exists - UPDATE with partial data
         // Include unit_id to backfill existing documents that may be missing this required field
         final updateData = {...dataToUpdate, 'unit_id': unitId};
         batch.update(docRef, updateData);
-        LoggingService.logInfo('bulkPartialUpdate: Queued UPDATE for $dateStr');
 
         // Merge existing data with updates for return value
         final existingData = existingDoc.data() as Map<String, dynamic>;
@@ -583,9 +550,6 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         };
 
         batch.set(docRef, fullData);
-        LoggingService.logInfo(
-          'bulkPartialUpdate: Queued SET for $dateStr with data: $fullData',
-        );
 
         try {
           updatedPrices.add(
@@ -604,9 +568,6 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
       // Commit batch when reaching max size
       if (batchCount >= _maxBatchSize) {
-        LoggingService.logInfo(
-          'bulkPartialUpdate: Committing batch of $batchCount operations (max reached)',
-        );
         await batch.commit();
         batch = _firestore.batch();
         batchCount = 0;
@@ -615,16 +576,8 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
     // Commit remaining operations
     if (batchCount > 0) {
-      LoggingService.logInfo(
-        'bulkPartialUpdate: Committing final batch of $batchCount operations',
-      );
       await batch.commit();
-      LoggingService.logInfo('bulkPartialUpdate: Batch committed successfully');
     }
-
-    LoggingService.logSuccess(
-      'Bulk partial update completed: ${normalizedDates.length} dates for unit $unitId',
-    );
 
     return updatedPrices;
   }
@@ -639,61 +592,16 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
     required List<DateTime> dates,
     required Map<String, dynamic> partialData,
   }) async {
-    // Log current auth state for debugging permission issues
-    final currentUser = FirebaseAuth.instance.currentUser;
-    LoggingService.logInfo(
-      'bulkPartialUpdateWithPropertyId: propertyId=$propertyId, unitId=$unitId, dates=${dates.length}, '
-      'currentUser=${currentUser?.uid ?? "NOT AUTHENTICATED"}',
-    );
-
     // Validate required parameters
     if (propertyId.isEmpty) {
-      unawaited(
-        LoggingService.logError(
-          'bulkPartialUpdateWithPropertyId: propertyId is EMPTY!',
-        ),
-      );
       throw ArgumentError('propertyId cannot be empty');
     }
     if (unitId.isEmpty) {
-      unawaited(
-        LoggingService.logError(
-          'bulkPartialUpdateWithPropertyId: unitId is EMPTY!',
-        ),
-      );
       throw ArgumentError('unitId cannot be empty');
     }
 
-    // Verify property ownership for debugging
-    try {
-      final propertyDoc = await _firestore
-          .collection('properties')
-          .doc(propertyId)
-          .get();
-      if (propertyDoc.exists) {
-        final propertyOwnerId = propertyDoc.data()?['owner_id'];
-        LoggingService.logInfo(
-          'bulkPartialUpdateWithPropertyId: Property $propertyId has owner_id=$propertyOwnerId, '
-          'currentUser=${currentUser?.uid}, match=${propertyOwnerId == currentUser?.uid}',
-        );
-      } else {
-        LoggingService.logWarning(
-          'bulkPartialUpdateWithPropertyId: Property $propertyId does NOT EXIST!',
-        );
-      }
-    } catch (e) {
-      LoggingService.logWarning(
-        'bulkPartialUpdateWithPropertyId: Failed to verify property ownership: $e',
-      );
-    }
-
     // Early return if no dates provided
-    if (dates.isEmpty) {
-      LoggingService.logWarning(
-        'bulkPartialUpdateWithPropertyId: No dates provided',
-      );
-      return [];
-    }
+    if (dates.isEmpty) return [];
 
     final List<DailyPriceModel> updatedPrices = [];
 
@@ -709,11 +617,6 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
     for (final date in normalizedDates) {
       final dateStr = _formatDateAsId(date);
-      final docPath =
-          'properties/$propertyId/units/$unitId/$_collectionName/$dateStr';
-      LoggingService.logInfo(
-        'bulkPartialUpdateWithPropertyId: Processing doc path: $docPath',
-      );
 
       final docRef = _firestore
           .collection('properties')
@@ -731,12 +634,6 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         // Include unit_id to backfill existing documents that may be missing this required field
         final updateData = {...dataToUpdate, 'unit_id': unitId};
         final existingData = existingDoc.data() as Map<String, dynamic>;
-        LoggingService.logInfo(
-          'bulkPartialUpdateWithPropertyId: UPDATE existing doc at $docPath, '
-          'existingData keys: ${existingData.keys.toList()}, '
-          'existingData available: ${existingData['available']}, '
-          'existingData unit_id: ${existingData['unit_id']}',
-        );
         batch.update(docRef, updateData);
 
         // Merge existing data with updates for return value
@@ -759,9 +656,6 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
           ...dataToUpdate,
         };
 
-        LoggingService.logInfo(
-          'bulkPartialUpdateWithPropertyId: CREATE new doc at $docPath',
-        );
         batch.set(docRef, fullData);
 
         try {
@@ -781,9 +675,6 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
       // Commit batch when reaching max size
       if (batchCount >= _maxBatchSize) {
-        LoggingService.logInfo(
-          'bulkPartialUpdateWithPropertyId: Committing batch of $batchCount operations',
-        );
         await batch.commit();
         batch = _firestore.batch();
         batchCount = 0;
@@ -792,14 +683,8 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
 
     // Commit remaining operations
     if (batchCount > 0) {
-      LoggingService.logInfo(
-        'bulkPartialUpdateWithPropertyId: Committing final batch of $batchCount operations',
-      );
       try {
         await batch.commit();
-        LoggingService.logInfo(
-          'bulkPartialUpdateWithPropertyId: Batch commit successful',
-        );
       } catch (e, stackTrace) {
         unawaited(
           LoggingService.logError(
@@ -812,10 +697,6 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         rethrow;
       }
     }
-
-    LoggingService.logSuccess(
-      'Bulk partial update (optimized) completed: ${normalizedDates.length} dates',
-    );
 
     return updatedPrices;
   }

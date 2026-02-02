@@ -171,9 +171,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= _kDesktopBreakpoint;
 
-    // OPTIMIZED: Watch properties for use in units change handler
+    // Watch both providers to trigger rebuilds when data arrives
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
     final properties = propertiesAsync.valueOrNull ?? [];
+    final unitsAsync = ref.watch(ownerUnitsProvider);
 
     // Listen for units changes and handle side effects (auto-selection, sync)
     ref.listen<AsyncValue<List<UnitModel>>>(ownerUnitsProvider, (
@@ -183,7 +184,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       next.whenData((units) => _handleUnitsChanged(units, properties));
     });
 
-    // BUG FIX: Also listen for properties changes to handle race condition
+    // Also listen for properties changes to handle race condition
     // If properties load AFTER units, we need to trigger auto-selection
     ref.listen<AsyncValue<List<PropertyModel>>>(ownerPropertiesProvider, (
       previous,
@@ -192,6 +193,21 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       final units = ref.read(ownerUnitsProvider).valueOrNull ?? [];
       next.whenData((props) => _handleUnitsChanged(units, props));
     });
+
+    // BUG FIX: Fallback auto-selection when providers already have data.
+    // ref.listen only fires on VALUE CHANGES after registration. If both
+    // providers already have cached data (not disposed between navigations),
+    // listeners never fire and _selectedUnit stays null.
+    if (_selectedUnit == null) {
+      final units = unitsAsync.valueOrNull ?? [];
+      if (units.isNotEmpty && properties.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _selectedUnit == null) {
+            _handleUnitsChanged(units, properties);
+          }
+        });
+      }
+    }
 
     final l10n = AppLocalizations.of(context);
 

@@ -110,10 +110,6 @@ class BookingPriceCalculator implements IPriceCalculator {
         normalizedCheckOut,
       );
       if (nights <= 0) {
-        LoggingService.log(
-          '⚠️ Invalid date range for price calculation',
-          tag: 'PRICE_CALCULATION',
-        );
         return const PriceCalculationResult.zero();
       }
 
@@ -126,10 +122,6 @@ class BookingPriceCalculator implements IPriceCalculator {
         );
 
         if (!availabilityResult.isAvailable) {
-          LoggingService.log(
-            '⚠️ Price calculation skipped - dates not available',
-            tag: 'PRICE_CALCULATION',
-          );
           throw DatesNotAvailableException.conflict();
         }
       }
@@ -231,10 +223,6 @@ class BookingPriceCalculator implements IPriceCalculator {
     // Find unit to get propertyId for correct subcollection path
     final unitDoc = await _findUnitDocument(unitId);
     if (unitDoc == null) {
-      LoggingService.log(
-        '⚠️ Unit not found for price fetch: $unitId',
-        tag: 'PRICE_CALCULATION',
-      );
       return {};
     }
 

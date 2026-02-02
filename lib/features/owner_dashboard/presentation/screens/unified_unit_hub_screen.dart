@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,8 @@ import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
+import '../../../../shared/models/additional_service_model.dart';
+import '../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
 import '../providers/owner_properties_provider.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -1428,6 +1431,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ],
     );
 
+    // Additional Services section - loaded from Firestore
+    final servicesCard = _buildServicesCard(theme, isMobile);
+
     // Information section - can have long description
     final informacijeCard = _buildInfoCard(
       theme,
@@ -1535,6 +1541,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ),
           const SizedBox(height: 14),
           cijenaCard,
+          const SizedBox(height: 14),
+          servicesCard,
         ] else if (isTablet) ...[
           // Tablet (800-900px): Information + Capacity side by side, then stacked
           Row(
@@ -1547,6 +1555,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ),
           const SizedBox(height: 14),
           cijenaCard,
+          const SizedBox(height: 14),
+          servicesCard,
         ] else ...[
           // Mobile (<800px): All stacked in wizard order
           informacijeCard,
@@ -1554,8 +1564,41 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           kapacitetCard,
           const SizedBox(height: 14),
           cijenaCard,
+          const SizedBox(height: 14),
+          servicesCard,
         ],
       ],
+    );
+  }
+
+  Widget _buildServicesCard(ThemeData theme, bool isMobile) {
+    final ownerId = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerId == null || _selectedUnit == null) {
+      return const SizedBox.shrink();
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final repo = ref.read(additionalServicesRepositoryProvider);
+
+    return FutureBuilder<List<AdditionalServiceModel>>(
+      // Key ensures rebuild when unit changes
+      key: ValueKey('services_${_selectedUnit!.id}'),
+      future: repo.fetchByUnit(_selectedUnit!.id, ownerId),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        final services = snapshot.data!;
+        return _buildInfoCard(
+          theme,
+          title: l10n.additionalServicesTitle,
+          icon: Icons.room_service,
+          isMobile: isMobile,
+          children: services
+              .map((s) => _buildDetailRow(theme, s.name, s.formattedPrice))
+              .toList(),
+        );
+      },
     );
   }
 

@@ -933,6 +933,7 @@ class FirebaseOwnerBookingsRepository {
       // Update using the found document reference
       await bookingDoc.reference.update({
         'status': BookingStatus.confirmed.value,
+        'approved_at': FieldValue.serverTimestamp(),
         'updated_at': FieldValue.serverTimestamp(),
       });
     } catch (e) {

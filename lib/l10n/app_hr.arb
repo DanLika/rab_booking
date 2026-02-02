@@ -1992,6 +1992,8 @@
   "embedGuideTestLinksTitle": "Testirajte prije ugradnje",
   "embedGuideTestWidgetTitle": "Testirajte vaš widget",
   "embedGuideTestWidgetDesc": "Pregledajte widget vašeg unita prije ugradnje",
+  "embedGuideSelectUnitHint": "Odaberite unit za pregled",
+  "embedGuidePreviewLive": "Pregledaj uživo",
   "embedGuideLiveExampleTitle": "Demo primjer",
   "embedGuideLiveExampleDesc": "Pogledajte kako radi booking widget",
   "errorOpeningLink": "Nije moguće otvoriti link",

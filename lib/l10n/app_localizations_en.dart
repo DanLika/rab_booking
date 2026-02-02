@@ -4893,6 +4893,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Preview your unit\'s widget before embedding';
 
   @override
+  String get embedGuideSelectUnitHint => 'Select a unit to preview';
+
+  @override
+  String get embedGuidePreviewLive => 'Preview Live';
+
+  @override
   String get embedGuideLiveExampleTitle => 'Live Demo';
 
   @override

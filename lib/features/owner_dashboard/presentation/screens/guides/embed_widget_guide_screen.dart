@@ -8,6 +8,7 @@ import '../../../../../core/theme/app_color_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
+import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../../../../shared/models/property_model.dart';
 import '../../../../../shared/models/unit_model.dart';
@@ -29,6 +30,10 @@ class EmbedWidgetGuideScreen extends ConsumerStatefulWidget {
 class _EmbedWidgetGuideScreenState
     extends ConsumerState<EmbedWidgetGuideScreen> {
   static const String _subdomainBaseDomain = 'view.bookbed.io';
+
+  /// Selected unit for live preview testing
+  UnitModel? _selectedPreviewUnit;
+  PropertyModel? _selectedPreviewProperty;
 
   /// Generate direct iframe embed code for a unit
   /// Works on any website - just copy and paste
@@ -493,6 +498,9 @@ class _EmbedWidgetGuideScreenState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final propertiesAsync = ref.watch(ownerPropertiesProvider);
+    final unitsAsync = ref.watch(ownerUnitsProvider);
+
     return Container(
       decoration: BoxDecoration(
         color: context.gradients.cardBackground,
@@ -504,6 +512,7 @@ class _EmbedWidgetGuideScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
             children: [
               Container(
@@ -520,32 +529,146 @@ class _EmbedWidgetGuideScreenState
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.embedGuideTestLinksTitle,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.success,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  l10n.embedGuideTestLinksTitle,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.success,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          _buildTestLinkCard(
-            icon: Icons.visibility_outlined,
-            title: l10n.embedGuideTestWidgetTitle,
-            description: l10n.embedGuideTestWidgetDesc,
-            url: 'https://bookbed.io/test-widget',
-            isDark: isDark,
+          const SizedBox(height: 20),
+
+          // Unit selector + Preview button
+          propertiesAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
+            data: (properties) => unitsAsync.when(
+              loading: () => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
+              data: (units) {
+                if (units.isEmpty || properties.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                // Build dropdown items with property grouping
+                final items = <DropdownMenuItem<UnitModel>>[];
+                for (final property in properties) {
+                  final propertyUnits = units
+                      .where((u) => u.propertyId == property.id)
+                      .toList();
+                  if (propertyUnits.isEmpty) continue;
+
+                  // Property header (disabled)
+                  if (properties.length > 1) {
+                    items.add(
+                      DropdownMenuItem<UnitModel>(
+                        enabled: false,
+                        child: Text(
+                          property.name,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.primary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  for (final unit in propertyUnits) {
+                    items.add(
+                      DropdownMenuItem<UnitModel>(
+                        value: unit,
+                        child: Text(
+                          properties.length > 1 ? '  ${unit.name}' : unit.name,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    );
+                  }
+                }
+
+                // Auto-select first unit if nothing selected
+                if (_selectedPreviewUnit == null && units.isNotEmpty) {
+                  _selectedPreviewUnit = units.first;
+                  _selectedPreviewProperty = properties.firstWhere(
+                    (p) => p.id == units.first.propertyId,
+                    orElse: () => properties.first,
+                  );
+                }
+
+                return Column(
+                  children: [
+                    // Dropdown
+                    DropdownButtonFormField<UnitModel>(
+                      value: _selectedPreviewUnit,
+                      dropdownColor: InputDecorationHelper.getDropdownColor(
+                        context,
+                      ),
+                      borderRadius: InputDecorationHelper.dropdownBorderRadius,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.embedGuideSelectUnitHint,
+                        prefixIcon: const Icon(Icons.apartment_outlined),
+                        context: context,
+                      ),
+                      items: items,
+                      onChanged: (unit) {
+                        if (unit == null) return;
+                        setState(() {
+                          _selectedPreviewUnit = unit;
+                          _selectedPreviewProperty = properties.firstWhere(
+                            (p) => p.id == unit.propertyId,
+                            orElse: () => properties.first,
+                          );
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Preview button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            _selectedPreviewUnit != null &&
+                                _selectedPreviewProperty != null
+                            ? () {
+                                final url =
+                                    'https://$_subdomainBaseDomain/?property=${_selectedPreviewProperty!.id}&unit=${_selectedPreviewUnit!.id}';
+                                _launchUrl(url, l10n);
+                              }
+                            : null,
+                        icon: const Icon(Icons.visibility_outlined),
+                        label: Text(l10n.embedGuidePreviewLive),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.success,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 16),
+
+          // Live demo link (kept as secondary option)
           _buildTestLinkCard(
             icon: Icons.apartment_outlined,
             title: l10n.embedGuideLiveExampleTitle,

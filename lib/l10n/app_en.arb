@@ -1992,6 +1992,8 @@
   "embedGuideTestLinksTitle": "Test Before Embedding",
   "embedGuideTestWidgetTitle": "Test Your Widget",
   "embedGuideTestWidgetDesc": "Preview your unit's widget before embedding",
+  "embedGuideSelectUnitHint": "Select a unit to preview",
+  "embedGuidePreviewLive": "Preview Live",
   "embedGuideLiveExampleTitle": "Live Demo",
   "embedGuideLiveExampleDesc": "See a working example of the booking widget",
   "errorOpeningLink": "Could not open link",

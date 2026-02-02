@@ -9102,6 +9102,18 @@ abstract class AppLocalizations {
   /// **'Preview your unit\'s widget before embedding'**
   String get embedGuideTestWidgetDesc;
 
+  /// No description provided for @embedGuideSelectUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a unit to preview'**
+  String get embedGuideSelectUnitHint;
+
+  /// No description provided for @embedGuidePreviewLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Live'**
+  String get embedGuidePreviewLive;
+
   /// No description provided for @embedGuideLiveExampleTitle.
   ///
   /// In en, this message translates to:

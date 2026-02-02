@@ -4923,6 +4923,12 @@ class AppLocalizationsHr extends AppLocalizations {
       'Pregledajte widget vašeg unita prije ugradnje';
 
   @override
+  String get embedGuideSelectUnitHint => 'Odaberite unit za pregled';
+
+  @override
+  String get embedGuidePreviewLive => 'Pregledaj uživo';
+
+  @override
   String get embedGuideLiveExampleTitle => 'Demo primjer';
 
   @override

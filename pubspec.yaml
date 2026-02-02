@@ -18,14 +18,14 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # State Management
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
   state_notifier: ^1.0.0
 
   # Backend & Database - Firebase
   firebase_core: ^4.4.0
   firebase_auth: ^6.1.2
-  cloud_firestore: ^6.1.0
+  cloud_firestore: ^6.1.2
   firebase_storage: ^13.0.6
   cloud_functions: ^6.0.6
   firebase_analytics: ^12.1.1
@@ -33,7 +33,7 @@ dependencies:
   firebase_messaging: ^16.1.1  # Push notifications (hidden until mobile app release)
 
   # Google Sign-In (native Android/iOS)
-  google_sign_in: ^6.2.2
+  google_sign_in: ^6.3.0
 
   # HTTP Client
   http: ^1.2.0
@@ -45,7 +45,7 @@ dependencies:
   go_router: ^17.0.0
 
   # UI & Styling
-  google_fonts: ^6.2.1
+  google_fonts: ^6.3.3
 
   # Internationalization
   intl: ^0.20.1
@@ -79,8 +79,8 @@ dependencies:
   # Utilities
   share_plus: ^12.0.1
   shared_preferences: ^2.3.4
-  package_info_plus: ^8.1.2  # App version info
-  flutter_secure_storage: ^9.0.0  # Secure credential storage
+  package_info_plus: ^8.3.1  # App version info
+  flutter_secure_storage: ^9.2.4  # Secure credential storage
   uuid: ^4.5.1
   crypto: ^3.0.3
   connectivity_plus: ^7.0.0
@@ -88,7 +88,7 @@ dependencies:
   collection: ^1.18.0  # Collection utilities (firstWhereOrNull, etc.)
 
   # Error Tracking (Web - Crashlytics doesn't support web)
-  sentry_flutter: ^8.12.0
+  sentry_flutter: ^8.14.2
 
   # Charts
   graphic: ^2.6.0
@@ -101,10 +101,10 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code Generation
-  build_runner: ^2.4.6
-  freezed: ^2.5.7
-  json_serializable: ^6.7.1
-  riverpod_generator: ^2.4.3
+  build_runner: ^2.5.4
+  freezed: ^2.5.8
+  json_serializable: ^6.9.5
+  riverpod_generator: ^2.6.4
 
   # Testing
   mocktail: ^1.0.4
@@ -133,6 +133,9 @@ flutter_launcher_icons:
     image_path: "assets/images/Apple_App_Icon.png"
     background_color: "#FFFFFF"
     theme_color: "#304FFE"
+
+dependency_overrides:
+  path_provider_foundation: 2.5.1
 
 flutter_native_splash:
   color: "#FFFFFF"

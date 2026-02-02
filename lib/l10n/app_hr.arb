@@ -2338,11 +2338,14 @@
   "icalExportNoUrlDesc": "Generirajte iCal URL za sinkronizaciju rezervacija s vanjskim kalendarima.",
 
   "icalExportDynamicLinkTitle": "Dinamički iCal Link",
-  "icalExportDynamicLinkDescription": "Kopirajte ovaj link na Booking.com, Airbnb ili druge OTA platforme. Vaša dostupnost će se automatski sinkronizirati.",
+  "icalExportDynamicLinkDescription": "Kopirajte ovaj link na Airbnb, Google Calendar, Apple Calendar ili Outlook. Vaša dostupnost će se automatski sinkronizirati.",
   "icalExportLinkCopied": "Link kopiran u međuspremnik",
   "icalExportTokenWarning": "Napomena: Ovaj link sadrži tajni token. Ne dijelite ga javno.",
-  "icalExportSyncTimeNote": "Booking.com sinkronizira svakih 15-60 min. Airbnb sinkronizira svakih 3-6 sati.",
+  "icalExportSyncTimeNote": "Airbnb sinkronizira svakih 3-6 sati. Kalendar aplikacije sinkroniziraju svakih 5-15 minuta.",
   "icalExportCopyLink": "Kopiraj Link",
+  "icalExportBookingComNote": "Booking.com ne prihvaća iCal linkove s prilagođenih platformi. Za sinkronizaciju s Booking.com: prvo dodajte ovaj URL na Airbnb, zatim povežite Airbnb kalendar s Booking.com.",
+  "icalExportBookingComInfoTitle": "Booking.com – Važna napomena",
+  "icalExportBookingComInfoDesc": "Booking.com prihvaća iCal linkove samo od velikih OTA platformi (Airbnb, VRBO, itd.), ne od prilagođenih platformi. Za sinkronizaciju BookBed rezervacija s Booking.com koristite: BookBed → Airbnb → Booking.com. Prvo dodajte iCal URL na Airbnb, zatim povežite Airbnb kalendar s Booking.com.",
 
   "errorWithMessage": "Greška: {message}",
   "@errorWithMessage": {

@@ -10707,7 +10707,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportDynamicLinkDescription.
   ///
   /// In en, this message translates to:
-  /// **'Copy this link to Booking.com, Airbnb, or other OTAs. Your availability will sync automatically.'**
+  /// **'Copy this link to Airbnb, Google Calendar, Apple Calendar, or Outlook. Your availability will sync automatically.'**
   String get icalExportDynamicLinkDescription;
 
   /// No description provided for @icalExportLinkCopied.
@@ -10725,7 +10725,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportSyncTimeNote.
   ///
   /// In en, this message translates to:
-  /// **'Booking.com syncs every 15-60 min. Airbnb syncs every 3-6 hours.'**
+  /// **'Airbnb syncs every 3-6 hours. Calendar apps sync every 5-15 minutes.'**
   String get icalExportSyncTimeNote;
 
   /// No description provided for @icalExportCopyLink.
@@ -10733,6 +10733,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy Link'**
   String get icalExportCopyLink;
+
+  /// No description provided for @icalExportBookingComNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking.com does not accept iCal links from custom platforms. To sync with Booking.com: add this URL to Airbnb first, then connect your Airbnb calendar to Booking.com.'**
+  String get icalExportBookingComNote;
+
+  /// No description provided for @icalExportBookingComInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking.com – Important Note'**
+  String get icalExportBookingComInfoTitle;
+
+  /// No description provided for @icalExportBookingComInfoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking.com only accepts iCal links from major OTAs (Airbnb, VRBO, etc.), not from custom platforms. To sync your BookBed bookings with Booking.com, use this flow: BookBed → Airbnb → Booking.com. First add the iCal URL to Airbnb, then connect Airbnb calendar to Booking.com.'**
+  String get icalExportBookingComInfoDesc;
 
   /// No description provided for @errorWithMessage.
   ///

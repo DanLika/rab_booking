@@ -5784,7 +5784,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportDynamicLinkDescription =>
-      'Copy this link to Booking.com, Airbnb, or other OTAs. Your availability will sync automatically.';
+      'Copy this link to Airbnb, Google Calendar, Apple Calendar, or Outlook. Your availability will sync automatically.';
 
   @override
   String get icalExportLinkCopied => 'Link copied to clipboard';
@@ -5795,10 +5795,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportSyncTimeNote =>
-      'Booking.com syncs every 15-60 min. Airbnb syncs every 3-6 hours.';
+      'Airbnb syncs every 3-6 hours. Calendar apps sync every 5-15 minutes.';
 
   @override
   String get icalExportCopyLink => 'Copy Link';
+
+  @override
+  String get icalExportBookingComNote =>
+      'Booking.com does not accept iCal links from custom platforms. To sync with Booking.com: add this URL to Airbnb first, then connect your Airbnb calendar to Booking.com.';
+
+  @override
+  String get icalExportBookingComInfoTitle => 'Booking.com – Important Note';
+
+  @override
+  String get icalExportBookingComInfoDesc =>
+      'Booking.com only accepts iCal links from major OTAs (Airbnb, VRBO, etc.), not from custom platforms. To sync your BookBed bookings with Booking.com, use this flow: BookBed → Airbnb → Booking.com. First add the iCal URL to Airbnb, then connect Airbnb calendar to Booking.com.';
 
   @override
   String errorWithMessage(String message) {

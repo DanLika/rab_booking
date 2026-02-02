@@ -764,7 +764,32 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-02 | **Version**: 6.49
+**Last Updated**: 2026-02-02 | **Version**: 6.50
+
+**Changelog 6.50**: Widget UI Fixes, iOS Compatibility & Email Terminology:
+- **Additional Services Widget — Neutral Colors** (`additional_services_widget.dart`):
+  - **Problem**: Widget booking form used green (`statusAvailableBorder`/`statusAvailableBackground`) colors — green is reserved for calendar availability status
+  - **Fix**: Replaced with neutral minimalist colors:
+    - Section container: `backgroundPrimary` (white/black)
+    - Selected item: `backgroundSecondary` (#FAFAFA/#0A0A0A), border: `borderStrong`
+    - Unselected item: `backgroundPrimary`, border: `borderDefault`
+  - **Dark Mode Checkbox Fix**: Added explicit `activeColor: colors.textPrimary`, `checkColor: colors.backgroundPrimary`, `side: BorderSide(color: colors.textSecondary)`
+  - **Price Breakdown**: Removed green color override from Additional Services row in `price_breakdown_widget.dart`
+- **iOS Profile Image Upload Fix** (`storage_service.dart`, `profile_image_picker.dart`):
+  - **Problem**: iOS HEIC format rejected by `_allowedExtensions` validation; `image_picker` converts bytes to JPEG but `XFile.name` retains `.heic` extension
+  - **Fix**: Added `'heic'`/`'heif'` to allowed extensions, fixed upload path to `'users/$userId/profile/profile.jpg'`
+  - Added `LoggingService.logError()` with stackTrace in `ProfileImagePicker` catch block
+- **iOS Help & Support mailto: Fix** (`profile_screen.dart`):
+  - **Problem**: `canLaunchUrl` returns false for `mailto:` on iOS without Mail configured
+  - **Fix**: Replaced `canLaunchUrl` guard with try-catch around `launchUrl`
+- **Email Terminology: "kapara" → "avans"** (4 Cloud Functions files):
+  - Changed across: `payment-reminder.ts`, `booking-confirmation.ts`, `owner-notification.ts`, `template-helpers.ts`
+  - **Bug Fix**: `booking-confirmation.ts` said "u roku od 3 dana" — fixed to "u roku od 7 dana" (actual payment deadline)
+- **Max Guests Widget Fix** (`booking_widget_screen.dart`):
+  - **Problem**: Guest count picker used `effectiveMaxCapacity` (includes extra beds) instead of `maxGuests` (Unit Hub Step 2 value)
+  - **Fix**: Changed 5 references from `effectiveMaxCapacity` to `maxGuests`; removed `maxTotalCapacity` param from `GuestCountPicker`
+  - Server-side (`atomicBooking.ts`) validates against `max_total_capacity` (more permissive) — no conflict
+  - **Verified**: Booking log confirmed `guestCount: 4` (previously 6)
 
 **Changelog 6.49**: iCal Export Compatibility & Booking.com Restriction FAQ:
 - **iCal Export — `.ics` URL support** (`icalExport.ts`):

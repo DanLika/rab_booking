@@ -5075,6 +5075,26 @@ class AppLocalizationsHr extends AppLocalizations {
       'Za detaljne upute, pogledajte linkove za pomoć ispod.';
 
   @override
+  String get embedGuideDeveloperInfoTitle => 'Za Developere';
+
+  @override
+  String get embedGuideDeveloperInfoDesc =>
+      'Developeri mogu slobodno prilagoditi style atribute iframe-a (width, height, border, itd.) prema dizajnu web stranice. Samo src URL mora ostati nepromijenjen.';
+
+  @override
+  String get embedGuideDeveloperWidth => 'Prilagođene dimenzije';
+
+  @override
+  String get embedGuideDeveloperBorder => 'Okvir i stilizacija';
+
+  @override
+  String get embedGuideDeveloperResponsive => 'Responzivni layout';
+
+  @override
+  String get embedGuideDeveloperWarning =>
+      'Ne mijenjajte src URL - sadrži potrebne identifikatore nekretnine i apartmana.';
+
+  @override
   String get embedHelpTitle => 'Pomoć za ugradnju widgeta';
 
   @override

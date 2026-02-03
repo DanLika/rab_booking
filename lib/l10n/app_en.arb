@@ -2040,6 +2040,13 @@
   "embedGuideQuickHelpTip": "The widget automatically updates when you change prices or availability in the app.",
   "embedGuideQuickHelpMoreInfo": "For detailed instructions, check the help links below.",
 
+  "embedGuideDeveloperInfoTitle": "For Developers",
+  "embedGuideDeveloperInfoDesc": "Developers can freely customize the iframe style attributes (width, height, border, etc.) to match your website design. Only the src URL must remain unchanged.",
+  "embedGuideDeveloperWidth": "Custom dimensions",
+  "embedGuideDeveloperBorder": "Border & styling",
+  "embedGuideDeveloperResponsive": "Responsive layout",
+  "embedGuideDeveloperWarning": "Do not modify the src URL - it contains required property and unit identifiers.",
+
   "embedHelpTitle": "Embed Widget Help",
   "embedHelpTabInstallation": "Guide",
   "embedHelpTabAdvanced": "Advanced",

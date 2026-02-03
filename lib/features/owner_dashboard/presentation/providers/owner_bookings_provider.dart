@@ -18,9 +18,7 @@ part 'owner_bookings_provider.g.dart';
 /// Provider for pending booking ID to show in dialog (from deep-link navigation)
 /// This avoids issues with widget parameter passing during navigation
 /// FIXED BUG #4: Added autoDispose to prevent state persistence across navigations
-final pendingBookingIdProvider = StateProvider.autoDispose<String?>(
-  (ref) => null,
-);
+final pendingBookingIdProvider = StateProvider.autoDispose<String?>((ref) => null);
 
 // Note: OwnerBooking is defined in firebase_owner_bookings_repository.dart (already imported above)
 
@@ -28,11 +26,7 @@ final pendingBookingIdProvider = StateProvider.autoDispose<String?>(
 ///
 /// Sorting: Pending bookings first (by check-in), then others by check-in (soonest first)
 /// This matches the repository sorting for "All" filter
-List<OwnerBooking> _updateBookingStatusInList(
-  List<OwnerBooking> bookings,
-  String bookingId,
-  BookingStatus newStatus,
-) {
+List<OwnerBooking> _updateBookingStatusInList(List<OwnerBooking> bookings, String bookingId, BookingStatus newStatus) {
   final updatedBookings = bookings.map((ownerBooking) {
     if (ownerBooking.booking.id == bookingId) {
       return OwnerBooking(
@@ -69,13 +63,7 @@ class BookingsFilters {
   /// When true, shows only imported reservations (iCal events from Booking.com, Airbnb, etc.)
   final bool showImportedOnly;
 
-  const BookingsFilters({
-    this.status,
-    this.propertyId,
-    this.startDate,
-    this.endDate,
-    this.showImportedOnly = false,
-  });
+  const BookingsFilters({this.status, this.propertyId, this.startDate, this.endDate, this.showImportedOnly = false});
 
   BookingsFilters copyWith({
     BookingStatus? status,
@@ -98,11 +86,7 @@ class BookingsFilters {
   }
 
   bool get hasActiveFilters =>
-      status != null ||
-      propertyId != null ||
-      startDate != null ||
-      endDate != null ||
-      showImportedOnly;
+      status != null || propertyId != null || startDate != null || endDate != null || showImportedOnly;
 }
 
 /// Paginated bookings state - server-side pagination
@@ -136,9 +120,7 @@ class PaginatedBookingsState {
   }) {
     return PaginatedBookingsState(
       bookings: bookings ?? this.bookings,
-      lastDocument: clearLastDocument
-          ? null
-          : (lastDocument ?? this.lastDocument),
+      lastDocument: clearLastDocument ? null : (lastDocument ?? this.lastDocument),
       hasMore: hasMore ?? this.hasMore,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
@@ -160,18 +142,11 @@ class BookingsFiltersNotifier extends _$BookingsFiltersNotifier {
 
   void setStatus(BookingStatus? status) {
     // When setting a status, disable imported filter
-    state = state.copyWith(
-      status: status,
-      clearStatus: status == null,
-      showImportedOnly: false,
-    );
+    state = state.copyWith(status: status, clearStatus: status == null, showImportedOnly: false);
   }
 
   void setProperty(String? propertyId) {
-    state = state.copyWith(
-      propertyId: propertyId,
-      clearProperty: propertyId == null,
-    );
+    state = state.copyWith(propertyId: propertyId, clearProperty: propertyId == null);
   }
 
   void setDateRange(DateTime? startDate, DateTime? endDate) {
@@ -209,10 +184,7 @@ Future<List<String>> ownerUnitIds(Ref ref) async {
   final userId = authState.userModel?.id;
 
   if (userId == null) {
-    throw AuthException(
-      'User not authenticated',
-      code: 'auth/not-authenticated',
-    );
+    throw AuthException('User not authenticated', code: 'auth/not-authenticated');
   }
 
   final repository = ref.watch(ownerBookingsRepositoryProvider);
@@ -251,10 +223,7 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
       final userId = auth.currentUser?.uid;
 
       if (userId == null) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'User not authenticated',
-        );
+        state = state.copyWith(isLoading: false, error: 'User not authenticated');
         return;
       }
 
@@ -276,10 +245,7 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
         hasMore: result.hasMore,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: LoggingService.safeErrorToString(e),
-      );
+      state = state.copyWith(isLoading: false, error: LoggingService.safeErrorToString(e));
     }
   }
 
@@ -314,14 +280,10 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
         startAfterDocument: state.lastDocument,
       );
 
-      // Append new bookings and re-sort: pending first, then all by check-in (soonest first)
+      // Append new bookings - server already returns sorted data
+      // NOTE: Removed client-side re-sorting which caused UI jumps when items
+      // shifted positions during scroll. Firestore ORDER BY ensures correct order.
       final allBookings = [...state.bookings, ...result.bookings];
-      allBookings.sort((a, b) {
-        final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
-        final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
-        if (aPending != bPending) return aPending.compareTo(bPending);
-        return a.booking.checkIn.compareTo(b.booking.checkIn);
-      });
 
       state = state.copyWith(
         bookings: allBookings,
@@ -342,20 +304,12 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
 
   /// Remove a booking from local state (after delete/status change)
   void removeBooking(String bookingId) {
-    state = state.copyWith(
-      bookings: state.bookings.where((b) => b.booking.id != bookingId).toList(),
-    );
+    state = state.copyWith(bookings: state.bookings.where((b) => b.booking.id != bookingId).toList());
   }
 
   /// Update a booking in local state (after status change)
   void updateBookingStatus(String bookingId, BookingStatus newStatus) {
-    state = state.copyWith(
-      bookings: _updateBookingStatusInList(
-        state.bookings,
-        bookingId,
-        newStatus,
-      ),
-    );
+    state = state.copyWith(bookings: _updateBookingStatusInList(state.bookings, bookingId, newStatus));
   }
 }
 
@@ -413,11 +367,7 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
 
   /// Load first page of bookings
   Future<void> loadFirstPage() async {
-    state = state.copyWith(
-      isInitialLoad: true,
-      isLoadingBottom: true,
-      clearError: true,
-    );
+    state = state.copyWith(isInitialLoad: true, isLoadingBottom: true, clearError: true);
 
     try {
       final repository = ref.read(ownerBookingsRepositoryProvider);
@@ -426,11 +376,7 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
       final userId = auth.currentUser?.uid;
 
       if (userId == null) {
-        state = state.copyWith(
-          isInitialLoad: false,
-          isLoadingBottom: false,
-          error: 'User not authenticated',
-        );
+        state = state.copyWith(isInitialLoad: false, isLoadingBottom: false, error: 'User not authenticated');
         return;
       }
 
@@ -461,11 +407,7 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         pageSize: state.pageSize,
       );
     } catch (e) {
-      state = state.copyWith(
-        isInitialLoad: false,
-        isLoadingBottom: false,
-        error: LoggingService.safeErrorToString(e),
-      );
+      state = state.copyWith(isInitialLoad: false, isLoadingBottom: false, error: LoggingService.safeErrorToString(e));
     }
   }
 
@@ -473,10 +415,7 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
   Future<void> loadMoreBottom() async {
     if (!state.canLoadBottom) return;
 
-    state = state.copyWith(
-      isLoadingBottom: true,
-      lastScrollDirection: ScrollDirection.down,
-    );
+    state = state.copyWith(isLoadingBottom: true, lastScrollDirection: ScrollDirection.down);
 
     try {
       final repository = ref.read(ownerBookingsRepositoryProvider);
@@ -512,14 +451,10 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         _addToCache(result.lastDocument!);
       }
 
-      // Append new bookings and re-sort: pending first, then all by check-in (soonest first)
+      // Append new bookings - server already returns sorted data
+      // NOTE: Removed client-side re-sorting which caused UI jumps when items
+      // shifted positions during scroll. Firestore ORDER BY ensures correct order.
       final newBookings = [...state.visibleBookings, ...result.bookings];
-      newBookings.sort((a, b) {
-        final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
-        final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
-        if (aPending != bPending) return aPending.compareTo(bPending);
-        return a.booking.checkIn.compareTo(b.booking.checkIn);
-      });
 
       state = state.copyWith(
         visibleBookings: newBookings,
@@ -530,10 +465,7 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
 
       // NOTE: Trimming disabled - for datasets < 500 items, keeping all in memory is fine
     } catch (e) {
-      state = state.copyWith(
-        isLoadingBottom: false,
-        error: LoggingService.safeErrorToString(e),
-      );
+      state = state.copyWith(isLoadingBottom: false, error: LoggingService.safeErrorToString(e));
     }
   }
 
@@ -541,10 +473,7 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
   Future<void> loadMoreTop() async {
     if (!state.canLoadTop || state.topCursor == null) return;
 
-    state = state.copyWith(
-      isLoadingTop: true,
-      lastScrollDirection: ScrollDirection.up,
-    );
+    state = state.copyWith(isLoadingTop: true, lastScrollDirection: ScrollDirection.up);
 
     try {
       final repository = ref.read(ownerBookingsRepositoryProvider);
@@ -580,14 +509,10 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         _addToCache(result.firstDocument!);
       }
 
-      // Prepend new bookings and re-sort: pending first, then all by check-in (soonest first)
+      // Prepend new bookings - server already returns sorted data
+      // NOTE: Removed client-side re-sorting which caused UI jumps when items
+      // shifted positions during scroll. Firestore ORDER BY ensures correct order.
       final newBookings = [...result.bookings, ...state.visibleBookings];
-      newBookings.sort((a, b) {
-        final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
-        final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
-        if (aPending != bPending) return aPending.compareTo(bPending);
-        return a.booking.checkIn.compareTo(b.booking.checkIn);
-      });
 
       state = state.copyWith(
         visibleBookings: newBookings,
@@ -598,10 +523,7 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
 
       // NOTE: Trimming disabled - for datasets < 500 items, keeping all in memory is fine
     } catch (e) {
-      state = state.copyWith(
-        isLoadingTop: false,
-        error: LoggingService.safeErrorToString(e),
-      );
+      state = state.copyWith(isLoadingTop: false, error: LoggingService.safeErrorToString(e));
     }
   }
 
@@ -615,39 +537,23 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
   /// Refresh bookings (reset window and reload)
   Future<void> refresh() async {
     _documentCache.clear();
-    state = WindowedBookingsState(
-      windowSize: state.windowSize,
-      pageSize: state.pageSize,
-    );
+    state = WindowedBookingsState(windowSize: state.windowSize, pageSize: state.pageSize);
     await loadFirstPage();
   }
 
   /// Remove a booking from visible list
   void removeBooking(String bookingId) {
     _documentCache.remove(bookingId);
-    state = state.copyWith(
-      visibleBookings: state.visibleBookings
-          .where((b) => b.booking.id != bookingId)
-          .toList(),
-    );
+    state = state.copyWith(visibleBookings: state.visibleBookings.where((b) => b.booking.id != bookingId).toList());
   }
 
   /// Update booking status in visible list
   void updateBookingStatus(String bookingId, BookingStatus newStatus) {
-    state = state.copyWith(
-      visibleBookings: _updateBookingStatusInList(
-        state.visibleBookings,
-        bookingId,
-        newStatus,
-      ),
-    );
+    state = state.copyWith(visibleBookings: _updateBookingStatusInList(state.visibleBookings, bookingId, newStatus));
   }
 
   /// Get debug info for overlay
-  WindowingDebugInfo getDebugInfo({
-    required double scrollPosition,
-    required double maxScrollExtent,
-  }) {
+  WindowingDebugInfo getDebugInfo({required double scrollPosition, required double maxScrollExtent}) {
     return WindowingDebugInfo(
       visibleCount: state.visibleBookings.length,
       windowSize: state.windowSize,
@@ -736,10 +642,7 @@ Future<List<OwnerBooking>> recentOwnerBookings(Ref ref) async {
   final userId = authState.userModel?.id;
 
   if (userId == null) {
-    throw AuthException(
-      'User not authenticated',
-      code: 'auth/not-authenticated',
-    );
+    throw AuthException('User not authenticated', code: 'auth/not-authenticated');
   }
 
   final repository = ref.watch(ownerBookingsRepositoryProvider);
@@ -748,11 +651,7 @@ Future<List<OwnerBooking>> recentOwnerBookings(Ref ref) async {
   final unitIds = await ref.watch(ownerUnitIdsProvider.future);
 
   // Fetch just 10 most recent
-  final result = await repository.getOwnerBookingsPaginated(
-    ownerId: userId,
-    unitIds: unitIds,
-    limit: 10,
-  );
+  final result = await repository.getOwnerBookingsPaginated(ownerId: userId, unitIds: unitIds, limit: 10);
 
   return result.bookings;
 }

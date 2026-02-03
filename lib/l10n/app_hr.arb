@@ -2046,6 +2046,13 @@
   "embedGuideQuickHelpTip": "Widget se automatski ažurira kada promijenite cijene ili dostupnost u aplikaciji.",
   "embedGuideQuickHelpMoreInfo": "Za detaljne upute, pogledajte linkove za pomoć ispod.",
 
+  "embedGuideDeveloperInfoTitle": "Za Developere",
+  "embedGuideDeveloperInfoDesc": "Developeri mogu slobodno prilagoditi style atribute iframe-a (width, height, border, itd.) prema dizajnu web stranice. Samo src URL mora ostati nepromijenjen.",
+  "embedGuideDeveloperWidth": "Prilagođene dimenzije",
+  "embedGuideDeveloperBorder": "Okvir i stilizacija",
+  "embedGuideDeveloperResponsive": "Responzivni layout",
+  "embedGuideDeveloperWarning": "Ne mijenjajte src URL - sadrži potrebne identifikatore nekretnine i apartmana.",
+
   "embedHelpTitle": "Pomoć za ugradnju widgeta",
   "embedHelpTabInstallation": "Vodič",
   "embedHelpTabAdvanced": "Napredno",

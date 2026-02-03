@@ -5044,6 +5044,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'For detailed instructions, check the help links below.';
 
   @override
+  String get embedGuideDeveloperInfoTitle => 'For Developers';
+
+  @override
+  String get embedGuideDeveloperInfoDesc =>
+      'Developers can freely customize the iframe style attributes (width, height, border, etc.) to match your website design. Only the src URL must remain unchanged.';
+
+  @override
+  String get embedGuideDeveloperWidth => 'Custom dimensions';
+
+  @override
+  String get embedGuideDeveloperBorder => 'Border & styling';
+
+  @override
+  String get embedGuideDeveloperResponsive => 'Responsive layout';
+
+  @override
+  String get embedGuideDeveloperWarning =>
+      'Do not modify the src URL - it contains required property and unit identifiers.';
+
+  @override
   String get embedHelpTitle => 'Embed Widget Help';
 
   @override

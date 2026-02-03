@@ -9366,6 +9366,42 @@ abstract class AppLocalizations {
   /// **'For detailed instructions, check the help links below.'**
   String get embedGuideQuickHelpMoreInfo;
 
+  /// No description provided for @embedGuideDeveloperInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For Developers'**
+  String get embedGuideDeveloperInfoTitle;
+
+  /// No description provided for @embedGuideDeveloperInfoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Developers can freely customize the iframe style attributes (width, height, border, etc.) to match your website design. Only the src URL must remain unchanged.'**
+  String get embedGuideDeveloperInfoDesc;
+
+  /// No description provided for @embedGuideDeveloperWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom dimensions'**
+  String get embedGuideDeveloperWidth;
+
+  /// No description provided for @embedGuideDeveloperBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Border & styling'**
+  String get embedGuideDeveloperBorder;
+
+  /// No description provided for @embedGuideDeveloperResponsive.
+  ///
+  /// In en, this message translates to:
+  /// **'Responsive layout'**
+  String get embedGuideDeveloperResponsive;
+
+  /// No description provided for @embedGuideDeveloperWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not modify the src URL - it contains required property and unit identifiers.'**
+  String get embedGuideDeveloperWarning;
+
   /// No description provided for @embedHelpTitle.
   ///
   /// In en, this message translates to:

@@ -22,10 +22,12 @@ class EmbedWidgetGuideScreen extends ConsumerStatefulWidget {
   const EmbedWidgetGuideScreen({super.key});
 
   @override
-  ConsumerState<EmbedWidgetGuideScreen> createState() => _EmbedWidgetGuideScreenState();
+  ConsumerState<EmbedWidgetGuideScreen> createState() =>
+      _EmbedWidgetGuideScreenState();
 }
 
-class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen> {
+class _EmbedWidgetGuideScreenState
+    extends ConsumerState<EmbedWidgetGuideScreen> {
   static const String _subdomainBaseDomain = 'view.bookbed.io';
 
   /// Selected unit for live preview testing
@@ -36,7 +38,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
   /// Works on any website - just copy and paste
   /// Responsive height using aspect-ratio with min/max constraints
   /// Always uses view.bookbed.io (no subdomain) - property/unit IDs are sufficient
-  String _generateEmbedCode(String propertyId, UnitModel unit, String? subdomain) {
+  String _generateEmbedCode(
+    String propertyId,
+    UnitModel unit,
+    String? subdomain,
+  ) {
     // Always use base domain for iframe embeds - no subdomain needed
     // Subdomains are optional and may not be configured for all properties
     const baseUrl = 'https://$_subdomainBaseDomain';
@@ -85,7 +91,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(Icons.help_outline, color: theme.colorScheme.primary, size: 20),
+                    child: Icon(
+                      Icons.help_outline,
+                      color: theme.colorScheme.primary,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -94,13 +104,17 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                       children: [
                         Text(
                           l10n.embedGuideQuickHelpTitle,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           l10n.embedGuideSimpleStepsTitle,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                       ],
@@ -120,9 +134,21 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  _buildCompactStep(number: '1', text: l10n.embedGuideSimpleStep1, theme: theme),
-                  _buildCompactStep(number: '2', text: l10n.embedGuideSimpleStep2, theme: theme),
-                  _buildCompactStep(number: '3', text: l10n.embedGuideSimpleStep3, theme: theme),
+                  _buildCompactStep(
+                    number: '1',
+                    text: l10n.embedGuideSimpleStep1,
+                    theme: theme,
+                  ),
+                  _buildCompactStep(
+                    number: '2',
+                    text: l10n.embedGuideSimpleStep2,
+                    theme: theme,
+                  ),
+                  _buildCompactStep(
+                    number: '3',
+                    text: l10n.embedGuideSimpleStep3,
+                    theme: theme,
+                  ),
                 ],
               ),
             ),
@@ -135,13 +161,19 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                 child: OutlinedButton.icon(
                   onPressed: () {
                     Navigator.of(sheetContext).pop();
-                    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const EmbedHelpScreen()));
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const EmbedHelpScreen(),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.menu_book, size: 18),
                   label: Text(l10n.embedGuideInstallationGuide),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),
@@ -153,7 +185,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
   }
 
   /// Build a compact step item for the quick help bottom sheet
-  Widget _buildCompactStep({required String number, required String text, required ThemeData theme}) {
+  Widget _buildCompactStep({
+    required String number,
+    required String text,
+    required ThemeData theme,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -161,11 +197,18 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
           Container(
             width: 24,
             height: 24,
-            decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
             alignment: Alignment.center,
             child: Text(
               number,
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -229,7 +272,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
 
                   // Mobile: stacked
                   return Column(
-                    children: [_buildInstallationStepsSection(), const SizedBox(height: 16), _buildTestWidgetSection()],
+                    children: [
+                      _buildInstallationStepsSection(),
+                      const SizedBox(height: 16),
+                      _buildTestWidgetSection(),
+                    ],
                   );
                 },
               ),
@@ -280,7 +327,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
           Positioned(
             right: -10,
             top: -10,
-            child: Icon(Icons.code, size: 100, color: Colors.white.withValues(alpha: 0.08)),
+            child: Icon(
+              Icons.code,
+              size: 100,
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(20),
@@ -295,7 +346,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.integration_instructions_outlined, size: 24, color: Colors.white),
+                      child: const Icon(
+                        Icons.integration_instructions_outlined,
+                        size: 24,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -358,13 +413,31 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
             color: context.gradients.cardBackground,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: context.gradients.sectionBorder),
-            boxShadow: AppShadows.getElevation(1, isDark: theme.brightness == Brightness.dark),
+            boxShadow: AppShadows.getElevation(
+              1,
+              isDark: theme.brightness == Brightness.dark,
+            ),
           ),
           child: Column(
             children: [
-              _buildModernStep(number: '1', text: l10n.embedGuideSimpleStep1, theme: theme, isLast: false),
-              _buildModernStep(number: '2', text: l10n.embedGuideSimpleStep2, theme: theme, isLast: false),
-              _buildModernStep(number: '3', text: l10n.embedGuideSimpleStep3, theme: theme, isLast: true),
+              _buildModernStep(
+                number: '1',
+                text: l10n.embedGuideSimpleStep1,
+                theme: theme,
+                isLast: false,
+              ),
+              _buildModernStep(
+                number: '2',
+                text: l10n.embedGuideSimpleStep2,
+                theme: theme,
+                isLast: false,
+              ),
+              _buildModernStep(
+                number: '3',
+                text: l10n.embedGuideSimpleStep3,
+                theme: theme,
+                isLast: true,
+              ),
             ],
           ),
         ),
@@ -402,7 +475,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                 alignment: Alignment.center,
                 child: Text(
                   number,
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               if (!isLast)
@@ -427,7 +504,10 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                   padding: const EdgeInsets.only(top: 6, bottom: 20),
                   child: Text(
                     text,
-                    style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurface, height: 1.4),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ],
@@ -463,7 +543,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                   color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.developer_mode, color: theme.colorScheme.tertiary, size: 20),
+                child: Icon(
+                  Icons.developer_mode,
+                  color: theme.colorScheme.tertiary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -491,7 +575,9 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF12121A) : const Color(0xFFF8F9FA),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+              border: Border.all(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -525,11 +611,17 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
             decoration: BoxDecoration(
               color: theme.colorScheme.error.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: theme.colorScheme.error.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, size: 18, color: theme.colorScheme.error),
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: 18,
+                  color: theme.colorScheme.error,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -614,7 +706,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.play_circle_outline_rounded, color: theme.colorScheme.primary, size: 24),
+                child: Icon(
+                  Icons.play_circle_outline_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -647,7 +743,9 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                 // Build dropdown items with property grouping
                 final items = <DropdownMenuItem<UnitModel>>[];
                 for (final property in properties) {
-                  final propertyUnits = units.where((u) => u.propertyId == property.id).toList();
+                  final propertyUnits = units
+                      .where((u) => u.propertyId == property.id)
+                      .toList();
                   if (propertyUnits.isEmpty) continue;
 
                   // Property header (disabled)
@@ -695,7 +793,9 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                     // Dropdown
                     DropdownButtonFormField<UnitModel>(
                       value: _selectedPreviewUnit,
-                      dropdownColor: InputDecorationHelper.getDropdownColor(context),
+                      dropdownColor: InputDecorationHelper.getDropdownColor(
+                        context,
+                      ),
                       borderRadius: InputDecorationHelper.dropdownBorderRadius,
                       decoration: InputDecorationHelper.buildDecoration(
                         labelText: l10n.embedGuideSelectUnitHint,
@@ -720,7 +820,9 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _selectedPreviewUnit != null && _selectedPreviewProperty != null
+                        onPressed:
+                            _selectedPreviewUnit != null &&
+                                _selectedPreviewProperty != null
                             ? () {
                                 final url =
                                     'https://$_subdomainBaseDomain/?property=${_selectedPreviewProperty!.id}&unit=${_selectedPreviewUnit!.id}';
@@ -733,8 +835,13 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                           backgroundColor: theme.colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -772,9 +879,13 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.onSurface.withValues(alpha: 0.05) : Colors.grey.shade50,
+        color: isDark
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
+            : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.05)),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -798,16 +909,31 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 2),
                       Text(
                         description,
-                        style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_outward_rounded, size: 20, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
+                Icon(
+                  Icons.arrow_outward_rounded,
+                  size: 20,
+                  color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                ),
               ],
             ),
           ),
@@ -876,21 +1002,31 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
     );
   }
 
-  Widget _buildHelpLinkButton({required IconData icon, required String label, required EmbedHelpTab tab}) {
+  Widget _buildHelpLinkButton({
+    required IconData icon,
+    required String label,
+    required EmbedHelpTab tab,
+  }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 2),
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.onSurface.withValues(alpha: 0.05) : Colors.grey.shade50,
+        color: isDark
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.05)
+            : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => EmbedHelpScreen(initialTab: tab)));
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => EmbedHelpScreen(initialTab: tab),
+              ),
+            );
           },
           borderRadius: BorderRadius.circular(12),
           child: Padding(
@@ -909,10 +1045,18 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                 Expanded(
                   child: Text(
                     label,
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, size: 22, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 22,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
               ],
             ),
           ),
@@ -951,7 +1095,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.code_rounded, color: theme.colorScheme.primary, size: 24),
+                  child: Icon(
+                    Icons.code_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -970,7 +1118,12 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                       const SizedBox(height: 2),
                       Text(
                         l10n.embedGuideCopyIframe,
-                        style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -986,16 +1139,25 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.15)),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.translate, size: 20, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.translate,
+                    size: 20,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.embedGuideLanguageNote,
-                      style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
                   ),
                 ],
@@ -1014,7 +1176,8 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                 }
 
                 return unitsAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Text('${l10n.error}: $e'),
                   data: (units) {
                     if (units.isEmpty) {
@@ -1024,12 +1187,17 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                     // Group units by property
                     return Column(
                       children: properties.map((property) {
-                        final propertyUnits = units.where((u) => u.propertyId == property.id).toList();
+                        final propertyUnits = units
+                            .where((u) => u.propertyId == property.id)
+                            .toList();
                         if (propertyUnits.isEmpty) {
                           return const SizedBox.shrink();
                         }
 
-                        return _buildPropertyUnitsSection(property, propertyUnits);
+                        return _buildPropertyUnitsSection(
+                          property,
+                          propertyUnits,
+                        );
                       }).toList(),
                     );
                   },
@@ -1043,7 +1211,10 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
   }
 
   /// Build section for a single property with its units
-  Widget _buildPropertyUnitsSection(PropertyModel property, List<UnitModel> units) {
+  Widget _buildPropertyUnitsSection(
+    PropertyModel property,
+    List<UnitModel> units,
+  ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -1052,7 +1223,9 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E26) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.08)),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1062,7 +1235,9 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.03),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(15),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1070,25 +1245,43 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                 // Row 1: Icon + Property name
                 Row(
                   children: [
-                    Icon(Icons.apartment, size: 20, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.apartment,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(property.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      child: Text(
+                        property.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ],
                 ),
                 // Row 2: Subdomain link (if available)
-                if (property.subdomain != null && property.subdomain!.isNotEmpty) ...[
+                if (property.subdomain != null &&
+                    property.subdomain!.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       '${property.subdomain}.$_subdomainBaseDomain',
-                      style: TextStyle(fontSize: 11, color: theme.colorScheme.primary, fontFamily: 'monospace'),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.primary,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                   ),
                 ],
@@ -1097,14 +1290,21 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
           ),
 
           // Units list
-          ...units.map((unit) => _buildUnitEmbedCard(property.id, unit, property.subdomain)),
+          ...units.map(
+            (unit) =>
+                _buildUnitEmbedCard(property.id, unit, property.subdomain),
+          ),
         ],
       ),
     );
   }
 
   /// Build embed card for a single unit
-  Widget _buildUnitEmbedCard(String propertyId, UnitModel unit, String? subdomain) {
+  Widget _buildUnitEmbedCard(
+    String propertyId,
+    UnitModel unit,
+    String? subdomain,
+  ) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -1113,7 +1313,11 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.08))),
+        border: Border(
+          top: BorderSide(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1124,13 +1328,19 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
               Container(
                 width: 8,
                 height: 8,
-                decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   unit.name,
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.2),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ),
               Container(
@@ -1141,15 +1351,29 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
                 child: TextButton.icon(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: embedCode));
-                    ErrorDisplayUtils.showSuccessSnackBar(context, l10n.embedGuideCodeCopied);
+                    ErrorDisplayUtils.showSuccessSnackBar(
+                      context,
+                      l10n.embedGuideCodeCopied,
+                    );
                   },
-                  icon: Icon(Icons.copy_rounded, size: 14, color: theme.colorScheme.primary),
+                  icon: Icon(
+                    Icons.copy_rounded,
+                    size: 14,
+                    color: theme.colorScheme.primary,
+                  ),
                   label: Text(
                     l10n.embedCodeCopy,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -1167,7 +1391,9 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF12121A) : const Color(0xFFF8F9FA),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+              border: Border.all(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              ),
             ),
             child: _buildHighlightedEmbedCode(
               embedCode: embedCode,
@@ -1214,7 +1440,12 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
     final propertyIndex = remaining.indexOf(propertyMarker);
     if (propertyIndex != -1) {
       // Text before property
-      spans.add(TextSpan(text: remaining.substring(0, propertyIndex + 9), style: normalStyle)); // "property="
+      spans.add(
+        TextSpan(
+          text: remaining.substring(0, propertyIndex + 9),
+          style: normalStyle,
+        ),
+      ); // "property="
       // Property ID (bold)
       spans.add(TextSpan(text: propertyId, style: boldStyle));
       remaining = remaining.substring(propertyIndex + propertyMarker.length);
@@ -1225,7 +1456,12 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
     final unitIndex = remaining.indexOf(unitMarker);
     if (unitIndex != -1) {
       // Text before unit
-      spans.add(TextSpan(text: remaining.substring(0, unitIndex + 5), style: normalStyle)); // "unit="
+      spans.add(
+        TextSpan(
+          text: remaining.substring(0, unitIndex + 5),
+          style: normalStyle,
+        ),
+      ); // "unit="
       // Unit ID (bold)
       spans.add(TextSpan(text: unitId, style: boldStyle));
       remaining = remaining.substring(unitIndex + unitMarker.length);
@@ -1247,11 +1483,17 @@ class _EmbedWidgetGuideScreenState extends ConsumerState<EmbedWidgetGuideScreen>
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          Icon(Icons.inbox_outlined, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+          Icon(
+            Icons.inbox_outlined,
+            size: 48,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+          ),
           const SizedBox(height: 12),
           Text(
             message,
-            style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
             textAlign: TextAlign.center,
           ),
         ],

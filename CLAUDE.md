@@ -764,7 +764,18 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-03 | **Version**: 6.51
+**Last Updated**: 2026-02-03 | **Version**: 6.52
+
+**Changelog 6.52**: Bookings Page Performance Optimization & Guide Update:
+- **Optimization: Removed Client-Side Sorting** (`owner_bookings_provider.dart`):
+  - Removed redundant `.sort()` calls in `WindowedBookingsNotifier` and `PaginatedBookingsNotifier`.
+  - Reliance on Firestore's `orderBy` prevents UI jumps during progressive loading.
+- **Optimization: Scroll Debounce** (`owner_bookings_screen.dart`):
+  - Added 100ms debounce to scroll listener to reduce CPU load and prevent rapid-fire data requests.
+  - Updated scroll thresholds (90%) for proactive background loading.
+- **Embed Widget Guide Update** (`embed_widget_guide_screen.dart`):
+  - Added "For Developers" section with styling customization info and security warnings about the src URL.
+  - Updated English and Croatian localizations for the developer guide.
 
 **Changelog 6.51**: iCal Export Critical Fixes — Same-Day Turnover & Min-Stay Gap Blocking:
 - **DTEND Off-by-One Fix** (`icalExport.ts` → `generateBookingEvent`):

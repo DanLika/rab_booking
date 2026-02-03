@@ -1,7 +1,7 @@
-import {onRequest} from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v2/https";
 import * as crypto from "crypto";
-import {admin} from "./firebase";
-import {logInfo, logError} from "./logger";
+import { admin } from "./firebase";
+import { logInfo, logError } from "./logger";
 
 // =============================================================================
 // CONFIGURATION
@@ -61,7 +61,7 @@ function generateContentHash(content: string): string {
  * Set HTTP cache headers for iCal response
  */
 function setCacheHeaders(
-  response: {set: (name: string, value: string) => void},
+  response: { set: (name: string, value: string) => void },
   etag: string,
   maxAge: number
 ): void {
@@ -114,7 +114,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     // Strip .ics extension if present (some calendar apps require URL to end in .ics)
     const token = pathParts[2].replace(/\.ics$/i, "");
 
-    logInfo("[iCal Feed] Request received", {propertyId, unitId});
+    logInfo("[iCal Feed] Request received", { propertyId, unitId });
 
     const db = admin.firestore();
 
@@ -127,7 +127,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       .get();
 
     if (!widgetSettingsDoc.exists) {
-      logError("[iCal Feed] Widget settings not found", {propertyId, unitId});
+      logError("[iCal Feed] Widget settings not found", { propertyId, unitId });
       response.status(404).send("Unit not found");
       return;
     }
@@ -136,14 +136,14 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 
     // Check if iCal export is enabled
     if (!widgetSettings?.ical_export_enabled) {
-      logError("[iCal Feed] iCal export disabled", {propertyId, unitId});
+      logError("[iCal Feed] iCal export disabled", { propertyId, unitId });
       response.status(403).send("iCal export is disabled for this unit");
       return;
     }
 
     // Verify token using timing-safe comparison (prevents timing attacks)
     if (!verifyIcalToken(token, widgetSettings.ical_export_token || "")) {
-      logError("[iCal Feed] Invalid token", {propertyId, unitId});
+      logError("[iCal Feed] Invalid token", { propertyId, unitId });
       response.status(403).send("Invalid token");
       return;
     }
@@ -162,14 +162,14 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     // 3. Handle ETag/If-None-Match for bandwidth optimization
     const clientETag = request.headers["if-none-match"];
     if (cacheValid && clientETag && clientETag === cachedETag) {
-      logInfo("[iCal Feed] 304 Not Modified (ETag match)", {propertyId, unitId});
+      logInfo("[iCal Feed] 304 Not Modified (ETag match)", { propertyId, unitId });
       response.status(304).send("");
       return;
     }
 
     // 4. Return cached content if still valid
     if (cacheValid && cachedContent) {
-      logInfo("[iCal Feed] Serving cached content", {propertyId, unitId});
+      logInfo("[iCal Feed] Serving cached content", { propertyId, unitId });
       setCacheHeaders(response, cachedETag, ICAL_CONFIG.CACHE_TTL_SECONDS);
       response.set("Content-Type", "text/calendar; charset=utf-8");
       const unitName = widgetSettings.ical_cache_unit_name || "Unit";
@@ -316,14 +316,14 @@ function groupConsecutiveBlockedDays(dates: Date[]): BlockedRange[] {
       rangeEnd = currentDate;
     } else {
       // Gap found - save current range and start new one
-      ranges.push({startDate: rangeStart, endDate: rangeEnd});
+      ranges.push({ startDate: rangeStart, endDate: rangeEnd });
       rangeStart = currentDate;
       rangeEnd = currentDate;
     }
   }
 
   // Don't forget the last range
-  ranges.push({startDate: rangeStart, endDate: rangeEnd});
+  ranges.push({ startDate: rangeStart, endDate: rangeEnd });
 
   return ranges;
 }
@@ -331,6 +331,10 @@ function groupConsecutiveBlockedDays(dates: Date[]): BlockedRange[] {
 /**
  * Generate iCal calendar content (RFC 5545)
  * Includes both bookings AND blocked days
+ *
+ * IMPORTANT: Booking.com rejects empty iCal feeds (those without any VEVENT).
+ * If there are no bookings or blocked days, we generate a placeholder event
+ * to ensure the feed is accepted.
  */
 function generateIcalCalendar(
   unitName: string,
@@ -358,6 +362,12 @@ function generateIcalCalendar(
   // CRITICAL: This ensures Booking.com/Airbnb see these dates as unavailable!
   for (let i = 0; i < blockedRanges.length; i++) {
     lines.push(...generateBlockedEvent(blockedRanges[i], unitName, i));
+  }
+
+  // BOOKING.COM FIX: If no events exist, add a placeholder event
+  // Booking.com rejects iCal feeds without at least one VEVENT
+  if (bookings.length === 0 && blockedRanges.length === 0) {
+    lines.push(...generatePlaceholderEvent(unitName));
   }
 
   // Calendar footer
@@ -479,6 +489,56 @@ function generateBlockedEvent(
 }
 
 /**
+ * Generate placeholder VEVENT for empty calendars
+ *
+ * BOOKING.COM REQUIREMENT: iCal feeds must contain at least one VEVENT.
+ * This placeholder event:
+ * - Uses TRANSP:TRANSPARENT so it doesn't block any dates
+ * - Creates an "Available" event for today
+ * - Has minimal visibility in calendar apps
+ *
+ * This is a workaround for Booking.com's validation requirement.
+ */
+function generatePlaceholderEvent(unitName: string): string[] {
+  const lines: string[] = [];
+  const now = new Date();
+
+  lines.push("BEGIN:VEVENT");
+
+  // UID - Unique identifier for this placeholder
+  lines.push(`UID:placeholder-${formatDate(now)}@bookbed.io`);
+
+  // DTSTAMP - Creation timestamp (required by RFC 5545)
+  lines.push(`DTSTAMP:${formatTimestamp(now)}`);
+
+  // DTSTART/DTEND - Today as an all-day event
+  lines.push(`DTSTART;VALUE=DATE:${formatDate(now)}`);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  lines.push(`DTEND;VALUE=DATE:${formatDate(tomorrow)}`);
+
+  // SUMMARY - Minimal placeholder text
+  lines.push(`SUMMARY:${escapeIcal(`${unitName} - Calendar Active`)}`);
+
+  // DESCRIPTION - Explain this is a placeholder
+  lines.push(`DESCRIPTION:${escapeIcal("This calendar is synced with BookBed. No bookings yet.")}`);
+
+  // STATUS - CONFIRMED for valid event
+  lines.push("STATUS:CONFIRMED");
+
+  // TRANSP - TRANSPARENT means this does NOT block time (important!)
+  // This ensures dates remain available for booking
+  lines.push("TRANSP:TRANSPARENT");
+
+  // CREATED
+  lines.push(`CREATED:${formatTimestamp(now)}`);
+
+  lines.push("END:VEVENT");
+
+  return lines;
+}
+
+/**
  * Build event description
  */
 function buildDescription(booking: any, unitName: string): string {
@@ -519,21 +579,22 @@ function buildDescription(booking: any, unitName: string): string {
  */
 function mapBookingStatus(status: string): string {
   switch (status) {
-  case "confirmed": return "CONFIRMED";
-  case "pending": return "CONFIRMED";
-  case "cancelled": return "CANCELLED";
-  case "completed": return "CONFIRMED";
-  default: return "CONFIRMED";
+    case "confirmed": return "CONFIRMED";
+    case "pending": return "CONFIRMED";
+    case "cancelled": return "CANCELLED";
+    case "completed": return "CONFIRMED";
+    default: return "CONFIRMED";
   }
 }
 
 /**
- * Format date as YYYYMMDD
+ * Format date as YYYYMMDD (UTC)
+ * IMPORTANT: Uses UTC methods to ensure consistent dates regardless of server timezone
  */
 function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   return `${year}${month}${day}`;
 }
 

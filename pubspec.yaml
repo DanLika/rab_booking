@@ -1,7 +1,7 @@
 name: bookbed
 description: "BookBed - Modern booking management platform for vacation rentals."
 publish_to: 'none'
-version: 1.0.7+14
+version: 1.0.8+16
 
 environment:
   sdk: ^3.9.0

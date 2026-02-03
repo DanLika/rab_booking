@@ -164,8 +164,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
             final key = DateKeyGenerator.fromDate(price.date);
             priceMap[key] = price;
-          } catch (e) {
-            LoggingService.logError('Error parsing daily price', e);
+          } catch (e, stackTrace) {
+            LoggingService.logError(
+              'Error parsing daily price - doc: ${doc.reference.path}',
+              e,
+              stackTrace,
+            );
           }
         }
 
@@ -330,8 +334,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
             final key = DateKeyGenerator.fromDate(price.date);
             priceMap[key] = price;
-          } catch (e) {
-            LoggingService.logError('Error parsing daily price', e);
+          } catch (e, stackTrace) {
+            LoggingService.logError(
+              'Error parsing daily price - doc: ${doc.reference.path}',
+              e,
+              stackTrace,
+            );
           }
         }
 
@@ -477,8 +485,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
           final key = DateKeyGenerator.fromDate(price.date);
           priceMap[key] = price;
-        } catch (e) {
-          LoggingService.logError('Error parsing daily price', e);
+        } catch (e, stackTrace) {
+          LoggingService.logError(
+            'Error parsing daily price - doc: ${doc.reference.path}',
+            e,
+            stackTrace,
+          );
         }
       }
 
@@ -612,8 +624,12 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           final price = DailyPriceModel.fromJson({...data, 'id': doc.id});
           final key = DateKeyGenerator.fromDate(price.date);
           priceMap[key] = price;
-        } catch (e) {
-          LoggingService.logError('Error parsing daily price', e);
+        } catch (e, stackTrace) {
+          LoggingService.logError(
+            'Error parsing daily price - doc: ${doc.reference.path}',
+            e,
+            stackTrace,
+          );
         }
       }
 

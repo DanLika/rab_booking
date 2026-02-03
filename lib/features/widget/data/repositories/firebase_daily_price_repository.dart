@@ -38,8 +38,13 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
         ...doc.data() as Map<String, dynamic>,
         'id': doc.id,
       });
-    } catch (e) {
-      LoggingService.logError('Error parsing daily price', e);
+    } catch (e, stackTrace) {
+      // Log full document path for debugging problematic documents
+      LoggingService.logError(
+        'Error parsing daily price - doc: ${doc.reference.path}',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }

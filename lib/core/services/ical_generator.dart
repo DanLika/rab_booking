@@ -96,9 +96,8 @@ class IcalGenerator {
     // DTSTART - Start date (all-day event)
     buffer.write('DTSTART;VALUE=DATE:${_formatDate(booking.checkIn)}\r\n');
 
-    // DTEND - End date (all-day event, exclusive - day after checkout)
-    final endDate = booking.checkOut.add(const Duration(days: 1));
-    buffer.write('DTEND;VALUE=DATE:${_formatDate(endDate)}\r\n');
+    // DTEND - End date (all-day event, exclusive)
+    buffer.write('DTEND;VALUE=DATE:${_formatDate(booking.checkOut)}\r\n');
 
     // SUMMARY - Event title
     final guestName = booking.guestName ?? 'Guest';
@@ -200,9 +199,8 @@ class IcalGenerator {
     // DTSTART - Start date (all-day event)
     buffer.write('DTSTART;VALUE=DATE:${_formatDate(event.startDate)}\r\n');
 
-    // DTEND - End date (all-day event, exclusive - day after end)
-    final endDate = event.endDate.add(const Duration(days: 1));
-    buffer.write('DTEND;VALUE=DATE:${_formatDate(endDate)}\r\n');
+    // DTEND - End date (all-day event, exclusive)
+    buffer.write('DTEND;VALUE=DATE:${_formatDate(event.endDate)}\r\n');
 
     // SUMMARY - Event title with source platform
     buffer.write(

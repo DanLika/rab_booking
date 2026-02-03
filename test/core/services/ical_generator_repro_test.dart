@@ -59,8 +59,8 @@ void main() {
       expect(ics, contains('DTSTART;VALUE=DATE:20250101'));
       expect(
         ics,
-        contains('DTEND;VALUE=DATE:20250106'),
-      ); // End date is exclusive (+1 day)
+        contains('DTEND;VALUE=DATE:20250105'),
+      ); // End date is exclusive (check-out day)
     });
 
     test('validates existence of DTSTAMP and UID', () {

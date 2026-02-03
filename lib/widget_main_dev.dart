@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -42,6 +43,10 @@ Future<void> _initializeFirebaseSafelyDev() async {
 void main() async {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+
+  // CRITICAL: Disable Google Fonts runtime fetching to prevent crashes when offline
+  // When false, the package uses system fonts as fallback instead of attempting network download
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Initialize Firebase with DEV options (Safari fix)
   await _initializeFirebaseSafelyDev();
@@ -85,6 +90,16 @@ class _BookingWidgetAppState extends ConsumerState<BookingWidgetApp> {
         hideNativeSplash();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Precache logo assets for loaders (prevents white square during load)
+    // logo-light.png = purple logo for light theme
+    // logo-dark.png = white logo for dark theme
+    precacheImage(const AssetImage('assets/images/logo-light.png'), context);
+    precacheImage(const AssetImage('assets/images/logo-dark.png'), context);
   }
 
   @override

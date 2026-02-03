@@ -11,7 +11,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../widgets/booking_details_dialog.dart';
+import '../widgets/booking_details_dialog_v2.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -70,6 +70,60 @@ class DashboardOverviewTab extends ConsumerWidget {
                 isMobile,
                 const AsyncValue.loading(),
                 dateRange,
+              );
+            }
+
+            // Handle network/Firestore errors gracefully
+            if (propertiesAsync.hasError) {
+              final error = propertiesAsync.error;
+              final isNetworkError =
+                  error.toString().contains('UNAVAILABLE') ||
+                  error.toString().contains('Unable to resolve host');
+
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isNetworkError
+                            ? Icons.wifi_off_rounded
+                            : Icons.error_outline_rounded,
+                        size: 64,
+                        color: theme.colorScheme.error.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        isNetworkError
+                            ? l10n.errorNetworkFailed
+                            : l10n.errorLoadingData,
+                        style: theme.textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        isNetworkError
+                            ? l10n.pleaseCheckConnection
+                            : l10n.tryAgainLater,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      FilledButton.icon(
+                        onPressed: () {
+                          ref.invalidate(ownerPropertiesProvider);
+                        },
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: Text(l10n.retry),
+                      ),
+                    ],
+                  ),
+                ),
               );
             }
 
@@ -224,26 +278,36 @@ class DashboardOverviewTab extends ConsumerWidget {
 
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.auto_awesome,
-              size: 20,
-              color: theme.colorScheme.primary,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(100),
+            border: Border.all(
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
             ),
-            const SizedBox(width: 8),
-            Text(
-              l10n.dashboardFuturePreview,
-              style: theme.textTheme.titleMedium?.copyWith(
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                size: 16,
                 color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.0,
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Text(
+                l10n.dashboardFuturePreview.toUpperCase(),
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         Stack(
           children: [
             // The blurred dashboard content
@@ -412,8 +476,8 @@ class DashboardOverviewTab extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    theme.colorScheme.error.withAlpha((0.1 * 255).toInt()),
-                    theme.colorScheme.error.withAlpha((0.05 * 255).toInt()),
+                    theme.colorScheme.error.withValues(alpha: 0.1),
+                    theme.colorScheme.error.withValues(alpha: 0.05),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -435,9 +499,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             Text(
               LoggingService.safeErrorToString(e),
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withAlpha(
-                  (0.7 * 255).toInt(),
-                ),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
               maxLines: 3,
@@ -502,7 +564,7 @@ class DashboardOverviewTab extends ConsumerWidget {
             showDialog(
               context: context,
               builder: (context) =>
-                  BookingDetailsDialog(ownerBooking: ownerBooking),
+                  BookingDetailsDialogV2(ownerBooking: ownerBooking),
             );
           },
         );
@@ -716,14 +778,17 @@ class DashboardOverviewTab extends ConsumerWidget {
         constraints: isMobile ? null : const BoxConstraints(maxWidth: 280),
         decoration: BoxDecoration(
           color: cardBgColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? accentColor.withValues(alpha: 0.2) : borderColor,
+            width: isDark ? 1.5 : 1,
+          ),
           boxShadow: isDark
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                    color: accentColor.withValues(alpha: 0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
                 ]
               : [
@@ -1294,8 +1359,31 @@ class _WelcomeHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
+                gradient: theme.brightness == Brightness.dark
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary,
+                          theme.colorScheme.primary.withValues(alpha: 0.7),
+                        ],
+                      )
+                    : null,
+                color: theme.brightness == Brightness.dark
+                    ? null
+                    : theme.colorScheme.primary,
                 shape: BoxShape.circle,
+                boxShadow: theme.brightness == Brightness.dark
+                    ? [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
+                          ),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
               child: const Icon(
                 Icons.waving_hand_rounded,
@@ -1312,6 +1400,7 @@ class _WelcomeHeader extends StatelessWidget {
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
+                  letterSpacing: -0.5,
                 ),
               ),
             ),
@@ -1353,76 +1442,117 @@ class _ActionStepCard extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return Card(
-      elevation: isPrimary ? 4 : 0,
-      color: isPrimary ? null : theme.colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: isPrimary
-            ? BorderSide.none
-            : BorderSide(color: theme.colorScheme.outlineVariant),
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: isPrimary && isDark
+            ? [
+                BoxShadow(
+                  color: gradient.colors.first.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : null,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          decoration: isPrimary ? BoxDecoration(gradient: gradient) : null,
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isPrimary
-                      ? Colors.white.withValues(alpha: 0.2)
-                      : theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+      child: Card(
+        elevation: isPrimary ? (isDark ? 0 : 4) : 0,
+        color: isPrimary
+            ? null
+            : (isDark
+                  ? theme.colorScheme.surfaceContainerHigh.withValues(
+                      alpha: 0.5,
+                    )
+                  : theme.colorScheme.surfaceContainerLow),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: isPrimary
+              ? BorderSide.none
+              : BorderSide(
+                  color: isDark
+                      ? theme.colorScheme.outlineVariant.withValues(alpha: 0.2)
+                      : theme.colorScheme.outlineVariant,
                 ),
-                child: Icon(
-                  icon,
-                  color: isPrimary ? Colors.white : theme.colorScheme.primary,
-                  size: 24,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            decoration: isPrimary ? BoxDecoration(gradient: gradient) : null,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isPrimary
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : (isDark
+                              ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                              : theme.colorScheme.surface),
+                    borderRadius: BorderRadius.circular(14),
+                    border: isPrimary
+                        ? Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          )
+                        : null,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isPrimary ? Colors.white : theme.colorScheme.primary,
+                    size: 26,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isPrimary ? Colors.white : theme.colorScheme.onSurface,
+                const SizedBox(height: 20),
+                Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isPrimary
+                        ? Colors.white
+                        : theme.colorScheme.onSurface,
+                    fontSize: 20,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isPrimary
-                      ? Colors.white.withValues(alpha: 0.9)
-                      : theme.colorScheme.onSurfaceVariant,
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: isPrimary
+                        ? Colors.white.withValues(alpha: 0.9)
+                        : theme.colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Text(
-                    l10n.dashboardGetStarted,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Text(
+                      l10n.dashboardGetStarted,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: isPrimary
+                            ? Colors.white
+                            : theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 18,
                       color: isPrimary
                           ? Colors.white
                           : theme.colorScheme.primary,
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 16,
-                    color: isPrimary ? Colors.white : theme.colorScheme.primary,
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

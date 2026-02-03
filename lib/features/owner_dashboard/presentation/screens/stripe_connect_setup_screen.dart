@@ -515,6 +515,9 @@ class _StripeConnectSetupScreenState
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: theme.colorScheme.primary,
+                    // Keep same colors when disabled (loading state)
+                    disabledBackgroundColor: Colors.white,
+                    disabledForegroundColor: theme.colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -540,6 +543,8 @@ class _StripeConnectSetupScreenState
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
+                    // Keep same color when disabled (loading state)
+                    disabledForegroundColor: Colors.white,
                     side: BorderSide(
                       color: Colors.white.withAlpha((0.5 * 255).toInt()),
                       width: 2,

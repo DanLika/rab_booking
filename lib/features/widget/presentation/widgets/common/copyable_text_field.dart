@@ -126,7 +126,7 @@ class CopyableTextField extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
+                SelectableText(
                   value,
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeM,

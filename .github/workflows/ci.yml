@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -43,7 +43,7 @@ jobs:
         run: flutter test --coverage
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./coverage/lcov.info
           fail_ci_if_error: false
@@ -57,7 +57,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -76,7 +76,7 @@ jobs:
         run: flutter build web --release
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: web-build
           path: build/web/
@@ -94,7 +94,7 @@ jobs:
   #   timeout-minutes: 30
   #   steps:
   #     - name: Checkout code
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v6
   #     - name: Setup Flutter
   #       uses: subosito/flutter-action@v2
   #       with:
@@ -113,7 +113,7 @@ jobs:
   #     - name: Build APK
   #       run: flutter build apk --release
   #     - name: Upload APK
-  #       uses: actions/upload-artifact@v4
+  #       uses: actions/upload-artifact@v6
   #       with:
   #         name: android-apk
   #         path: build/app/outputs/flutter-apk/app-release.apk
@@ -129,7 +129,7 @@ jobs:
   #   timeout-minutes: 45
   #   steps:
   #     - name: Checkout code
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v6
   #     - name: Setup Flutter
   #       uses: subosito/flutter-action@v2
   #       with:
@@ -143,7 +143,7 @@ jobs:
   #     - name: Build iOS (no codesign)
   #       run: flutter build ios --release --no-codesign
   #     - name: Upload iOS build
-  #       uses: actions/upload-artifact@v4
+  #       uses: actions/upload-artifact@v6
   #       with:
   #         name: ios-build
   #         path: build/ios/iphoneos/Runner.app
@@ -157,17 +157,20 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: functions/package-lock.json
 
       - name: Install dependencies
-        run: cd functions && npm ci
+        # TEMP: Use npm install because package-lock.json is out of sync
+        # TODO: Run `cd functions && npm install` locally, commit the updated lock file,
+        # then revert this back to `npm ci`
+        run: cd functions && npm install
 
       - name: Run npm audit
         run: cd functions && npm audit --audit-level=high
@@ -188,7 +191,7 @@ jobs:
 
     steps:
       - name: Download web build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: web-build
           path: build/web
@@ -235,7 +238,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -288,10 +291,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -336,7 +339,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -348,12 +351,12 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
 
-  # Job 10: CodeQL Analysis (for Dart/TypeScript)
+  # Job 10: CodeQL Analysis (for Cloud Functions TypeScript)
   codeql-analysis:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
@@ -365,17 +368,30 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
+          # Only scan Cloud Functions folder (TypeScript)
+          # Dart/Flutter is not supported by CodeQL
+          source-root: functions
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Install dependencies
+        run: cd functions && npm install
+
+      - name: Build TypeScript
+        run: cd functions && npm run build
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:javascript-typescript"

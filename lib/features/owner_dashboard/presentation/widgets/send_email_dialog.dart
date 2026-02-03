@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/accessibility/accessibility_helpers.dart';
@@ -324,7 +325,7 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    Text(
+                                    SelectableText(
                                       widget.booking.guestEmail ?? '',
                                       style: TextStyle(
                                         fontSize: 13,
@@ -513,8 +514,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: Text(
+                        child: AutoSizeText(
                           l10n.sendEmailCancel,
+                          maxLines: 1,
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -544,6 +546,9 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             foregroundColor: Colors.white,
+                            // Keep same colors when disabled (loading state)
+                            disabledBackgroundColor: Colors.transparent,
+                            disabledForegroundColor: Colors.white,
                             shadowColor: Colors.transparent,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -563,15 +568,15 @@ class _SendEmailDialogState extends ConsumerState<_SendEmailDialog> {
                                   ),
                                 )
                               : const Icon(Icons.send, size: 20),
-                          label: Text(
+                          label: AutoSizeText(
                             _isLoading
                                 ? l10n.sendEmailSending
                                 : l10n.sendEmailSend,
+                            maxLines: 1,
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),

@@ -57,4 +57,15 @@ abstract class UnitRepository {
     String slug, {
     String? excludeUnitId,
   });
+
+  /// Get unit by ID with forced server fetch (bypasses cache)
+  ///
+  /// IMPORTANT: Use this for booking price calculations to ensure fresh data.
+  /// This prevents price mismatch errors caused by stale cached unit data.
+  ///
+  /// Requires [propertyId] for efficient direct path query.
+  Future<UnitModel?> fetchUnitByIdFresh({
+    required String unitId,
+    required String propertyId,
+  });
 }

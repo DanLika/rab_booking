@@ -81,7 +81,7 @@ class BookingReferenceCard extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              SelectableText(
                 bookingReference,
                 style: TextStyle(
                   fontSize: TypographyTokens.fontSizeXL,

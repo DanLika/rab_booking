@@ -43,7 +43,7 @@ class BookingCardNotes extends StatelessWidget {
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                borderRadius: BorderRadius.circular(6),
+                shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.note_outlined,

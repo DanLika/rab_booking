@@ -1,18 +1,18 @@
 /**
  * Password Reset Service
- * 
+ *
  * Custom password reset email using Resend with premium template
  * Replaces default Firebase Auth email with branded design
  */
 
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getAuth } from "firebase-admin/auth";
-import { logError, logSuccess, logOperation } from "./logger";
-import { validateEmail } from "./utils/emailValidation";
-import { sanitizeEmail } from "./utils/inputSanitization";
-import { sendPasswordResetEmailV2 } from "./email";
-import { Resend } from "resend";
-import { setUser } from "./sentry";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {getAuth} from "firebase-admin/auth";
+import {logError, logSuccess, logOperation} from "./logger";
+import {validateEmail} from "./utils/emailValidation";
+import {sanitizeEmail} from "./utils/inputSanitization";
+import {sendPasswordResetEmailV2} from "./email";
+import {Resend} from "resend";
+import {setUser} from "./sentry";
 
 // Lazy initialization of Resend client
 let resend: Resend | null = null;
@@ -45,19 +45,19 @@ function getFromName(): string {
 
 /**
  * Send password reset email with custom template
- * 
+ *
  * This function:
  * 1. Validates email address
  * 2. Generates password reset link using Firebase Admin SDK
  * 3. Sends custom branded email via Resend
- * 
+ *
  * Rate limiting: Firebase Auth handles rate limiting automatically
  */
 export const sendPasswordResetEmail = onCall(
-  { cors: true, secrets: ["RESEND_API_KEY"] },
+  {cors: true, secrets: ["RESEND_API_KEY"]},
   async (request) => {
     try {
-      const { email } = request.data;
+      const {email} = request.data;
 
       // Set user context for Sentry error tracking (unauthenticated action - use email)
       if (email) {
@@ -154,10 +154,26 @@ export const sendPasswordResetEmail = onCall(
         );
       }
 
-      // Wrap other errors
+      // Handle unauthorized domain error
+      // This happens when the redirect URL domain is not in Firebase's authorized domains list
+      if (error.code === "auth/unauthorized-continue-uri" ||
+          error.message?.includes("INTERNAL ASSERT FAILED") ||
+          error.message?.includes("Unable to create the email action link")) {
+        logError(
+          "Password reset failed - domain not authorized. " +
+          "Add the domain to Firebase Console > Authentication > Settings > Authorized domains",
+          error
+        );
+        throw new HttpsError(
+          "internal",
+          "Password reset is temporarily unavailable. Please try again later."
+        );
+      }
+
+      // Wrap other errors - don't expose internal details to client
       throw new HttpsError(
         "internal",
-        `Failed to send password reset email: ${error.message}`
+        "Failed to send password reset email. Please try again later."
       );
     }
   }

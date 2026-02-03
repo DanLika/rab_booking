@@ -39,7 +39,7 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             // Navigation items
             _DrawerItem(
-              icon: Icons.grid_view_rounded,
+              icon: Icons.dashboard_outlined,
               title: l10n.ownerDrawerOverview,
               isSelected: currentRoute == 'overview',
               onTap: () => context.go(OwnerRoutes.overview),
@@ -49,7 +49,7 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             // Kalendar
             _DrawerItem(
-              icon: Icons.calendar_month_rounded,
+              icon: Icons.calendar_today_outlined,
               title: l10n.ownerDrawerCalendar,
               isSelected: currentRoute.startsWith('calendar'),
               onTap: () => context.go(OwnerRoutes.calendarTimeline),
@@ -59,7 +59,7 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             // Rezervacije with pending count badge
             _DrawerItemWithBadge(
-              icon: Icons.event_note_rounded,
+              icon: Icons.receipt_long_outlined,
               title: l10n.ownerDrawerBookings,
               isSelected: currentRoute == 'bookings',
               onTap: () => context.go(OwnerRoutes.bookings),
@@ -69,7 +69,7 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             // Smještajne Jedinice
             _DrawerItem(
-              icon: Icons.apartment_rounded,
+              icon: Icons.bed_outlined,
               title: l10n.ownerDrawerUnits,
               isSelected: currentRoute == 'unit-hub',
               onTap: () => context.go(OwnerRoutes.unitHub),
@@ -79,7 +79,7 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             // Unified Integracije Expansion (iCal + Plaćanja)
             _PremiumExpansionTile(
-              icon: Icons.hub_rounded,
+              icon: Icons.extension_outlined,
               title: l10n.ownerDrawerIntegrations,
               isExpanded: currentRoute.startsWith('integrations'),
               children: [
@@ -88,14 +88,14 @@ class OwnerAppDrawer extends ConsumerWidget {
                 _DrawerSubItem(
                   title: l10n.ownerDrawerImportBookings,
                   subtitle: l10n.ownerDrawerSyncBookingCom,
-                  icon: Icons.download,
+                  icon: Icons.system_update_alt_rounded,
                   isSelected: currentRoute == 'integrations/ical/import',
                   onTap: () => context.go(OwnerRoutes.icalImport),
                 ),
                 _DrawerSubItem(
                   title: l10n.ownerDrawerExportCalendar,
                   subtitle: l10n.ownerDrawerIcalFeedUrl,
-                  icon: Icons.upload,
+                  icon: Icons.ios_share_rounded,
                   isSelected: currentRoute == 'integrations/ical/export-list',
                   onTap: () => context.go(OwnerRoutes.icalExportList),
                 ),
@@ -107,7 +107,7 @@ class OwnerAppDrawer extends ConsumerWidget {
                 _DrawerSubItem(
                   title: l10n.ownerDrawerStripePayments,
                   subtitle: l10n.ownerDrawerCardProcessing,
-                  icon: Icons.credit_card,
+                  icon: Icons.payments_outlined,
                   isSelected: currentRoute == 'integrations/stripe',
                   onTap: () => context.go(OwnerRoutes.stripeIntegration),
                 ),
@@ -119,30 +119,17 @@ class OwnerAppDrawer extends ConsumerWidget {
                       currentRoute == 'integrations/payments/bank-account',
                   onTap: () => context.go(OwnerRoutes.bankAccount),
                 ),
-              ],
-            ),
 
-            const SizedBox(height: 4),
+                const SizedBox(height: 8),
 
-            // Uputstva Expansion
-            _PremiumExpansionTile(
-              icon: Icons.menu_book_rounded,
-              title: l10n.ownerDrawerGuides,
-              isExpanded: currentRoute.startsWith('guides'),
-              children: [
+                // Widget Section Header
+                _DrawerSectionHeader(title: l10n.ownerDrawerWidgetSection),
                 _DrawerSubItem(
                   title: l10n.ownerDrawerEmbedWidget,
                   subtitle: l10n.ownerDrawerAddToSite,
-                  icon: Icons.code,
+                  icon: Icons.integration_instructions_outlined,
                   isSelected: currentRoute == 'guides/embed-widget',
                   onTap: () => context.go(OwnerRoutes.guideEmbedWidget),
-                ),
-                _DrawerSubItem(
-                  title: l10n.ownerDrawerFaq,
-                  subtitle: l10n.ownerDrawerFaqSubtitle,
-                  icon: Icons.question_answer,
-                  isSelected: currentRoute == 'guides/faq',
-                  onTap: () => context.go(OwnerRoutes.guideFaq),
                 ),
               ],
             ),
@@ -153,6 +140,16 @@ class OwnerAppDrawer extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Divider(height: 1, color: context.gradients.sectionBorder),
             ),
+
+            // FAQ & Support - Placed here for better visibility
+            _DrawerItem(
+              icon: Icons.quiz_outlined,
+              title: l10n.ownerDrawerFaq,
+              isSelected: currentRoute == 'guides/faq',
+              onTap: () => context.go(OwnerRoutes.guideFaq),
+            ),
+
+            const SizedBox(height: 4),
 
             // Settings & Profile
             _DrawerItemWithNotificationBadge(
@@ -356,12 +353,21 @@ class _DrawerItemState extends State<_DrawerItem> {
                 : Colors.transparent,
           ),
           child: ListTile(
-            leading: Icon(
-              widget.icon,
-              color: widget.isSelected
-                  ? selectedTextColor
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
-              size: 24,
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: widget.isSelected
+                    ? selectedTextColor.withValues(alpha: 0.12)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                widget.icon,
+                color: widget.isSelected
+                    ? selectedTextColor
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                size: 20,
+              ),
             ),
             title: Text(
               widget.title,
@@ -449,12 +455,21 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
                 : Colors.transparent,
           ),
           child: ListTile(
-            leading: Icon(
-              widget.icon,
-              color: widget.isSelected
-                  ? selectedTextColor
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
-              size: 24,
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: widget.isSelected
+                    ? selectedTextColor.withValues(alpha: 0.12)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                widget.icon,
+                color: widget.isSelected
+                    ? selectedTextColor
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                size: 20,
+              ),
             ),
             title: Row(
               children: [
@@ -576,12 +591,21 @@ class _DrawerItemWithNotificationBadgeState
                 : Colors.transparent,
           ),
           child: ListTile(
-            leading: Icon(
-              widget.icon,
-              color: widget.isSelected
-                  ? selectedTextColor
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
-              size: 24,
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: widget.isSelected
+                    ? selectedTextColor.withValues(alpha: 0.12)
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                widget.icon,
+                color: widget.isSelected
+                    ? selectedTextColor
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                size: 20,
+              ),
             ),
             title: Row(
               children: [
@@ -732,14 +756,23 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
           child: ListTile(
             dense: true,
             leading: widget.icon != null
-                ? Icon(
-                    widget.icon,
-                    size: 18,
-                    color: widget.isSelected
-                        ? selectedTextColor
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ? Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: widget.isSelected
+                          ? selectedTextColor.withValues(alpha: 0.12)
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      size: 16,
+                      color: widget.isSelected
+                          ? selectedTextColor
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
                   )
-                : const SizedBox(width: 18),
+                : const SizedBox(width: 32),
             title: Text(
               widget.title,
               style: TextStyle(
@@ -809,9 +842,24 @@ class _PremiumExpansionTile extends StatelessWidget {
           highlightColor: theme.colorScheme.brandPurple.withValues(alpha: 0.06),
         ),
         child: ExpansionTile(
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isExpanded
+                  ? selectedTextColor.withValues(alpha: 0.12)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: isExpanded
+                  ? selectedTextColor
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+            ),
+          ),
           iconColor: iconColor,
           collapsedIconColor: iconColor,
-          leading: Icon(icon, color: iconColor, size: 24),
           title: Text(
             title,
             style: TextStyle(

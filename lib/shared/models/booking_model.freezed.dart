@@ -120,6 +120,10 @@ mixin _$BookingModel {
   @JsonKey(name: 'guest_count')
   int get guestCount => throw _privateConstructorUsedError;
 
+  /// Number of pets
+  @JsonKey(name: 'pet_count')
+  int get petCount => throw _privateConstructorUsedError;
+
   /// Special requests or notes
   String? get notes => throw _privateConstructorUsedError;
 
@@ -205,6 +209,7 @@ abstract class $BookingModelCopyWith<$Res> {
     @JsonKey(name: 'require_owner_approval') bool? requireOwnerApproval,
     String? source,
     @JsonKey(name: 'guest_count') int guestCount,
+    @JsonKey(name: 'pet_count') int petCount,
     String? notes,
     @JsonKey(name: 'tax_legal_accepted') bool? taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
@@ -262,6 +267,7 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
     Object? requireOwnerApproval = freezed,
     Object? source = freezed,
     Object? guestCount = null,
+    Object? petCount = null,
     Object? notes = freezed,
     Object? taxLegalAccepted = freezed,
     Object? paymentIntentId = freezed,
@@ -375,6 +381,10 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
                 ? _value.guestCount
                 : guestCount // ignore: cast_nullable_to_non_nullable
                       as int,
+            petCount: null == petCount
+                ? _value.petCount
+                : petCount // ignore: cast_nullable_to_non_nullable
+                      as int,
             notes: freezed == notes
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
@@ -456,6 +466,7 @@ abstract class _$$BookingModelImplCopyWith<$Res>
     @JsonKey(name: 'require_owner_approval') bool? requireOwnerApproval,
     String? source,
     @JsonKey(name: 'guest_count') int guestCount,
+    @JsonKey(name: 'pet_count') int petCount,
     String? notes,
     @JsonKey(name: 'tax_legal_accepted') bool? taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') String? paymentIntentId,
@@ -512,6 +523,7 @@ class __$$BookingModelImplCopyWithImpl<$Res>
     Object? requireOwnerApproval = freezed,
     Object? source = freezed,
     Object? guestCount = null,
+    Object? petCount = null,
     Object? notes = freezed,
     Object? taxLegalAccepted = freezed,
     Object? paymentIntentId = freezed,
@@ -625,6 +637,10 @@ class __$$BookingModelImplCopyWithImpl<$Res>
             ? _value.guestCount
             : guestCount // ignore: cast_nullable_to_non_nullable
                   as int,
+        petCount: null == petCount
+            ? _value.petCount
+            : petCount // ignore: cast_nullable_to_non_nullable
+                  as int,
         notes: freezed == notes
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
@@ -699,6 +715,7 @@ class _$BookingModelImpl extends _BookingModel {
     @JsonKey(name: 'require_owner_approval') this.requireOwnerApproval,
     this.source,
     @JsonKey(name: 'guest_count') this.guestCount = 1,
+    @JsonKey(name: 'pet_count') this.petCount = 0,
     this.notes,
     @JsonKey(name: 'tax_legal_accepted') this.taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') this.paymentIntentId,
@@ -840,6 +857,11 @@ class _$BookingModelImpl extends _BookingModel {
   @JsonKey(name: 'guest_count')
   final int guestCount;
 
+  /// Number of pets
+  @override
+  @JsonKey(name: 'pet_count')
+  final int petCount;
+
   /// Special requests or notes
   @override
   final String? notes;
@@ -894,7 +916,7 @@ class _$BookingModelImpl extends _BookingModel {
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, unitId: $unitId, propertyId: $propertyId, userId: $userId, guestId: $guestId, ownerId: $ownerId, guestName: $guestName, guestEmail: $guestEmail, guestPhone: $guestPhone, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, depositAmount: $depositAmount, remainingAmount: $remainingAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, paymentOption: $paymentOption, requireOwnerApproval: $requireOwnerApproval, source: $source, guestCount: $guestCount, notes: $notes, taxLegalAccepted: $taxLegalAccepted, paymentIntentId: $paymentIntentId, stripeSessionId: $stripeSessionId, bookingReference: $bookingReference, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
+    return 'BookingModel(id: $id, unitId: $unitId, propertyId: $propertyId, userId: $userId, guestId: $guestId, ownerId: $ownerId, guestName: $guestName, guestEmail: $guestEmail, guestPhone: $guestPhone, checkIn: $checkIn, checkInTime: $checkInTime, checkOutTime: $checkOutTime, checkOut: $checkOut, status: $status, totalPrice: $totalPrice, paidAmount: $paidAmount, advanceAmount: $advanceAmount, depositAmount: $depositAmount, remainingAmount: $remainingAmount, paymentMethod: $paymentMethod, paymentStatus: $paymentStatus, paymentOption: $paymentOption, requireOwnerApproval: $requireOwnerApproval, source: $source, guestCount: $guestCount, petCount: $petCount, notes: $notes, taxLegalAccepted: $taxLegalAccepted, paymentIntentId: $paymentIntentId, stripeSessionId: $stripeSessionId, bookingReference: $bookingReference, createdAt: $createdAt, updatedAt: $updatedAt, cancellationReason: $cancellationReason, cancelledAt: $cancelledAt, cancelledBy: $cancelledBy)';
   }
 
   @override
@@ -944,6 +966,8 @@ class _$BookingModelImpl extends _BookingModel {
             (identical(other.source, source) || other.source == source) &&
             (identical(other.guestCount, guestCount) ||
                 other.guestCount == guestCount) &&
+            (identical(other.petCount, petCount) ||
+                other.petCount == petCount) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.taxLegalAccepted, taxLegalAccepted) ||
                 other.taxLegalAccepted == taxLegalAccepted) &&
@@ -994,6 +1018,7 @@ class _$BookingModelImpl extends _BookingModel {
     requireOwnerApproval,
     source,
     guestCount,
+    petCount,
     notes,
     taxLegalAccepted,
     paymentIntentId,
@@ -1051,6 +1076,7 @@ abstract class _BookingModel extends BookingModel {
     @JsonKey(name: 'require_owner_approval') final bool? requireOwnerApproval,
     final String? source,
     @JsonKey(name: 'guest_count') final int guestCount,
+    @JsonKey(name: 'pet_count') final int petCount,
     final String? notes,
     @JsonKey(name: 'tax_legal_accepted') final bool? taxLegalAccepted,
     @JsonKey(name: 'payment_intent_id') final String? paymentIntentId,
@@ -1196,6 +1222,11 @@ abstract class _BookingModel extends BookingModel {
   @override
   @JsonKey(name: 'guest_count')
   int get guestCount;
+
+  /// Number of pets
+  @override
+  @JsonKey(name: 'pet_count')
+  int get petCount;
 
   /// Special requests or notes
   @override

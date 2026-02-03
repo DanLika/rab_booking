@@ -215,11 +215,6 @@ class AvailabilityChecker implements IAvailabilityChecker {
     );
     if (!result.isAvailable) return result;
 
-    LoggingService.log(
-      '✅ No conflicts found for $normalizedCheckIn to $normalizedCheckOut',
-      tag: 'AVAILABILITY_CHECK',
-    );
-
     return const AvailabilityCheckResult.available();
   }
 
@@ -267,10 +262,6 @@ class AvailabilityChecker implements IAvailabilityChecker {
             start2: checkIn,
             end2: checkOut,
           )) {
-            LoggingService.log(
-              '❌ Booking conflict found: ${booking.id}',
-              tag: 'AVAILABILITY_CHECK',
-            );
             return AvailabilityCheckResult.bookingConflict(booking.id);
           }
         } catch (e) {
@@ -328,10 +319,6 @@ class AvailabilityChecker implements IAvailabilityChecker {
             start2: checkIn,
             end2: checkOut,
           )) {
-            LoggingService.log(
-              '❌ iCal conflict found: $source event from $eventStart to $eventEnd',
-              tag: 'AVAILABILITY_CHECK',
-            );
             return AvailabilityCheckResult.icalConflict(doc.id, source);
           }
         } catch (e) {
@@ -382,10 +369,6 @@ class AvailabilityChecker implements IAvailabilityChecker {
               !blockedDate.isBefore(checkIn) && blockedDate.isBefore(checkOut);
 
           if (isWithinStay) {
-            LoggingService.log(
-              '❌ Blocked date conflict found: $blockedDate',
-              tag: 'AVAILABILITY_CHECK',
-            );
             return AvailabilityCheckResult.blockedDateConflict(
               doc.id,
               blockedDate,
@@ -450,10 +433,6 @@ class AvailabilityChecker implements IAvailabilityChecker {
         if (DateNormalizer.isSameDay(docDate, checkIn)) {
           final isBlockedCheckIn = data['block_checkin'] as bool? ?? false;
           if (isBlockedCheckIn) {
-            LoggingService.log(
-              '❌ Check-in blocked on $checkIn',
-              tag: 'AVAILABILITY_CHECK',
-            );
             return AvailabilityCheckResult.blockedCheckInConflict(
               doc.id,
               checkIn,
@@ -465,10 +444,6 @@ class AvailabilityChecker implements IAvailabilityChecker {
         if (DateNormalizer.isSameDay(docDate, checkOut)) {
           final isBlockedCheckOut = data['block_checkout'] as bool? ?? false;
           if (isBlockedCheckOut) {
-            LoggingService.log(
-              '❌ Check-out blocked on $checkOut',
-              tag: 'AVAILABILITY_CHECK',
-            );
             return AvailabilityCheckResult.blockedCheckOutConflict(
               doc.id,
               checkOut,

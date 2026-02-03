@@ -1,28 +1,28 @@
-import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
-import { admin, db } from "./firebase";
-import { logInfo, logError, logSuccess } from "./logger";
+import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
+import {admin, db} from "./firebase";
+import {logInfo, logError, logSuccess} from "./logger";
 import * as crypto from "crypto";
-import { setUser } from "./sentry";
+import {setUser} from "./sentry";
 
 /**
  * Booking.com Calendar API Integration
- * 
+ *
  * ⚠️ IMPORTANT: Direct API access is currently NOT AVAILABLE
- * 
+ *
  * Status: Partner program PAUSED (as of late 2024)
  * Requirements: Business registration, PCI compliance, partner approval
  * Timeline: Indefinite (3-6 months historically when accepting applications)
- * 
+ *
  * This code is kept for reference but will not work without partner approval.
- * 
+ *
  * RECOMMENDED ALTERNATIVE: Use channel manager APIs (Beds24, Hosthub, Guesty)
  * See: docs/CHANNEL_MANAGER_SETUP.md
- * 
+ *
  * Technical Notes:
  * - Does NOT use standard OAuth 2.0 (proprietary token-based auth)
  * - Uses OTA XML format (not JSON)
  * - No reservation webhooks (must poll Reservations API)
- * 
+ *
  * Documentation: https://developers.booking.com/connectivity/docs (restricted access)
  */
 
@@ -35,13 +35,34 @@ const BOOKING_COM_REDIRECT_URI = process.env.BOOKING_COM_REDIRECT_URI || "";
 const BOOKING_COM_API_BASE_URL = "https://distribution-xml.booking.com/2.3/json";
 
 /**
+ * Get encryption key with validation (fail-fast approach)
+ * Throws HttpsError if key is not configured or uses insecure default
+ * @return {string} The validated encryption key
+ */
+function getEncryptionKey(): string {
+  const encryptionKey = process.env.ENCRYPTION_KEY;
+
+  if (!encryptionKey || encryptionKey === "default-key-change-in-production") {
+    logError(
+      "[Encryption] CRITICAL: ENCRYPTION_KEY not configured or insecure.",
+      new Error("ENCRYPTION_KEY is not configured.")
+    );
+    throw new HttpsError(
+      "internal",
+      "The server is misconfigured. Unable to perform encryption."
+    );
+  }
+  return encryptionKey;
+}
+
+/**
  * Encrypt sensitive data (tokens) before storing in Firestore
  */
 export function encryptToken(token: string): string {
   // In production, use proper encryption (e.g., Google Cloud KMS)
   // For now, we'll use a simple base64 encoding (NOT secure for production)
   // TODO: Implement proper encryption with KMS
-  const encryptionKey = process.env.ENCRYPTION_KEY || "default-key-change-in-production";
+  const encryptionKey = getEncryptionKey();
   // Generate a consistent IV from the key (not secure, but matches deprecated createCipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
   const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
@@ -57,7 +78,7 @@ export function encryptToken(token: string): string {
 export function decryptToken(encryptedToken: string): string {
   // In production, use proper decryption (e.g., Google Cloud KMS)
   // TODO: Implement proper decryption with KMS
-  const encryptionKey = process.env.ENCRYPTION_KEY || "default-key-change-in-production";
+  const encryptionKey = getEncryptionKey();
   // Generate a consistent IV from the key (not secure, but matches deprecated createDecipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
   const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
@@ -79,7 +100,7 @@ export const initiateBookingComOAuth = onCall(async (request) => {
   // Set user context for Sentry error tracking
   setUser(request.auth.uid);
 
-  const { unitId, hotelId, roomTypeId } = request.data;
+  const {unitId, hotelId, roomTypeId} = request.data;
 
   if (!unitId || !hotelId || !roomTypeId) {
     throw new HttpsError(
@@ -140,13 +161,13 @@ export const initiateBookingComOAuth = onCall(async (request) => {
  * Exchanges authorization code for access token
  */
 export const handleBookingComOAuthCallback = onRequest(
-  { cors: true },
+  {cors: true},
   async (req, res) => {
     try {
-      const { code, state, error } = req.query;
+      const {code, state, error} = req.query;
 
       if (error) {
-        logError("[Booking.com OAuth] OAuth error", null, { error });
+        logError("[Booking.com OAuth] OAuth error", null, {error});
         res.status(400).send(`OAuth error: ${error}`);
         return;
       }
@@ -251,7 +272,7 @@ async function refreshBookingComToken(
   refreshToken: string
 ): Promise<string> {
   try {
-    logInfo("[Booking.com API] Refreshing access token", { connectionId });
+    logInfo("[Booking.com API] Refreshing access token", {connectionId});
 
     const response = await fetch("https://secure.booking.com/oauth/token", {
       method: "POST",
@@ -271,7 +292,7 @@ async function refreshBookingComToken(
     }
 
     const tokenData = await response.json();
-    const { access_token, expires_in } = tokenData;
+    const {access_token, expires_in} = tokenData;
 
     // Update connection with new token
     const expiresAtTime = new Date(Date.now() + expires_in * 1000);
@@ -281,11 +302,11 @@ async function refreshBookingComToken(
       updated_at: admin.firestore.Timestamp.now(),
     });
 
-    logSuccess("[Booking.com API] Token refreshed", { connectionId });
+    logSuccess("[Booking.com API] Token refreshed", {connectionId});
 
     return access_token;
   } catch (error) {
-    logError("[Booking.com API] Token refresh failed", error, { connectionId });
+    logError("[Booking.com API] Token refresh failed", error, {connectionId});
     throw error;
   }
 }

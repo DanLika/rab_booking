@@ -75,3 +75,9 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Force usage of newer play-services-auth to fix NPE in SignInHubActivity in 20.7.0
+    // This is required because androidx.credentials transitively pulls in the buggy 20.7.0 version
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+}

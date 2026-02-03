@@ -18,7 +18,8 @@
       "WebSearch",
       "SlashCommand(/misc:feature-plan)",
       "Skill(misc:code-explain)",
-      "Skill(misc:feature-plan)"
+      "Skill(misc:feature-plan)",
+      "mcp__memory__create_entities"
     ],
     "deny": []
   }

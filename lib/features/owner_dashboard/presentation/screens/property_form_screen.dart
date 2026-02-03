@@ -1229,7 +1229,13 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
 
       if (mounted) {
         final l10nSuccess = AppLocalizations.of(context);
-        Navigator.of(context).pop();
+        // Use GoRouter navigation instead of Navigator.pop()
+        // Navigator.pop() can crash if there's no previous route (e.g., direct navigation from onboarding)
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/owner/properties');
+        }
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
           _isEditing

@@ -42,7 +42,7 @@ setInterval(() => {
   const oldestAllowed = now - 3600000; // 1 hour
 
   for (const [key, timestamps] of rateLimitStore.entries()) {
-    const recent = timestamps.filter(ts => ts > oldestAllowed);
+    const recent = timestamps.filter((ts) => ts > oldestAllowed);
     if (recent.length === 0) {
       rateLimitStore.delete(key);
     } else {
@@ -60,7 +60,7 @@ setInterval(() => {
  * @param key - Unique identifier (e.g., "token_verify:192.168.1.1")
  * @param maxCalls - Maximum calls allowed in window
  * @param windowSeconds - Time window in seconds
- * @returns true if within limit, false if exceeded
+ * @return true if within limit, false if exceeded
  *
  * @example
  * if (!checkRateLimit(`token_verify:${clientIp}`, 10, 60)) {
@@ -80,7 +80,7 @@ export function checkRateLimit(
   const timestamps = rateLimitStore.get(key) || [];
 
   // Filter to recent timestamps only
-  const recentTimestamps = timestamps.filter(ts => ts > windowStart);
+  const recentTimestamps = timestamps.filter((ts) => ts > windowStart);
 
   // Check if limit exceeded
   if (recentTimestamps.length >= maxCalls) {
@@ -262,7 +262,7 @@ export async function enforceRateLimit(
  * @param userId - User ID to check
  * @param action - Action name
  * @param config - Rate limit configuration
- * @returns Rate limit status
+ * @return Rate limit status
  *
  * @example
  * const status = await getRateLimitStatus(userId, "send_email", {

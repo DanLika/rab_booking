@@ -15,9 +15,10 @@ import '../../../../../shared/models/booking_model.dart';
 import '../../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../providers/owner_bookings_provider.dart';
 import '../../../../../shared/providers/repository_providers.dart';
-import '../booking_details_dialog.dart';
+import '../booking_details_dialog_v2.dart';
 import '../edit_booking_dialog.dart';
 import '../send_email_dialog.dart';
+import '../../../../../shared/widgets/platform_icon.dart';
 
 /// BedBooking-style Table View for bookings
 /// Desktop: Full data table with all columns
@@ -374,51 +375,57 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       return Text(l10n.ownerTableSourceDirect);
     }
 
-    // Map source to display name and icon
+    // Map source to display name and fallback icon/color
     String displayName;
-    IconData icon;
+    IconData fallbackIcon;
     Color color;
 
     switch (source.toLowerCase()) {
       case 'ical':
         displayName = l10n.ownerTableSourceIcal;
-        icon = Icons.sync;
+        fallbackIcon = Icons.sync;
         color = AppColors.authSecondary;
         break;
       case 'booking_com':
       case 'booking.com':
         displayName = l10n.ownerTableSourceBookingCom;
-        icon = Icons.public;
+        fallbackIcon = Icons.public;
         color = Colors.orange;
         break;
       case 'airbnb':
         displayName = l10n.ownerTableSourceAirbnb;
-        icon = Icons.home;
+        fallbackIcon = Icons.home;
         color = Colors.red;
         break;
       case 'widget':
         displayName = l10n.ownerTableSourceWidget;
-        icon = Icons.web;
+        fallbackIcon = Icons.web;
         color = Colors.green;
         break;
       case 'admin':
       case 'manual':
         displayName = l10n.ownerTableSourceManual;
-        icon = Icons.person;
+        fallbackIcon = Icons.person;
         color = Colors.grey;
         break;
       default:
         displayName = source;
-        icon = Icons.help_outline;
+        fallbackIcon = Icons.help_outline;
         color = Colors.grey;
     }
+
+    // Use PlatformIcon for external sources (booking_com, airbnb, ical)
+    final usesPlatformIcon = PlatformIcon.shouldShowIcon(source);
 
     return Tooltip(
       message: displayName,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
+          if (usesPlatformIcon)
+            PlatformIcon(source: source, size: 14, showTooltip: false)
+          else
+            Icon(fallbackIcon, size: 14, color: color),
           const SizedBox(width: 4),
           Text(
             displayName,
@@ -558,7 +565,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         _sendEmail(booking);
         break;
       case 'delete':
-        _deleteBooking(booking.id);
+        _deleteBooking(booking);
         break;
     }
   }
@@ -566,7 +573,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
   void _showBookingDetails(OwnerBooking ownerBooking) {
     showDialog(
       context: context,
-      builder: (context) => BookingDetailsDialog(ownerBooking: ownerBooking),
+      builder: (context) => BookingDetailsDialogV2(ownerBooking: ownerBooking),
     );
   }
 
@@ -874,7 +881,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     await showSendEmailDialog(context, ref, booking);
   }
 
-  Future<void> _deleteBooking(String bookingId) async {
+  Future<void> _deleteBooking(BookingModel booking) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -901,7 +908,8 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
     if (confirmed == true && mounted) {
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
-        await repository.deleteBooking(bookingId);
+        // Pass full booking to avoid permission issues with collection group query
+        await repository.deleteBooking(booking.id, booking: booking);
 
         if (mounted) {
           ErrorDisplayUtils.showSuccessSnackBar(
@@ -910,7 +918,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           );
           ref
               .read(windowedBookingsNotifierProvider.notifier)
-              .removeBooking(bookingId);
+              .removeBooking(booking.id);
         }
       } catch (e) {
         if (mounted) {
@@ -1113,9 +1121,16 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       try {
         final repository = ref.read(ownerBookingsRepositoryProvider);
 
+        // Get full booking objects for selected IDs
+        final bookingsToDelete = widget.bookings
+            .where((b) => _selectedBookingIds.contains(b.booking.id))
+            .map((b) => b.booking)
+            .toList();
+
         // Delete all selected bookings
-        for (final bookingId in _selectedBookingIds) {
-          await repository.deleteBooking(bookingId);
+        // Pass full booking to avoid permission issues with collection group query
+        for (final booking in bookingsToDelete) {
+          await repository.deleteBooking(booking.id, booking: booking);
         }
 
         if (mounted) {

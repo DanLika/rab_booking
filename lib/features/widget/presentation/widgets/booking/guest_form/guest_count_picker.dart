@@ -4,36 +4,52 @@ import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 
-/// A widget for selecting adult and children guest counts.
+/// A widget for selecting adult, children, and pet counts.
 ///
-/// Provides increment/decrement buttons for both adults and children,
+/// Provides increment/decrement buttons for adults, children, and pets,
 /// with capacity validation to prevent exceeding max guests.
+/// Uses [maxTotalCapacity] (if set) for the upper guest limit,
+/// falling back to [maxGuests] (base capacity).
 class GuestCountPicker extends ConsumerWidget {
   final int adults;
   final int children;
   final int maxGuests;
+  final int? maxTotalCapacity;
+  final double? petFee;
+  final int? maxPets;
+  final int pets;
   final bool isDarkMode;
   final ValueChanged<int> onAdultsChanged;
   final ValueChanged<int> onChildrenChanged;
+  final ValueChanged<int>? onPetsChanged;
 
   const GuestCountPicker({
     super.key,
     required this.adults,
     required this.children,
     required this.maxGuests,
+    this.maxTotalCapacity,
+    this.petFee,
+    this.maxPets,
+    this.pets = 0,
     required this.isDarkMode,
     required this.onAdultsChanged,
     required this.onChildrenChanged,
+    this.onPetsChanged,
   });
 
   static const _countDisplayWidth = 40.0;
+  static const _defaultMaxPets = 10;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
     final tr = WidgetTranslations.of(context, ref);
     final totalGuests = adults + children;
-    final isAtCapacity = totalGuests >= maxGuests;
+    // Use maxTotalCapacity if set, otherwise fall back to maxGuests
+    final effectiveMax = maxTotalCapacity ?? maxGuests;
+    final isAtCapacity = totalGuests >= effectiveMax;
+    final allowsPets = petFee != null && onPetsChanged != null;
 
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
@@ -45,15 +61,13 @@ class GuestCountPicker extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(colors, tr, isAtCapacity),
+          _buildHeader(colors, tr, isAtCapacity, effectiveMax),
           const SizedBox(height: SpacingTokens.s),
           _GuestRow(
             icon: Icons.person,
             label: tr.adults,
             count: adults,
             canDecrement: adults > 1,
-            // Bug #31 & #32 Fix: Remove redundant check - isAtCapacity already
-            // validates totalGuests >= maxGuests, so individual check is unnecessary
             canIncrement: !isAtCapacity,
             onDecrement: () => onAdultsChanged(adults - 1),
             onIncrement: () => onAdultsChanged(adults + 1),
@@ -66,17 +80,30 @@ class GuestCountPicker extends ConsumerWidget {
             label: tr.children,
             count: children,
             canDecrement: children > 0,
-            // Bug #31 & #32 Fix: Remove redundant check - isAtCapacity already
-            // validates totalGuests >= maxGuests, so individual check is unnecessary
             canIncrement: !isAtCapacity,
             onDecrement: () => onChildrenChanged(children - 1),
             onIncrement: () => onChildrenChanged(children + 1),
             colors: colors,
             isAtCapacity: isAtCapacity,
           ),
+          if (allowsPets) ...[
+            const SizedBox(height: SpacingTokens.s),
+            _GuestRow(
+              icon: Icons.pets,
+              label: tr.pets,
+              count: pets,
+              canDecrement: pets > 0,
+              canIncrement:
+                  pets < (maxPets ?? GuestCountPicker._defaultMaxPets),
+              onDecrement: () => onPetsChanged!(pets - 1),
+              onIncrement: () => onPetsChanged!(pets + 1),
+              colors: colors,
+              isAtCapacity: false,
+            ),
+          ],
           if (isAtCapacity) ...[
             const SizedBox(height: SpacingTokens.m),
-            _CapacityWarning(maxGuests: maxGuests, colors: colors, tr: tr),
+            _CapacityWarning(maxGuests: effectiveMax, colors: colors, tr: tr),
           ],
         ],
       ),
@@ -87,6 +114,7 @@ class GuestCountPicker extends ConsumerWidget {
     MinimalistColorSchemeAdapter colors,
     WidgetTranslations tr,
     bool isAtCapacity,
+    int effectiveMax,
   ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -100,7 +128,7 @@ class GuestCountPicker extends ConsumerWidget {
           ),
         ),
         Text(
-          tr.maxLabel(maxGuests),
+          tr.maxLabel(effectiveMax),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,

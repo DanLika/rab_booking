@@ -232,7 +232,7 @@ class _BankTransferDetailRow extends StatelessWidget {
                           border: Border.all(color: colors.borderDefault),
                         )
                       : null,
-                  child: Text(
+                  child: SelectableText(
                     value,
                     style: TextStyle(
                       fontSize: TypographyTokens.fontSizeS,

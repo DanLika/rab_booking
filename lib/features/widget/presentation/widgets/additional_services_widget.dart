@@ -62,7 +62,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(SpacingTokens.m),
       decoration: BoxDecoration(
-        color: colors.backgroundTertiary,
+        color: colors.backgroundPrimary,
         borderRadius: BorderTokens.circularMedium,
         border: Border.all(color: colors.borderDefault),
         boxShadow: isDarkMode
@@ -127,14 +127,12 @@ class AdditionalServicesWidget extends ConsumerWidget {
       padding: const EdgeInsets.all(SpacingTokens.s),
       decoration: BoxDecoration(
         border: Border.all(
-          color: isSelected
-              ? colors.statusAvailableBorder
-              : colors.borderDefault,
+          color: isSelected ? colors.borderStrong : colors.borderDefault,
           width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
         ),
         borderRadius: BorderTokens.circularSmall,
         color: isSelected
-            ? colors.statusAvailableBackground
+            ? colors.backgroundSecondary
             : colors.backgroundPrimary,
       ),
       child: Row(
@@ -142,6 +140,9 @@ class AdditionalServicesWidget extends ConsumerWidget {
           // Checkbox
           Checkbox(
             value: isSelected,
+            activeColor: colors.textPrimary,
+            checkColor: colors.backgroundPrimary,
+            side: BorderSide(color: colors.textSecondary),
             onChanged: (value) {
               if (value == true) {
                 ref.read(selectedAdditionalServicesProvider.notifier).update((
@@ -197,7 +198,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: TypographyTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
-                    color: colors.statusAvailableBorder,
+                    color: colors.textPrimary,
                     fontFamily: 'Manrope',
                   ),
                 ),
@@ -329,7 +330,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
           style: TextStyle(
             fontSize: TypographyTokens.fontSizeL,
             fontWeight: FontWeight.bold,
-            color: colors.statusAvailableBorder,
+            color: colors.textPrimary,
             fontFamily: 'Manrope',
           ),
         ),

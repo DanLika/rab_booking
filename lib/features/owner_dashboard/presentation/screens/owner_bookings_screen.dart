@@ -27,7 +27,7 @@ import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings/bookings_table_view.dart';
-import '../widgets/booking_details_dialog.dart';
+import '../widgets/booking_details_dialog_v2.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/bookings/bookings_filters_dialog.dart';
@@ -189,30 +189,80 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           });
         }
       } else {
-        // Booking not found - show error message to user
+        // Booking not found - show friendly info message and clear URL
         debugPrint('Booking not found: $currentBookingId');
+        _clearBookingIdFromUrl();
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted || !context.mounted) return;
           final l10n = AppLocalizations.of(context);
-          ErrorDisplayUtils.showErrorSnackBar(
-            context,
-            l10n.ownerBookingsNotFound,
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.ownerBookingsNotFound),
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 3),
+            ),
           );
         });
       }
     } catch (error) {
-      // Handle error when fetching booking
+      // Handle error when fetching booking - show friendly message instead of error
       if (!mounted) return;
       setState(() {
         _isLoadingInitialBooking = false;
       });
       debugPrint('Error fetching booking: $error');
-      // Show error to user
+      // Clear URL and show friendly message (booking likely doesn't exist or no access)
+      _clearBookingIdFromUrl();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !context.mounted) return;
-        ErrorDisplayUtils.showErrorSnackBar(context, error);
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.ownerBookingsNotFound),
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       });
     }
+  }
+
+  /// Helper method to clear bookingId from URL and reset related state
+  /// Used when booking is not found or access is denied
+  void _clearBookingIdFromUrl() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !context.mounted) return;
+      try {
+        final router = GoRouter.of(context);
+        final currentUri = router.routerDelegate.currentConfiguration.uri;
+        if (currentUri.queryParameters.containsKey('bookingId')) {
+          final newQueryParams = Map<String, String>.from(
+            currentUri.queryParameters,
+          );
+          newQueryParams.remove('bookingId');
+          final newUri = currentUri.replace(queryParameters: newQueryParams);
+          router.go(newUri.toString());
+        }
+        // Reset flags
+        if (mounted) {
+          setState(() {
+            _handledBookingId = null;
+            _dialogShownForBooking = false;
+            _hasHandledInitialBooking = false;
+            _bookingCheckScheduled = false;
+            _isLoadingInitialBooking = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error clearing bookingId from route: $e');
+      }
+    });
   }
 
   @override
@@ -406,7 +456,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
             showDialog(
               context: context,
               builder: (context) =>
-                  BookingDetailsDialog(ownerBooking: bookingToShow),
+                  BookingDetailsDialogV2(ownerBooking: bookingToShow),
             ).then((_) {
               // Dialog closed - clean up state
               if (!mounted) return;
@@ -837,7 +887,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
         await showDialog(
           context: context,
           builder: (dialogContext) =>
-              BookingDetailsDialog(ownerBooking: ownerBooking),
+              BookingDetailsDialogV2(ownerBooking: ownerBooking),
         );
       } else {
         // Fallback: try booking2 if booking1 not found
@@ -848,7 +898,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           await showDialog(
             context: context,
             builder: (dialogContext) =>
-                BookingDetailsDialog(ownerBooking: ownerBooking2),
+                BookingDetailsDialogV2(ownerBooking: ownerBooking2),
           );
         }
       }
@@ -1739,7 +1789,7 @@ class _BookingCard extends ConsumerWidget {
                     showDialog(
                       context: context,
                       builder: (context) =>
-                          BookingDetailsDialog(ownerBooking: ownerBooking),
+                          BookingDetailsDialogV2(ownerBooking: ownerBooking),
                     );
                   },
                   onApprove: booking.status == BookingStatus.pending
@@ -1986,7 +2036,7 @@ class _InfoRow extends StatelessWidget {
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(6),
+            shape: BoxShape.circle,
           ),
           child: Icon(icon, size: 20, color: theme.colorScheme.primary),
         ),

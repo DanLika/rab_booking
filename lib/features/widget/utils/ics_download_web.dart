@@ -1,20 +1,21 @@
 /// Web implementation of ICS file download
 ///
-/// This file uses dart:html which is ONLY available on web platform.
+/// This file uses package:web + dart:js_interop which are the modern
+/// replacements for the deprecated dart:html library.
 /// Flutter automatically excludes this file from mobile/desktop builds
 /// via conditional imports in ics_download.dart.
 ///
 /// Implementation:
-/// 1. Converts content string to UTF-8 bytes
-/// 2. Creates a Blob with MIME type 'text/calendar'
-/// 3. Generates a temporary object URL for the blob
-/// 4. Creates a hidden anchor element and triggers download
-/// 5. Cleans up by revoking the temporary URL
+/// 1. Converts content string to a JS Blob with MIME type 'text/calendar'
+/// 2. Generates a temporary object URL for the blob
+/// 3. Creates a hidden anchor element and triggers download
+/// 4. Cleans up by revoking the temporary URL
 library;
 
-// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
-import 'dart:html' as html;
-import 'dart:convert';
+import 'dart:js_interop';
+
+import 'package:web/web.dart' as web;
+
 import '../../../core/exceptions/app_exceptions.dart';
 import '../../../core/services/logging_service.dart';
 
@@ -31,26 +32,27 @@ import '../../../core/services/logging_service.dart';
 /// ```
 Future<void> downloadIcsFile(String content, String filename) async {
   try {
-    // 1. Convert content string to UTF-8 bytes
-    final bytes = utf8.encode(content);
+    // 1. Create a Blob with MIME type 'text/calendar'
+    // Passing the string directly; Blob handles UTF-8 encoding
+    final blob = web.Blob(
+      [content.toJS].toJS,
+      web.BlobPropertyBag(type: 'text/calendar;charset=utf-8'),
+    );
 
-    // 2. Create a Blob with MIME type 'text/calendar'
-    // This tells the browser to treat it as an iCalendar file
-    final blob = html.Blob([bytes], 'text/calendar');
-
-    // 3. Generate a temporary object URL for the blob
+    // 2. Generate a temporary object URL for the blob
     // This creates a URL like: blob:http://example.com/uuid
-    final url = html.Url.createObjectUrlFromBlob(blob);
+    final url = web.URL.createObjectURL(blob);
 
-    // 4. Create a hidden anchor element and trigger download
+    // 3. Create a hidden anchor element and trigger download
     // The 'download' attribute forces browser to download instead of navigate
-    html.AnchorElement(href: url)
-      ..setAttribute('download', filename)
-      ..click();
+    final anchor = web.HTMLAnchorElement()
+      ..href = url
+      ..download = filename;
+    anchor.click();
 
-    // 5. Clean up - revoke the temporary URL to free memory
+    // 4. Clean up - revoke the temporary URL to free memory
     // Important: Prevents memory leaks in long-running web apps
-    html.Url.revokeObjectUrl(url);
+    web.URL.revokeObjectURL(url);
   } catch (e, stackTrace) {
     // Log error using LoggingService instead of print
     await LoggingService.logError(

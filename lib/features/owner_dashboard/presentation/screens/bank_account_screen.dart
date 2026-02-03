@@ -462,7 +462,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                   },
                 );
               },
-              loading: () => UniversalLoader.forSection(),
+              loading: UniversalLoader.forSection,
               error: (error, stack) =>
                   Center(child: Text('${l10n.error}: $error')),
             ),

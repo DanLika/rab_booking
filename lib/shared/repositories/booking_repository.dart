@@ -24,7 +24,13 @@ abstract class BookingRepository {
   Future<List<BookingModel>> fetchPropertyBookings(String propertyId);
 
   /// Update booking
-  Future<BookingModel> updateBooking(BookingModel booking);
+  /// [originalBooking] - optional, provide when moving between units to avoid
+  /// collection group query permission issues. Contains the booking's current
+  /// location (unitId, propertyId) before the update.
+  Future<BookingModel> updateBooking(
+    BookingModel booking, {
+    BookingModel? originalBooking,
+  });
 
   /// Update booking status
   Future<BookingModel> updateBookingStatus(String id, BookingStatus status);
@@ -33,7 +39,9 @@ abstract class BookingRepository {
   Future<BookingModel> cancelBooking(String id, String reason);
 
   /// Delete booking (admin only)
-  Future<void> deleteBooking(String id);
+  /// [booking] - optional, provide to avoid collection group query permission issues
+  /// When provided, uses booking.propertyId and booking.unitId for direct path access
+  Future<void> deleteBooking(String id, {BookingModel? booking});
 
   /// Check if dates are available for unit
   Future<bool> areDatesAvailable({

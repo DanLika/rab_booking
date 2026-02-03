@@ -68,6 +68,9 @@ class BookingFormState {
   /// Number of child guests
   int children = 0;
 
+  /// Number of pets
+  int pets = 0;
+
   /// Total guest count
   int get totalGuests => adults + children;
 
@@ -156,6 +159,7 @@ class BookingFormState {
     // Reset guest count to defaults
     adults = 1;
     children = 0;
+    pets = 0;
 
     // Reset country to default
     selectedCountry = defaultCountry;
@@ -216,11 +220,12 @@ class BookingFormState {
   /// Adjust guest count to respect max capacity
   ///
   /// Called when unit data is loaded to ensure defaults don't exceed limits.
-  void adjustGuestCountToCapacity(int maxGuests) {
-    if (maxGuests <= 0) return; // Defensive check
+  /// Uses [effectiveMax] which should be maxTotalCapacity ?? maxGuests.
+  void adjustGuestCountToCapacity(int effectiveMax) {
+    if (effectiveMax <= 0) return; // Defensive check
 
-    if (totalGuests > maxGuests) {
-      adults = maxGuests; // maxGuests is already >= 1 (checked above)
+    if (totalGuests > effectiveMax) {
+      adults = effectiveMax; // effectiveMax is already >= 1 (checked above)
       children = 0;
     }
   }

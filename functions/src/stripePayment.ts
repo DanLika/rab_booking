@@ -1,35 +1,35 @@
-import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
+import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import Stripe from "stripe";
-import { defineSecret } from "firebase-functions/params";
+import {defineSecret} from "firebase-functions/params";
 import {
   sendBookingApprovedEmail,
   sendOwnerNotificationEmail,
 } from "./emailService";
-import { sendEmailIfAllowed } from "./emailNotificationHelper";
-import { admin, db } from "./firebase";
-import { getStripeClient, stripeSecretKey } from "./stripe";
-import { createPaymentNotification } from "./notificationService";
-import { sendPaymentPushNotification } from "./fcmService";
+import {sendEmailIfAllowed} from "./emailNotificationHelper";
+import {admin, db} from "./firebase";
+import {getStripeClient, stripeSecretKey} from "./stripe";
+import {createPaymentNotification} from "./notificationService";
+import {sendPaymentPushNotification} from "./fcmService";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
 } from "./bookingAccessToken";
-import { generateBookingReference } from "./utils/bookingReferenceGenerator";
+import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {
   validateAndConvertBookingDates,
   calculateBookingNights,
   safeToDate,
 } from "./utils/dateValidation";
-import { sanitizeText, sanitizeEmail, sanitizePhone } from "./utils/inputSanitization";
-import { logInfo, logError, logWarn, logSuccess } from "./logger";
-import { validateBookingPrice, calculateBookingPrice } from "./utils/priceValidation";
-import { checkRateLimit } from "./utils/rateLimit";
+import {sanitizeText, sanitizeEmail, sanitizePhone} from "./utils/inputSanitization";
+import {logInfo, logError, logWarn, logSuccess} from "./logger";
+import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
+import {checkRateLimit} from "./utils/rateLimit";
 import {
   logSecurityEvent,
   logWebhookSignatureFailure,
   SecurityEventType,
 } from "./utils/securityMonitoring";
-import { setUser } from "./sentry";
+import {setUser, captureMessage} from "./sentry";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
@@ -41,11 +41,11 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 // - view.bookbed.io = Booking Widget (main domain)
 // - *.view.bookbed.io = Client subdomains (e.g., jasko-rab.view.bookbed.io)
 const ALLOWED_RETURN_DOMAINS = [
-  "https://bookbed.io",           // Marketing site (for future use)
-  "https://app.bookbed.io",       // Owner dashboard
-  "https://view.bookbed.io",      // Booking widget (main domain)
-  "http://localhost",             // Local development
-  "http://127.0.0.1",             // Local development
+  "https://bookbed.io", // Marketing site (for future use)
+  "https://app.bookbed.io", // Owner dashboard
+  "https://view.bookbed.io", // Booking widget (main domain)
+  "http://localhost", // Local development
+  "http://127.0.0.1", // Local development
 ];
 
 // Allowed wildcard domains for custom client subdomains
@@ -57,7 +57,7 @@ const ALLOWED_WILDCARD_DOMAINS = [
 /**
  * Validates if a return URL is allowed based on whitelist and wildcard rules
  * @param returnUrl - The full return URL to validate
- * @returns true if URL is allowed, false otherwise
+ * @return true if URL is allowed, false otherwise
  *
  * SECURITY: Uses split-based validation to prevent attacks like "evil-bookbed.io"
  * which would pass endsWith() check but should be blocked
@@ -114,7 +114,7 @@ function isAllowedReturnUrl(returnUrl: string): boolean {
  *
  * Security: Validates return URL against whitelist
  */
-export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "RESEND_API_KEY"] }, async (request) => {
+export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "RESEND_API_KEY"]}, async (request) => {
   // ========================================================================
   // SECURITY: Rate Limiting - BEFORE any business logic
   // ========================================================================
@@ -129,11 +129,11 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
     // Log security event (fire-and-forget)
     logSecurityEvent(
       SecurityEventType.RATE_LIMIT_EXCEEDED,
-      { ip: clientIp, action: "stripe_checkout" },
+      {ip: clientIp, action: "stripe_checkout"},
       "medium"
     ).catch(() => { }); // Don't block on logging
 
-    logWarn("createStripeCheckoutSession: Rate limit exceeded", { ip: clientIp });
+    logWarn("createStripeCheckoutSession: Rate limit exceeded", {ip: clientIp});
     throw new HttpsError(
       "resource-exhausted",
       "Too many checkout attempts. Please wait a few minutes before trying again."
@@ -168,6 +168,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
     guestEmail,
     guestPhone,
     guestCount,
+    petCount = 0,
     totalPrice,
     servicesTotal = 0, // Additional services total for price validation
     depositAmount: initialDepositAmount,
@@ -221,7 +222,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
       logError(`createStripeCheckoutSession: Invalid return URL format: ${returnUrl}`, urlError);
       logSecurityEvent(
         SecurityEventType.INVALID_RETURN_URL,
-        { returnUrl, error: "Invalid format" },
+        {returnUrl, error: "Invalid format"},
         "medium"
       ).catch(() => { });
       throw new HttpsError("invalid-argument", "Invalid return URL format.");
@@ -237,7 +238,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
       });
       logSecurityEvent(
         SecurityEventType.INVALID_RETURN_URL,
-        { returnUrl, error: "Not in whitelist" },
+        {returnUrl, error: "Not in whitelist"},
         "high"
       ).catch(() => { });
       throw new HttpsError(
@@ -357,7 +358,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
     // If deposit is below minimum, use the minimum amount
     const STRIPE_MINIMUM_CENTS = 50; // €0.50
     const rawDepositCents = Math.round(depositAmount * 100);
-    const depositAmountInCents = Math.max(rawDepositCents, STRIPE_MINIMUM_CENTS);
+    let depositAmountInCents = Math.max(rawDepositCents, STRIPE_MINIMUM_CENTS);
 
     // If we had to adjust the deposit, log it for debugging
     if (rawDepositCents < STRIPE_MINIMUM_CENTS) {
@@ -404,7 +405,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
     }
 
     // Validate and convert dates
-    const { checkInDate, checkOutDate } = validateAndConvertBookingDates(
+    const {checkInDate, checkOutDate} = validateAndConvertBookingDates(
       checkIn,
       checkOut
     );
@@ -434,6 +435,83 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
       servicesTotal >= 0
     ) ? servicesTotal : 0;
 
+    // ========================================================================
+    // SERVER-SIDE EXTRA GUEST & PET FEE CALCULATION
+    // Must match atomicBooking.ts logic to prevent price mismatch errors.
+    // Fees are calculated from unit data to prevent client-side manipulation.
+    // Reuses unitData already fetched at line ~258 (no extra Firestore read).
+    // ========================================================================
+    const unitMaxGuests = unitData?.max_guests ?? 10;
+    const unitExtraBedFee = unitData?.extra_bed_fee ?? null;
+    const unitPetFeeRate = unitData?.pet_fee ?? null;
+    const numericGuestCount = Number(guestCount) || 1;
+    const numericPetCount = Number(petCount) || 0;
+
+    let serverExtraGuestFees = 0;
+    if (unitExtraBedFee !== null && numericGuestCount > unitMaxGuests) {
+      const extraGuests = numericGuestCount - unitMaxGuests;
+      serverExtraGuestFees = Math.round(extraGuests * unitExtraBedFee * bookingNights * 100) / 100;
+    }
+
+    let serverPetFees = 0;
+    if (unitPetFeeRate !== null && numericPetCount > 0) {
+      serverPetFees = Math.round(numericPetCount * unitPetFeeRate * bookingNights * 100) / 100;
+    }
+
+    // Client now sends ALL non-nightly fees (pet + guest + additional services) in servicesTotal.
+    // Server independently calculates pet + guest fees for security validation.
+    // Use max(client, server) to prevent BOTH underpaying AND lost fees.
+    const serverCalculatedExtras = Math.round((serverExtraGuestFees + serverPetFees) * 100) / 100;
+    const totalExtras = Math.round(Math.max(numericServicesTotal, serverCalculatedExtras) * 100) / 100;
+
+    // Security: warn if client extras differ significantly from server extras
+    const extrasDifference = Math.abs(numericServicesTotal - serverCalculatedExtras);
+    if (extrasDifference > 10) {
+      logWarn("Stripe: Extras mismatch between client and server", {
+        unitId,
+        clientExtras: numericServicesTotal,
+        serverCalculatedExtras,
+        difference: extrasDifference,
+      });
+    }
+
+    // Fee anomaly detection: catch NaN, negative, or unreasonably large values
+    if (!Number.isFinite(serverExtraGuestFees) || serverExtraGuestFees < 0 ||
+        !Number.isFinite(serverPetFees) || serverPetFees < 0 ||
+        !Number.isFinite(totalExtras) || totalExtras < 0 ||
+        serverExtraGuestFees > 10000 || serverPetFees > 10000) {
+      captureMessage("Stripe: Fee calculation anomaly detected", "error", {
+        unitId,
+        serverExtraGuestFees,
+        serverPetFees,
+        totalExtras,
+        guestCount: numericGuestCount,
+        petCount: numericPetCount,
+        maxGuests: unitMaxGuests,
+        extraBedFee: unitExtraBedFee,
+        petFeeRate: unitPetFeeRate,
+        nights: bookingNights,
+      });
+    }
+
+    // Log fee breakdown for monitoring (non-zero fees only)
+    if (serverExtraGuestFees > 0 || serverPetFees > 0) {
+      logInfo("createStripeCheckoutSession: Fee calculation breakdown", {
+        unitId,
+        guestCount: numericGuestCount,
+        petCount: numericPetCount,
+        maxGuests: unitMaxGuests,
+        extraBedFee: unitExtraBedFee,
+        petFeeRate: unitPetFeeRate,
+        nights: bookingNights,
+        serverExtraGuestFees,
+        serverPetFees,
+        clientServicesTotal: numericServicesTotal,
+        serverCalculatedExtras,
+        totalExtras,
+      });
+    }
+
     try {
       await validateBookingPrice(
         unitId,
@@ -441,12 +519,15 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
         checkOutDate,
         Number(totalPrice),
         propertyId,
-        numericServicesTotal // Pass services total for accurate validation
+        totalExtras // Pass ALL extras (services + guest fees + pet fees) for validation
       );
       logInfo("createStripeCheckoutSession: Price validated successfully", {
         unitId,
         clientPrice: totalPrice,
         servicesTotal: numericServicesTotal,
+        serverExtraGuestFees,
+        serverPetFees,
+        totalExtras,
       });
     } catch (priceError: any) {
       // If price mismatch, use server-calculated price instead of client's locked price
@@ -457,22 +538,22 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
           error: priceError.message,
         });
 
-        // Calculate server-side nightly price and add services total
-        const { totalPrice: serverNightlyPrice } = await calculateBookingPrice(
+        // Calculate server-side nightly price and add all extras
+        const {totalPrice: serverNightlyPrice} = await calculateBookingPrice(
           unitId,
           checkInDate,
           checkOutDate,
           propertyId
         );
 
-        // Server total = nightly prices + services (services from client are trusted)
-        const serverTotalPrice = Math.round((serverNightlyPrice + numericServicesTotal) * 100) / 100;
+        // Server total = nightly prices + all extras (services + guest fees + pet fees)
+        const serverTotalPrice = Math.round((serverNightlyPrice + totalExtras) * 100) / 100;
 
         logInfo("createStripeCheckoutSession: Using server-calculated price", {
           unitId,
           oldPrice: totalPrice,
           serverNightlyPrice,
-          servicesTotal: numericServicesTotal,
+          totalExtras,
           newPrice: serverTotalPrice,
         });
 
@@ -484,6 +565,8 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
         } else {
           depositAmount = serverTotalPrice;
         }
+        // Recalculate Stripe charge amount after price adjustment
+        depositAmountInCents = Math.max(Math.round(depositAmount * 100), STRIPE_MINIMUM_CENTS);
       } else {
         // Other validation errors - rethrow
         throw priceError;
@@ -560,7 +643,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
       const bookingRef = generateBookingReference(placeholderBookingId);
 
       // Generate access token for future "View my reservation" link
-      const { token: accessToken, hashedToken } =
+      const {token: accessToken, hashedToken} =
         generateBookingAccessToken();
       const tokenExpiration = calculateTokenExpiration(checkOutDate);
 
@@ -580,7 +663,13 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
         check_in: checkInDate,
         check_out: checkOutDate,
         guest_count: Number(guestCount),
+        pet_count: Number(petCount),
         total_price: Number(totalPrice),
+        // Price breakdown for confirmation/lookup display
+        room_price: Math.round((Number(totalPrice) - totalExtras) * 100) / 100,
+        extra_guest_fees: serverExtraGuestFees,
+        pet_fees: serverPetFees,
+        services_total: totalExtras,
         advance_amount: Number(depositAmount),
         deposit_amount: Number(depositAmount),
         remaining_amount: Number(totalPrice) - Number(depositAmount),
@@ -717,6 +806,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
         guest_email: sanitizedGuestEmail,
         guest_phone: sanitizedGuestPhone || "",
         guest_count: String(guestCount),
+        pet_count: String(petCount),
         // Payment info
         total_price: String(totalPrice),
         deposit_amount: String(depositAmount),
@@ -729,7 +819,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
     });
 
     logInfo(`Stripe checkout session created: ${session.id}`);
-    logInfo(`Booking will be created by webhook after payment success`);
+    logInfo("Booking will be created by webhook after payment success");
 
     return {
       success: true,
@@ -755,7 +845,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
     // Return user-friendly error message
     throw new HttpsError(
       "internal",
-      error.message || "Failed to create checkout session. Please try again."
+      "Failed to create checkout session. Please try again."
     );
   }
 });
@@ -769,7 +859,7 @@ export const createStripeCheckoutSession = onCall({ secrets: [stripeSecretKey, "
  * - Uses atomic transaction to prevent race conditions
  * - No more "ghost bookings" - only paid bookings exist
  */
-export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripeWebhookSecret, "RESEND_API_KEY"] }, async (req, res) => {
+export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeWebhookSecret, "RESEND_API_KEY"]}, async (req, res) => {
   const sig = req.headers["stripe-signature"];
 
   if (!sig) {
@@ -799,11 +889,11 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
     logWebhookSignatureFailure(
       error.message || "Unknown error",
       !!sig,
-      { hasRawBody: !!req.rawBody }
+      {hasRawBody: !!req.rawBody}
     ).catch(() => { }); // Fire-and-forget
 
     logError("Webhook signature verification failed", error);
-    res.status(400).send(`Webhook Error: ${error.message}`);
+    res.status(400).send("Webhook signature verification failed");
     return;
   }
 
@@ -837,7 +927,7 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       if (bookingsSnapshot.empty) {
         logWarn(`No booking found for payment intent: ${paymentIntentId}`);
         // This is not necessarily an error - might be a payment that wasn't linked to a booking
-        res.json({ received: true, status: "no_booking_found" });
+        res.json({received: true, status: "no_booking_found"});
         return;
       }
 
@@ -861,10 +951,10 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
         chargeId: charge.id,
       });
 
-      res.json({ received: true, booking_id: bookingId, status: "refund_synced" });
+      res.json({received: true, booking_id: bookingId, status: "refund_synced"});
     } catch (error: any) {
       logError("Error processing charge.refunded", error);
-      res.status(500).send(`Error: ${error.message}`);
+      res.status(500).send("Internal server error");
     }
   } else if (event.type === "checkout.session.expired") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -873,7 +963,7 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
     // SUBSCRIPTION CHECKOUT EXPIRED - no action needed
     if (session.mode === "subscription") {
       logInfo("Subscription checkout session expired (no action needed)");
-      res.json({ received: true });
+      res.json({received: true});
       return;
     }
 
@@ -882,7 +972,7 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
 
     if (!placeholderBookingId) {
       logInfo("Session expired but no placeholder_booking_id in metadata");
-      res.json({ received: true });
+      res.json({received: true});
       return;
     }
 
@@ -915,8 +1005,7 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       }
     }
 
-    res.json({ received: true, status: "placeholder_cleaned" });
-
+    res.json({received: true, status: "placeholder_cleaned"});
   } else if (event.type === "customer.subscription.deleted") {
     // ========================================================================
     // SUBSCRIPTION CANCELLATION
@@ -953,12 +1042,11 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       });
 
       logSuccess(`User ${userId} downgraded to trial_expired due to subscription cancellation`);
-      res.json({ received: true, status: "subscription_canceled" });
+      res.json({received: true, status: "subscription_canceled"});
     } catch (error: any) {
       logError("Error processing customer.subscription.deleted", error);
-      res.status(500).send(`Error: ${error.message}`);
+      res.status(500).send("Internal server error");
     }
-
   } else if (event.type === "invoice.paid") {
     // ========================================================================
     // SUBSCRIPTION RENEWAL / PAYMENT SUCCESS
@@ -967,13 +1055,13 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
     // Cast to any to handle potential type definition mismatches
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const subscription = (invoice as any).subscription;
-    const subscriptionId = typeof subscription === 'string'
-      ? subscription
-      : subscription?.id;
+    const subscriptionId = typeof subscription === "string" ?
+      subscription :
+      subscription?.id;
 
     // Only care if it's a subscription invoice
     if (!subscriptionId) {
-      res.json({ received: true });
+      res.json({received: true});
       return;
     }
 
@@ -989,7 +1077,7 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       if (usersSnapshot.empty) {
         // Might be a new subscription where checkout.session.completed hasn't fired yet
         logWarn(`No user found for invoice.paid (sub: ${subscriptionId}) - skipping`);
-        res.json({ received: true, status: "user_not_found" });
+        res.json({received: true, status: "user_not_found"});
         return;
       }
 
@@ -1004,12 +1092,11 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       });
 
       logSuccess(`User ${userId} subscription confirmed active via invoice.paid`);
-      res.json({ received: true, status: "subscription_renewed" });
+      res.json({received: true, status: "subscription_renewed"});
     } catch (error: any) {
       logError("Error processing invoice.paid", error);
-      res.status(500).send(`Error: ${error.message}`);
+      res.status(500).send("Internal server error");
     }
-
   } else if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const metadata = session.metadata;
@@ -1043,11 +1130,11 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
         });
 
         logSuccess(`User ${userId} upgraded to active subscription`);
-        res.json({ received: true, status: "subscription_activated" });
+        res.json({received: true, status: "subscription_activated"});
         return;
       } catch (error: any) {
         logError("Error activating subscription", error);
-        res.status(500).send(`Error: ${error.message}`);
+        res.status(500).send("Internal server error");
         return;
       }
     }
@@ -1276,11 +1363,11 @@ export const handleStripeWebhook = onRequest({ secrets: [stripeSecretKey, stripe
       });
     } catch (error: any) {
       logError("Error processing webhook", error);
-      res.status(500).send(`Error: ${error.message}`);
+      res.status(500).send("Internal server error");
     }
   } else {
     // Unexpected event type
     logInfo(`Unhandled event type: ${event.type}`);
-    res.json({ received: true });
+    res.json({received: true});
   }
 });

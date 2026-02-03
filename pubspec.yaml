@@ -1,7 +1,7 @@
 name: bookbed
 description: "BookBed - Modern booking management platform for vacation rentals."
 publish_to: 'none'
-version: 1.0.3+8
+version: 1.0.7+14
 
 environment:
   sdk: ^3.9.0
@@ -23,14 +23,17 @@ dependencies:
   state_notifier: ^1.0.0
 
   # Backend & Database - Firebase
-  firebase_core: ^4.2.1
+  firebase_core: ^4.4.0
   firebase_auth: ^6.1.4
   cloud_firestore: ^6.1.0
-  firebase_storage: ^13.0.4
-  cloud_functions: ^6.0.4
-  firebase_analytics: ^12.0.4
-  firebase_crashlytics: ^5.0.5
-  firebase_messaging: ^16.0.0  # Push notifications (hidden until mobile app release)
+  firebase_storage: ^13.0.6
+  cloud_functions: ^6.0.6
+  firebase_analytics: ^12.1.1
+  firebase_crashlytics: ^5.0.7
+  firebase_messaging: ^16.1.1  # Push notifications (hidden until mobile app release)
+
+  # Google Sign-In (native Android/iOS)
+  google_sign_in: ^6.2.2
 
   # HTTP Client
   http: ^1.2.0
@@ -105,13 +108,13 @@ dev_dependencies:
 
   # Testing
   mocktail: ^1.0.4
-  fake_cloud_firestore: ^4.0.0  # Moved from dependencies - test-only package
+  fake_cloud_firestore: ^4.0.1  # Moved from dependencies - test-only package
   # integration_test removed - was causing Android release build issues
   # (Flutter bug: dev_dependencies included in GeneratedPluginRegistrant.java)
   golden_toolkit: ^0.15.0
 
   # Sentry source maps upload (for better error tracking)
-  sentry_dart_plugin: ^3.2.0
+  sentry_dart_plugin: ^3.2.1
 
   # Icon Generation
   flutter_launcher_icons: ^0.13.1
@@ -148,7 +151,20 @@ flutter:
   # Assets
   assets:
     - assets/translations/
+    # Inter fonts (5 weights - used in body text, titles, buttons)
+    - assets/google_fonts/Inter-Light.ttf
+    - assets/google_fonts/Inter-Regular.ttf
+    - assets/google_fonts/Inter-Medium.ttf
+    - assets/google_fonts/Inter-SemiBold.ttf
+    - assets/google_fonts/Inter-Bold.ttf
+    # PlayfairDisplay fonts (5 weights - used in headings, quotes)
+    - assets/google_fonts/PlayfairDisplay-Regular.ttf
+    - assets/google_fonts/PlayfairDisplay-SemiBold.ttf
+    - assets/google_fonts/PlayfairDisplay-Bold.ttf
+    - assets/google_fonts/PlayfairDisplay-ExtraBold.ttf
+    - assets/google_fonts/PlayfairDisplay-Italic.ttf
     - assets/images/
+    - assets/images/platforms/
 
   # Custom Fonts
   fonts:

@@ -24,7 +24,11 @@ class UnitWizardDraft with _$UnitWizardDraft {
     int? bathrooms,
     int? maxGuests,
     double? areaSqm,
-
+    // Step 2: Extra beds & pets (OPTIONAL, expandable sections)
+    int? maxTotalCapacity, // Max guests including extra beds
+    double? extraBedFee, // Fee per extra person per night
+    int? maxPets, // Max pets allowed per booking
+    double? petFee, // Fee per pet per night
     // Step 3: Pricing (REQUIRED)
     double? pricePerNight,
     double? weekendBasePrice, // Weekend price (Fri-Sat nights by default)
@@ -82,6 +86,10 @@ class UnitWizardDraft with _$UnitWizardDraft {
       weekendDays: unit.weekendDays ?? [5, 6],
       minStayNights: unit.minStayNights,
       maxStayNights: unit.maxStayNights,
+      maxTotalCapacity: unit.maxTotalCapacity,
+      extraBedFee: unit.extraBedFee,
+      maxPets: unit.maxPets,
+      petFee: unit.petFee,
       images: unit.images,
       coverImageUrl: unit.images.isNotEmpty ? unit.images.first : null,
       widgetMode: 'bookingInstant',

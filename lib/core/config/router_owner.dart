@@ -272,19 +272,9 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         return OwnerRoutes.login;
       }
 
-      // Redirect to overview if authenticated and trying to access login
-      if (isAuthenticated && isLoggingIn) {
-        if (kDebugMode) {
-          LoggingService.log(
-            '  → Redirecting to overview (authenticated, was on login)',
-            tag: 'ROUTER',
-          );
-        }
-        return OwnerRoutes.overview;
-      }
-
       // SECURITY: Email verification enforcement for authenticated users
-      // Block access to protected routes if email is not verified
+      // IMPORTANT: This check MUST happen BEFORE redirecting from login to dashboard!
+      // Otherwise, users completing registration bypass email verification.
       final requiresEmailVerification = authState.requiresEmailVerification;
       final isEmailVerificationRoute =
           state.matchedLocation == OwnerRoutes.emailVerification;
@@ -304,6 +294,18 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           );
         }
         return OwnerRoutes.emailVerification;
+      }
+
+      // Redirect to overview if authenticated and trying to access login
+      // (Only after email verification check passes)
+      if (isAuthenticated && isLoggingIn) {
+        if (kDebugMode) {
+          LoggingService.log(
+            '  → Redirecting to overview (authenticated, was on login)',
+            tag: 'ROUTER',
+          );
+        }
+        return OwnerRoutes.overview;
       }
 
       // PROFILE COMPLETION: Redirect social sign-in users to complete profile

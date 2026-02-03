@@ -21,6 +21,7 @@ import {
   generateBookingAccessToken,
   calculateTokenExpiration,
 } from "./bookingAccessToken";
+import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 
 // ==========================================
 // EMAIL ERROR TRACKING
@@ -179,7 +180,7 @@ export const onBookingCreated = onDocumentCreated(
       logInfo("Booking uses Stripe or other instant method, skipping initial email", {
         bookingId: event.params.bookingId,
         paymentMethod: booking.payment_method,
-        requiresApproval
+        requiresApproval,
       });
       return;
     }
@@ -189,7 +190,7 @@ export const onBookingCreated = onDocumentCreated(
       bookingId: event.params.bookingId,
       reference: booking.booking_reference,
       guest: booking.guest_name,
-      email: booking.guest_email
+      email: booking.guest_email,
     });
 
     try {
@@ -270,7 +271,7 @@ export const onBookingStatusChange = onDocumentUpdated(
       logInfo("Booking status changed", {
         bookingId: event.params.bookingId,
         from: before.status,
-        to: after.status
+        to: after.status,
       });
 
       // If booking was approved (pending -> confirmed with approved_at timestamp)
@@ -432,18 +433,26 @@ export const onBookingStatusChange = onDocumentUpdated(
             email: emailTracking.cancellation.email,
           });
           // Don't return here - we still need to create owner notification
-        } else {
-          // Send cancellation email to guest (only if not sent before)
+        } else if (after.guest_email) {
+          // Send cancellation email to guest (only if not sent before and guest email exists)
           try {
             const booking = after as any;
 
             // Validate booking reference exists (data integrity check)
             if (!booking.booking_reference) {
-              logError(
-                "[onStatusChange] CRITICAL: booking_reference missing - possible data corruption",
-                null,
+              // AUTO-HEAL: Restore missing booking_reference
+              const newRef = generateBookingReference(event.params.bookingId);
+              await event.data?.after.ref.update({
+                booking_reference: newRef,
+                updated_at: admin.firestore.FieldValue.serverTimestamp(),
+              });
+              booking.booking_reference = newRef; // Update local object usage
+
+              logWarn(
+                "[onStatusChange] Restored missing booking_reference - data auto-healed",
                 {
                   bookingId: event.params.bookingId,
+                  newReference: newRef,
                   propertyId: booking.property_id,
                   unitId: booking.unit_id,
                 }
@@ -502,6 +511,11 @@ export const onBookingStatusChange = onDocumentUpdated(
             );
             // Don't throw - cancellation should succeed even if email fails
           }
+        } else if (!emailTracking?.cancellation) {
+          // No guest email and no previous email sent - skip email silently
+          logInfo("Skipping cancellation email - no guest email on booking", {
+            bookingId: event.params.bookingId,
+          });
         }
 
         // Create in-app notification for owner about cancellation

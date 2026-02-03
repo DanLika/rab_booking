@@ -41,7 +41,7 @@ export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
  * 3. Additional security checks (consecutive dots)
  *
  * @param email - Email address to validate
- * @returns true if email is valid, false otherwise
+ * @return true if email is valid, false otherwise
  *
  * @example
  * validateEmail('test@example.com')     // true

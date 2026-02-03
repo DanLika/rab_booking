@@ -26,6 +26,7 @@ class _EmailVerificationScreenState
   bool _isResending = false;
   int _resendCooldown = 0;
   Timer? _cooldownTimer;
+  bool _hasShownNetworkError = false; // Prevent repeated error snackbars
 
   @override
   void initState() {
@@ -34,6 +35,29 @@ class _EmailVerificationScreenState
     // Auto-check verification status every 3 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       _checkVerificationStatus();
+    });
+
+    // Start with initial cooldown to prevent immediate resend after registration
+    // Email was already sent during registration, so user must wait before resending
+    _startInitialCooldown();
+  }
+
+  /// Start initial 60-second cooldown when screen opens
+  /// Firebase Auth has an internal rate limit (~60s) on sendEmailVerification()
+  /// Since email is already sent during registration, we must wait before allowing resend
+  void _startInitialCooldown() {
+    _resendCooldown = 60;
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _resendCooldown--;
+        if (_resendCooldown == 0) {
+          timer.cancel();
+        }
+      });
     });
   }
 
@@ -48,6 +72,8 @@ class _EmailVerificationScreenState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      // Reset error flag when returning to app - network may have been restored
+      _hasShownNetworkError = false;
       _checkVerificationStatus();
     }
   }
@@ -58,30 +84,66 @@ class _EmailVerificationScreenState
           .read(enhancedAuthProvider.notifier)
           .refreshEmailVerificationStatus();
 
+      // Reset error flag on success
+      _hasShownNetworkError = false;
+
       final authState = ref.read(enhancedAuthProvider);
       if (!authState.requiresEmailVerification && mounted) {
-        // Email verified! Navigate to owner overview
-        // Router will handle onboarding redirect if needed
+        // Email verified! Cancel timers BEFORE navigating to prevent
+        // overlapping calls from showing errors after redirect
+        _refreshTimer?.cancel();
+        _cooldownTimer?.cancel();
         context.go(OwnerRoutes.overview);
       }
     } catch (e) {
-      // Network error during verification check - show user-friendly message
-      // Don't crash, user can try again manually
-      if (mounted) {
+      // If email is already verified in Firebase Auth, the error is from a
+      // race condition (e.g., overlapping resumed + timer calls where one
+      // succeeded but the other failed on token refresh). Silently ignore.
+      final authState = ref.read(enhancedAuthProvider);
+      if (authState.firebaseUser?.emailVerified == true) return;
+
+      // Only show network error ONCE to avoid spamming user every 3 seconds
+      // Permission-denied errors (e.g., Firestore token refresh race condition)
+      // are silently retried - they usually resolve on next attempt
+      final errorString = e.toString().toLowerCase();
+      final isNetworkError =
+          errorString.contains('network') ||
+          errorString.contains('socket') ||
+          errorString.contains('timeout') ||
+          errorString.contains('connection');
+
+      if (isNetworkError && !_hasShownNetworkError && mounted) {
+        _hasShownNetworkError = true;
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           AppLocalizations.of(context).errorNetworkFailed,
         );
       }
+      // For non-network errors (permission-denied, etc.), silently retry
+      // The timer will try again in 3 seconds
     }
   }
 
   Future<void> _resendVerificationEmail() async {
     if (_resendCooldown > 0) return;
 
+    final authState = ref.read(enhancedAuthProvider);
+    final firebaseEmail = authState.firebaseUser?.email;
+    final firestoreEmail = authState.userModel?.email;
+
+    // If emails differ, user has a pending email change
+    // Need to show password dialog because verifyBeforeUpdateEmail requires recent auth
+    if (firestoreEmail != null &&
+        firebaseEmail != null &&
+        firestoreEmail.toLowerCase() != firebaseEmail.toLowerCase()) {
+      await _showResendPasswordDialog(firestoreEmail);
+      return;
+    }
+
     setState(() => _isResending = true);
 
     try {
+      // Normal case: send verification to current Firebase Auth email
       await ref.read(enhancedAuthProvider.notifier).sendEmailVerification();
 
       if (mounted) {
@@ -90,33 +152,153 @@ class _EmailVerificationScreenState
           AppLocalizations.of(context).authVerifyEmailSuccess,
           duration: const Duration(seconds: 3),
         );
-
-        // Start 60 second cooldown
-        setState(() {
-          _resendCooldown = 60;
-        });
-
-        _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-          setState(() {
-            _resendCooldown--;
-            if (_resendCooldown == 0) {
-              timer.cancel();
-            }
-          });
-        });
+        _startCooldown();
       }
     } catch (e) {
       if (mounted) {
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          '${AppLocalizations.of(context).error}: $e',
-        );
+        final errorString = e.toString().toLowerCase();
+
+        if (errorString.contains('too-many-requests')) {
+          // Firebase rate limit hit - start cooldown so user knows when to retry
+          _startCooldown();
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            AppLocalizations.of(context).authErrorTooManyRequests,
+          );
+        } else if (errorString.contains('network') ||
+            errorString.contains('socket') ||
+            errorString.contains('timeout') ||
+            errorString.contains('connection')) {
+          // Network error - show user-friendly message
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            AppLocalizations.of(context).errorNetworkFailed,
+          );
+        } else {
+          ErrorDisplayUtils.showErrorSnackBar(
+            context,
+            '${AppLocalizations.of(context).error}: $e',
+          );
+        }
       }
     } finally {
       if (mounted) {
         setState(() => _isResending = false);
       }
     }
+  }
+
+  /// Show password dialog for resending email change verification
+  /// Required because verifyBeforeUpdateEmail is a sensitive operation
+  Future<void> _showResendPasswordDialog(String newEmail) async {
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.authResendVerificationEmail),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.authPasswordHelper,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Builder(
+                  builder: (ctx) => TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: InputDecorationHelper.buildDecoration(
+                      labelText: l10n.authPasswordLabel,
+                      prefixIcon: const Icon(Icons.lock),
+                      context: ctx,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.passwordRequired;
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+
+                final navigator = Navigator.of(context);
+                navigator.pop();
+
+                setState(() => _isResending = true);
+
+                try {
+                  // Re-authenticate and resend verification
+                  await ref
+                      .read(enhancedAuthProvider.notifier)
+                      .updateEmail(
+                        newEmail: newEmail,
+                        currentPassword: passwordController.text,
+                      );
+
+                  if (mounted) {
+                    ErrorDisplayUtils.showSuccessSnackBar(
+                      this.context,
+                      l10n.authVerifyEmailSuccess,
+                      duration: const Duration(seconds: 3),
+                    );
+                    _startCooldown();
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() => _isResending = false);
+                  }
+                }
+              },
+              child: Text(l10n.submit),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Start 60 second cooldown after sending verification email
+  void _startCooldown() {
+    _cooldownTimer?.cancel();
+    setState(() {
+      _resendCooldown = 60;
+    });
+
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _resendCooldown--;
+        if (_resendCooldown == 0) {
+          timer.cancel();
+        }
+      });
+    });
   }
 
   /// Show dialog to change email address (Phase 3 feature)
@@ -137,92 +319,94 @@ class _EmailVerificationScreenState
               Text(l10n.authChangeEmailTitle),
             ],
           ),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l10n.authChangeEmailDesc,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 20),
-                Builder(
-                  builder: (ctx) => TextFormField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.authNewEmailLabel,
-                      prefixIcon: const Icon(Icons.email),
-                      context: ctx,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return l10n.emailRequired;
-                      }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return l10n.validEmailRequired;
-                      }
-                      return null;
-                    },
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.authChangeEmailDesc,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                ),
-                const SizedBox(height: 16),
-                Builder(
-                  builder: (ctx) => TextFormField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.authPasswordLabel,
-                      prefixIcon: const Icon(Icons.lock),
-                      helperText: l10n.authPasswordHelper,
-                      context: ctx,
+                  const SizedBox(height: 20),
+                  Builder(
+                    builder: (ctx) => TextFormField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.authNewEmailLabel,
+                        prefixIcon: const Icon(Icons.email),
+                        context: ctx,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return l10n.emailRequired;
+                        }
+                        if (!value.contains('@') || !value.contains('.')) {
+                          return l10n.validEmailRequired;
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.passwordRequired;
-                      }
-                      return null;
-                    },
                   ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
+                  const SizedBox(height: 16),
+                  Builder(
+                    builder: (ctx) => TextFormField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.authPasswordLabel,
+                        prefixIcon: const Icon(Icons.lock),
+                        helperText: l10n.authPasswordHelper,
+                        context: ctx,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.passwordRequired;
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
                       color: Theme.of(
                         context,
-                      ).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.tertiary,
+                      ).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          l10n.authLogoutHint,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.tertiary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.authLogoutHint,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           actions: [
@@ -231,6 +415,7 @@ class _EmailVerificationScreenState
               child: Text(l10n.cancel),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
 
@@ -269,7 +454,12 @@ class _EmailVerificationScreenState
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(enhancedAuthProvider);
-    final email = authState.firebaseUser?.email ?? 'your email';
+    // Prefer Firestore email (userModel) which is updated immediately after email change
+    // Firebase Auth email only updates AFTER user clicks verification link
+    final email =
+        authState.userModel?.email ??
+        authState.firebaseUser?.email ??
+        'your email';
     final theme = Theme.of(context);
 
     return Scaffold(

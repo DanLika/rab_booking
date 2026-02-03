@@ -2,7 +2,7 @@
  * Email template for notifying a user that their trial has expired.
  *
  * @param {string} userName - The display name of the user.
- * @returns {object} An object containing the email subject and html content.
+ * @return {object} An object containing the email subject and html content.
  */
 export const getTrialExpiredTemplate = (userName: string) => {
   const subject = "Vaš BookBed probni period je istekao";
@@ -25,5 +25,5 @@ export const getTrialExpiredTemplate = (userName: string) => {
     </p>
   `;
 
-  return { subject, html };
+  return {subject, html};
 };

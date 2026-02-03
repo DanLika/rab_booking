@@ -6,17 +6,17 @@
  * Integrates with Sentry for error tracking (production only)
  */
 
-import * as functions from 'firebase-functions';
-import {captureException, captureMessage, addBreadcrumb} from './sentry';
+import * as functions from "firebase-functions";
+import {captureException, captureMessage, addBreadcrumb} from "./sentry";
 
 /**
  * Log levels
  */
 export enum LogLevel {
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
+  DEBUG = "debug",
+  INFO = "info",
+  WARN = "warn",
+  ERROR = "error",
 }
 
 /**
@@ -70,7 +70,7 @@ export class Logger {
    * @param data - Optional additional structured data
    */
   static error(message: string, error?: Error | unknown, data?: Record<string, any>): void {
-    const logData: Record<string, any> = { ...data };
+    const logData: Record<string, any> = {...data};
 
     if (error) {
       if (error instanceof Error) {
@@ -79,7 +79,7 @@ export class Logger {
           stack: error.stack,
           name: error.name,
         };
-      } else if (error && typeof error === 'object') {
+      } else if (error && typeof error === "object") {
         // Handle non-Error objects (e.g., API responses, plain objects)
         try {
           logData.error = JSON.stringify(error, null, 2);
@@ -102,7 +102,7 @@ export class Logger {
       captureException(error, {message, ...data});
     } else {
       // If no error object, send as message
-      captureMessage(message, 'error', data);
+      captureMessage(message, "error", data);
     }
   }
 
@@ -112,7 +112,7 @@ export class Logger {
    * @param data - Optional structured data
    */
   static success(message: string, data?: Record<string, any>): void {
-    const logData = { ...data, status: 'success' };
+    const logData = {...data, status: "success"};
     functions.logger.info(message, logData);
   }
 
@@ -123,11 +123,11 @@ export class Logger {
    * @param data - Optional structured data
    */
   static operation(operation: string, data?: Record<string, any>): void {
-    const logData = { ...data, operation, phase: 'start' };
+    const logData = {...data, operation, phase: "start"};
     functions.logger.info(`Starting: ${operation}`, logData);
 
     // Add breadcrumb for Sentry (helps debug errors)
-    addBreadcrumb(`Starting: ${operation}`, 'operation', data);
+    addBreadcrumb(`Starting: ${operation}`, "operation", data);
   }
 
   /**
@@ -137,11 +137,11 @@ export class Logger {
    * @param data - Optional structured data
    */
   static complete(operation: string, data?: Record<string, any>): void {
-    const logData = { ...data, operation, phase: 'complete' };
+    const logData = {...data, operation, phase: "complete"};
     functions.logger.info(`Completed: ${operation}`, logData);
 
     // Add breadcrumb for Sentry (helps debug errors)
-    addBreadcrumb(`Completed: ${operation}`, 'operation', data);
+    addBreadcrumb(`Completed: ${operation}`, "operation", data);
   }
 }
 

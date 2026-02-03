@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
-import '../../../../shared/models/user_model.dart' show AccountType;
+import '../../../../shared/models/user_model.dart' show AccountType, UserModel;
 import '../../../../core/providers/language_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/config/router_owner.dart';
@@ -22,6 +22,28 @@ import '../../../../shared/widgets/premium_list_tile.dart';
 import '../../../../shared/widgets/logout_tile.dart';
 import '../../../../shared/widgets/delete_account_dialog.dart';
 import '../providers/user_profile_provider.dart';
+
+/// Calculate profile completion from UserModel (fallback when UserProfile doesn't exist)
+/// This handles existing users who registered before profile subdocument was created
+int _calculateCompletionFromUserModel(UserModel? userModel) {
+  if (userModel == null) return 0;
+
+  int filled = 0;
+  const total = 7; // Same fields as UserProfile.completionPercentage
+
+  // Check fields that map to UserProfile fields
+  final hasName =
+      userModel.firstName.isNotEmpty || userModel.lastName.isNotEmpty;
+  if (hasName) filled++; // displayName
+  if (userModel.email.isNotEmpty) filled++; // emailContact
+  if (userModel.phone?.isNotEmpty == true) filled++; // phoneE164
+  // address.city - not available in UserModel, skip
+  // address.country - not available in UserModel, skip
+  // propertyType - not available in UserModel, skip
+  // logoUrl - not available in UserModel, skip
+
+  return ((filled / total) * 100).round();
+}
 
 /// Profile screen for owner dashboard
 class ProfileScreen extends ConsumerWidget {
@@ -67,6 +89,12 @@ class ProfileScreen extends ConsumerWidget {
                 builder: (context) {
                   // OPTIMIZED: Use authState.userModel directly instead of separate Firestore query
                   final isAnonymous = authState.isAnonymous;
+                  // Check if user signed in with social provider (Google/Apple)
+                  // These users don't have a password to change
+                  final lastProvider = authState.userModel?.lastProvider;
+                  final isSocialSignIn =
+                      lastProvider == 'google.com' ||
+                      lastProvider == 'apple.com';
                   // Calculate effective account type (admin override takes precedence)
                   final effectiveAccountType =
                       authState.userModel?.adminOverrideAccountType ??
@@ -235,10 +263,9 @@ class ProfileScreen extends ConsumerWidget {
                                             ? double.infinity
                                             : 400,
                                       ),
-                                      child: Text(
+                                      child: SelectableText(
                                         displayName,
                                         maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: isMobile ? 20 : 22,
@@ -259,10 +286,9 @@ class ProfileScreen extends ConsumerWidget {
                                         ),
                                         borderRadius: BorderRadius.circular(16),
                                       ),
-                                      child: Text(
+                                      child: SelectableText(
                                         email,
                                         maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: isMobile ? 12 : 13,
@@ -274,7 +300,7 @@ class ProfileScreen extends ConsumerWidget {
                                       ),
                                     ),
                                     // Profile completion widget (only for non-anonymous)
-                                    if (!isAnonymous && !isMobile) ...[
+                                    if (!isAnonymous) ...[
                                       const SizedBox(height: 16),
                                       _ProfileCompletionWidget(
                                         percentage:
@@ -282,7 +308,9 @@ class ProfileScreen extends ConsumerWidget {
                                                 .value
                                                 ?.profile
                                                 .completionPercentage ??
-                                            0,
+                                            _calculateCompletionFromUserModel(
+                                              authState.userModel,
+                                            ),
                                         isDark: isDark,
                                       ),
                                     ],
@@ -328,7 +356,8 @@ class ProfileScreen extends ConsumerWidget {
                                     : () =>
                                           context.push(OwnerRoutes.profileEdit),
                               ),
-                              if (!isAnonymous) ...[
+                              // Hide password change for anonymous users and social sign-in users (Google/Apple)
+                              if (!isAnonymous && !isSocialSignIn) ...[
                                 Divider(
                                   height: 1,
                                   indent: 72,
@@ -460,18 +489,19 @@ class ProfileScreen extends ConsumerWidget {
                                           .currentUser
                                           ?.email ??
                                       '';
-                                  final Uri emailUri = Uri(
-                                    scheme: 'mailto',
-                                    path: 'support@bookbed.io',
-                                    queryParameters: {
-                                      'subject': 'BookBed Support Request',
-                                      'body':
-                                          'User Email: $userEmail\n\nDescribe your issue:\n\n',
-                                    },
+                                  // Build mailto URI manually to avoid ugly URL encoding
+                                  final subject = Uri.encodeComponent(
+                                    'BookBed Support Request',
                                   );
-                                  if (await canLaunchUrl(emailUri)) {
+                                  final body = Uri.encodeComponent(
+                                    'User: $userEmail\n\n',
+                                  );
+                                  final Uri emailUri = Uri.parse(
+                                    'mailto:dusko@book-bed.com?subject=$subject&body=$body',
+                                  );
+                                  try {
                                     await launchUrl(emailUri);
-                                  } else {
+                                  } catch (e) {
                                     if (context.mounted) {
                                       ErrorDisplayUtils.showErrorSnackBar(
                                         context,

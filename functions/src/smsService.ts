@@ -2,9 +2,9 @@ import {logInfo, logError, logSuccess} from "./logger";
 
 /**
  * SMS Service using Twilio
- * 
+ *
  * Simple SMS sending for critical notifications
- * 
+ *
  * Note: For MVP, this is a simplified version.
  * Full features (rate limiting, delivery tracking, webhooks) can be added later if needed.
  */
@@ -23,7 +23,7 @@ interface SendSmsParams {
 
 /**
  * Send SMS via Twilio
- * 
+ *
  * Simplified version for MVP - just sends SMS without complex tracking
  */
 export async function sendSms(params: SendSmsParams): Promise<boolean> {

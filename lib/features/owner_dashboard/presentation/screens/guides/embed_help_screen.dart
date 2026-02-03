@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -74,12 +75,14 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
             ),
           ),
         ),
-        title: Text(
+        title: AutoSizeText(
           l10n.embedHelpTitle,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
+          maxLines: 1,
+          minFontSize: 14,
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,

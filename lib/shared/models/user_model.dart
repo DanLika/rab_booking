@@ -7,7 +7,11 @@ part 'user_model.freezed.dart';
 part 'user_model.g.dart';
 
 /// Account type for subscription management
-enum AccountType { trial, premium, enterprise }
+/// - trial: Free tier with limited features
+/// - premium: Paid subscription via Stripe
+/// - enterprise: Business tier (future use)
+/// - lifetime: Admin-granted permanent premium access
+enum AccountType { trial, premium, enterprise, lifetime }
 
 /// Employee permission roles
 enum EmployeeRole {
@@ -145,9 +149,11 @@ class UserModel with _$UserModel {
     DateTime? stripeDisconnectedAt,
 
     /// Account creation timestamp
-    @TimestampConverter()
+    /// Nullable for race condition when Google sign-in creates profile
+    /// before Cloud Function sets timestamps
+    @NullableTimestampConverter()
     @JsonKey(name: 'created_at')
-    required DateTime createdAt,
+    DateTime? createdAt,
 
     /// Last update timestamp
     @NullableTimestampConverter()
@@ -181,6 +187,15 @@ class UserModel with _$UserModel {
     /// Values: 'google.com', 'apple.com', 'password', null
     /// Used to auto-populate profile data from social providers.
     @JsonKey(name: 'last_provider') String? lastProvider,
+
+    /// Lifetime license: Timestamp when admin granted lifetime access
+    @NullableTimestampConverter()
+    @JsonKey(name: 'lifetime_license_granted_at')
+    DateTime? lifetimeLicenseGrantedAt,
+
+    /// Lifetime license: Admin UID who granted the license
+    @JsonKey(name: 'lifetime_license_granted_by')
+    String? lifetimeLicenseGrantedBy,
   }) = _UserModel;
 
   const UserModel._();
@@ -219,4 +234,19 @@ class UserModel with _$UserModel {
 
   /// Check if user needs onboarding
   bool get needsOnboarding => isOwner && !onboardingCompleted;
+
+  /// Check if user has lifetime license (admin-granted permanent premium access)
+  bool get isLifetimeLicense =>
+      accountType == AccountType.lifetime ||
+      adminOverrideAccountType == AccountType.lifetime;
+
+  /// Get effective account type (considering admin override)
+  AccountType get effectiveAccountType =>
+      adminOverrideAccountType ?? accountType;
+
+  /// Check if user has premium-level access (premium, enterprise, or lifetime)
+  bool get hasPremiumAccess =>
+      effectiveAccountType == AccountType.premium ||
+      effectiveAccountType == AccountType.enterprise ||
+      effectiveAccountType == AccountType.lifetime;
 }

@@ -120,6 +120,11 @@ class AdditionalServiceModel with _$AdditionalServiceModel {
   }
 
   /// Calculate total price for booking
+  ///
+  /// - per_booking: price * quantity (flat fee per booking, multiplied by quantity)
+  /// - per_night: price * nights * quantity (e.g., breakfast for N nights)
+  /// - per_person: price * guests * quantity (e.g., transfer per person)
+  /// - per_item: price * quantity (e.g., 3 parking spots)
   double calculateTotalPrice({
     int quantity = 1,
     int nights = 1,
@@ -138,7 +143,8 @@ class AdditionalServiceModel with _$AdditionalServiceModel {
         multiplier = guests.toDouble();
         break;
       case 'per_item':
-        multiplier = quantity.toDouble();
+        // per_item: quantity is already applied in final formula, so multiplier = 1
+        multiplier = 1;
         break;
     }
 

@@ -122,6 +122,9 @@ class _CalendarExportButtonState extends ConsumerState<CalendarExportButton> {
         style: ElevatedButton.styleFrom(
           backgroundColor: buttonBackground,
           foregroundColor: colors.textPrimary,
+          // Keep same colors when disabled (loading state)
+          disabledBackgroundColor: buttonBackground,
+          disabledForegroundColor: colors.textPrimary,
           minimumSize: const Size(double.infinity, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),

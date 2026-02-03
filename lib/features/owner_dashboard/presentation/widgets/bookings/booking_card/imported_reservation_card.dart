@@ -115,7 +115,7 @@ class ImportedReservationCard extends ConsumerWidget {
                                 color: theme.colorScheme.primary.withValues(
                                   alpha: 0.1,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.calendar_today_outlined,
@@ -157,7 +157,7 @@ class ImportedReservationCard extends ConsumerWidget {
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
                                   color: Colors.amber.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(6),
+                                  shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.notes_outlined,

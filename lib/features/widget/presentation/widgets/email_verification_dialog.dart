@@ -397,11 +397,12 @@ class _EmailVerificationDialogState
                   controller: _codeController,
                   autofocus: true,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.robotoMono(
+                  style: GoogleFonts.inter(
                     fontSize: codeFontSize,
                     fontWeight: FontWeight.bold,
                     letterSpacing: screenWidth < 600 ? 4 : 8,
                     color: widget.colors.textPrimary,
+                    fontFeatures: [const FontFeature.tabularFigures()],
                   ),
                   keyboardType: TextInputType.number,
                   inputFormatters: [
@@ -410,11 +411,12 @@ class _EmailVerificationDialogState
                   ],
                   decoration: InputDecoration(
                     hintText: '000000',
-                    hintStyle: GoogleFonts.robotoMono(
+                    hintStyle: GoogleFonts.inter(
                       fontSize: codeFontSize,
                       fontWeight: FontWeight.bold,
                       letterSpacing: screenWidth < 600 ? 4 : 8,
                       color: widget.colors.textDisabled,
+                      fontFeatures: [const FontFeature.tabularFigures()],
                     ),
                     filled: true,
                     fillColor: widget.colors.backgroundPrimary,

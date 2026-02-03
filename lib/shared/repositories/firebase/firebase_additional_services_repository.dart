@@ -96,7 +96,8 @@ class FirebaseAdditionalServicesRepository
     if (service.updatedAt != null) {
       data['updated_at'] = Timestamp.fromDate(service.updatedAt!);
     }
-    data.remove('deleted_at'); // Don't set on creation
+    data['deleted_at'] =
+        null; // Explicitly null (not removed) for composite index compatibility
 
     await docRef.set(data);
 

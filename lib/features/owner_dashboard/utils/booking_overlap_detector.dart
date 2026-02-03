@@ -20,25 +20,40 @@ bool isActiveBooking(BookingModel booking) =>
 /// - Cancelled and completed reservations don't block dates
 /// - Only active bookings (pending, confirmed) are checked
 class BookingOverlapDetector {
+  /// Normalize DateTime to midnight (remove time component)
+  /// This ensures date comparisons work correctly regardless of time
+  static DateTime _normalizeDate(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
   /// Check if a booking overlaps with another booking
   ///
   /// SAME-DAY TURNOVER SUPPORT:
   /// - Uses isBefore/isAfter (not <=/>= comparisons)
   /// - This allows check-out date to equal check-in date of next booking
   /// - Example: Booking A (May 1-5) does NOT overlap with Booking B (May 5-10)
+  ///
+  /// IMPORTANT: Dates are normalized to midnight before comparison
+  /// This ensures time components don't affect the overlap detection
   static bool doBookingsOverlap({
     required DateTime start1,
     required DateTime end1,
     required DateTime start2,
     required DateTime end2,
   }) {
+    // Normalize all dates to midnight to avoid time component issues
+    final s1 = _normalizeDate(start1);
+    final e1 = _normalizeDate(end1);
+    final s2 = _normalizeDate(start2);
+    final e2 = _normalizeDate(end2);
+
     // Two bookings overlap if:
     // - start1 is BEFORE end2 (not equal) AND
     // - end1 is AFTER start2 (not equal)
     //
     // This ensures same-day turnover is allowed:
     // - If end1 == start2, they DON'T overlap (checkout = next checkin)
-    return start1.isBefore(end2) && end1.isAfter(start2);
+    return s1.isBefore(e2) && e1.isAfter(s2);
   }
 
   /// Check if a booking can be placed in a unit without conflicts

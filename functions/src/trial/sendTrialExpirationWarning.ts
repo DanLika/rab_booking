@@ -3,10 +3,11 @@ import {admin, db} from "../firebase";
 import {logInfo, logError, logSuccess} from "../logger";
 import {sendTrialExpiringEmail} from "../emailService";
 import {sendTrialExpiringPushNotification} from "../fcmService";
+import {captureException, captureMessage, addBreadcrumb} from "../sentry";
 
 /**
  * Send Trial Expiration Warnings
- * 
+ *
  * Scheduled Cloud Function that runs daily to send trial expiration warnings.
  *
  * @remarks
@@ -76,7 +77,7 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
       return;
     }
 
-    logInfo(`[Trial Warning] Found users to warn`, {
+    logInfo("[Trial Warning] Found users to warn", {
       days,
       count: usersToWarnSnapshot.docs.length,
     });
@@ -104,6 +105,11 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
             userId: doc.id,
             days,
           });
+          captureException(emailError, {
+            userId: doc.id,
+            days,
+            context: "sendTrialExpiringEmail",
+          });
         }
       }
 
@@ -115,6 +121,11 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
         logError("[Trial Warning] Failed to send push notification", pushError, {
           userId: doc.id,
           days,
+        });
+        captureException(pushError, {
+          userId: doc.id,
+          days,
+          context: "sendTrialExpiringPushNotification",
         });
       }
 
@@ -129,7 +140,31 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
       pushSent,
       totalUsers: usersToWarnSnapshot.docs.length,
     });
+
+    // Track successful batch in Sentry for monitoring
+    addBreadcrumb(`Trial warning batch completed: ${days} days`, "trial", {
+      emailsSent,
+      pushSent,
+      totalUsers: usersToWarnSnapshot.docs.length,
+    });
+
+    // Alert if push delivery rate is low (< 50%)
+    const pushDeliveryRate = usersToWarnSnapshot.docs.length > 0 ?
+      pushSent / usersToWarnSnapshot.docs.length :
+      1;
+    if (pushDeliveryRate < 0.5 && usersToWarnSnapshot.docs.length >= 5) {
+      captureMessage("[Trial Warning] Low push notification delivery rate", "warning", {
+        days,
+        pushSent,
+        totalUsers: usersToWarnSnapshot.docs.length,
+        deliveryRate: `${(pushDeliveryRate * 100).toFixed(1)}%`,
+      });
+    }
   } catch (error) {
     logError(`[Trial Warning] Error sending ${days}-day warnings`, error);
+    captureException(error, {
+      days,
+      context: "sendWarningsForInterval",
+    });
   }
 }

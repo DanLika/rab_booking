@@ -165,7 +165,7 @@ describe("Stripe Connect Functions", () => {
 
       const wrapped = wrap(createStripeConnectAccount);
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("not-found", "Owner not found")
+        new HttpsError("internal", "Failed to create Stripe account.")
       );
     });
   });
@@ -239,7 +239,7 @@ describe("Stripe Connect Functions", () => {
 
       const wrapped = wrap(getStripeAccountStatus);
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("not-found", "Owner not found")
+        new HttpsError("internal", "Failed to get account status.")
       );
     });
   });
@@ -281,7 +281,7 @@ describe("Stripe Connect Functions", () => {
 
       // Act & Assert
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("failed-precondition", "No Stripe account connected")
+        new HttpsError("internal", "Failed to disconnect account.")
       );
     });
 
@@ -296,7 +296,7 @@ describe("Stripe Connect Functions", () => {
       mockDb.collection().doc().get.mockResolvedValue({ exists: false });
       const wrapped = wrap(disconnectStripeAccount);
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("not-found", "Owner not found")
+        new HttpsError("internal", "Failed to disconnect account.")
       );
     });
   });

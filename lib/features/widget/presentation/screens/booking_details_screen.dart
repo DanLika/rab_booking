@@ -493,6 +493,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         const SizedBox(height: SpacingTokens.l),
         PaymentInfoCard(
           totalPrice: widget.booking.totalPrice,
+          roomPrice: widget.booking.roomPrice,
+          extraGuestFees: widget.booking.extraGuestFees,
+          petFees: widget.booking.petFees,
           depositAmount: widget.booking.depositAmount,
           paidAmount: widget.booking.paidAmount,
           remainingAmount: widget.booking.remainingAmount,

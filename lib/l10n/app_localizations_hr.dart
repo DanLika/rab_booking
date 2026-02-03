@@ -1662,7 +1662,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerDrawerSyncBookingCom => 'Sync sa booking.com';
 
   @override
-  String get ownerDrawerExportCalendar => 'Export Kalendara';
+  String get ownerDrawerExportCalendar => 'Export Rezervacija';
 
   @override
   String get ownerDrawerIcalFeedUrl => 'iCal feed URL';
@@ -1681,6 +1681,9 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerDrawerBankAccountData => 'Podaci za uplate';
+
+  @override
+  String get ownerDrawerWidgetSection => 'Widget';
 
   @override
   String get ownerDrawerGuides => 'Uputstva';
@@ -2798,17 +2801,18 @@ class AppLocalizationsHr extends AppLocalizations {
   String get notificationSettingsTitle => 'Postavke Obavijesti';
 
   @override
-  String get notificationSettingsEnableAll => 'Omogući Sve Obavijesti';
+  String get notificationSettingsEnableAll => 'Omogući Opcionalne Obavijesti';
 
   @override
   String get notificationSettingsMasterSwitch =>
-      'Isključite da zaustavite sve email obavijesti. Emailovi gostima nisu zahvaćeni.';
+      'Kontrolirajte marketing i podsjetnik emailove. Kritične obavijesti o rezervacijama se uvijek šalju.';
 
   @override
   String get notificationSettingsEnabled => 'Obavijesti uspješno omogućene';
 
   @override
-  String get notificationSettingsDisabled => 'Obavijesti uspješno onemogućene';
+  String get notificationSettingsDisabled =>
+      'Opcionalne obavijesti onemogućene';
 
   @override
   String get notificationSettingsUpdateError =>
@@ -2816,10 +2820,33 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get notificationSettingsDisabledWarning =>
-      'Sve email obavijesti su pauzirane. Potvrdni emailovi gostima i dalje se šalju. Omogućite za primanje upozorenja o rezervacijama.';
+      'Opcionalne email obavijesti su pauzirane. I dalje ćete primati kritične emailove: nove rezervacije, potvrde i otkazivanja.';
 
   @override
-  String get notificationSettingsCategories => 'Email Obavijesti';
+  String get notificationSettingsCategories => 'Opcionalne Obavijesti';
+
+  @override
+  String get notificationSettingsCategoriesDesc =>
+      'Možete isključiti ove nekritične obavijesti';
+
+  @override
+  String get notificationSettingsAlwaysSent => 'Uvijek se šalju';
+
+  @override
+  String get notificationSettingsAlwaysSentDesc =>
+      'Ove kritične obavijesti se ne mogu onemogućiti';
+
+  @override
+  String get notificationSettingsAlwaysSentBookings =>
+      'Novi zahtjevi za rezervaciju i čekanja na odobrenje';
+
+  @override
+  String get notificationSettingsAlwaysSentConfirmations =>
+      'Potvrde rezervacija';
+
+  @override
+  String get notificationSettingsAlwaysSentCancellations =>
+      'Otkazivanja rezervacija';
 
   @override
   String get notificationSettingsBookings => 'Rezervacije';
@@ -2829,21 +2856,21 @@ class AppLocalizationsHr extends AppLocalizations {
       'Emailovi kada gosti naprave instant rezervacije. Rezervacije na čekanju koje zahtijevaju odobrenje uvijek se šalju.';
 
   @override
-  String get notificationSettingsPayments => 'Plaćanja';
+  String get notificationSettingsPayments => 'Podsjetnici za plaćanje';
 
   @override
   String get notificationSettingsPaymentsDesc =>
-      'Emailovi kada primite Stripe uplatu od gostiju.';
+      'Opcionalni emailovi o plaćanjima. Početne Stripe potvrde plaćanja se uvijek šalju.';
 
   @override
-  String get notificationSettingsCalendar => 'Kalendar';
+  String get notificationSettingsCalendar => 'Sinkronizacija kalendara';
 
   @override
   String get notificationSettingsCalendarDesc =>
       'Upozorenja iCal sinkronizacije i konflikti u kalendaru.';
 
   @override
-  String get notificationSettingsMarketing => 'Marketing';
+  String get notificationSettingsMarketing => 'Marketing i ažuriranja';
 
   @override
   String get notificationSettingsMarketingDesc =>
@@ -4179,25 +4206,23 @@ class AppLocalizationsHr extends AppLocalizations {
       'U ovom modu gosti mogu kreirati rezervaciju, ali NE mogu platiti online. Plaćanje dogovarate privatno nakon što potvrdite rezervaciju.';
 
   @override
-  String get widgetSettingsAdvanceBooking => 'Rezerviranje Unaprijed';
+  String get widgetSettingsAdvanceBooking => 'Rok za rezervaciju';
 
   @override
   String get widgetSettingsAdvanceBookingDesc =>
-      'Kontrolirajte koliko unaprijed gosti mogu rezervirati';
+      'Zadani raspon za sve datume (može se podesiti pojedinačno u cjenovniku)';
 
   @override
-  String get widgetSettingsMinDaysAdvance => 'Minimalno dana unaprijed';
+  String get widgetSettingsMinDaysAdvance => 'Min. dana unaprijed';
 
   @override
-  String get widgetSettingsMinDaysAdvanceHint =>
-      '0 = rezervacija isti dan dopuštena';
+  String get widgetSettingsMinDaysAdvanceHint => '0 = isti dan';
 
   @override
-  String get widgetSettingsMaxDaysAdvance => 'Maksimalno dana unaprijed';
+  String get widgetSettingsMaxDaysAdvance => 'Max. dana unaprijed';
 
   @override
-  String get widgetSettingsMaxDaysAdvanceHint =>
-      '365 = do godinu dana unaprijed';
+  String get widgetSettingsMaxDaysAdvanceHint => '365 = godinu dana';
 
   @override
   String get bookingCreateTitle => 'Nova rezervacija';
@@ -4922,6 +4947,12 @@ class AppLocalizationsHr extends AppLocalizations {
       'Pregledajte widget vašeg unita prije ugradnje';
 
   @override
+  String get embedGuideSelectUnitHint => 'Odaberite unit za pregled';
+
+  @override
+  String get embedGuidePreviewLive => 'Pregledaj uživo';
+
+  @override
   String get embedGuideLiveExampleTitle => 'Demo primjer';
 
   @override
@@ -5233,6 +5264,71 @@ class AppLocalizationsHr extends AppLocalizations {
       'Ove informacije pomažu gostima da odaberu odgovarajući smještaj';
 
   @override
+  String get unitWizardStep2ExtraBedsTitle => 'Dodatni kreveti';
+
+  @override
+  String get unitWizardStep2ExtraBedsDesc =>
+      'Automatska naknada po gostu po noći';
+
+  @override
+  String get unitWizardStep2MaxExtraBeds => 'Maks. dodatnih kreveta';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsHint => 'npr. 2';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsHelper =>
+      'Koliko dodatnih kreveta možete ponuditi';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsInvalid => 'Unesite ispravni broj';
+
+  @override
+  String get unitWizardStep2ExtraBedFee => 'Cijena po krevetu (€/noć)';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeHint => 'npr. 15';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeHelper =>
+      'Po dodatnom krevetu po noćenju';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeInvalid => 'Unesite ispravni iznos';
+
+  @override
+  String get unitWizardStep2PetsTitle => 'Kućni ljubimci';
+
+  @override
+  String get unitWizardStep2PetsDesc =>
+      'Automatska naknada po ljubimcu po noći';
+
+  @override
+  String get unitWizardStep2MaxPets => 'Maks. broj ljubimaca';
+
+  @override
+  String get unitWizardStep2MaxPetsHint => 'npr. 2';
+
+  @override
+  String get unitWizardStep2MaxPetsHelper =>
+      'Maksimalan broj ljubimaca po rezervaciji';
+
+  @override
+  String get unitWizardStep2MaxPetsInvalid => 'Unesite ispravni broj';
+
+  @override
+  String get unitWizardStep2PetFee => 'Cijena po ljubimcu (€/noć)';
+
+  @override
+  String get unitWizardStep2PetFeeHint => 'npr. 10';
+
+  @override
+  String get unitWizardStep2PetFeeHelper => 'Po ljubimcu po noćenju';
+
+  @override
+  String get unitWizardStep2PetFeeInvalid => 'Unesite ispravni iznos';
+
+  @override
   String get unitWizardStep3Title => 'Cijena i Dostupnost';
 
   @override
@@ -5303,6 +5399,18 @@ class AppLocalizationsHr extends AppLocalizations {
   String unitWizardStep3MaxStayMinError(int min) {
     return 'Max mora biti >= min ($min)';
   }
+
+  @override
+  String get unitWizardStep5ExtraBeds => 'Dodatni kreveti';
+
+  @override
+  String get unitWizardStep5ExtraBedFee => 'Cijena kreveta';
+
+  @override
+  String get unitWizardStep5MaxPets => 'Maks. ljubimaca';
+
+  @override
+  String get unitWizardStep5PetFee => 'Cijena ljubimca';
 
   @override
   String get unitWizardStep3Availability => 'Dostupnost';
@@ -5635,15 +5743,16 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalExportHowItWorks => 'Kako Funkcionira';
 
   @override
-  String get icalExportStep1 => 'Odaberite jedinicu s popisa ispod';
+  String get icalExportStep1 =>
+      'Svaka jedinica ima automatski generiran iCal URL';
 
   @override
   String get icalExportStep2 =>
-      'Kliknite \'Generiraj\' za kreiranje iCal URL-a';
+      'Kliknite ikonu linka za kopiranje URL-a ili preuzmite .ics datoteku';
 
   @override
   String get icalExportStep3 =>
-      'Kopirajte URL i dodajte ga u svoju kalendarsku aplikaciju';
+      'Dodajte URL u svoju kalendarsku aplikaciju (Google Calendar, Apple Calendar, Outlook)';
 
   @override
   String get icalExportStep4 =>
@@ -5657,7 +5766,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportFaq1A =>
-      'Većina kalendarskih aplikacija sinkronizira svakih 5-15 minuta. Možete i ručno osvježiti u svojoj aplikaciji.';
+      'Kalendarske aplikacije (Google Calendar, Apple, Outlook) sinkroniziraju svakih 5-15 minuta. Airbnb sinkronizira svakih 3-6 sati.';
 
   @override
   String get icalExportFaq2Q => 'Hoće li obrisane rezervacije biti uklonjene?';
@@ -5672,6 +5781,14 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get icalExportFaq3A =>
       'Da, ali budite oprezni - svatko s URL-om može vidjeti vaš raspored rezervacija.';
+
+  @override
+  String get icalExportFaq4Q =>
+      'Mogu li dodati ovaj URL direktno na Booking.com?';
+
+  @override
+  String get icalExportFaq4A =>
+      'Ne. Booking.com prihvata iCal linkove samo od velikih platformi (Airbnb, VRBO, itd.). Zaobilazno rješenje: Prvo dodajte naš iCal URL na Airbnb, zatim povežite Airbnb kalendar sa Booking.com. Na taj način BookBed rezervacije stižu na Booking.com preko Airbnb-a.';
 
   @override
   String get icalExportUrlReady => 'URL Spreman';
@@ -5696,6 +5813,38 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get icalExportNoUrlDesc =>
       'Generirajte iCal URL za sinkronizaciju rezervacija s vanjskim kalendarima.';
+
+  @override
+  String get icalExportDynamicLinkTitle => 'Dinamički iCal Link';
+
+  @override
+  String get icalExportDynamicLinkDescription =>
+      'Kopirajte ovaj link na Airbnb, Google Calendar, Apple Calendar ili Outlook. Vaša dostupnost će se automatski sinkronizirati.';
+
+  @override
+  String get icalExportLinkCopied => 'Link kopiran u međuspremnik';
+
+  @override
+  String get icalExportTokenWarning =>
+      'Napomena: Ovaj link sadrži tajni token. Ne dijelite ga javno.';
+
+  @override
+  String get icalExportSyncTimeNote =>
+      'Airbnb sinkronizira svakih 3-6 sati. Kalendar aplikacije sinkroniziraju svakih 5-15 minuta.';
+
+  @override
+  String get icalExportCopyLink => 'Kopiraj Link';
+
+  @override
+  String get icalExportBookingComNote =>
+      'Booking.com ne prihvaća iCal linkove s prilagođenih platformi. Za sinkronizaciju s Booking.com: prvo dodajte ovaj URL na Airbnb, zatim povežite Airbnb kalendar s Booking.com.';
+
+  @override
+  String get icalExportBookingComInfoTitle => 'Booking.com – Važna napomena';
+
+  @override
+  String get icalExportBookingComInfoDesc =>
+      'Booking.com prihvaća iCal linkove samo od velikih OTA platformi (Airbnb, VRBO, itd.), ne od prilagođenih platformi. Za sinkronizaciju BookBed rezervacija s Booking.com koristite: BookBed → Airbnb → Booking.com. Prvo dodajte iCal URL na Airbnb, zatim povežite Airbnb kalendar s Booking.com.';
 
   @override
   String errorWithMessage(String message) {
@@ -5915,7 +6064,7 @@ class AppLocalizationsHr extends AppLocalizations {
   String get priceCalendarSelectMonth => 'Odaberi mjesec';
 
   @override
-  String get priceCalendarBulkEdit => 'Bulk Edit';
+  String get priceCalendarBulkEdit => 'Uredi više';
 
   @override
   String priceCalendarDaysSelected(int count) {
@@ -5995,42 +6144,7 @@ class AppLocalizationsHr extends AppLocalizations {
       'Gosti ne mogu završiti rezervaciju';
 
   @override
-  String get priceCalendarAdvancedOptions => 'Napredne opcije';
-
-  @override
-  String get priceCalendarAdvancedOptionsDesc =>
-      'Vikend cijena, min/max noći, unaprijed';
-
-  @override
   String get priceCalendarWeekendPrice => 'Vikend cijena (€)';
-
-  @override
-  String get priceCalendarMinNights => 'Min. noći';
-
-  @override
-  String get priceCalendarMinNightsHint =>
-      'Minimalni broj noćenja za prijavu ovog datuma';
-
-  @override
-  String get priceCalendarMaxNights => 'Max. noći';
-
-  @override
-  String get priceCalendarMaxNightsHint =>
-      'Maksimalni broj noćenja za prijavu ovog datuma';
-
-  @override
-  String get priceCalendarMinDaysAdvance => 'Min. dana unaprijed';
-
-  @override
-  String get priceCalendarMinDaysAdvanceHint =>
-      'Rezervacija mora biti napravljena najmanje ovoliko dana prije prijave';
-
-  @override
-  String get priceCalendarMaxDaysAdvance => 'Max. dana unaprijed';
-
-  @override
-  String get priceCalendarMaxDaysAdvanceHint =>
-      'Koliko unaprijed gosti mogu rezervirati za prijavu ovog datuma';
 
   @override
   String get priceCalendarDeleteConfirmTitle => 'Potvrda brisanja';
@@ -6052,30 +6166,6 @@ class AppLocalizationsHr extends AppLocalizations {
   @override
   String get priceCalendarWeekendPriceMustBeGreaterThanZero =>
       'Vikend cijena mora biti veća od 0';
-
-  @override
-  String get priceCalendarMinNightsMustBeGreaterThanZero =>
-      'Min. noći mora biti veće od 0';
-
-  @override
-  String get priceCalendarMaxNightsMustBeGreaterThanZero =>
-      'Max. noći mora biti veće od 0';
-
-  @override
-  String get priceCalendarMinDaysAdvanceMustBeZeroOrMore =>
-      'Min. dana unaprijed mora biti 0 ili više';
-
-  @override
-  String get priceCalendarMaxDaysAdvanceMustBeGreaterThanZero =>
-      'Max. dana unaprijed mora biti veće od 0';
-
-  @override
-  String get priceCalendarMinNightsCannotExceedMax =>
-      'Min. noći ne može biti veće od max. noći';
-
-  @override
-  String get priceCalendarMinAdvanceCannotExceedMax =>
-      'Min. dana unaprijed ne može biti veće od max. dana unaprijed';
 
   @override
   String get priceCalendarPriceSaved => 'Cijena spremljena';
@@ -7227,6 +7317,14 @@ class AppLocalizationsHr extends AppLocalizations {
       'Da! Možete dodati iCal feed-ove sa Booking.com, Airbnb ili bilo koje druge platforme koja podržava iCal format za isti apartman. Sve rezervacije će biti prikazane.';
 
   @override
+  String get ownerFaqIcal5Q =>
+      'Mogu li exportovati BookBed kalendar na Booking.com?';
+
+  @override
+  String get ownerFaqIcal5A =>
+      'Ne direktno. Booking.com prihvata iCal linkove samo od velikih platformi (Airbnb, VRBO, itd.) — ne od PMS sistema trećih strana. Zaobilazno rješenje: Prvo exportujte BookBed kalendar na Airbnb, a zatim povežite Airbnb kalendar sa Booking.com.';
+
+  @override
   String get ownerFaqSupport1Q => 'Widget se ne učitava na mom sajtu';
 
   @override
@@ -7765,6 +7863,23 @@ class AppLocalizationsHr extends AppLocalizations {
       'Brisanje računa nije uspjelo. Molimo pokušajte ponovno ili kontaktirajte podršku.';
 
   @override
+  String get deleteAccountReauthRequired => 'Potrebna ponovna prijava';
+
+  @override
+  String deleteAccountReauthDescription(String provider) {
+    return 'Iz sigurnosnih razloga, molimo prijavite se ponovo putem $provider kako biste potvrdili brisanje računa.';
+  }
+
+  @override
+  String deleteAccountReauthButton(String provider) {
+    return 'Prijava putem $provider';
+  }
+
+  @override
+  String get deleteAccountReauthSuccess =>
+      'Identitet potvrđen. Sada možete obrisati svoj račun.';
+
+  @override
   String get subscriptionTitle => 'Pretplata';
 
   @override
@@ -8092,4 +8207,114 @@ class AppLocalizationsHr extends AppLocalizations {
   String optionalUpdateVersion(String version) {
     return 'Najnovija verzija: $version';
   }
+
+  @override
+  String get additionalServicesTitle => 'Dodatne usluge';
+
+  @override
+  String get additionalServicesSubtitle =>
+      'Dodatne opcije koje gosti mogu rezervirati';
+
+  @override
+  String get additionalServicesEmpty => 'Nema konfiguriranih dodatnih usluga';
+
+  @override
+  String get additionalServicesEmptyHint =>
+      'Dodajte usluge poput parkinga, doručka, itd.';
+
+  @override
+  String get additionalServiceAddTitle => 'Dodaj uslugu';
+
+  @override
+  String get additionalServiceEditTitle => 'Uredi uslugu';
+
+  @override
+  String get additionalServiceType => 'Vrsta usluge';
+
+  @override
+  String get additionalServiceName => 'Naziv usluge';
+
+  @override
+  String get additionalServiceNameHint => 'npr. Privatni parking';
+
+  @override
+  String get additionalServiceNameRequired => 'Molimo unesite naziv usluge';
+
+  @override
+  String get additionalServicePrice => 'Cijena (EUR)';
+
+  @override
+  String get additionalServicePriceRequired => 'Molimo unesite cijenu';
+
+  @override
+  String get additionalServicePriceInvalid => 'Molimo unesite ispravnu cijenu';
+
+  @override
+  String get additionalServicePricingUnit => 'Jedinica naplate';
+
+  @override
+  String get additionalServiceMaxQuantity => 'Max količina';
+
+  @override
+  String get additionalServiceMaxQuantityHint =>
+      'Ostavite prazno za neograničeno';
+
+  @override
+  String get additionalServiceMaxQuantityHelper =>
+      'Opcionalno - ograniči koliko se može rezervirati';
+
+  @override
+  String get additionalServiceDescription => 'Opis';
+
+  @override
+  String get additionalServiceDescriptionHint => 'Opcionalni detalji o usluzi';
+
+  @override
+  String get additionalServiceTypeParking => 'Parking';
+
+  @override
+  String get additionalServiceTypeBreakfast => 'Doručak';
+
+  @override
+  String get additionalServiceTypeLateCheckin => 'Kasni check-in';
+
+  @override
+  String get additionalServiceTypeEarlyCheckout => 'Rani check-out';
+
+  @override
+  String get additionalServiceTypeCleaning => 'Čišćenje';
+
+  @override
+  String get additionalServiceTypeBabyCot => 'Dječji krevetić';
+
+  @override
+  String get additionalServiceTypeTransfer => 'Aerodromski transfer';
+
+  @override
+  String get additionalServiceTypeOther => 'Ostalo';
+
+  @override
+  String get additionalServicePricingPerBooking => 'Po rezervaciji';
+
+  @override
+  String get additionalServicePricingPerNight => 'Po noći';
+
+  @override
+  String get additionalServicePricingPerPerson => 'Po osobi';
+
+  @override
+  String get additionalServicePricingPerItem => 'Po komadu';
+
+  @override
+  String get additionalServiceDeleteConfirm => 'Obrisati ovu uslugu?';
+
+  @override
+  String get additionalServiceDeleteHint => 'Ova akcija se ne može poništiti';
+
+  @override
+  String get additionalServiceSaveUnitFirst =>
+      'Prvo spremite unit da biste dodali usluge';
+
+  @override
+  String get add => 'Dodaj';
 }

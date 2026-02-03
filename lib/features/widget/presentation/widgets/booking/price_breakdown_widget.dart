@@ -43,6 +43,18 @@ class PriceBreakdownWidget extends StatelessWidget {
   /// Formatted additional services string
   final String? formattedAdditionalServices;
 
+  /// Extra guest fees amount (used to determine visibility)
+  final double extraGuestFees;
+
+  /// Formatted extra guest fees string (e.g., "€30.00")
+  final String? formattedExtraGuestFees;
+
+  /// Pet fees amount (used to determine visibility)
+  final double petFees;
+
+  /// Formatted pet fees string (e.g., "€15.00")
+  final String? formattedPetFees;
+
   /// Formatted total price string
   final String formattedTotal;
 
@@ -51,6 +63,9 @@ class PriceBreakdownWidget extends StatelessWidget {
 
   /// Deposit percentage (e.g., 20 for 20%)
   final int depositPercentage;
+
+  /// Whether to show the deposit line (hide for no-payment mode)
+  final bool showDeposit;
 
   /// Translations for localization
   final WidgetTranslations translations;
@@ -62,9 +77,14 @@ class PriceBreakdownWidget extends StatelessWidget {
     required this.formattedRoomPrice,
     this.additionalServicesTotal = 0,
     this.formattedAdditionalServices,
+    this.extraGuestFees = 0,
+    this.formattedExtraGuestFees,
+    this.petFees = 0,
+    this.formattedPetFees,
     required this.formattedTotal,
     required this.formattedDeposit,
     required this.depositPercentage,
+    this.showDeposit = true,
     required this.translations,
   });
 
@@ -89,6 +109,28 @@ class PriceBreakdownWidget extends StatelessWidget {
             isDarkMode: isDarkMode,
           ),
 
+          // Extra guest fees (only show if > tolerance)
+          if (extraGuestFees.abs() > WidgetConstants.priceTolerance &&
+              formattedExtraGuestFees != null) ...[
+            const SizedBox(height: SpacingTokens.s),
+            PriceRowWidget(
+              label: translations.extraGuestFees,
+              amount: formattedExtraGuestFees!,
+              isDarkMode: isDarkMode,
+            ),
+          ],
+
+          // Pet fees (only show if > tolerance)
+          if (petFees.abs() > WidgetConstants.priceTolerance &&
+              formattedPetFees != null) ...[
+            const SizedBox(height: SpacingTokens.s),
+            PriceRowWidget(
+              label: translations.petFees,
+              amount: formattedPetFees!,
+              isDarkMode: isDarkMode,
+            ),
+          ],
+
           // Additional services (only show if > tolerance)
           // Bug #37 Fix: Use tolerance-based comparison to handle floating point precision
           if (additionalServicesTotal.abs() > WidgetConstants.priceTolerance &&
@@ -98,7 +140,6 @@ class PriceBreakdownWidget extends StatelessWidget {
               label: translations.additionalServices,
               amount: formattedAdditionalServices!,
               isDarkMode: isDarkMode,
-              color: colors.statusAvailableBorder,
             ),
           ],
 
@@ -115,19 +156,21 @@ class PriceBreakdownWidget extends StatelessWidget {
             isBold: true,
           ),
 
-          // Deposit info
-          const SizedBox(height: SpacingTokens.s),
-          Text(
-            translations.depositWithPercentage(
-              formattedDeposit,
-              depositPercentage,
+          // Deposit info (hidden in no-payment mode)
+          if (showDeposit) ...[
+            const SizedBox(height: SpacingTokens.s),
+            Text(
+              translations.depositWithPercentage(
+                formattedDeposit,
+                depositPercentage,
+              ),
+              style: TextStyle(
+                fontSize: TypographyTokens.fontSizeS,
+                color: colors.textSecondary,
+                fontFamily: TypographyTokens.primaryFont,
+              ),
             ),
-            style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
-              color: colors.textSecondary,
-              fontFamily: TypographyTokens.primaryFont,
-            ),
-          ),
+          ],
         ],
       ),
     );

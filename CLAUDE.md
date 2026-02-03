@@ -24,6 +24,7 @@ an |
 | Subdomain validation regex | `/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/` (3-30 chars) |
 | `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |
 | Navigator.push za confirmation | NE vraaj state-based navigaciju |
+| Timeline Calendar fixed dimensions (`timeline_dimensions.dart`) | FIXED 50/42/100/60px za SVE uređaje — NE vraćaj responsive breakpoints |
 
 ---
 
@@ -763,7 +764,379 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-01-23 | **Version**: 6.35
+**Last Updated**: 2026-02-02 | **Version**: 6.50
+
+**Changelog 6.50**: Widget UI Fixes, iOS Compatibility & Email Terminology:
+- **Additional Services Widget — Neutral Colors** (`additional_services_widget.dart`):
+  - **Problem**: Widget booking form used green (`statusAvailableBorder`/`statusAvailableBackground`) colors — green is reserved for calendar availability status
+  - **Fix**: Replaced with neutral minimalist colors:
+    - Section container: `backgroundPrimary` (white/black)
+    - Selected item: `backgroundSecondary` (#FAFAFA/#0A0A0A), border: `borderStrong`
+    - Unselected item: `backgroundPrimary`, border: `borderDefault`
+  - **Dark Mode Checkbox Fix**: Added explicit `activeColor: colors.textPrimary`, `checkColor: colors.backgroundPrimary`, `side: BorderSide(color: colors.textSecondary)`
+  - **Price Breakdown**: Removed green color override from Additional Services row in `price_breakdown_widget.dart`
+- **iOS Profile Image Upload Fix** (`storage_service.dart`, `profile_image_picker.dart`):
+  - **Problem**: iOS HEIC format rejected by `_allowedExtensions` validation; `image_picker` converts bytes to JPEG but `XFile.name` retains `.heic` extension
+  - **Fix**: Added `'heic'`/`'heif'` to allowed extensions, fixed upload path to `'users/$userId/profile/profile.jpg'`
+  - Added `LoggingService.logError()` with stackTrace in `ProfileImagePicker` catch block
+- **iOS Help & Support mailto: Fix** (`profile_screen.dart`):
+  - **Problem**: `canLaunchUrl` returns false for `mailto:` on iOS without Mail configured
+  - **Fix**: Replaced `canLaunchUrl` guard with try-catch around `launchUrl`
+- **Email Terminology: "kapara" → "avans"** (4 Cloud Functions files):
+  - Changed across: `payment-reminder.ts`, `booking-confirmation.ts`, `owner-notification.ts`, `template-helpers.ts`
+  - **Bug Fix**: `booking-confirmation.ts` said "u roku od 3 dana" — fixed to "u roku od 7 dana" (actual payment deadline)
+- **Max Guests Widget Fix** (`booking_widget_screen.dart`):
+  - **Problem**: Guest count picker used `effectiveMaxCapacity` (includes extra beds) instead of `maxGuests` (Unit Hub Step 2 value)
+  - **Fix**: Changed 5 references from `effectiveMaxCapacity` to `maxGuests`; removed `maxTotalCapacity` param from `GuestCountPicker`
+  - Server-side (`atomicBooking.ts`) validates against `max_total_capacity` (more permissive) — no conflict
+  - **Verified**: Booking log confirmed `guestCount: 4` (previously 6)
+
+**Changelog 6.49**: iCal Export Compatibility & Booking.com Restriction FAQ:
+- **iCal Export — `.ics` URL support** (`icalExport.ts`):
+  - Token parsing now strips `.ics` extension: `pathParts[2].replace(/\.ics$/i, "")`
+  - Allows calendar apps that require URL ending in `.ics` to work correctly
+- **iCal Export — Pending → CONFIRMED** (`icalExport.ts`):
+  - `mapBookingStatus("pending")` now returns `CONFIRMED` instead of `TENTATIVE`
+  - Pending bookings block dates in our system — exporting as TENTATIVE allowed OTAs to ignore them
+  - Airbnb only reliably imports CONFIRMED events; TENTATIVE may cause double-bookings
+- **Booking.com iCal Restriction (March 2025)**:
+  - Booking.com only accepts iCal imports from recognized OTAs (Airbnb, VRBO, TripAdvisor, Expedia)
+  - Custom PMS URLs (including ours on `cloudfunctions.net`) are **rejected**
+  - **Workaround**: BookBed → Airbnb (direct iCal import) → Booking.com (accepts Airbnb calendar)
+  - This affects ALL small PMS platforms, not just BookBed
+- **New FAQ entries** (EN + HR):
+  - `icalExportFaq4Q/4A`: "Can I add this URL directly to Booking.com?" → Explains restriction + workaround
+  - `ownerFaqIcal5Q/5A`: "Can I export BookBed calendar to Booking.com?" → Same info in main FAQ
+  - Fixed `icalExportFaq1A`: Removed misleading "Booking.com syncs every 15-60 min"
+- **FAQ Screen** (`faq_screen.dart`): Added both new FAQ items to iCalSync category
+
+**Changelog 6.48**: Unit Wizard Reorganization, Services Display, Live Preview & UI Cleanup:
+- **Unit Wizard Step 2 — Extra Beds, Pets & Additional Services**:
+  - Extra Beds and Pets expandable sections moved from Step 3 (Pricing) to Step 2 (Capacity)
+  - New "Additional Services" expandable section in Step 2 with full CRUD (add/edit/delete)
+  - Services stored in Firestore via `AdditionalServiceModel` + `firebase_additional_services_repository`
+  - Add service dialog: name, price, pricing type (per booking/per night/per guest/per guest per night), availability toggle
+  - Services only available after unit is saved (unitId required for Firestore path)
+- **Step 4 Review — Additional Services Display**:
+  - New `_buildServicesCard()` using `FutureBuilder` to load services from Firestore
+  - Shows service name + formatted price (e.g., "€5.00 per night")
+  - Only appears when `unitId != null` and services exist
+  - Displayed in both desktop (2x2 grid) and mobile (stacked) layouts
+- **Unit Hub Basic Tab — Additional Services Section**:
+  - Same `FutureBuilder` pattern with `ValueKey('services_${unitId}')` for unit change rebuild
+  - Uses existing `_buildInfoCard` + `_buildDetailRow` helpers for consistent styling
+- **Per-Day Override Fields Removed from Pricing Calendar**:
+  - Removed 4 per-day override TextFormFields: `minNightsOnArrival`, `maxNightsOnArrival`, `minDaysAdvance`, `maxDaysAdvance`
+  - Removed "Advanced Options" ExpansionTile, controllers, validation, parsing, disposal
+  - Model fields kept nullable for backward compatibility — existing Firestore data won't break
+  - Server/widget validation code unchanged — gracefully falls back to global settings when null
+  - Removed ~16 localization keys (labels, hints, validation errors)
+- **Embed Widget Guide — Live Preview Feature**:
+  - Replaced "Test Your Widget" link with unit dropdown + "Preview Live" button
+  - Dropdown uses `DropdownButtonFormField<UnitModel>` with property grouping for multi-property owners
+  - Auto-selects first unit, opens `https://view.bookbed.io/?property={id}&unit={id}` directly
+  - Dark theme dropdown fix: uses `InputDecorationHelper` for consistent `dropdownColor`, `borderRadius`, `fillColor`
+  - New localization keys: `embedGuideSelectUnitHint`, `embedGuidePreviewLive` (EN + HR)
+- **Drawer Cleanup** (`owner_app_drawer.dart`):
+  - Removed `imagePath` property from `_DrawerItem`, `_DrawerItemWithBadge`, `_DrawerSubItem`
+  - Deleted 6 drawer icon PNG assets (`assets/images/drawer_icons/`)
+  - Removed `assets/images/drawer_icons/` from `pubspec.yaml` assets list
+  - All drawer items now use Material Icons exclusively (simpler, consistent)
+- **Offline Indicator Improvement** (`offline_indicator.dart`):
+  - Converted from `ConsumerWidget` to `ConsumerStatefulWidget`
+  - New "Ponovo povezano" (Back online) green banner on reconnection
+  - Auto-hides after 2 seconds via `Timer`
+  - Tracks `_wasOffline` / `_showReconnected` states
+- **Booking Confirmation Timestamp**:
+  - Added `approved_at: FieldValue.serverTimestamp()` when owner confirms a booking
+  - Stored alongside existing `updated_at` field
+
+**Changelog 6.47**: Google Sign-In Native SDK & Email Verification Fixes:
+- **Google Sign-In Native SDK** (`enhanced_auth_provider.dart`):
+  - **Problem**: Error "Failed to generate/retrieve public encryption key for Generic IDP flow" na Android native app
+  - **Root Cause**: App koristio `signInWithProvider(GoogleAuthProvider())` - Generic IDP flow koji ne radi na Android native
+  - **Fix**: Dodan `google_sign_in: ^6.2.2` paket za native mobile Google Sign-In
+  - `signInWithGoogle()` sada koristi `GoogleSignIn().signIn()` za mobile (Android/iOS)
+  - Web flow NEPROMIJENJEN - i dalje koristi `signInWithPopup(GoogleAuthProvider())`
+  - Apple Sign-In NEPROMIJENJEN - i dalje koristi `signInWithProvider(OAuthProvider('apple.com'))`
+  - **Files**: `pubspec.yaml`, `ios/Runner/Info.plist` (reversed client ID URL scheme), `enhanced_auth_provider.dart`
+- **Email Verification Resend Network Error** (`email_verification_screen.dart`):
+  - **Problem**: Resend dugme pokazivalo raw exception umjesto user-friendly poruke za network errore
+  - **Fix**: Dodan network/socket/timeout/connection check u catch blok - sada prikazuje `errorNetworkFailed`
+- **Email Verification Polling Error** (`enhanced_auth_provider.dart`):
+  - **Problem**: Nakon verifikacije emaila, background polling pokazivao "Greska u mrezi" iako je email vec verified
+  - **Root Cause**: `user.reload()` uspije (emailVerified=true), ali `getIdToken(true)` ili Firestore update fail-a, exception se rethrow-a
+  - **Fix**: U catch bloku `refreshEmailVerificationStatus()`, ako je email vec verified, pokusaj `_loadUserProfile()` i vrati se bez errora
+- **Google Reauth Native Fix** (`enhanced_auth_provider.dart`):
+  - **Problem**: `reauthenticateWithGoogle()` koristio Generic IDP flow - ne radi na Android za brisanje accounta
+  - **Fix**: `reauthenticateWithGoogle()` sada koristi native `GoogleSignIn` SDK na mobilnim platformama
+- **Google Sign-In Account Picker** (`enhanced_auth_provider.dart`):
+  - **Problem**: Google Sign-In automatski birao zadnji koristen account bez prikaza account pickera
+  - **Fix**: Dodan `googleSignIn.signOut()` prije `signIn()` u `signInWithGoogle()` i `reauthenticateWithGoogle()`
+  - `signOut()` briše kesirani account iz Google SDK-a, ali NE odlogovava iz Firebase Auth
+- **Change Email Dialog Button Overlap** (`email_verification_screen.dart`):
+  - **Problem**: Gumbi "Odustani" i "Promijeni e-poštu" se preklapali na manjim ekranima
+  - **Fix**: Omotan `content` u `SingleChildScrollView` - sadržaj se scroll-a umjesto da se gumbi preklapaju
+
+**Changelog 6.46**: Timeline Calendar Fixed Dimensions & UI Fixes:
+- **Timeline Calendar — Fixed Cell Dimensions** (`timeline_dimensions.dart`):
+  - **Problem**: Parallelogram booking blocks don't align correctly across different screen sizes. Responsive breakpoint-based sizing creates different cell widths per device, making positioning impossible to fix for all breakpoints simultaneously.
+  - **Solution**: Replaced ALL responsive dimension calculations with fixed constants based on mobile 360px values. Timeline is horizontally scrollable, so wider screens simply show more days with the same cell size.
+  - **Fixed values**: dayWidth=50px, rowHeight=42px, columnWidth=100px, headerHeight=60px
+  - **Result**: Mobile ~5 days visible, Tablet ~12 days, Desktop ~25 days (scroll for more)
+  - **Files**: `timeline_dimensions.dart` (single source of truth for all 11 timeline consumer files)
+- **Booking Block Positioning Fix** (`timeline_grid_widget.dart`):
+  - **Problem**: Parallelogram left edge bled into previous day (e.g., booking starting Feb 1 visible in Jan 31)
+  - **Root Cause**: `- skewOffset/2` shift (23px) pushed bottom-left corner of parallelogram into previous day
+  - **Fix**: Removed the shift — container left = `daysSinceFixedStart * dayWidth` (no offset)
+  - Bottom-left corner now aligns with check-in day's left column boundary
+  - Turnover gaps between adjacent bookings remain correct (4px)
+- **Timeline Components — Fixed Compact Sizing**:
+  - `timeline_unit_name_cell.dart`: Replaced responsive font/padding with fixed compact values (12px/10px fonts, 6px horizontal padding). Fixes 2px overflow from 42px row height.
+  - `timeline_date_header.dart`: Month header font fixed at 11px, day header circle 24px, font 12px, padding 6px. No more responsive breakpoints.
+  - `timeline_summary_cell.dart`: Hardcoded narrow layout (`isNarrow: true`) since dayWidth is always 50px.
+- **Login Screen RenderFlex Overflow Fix** (`enhanced_login_screen.dart`):
+  - **Problem**: 6.1px overflow in Remember Me row on narrow screens
+  - **Fix**: Changed inner text to `Flexible`, compact padding on forgot password button
+- **Error Boundary Fixes** (`error_boundary.dart`):
+  - Fixed 25px button overflow: Changed `Row` with `Expanded` to `Wrap` with fixed-width `SizedBox(170)`
+  - Fixed Navigator error: GoRouter as primary navigation, global navigator key as fallback
+- **Social Login Icon Fallback** (`social_login_button.dart`):
+  - Added `errorBuilder` to Google and Apple brand icons — shows Material icon if asset fails to load
+
+**Changelog 6.45**: Android Property Form Navigation Crash Fix:
+- **Problem**: App crashed on Android (release mode) when clicking "Add Property" after completing registration
+- **Root Cause**: `Navigator.of(context).pop()` used in `property_form_screen.dart` crashes when:
+  - User is directed to property form directly after registration (no previous route on stack)
+  - Navigation was managed by GoRouter, not Navigator
+- **Fix** (`property_form_screen.dart:1229-1239`):
+  ```dart
+  // OLD (crashes):
+  Navigator.of(context).pop();
+
+  // NEW (safe):
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go('/owner/properties');
+  }
+  ```
+- **Android-specific**: Issue only appeared in Android release mode, not iOS
+- **Pattern**: Always use `context.canPop()` check with GoRouter fallback instead of raw `Navigator.pop()`
+
+**Changelog 6.44**: Email Verification Flow Fixes:
+- **Email Verification Bypass Fix** (`enhanced_auth_provider.dart`):
+  - **Problem**: After registration, user was redirected to dashboard instead of email verification page
+  - **Root Cause**: `_createUserProfile()` overwrote auth state without `requiresEmailVerification` flag
+  - **Fix**: Added email verification check in `_createUserProfile()`:
+    ```dart
+    final requiresVerification = !isSocialSignIn &&
+        AuthFeatureFlags.requireEmailVerification &&
+        !firebaseUser.emailVerified;
+    state = state.copyWith(
+      userModel: userModel,
+      requiresEmailVerification: requiresVerification,
+    );
+    ```
+- **Email Change Resend Fix** (`email_verification_screen.dart`, `enhanced_auth_provider.dart`):
+  - **Problem**: After changing email, "Resend" button sent verification to OLD email
+  - **Root Cause**: `updateEmail()` updated Firestore but not `userModel` in memory
+  - **Fix**: `updateEmail()` now also updates `userModel.email` in state
+  - Added `resendEmailChangeVerification()` method for re-sending to new email
+- **Password Dialog for Email Change Resend** (`email_verification_screen.dart`):
+  - **Problem**: `verifyBeforeUpdateEmail()` requires recent authentication
+  - **Fix**: Added `_showResendPasswordDialog()` that prompts for password before resending
+  - Extracted `_startCooldown()` helper method for code reuse
+- **Initial Cooldown on Email Verification Screen**:
+  - Added 30-second initial cooldown when screen opens
+  - Prevents Firebase rate limit errors when user immediately clicks resend after registration
+- **RenderFlex Overflow Fix** (`logout_tile.dart`, `premium_list_tile.dart`):
+  - Added `maxLines: 1` and `overflow: TextOverflow.ellipsis` to title and subtitle Text widgets
+  - Fixes overflow on iOS simulator with long text
+- **Button Color Fix** (`email_verification_screen.dart`):
+  - Added `foregroundColor: Colors.white` to ElevatedButton style in change email dialog
+  - Fixes dark text on dark theme
+
+**Changelog 6.43**: Security Hardening & CI Upgrades:
+- **Security Fix - Encryption Key Validation** (`functions/src/bookingComApi.ts`):
+  - **Problem**: Hardcoded fallback encryption key could be used if `ENCRYPTION_KEY` env var not set
+  - **Fix**: New `getEncryptionKey()` helper function with fail-fast validation
+  - Throws `HttpsError("internal")` if key is missing or uses default value
+  - Prevents accidental use of insecure fallback in production
+  ```typescript
+  function getEncryptionKey(): string {
+    const encryptionKey = process.env.ENCRYPTION_KEY;
+    if (!encryptionKey || encryptionKey === "default-key-change-in-production") {
+      throw new HttpsError("internal", "ENCRYPTION_KEY is not configured.");
+    }
+    return encryptionKey;
+  }
+  ```
+- **GitHub Actions Upgrades** (`.github/workflows/ci.yml`, `deploy-widget.yml`):
+  - `actions/checkout@v4` → `@v6`
+  - `actions/upload-artifact@v4` → `@v6`
+  - `actions/setup-node@v4` → `@v6`
+  - `codecov/codecov-action@v4` → `@v5`
+  - All versions tested compatible with `ubuntu-latest` runners
+- **iCal Two-Way Sync Verification**:
+  - Confirmed `icalExport.ts` correctly exports both bookings AND blocked days
+  - Firestore index exists for `daily_prices` collection group query (`unit_id` + `available` + `date`)
+  - Blocked days from `daily_prices` where `available=false` are exported as "Not Available" VEVENT entries
+  - This prevents Booking.com/Airbnb from showing manually blocked days as available
+
+**Changelog 6.42**: Dialog UI Standardization (Delete Account & Booking Overlap Warning):
+- **Delete Account Dialog** (`delete_account_dialog.dart`):
+  - Migrated from `AlertDialog` to custom `Dialog` widget matching app design system
+  - Added gradient background using `context.gradients.sectionBackground`
+  - New header with red (`AppColors.error`) background, warning icon, and close button
+  - Footer with `AppColors.dialogFooterDark/Light` and section dividers
+  - Proper shadows using `AppShadows.elevation4Dark/elevation4`
+  - Responsive sizing using `ResponsiveDialogUtils`
+  - Works correctly in both light and dark mode
+- **Booking Overlap Warning Dialog** (`booking_create_dialog.dart`):
+  - Same migration from `AlertDialog` to custom `Dialog` widget
+  - Consistent red header for warning state
+  - Theme-aware conflict cards that adapt to dark/light mode
+  - Uses `AppColors.error` with proper opacity for conflict highlighting
+  - Responsive sizing and proper footer styling
+- **Pattern for Warning/Error Dialogs**:
+  - Header: `AppColors.error` background with white icon and text
+  - Content: `context.gradients.sectionBackground` with theme-aware elements
+  - Footer: `AppColors.dialogFooterDark/Light` with section divider border
+  - Use `ResponsiveDialogUtils` for width, padding, and height constraints
+
+**Changelog 6.41**: Platform Icons & Booking Details Dialog v2:
+- **Platform Logo Images** (`lib/shared/widgets/platform_icon.dart`):
+  - Added actual logo images for Booking.com, Airbnb, and other platforms
+  - Images stored in `assets/images/platforms/`
+  - Circular clipped images with fallback to letters if image fails to load
+  - Better visual recognition of booking sources in timeline calendar
+- **Booking Details Dialog v2** (`booking_details_dialog_v2.dart`):
+  - New improved booking details dialog with better UX
+  - Enhanced layout and information display
+- **Social Login Icons**: Updated Apple and Google login button icons
+
+**Changelog 6.40**: iCal Import Date Fix & Booking Sorting Improvements:
+- **iCal Import Date Fix** (`functions/src/icalSync.ts`):
+  - **Problem**: Imported bookings showed as "new" because `created_at` was set to import time
+  - **Fix**: Extract original booking date from iCal CREATED/DTSTAMP fields
+  - Priority: CREATED > DTSTAMP > startDate (fallback)
+  - Imported bookings now sort correctly by their original creation date
+- **Navigator Context Fix** (`ical_sync_settings_screen.dart`):
+  - **Problem**: "Navigator context not ready" error when editing Airbnb iCal events
+  - **Root Cause**: `_checkPlatformMismatch()` called during `initState()` before widget mounted
+  - **Fix**: Wrapped call in `WidgetsBinding.instance.addPostFrameCallback()`
+- **Booking Sorting Change** (All filter):
+  - Changed from `created_at DESC` to `check_in ASC` (soonest first)
+  - More operationally relevant: owner sees upcoming bookings first
+  - Pending bookings still appear first, then sorted by check-in date
+  - Files: `firebase_owner_bookings_repository.dart`, `owner_bookings_provider.dart`, `unified_bookings_provider.dart`
+- **Permission-Denied Fix** (`_findBookingById`):
+  - Added try-catch for Strategy 2 and 3 to handle permission errors gracefully
+  - Prevents crashes when booking not found in expected collections
+- **UI Improvements**:
+  - Month names in pricing calendar dropdown now localized (Croatian)
+  - Embed widget guide header matches export reservations page style
+  - Send email dialog buttons use AutoSizeText with maxLines=1
+
+**Changelog 6.39**: Lifetime License Admin Feature:
+- **NEW FEATURE**: Admin can grant/revoke lifetime licenses from Admin Dashboard
+- **UserModel Changes** (`user_model.dart`):
+  - Added `AccountType.lifetime` enum value (trial, premium, enterprise, **lifetime**)
+  - Added `lifetimeLicenseGrantedAt` and `lifetimeLicenseGrantedBy` audit fields
+  - Added helper getters: `isLifetimeLicense`, `effectiveAccountType`, `hasPremiumAccess`
+- **Cloud Function** (`functions/src/admin/setLifetimeLicense.ts`):
+  - Callable function for granting/revoking lifetime licenses
+  - Security: Checks `isAdmin` custom claim on Firebase Auth token
+  - Auditing: Logs all changes to `security_events` collection
+  - Validation: Checks user exists, validates boolean `grant` parameter
+- **Firestore Security Rules** (`firestore.rules`):
+  - Protected fields: `lifetime_license_granted_at`, `lifetime_license_granted_by`
+  - Users cannot modify these fields directly (only via Cloud Function)
+- **Admin Dashboard UI** (`user_detail_screen.dart`):
+  - New "Lifetime License" card with purple theme
+  - Shows "ACTIVE" badge when license is granted
+  - Displays grant date and admin who granted
+  - Grant/Revoke buttons with confirmation dialog
+  - Success/error message display
+- **Dashboard Stats** (`admin_users_repository.dart`):
+  - Added `lifetimeUsers` count to dashboard stats
+- **Bug Fix** (`users_list_screen.dart`):
+  - Added `AccountType.lifetime` case to switch statement (was causing non-exhaustive error)
+
+**Changelog 6.38**: Timeline Calendar Visual Centering & Same-Day Turnover Support:
+- **Visual Centering Fix** (`timeline_grid_widget.dart`):
+  - **Problem**: Booking blocks appeared shifted right by ~half a day on timeline calendar
+  - **Root Cause**: Parallelogram shape has `skewOffset ≈ dayWidth`, meaning top-left corner starts almost one full day right of container edge
+  - **Fix**: Shift bookings left by `skewOffset / 2` so visual center aligns with day column boundaries
+  - **Code**: `final left = (daysSinceFixedStart * dayWidth - skewOffset / 2).floorToDouble();`
+- **Same-Day Turnover Support** (booking move operations):
+  - **Problem**: Admin bookings couldn't be moved to turnover days (checkout == checkin), but Widget bookings could
+  - **Root Cause**: Dates weren't normalized to midnight before overlap comparison, causing time component differences
+  - **Fix** (`booking_model.dart`, `booking_action_menu.dart`, `timeline_booking_stacker.dart`):
+    - `datesOverlap()` now normalizes all dates to midnight before comparison
+    - Uses strict inequality (`isBefore`/`isAfter`) which allows checkout == checkin
+    - `booking_action_menu` normalizes dates before calling `areDatesAvailable()`
+    - `timeline_booking_stacker` uses normalized dates for stack level assignment
+  - **Example**: Booking A (May 1-5) does NOT overlap with Booking B (May 5-10)
+- **Repository Improvements** (`firebase_booking_repository.dart`):
+  - `getOverlappingBookings()` now excludes completed bookings (only pending/confirmed block dates)
+  - `deleteBooking()` accepts optional `booking` param to avoid permission issues with collectionGroup queries
+
+**Changelog 6.37**: Timeline Calendar TELEPORT Bug Fixes:
+- **Problem 1**: Clicking dates more than ~3 months away in date picker didn't work reliably
+  - Sometimes jumped correctly, sometimes stayed in place or jumped to wrong date
+- **Root Cause 1**: Timeline calendar uses 90-day "windowed" view for performance
+  - When target date is outside visible window, animated scroll couldn't reach it
+  - Recursive `_scrollToDate` calls caused race conditions
+  - `_extendDateRangeIfNeeded` during scroll caused additional conflicts
+- **Fix 1** (`timeline_calendar_widget.dart`):
+  - **TELEPORT approach**: For far jumps (target outside visible window):
+    1. Set `_isProgrammaticScroll = true` to block scroll listener updates
+    2. Rebuild window around target date (set `_visibleStartIndex`, `_forceVisibleStartIndex = true`)
+    3. Use `jumpTo()` (instant) instead of `animateTo()` (no race conditions)
+    4. Reset flag after 500ms via Timer
+  - Two TELEPORT blocks: one for range extension (past/future dates), one for far jumps within existing range
+  - **Disabled `_extendDateRangeIfNeeded`**: No longer needed - TELEPORT handles range extension
+- **Problem 2**: After TELEPORTing to distant dates and manually scrolling back, reservations disappeared
+  - User reported: TELEPORT to May, scroll back towards January → reservations vanish
+- **Root Cause 2**: TELEPORT scroll position calculation was missing `offsetWidth`
+  - Content structure: `[SizedBox(offsetWidth)] + [day cells]`
+  - TELEPORT calculated: `(newWindowTargetDay * dayWidth) - (viewport * 0.25)` ≈ 1550px
+  - Should have been: `offsetWidth + (newWindowTargetDay * dayWidth) - (viewport * 0.25)` ≈ 19550px
+  - Without `offsetWidth`, scroll landed in the spacer instead of the actual day cells
+- **Fix 2** (`timeline_calendar_widget.dart` lines ~860 and ~970):
+  ```dart
+  // BUG FIX: Must include offsetWidth in scroll calculation!
+  final offsetWidth = _visibleStartIndex * dimensions.dayWidth;
+  final scrollInNewWindow =
+      offsetWidth +
+      (newWindowTargetDay * dimensions.dayWidth) -
+      (dimensions.visibleContentWidth * 0.25);
+  ```
+- **Key insight**: Flag-based protection (`_isProgrammaticScroll`) must be set BEFORE `setState()` and reset AFTER scroll completes
+- **Testing**: Confirmed working - TELEPORT + manual scroll back no longer causes reservations to disappear
+
+**Changelog 6.36**: Calendar Timeline Booking Move Fixes:
+- **UI Not Refreshing After Booking Move** (main fix):
+  - **Problem**: After moving booking between units via drag-drop or menu, changes only visible after full app refresh
+  - **Root Cause**: Only `calendarBookingsProvider` was invalidated, but UI watches `timelineCalendarBookingsProvider` (filtered provider)
+  - **Fix** (`calendar_drag_drop_provider.dart`, `booking_action_menu.dart`):
+    - Added `ref.invalidate(timelineCalendarBookingsProvider)` alongside `calendarBookingsProvider`
+    - MUST invalidate BOTH: base provider AND filtered provider that UI watches
+- **"Cannot use ref after widget disposed" Error**:
+  - **Problem**: Error appeared after clicking "Move to" menu item
+  - **Root Cause**: `Navigator.pop(context)` called BEFORE `_moveBookingToUnit()`, so `ref.invalidate()` executed after widget disposal
+  - **Fix** (`booking_action_menu.dart`):
+    - Execute move operation FIRST (while dialog still open)
+    - Close dialog AFTER operation completes with `if (mounted && context.mounted)` check
+    - Changed `_moveBookingToUnit` return type from `void` to `bool` for proper flow control
+- **Provider Invalidation Pattern** (Important for future reference):
+  ```dart
+  // CORRECT - invalidate both base AND filtered providers
+  ref.invalidate(calendarBookingsProvider);        // base provider
+  ref.invalidate(timelineCalendarBookingsProvider); // filtered provider UI watches
+  ```
 
 **Changelog 6.35**: Web Push Notifications (FCM):
 - **NEW FEATURE**: Push notifications za Owner Dashboard (web)
@@ -1599,6 +1972,34 @@ AccountType get effectiveAccountType =>
 ### Korištenje
 - Admin može sakriti subscription stranicu za korisnika koji ima special deal
 - Admin može override-ati account type bez potrebe za Stripe subscription
+
+---
+
+## 📝 TODO: Security Branch Fixes (Za Kasnije)
+
+**Prioritet:** Medium
+**Branchevi:** Pregledani 2026-02-01, sadrže korisne security fixeve za budući deploy.
+
+### Branch 1: `security-audit-2026-01-29-9611837304482000277`
+**Šta radi**: Premješta `loginAttempts` Firestore write sa klijenta na Cloud Functions.
+- `firestore.rules`: `loginAttempts` write → `allow write: if false`
+- `authRateLimit.ts`: Nove CF `recordFailedLoginAttempt` + `resetLoginAttempts`
+- `rate_limit_service.dart`: Poziva CF umjesto direktnog Firestore write-a
+- `stripeSubscription.ts`: Generičke error poruke (ne leaka `error.message`)
+
+**⚠️ Zahtijeva koordiniran deploy** (ovim redoslijedom):
+1. Deploy Cloud Functions prvo
+2. Deploy Flutter app
+3. Deploy Firestore rules zadnje
+
+### Branch 2: `security-audit-2025-05-22-13396931281884778762`
+**Šta radi**: XSS fix u email template-ima + Stripe error sanitizacija.
+- `trial-expired.ts`: `${userName}` → `${escapeHtml(userName)}`
+- `trial-expiring-soon.ts`: isto `escapeHtml`
+- `stripePayment.ts`: `error.message` → generička poruka
+- `stripeSubscription.ts`: `error.message` → generička poruka
+
+**Jednostavan za cherry-pick** - samo 4 fajla, mali fixevi.
 
 ---
 

@@ -16,10 +16,15 @@ class CompactPillSummary extends StatelessWidget {
   final String formattedRoomPrice;
   final double additionalServicesTotal;
   final String formattedAdditionalServices;
+  final double extraGuestFees;
+  final String? formattedExtraGuestFees;
+  final double petFees;
+  final String? formattedPetFees;
   final String formattedTotal;
   final String formattedDeposit;
   final int depositPercentage;
   final bool isDarkMode;
+  final bool showDeposit;
   final bool showReserveButton;
   final VoidCallback onClose;
   final VoidCallback onReserve;
@@ -33,10 +38,15 @@ class CompactPillSummary extends StatelessWidget {
     required this.formattedRoomPrice,
     required this.additionalServicesTotal,
     required this.formattedAdditionalServices,
+    this.extraGuestFees = 0,
+    this.formattedExtraGuestFees,
+    this.petFees = 0,
+    this.formattedPetFees,
     required this.formattedTotal,
     required this.formattedDeposit,
     required this.depositPercentage,
     required this.isDarkMode,
+    this.showDeposit = true,
     required this.showReserveButton,
     required this.onClose,
     required this.onReserve,
@@ -82,9 +92,14 @@ class CompactPillSummary extends StatelessWidget {
           formattedRoomPrice: formattedRoomPrice,
           additionalServicesTotal: additionalServicesTotal,
           formattedAdditionalServices: formattedAdditionalServices,
+          extraGuestFees: extraGuestFees,
+          formattedExtraGuestFees: formattedExtraGuestFees,
+          petFees: petFees,
+          formattedPetFees: formattedPetFees,
           formattedTotal: formattedTotal,
           formattedDeposit: formattedDeposit,
           depositPercentage: depositPercentage,
+          showDeposit: showDeposit,
           translations: translations,
         ),
         const SizedBox(height: SpacingTokens.m),

@@ -287,8 +287,9 @@ class MultiSelectActionBar extends ConsumerWidget {
       final bookingRepo = ref.read(bookingRepositoryProvider);
 
       // Delete all selected bookings
+      // Pass full booking to avoid permission issues with collection group query
       for (final booking in selectedBookings) {
-        await bookingRepo.deleteBooking(booking.id);
+        await bookingRepo.deleteBooking(booking.id, booking: booking);
       }
 
       if (context.mounted) {

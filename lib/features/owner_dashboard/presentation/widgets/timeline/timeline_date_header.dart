@@ -43,9 +43,8 @@ class _TimelineMonthHeaderState extends State<TimelineMonthHeader> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Responsive font size
-    final width = widget.screenWidth ?? MediaQuery.of(context).size.width;
-    final fontSize = width < 600 ? 11.0 : (width < 900 ? 12.0 : 13.0);
+    // Fixed font size — matches fixed TimelineDimensions for all devices
+    const fontSize = 11.0;
 
     return MouseRegion(
       cursor: widget.onTap != null
@@ -117,19 +116,15 @@ class TimelineDayHeader extends StatelessWidget {
         date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
     final isFirstDayOfMonth = date.day == 1;
 
-    // Responsive sizing based on screen width
-    final width = screenWidth ?? MediaQuery.of(context).size.width;
-    final bool isMobile = width < 600;
-    final bool isTablet = width >= 600 && width < 900;
-
-    final minHeight = isMobile ? 40.0 : (isTablet ? 46.0 : 52.0);
-    final verticalPadding = isMobile ? 8.0 : (isTablet ? 10.0 : 12.0);
-    final circleSize = isMobile ? 24.0 : (isTablet ? 28.0 : 32.0);
-    final fontSize = isMobile ? 12.0 : (isTablet ? 14.0 : 15.0);
+    // Fixed sizing — matches fixed TimelineDimensions for all devices
+    const minHeight = 38.0;
+    const verticalPadding = 6.0;
+    const circleSize = 24.0;
+    const fontSize = 12.0;
 
     return Container(
       width: dayWidth,
-      constraints: BoxConstraints(minHeight: minHeight),
+      constraints: const BoxConstraints(minHeight: minHeight),
       decoration: BoxDecoration(
         color: isToday
             ? theme.colorScheme.primary.withValues(alpha: 0.2)
@@ -144,9 +139,9 @@ class TimelineDayHeader extends StatelessWidget {
           bottom: BorderSide(color: theme.dividerColor, width: 1.5),
         ),
       ),
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         vertical: verticalPadding,
-        horizontal: 4, // Reduced from 8 to prevent overflow
+        horizontal: 4,
       ),
       child: Center(
         child: Container(

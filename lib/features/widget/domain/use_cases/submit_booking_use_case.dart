@@ -28,6 +28,7 @@ class SubmitBookingParams {
   final String? notes;
   final int adults;
   final int children;
+  final int pets;
 
   // Payment
   final double totalPrice;
@@ -55,6 +56,7 @@ class SubmitBookingParams {
     this.notes,
     required this.adults,
     required this.children,
+    this.pets = 0,
     required this.totalPrice,
     this.servicesTotal = 0.0,
     required this.paymentMethod,
@@ -165,6 +167,7 @@ class SubmitBookingUseCase {
         guestPhone:
             sanitizedPhone, // SF-005: Validated above - guaranteed non-null
         guestCount: params.totalGuests,
+        petCount: params.pets,
         totalPrice: params.totalPrice,
         servicesTotal: params.servicesTotal,
         paymentOption: 'none', // No payment for pending bookings
@@ -204,6 +207,7 @@ class SubmitBookingUseCase {
       guestPhone:
           sanitizedPhone, // SF-005: Validated above - guaranteed non-null
       guestCount: params.totalGuests,
+      petCount: params.pets,
       totalPrice: params.totalPrice,
       servicesTotal: params.servicesTotal,
       paymentOption: params.paymentOption, // 'deposit' or 'full'

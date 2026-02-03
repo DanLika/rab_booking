@@ -1,8 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../../shared/models/additional_service_model.dart';
+import '../../../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
 import '../state/unit_wizard_provider.dart';
 
 /// Step 4: Review & Publish - Final review before creating the unit
@@ -80,6 +83,32 @@ class Step4Review extends ConsumerWidget {
                 l10n.unitWizardStep5Area,
                 '${draft.areaSqm} m²',
               ),
+            if (draft.maxTotalCapacity != null &&
+                draft.maxGuests != null &&
+                draft.maxTotalCapacity! > draft.maxGuests!)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5ExtraBeds,
+                '${draft.maxTotalCapacity! - draft.maxGuests!}',
+              ),
+            if (draft.extraBedFee != null)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5ExtraBedFee,
+                '€${draft.extraBedFee}/night',
+              ),
+            if (draft.maxPets != null)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5MaxPets,
+                '${draft.maxPets}',
+              ),
+            if (draft.petFee != null)
+              _buildSummaryRow(
+                theme,
+                l10n.unitWizardStep5PetFee,
+                '€${draft.petFee}/night',
+              ),
           ],
         );
 
@@ -121,6 +150,11 @@ class Step4Review extends ConsumerWidget {
             ),
           ],
         );
+
+        // Services card - loaded from Firestore if unitId exists
+        final servicesCard = unitId != null
+            ? _buildServicesCard(context, ref, theme, isMobile, l10n)
+            : null;
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
         return Container(
@@ -202,6 +236,10 @@ class Step4Review extends ConsumerWidget {
                       Expanded(child: availabilityCard),
                     ],
                   ),
+                  if (servicesCard != null) ...[
+                    const SizedBox(height: 16),
+                    servicesCard,
+                  ],
                 ] else ...[
                   // Mobile/Tablet: stacked layout
                   basicInfoCard,
@@ -211,6 +249,10 @@ class Step4Review extends ConsumerWidget {
                   capacityCard,
                   const SizedBox(height: 16),
                   availabilityCard,
+                  if (servicesCard != null) ...[
+                    const SizedBox(height: 16),
+                    servicesCard,
+                  ],
                 ],
                 const SizedBox(height: AppDimensions.spaceL),
 
@@ -255,6 +297,38 @@ class Step4Review extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
+    );
+  }
+
+  Widget _buildServicesCard(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    bool isMobile,
+    AppLocalizations l10n,
+  ) {
+    final ownerId = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerId == null) return const SizedBox.shrink();
+
+    final repo = ref.read(additionalServicesRepositoryProvider);
+    return FutureBuilder<List<AdditionalServiceModel>>(
+      future: repo.fetchByUnit(unitId!, ownerId),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        final services = snapshot.data!;
+        return _buildSummaryCard(
+          context,
+          theme,
+          isMobile,
+          l10n.additionalServicesTitle,
+          Icons.room_service,
+          services
+              .map((s) => _buildSummaryRow(theme, s.name, s.formattedPrice))
+              .toList(),
+        );
+      },
     );
   }
 

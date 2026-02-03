@@ -787,9 +787,11 @@ mixin _$UserModel {
   DateTime? get stripeDisconnectedAt => throw _privateConstructorUsedError;
 
   /// Account creation timestamp
-  @TimestampConverter()
+  /// Nullable for race condition when Google sign-in creates profile
+  /// before Cloud Function sets timestamps
+  @NullableTimestampConverter()
   @JsonKey(name: 'created_at')
-  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime? get createdAt => throw _privateConstructorUsedError;
 
   /// Last update timestamp
   @NullableTimestampConverter()
@@ -829,6 +831,15 @@ mixin _$UserModel {
   @JsonKey(name: 'last_provider')
   String? get lastProvider => throw _privateConstructorUsedError;
 
+  /// Lifetime license: Timestamp when admin granted lifetime access
+  @NullableTimestampConverter()
+  @JsonKey(name: 'lifetime_license_granted_at')
+  DateTime? get lifetimeLicenseGrantedAt => throw _privateConstructorUsedError;
+
+  /// Lifetime license: Admin UID who granted the license
+  @JsonKey(name: 'lifetime_license_granted_by')
+  String? get lifetimeLicenseGrantedBy => throw _privateConstructorUsedError;
+
   /// Serializes this UserModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -866,7 +877,9 @@ abstract class $UserModelCopyWith<$Res> {
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_disconnected_at')
     DateTime? stripeDisconnectedAt,
-    @TimestampConverter() @JsonKey(name: 'created_at') DateTime createdAt,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'created_at')
+    DateTime? createdAt,
     @NullableTimestampConverter()
     @JsonKey(name: 'updated_at')
     DateTime? updatedAt,
@@ -878,6 +891,11 @@ abstract class $UserModelCopyWith<$Res> {
     Map<String, bool> featureFlags,
     @JsonKey(name: 'profile_completed') bool profileCompleted,
     @JsonKey(name: 'last_provider') String? lastProvider,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'lifetime_license_granted_at')
+    DateTime? lifetimeLicenseGrantedAt,
+    @JsonKey(name: 'lifetime_license_granted_by')
+    String? lifetimeLicenseGrantedBy,
   });
 
   $EmployeePermissionsCopyWith<$Res>? get permissions;
@@ -915,7 +933,7 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? stripeAccountId = freezed,
     Object? stripeConnectedAt = freezed,
     Object? stripeDisconnectedAt = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
     Object? updatedAt = freezed,
     Object? devices = null,
     Object? recentSecurityEvents = null,
@@ -924,6 +942,8 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
     Object? featureFlags = null,
     Object? profileCompleted = null,
     Object? lastProvider = freezed,
+    Object? lifetimeLicenseGrantedAt = freezed,
+    Object? lifetimeLicenseGrantedBy = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -995,10 +1015,10 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
                 ? _value.stripeDisconnectedAt
                 : stripeDisconnectedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
-            createdAt: null == createdAt
+            createdAt: freezed == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
-                      as DateTime,
+                      as DateTime?,
             updatedAt: freezed == updatedAt
                 ? _value.updatedAt
                 : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -1030,6 +1050,14 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
             lastProvider: freezed == lastProvider
                 ? _value.lastProvider
                 : lastProvider // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            lifetimeLicenseGrantedAt: freezed == lifetimeLicenseGrantedAt
+                ? _value.lifetimeLicenseGrantedAt
+                : lifetimeLicenseGrantedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+            lifetimeLicenseGrantedBy: freezed == lifetimeLicenseGrantedBy
+                ? _value.lifetimeLicenseGrantedBy
+                : lifetimeLicenseGrantedBy // ignore: cast_nullable_to_non_nullable
                       as String?,
           )
           as $Val,
@@ -1082,7 +1110,9 @@ abstract class _$$UserModelImplCopyWith<$Res>
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_disconnected_at')
     DateTime? stripeDisconnectedAt,
-    @TimestampConverter() @JsonKey(name: 'created_at') DateTime createdAt,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'created_at')
+    DateTime? createdAt,
     @NullableTimestampConverter()
     @JsonKey(name: 'updated_at')
     DateTime? updatedAt,
@@ -1094,6 +1124,11 @@ abstract class _$$UserModelImplCopyWith<$Res>
     Map<String, bool> featureFlags,
     @JsonKey(name: 'profile_completed') bool profileCompleted,
     @JsonKey(name: 'last_provider') String? lastProvider,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'lifetime_license_granted_at')
+    DateTime? lifetimeLicenseGrantedAt,
+    @JsonKey(name: 'lifetime_license_granted_by')
+    String? lifetimeLicenseGrantedBy,
   });
 
   @override
@@ -1131,7 +1166,7 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? stripeAccountId = freezed,
     Object? stripeConnectedAt = freezed,
     Object? stripeDisconnectedAt = freezed,
-    Object? createdAt = null,
+    Object? createdAt = freezed,
     Object? updatedAt = freezed,
     Object? devices = null,
     Object? recentSecurityEvents = null,
@@ -1140,6 +1175,8 @@ class __$$UserModelImplCopyWithImpl<$Res>
     Object? featureFlags = null,
     Object? profileCompleted = null,
     Object? lastProvider = freezed,
+    Object? lifetimeLicenseGrantedAt = freezed,
+    Object? lifetimeLicenseGrantedBy = freezed,
   }) {
     return _then(
       _$UserModelImpl(
@@ -1211,10 +1248,10 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value.stripeDisconnectedAt
             : stripeDisconnectedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
-        createdAt: null == createdAt
+        createdAt: freezed == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
-                  as DateTime,
+                  as DateTime?,
         updatedAt: freezed == updatedAt
             ? _value.updatedAt
             : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -1247,6 +1284,14 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value.lastProvider
             : lastProvider // ignore: cast_nullable_to_non_nullable
                   as String?,
+        lifetimeLicenseGrantedAt: freezed == lifetimeLicenseGrantedAt
+            ? _value.lifetimeLicenseGrantedAt
+            : lifetimeLicenseGrantedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+        lifetimeLicenseGrantedBy: freezed == lifetimeLicenseGrantedBy
+            ? _value.lifetimeLicenseGrantedBy
+            : lifetimeLicenseGrantedBy // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -1277,7 +1322,7 @@ class _$UserModelImpl extends _UserModel {
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_disconnected_at')
     this.stripeDisconnectedAt,
-    @TimestampConverter() @JsonKey(name: 'created_at') required this.createdAt,
+    @NullableTimestampConverter() @JsonKey(name: 'created_at') this.createdAt,
     @NullableTimestampConverter() @JsonKey(name: 'updated_at') this.updatedAt,
     final List<DeviceInfo> devices = const [],
     final List<SecurityEvent> recentSecurityEvents = const [],
@@ -1286,6 +1331,10 @@ class _$UserModelImpl extends _UserModel {
     final Map<String, bool> featureFlags = const {},
     @JsonKey(name: 'profile_completed') this.profileCompleted = true,
     @JsonKey(name: 'last_provider') this.lastProvider,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'lifetime_license_granted_at')
+    this.lifetimeLicenseGrantedAt,
+    @JsonKey(name: 'lifetime_license_granted_by') this.lifetimeLicenseGrantedBy,
   }) : _devices = devices,
        _recentSecurityEvents = recentSecurityEvents,
        _featureFlags = featureFlags,
@@ -1375,10 +1424,12 @@ class _$UserModelImpl extends _UserModel {
   final DateTime? stripeDisconnectedAt;
 
   /// Account creation timestamp
+  /// Nullable for race condition when Google sign-in creates profile
+  /// before Cloud Function sets timestamps
   @override
-  @TimestampConverter()
+  @NullableTimestampConverter()
   @JsonKey(name: 'created_at')
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
   /// Last update timestamp
   @override
@@ -1450,9 +1501,20 @@ class _$UserModelImpl extends _UserModel {
   @JsonKey(name: 'last_provider')
   final String? lastProvider;
 
+  /// Lifetime license: Timestamp when admin granted lifetime access
+  @override
+  @NullableTimestampConverter()
+  @JsonKey(name: 'lifetime_license_granted_at')
+  final DateTime? lifetimeLicenseGrantedAt;
+
+  /// Lifetime license: Admin UID who granted the license
+  @override
+  @JsonKey(name: 'lifetime_license_granted_by')
+  final String? lifetimeLicenseGrantedBy;
+
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType, featureFlags: $featureFlags, profileCompleted: $profileCompleted, lastProvider: $lastProvider)';
+    return 'UserModel(id: $id, email: $email, firstName: $firstName, lastName: $lastName, role: $role, accountType: $accountType, emailVerified: $emailVerified, phone: $phone, avatarUrl: $avatarUrl, displayName: $displayName, onboardingCompleted: $onboardingCompleted, lastLoginAt: $lastLoginAt, employeeOf: $employeeOf, permissions: $permissions, stripeAccountId: $stripeAccountId, stripeConnectedAt: $stripeConnectedAt, stripeDisconnectedAt: $stripeDisconnectedAt, createdAt: $createdAt, updatedAt: $updatedAt, devices: $devices, recentSecurityEvents: $recentSecurityEvents, hideSubscription: $hideSubscription, adminOverrideAccountType: $adminOverrideAccountType, featureFlags: $featureFlags, profileCompleted: $profileCompleted, lastProvider: $lastProvider, lifetimeLicenseGrantedAt: $lifetimeLicenseGrantedAt, lifetimeLicenseGrantedBy: $lifetimeLicenseGrantedBy)';
   }
 
   @override
@@ -1513,7 +1575,17 @@ class _$UserModelImpl extends _UserModel {
             (identical(other.profileCompleted, profileCompleted) ||
                 other.profileCompleted == profileCompleted) &&
             (identical(other.lastProvider, lastProvider) ||
-                other.lastProvider == lastProvider));
+                other.lastProvider == lastProvider) &&
+            (identical(
+                  other.lifetimeLicenseGrantedAt,
+                  lifetimeLicenseGrantedAt,
+                ) ||
+                other.lifetimeLicenseGrantedAt == lifetimeLicenseGrantedAt) &&
+            (identical(
+                  other.lifetimeLicenseGrantedBy,
+                  lifetimeLicenseGrantedBy,
+                ) ||
+                other.lifetimeLicenseGrantedBy == lifetimeLicenseGrantedBy));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1546,6 +1618,8 @@ class _$UserModelImpl extends _UserModel {
     const DeepCollectionEquality().hash(_featureFlags),
     profileCompleted,
     lastProvider,
+    lifetimeLicenseGrantedAt,
+    lifetimeLicenseGrantedBy,
   ]);
 
   /// Create a copy of UserModel
@@ -1585,9 +1659,9 @@ abstract class _UserModel extends UserModel {
     @NullableTimestampConverter()
     @JsonKey(name: 'stripe_disconnected_at')
     final DateTime? stripeDisconnectedAt,
-    @TimestampConverter()
+    @NullableTimestampConverter()
     @JsonKey(name: 'created_at')
-    required final DateTime createdAt,
+    final DateTime? createdAt,
     @NullableTimestampConverter()
     @JsonKey(name: 'updated_at')
     final DateTime? updatedAt,
@@ -1599,6 +1673,11 @@ abstract class _UserModel extends UserModel {
     final Map<String, bool> featureFlags,
     @JsonKey(name: 'profile_completed') final bool profileCompleted,
     @JsonKey(name: 'last_provider') final String? lastProvider,
+    @NullableTimestampConverter()
+    @JsonKey(name: 'lifetime_license_granted_at')
+    final DateTime? lifetimeLicenseGrantedAt,
+    @JsonKey(name: 'lifetime_license_granted_by')
+    final String? lifetimeLicenseGrantedBy,
   }) = _$UserModelImpl;
   const _UserModel._() : super._();
 
@@ -1683,10 +1762,12 @@ abstract class _UserModel extends UserModel {
   DateTime? get stripeDisconnectedAt;
 
   /// Account creation timestamp
+  /// Nullable for race condition when Google sign-in creates profile
+  /// before Cloud Function sets timestamps
   @override
-  @TimestampConverter()
+  @NullableTimestampConverter()
   @JsonKey(name: 'created_at')
-  DateTime get createdAt;
+  DateTime? get createdAt;
 
   /// Last update timestamp
   @override
@@ -1731,6 +1812,17 @@ abstract class _UserModel extends UserModel {
   @override
   @JsonKey(name: 'last_provider')
   String? get lastProvider;
+
+  /// Lifetime license: Timestamp when admin granted lifetime access
+  @override
+  @NullableTimestampConverter()
+  @JsonKey(name: 'lifetime_license_granted_at')
+  DateTime? get lifetimeLicenseGrantedAt;
+
+  /// Lifetime license: Admin UID who granted the license
+  @override
+  @JsonKey(name: 'lifetime_license_granted_by')
+  String? get lifetimeLicenseGrantedBy;
 
   /// Create a copy of UserModel
   /// with the given fields replaced by the non-null parameter values.

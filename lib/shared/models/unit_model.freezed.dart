@@ -59,9 +59,25 @@ mixin _$UnitModel {
   /// Currency code (default: EUR)
   String? get currency => throw _privateConstructorUsedError;
 
-  /// Maximum number of guests
+  /// Maximum number of guests (base capacity, included in base price)
   @JsonKey(name: 'max_guests')
   int get maxGuests => throw _privateConstructorUsedError;
+
+  /// Maximum total capacity including extra beds (null = no extra beds)
+  @JsonKey(name: 'max_total_capacity')
+  int? get maxTotalCapacity => throw _privateConstructorUsedError;
+
+  /// Extra bed fee per person per night (null = extra beds not offered)
+  @JsonKey(name: 'extra_bed_fee')
+  double? get extraBedFee => throw _privateConstructorUsedError;
+
+  /// Pet fee per pet per night (null = pets not allowed)
+  @JsonKey(name: 'pet_fee')
+  double? get petFee => throw _privateConstructorUsedError;
+
+  /// Maximum number of pets allowed per booking (null = use default 10)
+  @JsonKey(name: 'max_pets')
+  int? get maxPets => throw _privateConstructorUsedError;
 
   /// Number of bedrooms
   int get bedrooms => throw _privateConstructorUsedError;
@@ -133,6 +149,10 @@ abstract class $UnitModelCopyWith<$Res> {
     @JsonKey(name: 'weekend_days') List<int>? weekendDays,
     String? currency,
     @JsonKey(name: 'max_guests') int maxGuests,
+    @JsonKey(name: 'max_total_capacity') int? maxTotalCapacity,
+    @JsonKey(name: 'extra_bed_fee') double? extraBedFee,
+    @JsonKey(name: 'pet_fee') double? petFee,
+    @JsonKey(name: 'max_pets') int? maxPets,
     int bedrooms,
     int bathrooms,
     @JsonKey(name: 'area_sqm') double? areaSqm,
@@ -175,6 +195,10 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
     Object? weekendDays = freezed,
     Object? currency = freezed,
     Object? maxGuests = null,
+    Object? maxTotalCapacity = freezed,
+    Object? extraBedFee = freezed,
+    Object? petFee = freezed,
+    Object? maxPets = freezed,
     Object? bedrooms = null,
     Object? bathrooms = null,
     Object? areaSqm = freezed,
@@ -233,6 +257,22 @@ class _$UnitModelCopyWithImpl<$Res, $Val extends UnitModel>
                 ? _value.maxGuests
                 : maxGuests // ignore: cast_nullable_to_non_nullable
                       as int,
+            maxTotalCapacity: freezed == maxTotalCapacity
+                ? _value.maxTotalCapacity
+                : maxTotalCapacity // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            extraBedFee: freezed == extraBedFee
+                ? _value.extraBedFee
+                : extraBedFee // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            petFee: freezed == petFee
+                ? _value.petFee
+                : petFee // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            maxPets: freezed == maxPets
+                ? _value.maxPets
+                : maxPets // ignore: cast_nullable_to_non_nullable
+                      as int?,
             bedrooms: null == bedrooms
                 ? _value.bedrooms
                 : bedrooms // ignore: cast_nullable_to_non_nullable
@@ -304,6 +344,10 @@ abstract class _$$UnitModelImplCopyWith<$Res>
     @JsonKey(name: 'weekend_days') List<int>? weekendDays,
     String? currency,
     @JsonKey(name: 'max_guests') int maxGuests,
+    @JsonKey(name: 'max_total_capacity') int? maxTotalCapacity,
+    @JsonKey(name: 'extra_bed_fee') double? extraBedFee,
+    @JsonKey(name: 'pet_fee') double? petFee,
+    @JsonKey(name: 'max_pets') int? maxPets,
     int bedrooms,
     int bathrooms,
     @JsonKey(name: 'area_sqm') double? areaSqm,
@@ -345,6 +389,10 @@ class __$$UnitModelImplCopyWithImpl<$Res>
     Object? weekendDays = freezed,
     Object? currency = freezed,
     Object? maxGuests = null,
+    Object? maxTotalCapacity = freezed,
+    Object? extraBedFee = freezed,
+    Object? petFee = freezed,
+    Object? maxPets = freezed,
     Object? bedrooms = null,
     Object? bathrooms = null,
     Object? areaSqm = freezed,
@@ -403,6 +451,22 @@ class __$$UnitModelImplCopyWithImpl<$Res>
             ? _value.maxGuests
             : maxGuests // ignore: cast_nullable_to_non_nullable
                   as int,
+        maxTotalCapacity: freezed == maxTotalCapacity
+            ? _value.maxTotalCapacity
+            : maxTotalCapacity // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        extraBedFee: freezed == extraBedFee
+            ? _value.extraBedFee
+            : extraBedFee // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        petFee: freezed == petFee
+            ? _value.petFee
+            : petFee // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        maxPets: freezed == maxPets
+            ? _value.maxPets
+            : maxPets // ignore: cast_nullable_to_non_nullable
+                  as int?,
         bedrooms: null == bedrooms
             ? _value.bedrooms
             : bedrooms // ignore: cast_nullable_to_non_nullable
@@ -467,6 +531,10 @@ class _$UnitModelImpl extends _UnitModel {
     @JsonKey(name: 'weekend_days') final List<int>? weekendDays,
     this.currency = 'EUR',
     @JsonKey(name: 'max_guests') required this.maxGuests,
+    @JsonKey(name: 'max_total_capacity') this.maxTotalCapacity,
+    @JsonKey(name: 'extra_bed_fee') this.extraBedFee,
+    @JsonKey(name: 'pet_fee') this.petFee,
+    @JsonKey(name: 'max_pets') this.maxPets,
     this.bedrooms = 1,
     this.bathrooms = 1,
     @JsonKey(name: 'area_sqm') this.areaSqm,
@@ -543,10 +611,30 @@ class _$UnitModelImpl extends _UnitModel {
   @JsonKey()
   final String? currency;
 
-  /// Maximum number of guests
+  /// Maximum number of guests (base capacity, included in base price)
   @override
   @JsonKey(name: 'max_guests')
   final int maxGuests;
+
+  /// Maximum total capacity including extra beds (null = no extra beds)
+  @override
+  @JsonKey(name: 'max_total_capacity')
+  final int? maxTotalCapacity;
+
+  /// Extra bed fee per person per night (null = extra beds not offered)
+  @override
+  @JsonKey(name: 'extra_bed_fee')
+  final double? extraBedFee;
+
+  /// Pet fee per pet per night (null = pets not allowed)
+  @override
+  @JsonKey(name: 'pet_fee')
+  final double? petFee;
+
+  /// Maximum number of pets allowed per booking (null = use default 10)
+  @override
+  @JsonKey(name: 'max_pets')
+  final int? maxPets;
 
   /// Number of bedrooms
   @override
@@ -614,7 +702,7 @@ class _$UnitModelImpl extends _UnitModel {
 
   @override
   String toString() {
-    return 'UnitModel(id: $id, propertyId: $propertyId, ownerId: $ownerId, name: $name, slug: $slug, description: $description, pricePerNight: $pricePerNight, weekendBasePrice: $weekendBasePrice, weekendDays: $weekendDays, currency: $currency, maxGuests: $maxGuests, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, maxStayNights: $maxStayNights, sortOrder: $sortOrder, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
+    return 'UnitModel(id: $id, propertyId: $propertyId, ownerId: $ownerId, name: $name, slug: $slug, description: $description, pricePerNight: $pricePerNight, weekendBasePrice: $weekendBasePrice, weekendDays: $weekendDays, currency: $currency, maxGuests: $maxGuests, maxTotalCapacity: $maxTotalCapacity, extraBedFee: $extraBedFee, petFee: $petFee, maxPets: $maxPets, bedrooms: $bedrooms, bathrooms: $bathrooms, areaSqm: $areaSqm, images: $images, isAvailable: $isAvailable, minStayNights: $minStayNights, maxStayNights: $maxStayNights, sortOrder: $sortOrder, createdAt: $createdAt, updatedAt: $updatedAt, deletedAt: $deletedAt)';
   }
 
   @override
@@ -642,6 +730,12 @@ class _$UnitModelImpl extends _UnitModel {
                 other.currency == currency) &&
             (identical(other.maxGuests, maxGuests) ||
                 other.maxGuests == maxGuests) &&
+            (identical(other.maxTotalCapacity, maxTotalCapacity) ||
+                other.maxTotalCapacity == maxTotalCapacity) &&
+            (identical(other.extraBedFee, extraBedFee) ||
+                other.extraBedFee == extraBedFee) &&
+            (identical(other.petFee, petFee) || other.petFee == petFee) &&
+            (identical(other.maxPets, maxPets) || other.maxPets == maxPets) &&
             (identical(other.bedrooms, bedrooms) ||
                 other.bedrooms == bedrooms) &&
             (identical(other.bathrooms, bathrooms) ||
@@ -679,6 +773,10 @@ class _$UnitModelImpl extends _UnitModel {
     const DeepCollectionEquality().hash(_weekendDays),
     currency,
     maxGuests,
+    maxTotalCapacity,
+    extraBedFee,
+    petFee,
+    maxPets,
     bedrooms,
     bathrooms,
     areaSqm,
@@ -719,6 +817,10 @@ abstract class _UnitModel extends UnitModel {
     @JsonKey(name: 'weekend_days') final List<int>? weekendDays,
     final String? currency,
     @JsonKey(name: 'max_guests') required final int maxGuests,
+    @JsonKey(name: 'max_total_capacity') final int? maxTotalCapacity,
+    @JsonKey(name: 'extra_bed_fee') final double? extraBedFee,
+    @JsonKey(name: 'pet_fee') final double? petFee,
+    @JsonKey(name: 'max_pets') final int? maxPets,
     final int bedrooms,
     final int bathrooms,
     @JsonKey(name: 'area_sqm') final double? areaSqm,
@@ -788,10 +890,30 @@ abstract class _UnitModel extends UnitModel {
   @override
   String? get currency;
 
-  /// Maximum number of guests
+  /// Maximum number of guests (base capacity, included in base price)
   @override
   @JsonKey(name: 'max_guests')
   int get maxGuests;
+
+  /// Maximum total capacity including extra beds (null = no extra beds)
+  @override
+  @JsonKey(name: 'max_total_capacity')
+  int? get maxTotalCapacity;
+
+  /// Extra bed fee per person per night (null = extra beds not offered)
+  @override
+  @JsonKey(name: 'extra_bed_fee')
+  double? get extraBedFee;
+
+  /// Pet fee per pet per night (null = pets not allowed)
+  @override
+  @JsonKey(name: 'pet_fee')
+  double? get petFee;
+
+  /// Maximum number of pets allowed per booking (null = use default 10)
+  @override
+  @JsonKey(name: 'max_pets')
+  int? get maxPets;
 
   /// Number of bedrooms
   @override

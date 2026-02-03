@@ -57,6 +57,12 @@ class BookingSummaryCard extends ConsumerWidget {
   /// Room price before additional services (optional, for price breakdown)
   final double? roomPrice;
 
+  /// Extra guest fees (optional, for price breakdown)
+  final double? extraGuestFees;
+
+  /// Pet fees (optional, for price breakdown)
+  final double? petFees;
+
   /// Additional services total (optional, for price breakdown)
   final double? additionalServicesTotal;
 
@@ -78,6 +84,8 @@ class BookingSummaryCard extends ConsumerWidget {
     required this.guests,
     required this.totalPrice,
     this.roomPrice,
+    this.extraGuestFees,
+    this.petFees,
     this.additionalServicesTotal,
     required this.isDarkMode,
     required this.colors,
@@ -180,6 +188,32 @@ class BookingSummaryCard extends ConsumerWidget {
                 locale: tr.locale.toString(),
                 decimalDigits: 2,
               ).format(roomPrice),
+              isDarkMode: isDarkMode,
+              hasPadding: true,
+              valueFontWeight: FontWeight.w400,
+            ),
+          ],
+          if (extraGuestFees != null && extraGuestFees! > 0) ...[
+            DetailRowWidget(
+              label: tr.extraGuestFees,
+              value: NumberFormat.currency(
+                symbol: tr.currencySymbol,
+                locale: tr.locale.toString(),
+                decimalDigits: 2,
+              ).format(extraGuestFees),
+              isDarkMode: isDarkMode,
+              hasPadding: true,
+              valueFontWeight: FontWeight.w400,
+            ),
+          ],
+          if (petFees != null && petFees! > 0) ...[
+            DetailRowWidget(
+              label: tr.petFees,
+              value: NumberFormat.currency(
+                symbol: tr.currencySymbol,
+                locale: tr.locale.toString(),
+                decimalDigits: 2,
+              ).format(petFees),
               isDarkMode: isDarkMode,
               hasPadding: true,
               valueFontWeight: FontWeight.w400,

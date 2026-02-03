@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/constants/enums.dart';
 import '../../domain/models/unified_booking_item.dart';
 import '../../domain/models/ical_feed.dart';
 import 'owner_bookings_provider.dart';
@@ -13,7 +14,7 @@ part 'unified_bookings_provider.g.dart';
 /// Behavior:
 /// - When `showImportedOnly == true` → only imported reservations (IcalEvents)
 /// - When status filter is applied → only regular bookings (imported don't have status)
-/// - Otherwise → both merged and sorted by check-in date (descending)
+/// - Otherwise → both merged and sorted by creation date (newest first)
 @riverpod
 Future<List<UnifiedBookingItem>> unifiedBookings(Ref ref) async {
   final filters = ref.watch(bookingsFiltersNotifierProvider);
@@ -23,7 +24,7 @@ Future<List<UnifiedBookingItem>> unifiedBookings(Ref ref) async {
   if (filters.showImportedOnly) {
     final eventsAsync = await ref.watch(allOwnerIcalEventsProvider.future);
     return eventsAsync.map(ImportedBookingItem.new).toList()
-      ..sort((a, b) => b.checkIn.compareTo(a.checkIn));
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
   // Case 2: Status filter applied - only regular bookings (imported don't have status)
@@ -46,9 +47,28 @@ Future<List<UnifiedBookingItem>> unifiedBookings(Ref ref) async {
 
   final importedBookings = importedEvents.map(ImportedBookingItem.new).toList();
 
-  // Merge and sort by check-in date (newest first)
+  // Merge and sort: pending first (by check-in), then all others by created_at (newest first)
+  // This matches the sorting logic in firebase_owner_bookings_repository.dart
   final merged = <UnifiedBookingItem>[...regularBookings, ...importedBookings];
-  merged.sort((a, b) => b.checkIn.compareTo(a.checkIn));
+  merged.sort((a, b) {
+    // Determine if item is pending (only RegularBookingItem can be pending)
+    final aPending =
+        a is RegularBookingItem &&
+            a.ownerBooking.booking.status == BookingStatus.pending
+        ? 0
+        : 1;
+    final bPending =
+        b is RegularBookingItem &&
+            b.ownerBooking.booking.status == BookingStatus.pending
+        ? 0
+        : 1;
+
+    // Pending bookings come first
+    if (aPending != bPending) return aPending.compareTo(bPending);
+
+    // Both pending and non-pending: sort by check-in (soonest first)
+    return a.checkIn.compareTo(b.checkIn);
+  });
 
   return merged;
 }
@@ -63,7 +83,12 @@ bool isUnifiedBookingsLoading(Ref ref) {
     return ref.watch(allOwnerIcalEventsProvider).isLoading;
   }
 
-  return windowedState.isInitialLoad;
+  // Also check if the unified bookings provider itself is loading
+  // This fixes the race condition where windowedState is ready but
+  // unifiedBookingsProvider is still computing the merged list
+  final unifiedAsync = ref.watch(unifiedBookingsProvider);
+
+  return windowedState.isInitialLoad || unifiedAsync.isLoading;
 }
 
 /// Convenience provider for unified bookings error

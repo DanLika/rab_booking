@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/models/ical_feed.dart';
 import '../../../../core/services/logging_service.dart';
@@ -42,11 +44,8 @@ class FirebaseIcalRepository {
       }
 
       return allFeeds;
-    } catch (e) {
-      LoggingService.log(
-        'Error getting owner feeds: $e',
-        tag: 'IcalRepository',
-      );
+    } catch (e, stack) {
+      unawaited(LoggingService.logError('Error getting owner feeds', e, stack));
       return [];
     }
   }
@@ -61,8 +60,8 @@ class FirebaseIcalRepository {
           .get();
 
       return snapshot.docs.map(IcalFeed.fromFirestore).toList();
-    } catch (e) {
-      LoggingService.log('Error getting unit feeds: $e', tag: 'IcalRepository');
+    } catch (e, stack) {
+      unawaited(LoggingService.logError('Error getting unit feeds', e, stack));
       return [];
     }
   }
@@ -109,10 +108,15 @@ class FirebaseIcalRepository {
                 .toFirestore(),
           );
 
-      LoggingService.log('Feed created: ${docRef.id}', tag: 'IcalRepository');
+      // Security: Log new iCal source being trusted
+      LoggingService.log(
+        'SECURITY: New iCal feed created - feedId: ${docRef.id}, '
+        'platform: ${feed.platform.name}, unitId: ${feed.unitId}',
+        tag: 'ICAL_SECURITY',
+      );
       return docRef.id;
-    } catch (e) {
-      LoggingService.log('Error creating feed: $e', tag: 'IcalRepository');
+    } catch (e, stack) {
+      unawaited(LoggingService.logError('Error creating iCal feed', e, stack));
       rethrow;
     }
   }
@@ -128,9 +132,20 @@ class FirebaseIcalRepository {
           .doc(feed.id)
           .update(feed.copyWith(updatedAt: DateTime.now()).toFirestore());
 
-      LoggingService.log('Feed updated: ${feed.id}', tag: 'IcalRepository');
-    } catch (e) {
-      LoggingService.log('Error updating feed: $e', tag: 'IcalRepository');
+      // Security: Log iCal feed modification
+      LoggingService.log(
+        'SECURITY: iCal feed updated - feedId: ${feed.id}, '
+        'platform: ${feed.platform.name}, unitId: ${feed.unitId}',
+        tag: 'ICAL_SECURITY',
+      );
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError(
+          'Error updating iCal feed: ${feed.id}',
+          e,
+          stack,
+        ),
+      );
       rethrow;
     }
   }
@@ -198,14 +213,19 @@ class FirebaseIcalRepository {
           .doc(feedId)
           .delete();
 
+      // Security: Log iCal feed deletion
       LoggingService.log(
-        'Feed deleted successfully: $feedId with $deletedCount events removed',
-        tag: 'IcalRepository',
+        'SECURITY: iCal feed deleted - feedId: $feedId, '
+        'propertyId: $propertyId, eventsRemoved: $deletedCount',
+        tag: 'ICAL_SECURITY',
       );
     } catch (e, stackTrace) {
-      LoggingService.log(
-        'Error deleting feed $feedId: $e\n$stackTrace',
-        tag: 'IcalRepository',
+      unawaited(
+        LoggingService.logError(
+          'Error deleting iCal feed: $feedId',
+          e,
+          stackTrace,
+        ),
       );
       rethrow;
     }
@@ -235,10 +255,13 @@ class FirebaseIcalRepository {
         'Feed status updated: $feedId -> $status',
         tag: 'IcalRepository',
       );
-    } catch (e) {
-      LoggingService.log(
-        'Error updating feed status: $e',
-        tag: 'IcalRepository',
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError(
+          'Error updating feed status: $feedId',
+          e,
+          stack,
+        ),
       );
       rethrow;
     }
@@ -278,8 +301,10 @@ class FirebaseIcalRepository {
         'Last sync updated for feed: $feedId',
         tag: 'IcalRepository',
       );
-    } catch (e) {
-      LoggingService.log('Error updating last sync: $e', tag: 'IcalRepository');
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError('Error updating last sync: $feedId', e, stack),
+      );
       rethrow;
     }
   }
@@ -299,11 +324,8 @@ class FirebaseIcalRepository {
           .get();
 
       return snapshot.docs.map(IcalEvent.fromFirestore).toList();
-    } catch (e) {
-      LoggingService.log(
-        'Error getting unit events: $e',
-        tag: 'IcalRepository',
-      );
+    } catch (e, stack) {
+      unawaited(LoggingService.logError('Error getting unit events', e, stack));
       return [];
     }
   }
@@ -338,10 +360,13 @@ class FirebaseIcalRepository {
       allEvents.sort((a, b) => b.startDate.compareTo(a.startDate));
 
       return allEvents;
-    } catch (e) {
-      LoggingService.log(
-        'Error getting all owner iCal events: $e',
-        tag: 'IcalRepository',
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError(
+          'Error getting all owner iCal events',
+          e,
+          stack,
+        ),
       );
       return [];
     }
@@ -363,10 +388,9 @@ class FirebaseIcalRepository {
           .get();
 
       return snapshot.docs.map(IcalEvent.fromFirestore).toList();
-    } catch (e) {
-      LoggingService.log(
-        'Error getting events in range: $e',
-        tag: 'IcalRepository',
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError('Error getting events in range', e, stack),
       );
       return [];
     }
@@ -402,8 +426,8 @@ class FirebaseIcalRepository {
 
       LoggingService.log('Event created: ${docRef.id}', tag: 'IcalRepository');
       return docRef.id;
-    } catch (e) {
-      LoggingService.log('Error creating event: $e', tag: 'IcalRepository');
+    } catch (e, stack) {
+      unawaited(LoggingService.logError('Error creating event', e, stack));
       rethrow;
     }
   }
@@ -434,10 +458,9 @@ class FirebaseIcalRepository {
         'Batch created ${events.length} events in property $propertyId',
         tag: 'IcalRepository',
       );
-    } catch (e) {
-      LoggingService.log(
-        'Error batch creating events: $e',
-        tag: 'IcalRepository',
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError('Error batch creating events', e, stack),
       );
       rethrow;
     }
@@ -466,10 +489,13 @@ class FirebaseIcalRepository {
         'Deleted ${snapshot.docs.length} events for feed: $feedId',
         tag: 'IcalRepository',
       );
-    } catch (e) {
-      LoggingService.log(
-        'Error deleting events for feed: $e',
-        tag: 'IcalRepository',
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError(
+          'Error deleting events for feed: $feedId',
+          e,
+          stack,
+        ),
       );
       rethrow;
     }
@@ -496,10 +522,9 @@ class FirebaseIcalRepository {
           .toList();
 
       return conflictingEvents.isNotEmpty;
-    } catch (e) {
-      LoggingService.log(
-        'Error checking iCal conflict: $e',
-        tag: 'IcalRepository',
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError('Error checking iCal conflict', e, stack),
       );
       return false;
     }
@@ -524,8 +549,10 @@ class FirebaseIcalRepository {
         'total_events': totalEvents,
         'total_syncs': totalSyncs,
       };
-    } catch (e) {
-      LoggingService.log('Error getting statistics: $e', tag: 'IcalRepository');
+    } catch (e, stack) {
+      unawaited(
+        LoggingService.logError('Error getting iCal statistics', e, stack),
+      );
       return {};
     }
   }

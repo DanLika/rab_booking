@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/booking_model.dart';
@@ -7,6 +8,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../utils/booking_overlap_detector.dart';
 import 'owner_calendar_provider.dart';
+import 'calendar_filters_provider.dart';
 
 /// Drag-and-drop state for calendar
 class DragDropState {
@@ -171,17 +173,32 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       }
 
       // Update booking in Firestore
+      // CRITICAL: Must update unitId, propertyId, AND ownerId because:
+      // 1. Firestore path is: properties/{propertyId}/units/{unitId}/bookings/{id}
+      // 2. When moving between units, the booking is DELETE from old path + CREATE at new path
+      // 3. Security rule requires: request.resource.data.owner_id == request.auth.uid
+      // 4. Without correct propertyId/ownerId, the batch operation fails with permission-denied
+      // 5. Fallback to current user ID if unit has no ownerId (legacy units)
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
       final updatedBooking = booking.copyWith(
         unitId: targetUnit.id,
+        propertyId: targetUnit.propertyId,
+        ownerId: targetUnit.ownerId ?? currentUserId ?? booking.ownerId,
         checkIn: dates.newCheckIn,
         checkOut: dates.newCheckOut,
         updatedAt: DateTime.now(),
       );
 
-      await _bookingRepository.updateBooking(updatedBooking);
+      // Pass original booking to avoid collectionGroup permission error
+      await _bookingRepository.updateBooking(
+        updatedBooking,
+        originalBooking: booking,
+      );
 
-      // Invalidate calendar to refresh
+      // Invalidate calendar providers to refresh UI
+      // MUST invalidate both: base provider AND filtered provider that UI watches
       _ref.invalidate(calendarBookingsProvider);
+      _ref.invalidate(timelineCalendarBookingsProvider);
 
       // Show success message with undo action
       if (context.mounted) {

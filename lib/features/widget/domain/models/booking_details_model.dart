@@ -46,6 +46,10 @@ class BookingDetailsModel with _$BookingDetailsModel {
     required int nights,
     required GuestCount guestCount,
     required double totalPrice,
+    double? roomPrice, // Nightly accommodation price
+    double? extraGuestFees, // Extra guest fees
+    double? petFees, // Pet fees
+    double? servicesTotal, // Total non-nightly fees
     required double depositAmount,
     required double remainingAmount,
     required double paidAmount,

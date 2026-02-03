@@ -97,7 +97,7 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"]}, async (r
         "Unit not found"
       );
     }
-    const unitData = unitDoc.data()!
+    const unitData = unitDoc.data()!;
 
     // Verify ownership - check owner_id from booking instead of unit
     if (booking.owner_id !== request.auth.uid) {
@@ -116,6 +116,14 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"]}, async (r
       .doc(booking.property_id)
       .get();
     const propertyData = propertyDoc.data();
+
+    // Validate guest email exists before attempting to send
+    if (!booking.guest_email) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Cannot send email - booking has no guest email address"
+      );
+    }
 
     // Generate new access token
     const {token: accessToken, hashedToken} = generateBookingAccessToken();

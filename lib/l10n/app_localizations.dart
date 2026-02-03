@@ -3149,7 +3149,7 @@ abstract class AppLocalizations {
   /// No description provided for @ownerDrawerExportCalendar.
   ///
   /// In en, this message translates to:
-  /// **'Export Calendar'**
+  /// **'Export Bookings'**
   String get ownerDrawerExportCalendar;
 
   /// No description provided for @ownerDrawerIcalFeedUrl.
@@ -3187,6 +3187,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment data'**
   String get ownerDrawerBankAccountData;
+
+  /// No description provided for @ownerDrawerWidgetSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget'**
+  String get ownerDrawerWidgetSection;
 
   /// No description provided for @ownerDrawerGuides.
   ///
@@ -5283,13 +5289,13 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsEnableAll.
   ///
   /// In en, this message translates to:
-  /// **'Enable All Notifications'**
+  /// **'Enable Optional Notifications'**
   String get notificationSettingsEnableAll;
 
   /// No description provided for @notificationSettingsMasterSwitch.
   ///
   /// In en, this message translates to:
-  /// **'Turn off to stop all email notifications to you. Guest emails are not affected.'**
+  /// **'Control marketing and payment reminder emails. Critical booking notifications are always sent.'**
   String get notificationSettingsMasterSwitch;
 
   /// No description provided for @notificationSettingsEnabled.
@@ -5301,7 +5307,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsDisabled.
   ///
   /// In en, this message translates to:
-  /// **'Notifications disabled successfully'**
+  /// **'Optional notifications disabled'**
   String get notificationSettingsDisabled;
 
   /// No description provided for @notificationSettingsUpdateError.
@@ -5313,14 +5319,50 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsDisabledWarning.
   ///
   /// In en, this message translates to:
-  /// **'All email notifications to you are paused. Guest confirmation emails will still be sent. Enable to receive booking alerts.'**
+  /// **'Optional email notifications are paused. You will still receive critical emails: new bookings, confirmations, and cancellations.'**
   String get notificationSettingsDisabledWarning;
 
   /// No description provided for @notificationSettingsCategories.
   ///
   /// In en, this message translates to:
-  /// **'Email Notifications'**
+  /// **'Optional Notifications'**
   String get notificationSettingsCategories;
+
+  /// No description provided for @notificationSettingsCategoriesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can turn off these non-critical notifications'**
+  String get notificationSettingsCategoriesDesc;
+
+  /// No description provided for @notificationSettingsAlwaysSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Always Sent'**
+  String get notificationSettingsAlwaysSent;
+
+  /// No description provided for @notificationSettingsAlwaysSentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'These critical notifications cannot be disabled'**
+  String get notificationSettingsAlwaysSentDesc;
+
+  /// No description provided for @notificationSettingsAlwaysSentBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'New booking requests and pending approvals'**
+  String get notificationSettingsAlwaysSentBookings;
+
+  /// No description provided for @notificationSettingsAlwaysSentConfirmations.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking confirmations'**
+  String get notificationSettingsAlwaysSentConfirmations;
+
+  /// No description provided for @notificationSettingsAlwaysSentCancellations.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking cancellations'**
+  String get notificationSettingsAlwaysSentCancellations;
 
   /// No description provided for @notificationSettingsBookings.
   ///
@@ -5337,19 +5379,19 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsPayments.
   ///
   /// In en, this message translates to:
-  /// **'Payments'**
+  /// **'Payment Reminders'**
   String get notificationSettingsPayments;
 
   /// No description provided for @notificationSettingsPaymentsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Emails when you receive Stripe payments from guests.'**
+  /// **'Optional payment notification emails. Initial Stripe payment confirmations are always sent.'**
   String get notificationSettingsPaymentsDesc;
 
   /// No description provided for @notificationSettingsCalendar.
   ///
   /// In en, this message translates to:
-  /// **'Calendar'**
+  /// **'Calendar Sync'**
   String get notificationSettingsCalendar;
 
   /// No description provided for @notificationSettingsCalendarDesc.
@@ -5361,7 +5403,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsMarketing.
   ///
   /// In en, this message translates to:
-  /// **'Marketing'**
+  /// **'Marketing & Updates'**
   String get notificationSettingsMarketing;
 
   /// No description provided for @notificationSettingsMarketingDesc.
@@ -7755,37 +7797,37 @@ abstract class AppLocalizations {
   /// No description provided for @widgetSettingsAdvanceBooking.
   ///
   /// In en, this message translates to:
-  /// **'Advance Booking'**
+  /// **'Booking window'**
   String get widgetSettingsAdvanceBooking;
 
   /// No description provided for @widgetSettingsAdvanceBookingDesc.
   ///
   /// In en, this message translates to:
-  /// **'Control how far in advance guests can book'**
+  /// **'Default range for all dates (can be adjusted per-date in pricing)'**
   String get widgetSettingsAdvanceBookingDesc;
 
   /// No description provided for @widgetSettingsMinDaysAdvance.
   ///
   /// In en, this message translates to:
-  /// **'Minimum days in advance'**
+  /// **'Min. days ahead'**
   String get widgetSettingsMinDaysAdvance;
 
   /// No description provided for @widgetSettingsMinDaysAdvanceHint.
   ///
   /// In en, this message translates to:
-  /// **'0 = same-day booking allowed'**
+  /// **'0 = same day'**
   String get widgetSettingsMinDaysAdvanceHint;
 
   /// No description provided for @widgetSettingsMaxDaysAdvance.
   ///
   /// In en, this message translates to:
-  /// **'Maximum days in advance'**
+  /// **'Max. days ahead'**
   String get widgetSettingsMaxDaysAdvance;
 
   /// No description provided for @widgetSettingsMaxDaysAdvanceHint.
   ///
   /// In en, this message translates to:
-  /// **'365 = up to 1 year ahead'**
+  /// **'365 = 1 year'**
   String get widgetSettingsMaxDaysAdvanceHint;
 
   /// No description provided for @bookingCreateTitle.
@@ -9096,6 +9138,18 @@ abstract class AppLocalizations {
   /// **'Preview your unit\'s widget before embedding'**
   String get embedGuideTestWidgetDesc;
 
+  /// No description provided for @embedGuideSelectUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a unit to preview'**
+  String get embedGuideSelectUnitHint;
+
+  /// No description provided for @embedGuidePreviewLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview Live'**
+  String get embedGuidePreviewLive;
+
   /// No description provided for @embedGuideLiveExampleTitle.
   ///
   /// In en, this message translates to:
@@ -9660,6 +9714,126 @@ abstract class AppLocalizations {
   /// **'This information helps guests choose appropriate accommodation'**
   String get unitWizardStep2InfoTip;
 
+  /// No description provided for @unitWizardStep2ExtraBedsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra Beds'**
+  String get unitWizardStep2ExtraBedsTitle;
+
+  /// No description provided for @unitWizardStep2ExtraBedsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic fee per extra guest per night'**
+  String get unitWizardStep2ExtraBedsDesc;
+
+  /// No description provided for @unitWizardStep2MaxExtraBeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Max extra beds'**
+  String get unitWizardStep2MaxExtraBeds;
+
+  /// No description provided for @unitWizardStep2MaxExtraBedsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 2'**
+  String get unitWizardStep2MaxExtraBedsHint;
+
+  /// No description provided for @unitWizardStep2MaxExtraBedsHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'How many extra beds can you provide'**
+  String get unitWizardStep2MaxExtraBedsHelper;
+
+  /// No description provided for @unitWizardStep2MaxExtraBedsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get unitWizardStep2MaxExtraBedsInvalid;
+
+  /// No description provided for @unitWizardStep2ExtraBedFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per extra bed (€/night)'**
+  String get unitWizardStep2ExtraBedFee;
+
+  /// No description provided for @unitWizardStep2ExtraBedFeeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 15'**
+  String get unitWizardStep2ExtraBedFeeHint;
+
+  /// No description provided for @unitWizardStep2ExtraBedFeeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Per extra bed per night'**
+  String get unitWizardStep2ExtraBedFeeHelper;
+
+  /// No description provided for @unitWizardStep2ExtraBedFeeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount'**
+  String get unitWizardStep2ExtraBedFeeInvalid;
+
+  /// No description provided for @unitWizardStep2PetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pets'**
+  String get unitWizardStep2PetsTitle;
+
+  /// No description provided for @unitWizardStep2PetsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic fee per pet per night'**
+  String get unitWizardStep2PetsDesc;
+
+  /// No description provided for @unitWizardStep2MaxPets.
+  ///
+  /// In en, this message translates to:
+  /// **'Max pets allowed'**
+  String get unitWizardStep2MaxPets;
+
+  /// No description provided for @unitWizardStep2MaxPetsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 2'**
+  String get unitWizardStep2MaxPetsHint;
+
+  /// No description provided for @unitWizardStep2MaxPetsHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum number of pets per booking'**
+  String get unitWizardStep2MaxPetsHelper;
+
+  /// No description provided for @unitWizardStep2MaxPetsInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get unitWizardStep2MaxPetsInvalid;
+
+  /// No description provided for @unitWizardStep2PetFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Price per pet (€/night)'**
+  String get unitWizardStep2PetFee;
+
+  /// No description provided for @unitWizardStep2PetFeeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 10'**
+  String get unitWizardStep2PetFeeHint;
+
+  /// No description provided for @unitWizardStep2PetFeeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Per pet per night'**
+  String get unitWizardStep2PetFeeHelper;
+
+  /// No description provided for @unitWizardStep2PetFeeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount'**
+  String get unitWizardStep2PetFeeInvalid;
+
   /// No description provided for @unitWizardStep3Title.
   ///
   /// In en, this message translates to:
@@ -9791,6 +9965,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Max must be >= min ({min})'**
   String unitWizardStep3MaxStayMinError(int min);
+
+  /// No description provided for @unitWizardStep5ExtraBeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra Beds'**
+  String get unitWizardStep5ExtraBeds;
+
+  /// No description provided for @unitWizardStep5ExtraBedFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Bed Fee'**
+  String get unitWizardStep5ExtraBedFee;
+
+  /// No description provided for @unitWizardStep5MaxPets.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Pets'**
+  String get unitWizardStep5MaxPets;
+
+  /// No description provided for @unitWizardStep5PetFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Pet Fee'**
+  String get unitWizardStep5PetFee;
 
   /// No description provided for @unitWizardStep3Availability.
   ///
@@ -10383,19 +10581,19 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportStep1.
   ///
   /// In en, this message translates to:
-  /// **'Select a unit from the list below'**
+  /// **'Each unit has an automatically generated iCal URL'**
   String get icalExportStep1;
 
   /// No description provided for @icalExportStep2.
   ///
   /// In en, this message translates to:
-  /// **'Click \'Generate\' to create the iCal URL'**
+  /// **'Click the link icon to copy the URL or download the .ics file'**
   String get icalExportStep2;
 
   /// No description provided for @icalExportStep3.
   ///
   /// In en, this message translates to:
-  /// **'Copy the URL and add it to your calendar app'**
+  /// **'Add the URL to your calendar app (Google Calendar, Apple Calendar, Outlook)'**
   String get icalExportStep3;
 
   /// No description provided for @icalExportStep4.
@@ -10419,7 +10617,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportFaq1A.
   ///
   /// In en, this message translates to:
-  /// **'Most calendar apps sync every 5-15 minutes. You can also manually refresh in your calendar app.'**
+  /// **'Calendar apps (Google Calendar, Apple, Outlook) sync every 5-15 minutes. Airbnb syncs every 3-6 hours.'**
   String get icalExportFaq1A;
 
   /// No description provided for @icalExportFaq2Q.
@@ -10445,6 +10643,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yes, but be careful - anyone with the URL can see your booking schedule.'**
   String get icalExportFaq3A;
+
+  /// No description provided for @icalExportFaq4Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I add this URL directly to Booking.com?'**
+  String get icalExportFaq4Q;
+
+  /// No description provided for @icalExportFaq4A.
+  ///
+  /// In en, this message translates to:
+  /// **'No. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.). Workaround: Add our iCal URL to Airbnb first, then connect Airbnb calendar to Booking.com. This way BookBed bookings reach Booking.com via Airbnb.'**
+  String get icalExportFaq4A;
 
   /// No description provided for @icalExportUrlReady.
   ///
@@ -10487,6 +10697,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generate an iCal URL to sync your bookings with external calendars.'**
   String get icalExportNoUrlDesc;
+
+  /// No description provided for @icalExportDynamicLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic iCal Link'**
+  String get icalExportDynamicLinkTitle;
+
+  /// No description provided for @icalExportDynamicLinkDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy this link to Airbnb, Google Calendar, Apple Calendar, or Outlook. Your availability will sync automatically.'**
+  String get icalExportDynamicLinkDescription;
+
+  /// No description provided for @icalExportLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied to clipboard'**
+  String get icalExportLinkCopied;
+
+  /// No description provided for @icalExportTokenWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: This link contains a secret token. Do not share it publicly.'**
+  String get icalExportTokenWarning;
+
+  /// No description provided for @icalExportSyncTimeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Airbnb syncs every 3-6 hours. Calendar apps sync every 5-15 minutes.'**
+  String get icalExportSyncTimeNote;
+
+  /// No description provided for @icalExportCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Link'**
+  String get icalExportCopyLink;
+
+  /// No description provided for @icalExportBookingComNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking.com does not accept iCal links from custom platforms. To sync with Booking.com: add this URL to Airbnb first, then connect your Airbnb calendar to Booking.com.'**
+  String get icalExportBookingComNote;
+
+  /// No description provided for @icalExportBookingComInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking.com – Important Note'**
+  String get icalExportBookingComInfoTitle;
+
+  /// No description provided for @icalExportBookingComInfoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking.com only accepts iCal links from major OTAs (Airbnb, VRBO, etc.), not from custom platforms. To sync your BookBed bookings with Booking.com, use this flow: BookBed → Airbnb → Booking.com. First add the iCal URL to Airbnb, then connect Airbnb calendar to Booking.com.'**
+  String get icalExportBookingComInfoDesc;
 
   /// No description provided for @errorWithMessage.
   ///
@@ -10992,71 +11256,11 @@ abstract class AppLocalizations {
   /// **'Guests cannot end reservation'**
   String get priceCalendarBlockCheckOutDesc;
 
-  /// No description provided for @priceCalendarAdvancedOptions.
-  ///
-  /// In en, this message translates to:
-  /// **'Advanced options'**
-  String get priceCalendarAdvancedOptions;
-
-  /// No description provided for @priceCalendarAdvancedOptionsDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Weekend price, min/max nights, advance'**
-  String get priceCalendarAdvancedOptionsDesc;
-
   /// No description provided for @priceCalendarWeekendPrice.
   ///
   /// In en, this message translates to:
   /// **'Weekend price (€)'**
   String get priceCalendarWeekendPrice;
-
-  /// No description provided for @priceCalendarMinNights.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. nights'**
-  String get priceCalendarMinNights;
-
-  /// No description provided for @priceCalendarMinNightsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Minimum nights required for check-in on this date'**
-  String get priceCalendarMinNightsHint;
-
-  /// No description provided for @priceCalendarMaxNights.
-  ///
-  /// In en, this message translates to:
-  /// **'Max. nights'**
-  String get priceCalendarMaxNights;
-
-  /// No description provided for @priceCalendarMaxNightsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum nights allowed for check-in on this date'**
-  String get priceCalendarMaxNightsHint;
-
-  /// No description provided for @priceCalendarMinDaysAdvance.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. days advance'**
-  String get priceCalendarMinDaysAdvance;
-
-  /// No description provided for @priceCalendarMinDaysAdvanceHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Booking must be made at least this many days before check-in'**
-  String get priceCalendarMinDaysAdvanceHint;
-
-  /// No description provided for @priceCalendarMaxDaysAdvance.
-  ///
-  /// In en, this message translates to:
-  /// **'Max. days advance'**
-  String get priceCalendarMaxDaysAdvance;
-
-  /// No description provided for @priceCalendarMaxDaysAdvanceHint.
-  ///
-  /// In en, this message translates to:
-  /// **'How far in advance guests can book for check-in on this date'**
-  String get priceCalendarMaxDaysAdvanceHint;
 
   /// No description provided for @priceCalendarDeleteConfirmTitle.
   ///
@@ -11093,42 +11297,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weekend price must be greater than 0'**
   String get priceCalendarWeekendPriceMustBeGreaterThanZero;
-
-  /// No description provided for @priceCalendarMinNightsMustBeGreaterThanZero.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. nights must be greater than 0'**
-  String get priceCalendarMinNightsMustBeGreaterThanZero;
-
-  /// No description provided for @priceCalendarMaxNightsMustBeGreaterThanZero.
-  ///
-  /// In en, this message translates to:
-  /// **'Max. nights must be greater than 0'**
-  String get priceCalendarMaxNightsMustBeGreaterThanZero;
-
-  /// No description provided for @priceCalendarMinDaysAdvanceMustBeZeroOrMore.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. days advance must be 0 or more'**
-  String get priceCalendarMinDaysAdvanceMustBeZeroOrMore;
-
-  /// No description provided for @priceCalendarMaxDaysAdvanceMustBeGreaterThanZero.
-  ///
-  /// In en, this message translates to:
-  /// **'Max. days advance must be greater than 0'**
-  String get priceCalendarMaxDaysAdvanceMustBeGreaterThanZero;
-
-  /// No description provided for @priceCalendarMinNightsCannotExceedMax.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. nights cannot exceed max. nights'**
-  String get priceCalendarMinNightsCannotExceedMax;
-
-  /// No description provided for @priceCalendarMinAdvanceCannotExceedMax.
-  ///
-  /// In en, this message translates to:
-  /// **'Min. days advance cannot exceed max. days advance'**
-  String get priceCalendarMinAdvanceCannotExceedMax;
 
   /// No description provided for @priceCalendarPriceSaved.
   ///
@@ -13023,6 +13191,18 @@ abstract class AppLocalizations {
   /// **'Yes! You can add iCal feeds from Booking.com, Airbnb or any other platform that supports iCal format for the same apartment. All reservations will be displayed.'**
   String get ownerFaqIcal4A;
 
+  /// No description provided for @ownerFaqIcal5Q.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I export my BookBed calendar to Booking.com?'**
+  String get ownerFaqIcal5Q;
+
+  /// No description provided for @ownerFaqIcal5A.
+  ///
+  /// In en, this message translates to:
+  /// **'Not directly. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.) — not from third-party PMS systems. Workaround: Export your BookBed calendar to Airbnb first, then connect your Airbnb calendar to Booking.com.'**
+  String get ownerFaqIcal5A;
+
   /// No description provided for @ownerFaqSupport1Q.
   ///
   /// In en, this message translates to:
@@ -13918,6 +14098,30 @@ abstract class AppLocalizations {
   /// **'Failed to delete account. Please try again or contact support.'**
   String get deleteAccountError;
 
+  /// No description provided for @deleteAccountReauthRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-authentication Required'**
+  String get deleteAccountReauthRequired;
+
+  /// No description provided for @deleteAccountReauthDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For security, please sign in again with {provider} to confirm account deletion.'**
+  String deleteAccountReauthDescription(String provider);
+
+  /// No description provided for @deleteAccountReauthButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with {provider}'**
+  String deleteAccountReauthButton(String provider);
+
+  /// No description provided for @deleteAccountReauthSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity verified. You can now delete your account.'**
+  String get deleteAccountReauthSuccess;
+
   /// No description provided for @subscriptionTitle.
   ///
   /// In en, this message translates to:
@@ -14481,6 +14685,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Latest version: {version}'**
   String optionalUpdateVersion(String version);
+
+  /// No description provided for @additionalServicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional Services'**
+  String get additionalServicesTitle;
+
+  /// No description provided for @additionalServicesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional extras guests can book'**
+  String get additionalServicesSubtitle;
+
+  /// No description provided for @additionalServicesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No additional services configured'**
+  String get additionalServicesEmpty;
+
+  /// No description provided for @additionalServicesEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add services like parking, breakfast, etc.'**
+  String get additionalServicesEmptyHint;
+
+  /// No description provided for @additionalServiceAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Service'**
+  String get additionalServiceAddTitle;
+
+  /// No description provided for @additionalServiceEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Service'**
+  String get additionalServiceEditTitle;
+
+  /// No description provided for @additionalServiceType.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Type'**
+  String get additionalServiceType;
+
+  /// No description provided for @additionalServiceName.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Name'**
+  String get additionalServiceName;
+
+  /// No description provided for @additionalServiceNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Private Parking'**
+  String get additionalServiceNameHint;
+
+  /// No description provided for @additionalServiceNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter service name'**
+  String get additionalServiceNameRequired;
+
+  /// No description provided for @additionalServicePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (EUR)'**
+  String get additionalServicePrice;
+
+  /// No description provided for @additionalServicePriceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter price'**
+  String get additionalServicePriceRequired;
+
+  /// No description provided for @additionalServicePriceInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid price'**
+  String get additionalServicePriceInvalid;
+
+  /// No description provided for @additionalServicePricingUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing Unit'**
+  String get additionalServicePricingUnit;
+
+  /// No description provided for @additionalServiceMaxQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Quantity'**
+  String get additionalServiceMaxQuantity;
+
+  /// No description provided for @additionalServiceMaxQuantityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for unlimited'**
+  String get additionalServiceMaxQuantityHint;
+
+  /// No description provided for @additionalServiceMaxQuantityHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional - limit how many can be booked'**
+  String get additionalServiceMaxQuantityHelper;
+
+  /// No description provided for @additionalServiceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get additionalServiceDescription;
+
+  /// No description provided for @additionalServiceDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional details about the service'**
+  String get additionalServiceDescriptionHint;
+
+  /// No description provided for @additionalServiceTypeParking.
+  ///
+  /// In en, this message translates to:
+  /// **'Parking'**
+  String get additionalServiceTypeParking;
+
+  /// No description provided for @additionalServiceTypeBreakfast.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakfast'**
+  String get additionalServiceTypeBreakfast;
+
+  /// No description provided for @additionalServiceTypeLateCheckin.
+  ///
+  /// In en, this message translates to:
+  /// **'Late Check-in'**
+  String get additionalServiceTypeLateCheckin;
+
+  /// No description provided for @additionalServiceTypeEarlyCheckout.
+  ///
+  /// In en, this message translates to:
+  /// **'Early Check-out'**
+  String get additionalServiceTypeEarlyCheckout;
+
+  /// No description provided for @additionalServiceTypeCleaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning'**
+  String get additionalServiceTypeCleaning;
+
+  /// No description provided for @additionalServiceTypeBabyCot.
+  ///
+  /// In en, this message translates to:
+  /// **'Baby Cot'**
+  String get additionalServiceTypeBabyCot;
+
+  /// No description provided for @additionalServiceTypeTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Airport Transfer'**
+  String get additionalServiceTypeTransfer;
+
+  /// No description provided for @additionalServiceTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get additionalServiceTypeOther;
+
+  /// No description provided for @additionalServicePricingPerBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Per Booking'**
+  String get additionalServicePricingPerBooking;
+
+  /// No description provided for @additionalServicePricingPerNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Per Night'**
+  String get additionalServicePricingPerNight;
+
+  /// No description provided for @additionalServicePricingPerPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Per Person'**
+  String get additionalServicePricingPerPerson;
+
+  /// No description provided for @additionalServicePricingPerItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Per Item'**
+  String get additionalServicePricingPerItem;
+
+  /// No description provided for @additionalServiceDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this service?'**
+  String get additionalServiceDeleteConfirm;
+
+  /// No description provided for @additionalServiceDeleteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone'**
+  String get additionalServiceDeleteHint;
+
+  /// No description provided for @additionalServiceSaveUnitFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the unit first to add services'**
+  String get additionalServiceSaveUnitFirst;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
 }
 
 class _AppLocalizationsDelegate

@@ -52,18 +52,41 @@ class SecurityEventsService {
       );
 
       // Log to subcollection for full history
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('securityEvents')
-          .add({
-            'type': event.type.name,
-            'timestamp': Timestamp.fromDate(event.timestamp),
-            'deviceId': event.deviceId,
-            'ipAddress': event.ipAddress,
-            'location': event.location,
-            'metadata': event.metadata,
-          });
+      // Retry once on permission-denied - newly created users may experience
+      // a brief delay before Firebase Auth token propagates to Firestore rules
+      try {
+        await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('securityEvents')
+            .add({
+              'type': event.type.name,
+              'timestamp': Timestamp.fromDate(event.timestamp),
+              'deviceId': event.deviceId,
+              'ipAddress': event.ipAddress,
+              'location': event.location,
+              'metadata': event.metadata,
+            });
+      } on FirebaseException catch (e) {
+        if (e.code == 'permission-denied') {
+          // Token propagation delay - wait and retry once
+          await Future<void>.delayed(const Duration(seconds: 2));
+          await _firestore
+              .collection('users')
+              .doc(userId)
+              .collection('securityEvents')
+              .add({
+                'type': event.type.name,
+                'timestamp': Timestamp.fromDate(event.timestamp),
+                'deviceId': event.deviceId,
+                'ipAddress': event.ipAddress,
+                'location': event.location,
+                'metadata': event.metadata,
+              });
+        } else {
+          rethrow;
+        }
+      }
 
       // Update recent events in main user document (keep last 10)
       await _updateRecentEvents(userId, event);

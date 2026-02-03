@@ -62,7 +62,8 @@ export const verifyBookingAccess = onCall(async (request) => {
     const booking = bookingDoc.data();
 
     // Verify email matches (case-insensitive)
-    if (booking.guest_email.toLowerCase() !== email.toLowerCase()) {
+    // Guard against null guest_email (e.g., admin-created bookings without guest email)
+    if (!booking.guest_email || booking.guest_email.toLowerCase() !== email.toLowerCase()) {
       logWarn("[VerifyBookingAccess] Email mismatch", {
         bookingReference,
         attemptedEmail: email.substring(0, 3) + "***",
@@ -130,13 +131,13 @@ export const verifyBookingAccess = onCall(async (request) => {
         .collection("units")
         .doc(booking.unit_id)
         .get(),
-      needsBankDetails
-        ? db.collection("users")
+      needsBankDetails ?
+        db.collection("users")
           .doc(booking.owner_id)
           .collection("data")
           .doc("company")
-          .get()
-        : Promise.resolve(null),
+          .get() :
+        Promise.resolve(null),
     ]);
 
     const property = propertyDoc.data();
@@ -179,10 +180,14 @@ export const verifyBookingAccess = onCall(async (request) => {
       checkOut: checkOut.toISOString(),
       nights: nights,
       // Handle both formats: int (legacy) or object {adults, children}
-      guestCount: typeof booking.guest_count === "number"
-        ? {adults: booking.guest_count, children: 0}
-        : (booking.guest_count || {adults: 1, children: 0}),
+      guestCount: typeof booking.guest_count === "number" ?
+        {adults: booking.guest_count, children: 0} :
+        (booking.guest_count || {adults: 1, children: 0}),
       totalPrice: booking.total_price,
+      roomPrice: booking.room_price ?? null,
+      extraGuestFees: booking.extra_guest_fees ?? null,
+      petFees: booking.pet_fees ?? null,
+      servicesTotal: booking.services_total ?? null,
       depositAmount: booking.deposit_amount || booking.advance_amount || 0,
       remainingAmount: booking.remaining_amount || 0,
       paidAmount: booking.paid_amount || 0,

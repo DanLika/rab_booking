@@ -1648,7 +1648,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerDrawerSyncBookingCom => 'Sync with booking.com';
 
   @override
-  String get ownerDrawerExportCalendar => 'Export Calendar';
+  String get ownerDrawerExportCalendar => 'Export Bookings';
 
   @override
   String get ownerDrawerIcalFeedUrl => 'iCal feed URL';
@@ -1667,6 +1667,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ownerDrawerBankAccountData => 'Payment data';
+
+  @override
+  String get ownerDrawerWidgetSection => 'Widget';
 
   @override
   String get ownerDrawerGuides => 'Guides';
@@ -2779,29 +2782,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationSettingsTitle => 'Notification Settings';
 
   @override
-  String get notificationSettingsEnableAll => 'Enable All Notifications';
+  String get notificationSettingsEnableAll => 'Enable Optional Notifications';
 
   @override
   String get notificationSettingsMasterSwitch =>
-      'Turn off to stop all email notifications to you. Guest emails are not affected.';
+      'Control marketing and payment reminder emails. Critical booking notifications are always sent.';
 
   @override
   String get notificationSettingsEnabled =>
       'Notifications enabled successfully';
 
   @override
-  String get notificationSettingsDisabled =>
-      'Notifications disabled successfully';
+  String get notificationSettingsDisabled => 'Optional notifications disabled';
 
   @override
   String get notificationSettingsUpdateError => 'Error updating settings';
 
   @override
   String get notificationSettingsDisabledWarning =>
-      'All email notifications to you are paused. Guest confirmation emails will still be sent. Enable to receive booking alerts.';
+      'Optional email notifications are paused. You will still receive critical emails: new bookings, confirmations, and cancellations.';
 
   @override
-  String get notificationSettingsCategories => 'Email Notifications';
+  String get notificationSettingsCategories => 'Optional Notifications';
+
+  @override
+  String get notificationSettingsCategoriesDesc =>
+      'You can turn off these non-critical notifications';
+
+  @override
+  String get notificationSettingsAlwaysSent => 'Always Sent';
+
+  @override
+  String get notificationSettingsAlwaysSentDesc =>
+      'These critical notifications cannot be disabled';
+
+  @override
+  String get notificationSettingsAlwaysSentBookings =>
+      'New booking requests and pending approvals';
+
+  @override
+  String get notificationSettingsAlwaysSentConfirmations =>
+      'Booking confirmations';
+
+  @override
+  String get notificationSettingsAlwaysSentCancellations =>
+      'Booking cancellations';
 
   @override
   String get notificationSettingsBookings => 'Bookings';
@@ -2811,21 +2836,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Emails when guests make instant bookings. Pending bookings requiring your approval are always sent.';
 
   @override
-  String get notificationSettingsPayments => 'Payments';
+  String get notificationSettingsPayments => 'Payment Reminders';
 
   @override
   String get notificationSettingsPaymentsDesc =>
-      'Emails when you receive Stripe payments from guests.';
+      'Optional payment notification emails. Initial Stripe payment confirmations are always sent.';
 
   @override
-  String get notificationSettingsCalendar => 'Calendar';
+  String get notificationSettingsCalendar => 'Calendar Sync';
 
   @override
   String get notificationSettingsCalendarDesc =>
       'iCal sync alerts and calendar conflict warnings.';
 
   @override
-  String get notificationSettingsMarketing => 'Marketing';
+  String get notificationSettingsMarketing => 'Marketing & Updates';
 
   @override
   String get notificationSettingsMarketingDesc =>
@@ -4154,23 +4179,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'In this mode, guests can create a reservation but CANNOT pay online. You arrange payment privately after confirming the reservation.';
 
   @override
-  String get widgetSettingsAdvanceBooking => 'Advance Booking';
+  String get widgetSettingsAdvanceBooking => 'Booking window';
 
   @override
   String get widgetSettingsAdvanceBookingDesc =>
-      'Control how far in advance guests can book';
+      'Default range for all dates (can be adjusted per-date in pricing)';
 
   @override
-  String get widgetSettingsMinDaysAdvance => 'Minimum days in advance';
+  String get widgetSettingsMinDaysAdvance => 'Min. days ahead';
 
   @override
-  String get widgetSettingsMinDaysAdvanceHint => '0 = same-day booking allowed';
+  String get widgetSettingsMinDaysAdvanceHint => '0 = same day';
 
   @override
-  String get widgetSettingsMaxDaysAdvance => 'Maximum days in advance';
+  String get widgetSettingsMaxDaysAdvance => 'Max. days ahead';
 
   @override
-  String get widgetSettingsMaxDaysAdvanceHint => '365 = up to 1 year ahead';
+  String get widgetSettingsMaxDaysAdvanceHint => '365 = 1 year';
 
   @override
   String get bookingCreateTitle => 'New Booking';
@@ -4890,6 +4915,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Preview your unit\'s widget before embedding';
 
   @override
+  String get embedGuideSelectUnitHint => 'Select a unit to preview';
+
+  @override
+  String get embedGuidePreviewLive => 'Preview Live';
+
+  @override
   String get embedGuideLiveExampleTitle => 'Live Demo';
 
   @override
@@ -5203,6 +5234,69 @@ class AppLocalizationsEn extends AppLocalizations {
       'This information helps guests choose appropriate accommodation';
 
   @override
+  String get unitWizardStep2ExtraBedsTitle => 'Extra Beds';
+
+  @override
+  String get unitWizardStep2ExtraBedsDesc =>
+      'Automatic fee per extra guest per night';
+
+  @override
+  String get unitWizardStep2MaxExtraBeds => 'Max extra beds';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsHint => 'e.g. 2';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsHelper =>
+      'How many extra beds can you provide';
+
+  @override
+  String get unitWizardStep2MaxExtraBedsInvalid => 'Enter a valid number';
+
+  @override
+  String get unitWizardStep2ExtraBedFee => 'Price per extra bed (€/night)';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeHint => 'e.g. 15';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeHelper => 'Per extra bed per night';
+
+  @override
+  String get unitWizardStep2ExtraBedFeeInvalid => 'Enter a valid amount';
+
+  @override
+  String get unitWizardStep2PetsTitle => 'Pets';
+
+  @override
+  String get unitWizardStep2PetsDesc => 'Automatic fee per pet per night';
+
+  @override
+  String get unitWizardStep2MaxPets => 'Max pets allowed';
+
+  @override
+  String get unitWizardStep2MaxPetsHint => 'e.g. 2';
+
+  @override
+  String get unitWizardStep2MaxPetsHelper =>
+      'Maximum number of pets per booking';
+
+  @override
+  String get unitWizardStep2MaxPetsInvalid => 'Enter a valid number';
+
+  @override
+  String get unitWizardStep2PetFee => 'Price per pet (€/night)';
+
+  @override
+  String get unitWizardStep2PetFeeHint => 'e.g. 10';
+
+  @override
+  String get unitWizardStep2PetFeeHelper => 'Per pet per night';
+
+  @override
+  String get unitWizardStep2PetFeeInvalid => 'Enter a valid amount';
+
+  @override
   String get unitWizardStep3Title => 'Price and Availability';
 
   @override
@@ -5271,6 +5365,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String unitWizardStep3MaxStayMinError(int min) {
     return 'Max must be >= min ($min)';
   }
+
+  @override
+  String get unitWizardStep5ExtraBeds => 'Extra Beds';
+
+  @override
+  String get unitWizardStep5ExtraBedFee => 'Bed Fee';
+
+  @override
+  String get unitWizardStep5MaxPets => 'Max Pets';
+
+  @override
+  String get unitWizardStep5PetFee => 'Pet Fee';
 
   @override
   String get unitWizardStep3Availability => 'Availability';
@@ -5603,13 +5709,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalExportHowItWorks => 'How It Works';
 
   @override
-  String get icalExportStep1 => 'Select a unit from the list below';
+  String get icalExportStep1 =>
+      'Each unit has an automatically generated iCal URL';
 
   @override
-  String get icalExportStep2 => 'Click \'Generate\' to create the iCal URL';
+  String get icalExportStep2 =>
+      'Click the link icon to copy the URL or download the .ics file';
 
   @override
-  String get icalExportStep3 => 'Copy the URL and add it to your calendar app';
+  String get icalExportStep3 =>
+      'Add the URL to your calendar app (Google Calendar, Apple Calendar, Outlook)';
 
   @override
   String get icalExportStep4 =>
@@ -5623,7 +5732,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportFaq1A =>
-      'Most calendar apps sync every 5-15 minutes. You can also manually refresh in your calendar app.';
+      'Calendar apps (Google Calendar, Apple, Outlook) sync every 5-15 minutes. Airbnb syncs every 3-6 hours.';
 
   @override
   String get icalExportFaq2Q => 'Will deleted bookings be removed?';
@@ -5638,6 +5747,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get icalExportFaq3A =>
       'Yes, but be careful - anyone with the URL can see your booking schedule.';
+
+  @override
+  String get icalExportFaq4Q => 'Can I add this URL directly to Booking.com?';
+
+  @override
+  String get icalExportFaq4A =>
+      'No. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.). Workaround: Add our iCal URL to Airbnb first, then connect Airbnb calendar to Booking.com. This way BookBed bookings reach Booking.com via Airbnb.';
 
   @override
   String get icalExportUrlReady => 'URL Ready';
@@ -5662,6 +5778,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get icalExportNoUrlDesc =>
       'Generate an iCal URL to sync your bookings with external calendars.';
+
+  @override
+  String get icalExportDynamicLinkTitle => 'Dynamic iCal Link';
+
+  @override
+  String get icalExportDynamicLinkDescription =>
+      'Copy this link to Airbnb, Google Calendar, Apple Calendar, or Outlook. Your availability will sync automatically.';
+
+  @override
+  String get icalExportLinkCopied => 'Link copied to clipboard';
+
+  @override
+  String get icalExportTokenWarning =>
+      'Note: This link contains a secret token. Do not share it publicly.';
+
+  @override
+  String get icalExportSyncTimeNote =>
+      'Airbnb syncs every 3-6 hours. Calendar apps sync every 5-15 minutes.';
+
+  @override
+  String get icalExportCopyLink => 'Copy Link';
+
+  @override
+  String get icalExportBookingComNote =>
+      'Booking.com does not accept iCal links from custom platforms. To sync with Booking.com: add this URL to Airbnb first, then connect your Airbnb calendar to Booking.com.';
+
+  @override
+  String get icalExportBookingComInfoTitle => 'Booking.com – Important Note';
+
+  @override
+  String get icalExportBookingComInfoDesc =>
+      'Booking.com only accepts iCal links from major OTAs (Airbnb, VRBO, etc.), not from custom platforms. To sync your BookBed bookings with Booking.com, use this flow: BookBed → Airbnb → Booking.com. First add the iCal URL to Airbnb, then connect Airbnb calendar to Booking.com.';
 
   @override
   String errorWithMessage(String message) {
@@ -5956,42 +6104,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get priceCalendarBlockCheckOutDesc => 'Guests cannot end reservation';
 
   @override
-  String get priceCalendarAdvancedOptions => 'Advanced options';
-
-  @override
-  String get priceCalendarAdvancedOptionsDesc =>
-      'Weekend price, min/max nights, advance';
-
-  @override
   String get priceCalendarWeekendPrice => 'Weekend price (€)';
-
-  @override
-  String get priceCalendarMinNights => 'Min. nights';
-
-  @override
-  String get priceCalendarMinNightsHint =>
-      'Minimum nights required for check-in on this date';
-
-  @override
-  String get priceCalendarMaxNights => 'Max. nights';
-
-  @override
-  String get priceCalendarMaxNightsHint =>
-      'Maximum nights allowed for check-in on this date';
-
-  @override
-  String get priceCalendarMinDaysAdvance => 'Min. days advance';
-
-  @override
-  String get priceCalendarMinDaysAdvanceHint =>
-      'Booking must be made at least this many days before check-in';
-
-  @override
-  String get priceCalendarMaxDaysAdvance => 'Max. days advance';
-
-  @override
-  String get priceCalendarMaxDaysAdvanceHint =>
-      'How far in advance guests can book for check-in on this date';
 
   @override
   String get priceCalendarDeleteConfirmTitle => 'Delete confirmation';
@@ -6013,30 +6126,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get priceCalendarWeekendPriceMustBeGreaterThanZero =>
       'Weekend price must be greater than 0';
-
-  @override
-  String get priceCalendarMinNightsMustBeGreaterThanZero =>
-      'Min. nights must be greater than 0';
-
-  @override
-  String get priceCalendarMaxNightsMustBeGreaterThanZero =>
-      'Max. nights must be greater than 0';
-
-  @override
-  String get priceCalendarMinDaysAdvanceMustBeZeroOrMore =>
-      'Min. days advance must be 0 or more';
-
-  @override
-  String get priceCalendarMaxDaysAdvanceMustBeGreaterThanZero =>
-      'Max. days advance must be greater than 0';
-
-  @override
-  String get priceCalendarMinNightsCannotExceedMax =>
-      'Min. nights cannot exceed max. nights';
-
-  @override
-  String get priceCalendarMinAdvanceCannotExceedMax =>
-      'Min. days advance cannot exceed max. days advance';
 
   @override
   String get priceCalendarPriceSaved => 'Price saved';
@@ -7171,6 +7260,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Yes! You can add iCal feeds from Booking.com, Airbnb or any other platform that supports iCal format for the same apartment. All reservations will be displayed.';
 
   @override
+  String get ownerFaqIcal5Q =>
+      'Can I export my BookBed calendar to Booking.com?';
+
+  @override
+  String get ownerFaqIcal5A =>
+      'Not directly. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.) — not from third-party PMS systems. Workaround: Export your BookBed calendar to Airbnb first, then connect your Airbnb calendar to Booking.com.';
+
+  @override
   String get ownerFaqSupport1Q => 'Widget is not loading on my site';
 
   @override
@@ -7706,6 +7803,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to delete account. Please try again or contact support.';
 
   @override
+  String get deleteAccountReauthRequired => 'Re-authentication Required';
+
+  @override
+  String deleteAccountReauthDescription(String provider) {
+    return 'For security, please sign in again with $provider to confirm account deletion.';
+  }
+
+  @override
+  String deleteAccountReauthButton(String provider) {
+    return 'Sign in with $provider';
+  }
+
+  @override
+  String get deleteAccountReauthSuccess =>
+      'Identity verified. You can now delete your account.';
+
+  @override
   String get subscriptionTitle => 'Subscription';
 
   @override
@@ -8025,4 +8139,113 @@ class AppLocalizationsEn extends AppLocalizations {
   String optionalUpdateVersion(String version) {
     return 'Latest version: $version';
   }
+
+  @override
+  String get additionalServicesTitle => 'Additional Services';
+
+  @override
+  String get additionalServicesSubtitle => 'Optional extras guests can book';
+
+  @override
+  String get additionalServicesEmpty => 'No additional services configured';
+
+  @override
+  String get additionalServicesEmptyHint =>
+      'Add services like parking, breakfast, etc.';
+
+  @override
+  String get additionalServiceAddTitle => 'Add Service';
+
+  @override
+  String get additionalServiceEditTitle => 'Edit Service';
+
+  @override
+  String get additionalServiceType => 'Service Type';
+
+  @override
+  String get additionalServiceName => 'Service Name';
+
+  @override
+  String get additionalServiceNameHint => 'e.g. Private Parking';
+
+  @override
+  String get additionalServiceNameRequired => 'Please enter service name';
+
+  @override
+  String get additionalServicePrice => 'Price (EUR)';
+
+  @override
+  String get additionalServicePriceRequired => 'Please enter price';
+
+  @override
+  String get additionalServicePriceInvalid => 'Please enter a valid price';
+
+  @override
+  String get additionalServicePricingUnit => 'Pricing Unit';
+
+  @override
+  String get additionalServiceMaxQuantity => 'Max Quantity';
+
+  @override
+  String get additionalServiceMaxQuantityHint => 'Leave empty for unlimited';
+
+  @override
+  String get additionalServiceMaxQuantityHelper =>
+      'Optional - limit how many can be booked';
+
+  @override
+  String get additionalServiceDescription => 'Description';
+
+  @override
+  String get additionalServiceDescriptionHint =>
+      'Optional details about the service';
+
+  @override
+  String get additionalServiceTypeParking => 'Parking';
+
+  @override
+  String get additionalServiceTypeBreakfast => 'Breakfast';
+
+  @override
+  String get additionalServiceTypeLateCheckin => 'Late Check-in';
+
+  @override
+  String get additionalServiceTypeEarlyCheckout => 'Early Check-out';
+
+  @override
+  String get additionalServiceTypeCleaning => 'Cleaning';
+
+  @override
+  String get additionalServiceTypeBabyCot => 'Baby Cot';
+
+  @override
+  String get additionalServiceTypeTransfer => 'Airport Transfer';
+
+  @override
+  String get additionalServiceTypeOther => 'Other';
+
+  @override
+  String get additionalServicePricingPerBooking => 'Per Booking';
+
+  @override
+  String get additionalServicePricingPerNight => 'Per Night';
+
+  @override
+  String get additionalServicePricingPerPerson => 'Per Person';
+
+  @override
+  String get additionalServicePricingPerItem => 'Per Item';
+
+  @override
+  String get additionalServiceDeleteConfirm => 'Delete this service?';
+
+  @override
+  String get additionalServiceDeleteHint => 'This action cannot be undone';
+
+  @override
+  String get additionalServiceSaveUnitFirst =>
+      'Save the unit first to add services';
+
+  @override
+  String get add => 'Add';
 }

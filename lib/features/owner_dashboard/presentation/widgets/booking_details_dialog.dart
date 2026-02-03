@@ -129,6 +129,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                     _SectionHeader(
                       icon: Icons.confirmation_number_outlined,
                       title: l10n.ownerDetailsBookingInfo,
+                      isFirst: true,
                     ),
                     _DetailRow(
                       label: l10n.ownerDetailsBookingId,
@@ -138,8 +139,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                       label: l10n.ownerDetailsStatus,
                       child: _StatusBadge(status: booking.status),
                     ),
-
-                    _ThemedDivider(),
 
                     // Guest Information
                     _SectionHeader(
@@ -184,8 +183,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                         ),
                       ),
 
-                    _ThemedDivider(),
-
                     // Property Information
                     _SectionHeader(
                       icon: Icons.home_outlined,
@@ -200,8 +197,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                       label: l10n.ownerDetailsLocation,
                       value: property.location,
                     ),
-
-                    _ThemedDivider(),
 
                     // Booking Details
                     _SectionHeader(
@@ -226,8 +221,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                       label: l10n.ownerDetailsGuests,
                       value: '${booking.guestCount}',
                     ),
-
-                    _ThemedDivider(),
 
                     // Payment Information
                     _SectionHeader(
@@ -274,7 +267,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                       ),
 
                     if (booking.notes != null && booking.notes!.isNotEmpty) ...[
-                      _ThemedDivider(),
                       _SectionHeader(
                         icon: Icons.note_outlined,
                         title: l10n.ownerDetailsNotes,
@@ -286,7 +278,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                     ],
 
                     if (booking.status == BookingStatus.cancelled) ...[
-                      _ThemedDivider(),
                       _SectionHeader(
                         icon: Icons.cancel_outlined,
                         title: l10n.ownerDetailsCancellationInfo,
@@ -303,8 +294,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                           value: booking.cancellationReason!,
                         ),
                     ],
-
-                    _ThemedDivider(),
 
                     // Timestamps
                     _DetailRow(
@@ -685,30 +674,17 @@ class BookingDetailsDialog extends ConsumerWidget {
   }
 }
 
-/// Themed divider that uses consistent colors from design system
-class _ThemedDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Divider(
-        height: 1,
-        thickness: 1,
-        color: isDark
-            ? AppColors.sectionDividerDark
-            : AppColors.sectionDividerLight,
-      ),
-    );
-  }
-}
-
 /// Section header widget with icon and subtle accent
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.icon, required this.title});
+  const _SectionHeader({
+    required this.icon,
+    required this.title,
+    this.isFirst = false,
+  });
 
   final IconData icon;
   final String title;
+  final bool isFirst;
 
   @override
   Widget build(BuildContext context) {
@@ -716,28 +692,28 @@ class _SectionHeader extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      // First section doesn't need top spacing, others get 12px for visual separation
+      padding: EdgeInsets.only(top: isFirst ? 0 : 12, bottom: 6),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              // Subtle background instead of full gradient
               color: primaryColor.withValues(alpha: 0.12),
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
+              borderRadius: const BorderRadius.all(Radius.circular(6)),
             ),
-            child: Icon(icon, color: primaryColor, size: 18),
+            child: Icon(icon, color: primaryColor, size: 16),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: AutoSizeText(
               title,
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 height: 1.2,
               ),
               maxLines: 1,
-              minFontSize: 12,
+              minFontSize: 11,
             ),
           ),
         ],
@@ -757,7 +733,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 4),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space
@@ -813,7 +789,7 @@ class _DetailRowWithWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 4),
       child: LayoutBuilder(
         builder: (context, constraints) {
           // More responsive label width based on available space
@@ -863,7 +839,7 @@ class _StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusColor.withValues(alpha: 0.4), width: 1),
+        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
       ),
       child: Text(
         statusText,

@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/constants/auth_feature_flags.dart';
 import '../../core/exceptions/app_exceptions.dart';
 import '../../core/services/rate_limit_service.dart';
@@ -77,7 +79,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   final IpGeolocationService _geolocation;
   StreamSubscription<User?>? _authSubscription;
   String? _loadingUserId; // Prevents concurrent profile loads for same user
-
+  Completer<void>?
+  _profileLoadCompleter; // Allows callers to await in-progress load
+  Timer?
+  _signOutGraceTimer; // Grace period before treating null user as sign-out
   EnhancedAuthNotifier(
     this._auth,
     this._firestore,
@@ -92,16 +97,37 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         tag: 'ENHANCED_AUTH',
       );
       if (user != null) {
+        // Cancel any pending sign-out grace timer
+        _signOutGraceTimer?.cancel();
+        _signOutGraceTimer = null;
         _loadUserProfile(user);
       } else {
-        LoggingService.log(
-          'User signed out, clearing state',
-          tag: 'ENHANCED_AUTH',
-        );
-        // Clear user context for Sentry/Crashlytics
-        LoggingService.clearUser();
-        // Set isLoading to false when no user (initial check complete)
-        state = const EnhancedAuthState(isLoading: false);
+        // GRACE PERIOD: Don't immediately clear state when user becomes null.
+        // This handles token refresh race conditions (e.g., after email change via
+        // verifyBeforeUpdateEmail). The auth listener may briefly fire with null
+        // during token refresh, then fire again with user once refresh completes.
+        // Without this grace period, the router would redirect to login during
+        // the brief null state, causing "dashboard for 3 seconds then login" bug.
+        _signOutGraceTimer?.cancel();
+
+        _signOutGraceTimer = Timer(const Duration(seconds: 2), () {
+          // After grace period, if still no user, treat as real sign-out
+          if (_auth.currentUser == null) {
+            LoggingService.log(
+              'User signed out (confirmed after grace period)',
+              tag: 'ENHANCED_AUTH',
+            );
+            // Clear user context for Sentry/Crashlytics
+            LoggingService.clearUser();
+            // Set isLoading to false when no user (initial check complete)
+            state = const EnhancedAuthState(isLoading: false);
+          } else {
+            LoggingService.log(
+              'User recovered after grace period (token refresh)',
+              tag: 'ENHANCED_AUTH',
+            );
+          }
+        });
       }
     });
   }
@@ -109,6 +135,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   @override
   void dispose() {
     _authSubscription?.cancel();
+    _signOutGraceTimer?.cancel();
     super.dispose();
   }
 
@@ -129,16 +156,22 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       return;
     }
 
-    // Prevent concurrent loads for the same user
+    // If loading is in progress for the same user, wait for it to complete
+    // instead of silently returning. This fixes the race condition where
+    // signInWithEmail() returns before the profile is loaded (the auth listener
+    // starts loading, the explicit call skips, and the login screen navigates
+    // to dashboard with null userModel).
     if (_loadingUserId == firebaseUser.uid) {
       LoggingService.log(
-        'User profile load already in progress for ${firebaseUser.uid}, skipping duplicate request',
+        'User profile load already in progress for ${firebaseUser.uid}, waiting for completion...',
         tag: 'ENHANCED_AUTH',
       );
+      await _profileLoadCompleter?.future;
       return;
     }
 
     _loadingUserId = firebaseUser.uid;
+    _profileLoadCompleter = Completer<void>();
     LoggingService.log(
       'Loading user profile for ${firebaseUser.uid}...',
       tag: 'ENHANCED_AUTH',
@@ -321,6 +354,11 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       );
     } finally {
       _loadingUserId = null;
+      if (_profileLoadCompleter != null &&
+          !_profileLoadCompleter!.isCompleted) {
+        _profileLoadCompleter!.complete();
+      }
+      _profileLoadCompleter = null;
     }
   }
 
@@ -357,7 +395,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       emailVerified:
           firebaseUser.emailVerified ||
           isSocialSignIn, // Social sign-in emails are verified
-      onboardingCompleted: false, // Show onboarding wizard for new users
       displayName: firebaseUser.displayName,
       phone: firebaseUser.phoneNumber,
       avatarUrl: firebaseUser.photoURL,
@@ -367,20 +404,51 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       lastProvider: providerId,
     );
 
-    await _firestore
-        .collection('users')
-        .doc(firebaseUser.uid)
-        .set(userModel.toJson());
+    // SECURITY FIX: Don't use toJson() - it includes protected fields
+    // that are blocked by Firestore security rules on user creation.
+    await _firestore.collection('users').doc(firebaseUser.uid).set({
+      'id': userModel.id,
+      'email': userModel.email,
+      'first_name': userModel.firstName,
+      'last_name': userModel.lastName,
+      'role': userModel.role.name,
+      'accountType': userModel.accountType.name,
+      'emailVerified': userModel.emailVerified,
+      'phone': userModel.phone,
+      'avatar_url': userModel.avatarUrl,
+      'displayName': userModel.displayName,
+      'onboardingCompleted': userModel.onboardingCompleted,
+      'createdAt': FieldValue.serverTimestamp(),
+      'profileCompleted': userModel.profileCompleted,
+      'lastProvider': userModel.lastProvider,
+    });
 
     // Set isLoading to false when user profile is created (initial check complete)
     // For social sign-in, set requiresProfileCompletion flag
+    // For email/password sign-in, check if email verification is required
+    final requiresVerification =
+        !isSocialSignIn &&
+        AuthFeatureFlags.requireEmailVerification &&
+        !firebaseUser.emailVerified;
+
     state = EnhancedAuthState(
       firebaseUser: firebaseUser,
       userModel: userModel,
       isLoading: false,
+      requiresEmailVerification: requiresVerification,
       requiresProfileCompletion: isSocialSignIn,
-      // Social sign-in emails are pre-verified by the provider
-      requiresEmailVerification: false,
+    );
+
+    // BUG FIX: Initialize FCM for newly created users (Google/Apple sign-in)
+    // The authStateChanges listener calls _loadUserProfile() but the optimization
+    // skips it because userModel is already set above.
+    unawaited(
+      fcmService.initialize().catchError((e) {
+        LoggingService.log(
+          'FCM initialization failed during profile creation (non-critical): $e',
+          tag: 'FCM_INIT',
+        );
+      }),
     );
   }
 
@@ -460,10 +528,73 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         'Calling Firebase signInWithEmailAndPassword: email=$email',
         tag: 'ENHANCED_AUTH',
       );
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+
+      UserCredential credential;
+      try {
+        credential = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      } on FirebaseAuthException catch (e) {
+        // SENTRY: Enhanced error tracking with specific error codes
+        LoggingService.log(
+          'AUTH_LOGIN_FAILED: code=${e.code}, method=email',
+          tag: 'AUTH_ERROR',
+        );
+        unawaited(LoggingService.logError('AUTH_LOGIN_FAILED: ${e.code}', e));
+
+        // PROVIDER MISMATCH DETECTION
+        // When user tries email/password but account was created with Google/Apple
+        if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+          // Check if this email might be linked to a social provider
+          // by checking if user exists in Firestore with a different provider
+          try {
+            final userQuery = await _firestore
+                .collection('users')
+                .where('email', isEqualTo: email)
+                .limit(1)
+                .get();
+
+            if (userQuery.docs.isNotEmpty) {
+              final userData = userQuery.docs.first.data();
+              final lastProvider = userData['last_provider'] as String?;
+
+              if (lastProvider == 'google.com' || lastProvider == 'apple.com') {
+                // Log provider mismatch for Sentry tracking
+                unawaited(
+                  _security.logEvent(
+                    userId: userQuery.docs.first.id,
+                    type: SecurityEventType.suspicious,
+                    metadata: {
+                      'reason': 'provider_mismatch',
+                      'attempted_method': 'email',
+                      'actual_provider': lastProvider,
+                      'action': 'login_attempt',
+                    },
+                  ),
+                );
+
+                // Throw specific error for provider mismatch
+                final providerName = lastProvider == 'google.com'
+                    ? 'Google'
+                    : 'Apple';
+                throw 'This account uses $providerName Sign-In. Please use the "$providerName" button to log in.';
+              }
+            }
+          } catch (queryError) {
+            if (queryError is String) rethrow;
+            // If Firestore query fails, continue with normal error handling
+            LoggingService.log(
+              'Provider mismatch check failed: $queryError',
+              tag: 'AUTH_WARNING',
+            );
+          }
+        }
+
+        // Re-throw for normal error handling
+        rethrow;
+      }
+
       LoggingService.log(
         'Firebase sign in successful for ${credential.user?.uid}',
         tag: 'ENHANCED_AUTH',
@@ -704,6 +835,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       }
 
       // Create user profile
+      // Note: onboardingCompleted defaults to false (show onboarding wizard for new users)
       final userModel = UserModel(
         id: user.uid,
         email: email,
@@ -713,12 +845,27 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         phone: phone,
         avatarUrl: finalAvatarUrl,
         displayName: '$firstName $lastName',
-        onboardingCompleted: false, // Show onboarding wizard for new users
         createdAt: DateTime.now(),
       );
 
+      // SECURITY FIX: Don't use toJson() spread - it includes protected fields
+      // like admin_override_account_type, lifetime_license_granted_at, etc.
+      // which are blocked by Firestore security rules on user creation.
+      // Explicitly list only the fields allowed for new user registration.
       await _firestore.collection('users').doc(user.uid).set({
-        ...userModel.toJson(),
+        'id': userModel.id,
+        'email': userModel.email,
+        'first_name': userModel.firstName,
+        'last_name': userModel.lastName,
+        'role': userModel.role.name,
+        'accountType': userModel.accountType.name,
+        'emailVerified': userModel.emailVerified,
+        'phone': userModel.phone,
+        'avatar_url': userModel.avatarUrl,
+        'displayName': userModel.displayName,
+        'onboardingCompleted': userModel.onboardingCompleted,
+        'createdAt': FieldValue.serverTimestamp(),
+        'profileCompleted': userModel.profileCompleted,
         'newsletterOptIn': newsletterOptIn,
       });
 
@@ -789,13 +936,66 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         userModel: userModel,
         requiresEmailVerification: AuthFeatureFlags.requireEmailVerification,
       );
+
+      // BUG FIX: Initialize FCM for newly registered users
+      // The authStateChanges listener calls _loadUserProfile() but the optimization
+      // at line 145-152 skips it because userModel is already set above.
+      // This means fcmService.initialize() (line 305) never gets called for new users.
+      // We need to initialize FCM explicitly here.
+      unawaited(
+        fcmService.initialize().catchError((e) {
+          LoggingService.log(
+            'FCM initialization failed during registration (non-critical): $e',
+            tag: 'FCM_INIT',
+          );
+        }),
+      );
     } on FirebaseAuthException catch (e) {
+      // SENTRY: Log registration failure with error code
+      LoggingService.log('REGISTER_FAILED: code=${e.code}', tag: 'AUTH_ERROR');
+      unawaited(LoggingService.logError('REGISTER_FAILED: ${e.code}', e));
+
       // PRIORITY: Critical errors like email-already-in-use should ALWAYS
       // be shown to user, not hidden behind rate limit messages.
       // This fixes the bug where users registering with Google-linked emails
       // see "try again in X seconds" instead of "email already exists".
       if (e.code == 'email-already-in-use') {
+        // SENTRY: Log email conflict - check if it's a provider mismatch
+        try {
+          final userQuery = await _firestore
+              .collection('users')
+              .where('email', isEqualTo: email)
+              .limit(1)
+              .get();
+
+          if (userQuery.docs.isNotEmpty) {
+            final userData = userQuery.docs.first.data();
+            final lastProvider = userData['last_provider'] as String?;
+
+            // Log the provider conflict for analytics
+            LoggingService.log(
+              'REGISTER_EMAIL_CONFLICT: provider=$lastProvider',
+              tag: 'AUTH_SECURITY',
+            );
+          }
+        } catch (_) {
+          // Ignore query errors, continue with standard error message
+        }
+
         final errorMessage = _getAuthErrorMessage(e);
+        state = state.copyWith(isLoading: false, error: errorMessage);
+        throw errorMessage;
+      }
+
+      // Handle account-exists-with-different-credential (rare but possible)
+      if (e.code == 'account-exists-with-different-credential') {
+        LoggingService.log(
+          'REGISTER_CREDENTIAL_CONFLICT: Different auth provider exists',
+          tag: 'AUTH_SECURITY',
+        );
+        const errorMessage =
+            'An account already exists with this email using a different sign-in method. '
+            'Please use Google or Apple Sign-In instead.';
         state = state.copyWith(isLoading: false, error: errorMessage);
         throw errorMessage;
       }
@@ -824,6 +1024,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
+      // SENTRY: Log unexpected registration error
+      unawaited(LoggingService.logError('REGISTER_UNEXPECTED_ERROR', e));
       final errorMessage = e.toString();
       // CRITICAL: Always reset isLoading to prevent infinite loading state
       state = state.copyWith(isLoading: false, error: errorMessage);
@@ -834,7 +1036,24 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   /// Send email verification
   Future<void> sendEmailVerification() async {
     final user = _auth.currentUser;
-    if (user == null) throw 'No user logged in';
+    if (user == null) {
+      // SENTRY: Log anomaly - no user when trying to send verification
+      unawaited(
+        LoggingService.logError(
+          'EMAIL_VERIFICATION_NO_USER',
+          Exception(
+            'Attempted to send email verification without logged in user',
+          ),
+        ),
+      );
+      throw 'No user logged in';
+    }
+
+    // SENTRY: Log verification email request
+    LoggingService.log(
+      'EMAIL_VERIFICATION_REQUESTED: uid=${user.uid}',
+      tag: 'AUTH_SECURITY',
+    );
 
     try {
       await user.sendEmailVerification();
@@ -843,8 +1062,52 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         type: SecurityEventType.emailVerification,
         metadata: {'action': 'resent'},
       );
+
+      // SENTRY: Log successful send
+      LoggingService.log(
+        'EMAIL_VERIFICATION_SENT: uid=${user.uid}',
+        tag: 'AUTH_SECURITY',
+      );
     } catch (e) {
+      // SENTRY: Log verification email failure
+      unawaited(LoggingService.logError('EMAIL_VERIFICATION_SEND_FAILED', e));
       throw 'Failed to send verification email: $e';
+    }
+  }
+
+  /// Resend email change verification
+  ///
+  /// Used when user changed their email and needs to verify the NEW email.
+  /// This calls verifyBeforeUpdateEmail which sends a verification link
+  /// to the new email address.
+  Future<void> resendEmailChangeVerification(String newEmail) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw 'No user logged in';
+    }
+
+    LoggingService.log(
+      'EMAIL_CHANGE_VERIFICATION_REQUESTED: uid=${user.uid}, newEmail=$newEmail',
+      tag: 'AUTH_SECURITY',
+    );
+
+    try {
+      await user.verifyBeforeUpdateEmail(newEmail);
+      await _security.logEvent(
+        userId: user.uid,
+        type: SecurityEventType.emailVerification,
+        metadata: {'action': 'resent_email_change', 'newEmail': newEmail},
+      );
+
+      LoggingService.log(
+        'EMAIL_CHANGE_VERIFICATION_SENT: uid=${user.uid}, newEmail=$newEmail',
+        tag: 'AUTH_SECURITY',
+      );
+    } catch (e) {
+      unawaited(
+        LoggingService.logError('EMAIL_CHANGE_VERIFICATION_SEND_FAILED', e),
+      );
+      throw 'Failed to send email change verification: $e';
     }
   }
 
@@ -870,8 +1133,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         // Log verification success
         await _security.logEmailVerification(user.uid);
 
-        // Reload profile
-        await _loadUserProfile(refreshedUser);
+        // Reload profile with forceRefresh to update requiresEmailVerification state
+        // Without forceRefresh, the optimization at line 122 would skip the update
+        // because the profile is already loaded, leaving requiresEmailVerification=true
+        await _loadUserProfile(refreshedUser, forceRefresh: true);
       }
     } catch (e, stackTrace) {
       // Network errors during reload are non-critical - user can retry
@@ -881,7 +1146,21 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         e,
         stackTrace,
       );
-      // Rethrow so caller knows refresh failed (for UI feedback)
+
+      // If email is already verified in Firebase Auth (reload succeeded but
+      // subsequent Firestore/token operations failed), try to complete the flow
+      // rather than showing an error to the user
+      final refreshedUser = _auth.currentUser;
+      if (refreshedUser != null && refreshedUser.emailVerified) {
+        try {
+          await _loadUserProfile(refreshedUser, forceRefresh: true);
+          return; // Email IS verified - don't rethrow
+        } catch (_) {
+          // Profile load also failed - fall through to rethrow
+        }
+      }
+
+      // Rethrow only if verification status is unknown or not verified
       rethrow;
     }
   }
@@ -908,20 +1187,20 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       if (isNewUser) {
         // Create anonymous user profile
-        final userModel = UserModel(
-          id: user.uid,
-          email: 'anonymous@demo.com',
-          firstName: 'Demo',
-          lastName: 'User',
-          role: UserRole.owner,
-          displayName: 'Demo User',
-          createdAt: DateTime.now(),
-        );
-
-        await _firestore
-            .collection('users')
-            .doc(user.uid)
-            .set(userModel.toJson());
+        // SECURITY FIX: Don't use toJson() - it includes protected fields
+        await _firestore.collection('users').doc(user.uid).set({
+          'id': user.uid,
+          'email': 'anonymous@demo.com',
+          'first_name': 'Demo',
+          'last_name': 'User',
+          'role': UserRole.owner.name,
+          'accountType': AccountType.trial.name,
+          'emailVerified': false,
+          'displayName': 'Demo User',
+          'onboardingCompleted': false,
+          'createdAt': FieldValue.serverTimestamp(),
+          'profileCompleted': true,
+        });
       } else {
         // Update last login for existing users
         await _updateLastLogin(user.uid);
@@ -1054,26 +1333,88 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   ///
   /// Required for Apple App Store compliance (mandatory since 2022).
   ///
-  /// [password] - Required for re-authentication before deletion (security measure)
+  /// For email/password users: provide [password]
+  /// For social sign-in users: provide [credential] from reauthenticateWithGoogle/Apple
   ///
   /// Throws [String] error message on failure.
-  Future<void> deleteAccount({required String password}) async {
+  Future<void> deleteAccount({
+    String? password,
+    AuthCredential? credential,
+  }) async {
     final user = _auth.currentUser;
     if (user == null) {
       throw 'No user is currently signed in';
     }
 
+    // Determine auth method for logging
+    final authMethod = credential != null
+        ? 'social'
+        : (password != null ? 'email' : 'unknown');
+
+    // SENTRY: Log delete account attempt
+    LoggingService.log(
+      'DELETE_ACCOUNT_ATTEMPT: uid=${user.uid}, method=$authMethod',
+      tag: 'AUTH_SECURITY',
+    );
+
     // Re-authenticate user before deletion (security measure)
     try {
-      if (user.email == null) {
-        throw 'User email is missing';
+      if (credential != null) {
+        // Social sign-in re-authentication (Google/Apple)
+        await user.reauthenticateWithCredential(credential);
+      } else if (password != null) {
+        // Email/password re-authentication
+        if (user.email == null) {
+          // SENTRY: Log anomaly - user has no email
+          unawaited(
+            LoggingService.logError(
+              'DELETE_ACCOUNT_ANOMALY: User has no email',
+              Exception('User email is null during delete account'),
+            ),
+          );
+          throw 'User email is missing';
+        }
+        final emailCredential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(emailCredential);
+      } else {
+        // SENTRY: Log invalid delete attempt (no credentials provided)
+        unawaited(
+          _security.logEvent(
+            userId: user.uid,
+            type: SecurityEventType.suspicious,
+            metadata: {
+              'reason': 'delete_account_no_credentials',
+              'action': 'delete_attempt',
+            },
+          ),
+        );
+        throw 'Re-authentication required';
       }
-      final credential = EmailAuthProvider.credential(
-        email: user.email!,
-        password: password,
+
+      // SENTRY: Log successful re-authentication for delete
+      LoggingService.log(
+        'DELETE_ACCOUNT_REAUTH_SUCCESS: uid=${user.uid}, method=$authMethod',
+        tag: 'AUTH_SECURITY',
       );
-      await user.reauthenticateWithCredential(credential);
     } on FirebaseAuthException catch (e) {
+      // SENTRY: Log failed re-authentication attempt
+      unawaited(
+        LoggingService.logError('DELETE_ACCOUNT_REAUTH_FAILED: ${e.code}', e),
+      );
+      unawaited(
+        _security.logEvent(
+          userId: user.uid,
+          type: SecurityEventType.suspicious,
+          metadata: {
+            'reason': 'delete_account_reauth_failed',
+            'error_code': e.code,
+            'auth_method': authMethod,
+          },
+        ),
+      );
       throw _getAuthErrorMessage(e);
     }
 
@@ -1083,9 +1424,10 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       final callable = functions.httpsCallable('deleteUserAccount');
       await callable.call();
 
+      // SENTRY: Log successful account deletion
       LoggingService.log(
-        'User account deleted successfully',
-        tag: 'ENHANCED_AUTH',
+        'DELETE_ACCOUNT_SUCCESS: uid=${user.uid}',
+        tag: 'AUTH_SECURITY',
       );
 
       // Clear user context for error tracking
@@ -1102,32 +1444,56 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       await _auth.signOut();
       state = const EnhancedAuthState(isLoading: false);
     } on FirebaseFunctionsException catch (e) {
-      LoggingService.log(
-        'Failed to delete account: ${e.message}',
-        tag: 'ENHANCED_AUTH',
+      // SENTRY: Log Cloud Function error during deletion
+      unawaited(
+        LoggingService.logError(
+          'DELETE_ACCOUNT_FUNCTION_ERROR: ${e.code} - ${e.message}',
+          e,
+        ),
       );
       throw e.message ?? 'Failed to delete account';
     } catch (e) {
-      LoggingService.log('Failed to delete account: $e', tag: 'ENHANCED_AUTH');
+      // SENTRY: Log unexpected error during deletion
+      unawaited(LoggingService.logError('DELETE_ACCOUNT_ERROR', e));
       throw 'Failed to delete account. Please try again or contact support.';
     }
   }
 
   /// Reset password using custom email template
   Future<void> resetPassword(String email) async {
+    // SENTRY: Log password reset attempt
+    LoggingService.log(
+      'PASSWORD_RESET_ATTEMPT: email_hash=${email.hashCode}',
+      tag: 'AUTH_SECURITY',
+    );
+
     try {
       // Use Cloud Function for custom email template instead of default Firebase Auth email
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable('sendPasswordResetEmail');
 
       await callable.call({'email': email});
+
+      // SENTRY: Log successful password reset request
+      LoggingService.log(
+        'PASSWORD_RESET_SENT: email_hash=${email.hashCode}',
+        tag: 'AUTH_SECURITY',
+      );
     } on FirebaseFunctionsException catch (e) {
-      // Handle Cloud Function errors
+      // SENTRY: Log Cloud Function error
+      unawaited(
+        LoggingService.logError('PASSWORD_RESET_FUNCTION_ERROR: ${e.code}', e),
+      );
       throw e.message ?? 'Failed to send password reset email';
     } on FirebaseAuthException catch (e) {
-      // Fallback to Firebase Auth if Cloud Function fails
+      // SENTRY: Log Firebase Auth error
+      unawaited(
+        LoggingService.logError('PASSWORD_RESET_AUTH_ERROR: ${e.code}', e),
+      );
       throw _getAuthErrorMessage(e);
     } catch (e) {
+      // SENTRY: Log unexpected error
+      unawaited(LoggingService.logError('PASSWORD_RESET_ERROR', e));
       throw 'Failed to send password reset email: $e';
     }
   }
@@ -1142,26 +1508,34 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Set persistence to LOCAL for Google sign in (web only)
-      if (kIsWeb) {
-        await _auth.setPersistence(Persistence.LOCAL);
-      }
-
-      // Create Google Auth Provider
-      final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-
-      // Add scopes if needed
-      googleProvider.addScope('email');
-      googleProvider.addScope('profile');
-
-      // Sign in with popup for web, native SDK for mobile
       final UserCredential userCredential;
       if (kIsWeb) {
-        // Web: Use signInWithPopup (signInWithProvider is not implemented for web)
+        // Web: Use signInWithPopup with Generic IDP flow
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        await _auth.setPersistence(Persistence.LOCAL);
         userCredential = await _auth.signInWithPopup(googleProvider);
       } else {
-        // Mobile: Use signInWithProvider
-        userCredential = await _auth.signInWithProvider(googleProvider);
+        // Mobile (Android/iOS): Use native Google Sign-In SDK
+        final GoogleSignIn googleSignIn = GoogleSignIn(
+          scopes: ['email', 'profile'],
+        );
+        // Clear cached account to always show account picker
+        await googleSignIn.signOut();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          // User cancelled the sign-in flow
+          state = state.copyWith(isLoading: false);
+          return;
+        }
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        userCredential = await _auth.signInWithCredential(credential);
       }
 
       if (userCredential.user == null) {
@@ -1210,14 +1584,33 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         state = state.copyWith(isLoading: false);
       }
     } on FirebaseAuthException catch (e) {
+      // SENTRY: Enhanced logging for Google Sign-In errors
       LoggingService.log(
-        'Google Sign-In error: ${e.code} - ${e.message}',
+        'GOOGLE_SIGNIN_FAILED: code=${e.code}',
         tag: 'AUTH_ERROR',
       );
+      unawaited(LoggingService.logError('GOOGLE_SIGNIN_FAILED: ${e.code}', e));
+
+      // Handle account-exists-with-different-credential
+      // This happens when email is already registered with email/password or Apple
+      if (e.code == 'account-exists-with-different-credential') {
+        LoggingService.log(
+          'GOOGLE_SIGNIN_CREDENTIAL_CONFLICT: Email exists with different provider',
+          tag: 'AUTH_SECURITY',
+        );
+        const errorMessage =
+            'An account already exists with this email. '
+            'Please sign in with your email/password or Apple Sign-In instead.';
+        state = state.copyWith(isLoading: false, error: errorMessage);
+        throw errorMessage;
+      }
+
       final errorMessage = _getAuthErrorMessage(e);
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
+      // SENTRY: Log unexpected Google Sign-In error
+      unawaited(LoggingService.logError('GOOGLE_SIGNIN_UNEXPECTED_ERROR', e));
       LoggingService.log(
         'Google Sign-In unexpected error: $e',
         tag: 'AUTH_ERROR',
@@ -1245,16 +1638,23 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       }
 
       // Create Apple Auth Provider
-      final OAuthProvider appleProvider = OAuthProvider('apple.com');
+      // IMPORTANT: Use AppleAuthProvider(), NOT OAuthProvider('apple.com')
+      // OAuthProvider triggers Generic IDP flow which fails on iPad/iOS native
+      // AppleAuthProvider triggers native ASAuthorizationController (correct path)
+      final appleProvider = AppleAuthProvider();
 
       // Request email and full name scopes
       appleProvider.addScope('email');
       appleProvider.addScope('name');
 
-      // Sign in with popup for web, native SDK for mobile
-      final UserCredential userCredential = await _auth.signInWithProvider(
-        appleProvider,
-      );
+      // Web: signInWithPopup (signInWithProvider not implemented on web)
+      // Mobile: signInWithProvider (uses native iOS ASAuthorizationController)
+      final UserCredential userCredential;
+      if (kIsWeb) {
+        userCredential = await _auth.signInWithPopup(appleProvider);
+      } else {
+        userCredential = await _auth.signInWithProvider(appleProvider);
+      }
 
       if (userCredential.user == null) {
         throw AuthException.noUserReturned('Apple');
@@ -1297,14 +1697,56 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         state = state.copyWith(isLoading: false);
       }
     } on FirebaseAuthException catch (e) {
+      // User cancelled the Apple Sign-In sheet - not an error
+      if (e.code == 'canceled' ||
+          e.code == 'web-context-canceled' ||
+          e.code == 'web-context-cancelled') {
+        LoggingService.log('Apple Sign-In cancelled by user', tag: 'AUTH_INFO');
+        state = state.copyWith(isLoading: false);
+        return; // Silent return - no error shown
+      }
+
+      // SENTRY: Enhanced logging for Apple Sign-In errors
       LoggingService.log(
-        'Apple Sign-In error: ${e.code} - ${e.message}',
+        'APPLE_SIGNIN_FAILED: code=${e.code}, message=${e.message}',
         tag: 'AUTH_ERROR',
       );
+      unawaited(LoggingService.logError('APPLE_SIGNIN_FAILED: ${e.code}', e));
+
+      // Handle account-exists-with-different-credential
+      // This happens when email is already registered with email/password or Google
+      if (e.code == 'account-exists-with-different-credential') {
+        LoggingService.log(
+          'APPLE_SIGNIN_CREDENTIAL_CONFLICT: Email exists with different provider',
+          tag: 'AUTH_SECURITY',
+        );
+        const errorMessage =
+            'An account already exists with this email. '
+            'Please sign in with your email/password or Google Sign-In instead.';
+        state = state.copyWith(isLoading: false, error: errorMessage);
+        throw errorMessage;
+      }
+
       final errorMessage = _getAuthErrorMessage(e);
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
     } catch (e) {
+      // Check if user cancelled (may come as PlatformException on some iOS versions)
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('cancel') ||
+          errorString.contains(
+            'com.apple.authenticationservices.authorizationerror error 1001',
+          )) {
+        LoggingService.log(
+          'Apple Sign-In cancelled by user (non-Firebase exception)',
+          tag: 'AUTH_INFO',
+        );
+        state = state.copyWith(isLoading: false);
+        return; // Silent return - no error shown
+      }
+
+      // SENTRY: Log unexpected Apple Sign-In error
+      unawaited(LoggingService.logError('APPLE_SIGNIN_UNEXPECTED_ERROR', e));
       LoggingService.log(
         'Apple Sign-In unexpected error: $e',
         tag: 'AUTH_ERROR',
@@ -1312,6 +1754,107 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       const errorMessage = 'Failed to sign in with Apple. Please try again.';
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message
+    }
+  }
+
+  /// Re-authenticate with Google for sensitive operations (e.g., account deletion)
+  ///
+  /// Returns [AuthCredential] that can be used with deleteAccount() or other
+  /// sensitive operations that require re-authentication.
+  ///
+  /// Throws [String] error message on failure.
+  Future<AuthCredential> reauthenticateWithGoogle() async {
+    try {
+      if (kIsWeb) {
+        // Web: Use popup for re-authentication
+        final GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        final userCredential = await _auth.currentUser!.reauthenticateWithPopup(
+          googleProvider,
+        );
+        final credential = userCredential.credential;
+        if (credential == null) {
+          throw 'Re-authentication succeeded but no credential was returned.';
+        }
+        return credential;
+      } else {
+        // Mobile (Android/iOS): Use native Google Sign-In SDK
+        final GoogleSignIn googleSignIn = GoogleSignIn(
+          scopes: ['email', 'profile'],
+        );
+        // Clear cached account to always show account picker
+        await googleSignIn.signOut();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+        if (googleUser == null) {
+          throw 'Google re-authentication was cancelled.';
+        }
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        await _auth.currentUser!.reauthenticateWithCredential(credential);
+        return credential;
+      }
+    } on FirebaseAuthException catch (e) {
+      LoggingService.log(
+        'Google re-auth error: ${e.code} - ${e.message}',
+        tag: 'AUTH_ERROR',
+      );
+      throw _getAuthErrorMessage(e);
+    } catch (e) {
+      LoggingService.log(
+        'Google re-auth unexpected error: $e',
+        tag: 'AUTH_ERROR',
+      );
+      throw 'Failed to re-authenticate with Google. Please try again.';
+    }
+  }
+
+  /// Re-authenticate with Apple for sensitive operations (e.g., account deletion)
+  ///
+  /// Returns [AuthCredential] that can be used with deleteAccount() or other
+  /// sensitive operations that require re-authentication.
+  ///
+  /// Throws [String] error message on failure.
+  Future<AuthCredential> reauthenticateWithApple() async {
+    try {
+      final appleProvider = AppleAuthProvider();
+      appleProvider.addScope('email');
+      appleProvider.addScope('name');
+
+      final UserCredential userCredential;
+      if (kIsWeb) {
+        // Web: Use popup for re-authentication
+        userCredential = await _auth.currentUser!.reauthenticateWithPopup(
+          appleProvider,
+        );
+      } else {
+        // Native: Use signInWithProvider for re-authentication
+        userCredential = await _auth.currentUser!.reauthenticateWithProvider(
+          appleProvider,
+        );
+      }
+
+      final credential = userCredential.credential;
+      if (credential == null) {
+        throw 'Re-authentication succeeded but no credential was returned.';
+      }
+      return credential;
+    } on FirebaseAuthException catch (e) {
+      LoggingService.log(
+        'Apple re-auth error: ${e.code} - ${e.message}',
+        tag: 'AUTH_ERROR',
+      );
+      throw _getAuthErrorMessage(e);
+    } catch (e) {
+      LoggingService.log(
+        'Apple re-auth unexpected error: $e',
+        tag: 'AUTH_ERROR',
+      );
+      throw 'Failed to re-authenticate with Apple. Please try again.';
     }
   }
 
@@ -1456,8 +1999,15 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       LoggingService.log('Email updated successfully!', tag: 'ENHANCED_AUTH');
 
+      // Update userModel with new email so resend works correctly
+      final updatedUserModel = state.userModel?.copyWith(
+        email: newEmail,
+        emailVerified: false,
+      );
+
       // Reload state to reflect changes
       state = state.copyWith(
+        userModel: updatedUserModel,
         requiresEmailVerification: AuthFeatureFlags.requireEmailVerification,
       );
     } on FirebaseAuthException catch (e) {

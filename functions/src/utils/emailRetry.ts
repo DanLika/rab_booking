@@ -33,7 +33,7 @@ interface RetryConfig {
  * @param emailType - Type of email (for logging)
  * @param recipient - Email recipient (for logging)
  * @param config - Retry configuration
- * @returns Promise<void>
+ * @return Promise<void>
  * @throws Error if all retries fail
  */
 export async function sendEmailWithRetry(
@@ -141,7 +141,7 @@ export async function sendEmailWithRetry(
  * - Service unavailable
  *
  * @param error - Error object from email sending
- * @returns true if permanent failure, false if should retry
+ * @return true if permanent failure, false if should retry
  */
 function isPermanentFailure(error: unknown): boolean {
   if (!error) return false;

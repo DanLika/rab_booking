@@ -210,7 +210,12 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
                             ? Colors.white.withValues(alpha: 0.3)
                             : Colors.black.withValues(alpha: 0.2),
                       ),
-                      size: Size(width - 2, blockHeight),
+                      // FIXED: Match container width to prevent visual overflow
+                      // Container width is: width - (margin * 2), so painter should match
+                      size: Size(
+                        width - (kTimelineBookingBlockHorizontalMargin * 2),
+                        blockHeight,
+                      ),
                     ),
 
                     // Conflict indicator (single centered warning icon)

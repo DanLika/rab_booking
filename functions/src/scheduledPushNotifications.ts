@@ -18,6 +18,27 @@ import {sendPushNotification} from "./fcmService";
  * All times are Europe/Zagreb timezone.
  */
 
+/**
+ * Croatian plural helper for "rezervacija"
+ * Rules: 1 → "rezervacija", 2-4 → "rezervacije", 5+ → "rezervacija"
+ * Exception: 11-14 → "rezervacija" (not "rezervacije")
+ */
+function getBookingPluralHr(count: number): string {
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+
+  // 11-14 are special - always "rezervacija"
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return "rezervacija";
+  }
+  // 2, 3, 4, 22, 23, 24, 32, 33, 34... → "rezervacije"
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return "rezervacije";
+  }
+  // 1, 5-9, 0, 11-14, 21, 25-30... → "rezervacija"
+  return "rezervacija";
+}
+
 // ============================================================================
 // CHECK-IN TOMORROW REMINDER
 // Runs daily at 18:00 (Europe/Zagreb)
@@ -91,8 +112,8 @@ export const checkInTomorrowReminder = onSchedule(
         try {
           await sendPushNotification({
             userId: ownerId,
-            title: "Check-in Tomorrow",
-            body: `${guestName} arrives tomorrow. Make sure everything is ready!`,
+            title: "Dolazak sutra",
+            body: `${guestName} dolazi sutra. Pobrinite se da je sve spremno!`,
             category: "calendar",
             data: {
               bookingId: doc.id,
@@ -198,8 +219,8 @@ export const checkOutTodayReminder = onSchedule(
         try {
           await sendPushNotification({
             userId: ownerId,
-            title: "Check-out Today",
-            body: `${guestName} leaves today. Don't forget to schedule cleaning!`,
+            title: "Odlazak danas",
+            body: `${guestName} odlazi danas. Ne zaboravite zakazati čišćenje!`,
             category: "calendar",
             data: {
               bookingId: doc.id,
@@ -302,8 +323,8 @@ export const pendingPaymentReminder = onSchedule(
         try {
           await sendPushNotification({
             userId: ownerId,
-            title: "Payment Deadline Tomorrow",
-            body: `Booking from ${guestName} - payment deadline expires tomorrow.`,
+            title: "Rok za uplatu ističe sutra",
+            body: `Rezervacija od ${guestName} - rok za uplatu ističe sutra.`,
             category: "payments",
             data: {
               bookingId: doc.id,
@@ -342,6 +363,10 @@ export const pendingPaymentReminder = onSchedule(
 // COMEBACK REMINDER (5 days inactive)
 // Runs daily at 12:00 (Europe/Zagreb)
 // Reminds owners who haven't opened the app in 5 days
+//
+// NOTE: This function requires Flutter app to update 'lastActiveAt' field
+// on user login/app open. Without that, query returns 0 users.
+// TODO: Implement lastActiveAt update in enhanced_auth_provider.dart
 // ============================================================================
 export const comebackReminder = onSchedule(
   {
@@ -403,8 +428,8 @@ export const comebackReminder = onSchedule(
         try {
           await sendPushNotification({
             userId,
-            title: "We miss you! 👋",
-            body: "Check your bookings and see what's new in BookBed.",
+            title: "Nedostajete nam! 👋",
+            body: "Provjerite svoje rezervacije i pogledajte što je novo u BookBed-u.",
             category: "marketing",
             data: {
               action: "comeback_reminder",
@@ -510,15 +535,15 @@ export const biweeklySummary = onSchedule(
             continue;
           }
 
-          const formattedRevenue = new Intl.NumberFormat("en-EU", {
+          const formattedRevenue = new Intl.NumberFormat("hr-HR", {
             style: "currency",
             currency: "EUR",
           }).format(totalRevenue);
 
           await sendPushNotification({
             userId: ownerId,
-            title: "Your Bi-weekly Summary 📊",
-            body: `Last 15 days: ${bookingsCount} booking${bookingsCount !== 1 ? "s" : ""}, ${formattedRevenue} revenue.`,
+            title: "Vaš dvotjedni pregled 📊",
+            body: `Zadnjih 15 dana: ${bookingsCount} ${getBookingPluralHr(bookingsCount)}, ${formattedRevenue} prihoda.`,
             category: "payments",
             data: {
               action: "biweekly_summary",
@@ -570,7 +595,7 @@ export const monthlyRevenueReport = onSchedule(
       const startTs = admin.firestore.Timestamp.fromDate(firstDayPrevMonth);
       const endTs = admin.firestore.Timestamp.fromDate(lastDayPrevMonth);
 
-      const monthName = firstDayPrevMonth.toLocaleDateString("en-US", {month: "long"});
+      const monthName = firstDayPrevMonth.toLocaleDateString("hr-HR", {month: "long"});
 
       // Get all active owners
       const ownersSnapshot = await db
@@ -625,15 +650,15 @@ export const monthlyRevenueReport = onSchedule(
             continue;
           }
 
-          const formattedRevenue = new Intl.NumberFormat("en-EU", {
+          const formattedRevenue = new Intl.NumberFormat("hr-HR", {
             style: "currency",
             currency: "EUR",
           }).format(totalRevenue);
 
           await sendPushNotification({
             userId: ownerId,
-            title: `${monthName} Revenue Report 💰`,
-            body: `${confirmedCount} booking${confirmedCount !== 1 ? "s" : ""}, ${formattedRevenue} total revenue.`,
+            title: `Izvještaj prihoda za ${monthName} 💰`,
+            body: `${confirmedCount} ${getBookingPluralHr(confirmedCount)}, ukupno ${formattedRevenue} prihoda.`,
             category: "payments",
             data: {
               action: "monthly_report",
@@ -757,8 +782,8 @@ export const newAppUpdateNotification = onDocumentUpdated(
           // Send push notification
           const sent = await sendPushNotification({
             userId,
-            title: "New Update Available 🚀",
-            body: `BookBed ${newVersion} is now available with improvements and bug fixes.`,
+            title: "Nova verzija dostupna 🚀",
+            body: `BookBed ${newVersion} je sada dostupna s poboljšanjima i ispravkama.`,
             category: "marketing",
             data: {
               action: "app_update",

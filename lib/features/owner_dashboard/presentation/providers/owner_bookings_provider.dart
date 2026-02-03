@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -22,9 +24,10 @@ final pendingBookingIdProvider = StateProvider.autoDispose<String?>(
 
 // Note: OwnerBooking is defined in firebase_owner_bookings_repository.dart (already imported above)
 
-/// Updates a booking's status in a list and re-sorts by priority
+/// Updates a booking's status in a list and re-sorts
 ///
-/// Returns a new list with the updated booking and proper sorting
+/// Sorting: Pending bookings first (by check-in), then others by check-in (soonest first)
+/// This matches the repository sorting for "All" filter
 List<OwnerBooking> _updateBookingStatusInList(
   List<OwnerBooking> bookings,
   String bookingId,
@@ -44,13 +47,13 @@ List<OwnerBooking> _updateBookingStatusInList(
     return ownerBooking;
   }).toList();
 
-  // Re-sort by status priority, then by createdAt
+  // Re-sort: pending first, then all by check-in (soonest first)
   updatedBookings.sort((a, b) {
-    final priorityCompare = b.booking.status.sortPriority.compareTo(
-      a.booking.status.sortPriority,
-    );
-    if (priorityCompare != 0) return priorityCompare;
-    return b.booking.createdAt.compareTo(a.booking.createdAt);
+    final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
+    final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
+    if (aPending != bPending) return aPending.compareTo(bPending);
+    // Both pending and non-pending: sort by check-in (soonest first)
+    return a.booking.checkIn.compareTo(b.booking.checkIn);
   });
 
   return updatedBookings;
@@ -222,12 +225,20 @@ Future<List<String>> ownerUnitIds(Ref ref) async {
 class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
   static const int pageSize = 20;
 
+  Timer? _debounceTimer;
+
   @override
   PaginatedBookingsState build() {
-    // Auto-load first page when provider is created
-    Future.microtask(loadFirstPage);
+    // Debounce: Riverpod provider graph stabilization causes multiple rapid
+    // build() calls when dependencies load in cascade. Timer ensures only
+    // the last rebuild triggers the Firestore query (~150ms is imperceptible).
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 150), loadFirstPage);
+    ref.onDispose(_cancelDebounce);
     return PaginatedBookingsState.initial;
   }
+
+  void _cancelDebounce() => _debounceTimer?.cancel();
 
   /// Load first page of bookings
   Future<void> loadFirstPage() async {
@@ -303,9 +314,17 @@ class PaginatedBookingsNotifier extends _$PaginatedBookingsNotifier {
         startAfterDocument: state.lastDocument,
       );
 
-      // Append new bookings to existing list
+      // Append new bookings and re-sort: pending first, then all by check-in (soonest first)
+      final allBookings = [...state.bookings, ...result.bookings];
+      allBookings.sort((a, b) {
+        final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
+        final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
+        if (aPending != bPending) return aPending.compareTo(bPending);
+        return a.booking.checkIn.compareTo(b.booking.checkIn);
+      });
+
       state = state.copyWith(
-        bookings: [...state.bookings, ...result.bookings],
+        bookings: allBookings,
         lastDocument: result.lastDocument,
         hasMore: result.hasMore,
         isLoadingMore: false,
@@ -353,6 +372,8 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
   final Map<String, DocumentSnapshot> _documentCache = {};
   static const int _maxCacheSize = 100;
 
+  Timer? _debounceTimer;
+
   /// Add document to cache with size limit (FIFO eviction)
   void _addToCache(DocumentSnapshot doc) {
     if (_documentCache.length >= _maxCacheSize) {
@@ -363,13 +384,19 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
     _documentCache[doc.id] = doc;
   }
 
+  void _cancelDebounce() => _debounceTimer?.cancel();
+
   @override
   WindowedBookingsState build() {
     // Watch filters - when they change, the provider rebuilds and reloads
     ref.watch(bookingsFiltersNotifierProvider);
 
-    // Auto-load first page when provider is created (or filters change)
-    Future.microtask(loadFirstPage);
+    // Debounce: Riverpod provider graph stabilization causes multiple rapid
+    // build() calls when dependencies load in cascade. Timer ensures only
+    // the last rebuild triggers the Firestore query (~150ms is imperceptible).
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 150), loadFirstPage);
+    ref.onDispose(_cancelDebounce);
     return WindowedBookingsState.cardViewInitial;
   }
 
@@ -485,8 +512,14 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         _addToCache(result.lastDocument!);
       }
 
-      // Append new bookings
+      // Append new bookings and re-sort: pending first, then all by check-in (soonest first)
       final newBookings = [...state.visibleBookings, ...result.bookings];
+      newBookings.sort((a, b) {
+        final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
+        final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
+        if (aPending != bPending) return aPending.compareTo(bPending);
+        return a.booking.checkIn.compareTo(b.booking.checkIn);
+      });
 
       state = state.copyWith(
         visibleBookings: newBookings,
@@ -547,8 +580,14 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
         _addToCache(result.firstDocument!);
       }
 
-      // Prepend new bookings
+      // Prepend new bookings and re-sort: pending first, then all by check-in (soonest first)
       final newBookings = [...result.bookings, ...state.visibleBookings];
+      newBookings.sort((a, b) {
+        final aPending = a.booking.status == BookingStatus.pending ? 0 : 1;
+        final bPending = b.booking.status == BookingStatus.pending ? 0 : 1;
+        if (aPending != bPending) return aPending.compareTo(bPending);
+        return a.booking.checkIn.compareTo(b.booking.checkIn);
+      });
 
       state = state.copyWith(
         visibleBookings: newBookings,

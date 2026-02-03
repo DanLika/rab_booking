@@ -1,7 +1,7 @@
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
-import { logInfo } from "./logger";
-import { setUser } from "./sentry";
+import {logInfo} from "./logger";
+import {setUser} from "./sentry";
 
 const db = admin.firestore();
 
@@ -66,11 +66,11 @@ interface GenerateSubdomainResult {
  */
 function validateSubdomainFormat(subdomain: string): { valid: boolean; error: string | null } {
   if (!subdomain || subdomain.length < 3) {
-    return { valid: false, error: "Subdomain must be at least 3 characters" };
+    return {valid: false, error: "Subdomain must be at least 3 characters"};
   }
 
   if (subdomain.length > 30) {
-    return { valid: false, error: "Subdomain must be at most 30 characters" };
+    return {valid: false, error: "Subdomain must be at most 30 characters"};
   }
 
   if (!SUBDOMAIN_REGEX.test(subdomain)) {
@@ -81,10 +81,10 @@ function validateSubdomainFormat(subdomain: string): { valid: boolean; error: st
   }
 
   if (subdomain.includes("--")) {
-    return { valid: false, error: "Subdomain cannot contain consecutive hyphens" };
+    return {valid: false, error: "Subdomain cannot contain consecutive hyphens"};
   }
 
-  return { valid: true, error: null };
+  return {valid: true, error: null};
 }
 
 /**
@@ -98,7 +98,7 @@ function isReservedSubdomain(subdomain: string): boolean {
  * Checks if subdomain is taken by another property
  */
 async function isSubdomainTaken(subdomain: string, excludePropertyId?: string): Promise<boolean> {
-  let query = db.collection("properties").where("subdomain", "==", subdomain.toLowerCase());
+  const query = db.collection("properties").where("subdomain", "==", subdomain.toLowerCase());
 
   const snapshot = await query.get();
 
@@ -168,7 +168,7 @@ export const checkSubdomainAvailability = onCall<{
   subdomain: string;
   propertyId?: string;
 }>(async (request): Promise<CheckSubdomainResult> => {
-  const { subdomain, propertyId } = request.data;
+  const {subdomain, propertyId} = request.data;
 
   if (!subdomain) {
     throw new HttpsError("invalid-argument", "Subdomain is required");
@@ -229,7 +229,7 @@ export const checkSubdomainAvailability = onCall<{
   }
 
   // Subdomain is available!
-  logInfo("Subdomain is available", { subdomain: normalizedSubdomain });
+  logInfo("Subdomain is available", {subdomain: normalizedSubdomain});
   return {
     available: true,
     error: null,
@@ -253,7 +253,7 @@ export const generateSubdomainFromName = onCall<{
   propertyName: string;
   propertyId?: string;
 }>(async (request): Promise<GenerateSubdomainResult> => {
-  const { propertyName, propertyId } = request.data;
+  const {propertyName, propertyId} = request.data;
 
   if (!propertyName) {
     throw new HttpsError("invalid-argument", "Property name is required");
@@ -301,7 +301,7 @@ export const setPropertySubdomain = onCall<{
   propertyId: string;
   subdomain: string;
 }>(async (request): Promise<{ success: boolean; subdomain: string }> => {
-  const { propertyId, subdomain } = request.data;
+  const {propertyId, subdomain} = request.data;
 
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated");

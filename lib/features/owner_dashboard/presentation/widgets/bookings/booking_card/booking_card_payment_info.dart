@@ -175,7 +175,7 @@ class _PaymentInfoColumn extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(value, style: valueStyle ?? theme.textTheme.titleMedium),
+        SelectableText(value, style: valueStyle ?? theme.textTheme.titleMedium),
       ],
     );
   }

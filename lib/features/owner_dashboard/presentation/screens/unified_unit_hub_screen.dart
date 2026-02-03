@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,8 @@ import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/property_model.dart';
+import '../../../../shared/models/additional_service_model.dart';
+import '../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
 import '../providers/owner_properties_provider.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -171,9 +174,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= _kDesktopBreakpoint;
 
-    // OPTIMIZED: Watch properties for use in units change handler
+    // Watch both providers to trigger rebuilds when data arrives
     final propertiesAsync = ref.watch(ownerPropertiesProvider);
     final properties = propertiesAsync.valueOrNull ?? [];
+    final unitsAsync = ref.watch(ownerUnitsProvider);
 
     // Listen for units changes and handle side effects (auto-selection, sync)
     ref.listen<AsyncValue<List<UnitModel>>>(ownerUnitsProvider, (
@@ -183,7 +187,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       next.whenData((units) => _handleUnitsChanged(units, properties));
     });
 
-    // BUG FIX: Also listen for properties changes to handle race condition
+    // Also listen for properties changes to handle race condition
     // If properties load AFTER units, we need to trigger auto-selection
     ref.listen<AsyncValue<List<PropertyModel>>>(ownerPropertiesProvider, (
       previous,
@@ -192,6 +196,21 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       final units = ref.read(ownerUnitsProvider).valueOrNull ?? [];
       next.whenData((props) => _handleUnitsChanged(units, props));
     });
+
+    // BUG FIX: Fallback auto-selection when providers already have data.
+    // ref.listen only fires on VALUE CHANGES after registration. If both
+    // providers already have cached data (not disposed between navigations),
+    // listeners never fire and _selectedUnit stays null.
+    if (_selectedUnit == null) {
+      final units = unitsAsync.valueOrNull ?? [];
+      if (units.isNotEmpty && properties.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _selectedUnit == null) {
+            _handleUnitsChanged(units, properties);
+          }
+        });
+      }
+    }
 
     final l10n = AppLocalizations.of(context);
 
@@ -436,6 +455,29 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       style: theme.textTheme.titleMedium,
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Molimo osvježite aplikaciju ili pokušajte ponovno.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        ref.invalidate(ownerPropertiesProvider);
+                        ref.invalidate(ownerUnitsProvider);
+                      },
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: Text(l10n.tryAgain),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -481,7 +523,33 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ),
       error: (error, stack) {
         final l10n = AppLocalizations.of(context);
-        return Center(child: Text(l10n.unitHubError(error.toString())));
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 48,
+                  color: theme.colorScheme.error.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.unitHubError(error.toString()),
+                  style: theme.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () => ref.invalidate(ownerUnitsProvider),
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: Text(l10n.tryAgain),
+                ),
+              ],
+            ),
+          ),
+        );
       },
       data: (allUnits) {
         // Group units by property
@@ -1280,9 +1348,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     // Build individual cards as widgets for flex layout
     final l10n = AppLocalizations.of(context);
 
-    // Check if unit has photos
-    final hasPhotos = _selectedUnit!.images.isNotEmpty;
-
     // Capacity section - compact, fixed height
     final kapacitetCard = _buildInfoCard(
       theme,
@@ -1314,7 +1379,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       ],
     );
 
-    // Price section - compact, fixed height
+    // Price section
     final cijenaCard = _buildInfoCard(
       theme,
       title: l10n.unitHubPriceSection,
@@ -1327,13 +1392,47 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           '€${_selectedUnit!.pricePerNight.toStringAsFixed(0)}',
           valueColor: theme.colorScheme.primary,
         ),
+        if (_selectedUnit!.weekendBasePrice != null)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep3WeekendPrice,
+            '€${_selectedUnit!.weekendBasePrice!.toStringAsFixed(0)}',
+          ),
         _buildDetailRow(
           theme,
           l10n.unitHubMinNights,
           '${_selectedUnit!.minStayNights}',
         ),
+        if (_selectedUnit!.maxStayNights != null)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep3MaxStay,
+            '${_selectedUnit!.maxStayNights}',
+          ),
+        if (_selectedUnit!.maxTotalCapacity != null &&
+            _selectedUnit!.maxTotalCapacity! > _selectedUnit!.maxGuests)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep5ExtraBeds,
+            '${_selectedUnit!.maxTotalCapacity! - _selectedUnit!.maxGuests}',
+          ),
+        if (_selectedUnit!.extraBedFee != null)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep5ExtraBedFee,
+            '€${_selectedUnit!.extraBedFee!.toStringAsFixed(0)}/night',
+          ),
+        if (_selectedUnit!.petFee != null)
+          _buildDetailRow(
+            theme,
+            l10n.unitWizardStep5PetFee,
+            '€${_selectedUnit!.petFee!.toStringAsFixed(0)}/night',
+          ),
       ],
     );
+
+    // Additional Services section - loaded from Firestore
+    final servicesCard = _buildServicesCard(theme, isMobile);
 
     // Information section - can have long description
     final informacijeCard = _buildInfoCard(
@@ -1362,22 +1461,6 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ),
       ],
     );
-
-    // Photos section - only build if photos exist
-    Widget? photosCard;
-    if (hasPhotos) {
-      photosCard = _buildInfoCard(
-        theme,
-        title: l10n.unitHubPhotosSection,
-        icon: Icons.photo_library_outlined,
-        isMobile: isMobile,
-        children: _buildImageGridContent(
-          theme,
-          imageSize: isDesktop ? 80 : 100,
-          l10n: l10n,
-        ),
-      );
-    }
 
     return ListView(
       // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
@@ -1445,7 +1528,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         const SizedBox(height: 24),
 
         // Unit Details Cards - Layout based on screen size
-        // Order: Information → Capacity → Pricing → Photos (matches Unit Wizard flow)
+        // Order: Information → Capacity → Pricing
         if (isDesktop) ...[
           // Desktop: Row 1: Information (Basic Info) + Capacity
           Row(
@@ -1457,18 +1540,9 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             ],
           ),
           const SizedBox(height: 14),
-          // Desktop: Row 2: Pricing + Photos (or full-width if no photos)
-          if (hasPhotos)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: cijenaCard),
-                const SizedBox(width: 14),
-                Expanded(child: photosCard!),
-              ],
-            )
-          else
-            cijenaCard,
+          cijenaCard,
+          const SizedBox(height: 14),
+          servicesCard,
         ] else if (isTablet) ...[
           // Tablet (800-900px): Information + Capacity side by side, then stacked
           Row(
@@ -1481,7 +1555,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           ),
           const SizedBox(height: 14),
           cijenaCard,
-          if (hasPhotos) ...[const SizedBox(height: 14), photosCard!],
+          const SizedBox(height: 14),
+          servicesCard,
         ] else ...[
           // Mobile (<800px): All stacked in wizard order
           informacijeCard,
@@ -1489,9 +1564,41 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           kapacitetCard,
           const SizedBox(height: 14),
           cijenaCard,
-          if (hasPhotos) ...[const SizedBox(height: 14), photosCard!],
+          const SizedBox(height: 14),
+          servicesCard,
         ],
       ],
+    );
+  }
+
+  Widget _buildServicesCard(ThemeData theme, bool isMobile) {
+    final ownerId = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerId == null || _selectedUnit == null) {
+      return const SizedBox.shrink();
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final repo = ref.read(additionalServicesRepositoryProvider);
+
+    return FutureBuilder<List<AdditionalServiceModel>>(
+      // Key ensures rebuild when unit changes
+      key: ValueKey('services_${_selectedUnit!.id}'),
+      future: repo.fetchByUnit(_selectedUnit!.id, ownerId),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        final services = snapshot.data!;
+        return _buildInfoCard(
+          theme,
+          title: l10n.additionalServicesTitle,
+          icon: Icons.room_service,
+          isMobile: isMobile,
+          children: services
+              .map((s) => _buildDetailRow(theme, s.name, s.formattedPrice))
+              .toList(),
+        );
+      },
     );
   }
 
@@ -1670,86 +1777,5 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
         ],
       ),
     );
-  }
-
-  /// Builds the image grid for unit photos
-  /// [imageSize] - Size of each image thumbnail (desktop: 80, mobile: 100)
-  List<Widget> _buildImageGridContent(
-    ThemeData theme, {
-    required double imageSize,
-    required AppLocalizations l10n,
-  }) {
-    if (_selectedUnit == null) return [];
-
-    final images = _selectedUnit!.images;
-    if (images.isEmpty) {
-      return [
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.photo_library_outlined,
-                  size: 32,
-                  color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                    (0.4 * 255).toInt(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.unitHubNoPhotos,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                      (0.6 * 255).toInt(),
-                    ),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ];
-    }
-
-    return [
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: images.take(6).map((imageUrl) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              imageUrl,
-              width: imageSize,
-              height: imageSize,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: imageSize,
-                  height: imageSize,
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                );
-              },
-            ),
-          );
-        }).toList(),
-      ),
-      if (images.length > 6)
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text(
-            l10n.unitHubMorePhotos(images.length - 6),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-    ];
   }
 }

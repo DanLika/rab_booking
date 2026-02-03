@@ -25,15 +25,15 @@ class IcalGenerator {
   }) {
     final buffer = StringBuffer();
 
-    // Calendar header
-    buffer.writeln('BEGIN:VCALENDAR');
-    buffer.writeln('VERSION:2.0');
-    buffer.writeln('PRODID:-//BookBed//NONSGML Event Calendar//EN');
-    buffer.writeln('CALSCALE:GREGORIAN');
-    buffer.writeln('METHOD:PUBLISH');
-    buffer.writeln('X-WR-CALNAME:${_escape(unit.name)} - Bookings');
-    buffer.writeln('X-WR-TIMEZONE:Europe/Zagreb');
-    buffer.writeln('X-WR-CALDESC:Booking calendar for ${_escape(unit.name)}');
+    // Calendar header (RFC 5545 requires CRLF line endings)
+    buffer.write('BEGIN:VCALENDAR\r\n');
+    buffer.write('VERSION:2.0\r\n');
+    buffer.write('PRODID:-//BookBed//NONSGML Event Calendar//EN\r\n');
+    buffer.write('CALSCALE:GREGORIAN\r\n');
+    buffer.write('METHOD:PUBLISH\r\n');
+    buffer.write('X-WR-CALNAME:${_escape(unit.name)} - Bookings\r\n');
+    buffer.write('X-WR-TIMEZONE:Europe/Zagreb\r\n');
+    buffer.write('X-WR-CALDESC:Booking calendar for ${_escape(unit.name)}\r\n');
 
     // Add each booking as an event
     for (final booking in bookings) {
@@ -48,7 +48,7 @@ class IcalGenerator {
     }
 
     // Calendar footer
-    buffer.writeln('END:VCALENDAR');
+    buffer.write('END:VCALENDAR\r\n');
 
     return buffer.toString();
   }
@@ -62,18 +62,18 @@ class IcalGenerator {
   }) {
     final buffer = StringBuffer();
 
-    // Calendar header
-    buffer.writeln('BEGIN:VCALENDAR');
-    buffer.writeln('VERSION:2.0');
-    buffer.writeln('PRODID:-//BookBed//NONSGML Event Calendar//EN');
-    buffer.writeln('CALSCALE:GREGORIAN');
-    buffer.writeln('METHOD:PUBLISH');
+    // Calendar header (RFC 5545 requires CRLF line endings)
+    buffer.write('BEGIN:VCALENDAR\r\n');
+    buffer.write('VERSION:2.0\r\n');
+    buffer.write('PRODID:-//BookBed//NONSGML Event Calendar//EN\r\n');
+    buffer.write('CALSCALE:GREGORIAN\r\n');
+    buffer.write('METHOD:PUBLISH\r\n');
 
     // Single event
     buffer.write(_formatEvent(booking, unitName));
 
     // Calendar footer
-    buffer.writeln('END:VCALENDAR');
+    buffer.write('END:VCALENDAR\r\n');
 
     return buffer.toString();
   }
@@ -85,46 +85,46 @@ class IcalGenerator {
     final buffer = StringBuffer();
 
     // Event start
-    buffer.writeln('BEGIN:VEVENT');
+    buffer.write('BEGIN:VEVENT\r\n');
 
     // UID - Unique identifier (required by RFC 5545)
-    buffer.writeln('UID:booking-${booking.id}@bookbed.io');
+    buffer.write('UID:booking-${booking.id}@bookbed.io\r\n');
 
     // DTSTAMP - Timestamp when event was created (required)
-    buffer.writeln('DTSTAMP:${_formatTimestamp(booking.createdAt)}');
+    buffer.write('DTSTAMP:${_formatTimestamp(booking.createdAt)}\r\n');
 
     // DTSTART - Start date (all-day event)
-    buffer.writeln('DTSTART;VALUE=DATE:${_formatDate(booking.checkIn)}');
+    buffer.write('DTSTART;VALUE=DATE:${_formatDate(booking.checkIn)}\r\n');
 
     // DTEND - End date (all-day event, exclusive - day after checkout)
     final endDate = booking.checkOut.add(const Duration(days: 1));
-    buffer.writeln('DTEND;VALUE=DATE:${_formatDate(endDate)}');
+    buffer.write('DTEND;VALUE=DATE:${_formatDate(endDate)}\r\n');
 
     // SUMMARY - Event title
     final guestName = booking.guestName ?? 'Guest';
-    buffer.writeln('SUMMARY:${_escape('Booking: $guestName - $unitName')}');
+    buffer.write('SUMMARY:${_escape('Booking: $guestName - $unitName')}\r\n');
 
     // DESCRIPTION - Event details
     final description = _buildDescription(booking, unitName);
-    buffer.writeln('DESCRIPTION:${_escape(description)}');
+    buffer.write('DESCRIPTION:${_escape(description)}\r\n');
 
     // STATUS - Booking status
     final status = _mapBookingStatus(booking.status);
-    buffer.writeln('STATUS:$status');
+    buffer.write('STATUS:$status\r\n');
 
     // LOCATION - Unit name
-    buffer.writeln('LOCATION:${_escape(unitName)}');
+    buffer.write('LOCATION:${_escape(unitName)}\r\n');
 
     // LAST-MODIFIED - Last update timestamp
     if (booking.updatedAt != null) {
-      buffer.writeln('LAST-MODIFIED:${_formatTimestamp(booking.updatedAt!)}');
+      buffer.write('LAST-MODIFIED:${_formatTimestamp(booking.updatedAt!)}\r\n');
     }
 
     // CREATED - Creation timestamp
-    buffer.writeln('CREATED:${_formatTimestamp(booking.createdAt)}');
+    buffer.write('CREATED:${_formatTimestamp(booking.createdAt)}\r\n');
 
     // Event end
-    buffer.writeln('END:VEVENT');
+    buffer.write('END:VEVENT\r\n');
 
     return buffer.toString();
   }
@@ -188,25 +188,25 @@ class IcalGenerator {
     final buffer = StringBuffer();
 
     // Event start
-    buffer.writeln('BEGIN:VEVENT');
+    buffer.write('BEGIN:VEVENT\r\n');
 
     // UID - Unique identifier (required by RFC 5545)
     // Use external ID from the imported event
-    buffer.writeln('UID:${event.externalId}@bookbed.io');
+    buffer.write('UID:${event.externalId}@bookbed.io\r\n');
 
     // DTSTAMP - Timestamp when event was created (required)
-    buffer.writeln('DTSTAMP:${_formatTimestamp(event.createdAt)}');
+    buffer.write('DTSTAMP:${_formatTimestamp(event.createdAt)}\r\n');
 
     // DTSTART - Start date (all-day event)
-    buffer.writeln('DTSTART;VALUE=DATE:${_formatDate(event.startDate)}');
+    buffer.write('DTSTART;VALUE=DATE:${_formatDate(event.startDate)}\r\n');
 
     // DTEND - End date (all-day event, exclusive - day after end)
     final endDate = event.endDate.add(const Duration(days: 1));
-    buffer.writeln('DTEND;VALUE=DATE:${_formatDate(endDate)}');
+    buffer.write('DTEND;VALUE=DATE:${_formatDate(endDate)}\r\n');
 
     // SUMMARY - Event title with source platform
-    buffer.writeln(
-      'SUMMARY:${_escape('${event.guestName} (${event.source}) - $unitName')}',
+    buffer.write(
+      'SUMMARY:${_escape('${event.guestName} (${event.source}) - $unitName')}\r\n',
     );
 
     // DESCRIPTION - Event details
@@ -218,22 +218,22 @@ class IcalGenerator {
       descriptionParts.add('Notes: ${event.description}');
     }
     descriptionParts.add('Imported Event ID: ${event.id}');
-    buffer.writeln('DESCRIPTION:${_escape(descriptionParts.join('\n'))}');
+    buffer.write('DESCRIPTION:${_escape(descriptionParts.join('\n'))}\r\n');
 
     // STATUS - Always CONFIRMED for imported events
-    buffer.writeln('STATUS:CONFIRMED');
+    buffer.write('STATUS:CONFIRMED\r\n');
 
     // LOCATION - Unit name
-    buffer.writeln('LOCATION:${_escape(unitName)}');
+    buffer.write('LOCATION:${_escape(unitName)}\r\n');
 
     // LAST-MODIFIED - Last update timestamp
-    buffer.writeln('LAST-MODIFIED:${_formatTimestamp(event.updatedAt)}');
+    buffer.write('LAST-MODIFIED:${_formatTimestamp(event.updatedAt)}\r\n');
 
     // CREATED - Creation timestamp
-    buffer.writeln('CREATED:${_formatTimestamp(event.createdAt)}');
+    buffer.write('CREATED:${_formatTimestamp(event.createdAt)}\r\n');
 
     // Event end
-    buffer.writeln('END:VEVENT');
+    buffer.write('END:VEVENT\r\n');
 
     return buffer.toString();
   }

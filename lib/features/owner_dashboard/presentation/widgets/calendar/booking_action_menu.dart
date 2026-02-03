@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -11,6 +12,7 @@ import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../providers/owner_calendar_provider.dart';
+import '../../providers/calendar_filters_provider.dart';
 
 /// Bottom sheet with quick actions for a booking
 /// Shown on short tap of a booking block
@@ -671,14 +673,20 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                               onTap: _isProcessing
                                   ? null
                                   : () async {
-                                      // Close dialog first, then move booking
-                                      // Use widget.parentContext for snackbars (dialog context won't be valid)
-                                      Navigator.pop(context);
-                                      await _moveBookingToUnit(
-                                        widget.parentContext,
-                                        unit,
-                                        l10n,
-                                      );
+                                      // Move booking FIRST (while dialog is still open)
+                                      // Then close dialog after operation completes
+                                      // This ensures ref.invalidate() works before disposal
+                                      final targetDate =
+                                          await _moveBookingToUnit(
+                                            widget.parentContext,
+                                            unit,
+                                            l10n,
+                                          );
+                                      // Only close dialog if widget is still mounted
+                                      // Return the booking's check-in date so calendar can scroll to it
+                                      if (mounted && context.mounted) {
+                                        Navigator.pop(context, targetDate);
+                                      }
                                     },
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
@@ -781,55 +789,91 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
     return Icons.hotel;
   }
 
-  Future<void> _moveBookingToUnit(
+  /// Move booking to another unit
+  /// Returns the booking's check-in date on success (for calendar scroll-to-date)
+  /// Returns null on failure
+  Future<DateTime?> _moveBookingToUnit(
     BuildContext context,
     UnitModel targetUnit,
     AppLocalizations l10n,
   ) async {
-    if (_isProcessing) return; // Prevent double-tap
+    if (_isProcessing) return null; // Prevent double-tap
 
     setState(() => _isProcessing = true);
 
     try {
       // Show loading
-      if (!context.mounted) return;
+      if (!context.mounted) return null;
       ErrorDisplayUtils.showLoadingSnackBar(context, l10n.bookingActionMoving);
 
       // Check for conflicts in target unit
+      // IMPORTANT: Normalize dates to midnight for consistent turnover day detection
+      // Same-day turnover (checkOut == checkIn) is ALLOWED and should not be treated as conflict
+      final normalizedCheckIn = DateTime(
+        widget.booking.checkIn.year,
+        widget.booking.checkIn.month,
+        widget.booking.checkIn.day,
+      );
+      final normalizedCheckOut = DateTime(
+        widget.booking.checkOut.year,
+        widget.booking.checkOut.month,
+        widget.booking.checkOut.day,
+      );
+
       final bookingRepo = ref.read(bookingRepositoryProvider);
-      final hasConflict = await bookingRepo.areDatesAvailable(
+      // Note: areDatesAvailable returns TRUE if dates ARE available (no conflict)
+      final datesAvailable = await bookingRepo.areDatesAvailable(
         unitId: targetUnit.id,
-        checkIn: widget.booking.checkIn,
-        checkOut: widget.booking.checkOut,
+        checkIn: normalizedCheckIn,
+        checkOut: normalizedCheckOut,
         excludeBookingId: widget.booking.id,
       );
 
-      if (!hasConflict) {
+      if (!datesAvailable) {
         // Conflict detected - show error
-        if (!context.mounted) return;
+        if (!context.mounted) return null;
         ErrorDisplayUtils.showErrorSnackBar(
           context,
           'Cannot move booking: ${targetUnit.name} already has a booking during these dates',
           userMessage: 'Cannot move: unit is already booked for these dates',
         );
-        return;
+        return null;
       }
 
-      // Update booking with new unit
-      final updatedBooking = widget.booking.copyWith(unitId: targetUnit.id);
-      await bookingRepo.updateBooking(updatedBooking);
+      // Update booking with new unit, property AND owner
+      // CRITICAL: Must update unitId, propertyId, AND ownerId because:
+      // 1. Firestore path is: properties/{propertyId}/units/{unitId}/bookings/{id}
+      // 2. When moving between units, the booking is DELETE from old path + CREATE at new path
+      // 3. Security rule requires: request.resource.data.owner_id == request.auth.uid
+      // 4. Without correct propertyId/ownerId, the batch operation fails with permission-denied
+      // 5. Fallback to current user ID if unit has no ownerId (legacy units)
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      final updatedBooking = widget.booking.copyWith(
+        unitId: targetUnit.id,
+        propertyId: targetUnit.propertyId,
+        ownerId: targetUnit.ownerId ?? currentUserId ?? widget.booking.ownerId,
+      );
+      // Pass original booking to avoid collectionGroup permission error
+      await bookingRepo.updateBooking(
+        updatedBooking,
+        originalBooking: widget.booking,
+      );
 
-      // Refresh calendar
+      // Refresh calendar providers to update UI
+      // MUST invalidate both: base provider AND filtered provider that UI watches
       ref.invalidate(calendarBookingsProvider);
+      ref.invalidate(timelineCalendarBookingsProvider);
 
       // Show success
-      if (!context.mounted) return;
+      if (!context.mounted) return widget.booking.checkIn;
       ErrorDisplayUtils.showSuccessSnackBar(
         context,
         l10n.bookingActionMovedTo(targetUnit.name),
       );
+      // Return check-in date so calendar can scroll to the moved booking
+      return widget.booking.checkIn;
     } catch (e) {
-      if (!context.mounted) return;
+      if (!context.mounted) return null;
       ErrorDisplayUtils.showErrorSnackBar(
         context,
         e,
@@ -837,6 +881,7 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
           LoggingService.safeErrorToString(e),
         ),
       );
+      return null;
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);

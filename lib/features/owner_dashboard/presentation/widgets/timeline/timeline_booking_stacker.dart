@@ -20,9 +20,12 @@ class TimelineBookingStacker {
   /// IMPORTANT: Only active bookings (pending/confirmed) are considered for stacking.
   /// Cancelled and completed bookings are assigned stack level 0 but don't block other bookings.
   ///
+  /// IMPORTANT: Same-day turnovers are supported (checkout + checkin on same day = same level)
+  /// Dates are normalized to midnight to ensure time components don't affect comparison.
+  ///
   /// Example:
   /// - Booking A: May 1-5 → Level 0
-  /// - Booking B: May 6-10 → Level 0 (A ended before B starts)
+  /// - Booking B: May 5-10 → Level 0 (A checkout = B checkin, same-day turnover OK)
   /// - Booking C: May 3-7 → Level 1 (overlaps with A, so new level)
   static Map<String, int> assignStackLevels(List<BookingModel> bookings) {
     // Input validation
@@ -43,11 +46,14 @@ class TimelineBookingStacker {
     final sorted = List<BookingModel>.from(activeBookings)
       ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
-    // Track active bookings at each stack level
+    // Track active bookings at each stack level (normalized to midnight)
     final List<DateTime?> stackEndDates = [];
 
     // Assign stack levels to active bookings
     for (final booking in sorted) {
+      // Normalize check-in to midnight for comparison
+      final normalizedCheckIn = _normalizeDate(booking.checkIn);
+
       // Find the first available stack level
       int assignedLevel = stackEndDates.length; // Default: new level
 
@@ -55,22 +61,25 @@ class TimelineBookingStacker {
         final endDate = stackEndDates[level];
 
         // Check if this level is free (previous booking ended before this one starts)
-        // IMPORTANT: Check-out at 3pm means that day is available for new check-in at 10am
-        // So we compare: booking.checkIn >= previousCheckOut (same day is OK)
-        if (endDate == null || !booking.checkIn.isBefore(endDate)) {
+        // IMPORTANT: Same-day turnover is allowed (checkout = checkin on same day)
+        // Using !isBefore means: checkIn >= endDate (same day or later is OK)
+        // Dates are already normalized to midnight, so time components don't affect this
+        if (endDate == null || !normalizedCheckIn.isBefore(endDate)) {
           assignedLevel = level;
           break;
         }
       }
 
       // Create new level if needed
+      // Store normalized checkout date for consistent comparison
+      final normalizedCheckOut = _normalizeDate(booking.checkOut);
       if (assignedLevel >= stackEndDates.length) {
-        stackEndDates.add(booking.checkOut);
+        stackEndDates.add(normalizedCheckOut);
       } else {
         // FIXED: Only update if this booking ends later than current end date
         final currentEnd = stackEndDates[assignedLevel];
-        if (currentEnd == null || booking.checkOut.isAfter(currentEnd)) {
-          stackEndDates[assignedLevel] = booking.checkOut;
+        if (currentEnd == null || normalizedCheckOut.isAfter(currentEnd)) {
+          stackEndDates[assignedLevel] = normalizedCheckOut;
         }
       }
 

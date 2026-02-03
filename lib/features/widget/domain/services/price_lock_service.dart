@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../presentation/providers/booking_price_provider.dart';
+import '../../presentation/theme/minimalist_colors.dart';
 import '../constants/widget_constants.dart';
 
 /// Result of a price lock check.
@@ -41,6 +42,27 @@ class PriceChangeDialogConfig {
   /// Currency symbol for price display.
   final String currencySymbol;
 
+  /// Dialog background color (null = default Material).
+  final Color? backgroundColor;
+
+  /// Dialog title text color (null = uses increaseColor/decreaseColor).
+  final Color? titleColor;
+
+  /// Dialog content text color (null = default Material).
+  final Color? contentColor;
+
+  /// Dialog border color (null = no border).
+  final Color? borderColor;
+
+  /// Primary button background (null = uses increaseColor/decreaseColor).
+  final Color? buttonPrimaryBg;
+
+  /// Primary button text color (null = default).
+  final Color? buttonPrimaryText;
+
+  /// Cancel button text color (null = default).
+  final Color? cancelColor;
+
   const PriceChangeDialogConfig({
     this.increaseTitleText = '⚠️ Price Increased',
     this.decreaseTitleText = 'ℹ️ Price Decreased',
@@ -49,6 +71,13 @@ class PriceChangeDialogConfig {
     this.increaseColor = Colors.orange,
     this.decreaseColor = Colors.blue,
     this.currencySymbol = '€',
+    this.backgroundColor,
+    this.titleColor,
+    this.contentColor,
+    this.borderColor,
+    this.buttonPrimaryBg,
+    this.buttonPrimaryText,
+    this.cancelColor,
   });
 
   /// Default configuration with standard colors and text.
@@ -61,6 +90,22 @@ class PriceChangeDialogConfig {
     cancelButtonText: 'Odustani',
     proceedButtonText: 'Nastavi',
   );
+
+  /// Create a minimalist-themed config for the booking widget.
+  static PriceChangeDialogConfig minimalist({bool dark = false}) {
+    final colors = MinimalistColorSchemeAdapter(dark: dark);
+    return PriceChangeDialogConfig(
+      backgroundColor: colors.backgroundPrimary,
+      titleColor: colors.textPrimary,
+      contentColor: colors.textSecondary,
+      borderColor: colors.borderDefault,
+      buttonPrimaryBg: colors.buttonPrimary,
+      buttonPrimaryText: colors.buttonPrimaryText,
+      cancelColor: colors.textSecondary,
+      increaseColor: colors.textPrimary,
+      decreaseColor: colors.textPrimary,
+    );
+  }
 }
 
 /// Builder for price change confirmation dialogs.
@@ -95,14 +140,29 @@ class PriceChangeDialogBuilder {
     final originalFormatted = originalPrice.toStringAsFixed(2);
     final currentFormatted = currentPrice.toStringAsFixed(2);
 
+    final titleColor =
+        config.titleColor ??
+        (priceIncreased ? config.increaseColor : config.decreaseColor);
+    final buttonBg =
+        config.buttonPrimaryBg ??
+        (priceIncreased ? config.increaseColor : config.decreaseColor);
+
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        backgroundColor: config.backgroundColor,
+        surfaceTintColor: config.backgroundColor != null
+            ? Colors.transparent
+            : null,
+        shape: config.borderColor != null
+            ? RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: config.borderColor!),
+              )
+            : null,
         title: Text(
           priceIncreased ? config.increaseTitleText : config.decreaseTitleText,
-          style: TextStyle(
-            color: priceIncreased ? config.increaseColor : config.decreaseColor,
-          ),
+          style: TextStyle(color: titleColor, fontWeight: FontWeight.w600),
         ),
         content: Text(
           priceIncreased
@@ -114,18 +174,23 @@ class PriceChangeDialogBuilder {
                     'Original: $symbol$originalFormatted\n'
                     'Current: $symbol$currentFormatted\n\n'
                     'Proceed with the new price?',
+          style: config.contentColor != null
+              ? TextStyle(color: config.contentColor)
+              : null,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
+            style: config.cancelColor != null
+                ? TextButton.styleFrom(foregroundColor: config.cancelColor)
+                : null,
             child: Text(config.cancelButtonText),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: priceIncreased
-                  ? config.increaseColor
-                  : config.decreaseColor,
+            style: FilledButton.styleFrom(
+              backgroundColor: buttonBg,
+              foregroundColor: config.buttonPrimaryText,
             ),
             child: Text(config.proceedButtonText),
           ),
@@ -151,12 +216,27 @@ class PriceChangeDialogBuilder {
     final originalFormatted = originalPrice.toStringAsFixed(2);
     final currentFormatted = currentPrice.toStringAsFixed(2);
 
+    final titleColor =
+        config.titleColor ??
+        (priceIncreased ? config.increaseColor : config.decreaseColor);
+    final buttonBg =
+        config.buttonPrimaryBg ??
+        (priceIncreased ? config.increaseColor : config.decreaseColor);
+
     return AlertDialog(
+      backgroundColor: config.backgroundColor,
+      surfaceTintColor: config.backgroundColor != null
+          ? Colors.transparent
+          : null,
+      shape: config.borderColor != null
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: config.borderColor!),
+            )
+          : null,
       title: Text(
         priceIncreased ? config.increaseTitleText : config.decreaseTitleText,
-        style: TextStyle(
-          color: priceIncreased ? config.increaseColor : config.decreaseColor,
-        ),
+        style: TextStyle(color: titleColor, fontWeight: FontWeight.w600),
       ),
       content: Text(
         priceIncreased
@@ -168,15 +248,23 @@ class PriceChangeDialogBuilder {
                   'Original: $symbol$originalFormatted\n'
                   'Current: $symbol$currentFormatted\n\n'
                   'Proceed with the new price?',
+        style: config.contentColor != null
+            ? TextStyle(color: config.contentColor)
+            : null,
       ),
       actions: [
-        TextButton(onPressed: onCancel, child: Text(config.cancelButtonText)),
-        ElevatedButton(
+        TextButton(
+          onPressed: onCancel,
+          style: config.cancelColor != null
+              ? TextButton.styleFrom(foregroundColor: config.cancelColor)
+              : null,
+          child: Text(config.cancelButtonText),
+        ),
+        FilledButton(
           onPressed: onProceed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: priceIncreased
-                ? config.increaseColor
-                : config.decreaseColor,
+          style: FilledButton.styleFrom(
+            backgroundColor: buttonBg,
+            foregroundColor: config.buttonPrimaryText,
           ),
           child: Text(config.proceedButtonText),
         ),

@@ -296,6 +296,9 @@ class _BookingInlineEditDialogState
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
+                              // Keep same colors when disabled (loading state)
+                              disabledBackgroundColor: Colors.transparent,
+                              disabledForegroundColor: Colors.white,
                               shadowColor: Colors.transparent,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),

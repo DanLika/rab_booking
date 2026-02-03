@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
-import '../../../utils/calendar_grid_calculator.dart';
 import 'timeline_constants.dart';
 
 /// Timeline dimension calculator
-/// Provides responsive dimension calculations for the timeline calendar
-/// Uses CalendarGridCalculator for consistency across calendar views
+/// Uses FIXED dimensions for all devices to ensure consistent booking block
+/// positioning. Wider screens show more days, not bigger cells.
 class TimelineDimensions {
   final BuildContext context;
   final double zoomScale;
+
+  /// Fixed cell dimensions — same on mobile, tablet, and desktop.
+  /// Based on mobile 360px breakpoint values for maximum compatibility.
+  static const double _fixedDayWidth = 50.0;
+  static const double _fixedRowHeight = 42.0;
+  static const double _fixedColumnWidth = 100.0;
+  static const double _fixedHeaderHeight = 60.0;
 
   const TimelineDimensions({
     required this.context,
@@ -17,102 +23,26 @@ class TimelineDimensions {
   /// Screen width from MediaQuery
   double get screenWidth {
     final mediaQuery = MediaQuery.maybeOf(context);
-    if (mediaQuery == null) {
-      // Fallback to a reasonable default if MediaQuery is not available
-      return 1200.0;
-    }
+    if (mediaQuery == null) return 1200.0;
     final width = mediaQuery.size.width;
-    // Ensure width is finite and positive
-    if (!width.isFinite || width <= 0) {
-      return 1200.0; // Fallback to reasonable default
-    }
+    if (!width.isFinite || width <= 0) return 1200.0;
     return width;
-  }
-
-  /// Text scale factor for accessibility
-  double get textScaleFactor {
-    final mediaQuery = MediaQuery.maybeOf(context);
-    if (mediaQuery == null) {
-      return 1.0; // Default scale factor
-    }
-    return mediaQuery.textScaler.scale(1.0);
   }
 
   /// Whether the current theme is dark mode
   bool get isDarkMode => Theme.of(context).brightness == Brightness.dark;
 
-  /// Day cell width (with zoom applied)
-  double get dayWidth {
-    final width = screenWidth;
-    // Ensure we have a valid width before calculating
-    if (!width.isFinite || width <= 0) {
-      return 50.0 * zoomScale; // Fallback to reasonable default
-    }
+  /// Day cell width (with zoom applied) — FIXED for all devices
+  double get dayWidth => _fixedDayWidth * zoomScale;
 
-    final visibleDays = CalendarGridCalculator.getOptimalVisibleDays(width);
-    final baseWidth = CalendarGridCalculator.getDayCellWidth(
-      width,
-      visibleDays,
-      textScaleFactor: textScaleFactor,
-    );
+  /// Unit row height — FIXED for all devices
+  double get unitRowHeight => _fixedRowHeight;
 
-    // Ensure baseWidth is valid
-    if (!baseWidth.isFinite || baseWidth <= 0) {
-      return 50.0 * zoomScale; // Fallback to reasonable default
-    }
+  /// Unit column width (left sidebar) — FIXED for all devices
+  double get unitColumnWidth => _fixedColumnWidth;
 
-    final result = baseWidth * zoomScale;
-    // Ensure result is valid
-    if (!result.isFinite || result <= 0) {
-      return 50.0 * zoomScale; // Fallback to reasonable default
-    }
-    return result;
-  }
-
-  /// Unit row height (base height without stacking)
-  double get unitRowHeight {
-    final width = screenWidth;
-    if (!width.isFinite || width <= 0) {
-      return 60.0; // Fallback to reasonable default
-    }
-    final height = CalendarGridCalculator.getRowHeight(
-      width,
-      textScaleFactor: textScaleFactor,
-    );
-    // Ensure height is valid
-    if (!height.isFinite || height <= 0) {
-      return 60.0; // Fallback to reasonable default
-    }
-    return height;
-  }
-
-  /// Unit column width (left sidebar)
-  double get unitColumnWidth {
-    final width = screenWidth;
-    if (!width.isFinite || width <= 0) {
-      return 200.0; // Fallback to reasonable default
-    }
-    final columnWidth = CalendarGridCalculator.getRowHeaderWidth(
-      width,
-      textScaleFactor: textScaleFactor,
-    );
-    // Ensure columnWidth is valid
-    if (!columnWidth.isFinite || columnWidth <= 0) {
-      return 200.0; // Fallback to reasonable default
-    }
-    return columnWidth;
-  }
-
-  /// Total header height (month + day headers)
-  double get headerHeight {
-    if (screenWidth < kTimelineMobileBreakpoint) {
-      return kTimelineMobileHeaderHeight;
-    } else if (screenWidth < kTimelineTabletBreakpoint) {
-      return kTimelineTabletHeaderHeight;
-    } else {
-      return kTimelineDesktopHeaderHeight;
-    }
-  }
+  /// Total header height (month + day headers) — FIXED for all devices
+  double get headerHeight => _fixedHeaderHeight;
 
   /// Month header height (35% of total header)
   double get monthHeaderHeight => headerHeight * kTimelineMonthHeaderProportion;
@@ -135,13 +65,7 @@ class TimelineDimensions {
   /// Calculate dynamic row height based on stack count
   /// Includes vertical padding for booking blocks (top + bottom)
   double getStackedRowHeight(int stackCount) {
-    final baseHeight = unitRowHeight;
-    final result = (baseHeight * stackCount) + kTimelineStackedRowPadding;
-    // Ensure result is valid
-    if (!result.isFinite || result <= 0) {
-      return 60.0 * stackCount + kTimelineStackedRowPadding; // Fallback
-    }
-    return result;
+    return (unitRowHeight * stackCount) + kTimelineStackedRowPadding;
   }
 
   /// Calculate number of days visible in viewport

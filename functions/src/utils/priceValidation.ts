@@ -11,10 +11,10 @@
  * @module priceValidation
  */
 
-import { admin, db } from "../firebase";
-import { HttpsError } from "firebase-functions/v2/https";
-import { logInfo, logWarn, logError } from "../logger";
-import { logPriceMismatch } from "./securityMonitoring";
+import {admin, db} from "../firebase";
+import {HttpsError} from "firebase-functions/v2/https";
+import {logInfo, logWarn, logError} from "../logger";
+import {logPriceMismatch} from "./securityMonitoring";
 
 /**
  * Price calculation result
@@ -43,7 +43,7 @@ interface PriceCalculationResult {
  * @param checkOutDate - Check-out date (Firestore Timestamp)
  * @param propertyId - The property ID (REQUIRED for subcollection path)
  * @param transaction - Optional Firestore transaction for atomic reads
- * @returns Price calculation result with total and breakdown
+ * @return Price calculation result with total and breakdown
  * @throws HttpsError if pricing not configured or invalid
  */
 export async function calculateBookingPrice(
@@ -85,6 +85,17 @@ export async function calculateBookingPrice(
     await transaction.get(dailyPricesQuery) :
     await dailyPricesQuery.get();
 
+  // PRICE MISMATCH DEBUG: Log query details BEFORE processing
+  logInfo("[PriceValidation] 📊 Daily prices query executed", {
+    unitId,
+    propertyId,
+    queryPath: `properties/${propertyId}/units/${unitId}/daily_prices`,
+    checkInDate: checkInDate.toDate().toISOString(),
+    checkOutDate: checkOutDate.toDate().toISOString(),
+    documentsFound: snapshot.docs.length,
+    expectedNights,
+  });
+
   // Create a map of existing daily prices (date string -> price data)
   const dailyPricesMap = new Map<string, admin.firestore.DocumentData>();
   for (const doc of snapshot.docs) {
@@ -92,6 +103,14 @@ export async function calculateBookingPrice(
     const dateTimestamp = priceData.date as admin.firestore.Timestamp;
     const dateStr = dateTimestamp.toDate().toISOString().split("T")[0];
     dailyPricesMap.set(dateStr, priceData);
+
+    // PRICE MISMATCH DEBUG: Log each daily price found
+    logInfo("[PriceValidation] 💰 Daily price document found", {
+      docId: doc.id,
+      date: dateStr,
+      price: priceData.price,
+      weekendPrice: priceData.weekend_price,
+    });
   }
 
   // Fetch unit data for fallback pricing (if we don't have all daily_prices)
@@ -113,7 +132,9 @@ export async function calculateBookingPrice(
 
     if (unitDoc.exists) {
       const unitData = unitDoc.data();
-      fallbackPrice = unitData?.price_per_night ?? 100.0;
+      // BUG FIX: Flutter stores pricePerNight as 'base_price', not 'price_per_night'
+      // This was causing 50% price mismatches - server used €100 fallback instead of actual price
+      fallbackPrice = unitData?.base_price ?? unitData?.price_per_night ?? 100.0;
       weekendBasePrice = unitData?.weekend_base_price ?? null;
       // Convert weekend_days from [6, 7] (Mon=1 format) to JS format [5, 6] (Sun=0 format)
       if (unitData?.weekend_days && Array.isArray(unitData.weekend_days)) {
@@ -123,11 +144,29 @@ export async function calculateBookingPrice(
         });
       }
 
-      logInfo("[PriceValidation] Using unit base price as fallback", {
+      // PRICE MISMATCH FIX: Enhanced logging to debug 50% price mismatches
+      logInfo("[PriceValidation] 🔍 Server fetched unit pricing data", {
         unitId,
+        propertyId,
         fallbackPrice,
         weekendBasePrice,
         weekendDays,
+        rawUnitData: {
+          base_price: unitData?.base_price, // Flutter stores pricePerNight here
+          price_per_night: unitData?.price_per_night, // Legacy field name
+          weekend_base_price: unitData?.weekend_base_price,
+          weekend_days: unitData?.weekend_days,
+        },
+        unitDocPath: unitRef.path,
+        dailyPricesFound: dailyPricesMap.size,
+        expectedNights,
+      });
+    } else {
+      logWarn("[PriceValidation] ⚠️ Unit document not found, using default fallback", {
+        unitId,
+        propertyId,
+        fallbackPrice,
+        unitDocPath: unitRef.path,
       });
     }
   }
@@ -192,7 +231,7 @@ export async function calculateBookingPrice(
     }
 
     totalPrice += nightPrice;
-    breakdown.push({ date: dateStr, price: nightPrice });
+    breakdown.push({date: dateStr, price: nightPrice});
 
     // Move to next day
     currentDate.setDate(currentDate.getDate() + 1);
@@ -265,13 +304,27 @@ export async function validateBookingPrice(
   ) ? servicesTotal : 0;
 
   // Calculate server-side nightly price (with fallback support)
-  const { totalPrice: serverNightlyPrice } = await calculateBookingPrice(
+  const priceResult = await calculateBookingPrice(
     unitId,
     checkInDate,
     checkOutDate,
     propertyId,
     transaction
   );
+  const serverNightlyPrice = priceResult.totalPrice;
+
+  // PRICE MISMATCH FIX: Log price breakdown for debugging
+  logInfo("[PriceValidation] 📊 Price calculation complete", {
+    unitId,
+    propertyId,
+    checkIn: checkInDate.toDate().toISOString(),
+    checkOut: checkOutDate.toDate().toISOString(),
+    nights: priceResult.nights,
+    serverNightlyPrice,
+    priceBreakdown: priceResult.breakdown,
+    clientTotalPrice,
+    servicesTotal: validatedServicesTotal,
+  });
 
   // Server expected total = nightly prices + additional services
   const serverExpectedTotal = Math.round((serverNightlyPrice + validatedServicesTotal) * 100) / 100;
@@ -327,14 +380,18 @@ export async function validateBookingPrice(
     throw new HttpsError(
       "invalid-argument",
       `Price mismatch. Expected €${serverExpectedTotal.toFixed(2)}, received €${clientTotalPrice.toFixed(2)}. ` +
-      `Please refresh the page to see current pricing.`
+      "Please refresh the page to see current pricing."
     );
   }
 
-  logInfo("[PriceValidation] Price validated successfully", {
+  logInfo("[PriceValidation] ✅ Price validated successfully", {
     unitId,
+    propertyId,
+    clientPrice: clientTotalPrice,
+    serverPrice: serverExpectedTotal,
     nightlyPrice: serverNightlyPrice,
     servicesTotal: validatedServicesTotal,
-    totalPrice: serverExpectedTotal,
+    nights: priceResult.nights,
+    priceMatch: "OK",
   });
 }

@@ -40,7 +40,7 @@ const BCRYPT_SALT_ROUNDS = 12;
  * - Constant-time comparison (prevents timing attacks)
  *
  * @param password - Plain text password
- * @returns bcrypt hash string
+ * @return bcrypt hash string
  */
 async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
@@ -51,7 +51,7 @@ async function hashPassword(password: string): Promise<string> {
  *
  * @param password - Plain text password to check
  * @param hash - Stored bcrypt hash
- * @returns true if password matches hash
+ * @return true if password matches hash
  */
 async function comparePassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);

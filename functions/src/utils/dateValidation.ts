@@ -12,7 +12,7 @@ import {admin} from "../firebase";
  *
  * @param value - Date-like value to convert
  * @param fieldName - Name of field for error messages
- * @returns JavaScript Date object
+ * @return JavaScript Date object
  * @throws Error if value cannot be converted
  */
 export function safeToDate(
@@ -61,7 +61,7 @@ export function safeToDate(
 
   throw new Error(
     `${fieldName} has unsupported type: ${typeof value}. ` +
-    `Expected Timestamp, Date, string, or number.`
+    "Expected Timestamp, Date, string, or number."
   );
 }
 
@@ -76,7 +76,7 @@ export function safeToDate(
  *
  * @param checkIn - Check-in date (string, number, or Date)
  * @param checkOut - Check-out date (string, number, or Date)
- * @returns Object with validated Firestore Timestamps
+ * @return Object with validated Firestore Timestamps
  * @throws HttpsError if validation fails
  */
 export function validateAndConvertBookingDates(
@@ -206,7 +206,7 @@ export function validateAndConvertBookingDates(
  *
  * @param checkIn - Check-in Firestore Timestamp
  * @param checkOut - Check-out Firestore Timestamp
- * @returns Number of nights (always >= 1)
+ * @return Number of nights (always >= 1)
  */
 export function calculateBookingNights(
   checkIn: admin.firestore.Timestamp,
@@ -231,7 +231,7 @@ export function calculateBookingNights(
  * Used for min/max days advance validation in daily_prices
  *
  * @param checkInDate - Check-in Firestore Timestamp
- * @returns Number of days in advance (0 = today, 1 = tomorrow, etc.)
+ * @return Number of days in advance (0 = today, 1 = tomorrow, etc.)
  */
 export function calculateDaysInAdvance(
   checkInDate: admin.firestore.Timestamp

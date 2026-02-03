@@ -32,6 +32,8 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
   final DateTime checkOut;
   final double totalPrice;
   final double? roomPrice;
+  final double? extraGuestFees;
+  final double? petFees;
   final double? additionalServicesTotal;
   final int nights;
   final int guests;
@@ -61,6 +63,8 @@ class BookingConfirmationScreen extends ConsumerStatefulWidget {
     required this.checkOut,
     required this.totalPrice,
     this.roomPrice,
+    this.extraGuestFees,
+    this.petFees,
     this.additionalServicesTotal,
     required this.nights,
     required this.guests,
@@ -358,6 +362,8 @@ class _BookingConfirmationScreenState
                               guests: widget.guests,
                               totalPrice: widget.totalPrice,
                               roomPrice: widget.roomPrice,
+                              extraGuestFees: widget.extraGuestFees,
+                              petFees: widget.petFees,
                               additionalServicesTotal:
                                   widget.additionalServicesTotal,
                               isDarkMode: isDarkMode,

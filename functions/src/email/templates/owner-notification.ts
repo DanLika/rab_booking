@@ -115,7 +115,7 @@ export function generateOwnerNotificationEmailV2(
   const paymentDetailsRows: DetailRow[] = [];
 
   if (depositAmount && depositAmount > 0) {
-    paymentDetailsRows.push({label: "Kapara", value: formatCurrency(depositAmount)});
+    paymentDetailsRows.push({label: "Avans", value: formatCurrency(depositAmount)});
     paymentDetailsRows.push({
       label: "Preostalo",
       value: formatCurrency(totalAmount - depositAmount),
@@ -130,8 +130,8 @@ export function generateOwnerNotificationEmailV2(
 
   if (paymentMethod) {
     const methodText = paymentMethod === "stripe" ? "Kartica" :
-                       paymentMethod === "bank_transfer" ? "Bankovni prijenos" :
-                       "Plaćanje na mjestu";
+      paymentMethod === "bank_transfer" ? "Bankovni prijenos" :
+        "Plaćanje na mjestu";
     paymentDetailsRows.push({label: "Način plaćanja", value: methodText});
   }
 

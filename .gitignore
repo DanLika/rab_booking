@@ -73,10 +73,13 @@ firebase-service-account-key.json
 *.md
 !README.md
 !CLAUDE.md
+!SECURITY.md
 # Whitelist .claude directory and its .md files (Claude Code configuration)
 !.claude/
 !.claude/*.md
 !.claude/**/*.md
+# Ignore Claude memory (local-only, not for git)
+.claude/memory.json
 # Whitelist docs directory .md files (project documentation)
 !docs/**/*.md
 *.sql

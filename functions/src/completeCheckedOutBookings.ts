@@ -194,7 +194,7 @@ interface BatchUpdateResult {
  * a committed batch can't accept new operations.
  *
  * @param docs - Array of document snapshots to update
- * @returns Results with success/failure counts
+ * @return Results with success/failure counts
  */
 async function updateInBatches(
   docs: FirebaseFirestore.QueryDocumentSnapshot[]
@@ -232,7 +232,7 @@ async function updateInBatches(
       logInfo(`[AutoComplete] Batch committed successfully (total: ${results.successCount})`);
     } catch (batchError) {
       // Batch failed - fall back to individual updates
-      logWarn(`[AutoComplete] Batch commit failed, trying individual updates`, {
+      logWarn("[AutoComplete] Batch commit failed, trying individual updates", {
         error: batchError instanceof Error ? batchError.message : String(batchError),
       });
 

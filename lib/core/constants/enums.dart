@@ -242,6 +242,9 @@ enum PropertyType {
   /// House - traditional family home
   house('house'),
 
+  /// Apartment - unit within a larger building
+  apartment('apartment'),
+
   /// Other - any other property type
   other('other');
 
@@ -253,6 +256,7 @@ enum PropertyType {
   String get displayName => switch (this) {
     PropertyType.villa => 'Villa',
     PropertyType.house => 'House',
+    PropertyType.apartment => 'Apartment',
     PropertyType.other => 'Other',
   };
 
@@ -260,6 +264,7 @@ enum PropertyType {
   String get displayNameHR => switch (this) {
     PropertyType.villa => 'Vila',
     PropertyType.house => 'Kuća',
+    PropertyType.apartment => 'Apartman',
     PropertyType.other => 'Ostalo',
   };
 

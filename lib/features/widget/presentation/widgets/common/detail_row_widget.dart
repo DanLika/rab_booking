@@ -91,15 +91,13 @@ class DetailRowWidget extends StatelessWidget {
       ),
     );
 
-    final valueWidget = Text(
+    final valueWidget = SelectableText(
       value,
       style: TextStyle(
         fontSize: TypographyTokens.fontSizeM,
         fontWeight: isHighlighted ? TypographyTokens.bold : valueFontWeight,
         color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
       ),
-      // Allow text to wrap for stacked layout
-      softWrap: stacked,
     );
 
     // Bug #46 Fix: Add Semantics widget for accessibility (screen readers)

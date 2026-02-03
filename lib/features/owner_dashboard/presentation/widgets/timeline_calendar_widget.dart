@@ -120,6 +120,18 @@ class _TimelineCalendarWidgetState
   int _visibleStartIndex = 0;
   int _visibleDayCount = kTimelineDefaultVisibleDayCount;
 
+  // CRITICAL FIX: Flag to force using _visibleStartIndex even when hasClients=true
+  // When jumping far (e.g., from January to October), we need the 90-day window to be
+  // built around the TARGET date, not the current scroll position. This flag tells
+  // _calculateVisibleStartIndex() to use our pre-set _visibleStartIndex value.
+  bool _forceVisibleStartIndex = false;
+
+  // TELEPORT FIX: Store target start index during TELEPORT operation.
+  // This value persists through ALL rebuilds during TELEPORT, ensuring the
+  // correct date range is used even if _forceVisibleStartIndex is consumed
+  // or _isProgrammaticScroll timing is off. Reset to null when TELEPORT completes.
+  int? _teleportTargetStartIndex;
+
   // Fixed date range (simplified - no more dynamic PREPEND/APPEND)
   // This eliminates the scroll compensation race condition that caused erratic scrolling
   late DateTime _fixedStartDate;
@@ -242,10 +254,13 @@ class _TimelineCalendarWidgetState
 
           // Skip if target is already within 1/2 of visible width from current position
           // INCREASED from 1/4 to 1/2 to prevent feedback loop with _updateVisibleRange
+          // EXCEPTION: Never skip when forceScrollKey changed (user explicitly requested scroll)
           final scrollDifference = (centeredTarget - currentScroll).abs();
           final skipThreshold = visibleWidth / 2;
 
-          if (scrollDifference < skipThreshold) {
+          // FIX: Date picker precision - don't skip when user explicitly selected a date
+          // forceScrollKeyChanged means user clicked toolbar button (Today, arrows, date picker)
+          if (scrollDifference < skipThreshold && !forceScrollKeyChanged) {
             shouldSkipScroll = true;
             _timelineLog(
               'didUpdateWidget: SKIPPING scroll - target already visible',
@@ -519,13 +534,55 @@ class _TimelineCalendarWidgetState
               3 // 30 days during animation
         : kTimelineVisibleRangeUpdateThreshold; // 10 days normally
 
+    // CRITICAL FIX: Skip updating _visibleStartIndex during programmatic scroll
+    // When scrolling programmatically (e.g., date picker jump to October), we've already
+    // set _visibleStartIndex to the target position. Updating it here would overwrite
+    // that with the CURRENT scroll position (which is changing during animation),
+    // causing the 90-day window to shift back to the old position.
+    //
+    // BUG FIX: Also skip when _forceVisibleStartIndex is true.
+    // After TELEPORT, timer resets _isProgrammaticScroll=false but _forceVisibleStartIndex
+    // may still be true (not consumed because _teleportTargetStartIndex was used instead).
+    // Without this check, scroll listener would overwrite _visibleStartIndex before
+    // the forced value is used in _calculateVisibleStartIndex.
+    if (_isProgrammaticScroll || _forceVisibleStartIndex) {
+      return; // Don't update visible range during programmatic scroll or pending force
+    }
+
     if ((newStartIndex - _visibleStartIndex).abs() > threshold ||
         (newDayCount - _visibleDayCount).abs() > threshold) {
+      // TELEPORT PROTECTION: Don't overwrite _visibleStartIndex during active TELEPORT
+      // The TELEPORT code sets _visibleStartIndex to target position, and we must not
+      // overwrite it based on current scroll position (which may be at old location)
+      if (_teleportTargetStartIndex != null || _forceVisibleStartIndex) {
+        _timelineLog(
+          '_updateVisibleRange: BLOCKED - TELEPORT in progress',
+          category: 'Scroll',
+          data: {
+            'teleportTarget': _teleportTargetStartIndex,
+            'forceFlag': _forceVisibleStartIndex,
+            'wouldSetTo': newStartIndex,
+          },
+        );
+        return;
+      }
+
       // Invalidate memoization caches when visible range changes significantly
       _cachedVisibleDateRange = null;
       _cachedVisibleStartIndex = -1;
       _cachedTimelineContent = null;
       _lastBuildDataHash = null;
+
+      _timelineLog(
+        '_updateVisibleRange: UPDATING _visibleStartIndex',
+        category: 'Scroll',
+        data: {
+          'oldStartIndex': _visibleStartIndex,
+          'newStartIndex': newStartIndex,
+          'scrollOffset': scrollOffset.toStringAsFixed(0),
+          'firstVisibleDay': firstVisibleDay,
+        },
+      );
 
       setState(() {
         _visibleStartIndex = newStartIndex;
@@ -536,7 +593,10 @@ class _TimelineCalendarWidgetState
     // DYNAMIC EXTENSION: Extend range when approaching edges
     // Only extend forward (to the right) - no scroll compensation needed
     // Extend backward (to the left) would require compensation which causes scroll issues
-    _extendDateRangeIfNeeded(firstVisibleDay, totalDays);
+    // TELEPORT FIX: Skip during programmatic scroll to prevent unwanted range extension
+    if (!_isProgrammaticScroll) {
+      _extendDateRangeIfNeeded(firstVisibleDay, totalDays);
+    }
 
     // Notify parent of visible date change (debounced to prevent scroll interference)
     // Problem #12 fix: Skip notification during programmatic scroll to prevent infinite loop
@@ -565,100 +625,18 @@ class _TimelineCalendarWidgetState
     }
   }
 
-  /// Dynamically extend the date range when user approaches edges
-  /// Only extends forward (right) to avoid scroll compensation issues
-  /// Backward extension (left) is limited to prevent scroll jumps
+  /// Dynamically extend the date range when user approaches edges.
+  ///
+  /// DISABLED: This function is no longer needed because TELEPORT handles range
+  /// extension when user picks a date via date picker. The initial 1-year range
+  /// (6 months before/after today) is sufficient for manual scrolling, and TELEPORT
+  /// extends it automatically when jumping to dates outside this range.
+  ///
+  /// Keeping this function disabled prevents race conditions where scroll events
+  /// during TELEPORT would trigger unwanted range extensions.
   void _extendDateRangeIfNeeded(int firstVisibleDay, int totalDays) {
-    const extensionThreshold = 30; // Days from edge to trigger extension
-    const extensionAmount = 180; // 6 months extension
-    const maxTotalDays = 1460; // Max 4 years total (2 past + 2 future)
-
-    // Check if approaching right edge (future dates)
-    final daysUntilEnd = totalDays - firstVisibleDay;
-    if (daysUntilEnd < extensionThreshold && totalDays < maxTotalDays) {
-      _timelineLog(
-        '_extendDateRangeIfNeeded: extending FORWARD',
-        category: 'DateRange',
-        data: {
-          'daysUntilEnd': daysUntilEnd,
-          'oldEndDate': _fixedEndDate.toIso8601String().substring(0, 10),
-        },
-      );
-
-      // Extend end date by 6 months (no scroll compensation needed)
-      setState(() {
-        _fixedEndDate = _fixedEndDate.add(
-          const Duration(days: extensionAmount),
-        );
-        // Invalidate caches
-        _cachedFullDateRange = null;
-        _cachedVisibleDateRange = null;
-        _cachedTimelineContent = null;
-        _lastBuildDataHash = null;
-      });
-
-      _timelineLog(
-        '_extendDateRangeIfNeeded: extended FORWARD',
-        category: 'DateRange',
-        data: {
-          'newEndDate': _fixedEndDate.toIso8601String().substring(0, 10),
-          'newTotalDays': _fixedEndDate.difference(_fixedStartDate).inDays,
-        },
-      );
-    }
-
-    // Check if approaching left edge (past dates)
-    // Only extend if we have room and user is very close to the edge
-    if (firstVisibleDay < extensionThreshold && totalDays < maxTotalDays) {
-      _timelineLog(
-        '_extendDateRangeIfNeeded: extending BACKWARD',
-        category: 'DateRange',
-        data: {
-          'firstVisibleDay': firstVisibleDay,
-          'oldStartDate': _fixedStartDate.toIso8601String().substring(0, 10),
-        },
-      );
-
-      // Extend start date by 6 months
-      // NOTE: This will cause a visual "jump" but is necessary for viewing past dates
-      // We minimize impact by invalidating caches and recalculating positions
-      final oldStartDate = _fixedStartDate;
-      setState(() {
-        _fixedStartDate = _fixedStartDate.subtract(
-          const Duration(days: extensionAmount),
-        );
-        // Invalidate caches
-        _cachedFullDateRange = null;
-        _cachedVisibleDateRange = null;
-        _cachedTimelineContent = null;
-        _lastBuildDataHash = null;
-        // Adjust visible start index to account for new days
-        _visibleStartIndex += extensionAmount;
-      });
-
-      // Adjust scroll position to maintain visual continuity
-      if (_horizontalScrollController.hasClients) {
-        final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
-        final additionalOffset = extensionAmount * dimensions.dayWidth;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _horizontalScrollController.hasClients) {
-            _horizontalScrollController.jumpTo(
-              _horizontalScrollController.offset + additionalOffset,
-            );
-          }
-        });
-      }
-
-      _timelineLog(
-        '_extendDateRangeIfNeeded: extended BACKWARD',
-        category: 'DateRange',
-        data: {
-          'newStartDate': _fixedStartDate.toIso8601String().substring(0, 10),
-          'oldStartDate': oldStartDate.toIso8601String().substring(0, 10),
-          'newTotalDays': _fixedEndDate.difference(_fixedStartDate).inDays,
-        },
-      );
-    }
+    // NO-OP: Range extension is handled by TELEPORT in _scrollToDate()
+    return;
   }
 
   /// Wait for layout completion and then finalize initial scroll setup.
@@ -731,6 +709,7 @@ class _TimelineCalendarWidgetState
     DateTime targetDate, {
     bool isInitialScroll = false,
     bool forceScroll = false,
+    int retryCount = 0,
   }) {
     _timelineLog(
       '_scrollToDate called (SIMPLIFIED)',
@@ -743,6 +722,7 @@ class _TimelineCalendarWidgetState
         'isAnimating': _isScrollAnimating,
         'fixedStartDate': _fixedStartDate.toIso8601String().substring(0, 10),
         'fixedEndDate': _fixedEndDate.toIso8601String().substring(0, 10),
+        'retryCount': retryCount,
       },
     );
 
@@ -761,51 +741,297 @@ class _TimelineCalendarWidgetState
       _isScrollAnimating = false;
     }
 
+    // FIX: Instead of aborting when no clients, retry after short delay
+    // This handles race condition when widget rebuilds during scroll request
     if (!_horizontalScrollController.hasClients) {
-      _timelineLog('_scrollToDate: NO CLIENTS - aborting', category: 'Scroll');
+      const maxRetries = 5;
+      if (retryCount < maxRetries) {
+        _timelineLog(
+          '_scrollToDate: NO CLIENTS - scheduling retry ${retryCount + 1}/$maxRetries',
+          category: 'Scroll',
+        );
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (mounted) {
+            _scrollToDate(
+              targetDate,
+              isInitialScroll: isInitialScroll,
+              forceScroll: forceScroll,
+              retryCount: retryCount + 1,
+            );
+          }
+        });
+      } else {
+        _timelineLog(
+          '_scrollToDate: NO CLIENTS - max retries reached, aborting',
+          category: 'Scroll',
+        );
+      }
       return;
     }
 
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
 
-    // SIMPLIFIED: Clamp target date to fixed range (no dynamic extension)
-    // If target is outside range, clamp to nearest edge
-    DateTime clampedTarget = targetDate;
-    if (targetDate.isBefore(_fixedStartDate)) {
+    // FIX: Normalize to UTC to match _fixedStartDate (prevents timezone-related day miscalculation)
+    final clampedTarget = DateTime.utc(
+      targetDate.year,
+      targetDate.month,
+      targetDate.day,
+    );
+
+    // FIX: EXTEND range if target is outside, don't clamp!
+    // This allows scrolling to any date selected by user
+    bool rangeExtended = false;
+    if (clampedTarget.isBefore(_fixedStartDate)) {
       _timelineLog(
-        '_scrollToDate: target before range, clamping to start',
+        '_scrollToDate: extending range START to include target',
         category: 'Scroll',
+        data: {
+          'oldStart': _fixedStartDate.toIso8601String().substring(0, 10),
+          'target': clampedTarget.toIso8601String().substring(0, 10),
+        },
       );
-      clampedTarget = _fixedStartDate;
-    } else if (targetDate.isAfter(_fixedEndDate)) {
+      _fixedStartDate = DateTime.utc(clampedTarget.year, clampedTarget.month);
+      rangeExtended = true;
+    } else if (clampedTarget.isAfter(_fixedEndDate)) {
       _timelineLog(
-        '_scrollToDate: target after range, clamping to end',
+        '_scrollToDate: extending range END to include target',
         category: 'Scroll',
+        data: {
+          'oldEnd': _fixedEndDate.toIso8601String().substring(0, 10),
+          'target': clampedTarget.toIso8601String().substring(0, 10),
+        },
       );
-      clampedTarget = _fixedEndDate.subtract(const Duration(days: 1));
+      // Extend to end of target month + 1 month buffer
+      _fixedEndDate = DateTime.utc(clampedTarget.year, clampedTarget.month + 2);
+      rangeExtended = true;
+    }
+
+    // TELEPORT FIX: If range was extended, rebuild and jumpTo (no recursive call)
+    if (rangeExtended) {
+      // CRITICAL: Cancel previous timer FIRST to prevent race condition
+      // A previous timer might fire between setState and postFrameCallback,
+      // resetting _teleportTargetStartIndex to null before we can use it.
+      _programmaticScrollResetTimer?.cancel();
+      _isProgrammaticScroll = true;
+
+      _timelineLog(
+        '_scrollToDate: TELEPORT (range extended)',
+        category: 'Scroll',
+        data: {
+          'newStart': _fixedStartDate.toIso8601String().substring(0, 10),
+          'newEnd': _fixedEndDate.toIso8601String().substring(0, 10),
+        },
+      );
+
+      // Invalidate ALL caches
+      _cachedFullDateRange = null;
+      _cachedVisibleDateRange = null;
+      _cachedVisibleStartIndex = -1;
+      _cachedTimelineContent = null;
+      _lastBuildDataHash = null;
+
+      // Set _visibleStartIndex to target date's position
+      final targetDaysSinceStart = clampedTarget
+          .difference(_fixedStartDate)
+          .inDays;
+      const windowBefore = 30;
+      _visibleStartIndex = (targetDaysSinceStart - windowBefore).clamp(
+        0,
+        999999,
+      );
+      _forceVisibleStartIndex = true;
+      // TELEPORT FIX: Store target index - persists through ALL rebuilds during TELEPORT
+      _teleportTargetStartIndex = _visibleStartIndex;
+
+      // Calculate scroll position within the NEW window
+      // BUG FIX: Must include offsetWidth in scroll calculation!
+      // Content = [SizedBox(offsetWidth)] + [day cells]
+      // offsetWidth represents the spacer for days before the visible window
+      // Without adding offsetWidth, scroll lands in the spacer, not the day cells
+      final offsetWidth = _visibleStartIndex * dimensions.dayWidth;
+      final newWindowTargetDay = windowBefore;
+      final scrollInNewWindow =
+          offsetWidth +
+          (newWindowTargetDay * dimensions.dayWidth) -
+          (dimensions.visibleContentWidth * 0.25);
+      final teleportScrollPosition = scrollInNewWindow.clamp(
+        0.0,
+        double.maxFinite,
+      );
+
+      _timelineLog(
+        '_scrollToDate: TELEPORT (range extended) - calculated positions',
+        category: 'Scroll',
+        data: {
+          'targetDaysSinceStart': targetDaysSinceStart,
+          'visibleStartIndex': _visibleStartIndex,
+          'offsetWidth': offsetWidth.toStringAsFixed(0),
+          'teleportScrollPosition': teleportScrollPosition.toStringAsFixed(1),
+        },
+      );
+
+      // Trigger rebuild, then jumpTo (NO recursive _scrollToDate call!)
+      setState(() {});
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _horizontalScrollController.hasClients) {
+          _horizontalScrollController.jumpTo(teleportScrollPosition);
+
+          _timelineLog(
+            '_scrollToDate: TELEPORT (range extended) COMPLETE',
+            category: 'Scroll',
+          );
+
+          _programmaticScrollResetTimer?.cancel();
+          _programmaticScrollResetTimer = Timer(
+            const Duration(milliseconds: 500),
+            () {
+              if (mounted) {
+                _isProgrammaticScroll = false;
+                _teleportTargetStartIndex = null; // TELEPORT complete - reset
+              }
+            },
+          );
+        }
+      });
+      return;
     }
 
     final daysSinceStart = clampedTarget.difference(_fixedStartDate).inDays;
+
+    // TELEPORT FIX: For far jumps (target outside visible window), don't animate.
+    // Instead: rebuild window around target, then jumpTo the correct position.
+    // This avoids race conditions from recursive _scrollToDate calls.
+    final visibleRange = _getVisibleDateRange();
+    final visibleStart = visibleRange.isNotEmpty ? visibleRange.first : null;
+    final visibleEnd = visibleRange.isNotEmpty ? visibleRange.last : null;
+
+    // Check if target is significantly outside visible range (with 5-day buffer for safety)
+    final targetOutsideWindow =
+        visibleStart != null &&
+        visibleEnd != null &&
+        (clampedTarget.isBefore(
+              visibleStart.subtract(const Duration(days: 5)),
+            ) ||
+            clampedTarget.isAfter(visibleEnd.add(const Duration(days: 5))));
+
+    if (targetOutsideWindow && forceScroll) {
+      _timelineLog(
+        '_scrollToDate: TELEPORT - target outside visible window',
+        category: 'Scroll',
+        data: {
+          'target': clampedTarget.toIso8601String().substring(0, 10),
+          'visibleStart': visibleStart.toIso8601String().substring(0, 10),
+          'visibleEnd': visibleEnd.toIso8601String().substring(0, 10),
+          'daysSinceStart': daysSinceStart,
+        },
+      );
+
+      // CRITICAL: Cancel previous timer FIRST to prevent race condition
+      // A previous timer might fire between setState and postFrameCallback,
+      // resetting _teleportTargetStartIndex to null before we can use it.
+      _programmaticScrollResetTimer?.cancel();
+
+      // Set programmatic scroll flag
+      _isProgrammaticScroll = true;
+
+      // Invalidate caches
+      _cachedVisibleDateRange = null;
+      _cachedVisibleStartIndex = -1;
+      _cachedTimelineContent = null;
+      _lastBuildDataHash = null;
+
+      // Set _visibleStartIndex so window is built around target
+      // Target will be ~30 days into the new window
+      const windowBefore = 30;
+      _visibleStartIndex = (daysSinceStart - windowBefore).clamp(0, 999999);
+      _forceVisibleStartIndex = true;
+      // TELEPORT FIX: Store target index - persists through ALL rebuilds during TELEPORT
+      _teleportTargetStartIndex = _visibleStartIndex;
+
+      // Calculate scroll position within the NEW window
+      // Target is at day 30 of new window, we want it at ~25% from left edge
+      // BUG FIX: Must include offsetWidth in scroll calculation!
+      // Content = [SizedBox(offsetWidth)] + [day cells]
+      // offsetWidth represents the spacer for days before the visible window
+      // Without adding offsetWidth, scroll lands in the spacer, not the day cells
+      final offsetWidth = _visibleStartIndex * dimensions.dayWidth;
+      final newWindowTargetDay =
+          windowBefore; // Target is 30 days into new window
+      final scrollInNewWindow =
+          offsetWidth +
+          (newWindowTargetDay * dimensions.dayWidth) -
+          (dimensions.visibleContentWidth * 0.25);
+      final teleportScrollPosition = scrollInNewWindow.clamp(
+        0.0,
+        double.maxFinite,
+      );
+
+      _timelineLog(
+        '_scrollToDate: TELEPORT - calculated positions',
+        category: 'Scroll',
+        data: {
+          'visibleStartIndex': _visibleStartIndex,
+          'offsetWidth': offsetWidth.toStringAsFixed(0),
+          'newWindowTargetDay': newWindowTargetDay,
+          'teleportScrollPosition': teleportScrollPosition.toStringAsFixed(1),
+        },
+      );
+
+      // Trigger rebuild, then jumpTo (NO recursive _scrollToDate call!)
+      setState(() {});
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _horizontalScrollController.hasClients) {
+          // Use jumpTo - instant, no animation, no race conditions
+          _horizontalScrollController.jumpTo(teleportScrollPosition);
+
+          _timelineLog('_scrollToDate: TELEPORT COMPLETE', category: 'Scroll');
+
+          // Reset flags after short delay
+          _programmaticScrollResetTimer?.cancel();
+          _programmaticScrollResetTimer = Timer(
+            const Duration(milliseconds: 500),
+            () {
+              if (mounted) {
+                _isProgrammaticScroll = false;
+                _teleportTargetStartIndex = null; // TELEPORT complete - reset
+              }
+            },
+          );
+        }
+      });
+      return;
+    }
     final scrollPosition = daysSinceStart * dimensions.dayWidth;
 
     final maxScroll = _horizontalScrollController.position.maxScrollExtent;
     final currentScroll = _horizontalScrollController.offset;
     final visibleWidth = dimensions.visibleContentWidth;
 
-    final targetScroll =
-        (scrollPosition - (visibleWidth / 2) + (dimensions.dayWidth / 2)).clamp(
-          0.0,
-          maxScroll,
-        );
+    // PRECISION FIX: Position target date at ~25% from left edge instead of center (50%)
+    // Why: Centering formula (scrollPosition - visibleWidth/2) often hits maxScroll
+    // when target date is near the end of the windowed range (90 days), causing the
+    // date to appear off-center or even off-screen.
+    //
+    // Old formula: scrollPosition - visibleWidth/2 + dayWidth/2 (center - ~150px offset)
+    // New formula: scrollPosition - visibleWidth*0.25 (25% from left - ~75px offset)
+    //
+    // Benefits:
+    // - Less likely to hit maxScroll (smaller offset = more headroom)
+    // - Target date is clearly visible near left side
+    // - User has context of dates before the target
+    // - More predictable positioning across all date ranges
+    final targetScroll = (scrollPosition - (visibleWidth * 0.25)).clamp(
+      0.0,
+      maxScroll,
+    );
 
     // Problem #5 fix: Skip scroll if target is already visible
-    // INCREASED THRESHOLD to prevent feedback loop:
-    // Old: visibleWidth / 4 (~70px) - too small, 3-day difference (~147px) exceeded it
-    // New: visibleWidth / 2 (~140px) - allows for center-date reporting variance
-    // This prevents the _updateVisibleRange → didUpdateWidget → _scrollToDate loop
-    // EXCEPTION: forceScroll=true bypasses this (for explicit user date selection)
+    // REDUCED THRESHOLD: Changed from visibleWidth/2 to dayWidth*2 for more responsive scrolling
+    // Old behavior: Skip if within ~150px (3 days) - too coarse for date picker precision
+    // New behavior: Skip only if within ~100px (2 days) - still prevents feedback loop
+    // EXCEPTION: forceScroll=true bypasses this (for explicit user date selection via toolbar)
     final scrollDifference = (targetScroll - currentScroll).abs();
-    final skipThreshold = visibleWidth / 2;
+    final skipThreshold = dimensions.dayWidth * 2;
     if (scrollDifference < skipThreshold && !isInitialScroll && !forceScroll) {
       _timelineLog(
         '_scrollToDate: SKIPPING - target already visible (diff: ${scrollDifference.toStringAsFixed(1)}, threshold: ${skipThreshold.toStringAsFixed(1)})',
@@ -823,9 +1049,12 @@ class _TimelineCalendarWidgetState
         'scrollPosition': scrollPosition.toStringAsFixed(1),
         'currentScroll': currentScroll.toStringAsFixed(1),
         'targetScroll': targetScroll.toStringAsFixed(1),
+        'offset25pct': (visibleWidth * 0.25).toStringAsFixed(1),
         'scrollDifference': scrollDifference.toStringAsFixed(1),
+        'skipThreshold': skipThreshold.toStringAsFixed(1),
         'maxScroll': maxScroll.toStringAsFixed(1),
         'visibleWidth': visibleWidth.toStringAsFixed(1),
+        'dayWidth': dimensions.dayWidth.toStringAsFixed(1),
       },
     );
 
@@ -852,7 +1081,7 @@ class _TimelineCalendarWidgetState
       // Reset programmatic scroll flag after a short delay
       _programmaticScrollResetTimer?.cancel();
       _programmaticScrollResetTimer = Timer(
-        const Duration(milliseconds: 100),
+        const Duration(milliseconds: 500),
         () {
           if (mounted) {
             _isProgrammaticScroll = false;
@@ -926,14 +1155,95 @@ class _TimelineCalendarWidgetState
     _isProgrammaticScroll = true;
     _isScrollAnimating = true;
 
-    // Target is first day of the month
-    DateTime targetDate = DateTime(month.year, month.month);
+    // Target is first day of the month (UTC to match _fixedStartDate)
+    final targetDate = DateTime.utc(month.year, month.month);
 
-    // SIMPLIFIED: Clamp to fixed range instead of extending dynamically
+    // FIX: EXTEND range if target is outside, don't clamp!
+    // This allows user to navigate to any month via date picker
+    bool rangeExtended = false;
     if (targetDate.isBefore(_fixedStartDate)) {
-      targetDate = _fixedStartDate;
+      _timelineLog(
+        '_scrollToMonth: extending range START to include target',
+        category: 'Scroll',
+        data: {
+          'oldStart': _fixedStartDate.toIso8601String().substring(0, 10),
+          'target': targetDate.toIso8601String().substring(0, 10),
+        },
+      );
+      _fixedStartDate = DateTime.utc(targetDate.year, targetDate.month);
+      rangeExtended = true;
     } else if (targetDate.isAfter(_fixedEndDate)) {
-      targetDate = DateTime(_fixedEndDate.year, _fixedEndDate.month);
+      _timelineLog(
+        '_scrollToMonth: extending range END to include target',
+        category: 'Scroll',
+        data: {
+          'oldEnd': _fixedEndDate.toIso8601String().substring(0, 10),
+          'target': targetDate.toIso8601String().substring(0, 10),
+        },
+      );
+      // Extend to end of target month + 1 month buffer
+      _fixedEndDate = DateTime.utc(targetDate.year, targetDate.month + 2);
+      rangeExtended = true;
+    }
+
+    // If range was extended, we need to trigger a rebuild to update the grid
+    if (rangeExtended) {
+      // CRITICAL FIX #4: Set _isProgrammaticScroll IMMEDIATELY to prevent feedback loop
+      // Without this, _updateVisibleRange() reports current scroll position to parent,
+      // parent updates _currentRange to that position, and didUpdateWidget overrides our target
+      _isProgrammaticScroll = true;
+
+      _timelineLog(
+        '_scrollToMonth: range extended, scheduling scroll after rebuild',
+        category: 'Scroll',
+        data: {
+          'newStart': _fixedStartDate.toIso8601String().substring(0, 10),
+          'newEnd': _fixedEndDate.toIso8601String().substring(0, 10),
+        },
+      );
+
+      // CRITICAL FIX: Invalidate ALL caches so rebuild creates new grid with correct dimensions
+      // Without this, cached build returns old (shorter) grid and maxScrollExtent is wrong
+      _cachedFullDateRange = null;
+      _cachedVisibleDateRange = null;
+      _cachedVisibleStartIndex = -1;
+      _cachedTimelineContent = null;
+      _lastBuildDataHash = null;
+
+      // CRITICAL FIX #2: Set _visibleStartIndex to target date's position BEFORE rebuild
+      // Without this, _calculateVisibleStartIndex() uses CURRENT scroll position to build
+      // the 90-day window, which is still at the old position (e.g., January when jumping to October)
+      final targetDaysSinceStart = targetDate
+          .difference(_fixedStartDate)
+          .inDays;
+      const windowBefore = 30; // Match the value in _calculateVisibleStartIndex
+      _visibleStartIndex = (targetDaysSinceStart - windowBefore).clamp(
+        0,
+        999999,
+      );
+
+      // CRITICAL FIX #3: Set flag to force using _visibleStartIndex during rebuild
+      // Without this, _calculateVisibleStartIndex() ignores _visibleStartIndex when hasClients=true
+      _forceVisibleStartIndex = true;
+
+      _timelineLog(
+        '_scrollToMonth: setting _visibleStartIndex for target date',
+        category: 'Scroll',
+        data: {
+          'targetDaysSinceStart': targetDaysSinceStart,
+          'visibleStartIndex': _visibleStartIndex,
+          'forceFlag': _forceVisibleStartIndex,
+        },
+      );
+
+      // Use setState to trigger rebuild, then scroll in post-frame callback
+      setState(() {});
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _scrollToMonth(month);
+        }
+      });
+      return;
     }
 
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
@@ -1178,7 +1488,57 @@ class _TimelineCalendarWidgetState
   /// Calculate visible start index (extracted for memoization)
   int _calculateVisibleStartIndex() {
     final totalDays = _getDateRange().length;
+
+    // DEBUG: Log all state at start of calculation
+    _timelineLog(
+      '_calculateVisibleStartIndex: STATE CHECK',
+      category: 'Scroll',
+      data: {
+        'teleportTarget': _teleportTargetStartIndex,
+        'forceFlag': _forceVisibleStartIndex,
+        'visibleStartIndex': _visibleStartIndex,
+        'isProgrammatic': _isProgrammaticScroll,
+        'totalDays': totalDays,
+      },
+    );
+
     if (totalDays == 0) return 0;
+
+    // TELEPORT FIX (PRIMARY): If _teleportTargetStartIndex is set, use it unconditionally.
+    // This value is set during TELEPORT and persists through ALL rebuilds until
+    // TELEPORT completes. This is the most reliable way to ensure correct date range.
+    if (_teleportTargetStartIndex != null) {
+      final targetIndex = _teleportTargetStartIndex!;
+      _timelineLog(
+        '_calculateVisibleStartIndex: TELEPORT TARGET $_teleportTargetStartIndex',
+        category: 'Scroll',
+      );
+      return targetIndex.clamp(0, totalDays - 1);
+    }
+
+    // CRITICAL FIX: When _forceVisibleStartIndex is true, use _visibleStartIndex
+    // regardless of whether controller has clients. This is needed when jumping
+    // far (e.g., from January to October) - we must build the 90-day window
+    // around the TARGET date, not the current scroll position.
+    if (_forceVisibleStartIndex) {
+      _timelineLog(
+        '_calculateVisibleStartIndex: FORCING to $_visibleStartIndex',
+        category: 'Scroll',
+      );
+      // Reset flag after use - it's a one-time override
+      _forceVisibleStartIndex = false;
+      return _visibleStartIndex.clamp(0, totalDays - 1);
+    }
+
+    // TELEPORT FIX (SECONDARY): During programmatic scroll, keep using _visibleStartIndex
+    // to prevent the window from jumping back to old position.
+    if (_isProgrammaticScroll) {
+      _timelineLog(
+        '_calculateVisibleStartIndex: KEEPING $_visibleStartIndex (programmatic scroll)',
+        category: 'Scroll',
+      );
+      return _visibleStartIndex.clamp(0, totalDays - 1);
+    }
 
     // If controller doesn't have clients yet, use the pre-calculated _visibleStartIndex
     // This ensures the first render uses the correct date range (centered around today)
@@ -1983,12 +2343,21 @@ class _TimelineCalendarWidgetState
     // Store parent context before showing bottom sheet
     // (bottom sheet context becomes invalid after closing)
     final parentContext = context;
-    await showModalBottomSheet(
+    final targetDate = await showModalBottomSheet<DateTime?>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (sheetContext) =>
           BookingMoveToUnitMenu(booking: booking, parentContext: parentContext),
     );
+
+    // If booking was successfully moved, scroll to its new location
+    if (targetDate != null && mounted) {
+      // Small delay to allow provider refresh to complete
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) {
+        _scrollToDate(targetDate, forceScroll: true);
+      }
+    }
   }
 }

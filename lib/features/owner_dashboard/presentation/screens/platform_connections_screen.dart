@@ -236,7 +236,7 @@ class _PlatformConnectionsScreenState
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
+                      SelectableText(
                         'Unit: ${connection.unitId}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.grey,

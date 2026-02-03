@@ -65,9 +65,9 @@ export function generateOverbookingDetectedEmailV2(
     viewInAppUrl,
   } = params;
 
-  const conflictDateRange = conflictDates.length > 0
-    ? `${formatDate(conflictDates[0])} - ${formatDate(conflictDates[conflictDates.length - 1])}`
-    : "Unknown dates";
+  const conflictDateRange = conflictDates.length > 0 ?
+    `${formatDate(conflictDates[0])} - ${formatDate(conflictDates[conflictDates.length - 1])}` :
+    "Unknown dates";
 
   const header = generateHeader({
     icon: getWarningIcon(),

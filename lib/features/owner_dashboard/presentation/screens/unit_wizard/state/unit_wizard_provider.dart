@@ -121,6 +121,11 @@ class UnitWizardNotifier extends _$UnitWizardNotifier {
     'bathrooms' => draft.copyWith(bathrooms: value),
     'maxGuests' => draft.copyWith(maxGuests: value),
     'areaSqm' => draft.copyWith(areaSqm: value),
+    // Step 2 - Extra beds & pets (expandable sections)
+    'maxTotalCapacity' => draft.copyWith(maxTotalCapacity: value),
+    'extraBedFee' => draft.copyWith(extraBedFee: value),
+    'maxPets' => draft.copyWith(maxPets: value),
+    'petFee' => draft.copyWith(petFee: value),
     // Step 3 - Pricing & Availability (merged)
     'pricePerNight' => draft.copyWith(pricePerNight: value),
     'weekendBasePrice' => draft.copyWith(weekendBasePrice: value),

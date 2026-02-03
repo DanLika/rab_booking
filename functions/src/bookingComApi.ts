@@ -57,33 +57,49 @@ function getEncryptionKey(): string {
 
 /**
  * Encrypt sensitive data (tokens) before storing in Firestore
+ * SECURITY: Uses AES-256-CBC with a random IV for each encryption
  */
 export function encryptToken(token: string): string {
-  // In production, use proper encryption (e.g., Google Cloud KMS)
-  // For now, we'll use a simple base64 encoding (NOT secure for production)
-  // TODO: Implement proper encryption with KMS
   const encryptionKey = getEncryptionKey();
-  // Generate a consistent IV from the key (not secure, but matches deprecated createCipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
-  const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
+
+  // Generate a random 16-byte initialization vector (IV)
+  // SECURITY: Random IV prevents identical plaintexts from having identical ciphertexts
+  const iv = crypto.randomBytes(16);
+
   const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
   let encrypted = cipher.update(token, "utf8", "hex");
   encrypted += cipher.final("hex");
-  return encrypted;
+
+  // Prepend IV to ciphertext (format: iv:ciphertext)
+  return `${iv.toString("hex")}:${encrypted}`;
 }
 
 /**
  * Decrypt sensitive data (tokens) from Firestore
+ * Supports both new iv:ciphertext format and legacy consistent IV format
  */
-export function decryptToken(encryptedToken: string): string {
-  // In production, use proper decryption (e.g., Google Cloud KMS)
-  // TODO: Implement proper decryption with KMS
+export function decryptToken(encryptedData: string): string {
   const encryptionKey = getEncryptionKey();
-  // Generate a consistent IV from the key (not secure, but matches deprecated createDecipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
-  const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
+
+  let iv: Buffer;
+  let ciphertext: string;
+
+  // Check if format is new (iv:ciphertext)
+  if (encryptedData.includes(":")) {
+    const parts = encryptedData.split(":");
+    iv = Buffer.from(parts[0], "hex");
+    ciphertext = parts[1];
+  } else {
+    // Legacy format - use consistent IV derived from key
+    // SECURITY: Kept for backward compatibility with existing stored tokens
+    iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
+    ciphertext = encryptedData;
+  }
+
   const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
-  let decrypted = decipher.update(encryptedToken, "hex", "utf8");
+  let decrypted = decipher.update(ciphertext, "hex", "utf8");
   decrypted += decipher.final("utf8");
   return decrypted;
 }

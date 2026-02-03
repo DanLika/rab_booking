@@ -193,6 +193,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 
     const unitData = unitDoc.data();
     const unitName = unitData?.name || "Unit";
+    const minStayNights = unitData?.min_stay_nights || 1;
 
     // 6. Calculate date range for DoS protection
     const pastDate = new Date();
@@ -234,16 +235,37 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       bookingCount: bookingsSnapshot.size,
       blockedDaysCount: blockedDaysSnapshot.size,
       blockedRangesCount: blockedRanges.length,
+      minStayNights,
     });
 
-    // 8. Generate iCal content (bookings + blocked days)
+    // 7d. [NEW] Calculate gap blocks based on minimum stay
+    // Prevents OTAs from showing availability for gaps shorter than min_stay
+    const bookings = bookingsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    const gapBlocks = calculateMinStayGapBlocks(
+      bookings,
+      blockedRanges,
+      minStayNights,
+      pastDate,
+      futureDate
+    );
+
+    if (gapBlocks.length > 0) {
+      logInfo("[iCal Feed] Generated gap blocks", {
+        propertyId,
+        unitId,
+        gapBlocksCount: gapBlocks.length,
+      });
+    }
+
+    // 8. Generate iCal content (bookings + blocked days + gap blocks)
     const icalContent = generateIcalCalendar(
       unitName,
-      bookingsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })),
-      blockedRanges
+      bookings,
+      [...blockedRanges, ...gapBlocks]
     );
 
     // 9. Generate ETag from content hash
@@ -329,6 +351,100 @@ function groupConsecutiveBlockedDays(dates: Date[]): BlockedRange[] {
 }
 
 /**
+ * Calculate gaps between unavailable periods that are shorter than min_stay
+ * These gaps effectively become blocked because they cannot be booked
+ */
+function calculateMinStayGapBlocks(
+  bookings: any[],
+  blockedRanges: BlockedRange[],
+  minStayNights: number,
+  startDate: Date,
+  endDate: Date
+): BlockedRange[] {
+  if (minStayNights <= 1) return [];
+
+  // 1. Combine all unavailable ranges (bookings + blocked days)
+  const unavailableRanges: { start: number; end: number }[] = [];
+
+  // Add bookings
+  bookings.forEach((booking) => {
+    const checkIn = booking.check_in?.toDate();
+    const checkOut = booking.check_out?.toDate();
+    if (checkIn && checkOut) {
+      unavailableRanges.push({
+        start: truncateTime(checkIn).getTime(),
+        end: truncateTime(checkOut).getTime(),
+      });
+    }
+  });
+
+  // Add blocked days
+  blockedRanges.forEach((range) => {
+    // blockedRanges represent full blocked days (inclusive)
+    // For gap calculation logic, we treat user blocks as:
+    // Start: 00:00 of start date
+    // End: 00:00 of day AFTER end date (like checkout)
+    const rangeEnd = new Date(range.endDate);
+    rangeEnd.setDate(rangeEnd.getDate() + 1);
+
+    unavailableRanges.push({
+      start: truncateTime(range.startDate).getTime(),
+      end: truncateTime(rangeEnd).getTime(),
+    });
+  });
+
+  // Sort by start date
+  unavailableRanges.sort((a, b) => a.start - b.start);
+
+  // 2. Find gaps
+  const gapBlocks: BlockedRange[] = [];
+  const oneDayMs = 1000 * 60 * 60 * 24;
+
+  // Check gap from "now" (or pastDate) to first booking
+  // We skip this usually as users might want last minute bookings
+  // Only check gaps betwen ranges
+
+  for (let i = 0; i < unavailableRanges.length - 1; i++) {
+    const currentRangeEnd = unavailableRanges[i].end;
+    const nextRangeStart = unavailableRanges[i + 1].start;
+
+    // Check if there is a gap
+    if (nextRangeStart > currentRangeEnd) {
+      const gapMs = nextRangeStart - currentRangeEnd;
+      const gapDays = Math.round(gapMs / oneDayMs);
+
+      // If gap is smaller than min stay, block it
+      if (gapDays > 0 && gapDays < minStayNights) {
+        // Create a block for this gap
+        // BlockedRange expects startDate and endDate (inclusive)
+        // currentRangeEnd is like "Checkout", so the gap starts that day
+        // nextRangeStart is like "Checkin", so gap ends the day before
+
+        const gapStart = new Date(currentRangeEnd);
+        const gapEnd = new Date(nextRangeStart);
+        gapEnd.setDate(gapEnd.getDate() - 1); // Make inclusive
+
+        gapBlocks.push({
+          startDate: gapStart,
+          endDate: gapEnd,
+        });
+      }
+    }
+  }
+
+  return gapBlocks;
+}
+
+/**
+ * Truncate time to midnight UTC for consistent comparisons
+ */
+function truncateTime(date: Date): Date {
+  const d = new Date(date);
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
+/**
  * Generate iCal calendar content (RFC 5545)
  * Includes both bookings AND blocked days
  *
@@ -395,11 +511,12 @@ function generateBookingEvent(booking: any, unitName: string): string[] {
   const checkIn = booking.check_in?.toDate() || new Date();
   lines.push(`DTSTART;VALUE=DATE:${formatDate(checkIn)}`);
 
-  // DTEND - End date (exclusive, day after checkout)
+  // DTEND - End date (exclusive)
+  // check_out IS the departure day. In iCal, DTEND is exclusive (up to but not including).
+  // So if check_out = July 5, guests stayed nights 1,2,3,4 and July 5 is FREE for new check-in.
+  // Do NOT add +1 day here - that would block the check-out day incorrectly.
   const checkOut = booking.check_out?.toDate() || new Date();
-  const endDate = new Date(checkOut);
-  endDate.setDate(endDate.getDate() + 1);
-  lines.push(`DTEND;VALUE=DATE:${formatDate(endDate)}`);
+  lines.push(`DTEND;VALUE=DATE:${formatDate(checkOut)}`);
 
   // SUMMARY - Event title
   const guestName = booking.guest_name || "Guest";

@@ -125,46 +125,14 @@ class WidgetTranslations {
   List<String> get weekdaysFull {
     switch (locale.languageCode) {
       case 'hr':
-        return [
-          'Ponedjeljak',
-          'Utorak',
-          'Srijeda',
-          'Četvrtak',
-          'Petak',
-          'Subota',
-          'Nedjelja',
-        ];
+        return ['Ponedjeljak', 'Utorak', 'Srijeda', 'Četvrtak', 'Petak', 'Subota', 'Nedjelja'];
       case 'de':
-        return [
-          'Montag',
-          'Dienstag',
-          'Mittwoch',
-          'Donnerstag',
-          'Freitag',
-          'Samstag',
-          'Sonntag',
-        ];
+        return ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
       case 'it':
-        return [
-          'Lunedì',
-          'Martedì',
-          'Mercoledì',
-          'Giovedì',
-          'Venerdì',
-          'Sabato',
-          'Domenica',
-        ];
+        return ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
       case 'en':
       default:
-        return [
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-          'Sunday',
-        ];
+        return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     }
   }
 
@@ -826,6 +794,20 @@ class WidgetTranslations {
       case 'en':
       default:
         return 'Retry';
+    }
+  }
+
+  String get contactSupport {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Kontaktiraj podršku';
+      case 'de':
+        return 'Support kontaktieren';
+      case 'it':
+        return 'Contatta il supporto';
+      case 'en':
+      default:
+        return 'Contact Support';
     }
   }
 
@@ -3140,7 +3122,7 @@ class WidgetTranslations {
       case 'de':
         return 'Buchungsreferenz oder E-Mail fehlt in der URL';
       case 'it':
-        return 'Riferimento prenotazione o email mancante nell\'URL';
+        return 'Riferimento prenotazione ili email mancante nell\'URL';
       case 'en':
       default:
         return 'Missing booking reference or email in URL';
@@ -4121,7 +4103,7 @@ class WidgetTranslations {
       case 'de':
         return 'Buchungsreferenz oder E-Mail fehlt in der URL';
       case 'it':
-        return 'Riferimento prenotazione o email mancante nell\'URL';
+        return 'Riferimento prenotazione ili email mancante nell\'URL';
       case 'en':
       default:
         return 'Missing booking reference or email in URL';
@@ -4326,7 +4308,7 @@ class WidgetTranslations {
       case 'de':
         return 'Bitte geben Sie den Code ein';
       case 'it':
-        return 'Per favore inserisci il codice';
+        return 'Per favori inserisci il codice';
       case 'en':
       default:
         return 'Please enter the code';
@@ -4762,7 +4744,7 @@ class WidgetTranslations {
       case 'hr':
         return 'Maksimalni boravak za ovaj datum dolaska je $maxNights $maxWord. Odabrali ste $selectedNights $selectedWord.';
       case 'de':
-        return 'Maximaler Aufenthalt für dieses Anreisedatum ist $maxNights $maxWord. Sie haben $selectedNights $selectedWord ausgewählt.';
+        return 'Maximaler Aufenthalt za dieses Anreisedatum ist $maxNights $maxWord. Sie haben $selectedNights $selectedWord ausgewählt.';
       case 'it':
         return 'Il soggiorno massimo per questa data di arrivo è di $maxNights $maxWord. Hai selezionato $selectedNights $selectedWord.';
       case 'en':

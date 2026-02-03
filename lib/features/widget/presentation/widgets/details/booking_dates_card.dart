@@ -69,12 +69,14 @@ class BookingDatesCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = WidgetTranslations.of(context, ref);
 
-    // Bug #59 Fix: Parse dates with error handling
-    final checkInDate = _parseDateSafely(checkIn, 'BookingDatesCard.checkIn');
+    // Bug #59 Fix: Parse dates and add 12h buffer to handle timezone offsets
+    // Cloud Functions store dates as midnight local time (e.g., Aug 7 00:00 UTC+2 -> Aug 6 22:00 UTC)
+    // To display "Aug 7" correctly in all timezones, we add 12h to push it to the middle of the correct day (Aug 7 10:00 UTC)
+    final checkInDate = _parseDateSafely(checkIn, 'BookingDatesCard.checkIn')?.toUtc().add(const Duration(hours: 12));
     final checkOutDate = _parseDateSafely(
       checkOut,
       'BookingDatesCard.checkOut',
-    );
+    )?.toUtc().add(const Duration(hours: 12));
 
     // Return empty widget if dates cannot be parsed
     if (checkInDate == null || checkOutDate == null) {
@@ -86,9 +88,7 @@ class BookingDatesCard extends ConsumerWidget {
     final formatter = DateFormat('EEEE, MMM dd, yyyy', locale.toString());
 
     // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDarkMode
-        ? ColorTokens.pureBlack
-        : colors.backgroundSecondary;
+    final cardBackground = isDarkMode ? ColorTokens.pureBlack : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Container(

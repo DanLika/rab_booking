@@ -764,7 +764,18 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-02 | **Version**: 6.50
+**Last Updated**: 2026-02-03 | **Version**: 6.51
+
+**Changelog 6.51**: iCal Export Critical Fixes — Same-Day Turnover & Min-Stay Gap Blocking:
+- **DTEND Off-by-One Fix** (`icalExport.ts` → `generateBookingEvent`):
+  - **Problem**: Added +1 day to check_out, blocking check-out day for new check-ins (no same-day turnover)
+  - **Fix**: Set `DTEND = check_out` (no +1). In iCal, DTEND is exclusive, so check-out day is now free
+  - Example: Booking 1-5 July → DTSTART=1, DTEND=5 → blocks nights 1,2,3,4; July 5 free for check-in
+- **Min-Stay Gap Blocking** (`icalExport.ts` → `calculateMinStayGapBlocks`):
+  - Detects gaps between bookings/blocks shorter than unit's `min_stay_nights`
+  - These gaps are exported as "Not Available" (VEVENT with TRANSP:OPAQUE)
+  - Prevents OTAs from accepting reservations that violate min-stay rules
+- **Verified**: Same iCal feed works for Booking.com, Airbnb, VRBO, Google Calendar, etc. (RFC 5545 standard)
 
 **Changelog 6.50**: Widget UI Fixes, iOS Compatibility & Email Terminology:
 - **Additional Services Widget — Neutral Colors** (`additional_services_widget.dart`):

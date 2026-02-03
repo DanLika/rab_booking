@@ -25,7 +25,7 @@
     "node-ical": "^0.22.1",
     "resend": "^6.2.2",
     "rrule": "^2.8.1",
-    "stripe": "^19.1.0"
+    "stripe": "^20.3.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

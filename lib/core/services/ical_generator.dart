@@ -242,7 +242,11 @@ class IcalGenerator {
       case BookingStatus.confirmed:
         return 'CONFIRMED';
       case BookingStatus.pending:
-        return 'TENTATIVE';
+        // Bug Fix: Treat pending as CONFIRMED for iCal export.
+        // Pending bookings block dates in our system, so they must block dates
+        // in external calendars (Airbnb/Booking.com) to prevent double bookings.
+        // Exporting as TENTATIVE often leads to these dates being ignored by OTAs.
+        return 'CONFIRMED';
       case BookingStatus.cancelled:
         return 'CANCELLED';
       case BookingStatus.completed:

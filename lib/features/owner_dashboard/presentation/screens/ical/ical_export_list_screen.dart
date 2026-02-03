@@ -281,38 +281,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Booking.com warning
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.amber.withValues(alpha: 0.4),
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 18,
-                          color: Colors.amber.shade700,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            l10n.icalExportBookingComNote,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
                   Text(
                     l10n.icalExportTokenWarning,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -396,10 +364,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                               ),
                               child: _buildHeroCard(context),
                             ),
-                            const SizedBox(height: 24),
-
-                            // Booking.com info card (always visible)
-                            _buildBookingComInfoCard(context),
                             const SizedBox(height: 24),
 
                             // Desktop: Benefits + Units/HowItWorks side by side
@@ -916,68 +880,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBookingComInfoCard(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.amber.withValues(alpha: 0.08)
-            : Colors.amber.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.amber.withValues(alpha: isDark ? 0.3 : 0.4),
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.warning_amber_rounded,
-              color: isDark ? Colors.amber.shade300 : Colors.amber.shade700,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.icalExportBookingComInfoTitle,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: isDark
-                        ? Colors.amber.shade300
-                        : Colors.amber.shade800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  l10n.icalExportBookingComInfoDesc,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

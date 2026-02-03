@@ -2328,7 +2328,7 @@
   "icalExportFaq3Q": "Mogu li podijeliti ovaj URL s drugima?",
   "icalExportFaq3A": "Da, ali budite oprezni - svatko s URL-om može vidjeti vaš raspored rezervacija.",
   "icalExportFaq4Q": "Mogu li dodati ovaj URL direktno na Booking.com?",
-  "icalExportFaq4A": "Ne. Booking.com prihvata iCal linkove samo od velikih platformi (Airbnb, VRBO, itd.). Zaobilazno rješenje: Prvo dodajte naš iCal URL na Airbnb, zatim povežite Airbnb kalendar sa Booking.com. Na taj način BookBed rezervacije stižu na Booking.com preko Airbnb-a.",
+  "icalExportFaq4A": "Da! Booking.com prihvaća iCal linkove sa bilo koje platforme. Idite na vaš Booking.com Extranet → Calendar → Sync calendars → Add calendar connection i zalijepite vaš iCal URL.",
   "icalExportUrlReady": "URL Spreman",
   "icalExportUrlPending": "URL Nije Generiran",
   "icalExportUrlReadyDesc": "Vaš iCal URL je spreman. Kopirajte ga i dodajte u svoju kalendarsku aplikaciju.",
@@ -2343,9 +2343,9 @@
   "icalExportTokenWarning": "Napomena: Ovaj link sadrži tajni token. Ne dijelite ga javno.",
   "icalExportSyncTimeNote": "Airbnb sinkronizira svakih 3-6 sati. Kalendar aplikacije sinkroniziraju svakih 5-15 minuta.",
   "icalExportCopyLink": "Kopiraj Link",
-  "icalExportBookingComNote": "Booking.com ne prihvaća iCal linkove s prilagođenih platformi. Za sinkronizaciju s Booking.com: prvo dodajte ovaj URL na Airbnb, zatim povežite Airbnb kalendar s Booking.com.",
-  "icalExportBookingComInfoTitle": "Booking.com – Važna napomena",
-  "icalExportBookingComInfoDesc": "Booking.com prihvaća iCal linkove samo od velikih OTA platformi (Airbnb, VRBO, itd.), ne od prilagođenih platformi. Za sinkronizaciju BookBed rezervacija s Booking.com koristite: BookBed → Airbnb → Booking.com. Prvo dodajte iCal URL na Airbnb, zatim povežite Airbnb kalendar s Booking.com.",
+  "icalExportBookingComNote": "Vrijeme sinkronizacije: Airbnb sinkronizira svakih 3-6 sati. Booking.com sinkronizira svakih 15-60 minuta. Kalendar aplikacije (Google, Apple, Outlook) sinkroniziraju svakih 5-15 minuta.",
+  "icalExportBookingComInfoTitle": "Vrijeme sinkronizacije platformi",
+  "icalExportBookingComInfoDesc": "Različite platforme sinkroniziraju u različitim intervalima. Booking.com: 15-60 min, Airbnb: 3-6 sati, Google Calendar: 5-15 min. Za trenutnu sinkronizaciju, ručno osvježite na platformi.",
 
   "errorWithMessage": "Greška: {message}",
   "@errorWithMessage": {

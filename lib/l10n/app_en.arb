@@ -2322,7 +2322,7 @@
   "icalExportFaq3Q": "Can I share this URL with others?",
   "icalExportFaq3A": "Yes, but be careful - anyone with the URL can see your booking schedule.",
   "icalExportFaq4Q": "Can I add this URL directly to Booking.com?",
-  "icalExportFaq4A": "No. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.). Workaround: Add our iCal URL to Airbnb first, then connect Airbnb calendar to Booking.com. This way BookBed bookings reach Booking.com via Airbnb.",
+  "icalExportFaq4A": "Yes! Booking.com accepts iCal links from any platform. Go to your Booking.com Extranet → Calendar → Sync calendars → Add calendar connection and paste your iCal URL.",
   "icalExportUrlReady": "URL Ready",
   "icalExportUrlPending": "URL Not Generated",
   "icalExportUrlReadyDesc": "Your iCal URL is ready. Copy it and add to your calendar app.",
@@ -2337,9 +2337,9 @@
   "icalExportTokenWarning": "Note: This link contains a secret token. Do not share it publicly.",
   "icalExportSyncTimeNote": "Airbnb syncs every 3-6 hours. Calendar apps sync every 5-15 minutes.",
   "icalExportCopyLink": "Copy Link",
-  "icalExportBookingComNote": "Booking.com does not accept iCal links from custom platforms. To sync with Booking.com: add this URL to Airbnb first, then connect your Airbnb calendar to Booking.com.",
-  "icalExportBookingComInfoTitle": "Booking.com – Important Note",
-  "icalExportBookingComInfoDesc": "Booking.com only accepts iCal links from major OTAs (Airbnb, VRBO, etc.), not from custom platforms. To sync your BookBed bookings with Booking.com, use this flow: BookBed → Airbnb → Booking.com. First add the iCal URL to Airbnb, then connect Airbnb calendar to Booking.com.",
+  "icalExportBookingComNote": "Sync times: Airbnb syncs every 3-6 hours. Booking.com syncs every 15-60 minutes. Calendar apps (Google, Apple, Outlook) sync every 5-15 minutes.",
+  "icalExportBookingComInfoTitle": "Platform Sync Times",
+  "icalExportBookingComInfoDesc": "Different platforms sync at different intervals. Booking.com: 15-60 min, Airbnb: 3-6 hours, Google Calendar: 5-15 min. For immediate sync, manually refresh on the platform.",
 
   "errorWithMessage": "Error: {message}",
   "@errorWithMessage": {

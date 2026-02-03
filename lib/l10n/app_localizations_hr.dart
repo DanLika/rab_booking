@@ -5788,7 +5788,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportFaq4A =>
-      'Ne. Booking.com prihvata iCal linkove samo od velikih platformi (Airbnb, VRBO, itd.). Zaobilazno rješenje: Prvo dodajte naš iCal URL na Airbnb, zatim povežite Airbnb kalendar sa Booking.com. Na taj način BookBed rezervacije stižu na Booking.com preko Airbnb-a.';
+      'Da! Booking.com prihvaća iCal linkove sa bilo koje platforme. Idite na vaš Booking.com Extranet → Calendar → Sync calendars → Add calendar connection i zalijepite vaš iCal URL.';
 
   @override
   String get icalExportUrlReady => 'URL Spreman';
@@ -5837,14 +5837,15 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportBookingComNote =>
-      'Booking.com ne prihvaća iCal linkove s prilagođenih platformi. Za sinkronizaciju s Booking.com: prvo dodajte ovaj URL na Airbnb, zatim povežite Airbnb kalendar s Booking.com.';
+      'Vrijeme sinkronizacije: Airbnb sinkronizira svakih 3-6 sati. Booking.com sinkronizira svakih 15-60 minuta. Kalendar aplikacije (Google, Apple, Outlook) sinkroniziraju svakih 5-15 minuta.';
 
   @override
-  String get icalExportBookingComInfoTitle => 'Booking.com – Važna napomena';
+  String get icalExportBookingComInfoTitle =>
+      'Vrijeme sinkronizacije platformi';
 
   @override
   String get icalExportBookingComInfoDesc =>
-      'Booking.com prihvaća iCal linkove samo od velikih OTA platformi (Airbnb, VRBO, itd.), ne od prilagođenih platformi. Za sinkronizaciju BookBed rezervacija s Booking.com koristite: BookBed → Airbnb → Booking.com. Prvo dodajte iCal URL na Airbnb, zatim povežite Airbnb kalendar s Booking.com.';
+      'Različite platforme sinkroniziraju u različitim intervalima. Booking.com: 15-60 min, Airbnb: 3-6 sati, Google Calendar: 5-15 min. Za trenutnu sinkronizaciju, ručno osvježite na platformi.';
 
   @override
   String errorWithMessage(String message) {

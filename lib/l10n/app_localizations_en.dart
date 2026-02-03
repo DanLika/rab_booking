@@ -5753,7 +5753,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportFaq4A =>
-      'No. Booking.com only accepts iCal links from major platforms (Airbnb, VRBO, etc.). Workaround: Add our iCal URL to Airbnb first, then connect Airbnb calendar to Booking.com. This way BookBed bookings reach Booking.com via Airbnb.';
+      'Yes! Booking.com accepts iCal links from any platform. Go to your Booking.com Extranet → Calendar → Sync calendars → Add calendar connection and paste your iCal URL.';
 
   @override
   String get icalExportUrlReady => 'URL Ready';
@@ -5802,14 +5802,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportBookingComNote =>
-      'Booking.com does not accept iCal links from custom platforms. To sync with Booking.com: add this URL to Airbnb first, then connect your Airbnb calendar to Booking.com.';
+      'Sync times: Airbnb syncs every 3-6 hours. Booking.com syncs every 15-60 minutes. Calendar apps (Google, Apple, Outlook) sync every 5-15 minutes.';
 
   @override
-  String get icalExportBookingComInfoTitle => 'Booking.com – Important Note';
+  String get icalExportBookingComInfoTitle => 'Platform Sync Times';
 
   @override
   String get icalExportBookingComInfoDesc =>
-      'Booking.com only accepts iCal links from major OTAs (Airbnb, VRBO, etc.), not from custom platforms. To sync your BookBed bookings with Booking.com, use this flow: BookBed → Airbnb → Booking.com. First add the iCal URL to Airbnb, then connect Airbnb calendar to Booking.com.';
+      'Different platforms sync at different intervals. Booking.com: 15-60 min, Airbnb: 3-6 hours, Google Calendar: 5-15 min. For immediate sync, manually refresh on the platform.';
 
   @override
   String errorWithMessage(String message) {

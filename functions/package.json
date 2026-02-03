@@ -23,7 +23,7 @@
     "firebase-functions": "^6.0.1",
     "google-auth-library": "^10.5.0",
     "node-ical": "^0.22.1",
-    "resend": "^6.2.2",
+    "resend": "^6.9.1",
     "rrule": "^2.8.1",
     "stripe": "^19.1.0"
   },

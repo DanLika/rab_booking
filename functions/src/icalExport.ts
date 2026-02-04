@@ -241,8 +241,8 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     // 7d. [NEW] Calculate gap blocks based on minimum stay
     // Prevents OTAs from showing availability for gaps shorter than min_stay
     const bookings = bookingsSnapshot.docs.map((doc) => ({
-      id: doc.id,
       ...doc.data(),
+      id: doc.id,
     }));
 
     const gapBlocks = calculateMinStayGapBlocks(

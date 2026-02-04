@@ -33,9 +33,7 @@ void main() {
       );
 
       // Lines must be delimited by CRLF (RFC 5545)
-      // Note: Dart strings usually use \n, but output should be consistent.
-      // The generator currently uses writeln which uses \n.
-      // Strict validators might require \r\n, but let's check basic structure first.
+      // The generator uses buffer.write('...\r\n') for RFC 5545 compliance.
 
       expect(ics, contains('BEGIN:VCALENDAR'));
       expect(ics, contains('VERSION:2.0'));

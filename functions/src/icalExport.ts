@@ -530,14 +530,22 @@ function generateBookingEvent(booking: any, unitName: string): string[] {
   const status = mapBookingStatus(booking.status);
   lines.push(`STATUS:${status}`);
 
+  // TRANSP - OPAQUE means this blocks out time (important for OTA availability)
+  lines.push("TRANSP:OPAQUE");
+
+  // SEQUENCE - Event version (0 = original, increment on updates)
+  lines.push("SEQUENCE:0");
+
+  // Microsoft Outlook compatibility - mark as all-day busy event
+  lines.push("X-MICROSOFT-CDO-ALLDAYEVENT:TRUE");
+  lines.push("X-MICROSOFT-CDO-BUSYSTATUS:BUSY");
+
   // LOCATION - Unit name
   lines.push(`LOCATION:${escapeIcal(unitName)}`);
 
-  // LAST-MODIFIED
-  if (booking.updated_at) {
-    const updated = booking.updated_at.toDate();
-    lines.push(`LAST-MODIFIED:${formatTimestamp(updated)}`);
-  }
+  // LAST-MODIFIED - Use updated_at if available, fallback to created_at
+  const lastModified = booking.updated_at?.toDate() || created;
+  lines.push(`LAST-MODIFIED:${formatTimestamp(lastModified)}`);
 
   // CREATED
   lines.push(`CREATED:${formatTimestamp(created)}`);
@@ -594,10 +602,18 @@ function generateBlockedEvent(
   // TRANSP - OPAQUE means this blocks out time (important for availability!)
   lines.push("TRANSP:OPAQUE");
 
+  // SEQUENCE - Event version (0 = original)
+  lines.push("SEQUENCE:0");
+
+  // Microsoft Outlook compatibility - mark as all-day busy event
+  lines.push("X-MICROSOFT-CDO-ALLDAYEVENT:TRUE");
+  lines.push("X-MICROSOFT-CDO-BUSYSTATUS:BUSY");
+
   // LOCATION - Unit name
   lines.push(`LOCATION:${escapeIcal(unitName)}`);
 
-  // CREATED
+  // LAST-MODIFIED and CREATED
+  lines.push(`LAST-MODIFIED:${formatTimestamp(new Date())}`);
   lines.push(`CREATED:${formatTimestamp(new Date())}`);
 
   lines.push("END:VEVENT");
@@ -646,6 +662,13 @@ function generatePlaceholderEvent(unitName: string): string[] {
   // TRANSP - TRANSPARENT means this does NOT block time (important!)
   // This ensures dates remain available for booking
   lines.push("TRANSP:TRANSPARENT");
+
+  // SEQUENCE - Event version (0 = original)
+  lines.push("SEQUENCE:0");
+
+  // Microsoft Outlook compatibility - mark as all-day free event
+  lines.push("X-MICROSOFT-CDO-ALLDAYEVENT:TRUE");
+  lines.push("X-MICROSOFT-CDO-BUSYSTATUS:FREE");
 
   // CREATED
   lines.push(`CREATED:${formatTimestamp(now)}`);

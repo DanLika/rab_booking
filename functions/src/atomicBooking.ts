@@ -35,6 +35,7 @@ import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
 import {setUser, captureMessage} from "./sentry";
+import {getClientIp, hashIp} from "./utils/ipUtils";
 // NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
@@ -78,16 +79,12 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
     });
   } else {
     // Unauthenticated widget bookings - use in-memory IP-based limiting
-    // Note: Cloud Functions v2 provides IP via request.rawRequest
-    const clientIp = (request as any).rawRequest?.ip ||
-      (request as any).rawRequest?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
-      "unknown";
+    const clientIp = getClientIp(request);
+    const ipHash = hashIp(clientIp);
 
     // In-memory rate limiting (fast, per-instance)
-    // Sufficient for abuse prevention - no Firestore cost
-    if (!checkRateLimit(`widget_booking:${clientIp}`, 10, 600)) { // 10 bookings per 10 minutes
+    if (!checkRateLimit(`widget_booking:${ipHash}`, 10, 600)) { // 10 bookings per 10 minutes
       // Log security event (fire-and-forget)
-      const ipHash = Buffer.from(clientIp).toString("base64").substring(0, 16);
       logRateLimitExceeded(ipHash, "widget_booking").catch(() => {});
 
       throw new HttpsError(

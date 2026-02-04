@@ -10,6 +10,7 @@ import {safeToDate} from "./utils/dateValidation";
 import Stripe from "stripe";
 import {checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
+import {getClientIp, hashIp} from "./utils/ipUtils";
 
 /**
  * Create Stripe client instance with secret key
@@ -72,14 +73,11 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
   // ========================================================================
   // SECURITY: Rate limiting to prevent brute-force attacks
   // ========================================================================
-  const clientIp = (request as any).rawRequest?.ip ||
-    (request as any).rawRequest?.headers?.["x-forwarded-for"]?.split(",")[0]?.trim() ||
-    "unknown";
+  const clientIp = getClientIp(request);
+  const ipHash = hashIp(clientIp);
 
   // In-memory rate limiting (fast, per-instance)
-  // Sufficient for abuse prevention - no Firestore cost
-  const ipHash = Buffer.from(clientIp).toString("base64").substring(0, 16);
-  if (!checkRateLimit(`guest_cancel:${clientIp}`, 10, 60)) { // 10 attempts per minute
+  if (!checkRateLimit(`guest_cancel:${ipHash}`, 10, 60)) { // 10 attempts per minute
     logRateLimitExceeded(ipHash, "guest_cancel").catch(() => {});
 
     throw new HttpsError(

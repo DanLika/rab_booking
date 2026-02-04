@@ -1,7 +1,9 @@
 import { onRequest } from "firebase-functions/v2/https";
 import * as crypto from "crypto";
 import { admin } from "./firebase";
-import { logInfo, logError } from "./logger";
+import { logInfo, logError, logWarn } from "./logger";
+import { checkRateLimit } from "./utils/rateLimit";
+import { getClientIp, hashIp } from "./utils/ipUtils";
 
 // =============================================================================
 // CONFIGURATION
@@ -17,6 +19,9 @@ const ICAL_CONFIG = {
   FUTURE_DAYS: 365,
   // Cache TTL in seconds (5 minutes)
   CACHE_TTL_SECONDS: 300,
+  // Rate Limiting: 30 requests per IP per hour
+  RATE_LIMIT_MAX: 30,
+  RATE_LIMIT_WINDOW: 3600,
 };
 
 /**
@@ -96,6 +101,21 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 
   if (request.method !== "GET") {
     response.status(405).send("Method Not Allowed");
+    return;
+  }
+
+  // Rate Limiting: IP-based protection
+  const clientIp = getClientIp(request as any);
+  const ipHash = hashIp(clientIp);
+  const isAllowed = checkRateLimit(
+    `ical_feed_${ipHash}`,
+    ICAL_CONFIG.RATE_LIMIT_MAX,
+    ICAL_CONFIG.RATE_LIMIT_WINDOW
+  );
+
+  if (!isAllowed) {
+    logWarn("[iCal Feed] Rate limit exceeded", { ipHash });
+    response.status(429).send("Too many requests. Please try again later.");
     return;
   }
 
@@ -562,7 +582,8 @@ function buildDescription(booking: any, unitName: string): string {
     parts.push(`Payment: ${booking.payment_status}`);
   }
 
-  if (booking.notes) parts.push(`Notes: ${booking.notes}`);
+  // SECURITY: booking.notes removed to prevent sensitive information disclosure
+  // in public iCal feed (complying with privacy standards)
 
   parts.push(`Booking ID: ${booking.id}`);
 

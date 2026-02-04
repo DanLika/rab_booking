@@ -1,9 +1,11 @@
 import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
-import {logInfo, logError, logSuccess} from "./logger";
+import {logInfo, logError, logSuccess, logWarn} from "./logger";
 import * as crypto from "crypto";
 import {encryptToken, decryptToken} from "./bookingComApi"; // Reuse encryption functions
 import {setUser} from "./sentry";
+import {checkRateLimit, enforceRateLimit} from "./utils/rateLimit";
+import {getClientIp, hashIp} from "./utils/ipUtils";
 
 /**
  * Airbnb Calendar API Integration
@@ -44,8 +46,9 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
     throw new HttpsError("unauthenticated", "User must be authenticated");
   }
 
+  const userId = request.auth.uid;
   // Set user context for Sentry error tracking
-  setUser(request.auth.uid);
+  setUser(userId);
 
   const {unitId, listingId} = request.data;
 
@@ -56,12 +59,37 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
     );
   }
 
+  // Rate Limiting: Prevent abuse of OAuth initiation
+  await enforceRateLimit(userId, "initiate_airbnb_oauth", {
+    maxCalls: 10,
+    windowMs: 60 * 60 * 1000, // 10 attempts per hour
+  });
+
   try {
     logInfo("[Airbnb OAuth] Initiating OAuth flow", {
-      userId: request.auth.uid,
+      userId,
       unitId,
       listingId,
     });
+
+    // SECURITY: Ownership check - Ensure the user owns the unit
+    const unitQuery = await db.collectionGroup("units")
+      .where("property_id", "!=", null) // Trigger optimization
+      .where("owner_id", "==", userId)
+      .get();
+
+    const unitDoc = unitQuery.docs.find((doc) => doc.id === unitId);
+
+    if (!unitDoc) {
+      logWarn("[Airbnb OAuth] Unauthorized unit access attempt", {
+        userId,
+        unitId,
+      });
+      throw new HttpsError(
+        "permission-denied",
+        "You do not have permission to manage this unit"
+      );
+    }
 
     // Generate state parameter for CSRF protection
     const state = crypto.randomBytes(32).toString("hex");
@@ -108,6 +136,17 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
 export const handleAirbnbOAuthCallback = onRequest(
   {cors: true},
   async (req, res) => {
+    // Rate Limiting: 10 requests per IP per hour
+    const clientIp = getClientIp(req);
+    const ipHash = hashIp(clientIp);
+    const isAllowed = checkRateLimit(`oauth_callback_airbnb_${ipHash}`, 10, 3600);
+
+    if (!isAllowed) {
+      logWarn("[Airbnb OAuth] Rate limit exceeded", {ipHash});
+      res.status(429).send("Too many attempts. Please try again later.");
+      return;
+    }
+
     try {
       const {code, state, error} = req.query;
 

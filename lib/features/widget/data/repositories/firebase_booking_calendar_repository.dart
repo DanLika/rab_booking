@@ -111,7 +111,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
             .where(
               (booking) =>
-                  booking != null && booking.checkOut.isAfter(startDate),
+                  booking != null && !booking.checkOut.isBefore(startDate),
             )
             .cast<BookingModel>()
             .toList();
@@ -281,7 +281,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
             .where(
               (booking) =>
-                  booking != null && booking.checkOut.isAfter(startDate),
+                  booking != null && !booking.checkOut.isBefore(startDate),
             )
             .cast<BookingModel>()
             .toList();
@@ -435,7 +435,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       final bookings = bookingsSnapshot.docs
           .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
           .where(
-            (booking) => booking != null && booking.checkOut.isAfter(startDate),
+            (booking) =>
+                booking != null && !booking.checkOut.isBefore(startDate),
           )
           .cast<BookingModel>()
           .toList();
@@ -574,7 +575,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       final bookings = bookingsSnapshot.docs
           .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
           .where(
-            (booking) => booking != null && booking.checkOut.isAfter(startDate),
+            (booking) =>
+                booking != null && !booking.checkOut.isBefore(startDate),
           )
           .cast<BookingModel>()
           .toList();

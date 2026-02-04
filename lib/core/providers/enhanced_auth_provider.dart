@@ -1,11 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../core/constants/auth_feature_flags.dart';
 import '../../core/exceptions/app_exceptions.dart';
 import '../../core/services/rate_limit_service.dart';
@@ -1621,6 +1625,24 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
+  /// Generate a cryptographically secure random nonce for Apple Sign-In
+  String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(
+      length,
+      (_) => charset[random.nextInt(charset.length)],
+    ).join();
+  }
+
+  /// SHA-256 hash of a string (used for Apple Sign-In nonce)
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
   /// Sign in with Apple (OAuth)
   /// NOTE: Requires Firebase configuration with Apple Sign-In enabled
   /// Setup steps in Firebase Console:
@@ -1632,28 +1654,35 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Set persistence to LOCAL for Apple sign in (web only)
-      if (kIsWeb) {
-        await _auth.setPersistence(Persistence.LOCAL);
-      }
-
-      // Create Apple Auth Provider
-      // IMPORTANT: Use AppleAuthProvider(), NOT OAuthProvider('apple.com')
-      // OAuthProvider triggers Generic IDP flow which fails on iPad/iOS native
-      // AppleAuthProvider triggers native ASAuthorizationController (correct path)
-      final appleProvider = AppleAuthProvider();
-
-      // Request email and full name scopes
-      appleProvider.addScope('email');
-      appleProvider.addScope('name');
-
-      // Web: signInWithPopup (signInWithProvider not implemented on web)
-      // Mobile: signInWithProvider (uses native iOS ASAuthorizationController)
       final UserCredential userCredential;
       if (kIsWeb) {
+        // Web: Use signInWithPopup with AppleAuthProvider
+        await _auth.setPersistence(Persistence.LOCAL);
+        final appleProvider = AppleAuthProvider();
+        appleProvider.addScope('email');
+        appleProvider.addScope('name');
         userCredential = await _auth.signInWithPopup(appleProvider);
       } else {
-        userCredential = await _auth.signInWithProvider(appleProvider);
+        // Mobile (iOS): Use native Sign in with Apple SDK
+        // Generate nonce for security (prevents replay attacks)
+        final rawNonce = _generateNonce();
+        final nonce = _sha256ofString(rawNonce);
+
+        final appleCredential = await SignInWithApple.getAppleIDCredential(
+          scopes: [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+          nonce: nonce,
+        );
+
+        // Create OAuth credential for Firebase
+        final oauthCredential = OAuthProvider('apple.com').credential(
+          idToken: appleCredential.identityToken,
+          rawNonce: rawNonce,
+        );
+
+        userCredential = await _auth.signInWithCredential(oauthCredential);
       }
 
       if (userCredential.user == null) {
@@ -1730,6 +1759,23 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       final errorMessage = _getAuthErrorMessage(e);
       state = state.copyWith(isLoading: false, error: errorMessage);
       throw errorMessage; // Throw user-friendly message instead of FirebaseAuthException
+    } on SignInWithAppleAuthorizationException catch (e) {
+      // Native Sign in with Apple SDK: user cancelled
+      if (e.code == AuthorizationErrorCode.canceled) {
+        LoggingService.log(
+          'Apple Sign-In cancelled by user (native SDK)',
+          tag: 'AUTH_INFO',
+        );
+        state = state.copyWith(isLoading: false);
+        return; // Silent return - no error shown
+      }
+      // Other Apple authorization errors (e.g., unknown, invalidResponse, notHandled, failed, notInteractive)
+      unawaited(
+        LoggingService.logError('APPLE_SIGNIN_AUTH_ERROR: ${e.code}', e),
+      );
+      const errorMessage = 'Failed to sign in with Apple. Please try again.';
+      state = state.copyWith(isLoading: false, error: errorMessage);
+      throw errorMessage;
     } catch (e) {
       // Check if user cancelled (may come as PlatformException on some iOS versions)
       final errorString = e.toString().toLowerCase();
@@ -1821,28 +1867,49 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   /// Throws [String] error message on failure.
   Future<AuthCredential> reauthenticateWithApple() async {
     try {
-      final appleProvider = AppleAuthProvider();
-      appleProvider.addScope('email');
-      appleProvider.addScope('name');
-
-      final UserCredential userCredential;
       if (kIsWeb) {
         // Web: Use popup for re-authentication
-        userCredential = await _auth.currentUser!.reauthenticateWithPopup(
+        final appleProvider = AppleAuthProvider();
+        appleProvider.addScope('email');
+        appleProvider.addScope('name');
+        final userCredential = await _auth.currentUser!.reauthenticateWithPopup(
           appleProvider,
         );
+        final credential = userCredential.credential;
+        if (credential == null) {
+          throw 'Re-authentication succeeded but no credential was returned.';
+        }
+        return credential;
       } else {
-        // Native: Use signInWithProvider for re-authentication
-        userCredential = await _auth.currentUser!.reauthenticateWithProvider(
-          appleProvider,
-        );
-      }
+        // Mobile (iOS): Use native Sign in with Apple SDK
+        final rawNonce = _generateNonce();
+        final nonce = _sha256ofString(rawNonce);
 
-      final credential = userCredential.credential;
-      if (credential == null) {
-        throw 'Re-authentication succeeded but no credential was returned.';
+        final appleCredential = await SignInWithApple.getAppleIDCredential(
+          scopes: [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+          nonce: nonce,
+        );
+
+        final oauthCredential = OAuthProvider('apple.com').credential(
+          idToken: appleCredential.identityToken,
+          rawNonce: rawNonce,
+        );
+
+        await _auth.currentUser!.reauthenticateWithCredential(oauthCredential);
+        return oauthCredential;
       }
-      return credential;
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        throw 'Apple re-authentication was cancelled.';
+      }
+      LoggingService.log(
+        'Apple re-auth native SDK error: ${e.code}',
+        tag: 'AUTH_ERROR',
+      );
+      throw 'Failed to re-authenticate with Apple. Please try again.';
     } on FirebaseAuthException catch (e) {
       LoggingService.log(
         'Apple re-auth error: ${e.code} - ${e.message}',

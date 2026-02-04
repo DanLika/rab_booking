@@ -35,6 +35,9 @@ dependencies:
   # Google Sign-In (native Android/iOS)
   google_sign_in: ^6.2.2
 
+  # Apple Sign-In (native iOS)
+  sign_in_with_apple: ^6.1.4
+
   # HTTP Client
   http: ^1.2.0
 

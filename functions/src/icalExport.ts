@@ -702,7 +702,7 @@ function buildDescription(booking: any, unitName: string): string {
     parts.push(`Payment: ${booking.payment_status}`);
   }
 
-  if (booking.notes) parts.push(`Notes: ${booking.notes}`);
+  // Notes excluded from public iCal feed (owner-private data)
 
   parts.push(`Booking ID: ${booking.id}`);
 

@@ -4,7 +4,7 @@ import 'package:bookbed/core/constants/enums.dart';
 
 void main() {
   group('UserModel', () {
-    UserModel _createUser({
+    UserModel createUser({
       String id = 'user-123',
       String email = 'test@example.com',
       String firstName = 'John',
@@ -38,133 +38,127 @@ void main() {
 
     group('fullName', () {
       test('combines first and last name', () {
-        final user = _createUser(firstName: 'John', lastName: 'Doe');
+        final user = createUser();
         expect(user.fullName, 'John Doe');
       });
 
       test('handles empty first name', () {
-        final user = _createUser(firstName: '', lastName: 'Doe');
+        final user = createUser(firstName: '');
         expect(user.fullName, ' Doe');
       });
     });
 
     group('initials', () {
       test('returns uppercase initials', () {
-        final user = _createUser(firstName: 'John', lastName: 'Doe');
+        final user = createUser();
         expect(user.initials, 'JD');
       });
 
       test('handles lowercase names', () {
-        final user = _createUser(firstName: 'john', lastName: 'doe');
+        final user = createUser(firstName: 'john', lastName: 'doe');
         expect(user.initials, 'JD');
       });
 
       test('handles empty first name', () {
-        final user = _createUser(firstName: '', lastName: 'Doe');
+        final user = createUser(firstName: '');
         expect(user.initials, 'D');
       });
 
       test('handles empty last name', () {
-        final user = _createUser(firstName: 'John', lastName: '');
+        final user = createUser(lastName: '');
         expect(user.initials, 'J');
       });
     });
 
     group('hasCompletedProfile', () {
       test('returns true when all fields are filled', () {
-        final user = _createUser();
+        final user = createUser();
         expect(user.hasCompletedProfile, isTrue);
       });
 
       test('returns false when firstName is empty', () {
-        final user = _createUser(firstName: '');
+        final user = createUser(firstName: '');
         expect(user.hasCompletedProfile, isFalse);
       });
 
       test('returns false when lastName is empty', () {
-        final user = _createUser(lastName: '');
+        final user = createUser(lastName: '');
         expect(user.hasCompletedProfile, isFalse);
       });
 
       test('returns false when email is empty', () {
-        final user = _createUser(email: '');
+        final user = createUser(email: '');
         expect(user.hasCompletedProfile, isFalse);
       });
     });
 
     group('role checks', () {
       test('isOwner returns true for owner role', () {
-        final user = _createUser(role: UserRole.owner);
+        final user = createUser();
         expect(user.isOwner, isTrue);
       });
 
       test('isOwner returns true for admin role', () {
-        final user = _createUser(role: UserRole.admin);
+        final user = createUser(role: UserRole.admin);
         expect(user.isOwner, isTrue);
       });
 
       test('isOwner returns false for guest role', () {
-        final user = _createUser(role: UserRole.guest);
+        final user = createUser(role: UserRole.guest);
         expect(user.isOwner, isFalse);
       });
 
       test('isAdmin returns true for admin role', () {
-        final user = _createUser(role: UserRole.admin);
+        final user = createUser(role: UserRole.admin);
         expect(user.isAdmin, isTrue);
       });
 
       test('isAdmin returns false for owner role', () {
-        final user = _createUser(role: UserRole.owner);
+        final user = createUser();
         expect(user.isAdmin, isFalse);
       });
 
       test('isEmployee returns true when employeeOf is set', () {
-        final user = _createUser(employeeOf: 'owner-456');
+        final user = createUser(employeeOf: 'owner-456');
         expect(user.isEmployee, isTrue);
       });
 
       test('isEmployee returns false when employeeOf is null', () {
-        final user = _createUser();
+        final user = createUser();
         expect(user.isEmployee, isFalse);
       });
     });
 
     group('stripe', () {
       test('hasStripeConnected returns true with account ID', () {
-        final user = _createUser(stripeAccountId: 'acct_123');
+        final user = createUser(stripeAccountId: 'acct_123');
         expect(user.hasStripeConnected, isTrue);
       });
 
       test('hasStripeConnected returns false with null', () {
-        final user = _createUser();
+        final user = createUser();
         expect(user.hasStripeConnected, isFalse);
       });
 
       test('hasStripeConnected returns false with empty string', () {
-        final user = _createUser(stripeAccountId: '');
+        final user = createUser(stripeAccountId: '');
         expect(user.hasStripeConnected, isFalse);
       });
     });
 
     group('onboarding', () {
       test('needsOnboarding returns true for owner without onboarding', () {
-        final user = _createUser(
-          role: UserRole.owner,
-          onboardingCompleted: false,
-        );
+        final user = createUser(onboardingCompleted: false);
         expect(user.needsOnboarding, isTrue);
       });
 
       test('needsOnboarding returns false for owner with onboarding', () {
-        final user = _createUser(
-          role: UserRole.owner,
-          onboardingCompleted: true,
-        );
+        final user = createUser();
         expect(user.needsOnboarding, isFalse);
       });
 
       test('needsOnboarding returns false for guest', () {
-        final user = _createUser(
+        final user = createUser(
           role: UserRole.guest,
           onboardingCompleted: false,
         );
@@ -174,61 +168,52 @@ void main() {
 
     group('account type and premium access', () {
       test('effectiveAccountType returns accountType when no override', () {
-        final user = _createUser(accountType: AccountType.trial);
+        final user = createUser();
         expect(user.effectiveAccountType, AccountType.trial);
       });
 
       test('effectiveAccountType returns override when set', () {
-        final user = _createUser(
-          accountType: AccountType.trial,
-          adminOverrideAccountType: AccountType.premium,
-        );
+        final user = createUser(adminOverrideAccountType: AccountType.premium);
         expect(user.effectiveAccountType, AccountType.premium);
       });
 
       test('hasPremiumAccess for trial is false', () {
-        final user = _createUser(accountType: AccountType.trial);
+        final user = createUser();
         expect(user.hasPremiumAccess, isFalse);
       });
 
       test('hasPremiumAccess for premium is true', () {
-        final user = _createUser(accountType: AccountType.premium);
+        final user = createUser(accountType: AccountType.premium);
         expect(user.hasPremiumAccess, isTrue);
       });
 
       test('hasPremiumAccess for enterprise is true', () {
-        final user = _createUser(accountType: AccountType.enterprise);
+        final user = createUser(accountType: AccountType.enterprise);
         expect(user.hasPremiumAccess, isTrue);
       });
 
       test('hasPremiumAccess for lifetime is true', () {
-        final user = _createUser(accountType: AccountType.lifetime);
+        final user = createUser(accountType: AccountType.lifetime);
         expect(user.hasPremiumAccess, isTrue);
       });
 
       test('hasPremiumAccess via admin override', () {
-        final user = _createUser(
-          accountType: AccountType.trial,
-          adminOverrideAccountType: AccountType.premium,
-        );
+        final user = createUser(adminOverrideAccountType: AccountType.premium);
         expect(user.hasPremiumAccess, isTrue);
       });
 
       test('isLifetimeLicense via accountType', () {
-        final user = _createUser(accountType: AccountType.lifetime);
+        final user = createUser(accountType: AccountType.lifetime);
         expect(user.isLifetimeLicense, isTrue);
       });
 
       test('isLifetimeLicense via admin override', () {
-        final user = _createUser(
-          accountType: AccountType.trial,
-          adminOverrideAccountType: AccountType.lifetime,
-        );
+        final user = createUser(adminOverrideAccountType: AccountType.lifetime);
         expect(user.isLifetimeLicense, isTrue);
       });
 
       test('isLifetimeLicense false for trial', () {
-        final user = _createUser(accountType: AccountType.trial);
+        final user = createUser();
         expect(user.isLifetimeLicense, isFalse);
       });
     });

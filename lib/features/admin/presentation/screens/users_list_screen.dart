@@ -112,10 +112,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
       initialDateRange: _dateRange,
       builder: (context, child) => Theme(
         data: ThemeData.light(useMaterial3: true).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: AppColors.primary,
-            onPrimary: Colors.white,
-          ),
+          colorScheme: const ColorScheme.light(primary: AppColors.primary),
         ),
         child: child!,
       ),

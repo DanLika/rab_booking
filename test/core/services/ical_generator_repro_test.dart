@@ -18,7 +18,7 @@ void main() {
     final booking = BookingModel(
       id: 'booking-1',
       unitId: 'unit-1',
-      checkIn: DateTime(2025, 1, 1),
+      checkIn: DateTime(2025),
       checkOut: DateTime(2025, 1, 5),
       status: BookingStatus.confirmed,
       createdAt: DateTime.now(),

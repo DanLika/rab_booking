@@ -2082,16 +2082,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             );
           },
           fillColor: minimalistColors.backgroundTertiary,
-          elevation: 2,
           // Use textPrimary for automatic theme adaptation (Black in Light, White in Dark)
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: minimalistColors.borderDefault),
+          ),
           child: Icon(
             Icons.headset_mic,
             size: 16,
             color: minimalistColors.textPrimary,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(color: minimalistColors.borderDefault, width: 1),
           ),
         ),
       ),

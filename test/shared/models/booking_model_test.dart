@@ -31,7 +31,7 @@ void main() {
         guestCount: guestCount,
         guestName: guestName,
         guestEmail: guestEmail,
-        createdAt: DateTime.utc(2025, 1),
+        createdAt: DateTime.utc(2025),
       );
     }
 
@@ -71,7 +71,7 @@ void main() {
 
     group('payment calculations', () {
       test('remainingBalance returns correct value', () {
-        final booking = createBooking(paidAmount: 100.0);
+        final booking = createBooking();
         expect(booking.remainingBalance, 400.0);
       });
 
@@ -91,12 +91,12 @@ void main() {
       });
 
       test('isFullyPaid returns false when partially paid', () {
-        final booking = createBooking(paidAmount: 100.0);
+        final booking = createBooking();
         expect(booking.isFullyPaid, isFalse);
       });
 
       test('paymentPercentage calculates correctly', () {
-        final booking = createBooking(paidAmount: 100.0);
+        final booking = createBooking();
         expect(booking.paymentPercentage, 20.0);
       });
 
@@ -124,7 +124,7 @@ void main() {
       });
 
       test('formattedRemainingBalance formats with euro symbol', () {
-        final booking = createBooking(paidAmount: 100.0);
+        final booking = createBooking();
         expect(booking.formattedRemainingBalance, '€400.00');
       });
 

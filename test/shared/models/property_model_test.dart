@@ -35,7 +35,7 @@ void main() {
         rating: rating,
         amenities: amenities,
         isActive: isActive,
-        createdAt: DateTime.utc(2025, 1),
+        createdAt: DateTime.utc(2025),
       );
     }
 

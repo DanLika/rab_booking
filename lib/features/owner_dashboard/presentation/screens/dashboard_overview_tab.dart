@@ -1495,10 +1495,7 @@ class _ActionStepCard extends StatelessWidget {
                               : theme.colorScheme.surface),
                     borderRadius: BorderRadius.circular(14),
                     border: isPrimary
-                        ? Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            width: 1,
-                          )
+                        ? Border.all(color: Colors.white.withValues(alpha: 0.2))
                         : null,
                   ),
                   child: Icon(

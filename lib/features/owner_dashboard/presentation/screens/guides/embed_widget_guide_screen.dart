@@ -792,7 +792,7 @@ class _EmbedWidgetGuideScreenState
                   children: [
                     // Dropdown
                     DropdownButtonFormField<UnitModel>(
-                      value: _selectedPreviewUnit,
+                      initialValue: _selectedPreviewUnit,
                       dropdownColor: InputDecorationHelper.getDropdownColor(
                         context,
                       ),

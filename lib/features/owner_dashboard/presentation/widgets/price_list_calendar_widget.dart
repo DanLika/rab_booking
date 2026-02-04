@@ -1442,9 +1442,10 @@ class _PriceListCalendarWidgetState
         // Dispose controllers after dialog close animation completes (~300ms)
         // Using Future.delayed instead of addPostFrameCallback because the
         // animation takes multiple frames, not just one
-        Future.delayed(const Duration(milliseconds: 350), () {
-          priceController.dispose();
-        });
+        Future.delayed(
+          const Duration(milliseconds: 350),
+          priceController.dispose,
+        );
       }),
     );
   }

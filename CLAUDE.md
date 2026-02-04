@@ -764,7 +764,21 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-04 | **Version**: 6.53
+**Last Updated**: 2026-02-04 | **Version**: 6.54
+
+**Changelog 6.54**: iCal Export Timezone Bug Fix — All Dates Shifted -1 Day:
+- **ROOT CAUSE**: `truncateTime()` and `formatDate()` used `getUTCDate()` on Firestore dates stored as midnight local time (UTC+2)
+  - Firestore: `May 28, 2026 at 00:00 UTC+2` → JS Date: `May 27, 22:00 UTC` → `getUTCDate()` = **27** (WRONG!)
+  - ALL booking dates and gap blocks were shifted back by exactly 1 day in the iCal feed
+  - Booking.com/Airbnb saw wrong availability dates
+- **Fix** (`icalExport.ts`):
+  - `truncateTime()`: Added +12h before `setUTCHours(0,0,0,0)` — ensures correct calendar date for any timezone (UTC-12 to UTC+14)
+  - `generateBookingEvent()`: check_in/check_out now go through `truncateTime()` before `formatDate()`
+  - Blocked days mapping: `daily_prices` dates normalized via `truncateTime()`
+  - `generateBlockedEvent()`: range dates truncated, uses `setUTCDate()` for +1 day arithmetic
+  - `calculateMinStayGapBlocks()`: `setDate()` → `setUTCDate()` for consistent UTC arithmetic
+- **Verified**: All 5 bookings + 3 gap blocks + 2 off-season blocks now match Firestore exactly
+- **Key Learning**: Firestore Timestamp `.toDate()` returns UTC representation — midnight in UTC+2 = 22:00 previous day in UTC. Always add 12h before extracting calendar date.
 
 **Changelog 6.53**: Apple Sign-In iPad App Store Rejection Fix (Guideline 2.1):
 - **ROOT CAUSE**: `CODE_SIGN_ENTITLEMENTS` was missing from `project.pbxproj`

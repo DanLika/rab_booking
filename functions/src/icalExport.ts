@@ -225,8 +225,9 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       .get();
 
     // 7c. Group consecutive blocked days into ranges for efficiency
+    // truncateTime normalizes Firestore timezone (UTC+1/+2) to correct UTC calendar date
     const blockedRanges = groupConsecutiveBlockedDays(
-      blockedDaysSnapshot.docs.map((doc) => doc.data().date?.toDate() || new Date())
+      blockedDaysSnapshot.docs.map((doc) => truncateTime(doc.data().date?.toDate() || new Date()))
     );
 
     logInfo("[iCal Feed] Fetched data", {
@@ -385,7 +386,7 @@ function calculateMinStayGapBlocks(
     // Start: 00:00 of start date
     // End: 00:00 of day AFTER end date (like checkout)
     const rangeEnd = new Date(range.endDate);
-    rangeEnd.setDate(rangeEnd.getDate() + 1);
+    rangeEnd.setUTCDate(rangeEnd.getUTCDate() + 1);
 
     unavailableRanges.push({
       start: truncateTime(range.startDate).getTime(),
@@ -422,7 +423,7 @@ function calculateMinStayGapBlocks(
 
         const gapStart = new Date(currentRangeEnd);
         const gapEnd = new Date(nextRangeStart);
-        gapEnd.setDate(gapEnd.getDate() - 1); // Make inclusive
+        gapEnd.setUTCDate(gapEnd.getUTCDate() - 1); // Make inclusive
 
         gapBlocks.push({
           startDate: gapStart,
@@ -437,9 +438,16 @@ function calculateMinStayGapBlocks(
 
 /**
  * Truncate time to midnight UTC for consistent comparisons
+ *
+ * TIMEZONE FIX: Firestore stores dates as midnight local time (UTC+1/+2 for Europe/Zagreb).
+ * When converted to JS Date via .toDate(), these appear as 22:00/23:00 PREVIOUS day in UTC.
+ * Example: "May 28, 00:00 UTC+2" → "May 27, 22:00 UTC" → getUTCDate() = 27 (WRONG!)
+ * Adding 12h before truncating ensures we land on the correct calendar date:
+ * "May 27, 22:00 UTC" + 12h → "May 28, 10:00 UTC" → setUTCHours(0) → "May 28, 00:00 UTC" ✓
+ * This works for any timezone offset from UTC-12 to UTC+14.
  */
 function truncateTime(date: Date): Date {
-  const d = new Date(date);
+  const d = new Date(date.getTime() + 12 * 60 * 60 * 1000);
   d.setUTCHours(0, 0, 0, 0);
   return d;
 }
@@ -508,14 +516,15 @@ function generateBookingEvent(booking: any, unitName: string): string[] {
   lines.push(`DTSTAMP:${formatTimestamp(created)}`);
 
   // DTSTART - Start date (all-day event)
-  const checkIn = booking.check_in?.toDate() || new Date();
+  // truncateTime normalizes Firestore timezone (UTC+1/+2) to correct UTC calendar date
+  const checkIn = truncateTime(booking.check_in?.toDate() || new Date());
   lines.push(`DTSTART;VALUE=DATE:${formatDate(checkIn)}`);
 
   // DTEND - End date (exclusive)
   // check_out IS the departure day. In iCal, DTEND is exclusive (up to but not including).
   // So if check_out = July 5, guests stayed nights 1,2,3,4 and July 5 is FREE for new check-in.
   // Do NOT add +1 day here - that would block the check-out day incorrectly.
-  const checkOut = booking.check_out?.toDate() || new Date();
+  const checkOut = truncateTime(booking.check_out?.toDate() || new Date());
   lines.push(`DTEND;VALUE=DATE:${formatDate(checkOut)}`);
 
   // SUMMARY - Event title
@@ -569,8 +578,11 @@ function generateBlockedEvent(
   lines.push("BEGIN:VEVENT");
 
   // UID - Unique identifier (includes date range to ensure uniqueness)
-  const startStr = formatDate(range.startDate);
-  const endStr = formatDate(range.endDate);
+  // truncateTime normalizes Firestore timezone (UTC+1/+2) to correct UTC calendar date
+  const start = truncateTime(range.startDate);
+  const end = truncateTime(range.endDate);
+  const startStr = formatDate(start);
+  const endStr = formatDate(end);
   lines.push(`UID:blocked-${startStr}-${endStr}-${index}@bookbed.io`);
 
   // DTSTAMP - Creation timestamp (now)
@@ -580,8 +592,8 @@ function generateBlockedEvent(
   lines.push(`DTSTART;VALUE=DATE:${startStr}`);
 
   // DTEND - End date (exclusive in iCal, so add 1 day)
-  const endDateExclusive = new Date(range.endDate);
-  endDateExclusive.setDate(endDateExclusive.getDate() + 1);
+  const endDateExclusive = new Date(end);
+  endDateExclusive.setUTCDate(endDateExclusive.getUTCDate() + 1);
   lines.push(`DTEND;VALUE=DATE:${formatDate(endDateExclusive)}`);
 
   // SUMMARY - Event title (standard "Not Available" format recognized by OTAs)
@@ -589,7 +601,7 @@ function generateBlockedEvent(
 
   // DESCRIPTION - Additional context
   const dayCount = Math.round(
-    (range.endDate.getTime() - range.startDate.getTime()) / (1000 * 60 * 60 * 24)
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
   ) + 1;
   const description = `Blocked dates for ${unitName}\\n` +
     `${dayCount} day${dayCount > 1 ? "s" : ""} unavailable\\n` +

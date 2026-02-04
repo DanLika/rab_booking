@@ -764,7 +764,23 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-03 | **Version**: 6.52
+**Last Updated**: 2026-02-04 | **Version**: 6.53
+
+**Changelog 6.53**: Apple Sign-In iPad App Store Rejection Fix (Guideline 2.1):
+- **ROOT CAUSE**: `CODE_SIGN_ENTITLEMENTS` was missing from `project.pbxproj`
+  - `Runner.entitlements` existed on disk with correct `com.apple.developer.applesignin` capability
+  - But it was NOT linked in Xcode project — binary had no Apple Sign-In entitlement embedded
+  - Caused Sign in with Apple to fail on reviewer's iPad Pro 11-inch (M4) running iPadOS 26.2
+- **Fix** (`ios/Runner.xcodeproj/project.pbxproj`):
+  - Added `PBXFileReference` for `Runner.entitlements` (ID: `BBENTITLE001`)
+  - Added `Runner.entitlements` to Runner group children
+  - Added `CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;` to all 3 build configs (Debug, Profile, Release)
+- **Fix** (`ios/Runner/Info.plist`):
+  - Added `GIDClientID` key required by `google_sign_in` v6+ (discovered via Context7 MCP)
+  - Value matches `CLIENT_ID` from `GoogleService-Info.plist`
+- **Verified**: `flutter build ios --release --no-codesign` passes (71.2MB)
+- **Cross-platform verification**: All auth configs verified for iOS, iPad, Android, and Web
+- **Key Learning**: Entitlements file MUST be referenced in `project.pbxproj` — having it on disk alone is not enough
 
 **Changelog 6.52**: Bookings Page Performance Optimization & Guide Update:
 - **Optimization: Removed Client-Side Sorting** (`owner_bookings_provider.dart`):

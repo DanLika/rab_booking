@@ -84,6 +84,9 @@
 		<string>Access to camera is required to photograph your properties</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>Access to photo library is required to save photos</string>
+		<!-- Google Sign-In: Client ID (required for google_sign_in v6+) -->
+		<key>GIDClientID</key>
+		<string>592597958982-a38onq6ft57de2dprnsi3lg0rog27bvg.apps.googleusercontent.com</string>
 		<!-- Encryption Compliance -->
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>

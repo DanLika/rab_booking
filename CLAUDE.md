@@ -764,7 +764,27 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-05 | **Version**: 6.55
+**Last Updated**: 2026-02-05 | **Version**: 6.56
+
+**Changelog 6.56**: iCal Sync Improvements — Custom Platform Names, GDPR Export, 15-min Sync:
+- **Custom Platform Name for iCal Import** (`ical_feed.dart`, `ical_sync_settings_screen.dart`):
+  - When selecting "Other" platform, user can now enter custom name (e.g., "Adriagate", "Smoobu")
+  - New `customPlatformName` field in `IcalFeed` model, stored as `custom_platform_name` in Firestore
+  - New `platformDisplayName` getter returns custom name if set, otherwise default enum display name
+  - New localization strings: `icalCustomPlatformName`, `icalCustomPlatformNameHint`, `icalCustomPlatformNameRequired`
+- **iCal Export GDPR Compliance** (`icalExport.ts`):
+  - **REMOVED** guest PII from iCal export (industry standard: Airbnb, Booking.com, agencies all hide guest info)
+  - `SUMMARY` changed from `"Booking: John Smith - Unit"` → `"Reserved"`
+  - `DESCRIPTION` changed to minimal: `"{unitName}\nManaged by BookBed"` (no guest name, email, phone, price)
+  - Removed unused `buildDescription()` function
+- **iCal Sync Interval** (`icalSync.ts`):
+  - Changed scheduled sync from **60 minutes → 15 minutes** for faster availability updates
+  - Applies to all platforms: Booking.com, Airbnb, Adriagate, and other iCal sources
+- **SF-002 REVISED - iCal URL Validation** (`icalSync.ts`):
+  - **CHANGED** from whitelist to blocklist approach
+  - Whitelist was too restrictive - hundreds of iCal providers exist (agencies, PMS, calendars)
+  - Now: Block dangerous addresses (localhost, internal IPs, cloud metadata) but allow any public domain
+  - Security maintained via: blocklist + HTTPS requirement + iCal content validation (`BEGIN:VCALENDAR`)
 
 **Changelog 6.55**: Email Date Timezone Analysis — `timeZone: "Europe/Zagreb"` Sufficient:
 - **Investigation**: User reported email dates showing -1 day offset (August 6 instead of August 7)
@@ -862,11 +882,12 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
   - `mapBookingStatus("pending")` now returns `CONFIRMED` instead of `TENTATIVE`
   - Pending bookings block dates in our system — exporting as TENTATIVE allowed OTAs to ignore them
   - Airbnb only reliably imports CONFIRMED events; TENTATIVE may cause double-bookings
-- **Booking.com iCal Restriction (March 2025)**:
-  - Booking.com only accepts iCal imports from recognized OTAs (Airbnb, VRBO, TripAdvisor, Expedia)
-  - Custom PMS URLs (including ours on `cloudfunctions.net`) are **rejected**
-  - **Workaround**: BookBed → Airbnb (direct iCal import) → Booking.com (accepts Airbnb calendar)
-  - This affects ALL small PMS platforms, not just BookBed
+- **Booking.com iCal Import (February 2026 UPDATE)**:
+  - ~~Previous info about URL restrictions was incorrect~~
+  - Booking.com **DOES ACCEPT** custom PMS URLs including `cloudfunctions.net`
+  - Successfully tested with `?exclude=booking_com` query parameter
+  - Status: "U redu" (OK) in Booking.com Extranet after import
+  - No workaround needed - direct import works
 - **New FAQ entries** (EN + HR):
   - `icalExportFaq4Q/4A`: "Can I add this URL directly to Booking.com?" → Explains restriction + workaround
   - `ownerFaqIcal5Q/5A`: "Can I export BookBed calendar to Booking.com?" → Same info in main FAQ

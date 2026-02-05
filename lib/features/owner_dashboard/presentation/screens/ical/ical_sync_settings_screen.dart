@@ -131,7 +131,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                                   ),
                                   const SizedBox(height: 24),
 
-                                  // Desktop: Benefits + Feeds/Instructions side by side
+                                  // Desktop: Benefits + FAQ side by side, Feeds below
                                   if (isDesktop) ...[
                                     Row(
                                       crossAxisAlignment:
@@ -142,29 +142,22 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                                         ),
                                         const SizedBox(width: 24),
                                         Expanded(
-                                          child: hasFeeds
-                                              ? feedsAsync.when(
-                                                  data: (feeds) =>
-                                                      _buildFeedsSection(
-                                                        context,
-                                                        feeds,
-                                                      ),
-                                                  loading: () =>
-                                                      _buildFeedsLoading(
-                                                        context,
-                                                      ),
-                                                  error: (_, _) =>
-                                                      _buildFeedsError(context),
-                                                )
-                                              : _buildPlatformInstructions(
-                                                  context,
-                                                ),
+                                          child: _buildPlatformInstructions(
+                                            context,
+                                          ),
                                         ),
                                       ],
                                     ),
                                     const SizedBox(height: 24),
                                     if (hasFeeds)
-                                      _buildPlatformInstructions(context),
+                                      feedsAsync.when(
+                                        data: (feeds) =>
+                                            _buildFeedsSection(context, feeds),
+                                        loading: () =>
+                                            _buildFeedsLoading(context),
+                                        error: (_, _) =>
+                                            _buildFeedsError(context),
+                                      ),
                                   ] else ...[
                                     // Mobile/Tablet: Stack vertically
                                     _buildBenefitsSection(context),

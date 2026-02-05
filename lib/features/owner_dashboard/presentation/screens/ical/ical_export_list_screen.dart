@@ -397,7 +397,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Desktop: Benefits + Units/HowItWorks side by side
+                            // Desktop: Benefits + HowItWorks side by side, Units below
                             if (isDesktop) ...[
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,15 +407,13 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                                   ),
                                   const SizedBox(width: 24),
                                   Expanded(
-                                    child: _allUnits.isNotEmpty
-                                        ? _buildUnitsSection(context)
-                                        : _buildHowItWorksSection(context),
+                                    child: _buildHowItWorksSection(context),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 24),
                               if (_allUnits.isNotEmpty)
-                                _buildHowItWorksSection(context),
+                                _buildUnitsSection(context),
                             ] else ...[
                               // Mobile/Tablet: Stack vertically
                               _buildBenefitsSection(context),

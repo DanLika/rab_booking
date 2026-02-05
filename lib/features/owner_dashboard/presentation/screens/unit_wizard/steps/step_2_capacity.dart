@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../../../core/services/logging_service.dart';
 import '../../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
@@ -65,11 +64,15 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
     if (_servicesLoaded || _servicesLoading) return;
     setState(() => _servicesLoading = true);
     try {
-      final ownerId = FirebaseAuth.instance.currentUser?.uid;
       final unitId = widget.unitId;
-      if (ownerId != null && unitId != null) {
+      final draft = ref.read(unitWizardNotifierProvider(unitId)).value;
+      final propertyId = draft?.propertyId;
+      if (propertyId != null && unitId != null) {
         final repo = ref.read(additionalServicesRepositoryProvider);
-        final services = await repo.fetchByUnit(unitId, ownerId);
+        final services = await repo.fetchByUnit(
+          propertyId: propertyId,
+          unitId: unitId,
+        );
         if (mounted) {
           setState(() {
             _services = services;
@@ -96,20 +99,25 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
   }
 
   Future<void> _addService() async {
-    final ownerId = FirebaseAuth.instance.currentUser?.uid;
     final unitId = widget.unitId;
-    if (ownerId == null || unitId == null) return;
+    final draft = ref.read(unitWizardNotifierProvider(unitId)).value;
+    final propertyId = draft?.propertyId;
+    if (propertyId == null || unitId == null) return;
 
     final result = await showDialog<AdditionalServiceModel>(
       context: context,
       builder: (ctx) =>
-          AdditionalServiceDialog(ownerId: ownerId, unitId: unitId),
+          AdditionalServiceDialog(propertyId: propertyId, unitId: unitId),
     );
 
     if (result != null && mounted) {
       try {
         final repo = ref.read(additionalServicesRepositoryProvider);
-        final created = await repo.create(result);
+        final created = await repo.create(
+          propertyId: propertyId,
+          unitId: unitId,
+          service: result,
+        );
         if (mounted) {
           setState(() {
             _services.add(created);
@@ -134,15 +142,16 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
   }
 
   Future<void> _editService(AdditionalServiceModel service) async {
-    final ownerId = FirebaseAuth.instance.currentUser?.uid;
     final unitId = widget.unitId;
-    if (ownerId == null || unitId == null) return;
+    final draft = ref.read(unitWizardNotifierProvider(unitId)).value;
+    final propertyId = draft?.propertyId;
+    if (propertyId == null || unitId == null) return;
 
     final result = await showDialog<AdditionalServiceModel>(
       context: context,
       builder: (ctx) => AdditionalServiceDialog(
         service: service,
-        ownerId: ownerId,
+        propertyId: propertyId,
         unitId: unitId,
       ),
     );
@@ -150,7 +159,11 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
     if (result != null && mounted) {
       try {
         final repo = ref.read(additionalServicesRepositoryProvider);
-        await repo.update(result);
+        await repo.update(
+          propertyId: propertyId,
+          unitId: unitId,
+          service: result,
+        );
         if (mounted) {
           setState(() {
             final idx = _services.indexWhere((s) => s.id == result.id);
@@ -197,8 +210,17 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
 
     if (confirmed == true && mounted) {
       try {
+        final unitId = widget.unitId;
+        final draft = ref.read(unitWizardNotifierProvider(unitId)).value;
+        final propertyId = draft?.propertyId;
+        if (propertyId == null || unitId == null) return;
+
         final repo = ref.read(additionalServicesRepositoryProvider);
-        await repo.delete(service.id);
+        await repo.delete(
+          propertyId: propertyId,
+          unitId: unitId,
+          serviceId: service.id,
+        );
         if (mounted) {
           setState(() {
             _services.removeWhere((s) => s.id == service.id);

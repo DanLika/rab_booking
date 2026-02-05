@@ -9,6 +9,7 @@ import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../l10n/widget_translations.dart';
 
 class AdditionalServicesWidget extends ConsumerWidget {
+  final String propertyId;
   final String unitId;
   final int nights;
   final int guests;
@@ -18,6 +19,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
 
   const AdditionalServicesWidget({
     super.key,
+    required this.propertyId,
     required this.unitId,
     this.nights = 1,
     this.guests = 1,
@@ -26,7 +28,9 @@ class AdditionalServicesWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final servicesAsync = ref.watch(unitAdditionalServicesProvider(unitId));
+    final servicesAsync = ref.watch(
+      unitAdditionalServicesProvider((propertyId: propertyId, unitId: unitId)),
+    );
     final isDarkMode = ref.watch(themeProvider);
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 

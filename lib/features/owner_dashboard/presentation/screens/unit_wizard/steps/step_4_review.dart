@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../../l10n/app_localizations.dart';
@@ -153,7 +152,14 @@ class Step4Review extends ConsumerWidget {
 
         // Services card - loaded from Firestore if unitId exists
         final servicesCard = unitId != null
-            ? _buildServicesCard(context, ref, theme, isMobile, l10n)
+            ? _buildServicesCard(
+                context,
+                ref,
+                theme,
+                isMobile,
+                l10n,
+                draft.propertyId,
+              )
             : null;
 
         // Horizontal gradient (left → right) - matches footer gradient for seamless transition
@@ -306,13 +312,13 @@ class Step4Review extends ConsumerWidget {
     ThemeData theme,
     bool isMobile,
     AppLocalizations l10n,
+    String? propertyId,
   ) {
-    final ownerId = FirebaseAuth.instance.currentUser?.uid;
-    if (ownerId == null) return const SizedBox.shrink();
+    if (propertyId == null || unitId == null) return const SizedBox.shrink();
 
     final repo = ref.read(additionalServicesRepositoryProvider);
     return FutureBuilder<List<AdditionalServiceModel>>(
-      future: repo.fetchByUnit(unitId!, ownerId),
+      future: repo.fetchByUnit(propertyId: propertyId, unitId: unitId!),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();

@@ -1,52 +1,33 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/services/logging_service.dart';
-import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../../../shared/models/additional_service_model.dart';
 import '../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
 
+/// Provider parameters for fetching additional services
+typedef AdditionalServicesParams = ({String propertyId, String unitId});
+
 /// Provider for additional services for a unit
+/// Uses subcollection path: properties/{propertyId}/units/{unitId}/additional_services
 final unitAdditionalServicesProvider =
-    FutureProvider.family<List<AdditionalServiceModel>, String>((
-      ref,
-      unitId,
-    ) async {
+    FutureProvider.family<
+      List<AdditionalServiceModel>,
+      AdditionalServicesParams
+    >((ref, params) async {
       try {
-        final unitRepo = ref.watch(unitRepositoryProvider);
-        final propertyRepo = ref.watch(propertyRepositoryProvider);
         final serviceRepo = ref.watch(additionalServicesRepositoryProvider);
 
-        // Get unit to find property
-        final unit = await unitRepo.fetchUnitById(unitId);
-        if (unit == null) {
-          LoggingService.logWarning(
-            'AdditionalServicesProvider: Unit $unitId not found, returning empty services list',
-          );
-          return [];
-        }
-
-        // Get property to find owner
-        final property = await propertyRepo.fetchPropertyById(unit.propertyId);
-        if (property == null ||
-            property.ownerId == null ||
-            property.ownerId!.isEmpty) {
-          LoggingService.logWarning(
-            'AdditionalServicesProvider: Property ${unit.propertyId} not found or has no owner, returning empty services list',
-          );
-          return [];
-        }
-
-        // Get all services for this owner (includes soft delete check + sort order)
-        final allServices = await serviceRepo.fetchByOwner(property.ownerId!);
-
-        // Filter to only show available services (client-side filter)
-        final services = allServices.where((s) => s.isAvailable).toList();
+        // Fetch services directly from subcollection
+        final services = await serviceRepo.fetchByUnit(
+          propertyId: params.propertyId,
+          unitId: params.unitId,
+        );
 
         return services;
       } catch (e, stackTrace) {
         // Log error and return empty list for graceful degradation
         await LoggingService.logError(
-          'AdditionalServicesProvider: Failed to fetch services for unit $unitId',
+          'AdditionalServicesProvider: Failed to fetch services for unit ${params.unitId}',
           e,
           stackTrace,
         );

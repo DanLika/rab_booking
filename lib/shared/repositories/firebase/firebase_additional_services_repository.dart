@@ -17,121 +17,123 @@ class FirebaseAdditionalServicesRepository
 
   FirebaseAdditionalServicesRepository(this._firestore);
 
-  /// Collection reference
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _firestore.collection('additional_services');
-
-  @override
-  Future<List<AdditionalServiceModel>> fetchByOwner(String ownerId) async {
-    final query = await _collection
-        .where('owner_id', isEqualTo: ownerId)
-        .where('deleted_at', isNull: true)
-        .orderBy('sort_order', descending: false)
-        .get();
-
-    return query.docs
-        .map(
-          (doc) => AdditionalServiceModel.fromJson({
-            'id': doc.id,
-            ...doc.data(),
-            if (doc.data()['created_at'] != null)
-              'created_at': (doc.data()['created_at'] as Timestamp)
-                  .toDate()
-                  .toIso8601String(),
-            if (doc.data()['updated_at'] != null)
-              'updated_at': (doc.data()['updated_at'] as Timestamp)
-                  .toDate()
-                  .toIso8601String(),
-            if (doc.data()['deleted_at'] != null)
-              'deleted_at': (doc.data()['deleted_at'] as Timestamp)
-                  .toDate()
-                  .toIso8601String(),
-          }),
-        )
-        .toList();
-  }
-
-  @override
-  Future<List<AdditionalServiceModel>> fetchByUnit(
+  /// Get collection reference for a unit's additional services
+  /// Path: properties/{propertyId}/units/{unitId}/additional_services
+  CollectionReference<Map<String, dynamic>> _getCollection(
+    String propertyId,
     String unitId,
-    String ownerId,
-  ) async {
-    // Fetch services where unitId matches OR unitId is null (available for all)
-    final query = await _collection
-        .where('owner_id', isEqualTo: ownerId)
-        .where('is_available', isEqualTo: true)
-        .where('deleted_at', isNull: true)
-        .orderBy('sort_order', descending: false)
-        .get();
-
-    // Filter in memory for unitId (Firestore doesn't support OR on where clauses)
-    final services = query.docs
-        .map(
-          (doc) => AdditionalServiceModel.fromJson({
-            'id': doc.id,
-            ...doc.data(),
-            if (doc.data()['created_at'] != null)
-              'created_at': (doc.data()['created_at'] as Timestamp)
-                  .toDate()
-                  .toIso8601String(),
-            if (doc.data()['updated_at'] != null)
-              'updated_at': (doc.data()['updated_at'] as Timestamp)
-                  .toDate()
-                  .toIso8601String(),
-          }),
-        )
-        .where((service) => service.unitId == null || service.unitId == unitId)
-        .toList();
-
-    return services;
+  ) {
+    return _firestore
+        .collection('properties')
+        .doc(propertyId)
+        .collection('units')
+        .doc(unitId)
+        .collection('additional_services');
   }
 
-  @override
-  Future<AdditionalServiceModel> create(AdditionalServiceModel service) async {
-    final docRef = _collection.doc(); // Auto-generate ID
-
-    final data = service.toJson();
-    data['id'] = docRef.id;
-    data['created_at'] = Timestamp.fromDate(service.createdAt);
-    if (service.updatedAt != null) {
-      data['updated_at'] = Timestamp.fromDate(service.updatedAt!);
-    }
-    data['deleted_at'] =
-        null; // Explicitly null (not removed) for composite index compatibility
-
-    await docRef.set(data);
-
-    return service.copyWith(id: docRef.id);
-  }
-
-  @override
-  Future<void> update(AdditionalServiceModel service) async {
-    final data = service.toJson();
-    data['updated_at'] = Timestamp.now();
-    data['created_at'] = Timestamp.fromDate(service.createdAt);
-    if (service.deletedAt != null) {
-      data['deleted_at'] = Timestamp.fromDate(service.deletedAt!);
-    }
-    data.remove('id'); // Don't store ID in document
-
-    await _collection.doc(service.id).update(data);
-  }
-
-  @override
-  Future<void> delete(String id) async {
-    // Soft delete
-    await _collection.doc(id).update({
-      'deleted_at': Timestamp.now(),
-      'is_available': false,
+  /// Parse Firestore document to AdditionalServiceModel
+  AdditionalServiceModel _parseDocument(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
+    final data = doc.data()!;
+    return AdditionalServiceModel.fromJson({
+      'id': doc.id,
+      ...data,
+      if (data['created_at'] != null)
+        'created_at': (data['created_at'] as Timestamp)
+            .toDate()
+            .toIso8601String(),
+      if (data['updated_at'] != null)
+        'updated_at': (data['updated_at'] as Timestamp)
+            .toDate()
+            .toIso8601String(),
+      if (data['deleted_at'] != null)
+        'deleted_at': (data['deleted_at'] as Timestamp)
+            .toDate()
+            .toIso8601String(),
     });
   }
 
   @override
-  Future<void> reorder(List<String> serviceIds) async {
+  Future<List<AdditionalServiceModel>> fetchByUnit({
+    required String propertyId,
+    required String unitId,
+  }) async {
+    final query = await _getCollection(propertyId, unitId)
+        .where('is_available', isEqualTo: true)
+        .orderBy('sort_order', descending: false)
+        .get();
+
+    return query.docs.map(_parseDocument).toList();
+  }
+
+  @override
+  Future<AdditionalServiceModel> create({
+    required String propertyId,
+    required String unitId,
+    required AdditionalServiceModel service,
+  }) async {
+    final collection = _getCollection(propertyId, unitId);
+    final docRef = collection.doc(); // Auto-generate ID
+
+    final data = service.toJson();
+    data['id'] = docRef.id;
+    data['unit_id'] = unitId;
+    data['property_id'] = propertyId;
+    data['created_at'] = Timestamp.fromDate(service.createdAt);
+    if (service.updatedAt != null) {
+      data['updated_at'] = Timestamp.fromDate(service.updatedAt!);
+    }
+    // Remove owner_id as it's not needed in subcollection structure
+    data.remove('owner_id');
+
+    await docRef.set(data);
+
+    return service.copyWith(
+      id: docRef.id,
+      unitId: unitId,
+      propertyId: propertyId,
+    );
+  }
+
+  @override
+  Future<void> update({
+    required String propertyId,
+    required String unitId,
+    required AdditionalServiceModel service,
+  }) async {
+    final data = service.toJson();
+    data['updated_at'] = Timestamp.now();
+    data['created_at'] = Timestamp.fromDate(service.createdAt);
+    data['unit_id'] = unitId;
+    data['property_id'] = propertyId;
+    data.remove('id'); // Don't store ID in document
+    data.remove('owner_id'); // Not needed in subcollection structure
+
+    await _getCollection(propertyId, unitId).doc(service.id).update(data);
+  }
+
+  @override
+  Future<void> delete({
+    required String propertyId,
+    required String unitId,
+    required String serviceId,
+  }) async {
+    // Hard delete - remove document completely
+    await _getCollection(propertyId, unitId).doc(serviceId).delete();
+  }
+
+  @override
+  Future<void> reorder({
+    required String propertyId,
+    required String unitId,
+    required List<String> serviceIds,
+  }) async {
     final batch = _firestore.batch();
+    final collection = _getCollection(propertyId, unitId);
 
     for (var i = 0; i < serviceIds.length; i++) {
-      final docRef = _collection.doc(serviceIds[i]);
+      final docRef = collection.doc(serviceIds[i]);
       batch.update(docRef, {'sort_order': i, 'updated_at': Timestamp.now()});
     }
 
@@ -139,67 +141,14 @@ class FirebaseAdditionalServicesRepository
   }
 
   @override
-  Stream<List<AdditionalServiceModel>> watchByOwner(String ownerId) {
-    return _collection
-        .where('owner_id', isEqualTo: ownerId)
-        .where('deleted_at', isNull: true)
-        .orderBy('sort_order', descending: false)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(
-                (doc) => AdditionalServiceModel.fromJson({
-                  'id': doc.id,
-                  ...doc.data(),
-                  if (doc.data()['created_at'] != null)
-                    'created_at': (doc.data()['created_at'] as Timestamp)
-                        .toDate()
-                        .toIso8601String(),
-                  if (doc.data()['updated_at'] != null)
-                    'updated_at': (doc.data()['updated_at'] as Timestamp)
-                        .toDate()
-                        .toIso8601String(),
-                  if (doc.data()['deleted_at'] != null)
-                    'deleted_at': (doc.data()['deleted_at'] as Timestamp)
-                        .toDate()
-                        .toIso8601String(),
-                }),
-              )
-              .toList(),
-        );
-  }
-
-  @override
-  Stream<List<AdditionalServiceModel>> watchByUnit(
-    String unitId,
-    String ownerId,
-  ) {
-    return _collection
-        .where('owner_id', isEqualTo: ownerId)
+  Stream<List<AdditionalServiceModel>> watchByUnit({
+    required String propertyId,
+    required String unitId,
+  }) {
+    return _getCollection(propertyId, unitId)
         .where('is_available', isEqualTo: true)
-        .where('deleted_at', isNull: true)
         .orderBy('sort_order', descending: false)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map(
-                (doc) => AdditionalServiceModel.fromJson({
-                  'id': doc.id,
-                  ...doc.data(),
-                  if (doc.data()['created_at'] != null)
-                    'created_at': (doc.data()['created_at'] as Timestamp)
-                        .toDate()
-                        .toIso8601String(),
-                  if (doc.data()['updated_at'] != null)
-                    'updated_at': (doc.data()['updated_at'] as Timestamp)
-                        .toDate()
-                        .toIso8601String(),
-                }),
-              )
-              .where(
-                (service) => service.unitId == null || service.unitId == unitId,
-              )
-              .toList(),
-        );
+        .map((snapshot) => snapshot.docs.map(_parseDocument).toList());
   }
 }

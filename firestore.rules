@@ -174,6 +174,13 @@ service cloud.firestore {
           allow read: if true; // Public read for widget price display
           allow create, update, delete: if isPropertyOwner(propertyId);
         }
+
+        // Additional services subcollection
+        // Path: properties/{propertyId}/units/{unitId}/additional_services/{serviceId}
+        match /additional_services/{serviceId} {
+          allow read: if true; // Widget needs to read services for display
+          allow create, update, delete: if isPropertyOwner(propertyId);
+        }
       }
 
       // Widget settings subcollection
@@ -334,12 +341,9 @@ service cloud.firestore {
     // OTHER COLLECTIONS
     // ========================================================================
 
-    // Additional services - owners manage, anyone can read
-    match /additional_services/{serviceId} {
-      allow read: if true; // Widget needs to read services
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
-    }
+    // NOTE: additional_services moved to subcollection at:
+    // properties/{propertyId}/units/{unitId}/additional_services/{serviceId}
+    // See rule at line ~180
 
     // Platform connections - external platform OAuth/API connections (Booking.com, Airbnb)
     // Owner can read/write their own connections

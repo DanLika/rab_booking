@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1572,8 +1571,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
   }
 
   Widget _buildServicesCard(ThemeData theme, bool isMobile) {
-    final ownerId = FirebaseAuth.instance.currentUser?.uid;
-    if (ownerId == null || _selectedUnit == null) {
+    if (_selectedProperty == null || _selectedUnit == null) {
       return const SizedBox.shrink();
     }
 
@@ -1583,7 +1581,10 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return FutureBuilder<List<AdditionalServiceModel>>(
       // Key ensures rebuild when unit changes
       key: ValueKey('services_${_selectedUnit!.id}'),
-      future: repo.fetchByUnit(_selectedUnit!.id, ownerId),
+      future: repo.fetchByUnit(
+        propertyId: _selectedProperty!.id,
+        unitId: _selectedUnit!.id,
+      ),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();

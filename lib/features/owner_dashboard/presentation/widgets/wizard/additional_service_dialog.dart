@@ -13,13 +13,13 @@ import '../../../../../../shared/models/additional_service_model.dart';
 /// in Step 2 Capacity as automatic fees.
 class AdditionalServiceDialog extends ConsumerStatefulWidget {
   final AdditionalServiceModel? service; // null = create new
-  final String ownerId;
+  final String propertyId;
   final String unitId;
 
   const AdditionalServiceDialog({
     super.key,
     this.service,
-    required this.ownerId,
+    required this.propertyId,
     required this.unitId,
   });
 
@@ -60,7 +60,7 @@ class _AdditionalServiceDialogState
 
     final service = AdditionalServiceModel(
       id: widget.service?.id ?? const Uuid().v4(),
-      ownerId: widget.ownerId,
+      propertyId: widget.propertyId,
       unitId: widget.unitId,
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim().isEmpty

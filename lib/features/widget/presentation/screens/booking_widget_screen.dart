@@ -2534,7 +2534,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
 
         // Watch additional services selection
-        final servicesAsync = ref.watch(unitAdditionalServicesProvider(unitId));
+        final servicesAsync = ref.watch(
+          unitAdditionalServicesProvider((
+            propertyId: _propertyId ?? '',
+            unitId: unitId,
+          )),
+        );
         final selectedServices = ref.watch(selectedAdditionalServicesProvider);
 
         // Calculate additional services total synchronously from current provider state
@@ -2767,7 +2772,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               builder: (context, ref, _) {
                 try {
                   final servicesAsync = ref.watch(
-                    unitAdditionalServicesProvider(_unitId),
+                    unitAdditionalServicesProvider((
+                      propertyId: _propertyId ?? '',
+                      unitId: _unitId,
+                    )),
                   );
                   return servicesAsync.when(
                     data: (services) {
@@ -2790,6 +2798,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           children: [
                             const SizedBox(height: SpacingTokens.m),
                             AdditionalServicesWidget(
+                              propertyId: _propertyId ?? '',
                               unitId: _unitId,
                               nights: nights,
                               guests: _adults + _children,

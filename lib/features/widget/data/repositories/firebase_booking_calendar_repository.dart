@@ -111,7 +111,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
             .where(
               (booking) =>
-                  booking != null && !booking.checkOut.isBefore(startDate),
+                  booking != null &&
+                  !_normalizeToUtcMidnight(
+                    booking.checkOut,
+                  ).isBefore(startDate),
             )
             .cast<BookingModel>()
             .toList();
@@ -281,7 +284,10 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
             .where(
               (booking) =>
-                  booking != null && !booking.checkOut.isBefore(startDate),
+                  booking != null &&
+                  !_normalizeToUtcMidnight(
+                    booking.checkOut,
+                  ).isBefore(startDate),
             )
             .cast<BookingModel>()
             .toList();
@@ -436,7 +442,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
           .where(
             (booking) =>
-                booking != null && !booking.checkOut.isBefore(startDate),
+                booking != null &&
+                !_normalizeToUtcMidnight(booking.checkOut).isBefore(startDate),
           )
           .cast<BookingModel>()
           .toList();
@@ -576,7 +583,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
           .where(
             (booking) =>
-                booking != null && !booking.checkOut.isBefore(startDate),
+                booking != null &&
+                !_normalizeToUtcMidnight(booking.checkOut).isBefore(startDate),
           )
           .cast<BookingModel>()
           .toList();
@@ -1302,6 +1310,19 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       checkIn: checkIn,
       checkOut: checkOut,
     );
+  }
+
+  /// Normalize a DateTime to UTC midnight for consistent date comparison.
+  ///
+  /// TIMEZONE FIX: Firestore stores dates as midnight local time (UTC+1/+2 for Europe/Zagreb).
+  /// When converted to Dart DateTime, these appear as 22:00/23:00 PREVIOUS day in UTC.
+  /// Example: "Jul 1, 00:00 UTC+2" → "Jun 30, 22:00 UTC"
+  /// This causes date comparisons to fail when comparing with pure UTC dates.
+  ///
+  /// This helper extracts the calendar date (year, month, day) and creates
+  /// a new DateTime at UTC midnight, ensuring consistent comparisons.
+  DateTime _normalizeToUtcMidnight(DateTime date) {
+    return DateTime.utc(date.year, date.month, date.day);
   }
 
   /// Check availability with detailed result.

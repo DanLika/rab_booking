@@ -702,7 +702,8 @@ function buildDescription(booking: any, unitName: string): string {
     parts.push(`Payment: ${booking.payment_status}`);
   }
 
-  if (booking.notes) parts.push(`Notes: ${booking.notes}`);
+  // SECURITY: booking.notes may contain sensitive information like door codes or guest requests.
+  // We explicitly exclude it from the public iCal feed to prevent accidental disclosure.
 
   parts.push(`Booking ID: ${booking.id}`);
 

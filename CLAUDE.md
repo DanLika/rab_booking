@@ -764,7 +764,18 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-04 | **Version**: 6.54
+**Last Updated**: 2026-02-05 | **Version**: 6.55
+
+**Changelog 6.55**: Email Date Timezone Analysis — `timeZone: "Europe/Zagreb"` Sufficient:
+- **Investigation**: User reported email dates showing -1 day offset (August 6 instead of August 7)
+- **Root Cause**: `timeZone: "Europe/Zagreb"` parameter was added on Feb 3, 2026 (commit `fc9565ac`) but Cloud Functions were not deployed after that commit
+- **Analysis Result**: The `timeZone` parameter in `toLocaleDateString()` is SUFFICIENT by itself:
+  - Cloud Functions run in UTC timezone
+  - `timeZone: "Europe/Zagreb"` correctly converts any UTC instant to Zagreb local date
+  - No additional +12h normalization needed (would cause +1 day bug for times > 12:00 UTC)
+- **Deployed**: Cloud Functions with existing `timeZone: "Europe/Zagreb"` fix
+- **Worldwide Compatibility**: Zagreb timezone is correct for Croatian properties. USA users see Croatian check-in date (correct behavior for booking systems)
+- **Future TODO**: For international properties, add `property.timezone` field and use it in `formatDate(date, propertyTimezone)`
 
 **Changelog 6.54**: iCal Export Timezone Bug Fix — All Dates Shifted -1 Day:
 - **ROOT CAUSE**: `truncateTime()` and `formatDate()` used `getUTCDate()` on Firestore dates stored as midnight local time (UTC+2)

@@ -79,6 +79,12 @@ export function formatCurrency(amount: number): string {
 
 /**
  * Format date in Croatian locale
+ *
+ * Uses timeZone: "Europe/Zagreb" to ensure dates are displayed correctly
+ * regardless of server timezone (Cloud Functions run in UTC).
+ *
+ * This is sufficient for Croatian properties - the timeZone parameter
+ * handles all timezone conversion automatically.
  */
 export function formatDate(date: Date): string {
   return date.toLocaleDateString("hr-HR", {

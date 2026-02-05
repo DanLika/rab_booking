@@ -1,6 +1,7 @@
 import { onRequest } from "firebase-functions/v2/https";
 import * as crypto from "crypto";
-import { admin } from "./firebase";
+import { Timestamp } from "firebase-admin/firestore";
+import { db } from "./firebase";
 import { logInfo, logError } from "./logger";
 
 // =============================================================================
@@ -9,6 +10,8 @@ import { logInfo, logError } from "./logger";
 const ICAL_CONFIG = {
   // DoS Protection: Maximum bookings to include in feed
   MAX_BOOKINGS: 500,
+  // DoS Protection: Maximum imported events to include in feed
+  MAX_ICAL_EVENTS: 500,
   // DoS Protection: Maximum blocked days to include in feed
   MAX_BLOCKED_DAYS: 1000,
   // Date range: How far back to include past bookings (days)
@@ -114,9 +117,12 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     // Strip .ics extension if present (some calendar apps require URL to end in .ics)
     const token = pathParts[2].replace(/\.ics$/i, "");
 
-    logInfo("[iCal Feed] Request received", { propertyId, unitId });
+    // Parse exclude parameter for circular sync prevention
+    // Usage: ?exclude=booking_com (excludes Booking.com imported events from export)
+    // This prevents re-importing same events back to the origin platform
+    const excludeSource = (request.query.exclude as string)?.toLowerCase() || null;
 
-    const db = admin.firestore();
+    logInfo("[iCal Feed] Request received", { propertyId, unitId, excludeSource });
 
     // 1. Verify token against widget_settings
     const widgetSettingsDoc = await db
@@ -168,7 +174,8 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     }
 
     // 4. Return cached content if still valid
-    if (cacheValid && cachedContent) {
+    // IMPORTANT: Skip cache when excludeSource is specified - each platform needs different filtered content
+    if (cacheValid && cachedContent && !excludeSource) {
       logInfo("[iCal Feed] Serving cached content", { propertyId, unitId });
       setCacheHeaders(response, cachedETag, ICAL_CONFIG.CACHE_TTL_SECONDS);
       response.set("Content-Type", "text/calendar; charset=utf-8");
@@ -206,8 +213,8 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       .collectionGroup("bookings")
       .where("unit_id", "==", unitId)
       .where("status", "in", ["confirmed", "pending", "completed"])
-      .where("check_in", ">=", admin.firestore.Timestamp.fromDate(pastDate))
-      .where("check_in", "<=", admin.firestore.Timestamp.fromDate(futureDate))
+      .where("check_in", ">=", Timestamp.fromDate(pastDate))
+      .where("check_in", "<=", Timestamp.fromDate(futureDate))
       .orderBy("check_in", "asc")
       .limit(ICAL_CONFIG.MAX_BOOKINGS)
       .get();
@@ -218,8 +225,8 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       .collectionGroup("daily_prices")
       .where("unit_id", "==", unitId)
       .where("available", "==", false)
-      .where("date", ">=", admin.firestore.Timestamp.fromDate(pastDate))
-      .where("date", "<=", admin.firestore.Timestamp.fromDate(futureDate))
+      .where("date", ">=", Timestamp.fromDate(pastDate))
+      .where("date", "<=", Timestamp.fromDate(futureDate))
       .orderBy("date", "asc")
       .limit(ICAL_CONFIG.MAX_BLOCKED_DAYS)
       .get();
@@ -230,24 +237,63 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       blockedDaysSnapshot.docs.map((doc) => truncateTime(doc.data().date?.toDate() || new Date()))
     );
 
+    // 7d. Fetch imported events from ical_events
+    // CRITICAL: Without this, external platforms won't see events imported from OTHER platforms!
+    // Example: If Adriagate reservation is imported, Booking.com must see it to prevent overbooking
+    const icalEventsSnapshot = await db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("ical_events")
+      .where("unit_id", "==", unitId)
+      .where("start_date", ">=", Timestamp.fromDate(pastDate))
+      .where("start_date", "<=", Timestamp.fromDate(futureDate))
+      .orderBy("start_date", "asc")
+      .limit(ICAL_CONFIG.MAX_ICAL_EVENTS)
+      .get();
+
+    // Filter out events from the excluded source (circular sync prevention)
+    // Example: When exporting to Booking.com (?exclude=booking_com), don't include Booking.com events
+    const icalEvents = icalEventsSnapshot.docs
+      .filter((doc) => {
+        if (!excludeSource) return true;
+        const source = (doc.data().source || "").toLowerCase();
+        return source !== excludeSource;
+      })
+      .map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+        isExternal: true,
+      }));
+
     logInfo("[iCal Feed] Fetched data", {
       propertyId,
       unitId,
       bookingCount: bookingsSnapshot.size,
       blockedDaysCount: blockedDaysSnapshot.size,
       blockedRangesCount: blockedRanges.length,
+      icalEventsCount: icalEvents.length,
+      excludeSource,
       minStayNights,
     });
 
-    // 7d. [NEW] Calculate gap blocks based on minimum stay
+    // 7e. Calculate gap blocks based on minimum stay
     // Prevents OTAs from showing availability for gaps shorter than min_stay
     const bookings = bookingsSnapshot.docs.map((doc) => ({
       ...doc.data(),
       id: doc.id,
     }));
 
+    // Combine native bookings + imported events for gap calculation
+    const allBookingsForGapCalc = [
+      ...bookings,
+      ...icalEvents.map((evt: any) => ({
+        check_in: evt.start_date,
+        check_out: evt.end_date,
+      })),
+    ];
+
     const gapBlocks = calculateMinStayGapBlocks(
-      bookings,
+      allBookingsForGapCalc,
       blockedRanges,
       minStayNights,
       pastDate,
@@ -262,24 +308,29 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       });
     }
 
-    // 8. Generate iCal content (bookings + blocked days + gap blocks)
+    // 8. Generate iCal content (bookings + imported events + blocked days + gap blocks)
     const icalContent = generateIcalCalendar(
       unitName,
       bookings,
+      icalEvents,
       [...blockedRanges, ...gapBlocks]
     );
 
     // 9. Generate ETag from content hash
     const etag = `"${generateContentHash(icalContent)}"`;
 
-    // 10. Store in cache
-    await widgetSettingsDoc.ref.update({
-      ical_export_last_generated: admin.firestore.Timestamp.now(),
-      ical_cache_content: icalContent,
-      ical_cache_generated_at: admin.firestore.Timestamp.now(),
-      ical_cache_etag: etag,
-      ical_cache_unit_name: unitName,
-    });
+    // 10. Store in cache ONLY if not filtering by source
+    // IMPORTANT: Filtered content should NOT be cached, otherwise the generic URL
+    // would serve filtered content to other platforms
+    if (!excludeSource) {
+      await widgetSettingsDoc.ref.update({
+        ical_export_last_generated: Timestamp.now(),
+        ical_cache_content: icalContent,
+        ical_cache_generated_at: Timestamp.now(),
+        ical_cache_etag: etag,
+        ical_cache_unit_name: unitName,
+      });
+    }
 
     // 11. Return fresh iCal file with cache headers
     setCacheHeaders(response, etag, ICAL_CONFIG.CACHE_TTL_SECONDS);
@@ -291,8 +342,10 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       propertyId,
       unitId,
       bookingCount: bookingsSnapshot.size,
+      icalEventsCount: icalEvents.length,
       blockedDaysCount: blockedDaysSnapshot.size,
       blockedRangesCount: blockedRanges.length,
+      excludeSource,
       cacheTTL: ICAL_CONFIG.CACHE_TTL_SECONDS,
     });
   } catch (error) {
@@ -454,15 +507,15 @@ function truncateTime(date: Date): Date {
 
 /**
  * Generate iCal calendar content (RFC 5545)
- * Includes both bookings AND blocked days
+ * Includes native bookings, imported events, AND blocked days
  *
  * IMPORTANT: Booking.com rejects empty iCal feeds (those without any VEVENT).
- * If there are no bookings or blocked days, we generate a placeholder event
- * to ensure the feed is accepted.
+ * If there are no events, we generate a placeholder event to ensure acceptance.
  */
 function generateIcalCalendar(
   unitName: string,
   bookings: any[],
+  icalEvents: any[],
   blockedRanges: BlockedRange[] = []
 ): string {
   const lines: string[] = [];
@@ -477,9 +530,15 @@ function generateIcalCalendar(
   lines.push("X-WR-TIMEZONE:Europe/Zagreb");
   lines.push(`X-WR-CALDESC:Booking calendar for ${escapeIcal(unitName)}`);
 
-  // Add each booking as an event
+  // Add each native booking as an event
   for (const booking of bookings) {
     lines.push(...generateBookingEvent(booking, unitName));
+  }
+
+  // Add each imported event (from other platforms like Adriagate)
+  // CRITICAL: This ensures cross-platform sync works (Adriagate → BookBed → Booking.com)
+  for (const event of icalEvents) {
+    lines.push(...generateIcalEventEntry(event, unitName));
   }
 
   // Add blocked day ranges as events
@@ -490,7 +549,8 @@ function generateIcalCalendar(
 
   // BOOKING.COM FIX: If no events exist, add a placeholder event
   // Booking.com rejects iCal feeds without at least one VEVENT
-  if (bookings.length === 0 && blockedRanges.length === 0) {
+  const totalEvents = bookings.length + icalEvents.length + blockedRanges.length;
+  if (totalEvents === 0) {
     lines.push(...generatePlaceholderEvent(unitName));
   }
 
@@ -527,12 +587,12 @@ function generateBookingEvent(booking: any, unitName: string): string[] {
   const checkOut = truncateTime(booking.check_out?.toDate() || new Date());
   lines.push(`DTEND;VALUE=DATE:${formatDate(checkOut)}`);
 
-  // SUMMARY - Event title
-  const guestName = booking.guest_name || "Guest";
-  lines.push(`SUMMARY:${escapeIcal(`Booking: ${guestName} - ${unitName}`)}`);
+  // SUMMARY - Event title (GDPR compliant - no guest PII)
+  // Industry standard: Airbnb, Booking.com, agencies all use generic "Reserved"/"Unavailable"
+  lines.push(`SUMMARY:${escapeIcal("Reserved")}`);
 
-  // DESCRIPTION - Event details
-  const description = buildDescription(booking, unitName);
+  // DESCRIPTION - Minimal info (no guest PII for privacy/GDPR)
+  const description = `${unitName}\\nManaged by BookBed`;
   lines.push(`DESCRIPTION:${escapeIcal(description)}`);
 
   // STATUS - Booking status
@@ -562,6 +622,85 @@ function generateBookingEvent(booking: any, unitName: string): string[] {
   lines.push("END:VEVENT");
 
   return lines;
+}
+
+/**
+ * Generate VEVENT for imported iCal events (from Adriagate, other PMSs, etc.)
+ * These events originated from external platforms and are being re-exported
+ */
+function generateIcalEventEntry(event: any, unitName: string): string[] {
+  const lines: string[] = [];
+
+  lines.push("BEGIN:VEVENT");
+
+  // UID - Use external_id to maintain consistency with the original event
+  // Prefix with "ical-" to distinguish from native bookings
+  const externalId = event.external_id || event.id;
+  lines.push(`UID:ical-${sanitizeUid(externalId)}@bookbed.io`);
+
+  // DTSTAMP - Creation timestamp
+  const created = event.created_at?.toDate() || new Date();
+  lines.push(`DTSTAMP:${formatTimestamp(created)}`);
+
+  // DTSTART - Start date (all-day event)
+  const startDate = truncateTime(event.start_date?.toDate() || new Date());
+  lines.push(`DTSTART;VALUE=DATE:${formatDate(startDate)}`);
+
+  // DTEND - End date (exclusive in iCal)
+  // Same logic as bookings: end_date IS the checkout day, DTEND is exclusive
+  const endDate = truncateTime(event.end_date?.toDate() || new Date());
+  lines.push(`DTEND;VALUE=DATE:${formatDate(endDate)}`);
+
+  // SUMMARY - Generic "Reserved" (GDPR compliant, no PII)
+  lines.push(`SUMMARY:${escapeIcal("Reserved")}`);
+
+  // DESCRIPTION - Minimal info (source platform for reference)
+  const source = event.source || "external";
+  const description = `${unitName}\\nImported from ${capitalizeSource(source)}\\nManaged by BookBed`;
+  lines.push(`DESCRIPTION:${escapeIcal(description)}`);
+
+  // STATUS - CONFIRMED (these block dates)
+  lines.push("STATUS:CONFIRMED");
+
+  // TRANSP - OPAQUE means this blocks out time
+  lines.push("TRANSP:OPAQUE");
+
+  // SEQUENCE - Event version (0 = original)
+  lines.push("SEQUENCE:0");
+
+  // Microsoft Outlook compatibility
+  lines.push("X-MICROSOFT-CDO-ALLDAYEVENT:TRUE");
+  lines.push("X-MICROSOFT-CDO-BUSYSTATUS:BUSY");
+
+  // LOCATION - Unit name
+  lines.push(`LOCATION:${escapeIcal(unitName)}`);
+
+  // LAST-MODIFIED and CREATED
+  const lastModified = event.updated_at?.toDate() || created;
+  lines.push(`LAST-MODIFIED:${formatTimestamp(lastModified)}`);
+  lines.push(`CREATED:${formatTimestamp(created)}`);
+
+  lines.push("END:VEVENT");
+
+  return lines;
+}
+
+/**
+ * Sanitize UID for iCal (remove special characters that might cause issues)
+ */
+function sanitizeUid(uid: string): string {
+  return uid
+    .replace(/[^a-zA-Z0-9@._-]/g, "-")
+    .replace(/-+/g, "-");
+}
+
+/**
+ * Capitalize source name for display
+ */
+function capitalizeSource(source: string): string {
+  if (source === "booking_com") return "Booking.com";
+  if (source === "airbnb") return "Airbnb";
+  return source.charAt(0).toUpperCase() + source.slice(1);
 }
 
 /**
@@ -690,36 +829,9 @@ function generatePlaceholderEvent(unitName: string): string[] {
   return lines;
 }
 
-/**
- * Build event description
- */
-function buildDescription(booking: any, unitName: string): string {
-  const parts: string[] = [];
-
-  parts.push(`Unit: ${unitName}`);
-
-  // SECURITY: Only include guest name (not email/phone) in public iCal feed
-  if (booking.guest_name) parts.push(`Guest: ${booking.guest_name}`);
-
-  parts.push(`Guests: ${booking.guest_count || 1}`);
-
-  if (booking.check_in_time) parts.push(`Check-in: ${booking.check_in_time}`);
-  if (booking.check_out_time) parts.push(`Check-out: ${booking.check_out_time}`);
-
-  if (booking.total_price) {
-    parts.push(`Total: €${booking.total_price.toFixed(2)}`);
-  }
-
-  if (booking.payment_status) {
-    parts.push(`Payment: ${booking.payment_status}`);
-  }
-
-  // Notes excluded from public iCal feed (owner-private data)
-
-  parts.push(`Booking ID: ${booking.id}`);
-
-  return parts.join("\\n");
-}
+// buildDescription removed - GDPR compliance
+// iCal export now uses minimal "Reserved" summary with no guest PII
+// Industry standard: Airbnb, Booking.com, agencies all hide guest info
 
 /**
  * Map booking status to iCal STATUS

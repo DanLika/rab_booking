@@ -5868,6 +5868,45 @@ class AppLocalizationsHr extends AppLocalizations {
       'Različite platforme sinkroniziraju u različitim intervalima. Booking.com: 15-60 min, Airbnb: 3-6 sati, Google Calendar: 5-15 min. Za trenutnu sinkronizaciju, ručno osvježite na platformi.';
 
   @override
+  String get icalExportPerPlatformTitle => 'Export URL-ovi po platformi';
+
+  @override
+  String get icalExportPerPlatformDesc =>
+      'Koristite odgovarajući URL za svaku platformu kako biste spriječili duple rezervacije. Svaki URL isključuje rezervacije s te specifične platforme.';
+
+  @override
+  String get icalExportGenericUrl => 'Generički URL';
+
+  @override
+  String get icalExportGenericUrlDesc =>
+      'Za Google Calendar, Apple Calendar, Outlook ili druge aplikacije';
+
+  @override
+  String get icalExportForBookingCom => 'Za Booking.com';
+
+  @override
+  String get icalExportForBookingComDesc =>
+      'Isključuje Booking.com rezervacije (sprječava duplikate)';
+
+  @override
+  String get icalExportForAirbnb => 'Za Airbnb';
+
+  @override
+  String get icalExportForAirbnbDesc =>
+      'Isključuje Airbnb rezervacije (sprječava duplikate)';
+
+  @override
+  String get icalExportForAdriagate => 'Za Adriagate';
+
+  @override
+  String get icalExportForAdriagateDesc =>
+      'Isključuje Adriagate rezervacije (sprječava duplikate)';
+
+  @override
+  String get icalExportCircularSyncWarning =>
+      'Važno: Ako uvozite s neke platforme I izvozite na istu platformu, koristite filtrirani URL kako biste izbjegli ponovni uvoz vlastitih rezervacija kao duplikata.';
+
+  @override
   String errorWithMessage(String message) {
     return 'Greška: $message';
   }
@@ -6462,6 +6501,16 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalPlatformOther => 'Druga platforma (iCal)';
+
+  @override
+  String get icalCustomPlatformName => 'Naziv platforme *';
+
+  @override
+  String get icalCustomPlatformNameHint =>
+      'npr. Adriagate, Smoobu, Google Calendar';
+
+  @override
+  String get icalCustomPlatformNameRequired => 'Molimo unesite naziv platforme';
 
   @override
   String get icalUrlLabel => 'iCal URL *';

@@ -706,7 +706,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                   ),
                   child: Center(
                     child: Text(
-                      feed.platform.displayName[0],
+                      feed.platformDisplayName[0],
                       style: TextStyle(
                         color: statusColor,
                         fontSize: 20,
@@ -721,7 +721,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           title: Row(
             children: [
               Text(
-                feed.platform.displayName,
+                feed.platformDisplayName,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 8),
@@ -1077,12 +1077,12 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   void _syncFeedNow(IcalFeed feed) async {
     final l10n = AppLocalizations.of(context);
     LoggingService.log(
-      'Manual sync triggered for feed: ${feed.id} (${feed.platform.displayName})',
+      'Manual sync triggered for feed: ${feed.id} (${feed.platformDisplayName})',
       tag: 'ICAL_SYNC',
     );
     ErrorDisplayUtils.showInfoSnackBar(
       context,
-      l10n.icalSyncStarted(feed.platform.displayName),
+      l10n.icalSyncStarted(feed.platformDisplayName),
     );
 
     try {
@@ -1130,7 +1130,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   void _pauseFeed(IcalFeed feed) async {
     final l10n = AppLocalizations.of(context);
     LoggingService.log(
-      'Pausing iCal feed: ${feed.id} (${feed.platform.displayName})',
+      'Pausing iCal feed: ${feed.id} (${feed.platformDisplayName})',
       tag: 'ICAL_SYNC',
     );
     try {
@@ -1161,7 +1161,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   void _resumeFeed(IcalFeed feed) async {
     final l10n = AppLocalizations.of(context);
     LoggingService.log(
-      'Resuming iCal feed: ${feed.id} (${feed.platform.displayName})',
+      'Resuming iCal feed: ${feed.id} (${feed.platformDisplayName})',
       tag: 'ICAL_SYNC',
     );
     try {
@@ -1195,13 +1195,13 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     showDialog<bool>(
       context: context,
       builder: (dialogContext) => IcalFeedDeleteDialog(
-        platformName: feed.platform.displayName,
+        platformName: feed.platformDisplayName,
         eventCount: feed.eventCount,
       ),
     ).then((confirmed) async {
       if (confirmed == true && mounted) {
         LoggingService.log(
-          'Deleting iCal feed: ${feed.id} (${feed.platform.displayName})',
+          'Deleting iCal feed: ${feed.id} (${feed.platformDisplayName})',
           tag: 'ICAL_SYNC',
         );
         try {
@@ -1258,6 +1258,7 @@ class AddIcalFeedDialog extends ConsumerStatefulWidget {
 class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _icalUrlController;
+  late TextEditingController _customPlatformNameController;
   String? _selectedUnitId;
   String?
   _selectedPropertyId; // OPTIMIZED: Store property ID to avoid re-reading provider
@@ -1270,6 +1271,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     super.initState();
     _icalUrlController = TextEditingController(
       text: widget.existingFeed?.icalUrl ?? '',
+    );
+    _customPlatformNameController = TextEditingController(
+      text: widget.existingFeed?.customPlatformName ?? '',
     );
     if (widget.existingFeed != null) {
       _selectedUnitId = widget.existingFeed!.unitId;
@@ -1315,6 +1319,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   @override
   void dispose() {
     _icalUrlController.dispose();
+    _customPlatformNameController.dispose();
     super.dispose();
   }
 
@@ -1490,6 +1495,25 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                             _checkPlatformMismatch();
                           },
                         ),
+                        // Custom platform name field - shown when "Other" is selected
+                        if (_selectedPlatform == IcalPlatform.other) ...[
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _customPlatformNameController,
+                            decoration: InputDecorationHelper.buildDecoration(
+                              labelText: l10n.icalCustomPlatformName,
+                              hintText: l10n.icalCustomPlatformNameHint,
+                              context: context,
+                            ),
+                            validator: (value) {
+                              if (_selectedPlatform == IcalPlatform.other &&
+                                  (value == null || value.trim().isEmpty)) {
+                                return l10n.icalCustomPlatformNameRequired;
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _icalUrlController,
@@ -1679,6 +1703,11 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
 
       String feedIdForSync;
 
+      // Get custom platform name only when "other" is selected
+      final customName = _selectedPlatform == IcalPlatform.other
+          ? _customPlatformNameController.text.trim()
+          : null;
+
       if (widget.existingFeed == null) {
         final newFeed = IcalFeed(
           id: '',
@@ -1686,6 +1715,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           propertyId: _selectedPropertyId!,
           icalUrl: _icalUrlController.text.trim(),
           platform: _selectedPlatform,
+          customPlatformName: customName,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
@@ -1695,6 +1725,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         final updatedFeed = widget.existingFeed!.copyWith(
           icalUrl: _icalUrlController.text.trim(),
           platform: _selectedPlatform,
+          customPlatformName: customName,
         );
         await repository.updateIcalFeed(updatedFeed);
         feedIdForSync = widget.existingFeed!.id;

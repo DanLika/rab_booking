@@ -10788,6 +10788,72 @@ abstract class AppLocalizations {
   /// **'Different platforms sync at different intervals. Booking.com: 15-60 min, Airbnb: 3-6 hours, Google Calendar: 5-15 min. For immediate sync, manually refresh on the platform.'**
   String get icalExportBookingComInfoDesc;
 
+  /// No description provided for @icalExportPerPlatformTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export URLs by Platform'**
+  String get icalExportPerPlatformTitle;
+
+  /// No description provided for @icalExportPerPlatformDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the appropriate URL for each platform to prevent duplicate bookings. Each URL excludes reservations from that specific platform.'**
+  String get icalExportPerPlatformDesc;
+
+  /// No description provided for @icalExportGenericUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Generic URL'**
+  String get icalExportGenericUrl;
+
+  /// No description provided for @icalExportGenericUrlDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'For Google Calendar, Apple Calendar, Outlook, or other apps'**
+  String get icalExportGenericUrlDesc;
+
+  /// No description provided for @icalExportForBookingCom.
+  ///
+  /// In en, this message translates to:
+  /// **'For Booking.com'**
+  String get icalExportForBookingCom;
+
+  /// No description provided for @icalExportForBookingComDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Excludes Booking.com reservations (prevents duplicates)'**
+  String get icalExportForBookingComDesc;
+
+  /// No description provided for @icalExportForAirbnb.
+  ///
+  /// In en, this message translates to:
+  /// **'For Airbnb'**
+  String get icalExportForAirbnb;
+
+  /// No description provided for @icalExportForAirbnbDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Excludes Airbnb reservations (prevents duplicates)'**
+  String get icalExportForAirbnbDesc;
+
+  /// No description provided for @icalExportForAdriagate.
+  ///
+  /// In en, this message translates to:
+  /// **'For Adriagate'**
+  String get icalExportForAdriagate;
+
+  /// No description provided for @icalExportForAdriagateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Excludes Adriagate reservations (prevents duplicates)'**
+  String get icalExportForAdriagateDesc;
+
+  /// No description provided for @icalExportCircularSyncWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Important: If you import from a platform AND export to the same platform, use the filtered URL to avoid re-importing your own bookings as duplicates.'**
+  String get icalExportCircularSyncWarning;
+
   /// No description provided for @errorWithMessage.
   ///
   /// In en, this message translates to:
@@ -11741,6 +11807,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other platform (iCal)'**
   String get icalPlatformOther;
+
+  /// No description provided for @icalCustomPlatformName.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform name *'**
+  String get icalCustomPlatformName;
+
+  /// No description provided for @icalCustomPlatformNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Adriagate, Smoobu, Google Calendar'**
+  String get icalCustomPlatformNameHint;
+
+  /// No description provided for @icalCustomPlatformNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter platform name'**
+  String get icalCustomPlatformNameRequired;
 
   /// No description provided for @icalUrlLabel.
   ///

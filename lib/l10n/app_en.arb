@@ -2348,6 +2348,18 @@
   "icalExportBookingComInfoTitle": "Platform Sync Times",
   "icalExportBookingComInfoDesc": "Different platforms sync at different intervals. Booking.com: 15-60 min, Airbnb: 3-6 hours, Google Calendar: 5-15 min. For immediate sync, manually refresh on the platform.",
 
+  "icalExportPerPlatformTitle": "Export URLs by Platform",
+  "icalExportPerPlatformDesc": "Use the appropriate URL for each platform to prevent duplicate bookings. Each URL excludes reservations from that specific platform.",
+  "icalExportGenericUrl": "Generic URL",
+  "icalExportGenericUrlDesc": "For Google Calendar, Apple Calendar, Outlook, or other apps",
+  "icalExportForBookingCom": "For Booking.com",
+  "icalExportForBookingComDesc": "Excludes Booking.com reservations (prevents duplicates)",
+  "icalExportForAirbnb": "For Airbnb",
+  "icalExportForAirbnbDesc": "Excludes Airbnb reservations (prevents duplicates)",
+  "icalExportForAdriagate": "For Adriagate",
+  "icalExportForAdriagateDesc": "Excludes Adriagate reservations (prevents duplicates)",
+  "icalExportCircularSyncWarning": "Important: If you import from a platform AND export to the same platform, use the filtered URL to avoid re-importing your own bookings as duplicates.",
+
   "errorWithMessage": "Error: {message}",
   "@errorWithMessage": {
     "placeholders": {
@@ -2651,6 +2663,9 @@
   "icalPlatformBookingCom": "Booking.com",
   "icalPlatformAirbnb": "Airbnb",
   "icalPlatformOther": "Other platform (iCal)",
+  "icalCustomPlatformName": "Platform name *",
+  "icalCustomPlatformNameHint": "e.g. Adriagate, Smoobu, Google Calendar",
+  "icalCustomPlatformNameRequired": "Please enter platform name",
   "icalUrlLabel": "iCal URL *",
   "icalUrlHint": "https://...",
   "icalPasteFromClipboard": "Paste from clipboard",

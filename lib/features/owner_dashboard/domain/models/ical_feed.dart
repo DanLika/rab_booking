@@ -119,6 +119,9 @@ class IcalFeed with _$IcalFeed {
     required String propertyId,
     required IcalPlatform platform,
     required String icalUrl,
+
+    /// Custom platform name when platform is "other" (e.g., "Adriagate", "Smoobu")
+    String? customPlatformName,
     @Default(60) int syncIntervalMinutes,
     DateTime? lastSynced,
     @Default(IcalStatus.active) IcalStatus status,
@@ -142,6 +145,7 @@ class IcalFeed with _$IcalFeed {
       propertyId: data['property_id'] as String? ?? '',
       platform: IcalPlatform.fromString(data['platform'] as String?),
       icalUrl: data['ical_url'] as String? ?? '',
+      customPlatformName: data['custom_platform_name'] as String?,
       syncIntervalMinutes: data['sync_interval_minutes'] as int? ?? 60,
       lastSynced: (data['last_synced'] as Timestamp?)?.toDate(),
       status: IcalStatus.fromString(data['status'] as String?),
@@ -160,6 +164,7 @@ class IcalFeed with _$IcalFeed {
       'property_id': propertyId,
       'platform': platform.toFirestoreValue(),
       'ical_url': icalUrl,
+      'custom_platform_name': customPlatformName,
       'sync_interval_minutes': syncIntervalMinutes,
       'last_synced': lastSynced != null
           ? Timestamp.fromDate(lastSynced!)
@@ -178,6 +183,17 @@ class IcalFeed with _$IcalFeed {
 
   /// Check if feed has error
   bool get hasError => status == IcalStatus.error;
+
+  /// Get display name for the platform
+  /// Uses customPlatformName if platform is "other" and custom name is set
+  String get platformDisplayName {
+    if (platform == IcalPlatform.other &&
+        customPlatformName != null &&
+        customPlatformName!.isNotEmpty) {
+      return customPlatformName!;
+    }
+    return platform.displayName;
+  }
 
   /// Get time since last sync
   String getTimeSinceLastSync() {

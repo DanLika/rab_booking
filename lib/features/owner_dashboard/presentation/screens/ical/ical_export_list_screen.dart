@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
@@ -198,12 +198,44 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       // Construct Cloud Function URL
       const projectId = 'rab-booking-248fc';
       const region = 'us-central1';
-      final url =
+      final baseUrl =
           'https://$region-$projectId.cloudfunctions.net/getUnitIcalFeed/$propertyId/${unit.id}/$token.ics';
 
       if (!mounted) return;
 
-      // Show URL dialog
+      // Define platforms with their exclude parameters
+      final platformUrls = [
+        (
+          label: l10n.icalExportGenericUrl,
+          description: l10n.icalExportGenericUrlDesc,
+          url: baseUrl,
+          icon: Icons.calendar_today_rounded,
+          color: theme.colorScheme.primary,
+        ),
+        (
+          label: l10n.icalExportForBookingCom,
+          description: l10n.icalExportForBookingComDesc,
+          url: '$baseUrl?exclude=booking_com',
+          icon: Icons.hotel_rounded,
+          color: const Color(0xFF003580), // Booking.com blue
+        ),
+        (
+          label: l10n.icalExportForAirbnb,
+          description: l10n.icalExportForAirbnbDesc,
+          url: '$baseUrl?exclude=airbnb',
+          icon: Icons.house_rounded,
+          color: const Color(0xFFFF5A5F), // Airbnb red
+        ),
+        (
+          label: l10n.icalExportForAdriagate,
+          description: l10n.icalExportForAdriagateDesc,
+          url: '$baseUrl?exclude=adriagate',
+          icon: Icons.sailing_rounded,
+          color: const Color(0xFF0077B6), // Adriagate blue
+        ),
+      ];
+
+      // Show URL dialog with per-platform URLs
       unawaited(
         showDialog(
           context: context,
@@ -213,82 +245,81 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
               children: [
                 Icon(Icons.link, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
-                Expanded(child: Text(l10n.icalExportDynamicLinkTitle)),
+                Expanded(child: Text(l10n.icalExportPerPlatformTitle)),
               ],
             ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.icalExportDynamicLinkDescription,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.icalExportSyncTimeNote,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w500,
+            content: SizedBox(
+              width: 500,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.icalExportPerPlatformDesc,
+                      style: theme.textTheme.bodySmall,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: theme.colorScheme.outlineVariant,
+                    const SizedBox(height: 16),
+
+                    // Platform URL cards
+                    ...platformUrls.map(
+                      (platform) => _buildPlatformUrlCard(
+                        dialogContext,
+                        theme,
+                        l10n,
+                        platform.label,
+                        platform.description,
+                        platform.url,
+                        platform.icon,
+                        platform.color,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: SelectableText(
-                            url,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontFamily: 'monospace',
-                            ),
-                            maxLines: 3,
+
+                    const SizedBox(height: 12),
+
+                    // Circular sync warning
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.errorContainer.withValues(
+                          alpha: 0.3,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: theme.colorScheme.error.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 18,
+                            color: theme.colorScheme.error,
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.copy, size: 20),
-                          tooltip: l10n.icalExportCopyLink,
-                          onPressed: () async {
-                            try {
-                              await Clipboard.setData(ClipboardData(text: url));
-                              if (dialogContext.mounted) {
-                                ErrorDisplayUtils.showSuccessSnackBar(
-                                  dialogContext,
-                                  l10n.icalExportLinkCopied,
-                                );
-                              }
-                            } catch (e) {
-                              // Clipboard API can fail on some browsers (e.g., Safari in iframe)
-                              if (dialogContext.mounted) {
-                                ErrorDisplayUtils.showErrorSnackBar(
-                                  dialogContext,
-                                  e,
-                                );
-                              }
-                            }
-                          },
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.icalExportCircularSyncWarning,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onErrorContainer,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.icalExportTokenWarning,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.error,
-                      fontStyle: FontStyle.italic,
+
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.icalExportTokenWarning,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             actions: [
@@ -974,6 +1005,99 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build a card for a single platform URL with copy button
+  Widget _buildPlatformUrlCard(
+    BuildContext dialogContext,
+    ThemeData theme,
+    AppLocalizations l10n,
+    String label,
+    String description,
+    String url,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, size: 16, color: color),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                    Text(
+                      description,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.copy, size: 18),
+                tooltip: l10n.icalExportCopyLink,
+                onPressed: () async {
+                  try {
+                    await Clipboard.setData(ClipboardData(text: url));
+                    if (dialogContext.mounted) {
+                      ErrorDisplayUtils.showSuccessSnackBar(
+                        dialogContext,
+                        l10n.icalExportLinkCopied,
+                      );
+                    }
+                  } catch (e) {
+                    // Clipboard API can fail on some browsers
+                    if (dialogContext.mounted) {
+                      ErrorDisplayUtils.showErrorSnackBar(dialogContext, e);
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SelectableText(
+            url,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontFamily: 'monospace',
+              fontSize: 10,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+            maxLines: 2,
           ),
         ],
       ),

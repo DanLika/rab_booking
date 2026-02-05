@@ -45,46 +45,22 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
       }
     }
 
-    // Allow only known booking platform domains (whitelist approach)
-    const allowedDomains = [
-      "ical.booking.com",
-      "admin.booking.com",
-      "airbnb.com",
-      "www.airbnb.com",
-      "calendar.google.com",
-      "outlook.live.com",
-      "outlook.office365.com",
-      "p.calendar.yahoo.com",
-      "export.calendar.yandex.com",
-      "beds24.com",
-      "www.beds24.com",
-      "app.hospitable.com",
-      "smoobu.com",
-      "api.smoobu.com",
-      "rentalsunited.com",
-      "api.lodgify.com",
-      "ownerrez.com",
-      "api.ownerrez.com",
-      "guesty.com",
-      "open.guesty.com",
-      // Generic iCal providers
-      "webcal.io",
-      "icalendar.org",
-      // Testing/Development: GitHub hosted iCal files
-      "gist.githubusercontent.com",
-      "raw.githubusercontent.com",
+    // SF-002 REVISED: Whitelist approach was too restrictive for real-world use.
+    // Users need to import from hundreds of different iCal providers (agencies, PMS, etc.)
+    // Security is maintained via:
+    // 1. Blocklist above (prevents SSRF to internal/localhost addresses)
+    // 2. iCal content validation (must contain BEGIN:VCALENDAR)
+    // 3. HTTPS-only requirement
+    // Log unknown domains for monitoring but ALLOW the request.
+    const knownDomains = [
+      "booking.com", "airbnb.com", "calendar.google.com",
+      "outlook.live.com", "outlook.office365.com", "yahoo.com",
     ];
-
-    // Check if domain is in allowed list or is a subdomain of allowed domains
-    const isAllowed = allowedDomains.some((domain) =>
+    const isKnown = knownDomains.some((domain) =>
       hostname === domain || hostname.endsWith(`.${domain}`)
     );
-
-    // SECURITY FIX SF-002: Enable whitelist validation to prevent SSRF attacks
-    // Previously this was just logging a warning but allowing any domain
-    if (!isAllowed) {
-      logWarn("[iCal Sync] SECURITY SF-002: URL domain not in whitelist - BLOCKED", {hostname});
-      return {valid: false, error: `Domain ${hostname} is not in the allowed list. Contact support to add your calendar provider.`};
+    if (!isKnown) {
+      logInfo("[iCal Sync] New iCal domain used (allowed)", {hostname});
     }
 
     return {valid: true};
@@ -95,21 +71,16 @@ function validateIcalUrl(url: string): { valid: boolean; error?: string } {
 
 /**
  * Scheduled function to automatically sync all active iCal feeds
- * Runs every 60 minutes to keep external calendar data up to date
- *
- * NOTE: Airbnb officially updates their iCal export every 3 hours.
- * Booking.com has no documented frequency. Polling more frequently
- * than 60 minutes provides no benefit as OTA feeds are stale.
- * See: https://www.airbnb.com/help/article/99
+ * Runs every 15 minutes to keep external calendar data up to date
  *
  * This syncs reservations from:
  * - Booking.com (via iCal URL)
  * - Airbnb (via iCal URL)
- * - Other platforms that provide iCal feeds
+ * - Adriagate, Smoobu, and other platforms that provide iCal feeds
  */
 export const scheduledIcalSync = onSchedule(
   {
-    schedule: "every 60 minutes",
+    schedule: "every 15 minutes",
     timeoutSeconds: 540, // 9 minutes (max for scheduled functions)
     memory: "512MiB",
     region: "europe-west1",
@@ -288,9 +259,9 @@ async function syncSingleFeed(
   propertyId: string,
   feedData: any
 ): Promise<number> {
-  const {unit_id, ical_url, platform} = feedData;
+  const {unit_id, ical_url, platform, custom_platform_name} = feedData;
 
-  logInfo("[iCal Sync] Syncing feed", {feedId, propertyId, unitId: unit_id, platform});
+  logInfo("[iCal Sync] Syncing feed", {feedId, propertyId, unitId: unit_id, platform, customPlatformName: custom_platform_name});
 
   // Helper to get feed reference
   const feedRef = db
@@ -326,7 +297,7 @@ async function syncSingleFeed(
     await deleteOldEvents(db, feedId, propertyId);
 
     // Insert new events
-    const insertedCount = await insertNewEvents(db, feedId, unit_id, propertyId, platform, events);
+    const insertedCount = await insertNewEvents(db, feedId, unit_id, propertyId, platform, custom_platform_name, events);
 
     // Update feed metadata in subcollection
     await feedRef.update({
@@ -538,11 +509,20 @@ async function insertNewEvents(
   unitId: string,
   propertyId: string,
   platform: string,
+  customPlatformName: string | undefined,
   events: any[]
 ): Promise<number> {
   if (events.length === 0) {
     return 0;
   }
+
+  // Determine the source value for ical_events
+  // If platform is "other" and customPlatformName is set, use sanitized custom name
+  // This enables proper filtering with ?exclude={source} parameter
+  // e.g., "Adriagate" -> "adriagate", "Smoobu PMS" -> "smoobu-pms"
+  const source = (platform === "other" && customPlatformName)
+    ? sanitizeSource(customPlatformName)
+    : platform;
 
   // Firestore batch can handle max 500 operations
   const batchSize = 500;
@@ -564,7 +544,7 @@ async function insertNewEvents(
         feed_id: feedId,
         unit_id: unitId,
         property_id: propertyId, // Add property_id for reference
-        source: platform,
+        source: source,
         external_id: event.externalId,
         start_date: admin.firestore.Timestamp.fromDate(event.startDate),
         end_date: admin.firestore.Timestamp.fromDate(event.endDate),
@@ -580,9 +560,23 @@ async function insertNewEvents(
     insertedCount += batchEvents.length;
   }
 
-  logInfo("[iCal Sync] Inserted new events for feed", {feedId, propertyId, count: insertedCount});
+  logInfo("[iCal Sync] Inserted new events for feed", {feedId, propertyId, source, count: insertedCount});
 
   return insertedCount;
+}
+
+/**
+ * Sanitize custom platform name for use as source identifier
+ * "Adriagate" -> "adriagate"
+ * "Smoobu PMS" -> "smoobu-pms"
+ * "My Calendar 123" -> "my-calendar-123"
+ */
+function sanitizeSource(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "other";
 }
 
 /**

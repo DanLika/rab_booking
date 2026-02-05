@@ -5832,6 +5832,45 @@ class AppLocalizationsEn extends AppLocalizations {
       'Different platforms sync at different intervals. Booking.com: 15-60 min, Airbnb: 3-6 hours, Google Calendar: 5-15 min. For immediate sync, manually refresh on the platform.';
 
   @override
+  String get icalExportPerPlatformTitle => 'Export URLs by Platform';
+
+  @override
+  String get icalExportPerPlatformDesc =>
+      'Use the appropriate URL for each platform to prevent duplicate bookings. Each URL excludes reservations from that specific platform.';
+
+  @override
+  String get icalExportGenericUrl => 'Generic URL';
+
+  @override
+  String get icalExportGenericUrlDesc =>
+      'For Google Calendar, Apple Calendar, Outlook, or other apps';
+
+  @override
+  String get icalExportForBookingCom => 'For Booking.com';
+
+  @override
+  String get icalExportForBookingComDesc =>
+      'Excludes Booking.com reservations (prevents duplicates)';
+
+  @override
+  String get icalExportForAirbnb => 'For Airbnb';
+
+  @override
+  String get icalExportForAirbnbDesc =>
+      'Excludes Airbnb reservations (prevents duplicates)';
+
+  @override
+  String get icalExportForAdriagate => 'For Adriagate';
+
+  @override
+  String get icalExportForAdriagateDesc =>
+      'Excludes Adriagate reservations (prevents duplicates)';
+
+  @override
+  String get icalExportCircularSyncWarning =>
+      'Important: If you import from a platform AND export to the same platform, use the filtered URL to avoid re-importing your own bookings as duplicates.';
+
+  @override
   String errorWithMessage(String message) {
     return 'Error: $message';
   }
@@ -6416,6 +6455,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalPlatformOther => 'Other platform (iCal)';
+
+  @override
+  String get icalCustomPlatformName => 'Platform name *';
+
+  @override
+  String get icalCustomPlatformNameHint =>
+      'e.g. Adriagate, Smoobu, Google Calendar';
+
+  @override
+  String get icalCustomPlatformNameRequired => 'Please enter platform name';
 
   @override
   String get icalUrlLabel => 'iCal URL *';

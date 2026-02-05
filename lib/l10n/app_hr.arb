@@ -2354,6 +2354,18 @@
   "icalExportBookingComInfoTitle": "Vrijeme sinkronizacije platformi",
   "icalExportBookingComInfoDesc": "Različite platforme sinkroniziraju u različitim intervalima. Booking.com: 15-60 min, Airbnb: 3-6 sati, Google Calendar: 5-15 min. Za trenutnu sinkronizaciju, ručno osvježite na platformi.",
 
+  "icalExportPerPlatformTitle": "Export URL-ovi po platformi",
+  "icalExportPerPlatformDesc": "Koristite odgovarajući URL za svaku platformu kako biste spriječili duple rezervacije. Svaki URL isključuje rezervacije s te specifične platforme.",
+  "icalExportGenericUrl": "Generički URL",
+  "icalExportGenericUrlDesc": "Za Google Calendar, Apple Calendar, Outlook ili druge aplikacije",
+  "icalExportForBookingCom": "Za Booking.com",
+  "icalExportForBookingComDesc": "Isključuje Booking.com rezervacije (sprječava duplikate)",
+  "icalExportForAirbnb": "Za Airbnb",
+  "icalExportForAirbnbDesc": "Isključuje Airbnb rezervacije (sprječava duplikate)",
+  "icalExportForAdriagate": "Za Adriagate",
+  "icalExportForAdriagateDesc": "Isključuje Adriagate rezervacije (sprječava duplikate)",
+  "icalExportCircularSyncWarning": "Važno: Ako uvozite s neke platforme I izvozite na istu platformu, koristite filtrirani URL kako biste izbjegli ponovni uvoz vlastitih rezervacija kao duplikata.",
+
   "errorWithMessage": "Greška: {message}",
   "@errorWithMessage": {
     "placeholders": {
@@ -2657,6 +2669,9 @@
   "icalPlatformBookingCom": "Booking.com",
   "icalPlatformAirbnb": "Airbnb",
   "icalPlatformOther": "Druga platforma (iCal)",
+  "icalCustomPlatformName": "Naziv platforme *",
+  "icalCustomPlatformNameHint": "npr. Adriagate, Smoobu, Google Calendar",
+  "icalCustomPlatformNameRequired": "Molimo unesite naziv platforme",
   "icalUrlLabel": "iCal URL *",
   "icalUrlHint": "https://...",
   "icalPasteFromClipboard": "Zalijepi iz clipboard-a",

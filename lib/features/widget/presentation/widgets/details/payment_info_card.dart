@@ -187,6 +187,10 @@ class PaymentInfoCard extends ConsumerWidget {
   }
 
   Widget _buildStatusRow(WidgetTranslations tr) {
+    // Hide row when payment is not required - cleaner UI for guests
+    if (paymentStatus.toLowerCase() == 'not_required') {
+      return const SizedBox.shrink();
+    }
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -203,6 +207,10 @@ class PaymentInfoCard extends ConsumerWidget {
   }
 
   Widget _buildMethodRow(WidgetTranslations tr) {
+    // Hide row when no payment method selected - cleaner UI for guests
+    if (paymentMethod.toLowerCase() == 'none') {
+      return const SizedBox.shrink();
+    }
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

@@ -22,6 +22,7 @@ import '../providers/theme_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/additional_services_provider.dart';
+import '../../../../shared/models/additional_service_model.dart';
 import '../providers/submit_booking_provider.dart';
 import '../providers/subdomain_provider.dart';
 import '../providers/widget_context_provider.dart';
@@ -2534,12 +2535,15 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         }
 
         // Watch additional services selection
-        final servicesAsync = ref.watch(
-          unitAdditionalServicesProvider((
-            propertyId: _propertyId ?? '',
-            unitId: unitId,
-          )),
-        );
+        // Guard: Only fetch when propertyId is valid to avoid invalid Firestore path
+        final servicesAsync = (_propertyId != null && _propertyId!.isNotEmpty)
+            ? ref.watch(
+                unitAdditionalServicesProvider((
+                  propertyId: _propertyId!,
+                  unitId: unitId,
+                )),
+              )
+            : const AsyncValue<List<AdditionalServiceModel>>.data([]);
         final selectedServices = ref.watch(selectedAdditionalServicesProvider);
 
         // Calculate additional services total synchronously from current provider state
@@ -2771,12 +2775,16 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             additionalServicesBuilder: () => Consumer(
               builder: (context, ref, _) {
                 try {
-                  final servicesAsync = ref.watch(
-                    unitAdditionalServicesProvider((
-                      propertyId: _propertyId ?? '',
-                      unitId: _unitId,
-                    )),
-                  );
+                  // Guard: Only fetch when propertyId is valid to avoid invalid Firestore path
+                  final servicesAsync =
+                      (_propertyId != null && _propertyId!.isNotEmpty)
+                      ? ref.watch(
+                          unitAdditionalServicesProvider((
+                            propertyId: _propertyId!,
+                            unitId: _unitId,
+                          )),
+                        )
+                      : const AsyncValue<List<AdditionalServiceModel>>.data([]);
                   return servicesAsync.when(
                     data: (services) {
                       // Defensive check: ensure services is not empty

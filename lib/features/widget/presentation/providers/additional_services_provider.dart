@@ -14,6 +14,11 @@ final unitAdditionalServicesProvider =
       List<AdditionalServiceModel>,
       AdditionalServicesParams
     >((ref, params) async {
+      // Guard: Return empty list for invalid params to avoid Firestore path errors
+      if (params.propertyId.isEmpty || params.unitId.isEmpty) {
+        return [];
+      }
+
       try {
         final serviceRepo = ref.watch(additionalServicesRepositoryProvider);
 

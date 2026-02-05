@@ -74,7 +74,6 @@ class GuestInfoCard extends ConsumerWidget {
             isDarkMode: isDarkMode,
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
-            stacked: true, // Email can be long, show below label
           ),
           if (guestPhone != null && guestPhone!.isNotEmpty)
             DetailRowWidget(

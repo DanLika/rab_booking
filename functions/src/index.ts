@@ -73,6 +73,9 @@ export * from "./cleanupExpiredPendingBookings";
 // Export auto-complete scheduled function (Checked-out bookings)
 export * from "./completeCheckedOutBookings";
 
+// Export daily_prices cleanup scheduled function (monthly, 365 days retention)
+export * from "./cleanupPastDailyPrices";
+
 // Export Booking.com API integration functions
 export * from "./bookingComApi";
 

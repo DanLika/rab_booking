@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/design_tokens/design_tokens.dart';
 import '../../theme/minimalist_colors.dart';
@@ -66,6 +67,10 @@ class DetailRowWidget extends StatelessWidget {
   /// Use for long values like email addresses that would overflow horizontally.
   final bool stacked;
 
+  /// Whether to auto-size the value text to fit in one line.
+  /// Use for values like email addresses that may be long but should stay on one line.
+  final bool autoSize;
+
   // Bug #45 Fix: Removed const to allow assert validation for non-empty label and value
   DetailRowWidget({
     super.key,
@@ -76,6 +81,7 @@ class DetailRowWidget extends StatelessWidget {
     this.hasPadding = false,
     this.valueFontWeight = TypographyTokens.semiBold,
     this.stacked = false,
+    this.autoSize = false,
   }) : assert(label.isNotEmpty, 'Label cannot be empty'),
        assert(value.isNotEmpty, 'Value cannot be empty');
 
@@ -91,14 +97,26 @@ class DetailRowWidget extends StatelessWidget {
       ),
     );
 
-    final valueWidget = SelectableText(
-      value,
-      style: TextStyle(
-        fontSize: TypographyTokens.fontSizeM,
-        fontWeight: isHighlighted ? TypographyTokens.bold : valueFontWeight,
-        color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
-      ),
+    final valueStyle = TextStyle(
+      fontSize: TypographyTokens.fontSizeM,
+      fontWeight: isHighlighted ? TypographyTokens.bold : valueFontWeight,
+      color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
     );
+
+    final Widget valueWidget;
+    if (autoSize) {
+      // AutoSizeText shrinks to fit on one line for long values like emails
+      valueWidget = AutoSizeText(
+        value,
+        style: valueStyle,
+        maxLines: 1,
+        minFontSize: 10,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.end,
+      );
+    } else {
+      valueWidget = SelectableText(value, style: valueStyle);
+    }
 
     // Bug #46 Fix: Add Semantics widget for accessibility (screen readers)
     final Widget content;

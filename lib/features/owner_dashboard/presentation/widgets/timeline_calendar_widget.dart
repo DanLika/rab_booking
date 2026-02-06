@@ -166,11 +166,6 @@ class _TimelineCalendarWidgetState
   List<DateTime>? _cachedVisibleDateRange;
   int _cachedVisibleStartIndex = -1;
 
-  // Problem #6 fix: Save scroll position for debugging and potential restoration
-  // Currently used in _updateVisibleRange() to track last known position
-  // ignore: unused_field
-  double? _savedScrollOffset;
-
   // Problem #7 fix: Memoization for _buildTimelineView()
   // Cache the build result to avoid rebuilding with identical data
   int? _lastBuildDataHash;
@@ -503,9 +498,6 @@ class _TimelineCalendarWidgetState
     final dimensions = context.timelineDimensionsWithZoom(_zoomScale);
     final scrollOffset = _horizontalScrollController.offset;
     final dayWidth = dimensions.dayWidth;
-
-    // Problem #6 fix: Save scroll position for potential restoration after rebuild
-    _savedScrollOffset = scrollOffset;
 
     // Calculate total available days (fixed range - no dynamic extension)
     final totalDays = _fixedEndDate.difference(_fixedStartDate).inDays;

@@ -1858,11 +1858,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
-  /// Update last login timestamp and optionally the provider
+  /// Update last login and activity timestamps
   Future<void> _updateLastLogin(String userId, {String? provider}) async {
     try {
       final updates = <String, dynamic>{
         'lastLoginAt': FieldValue.serverTimestamp(),
+        'lastActiveAt': FieldValue.serverTimestamp(),
       };
       if (provider != null) {
         updates['last_provider'] = provider;
@@ -1870,6 +1871,20 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       await _firestore.collection('users').doc(userId).update(updates);
     } catch (e) {
       // Ignore error
+    }
+  }
+
+  /// Update only the last active timestamp
+  Future<void> updateLastActive() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      // Ignore error for non-critical activity tracking
     }
   }
 

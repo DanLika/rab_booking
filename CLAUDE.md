@@ -2025,6 +2025,22 @@ AccountType get effectiveAccountType =>
 
 ---
 
+## 📝 TODO: Long-term Technical Enhancements
+
+**Prioritet:** Medium/Low
+
+### Cloud Functions & API
+1. **Cancellation Policies**: Implement logic for full/partial/no refund based on property policy (`guestCancelBooking.ts`).
+2. **Stripe Price IDs**: Move hardcoded/placeholder Price IDs to environment variables/config (`stripeSubscription.ts`).
+3. **OTA API Access**: Update Booking.com and Airbnb API integrations with real base URLs and OAuth credentials once production access is granted.
+4. **SMS Notifications**: Implement Twilio/SMS provider integration for guest/owner alerts (`index.ts`).
+5. **KMS Encryption**: Implement proper encryption for sensitive API tokens using Google Cloud KMS (`bookingComApi.ts`).
+
+### UI & UX
+1. **HTML Email Templates**: Create visually appealing responsive HTML templates for trial expiration and other system emails.
+
+---
+
 ## ⚠️ OBAVEZNO PRIJE COMMITA
 
 **Dart formatiranje** - CI će odbiti PR ako kod nije formatiran:

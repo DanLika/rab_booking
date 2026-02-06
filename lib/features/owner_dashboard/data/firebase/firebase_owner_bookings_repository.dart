@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/utils/async_utils.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
@@ -244,8 +245,7 @@ class FirebaseOwnerBookingsRepository {
           bookings.add(booking);
         } catch (e) {
           // Skip invalid bookings - log for debugging but don't fail entire query
-          // ignore: avoid_print
-          print('WARNING: Failed to parse booking ${doc.id}: $e');
+          LoggingService.logWarning('Failed to parse booking ${doc.id}: $e');
         }
       }
 

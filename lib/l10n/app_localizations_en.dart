@@ -5678,7 +5678,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportListNoUnitsDesc =>
-      'First create a property and add accommodation units.';
+      'Create a property and add units to get started.';
+
+  @override
+  String get icalExportHeroDesc =>
+      'Sync your BookBed reservations with Booking.com, Airbnb, Google Calendar, and other platforms.';
 
   @override
   String get icalExportListAddProperty => 'Add Property';
@@ -5695,28 +5699,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalExportWhyExport => 'Why Export Your Calendar?';
 
   @override
-  String get icalExportBenefit1Title => 'Personal Calendar Sync';
+  String get icalExportBenefit1Title => 'Calendar Sync';
 
   @override
   String get icalExportBenefit1Desc =>
-      'See all your bookings in Google Calendar, Apple Calendar, or Outlook.';
+      'View bookings in Google Calendar, Outlook, or Apple Calendar.';
 
   @override
-  String get icalExportBenefit2Title => 'Automatic Updates';
+  String get icalExportBenefit2Title => 'Platform Sync';
 
   @override
   String get icalExportBenefit2Desc =>
-      'Calendar apps automatically sync new bookings every few hours.';
+      'Keep Booking.com, Airbnb, and other platforms in sync with your availability.';
 
   @override
-  String get icalExportBenefit3Title => 'Multi-Device Access';
+  String get icalExportBenefit3Title => 'Auto Updates';
 
   @override
   String get icalExportBenefit3Desc =>
-      'View your bookings on phone, tablet, and computer.';
+      'New bookings appear automatically — no manual updates needed.';
 
   @override
-  String get icalExportBenefit4Title => 'Reminders & Notifications';
+  String get icalExportBenefit4Title => 'Reminders';
 
   @override
   String get icalExportBenefit4Desc =>
@@ -5729,20 +5733,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalExportHowItWorks => 'How It Works';
 
   @override
-  String get icalExportStep1 =>
-      'Each unit has an automatically generated iCal URL';
+  String get icalExportStep1 => 'Click the link icon next to a unit';
 
   @override
   String get icalExportStep2 =>
-      'Click the link icon to copy the URL or download the .ics file';
+      'Select the destination platform from the dropdown';
 
   @override
   String get icalExportStep3 =>
-      'Add the URL to your calendar app (Google Calendar, Apple Calendar, Outlook)';
+      'Copy the URL and paste it into the platform\'s calendar import settings';
 
   @override
   String get icalExportStep4 =>
-      'Your calendar will automatically sync bookings';
+      'Bookings sync automatically from that point on';
 
   @override
   String get icalExportFaqTitle => 'Frequently Asked Questions';
@@ -5811,7 +5814,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportTokenWarning =>
-      'Note: This link contains a secret token. Do not share it publicly.';
+      'This link contains a secret token. Do not share it publicly.';
 
   @override
   String get icalExportSyncTimeNote =>
@@ -5883,14 +5886,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalExportPlatformUrlDesc =>
-      'Use the correct URL for each platform. Each link is filtered to prevent circular synchronization.';
+      'Select where you\'ll paste this URL. Platform links are filtered to prevent duplicates.';
 
   @override
   String get icalExportOtherCalendar => 'Other / Google Calendar';
 
   @override
   String get icalExportHubSpokeNote =>
-      'Each platform gets a filtered URL that excludes its own bookings. This prevents duplicate imports when syncing bidirectionally.';
+      'Each platform URL excludes that platform\'s own bookings, preventing duplicates during two-way sync.';
+
+  @override
+  String get icalExportGeneralUrl => 'General URL';
+
+  @override
+  String get icalExportPlatformSpecificUrls => 'Platform-Specific URLs';
+
+  @override
+  String get icalExportSelectPlatform => 'Destination platform';
+
+  @override
+  String get icalExportExcludesFrom => 'Excludes reservations from';
+
+  @override
+  String get icalExportNoPlatformFeeds =>
+      'Set up import feeds in iCal Sync to unlock platform-specific filtered URLs.';
+
+  @override
+  String get icalExportGoToImport => 'Set Up Import Feeds';
+
+  @override
+  String get icalExportGenericUrlWarning =>
+      'Shows ALL reservations — for personal calendars only. Do NOT paste into booking platforms!';
+
+  @override
+  String get icalExportLoadingFeeds => 'Loading your platforms...';
 
   @override
   String errorWithMessage(String message) {
@@ -8389,4 +8418,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get add => 'Add';
+
+  @override
+  String get monthCalendarTitle => 'Month Calendar';
+
+  @override
+  String get monthCalendarScheduleView => 'Schedule View';
+
+  @override
+  String get monthCalendarMonthView => 'Month View';
+
+  @override
+  String get monthCalendarAllUnits => 'All Units';
+
+  @override
+  String get monthCalendarNoBookings => 'No bookings';
+
+  @override
+  String get monthCalendarNoBookingsSubtitle =>
+      'This unit has no bookings for the visible period';
+
+  @override
+  String get monthCalendarCreateBooking => 'Create Booking';
+
+  @override
+  String get monthCalendarSelectUnit => 'Unit';
+
+  @override
+  String get ownerDrawerTimelineCalendar => 'Timeline';
+
+  @override
+  String get ownerDrawerMonthCalendar => 'Month Calendar';
 }

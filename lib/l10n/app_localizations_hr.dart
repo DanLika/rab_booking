@@ -5712,7 +5712,11 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportListNoUnitsDesc =>
-      'Prvo kreirajte nekretninu i dodajte smještajne jedinice.';
+      'Kreirajte nekretninu i dodajte jedinice za početak.';
+
+  @override
+  String get icalExportHeroDesc =>
+      'Sinkronizirajte BookBed rezervacije s Booking.com, Airbnb, Google Calendar i drugim platformama.';
 
   @override
   String get icalExportListAddProperty => 'Dodaj Nekretninu';
@@ -5726,35 +5730,35 @@ class AppLocalizationsHr extends AppLocalizations {
   }
 
   @override
-  String get icalExportWhyExport => 'Zašto Exportirati Kalendar?';
+  String get icalExportWhyExport => 'Zašto exportirati kalendar?';
 
   @override
-  String get icalExportBenefit1Title => 'Sinkronizacija s Osobnim Kalendarom';
+  String get icalExportBenefit1Title => 'Sinkronizacija kalendara';
 
   @override
   String get icalExportBenefit1Desc =>
-      'Pregledajte sve rezervacije u Google Calendar, Apple Calendar ili Outlook.';
+      'Pregledajte rezervacije u Google Calendar, Outlook ili Apple Calendar.';
 
   @override
-  String get icalExportBenefit2Title => 'Automatska Ažuriranja';
+  String get icalExportBenefit2Title => 'Sinkronizacija platformi';
 
   @override
   String get icalExportBenefit2Desc =>
-      'Kalendarske aplikacije automatski sinkroniziraju nove rezervacije svakih nekoliko sati.';
+      'Držite Booking.com, Airbnb i druge platforme u skladu s vašom dostupnošću.';
 
   @override
-  String get icalExportBenefit3Title => 'Pristup s Više Uređaja';
+  String get icalExportBenefit3Title => 'Automatska ažuriranja';
 
   @override
   String get icalExportBenefit3Desc =>
-      'Pregledajte rezervacije na mobitelu, tabletu i računalu.';
+      'Nove rezervacije se pojavljuju automatski — bez ručnog ažuriranja.';
 
   @override
-  String get icalExportBenefit4Title => 'Podsjetnici i Obavijesti';
+  String get icalExportBenefit4Title => 'Podsjetnici';
 
   @override
   String get icalExportBenefit4Desc =>
-      'Primajte kalendarske obavijesti za nadolazeće prijave i odjave gostiju.';
+      'Primajte obavijesti o nadolazećim prijavama i odjavama.';
 
   @override
   String get icalExportSelectUnit => 'Odaberi Jedinicu';
@@ -5763,20 +5767,19 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalExportHowItWorks => 'Kako Funkcionira';
 
   @override
-  String get icalExportStep1 =>
-      'Svaka jedinica ima automatski generiran iCal URL';
+  String get icalExportStep1 => 'Kliknite ikonu linka pored jedinice';
 
   @override
   String get icalExportStep2 =>
-      'Kliknite ikonu linka za kopiranje URL-a ili preuzmite .ics datoteku';
+      'Odaberite odredišnu platformu iz padajućeg izbornika';
 
   @override
   String get icalExportStep3 =>
-      'Dodajte URL u svoju kalendarsku aplikaciju (Google Calendar, Apple Calendar, Outlook)';
+      'Kopirajte URL i zalijepite ga u postavke uvoza kalendara na platformi';
 
   @override
   String get icalExportStep4 =>
-      'Vaš kalendar će automatski sinkronizirati rezervacije';
+      'Rezervacije se od tada sinkroniziraju automatski';
 
   @override
   String get icalExportFaqTitle => 'Često Postavljana Pitanja';
@@ -5846,7 +5849,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportTokenWarning =>
-      'Napomena: Ovaj link sadrži tajni token. Ne dijelite ga javno.';
+      'Ovaj link sadrži tajni token. Ne dijelite ga javno.';
 
   @override
   String get icalExportSyncTimeNote =>
@@ -5919,14 +5922,40 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportPlatformUrlDesc =>
-      'Koristite ispravan URL za svaku platformu. Svaki link je filtriran kako bi se spriječila kružna sinkronizacija.';
+      'Odaberite gdje ćete zalijepiti ovaj URL. Linkovi za platforme su filtrirani kako bi se spriječili duplikati.';
 
   @override
   String get icalExportOtherCalendar => 'Ostalo / Google Calendar';
 
   @override
   String get icalExportHubSpokeNote =>
-      'Svaka platforma dobiva filtrirani URL koji isključuje vlastite rezervacije. To sprječava duple uvoze kod dvosmjerne sinkronizacije.';
+      'URL za svaku platformu isključuje njene vlastite rezervacije, čime se sprječavaju duplikati pri dvosmernoj sinkronizaciji.';
+
+  @override
+  String get icalExportGeneralUrl => 'Opći URL';
+
+  @override
+  String get icalExportPlatformSpecificUrls => 'URL-ovi za platforme';
+
+  @override
+  String get icalExportSelectPlatform => 'Odredišna platforma';
+
+  @override
+  String get icalExportExcludesFrom => 'Isključuje rezervacije iz';
+
+  @override
+  String get icalExportNoPlatformFeeds =>
+      'Postavite uvozne feedove u iCal sinkronizaciji za filtrirane URL-ove specifične za platforme.';
+
+  @override
+  String get icalExportGoToImport => 'Postavi uvozne feedove';
+
+  @override
+  String get icalExportGenericUrlWarning =>
+      'Prikazuje SVE rezervacije — samo za osobne kalendare. NE lijepiti na booking platforme!';
+
+  @override
+  String get icalExportLoadingFeeds => 'Učitavanje vaših platformi...';
 
   @override
   String errorWithMessage(String message) {
@@ -8459,4 +8488,35 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get add => 'Dodaj';
+
+  @override
+  String get monthCalendarTitle => 'Mjesečni kalendar';
+
+  @override
+  String get monthCalendarScheduleView => 'Raspored';
+
+  @override
+  String get monthCalendarMonthView => 'Mjesečni prikaz';
+
+  @override
+  String get monthCalendarAllUnits => 'Svi smještajni objekti';
+
+  @override
+  String get monthCalendarNoBookings => 'Nema rezervacija';
+
+  @override
+  String get monthCalendarNoBookingsSubtitle =>
+      'Ovaj smještajni objekt nema rezervacija za vidljivo razdoblje';
+
+  @override
+  String get monthCalendarCreateBooking => 'Kreiraj rezervaciju';
+
+  @override
+  String get monthCalendarSelectUnit => 'Smještajni objekt';
+
+  @override
+  String get ownerDrawerTimelineCalendar => 'Timeline kalendar';
+
+  @override
+  String get ownerDrawerMonthCalendar => 'Mjesečni kalendar';
 }

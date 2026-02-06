@@ -10527,8 +10527,14 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportListNoUnitsDesc.
   ///
   /// In en, this message translates to:
-  /// **'First create a property and add accommodation units.'**
+  /// **'Create a property and add units to get started.'**
   String get icalExportListNoUnitsDesc;
+
+  /// No description provided for @icalExportHeroDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync your BookBed reservations with Booking.com, Airbnb, Google Calendar, and other platforms.'**
+  String get icalExportHeroDesc;
 
   /// No description provided for @icalExportListAddProperty.
   ///
@@ -10557,43 +10563,43 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportBenefit1Title.
   ///
   /// In en, this message translates to:
-  /// **'Personal Calendar Sync'**
+  /// **'Calendar Sync'**
   String get icalExportBenefit1Title;
 
   /// No description provided for @icalExportBenefit1Desc.
   ///
   /// In en, this message translates to:
-  /// **'See all your bookings in Google Calendar, Apple Calendar, or Outlook.'**
+  /// **'View bookings in Google Calendar, Outlook, or Apple Calendar.'**
   String get icalExportBenefit1Desc;
 
   /// No description provided for @icalExportBenefit2Title.
   ///
   /// In en, this message translates to:
-  /// **'Automatic Updates'**
+  /// **'Platform Sync'**
   String get icalExportBenefit2Title;
 
   /// No description provided for @icalExportBenefit2Desc.
   ///
   /// In en, this message translates to:
-  /// **'Calendar apps automatically sync new bookings every few hours.'**
+  /// **'Keep Booking.com, Airbnb, and other platforms in sync with your availability.'**
   String get icalExportBenefit2Desc;
 
   /// No description provided for @icalExportBenefit3Title.
   ///
   /// In en, this message translates to:
-  /// **'Multi-Device Access'**
+  /// **'Auto Updates'**
   String get icalExportBenefit3Title;
 
   /// No description provided for @icalExportBenefit3Desc.
   ///
   /// In en, this message translates to:
-  /// **'View your bookings on phone, tablet, and computer.'**
+  /// **'New bookings appear automatically — no manual updates needed.'**
   String get icalExportBenefit3Desc;
 
   /// No description provided for @icalExportBenefit4Title.
   ///
   /// In en, this message translates to:
-  /// **'Reminders & Notifications'**
+  /// **'Reminders'**
   String get icalExportBenefit4Title;
 
   /// No description provided for @icalExportBenefit4Desc.
@@ -10617,25 +10623,25 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportStep1.
   ///
   /// In en, this message translates to:
-  /// **'Each unit has an automatically generated iCal URL'**
+  /// **'Click the link icon next to a unit'**
   String get icalExportStep1;
 
   /// No description provided for @icalExportStep2.
   ///
   /// In en, this message translates to:
-  /// **'Click the link icon to copy the URL or download the .ics file'**
+  /// **'Select the destination platform from the dropdown'**
   String get icalExportStep2;
 
   /// No description provided for @icalExportStep3.
   ///
   /// In en, this message translates to:
-  /// **'Add the URL to your calendar app (Google Calendar, Apple Calendar, Outlook)'**
+  /// **'Copy the URL and paste it into the platform\'s calendar import settings'**
   String get icalExportStep3;
 
   /// No description provided for @icalExportStep4.
   ///
   /// In en, this message translates to:
-  /// **'Your calendar will automatically sync bookings'**
+  /// **'Bookings sync automatically from that point on'**
   String get icalExportStep4;
 
   /// No description provided for @icalExportFaqTitle.
@@ -10755,7 +10761,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportTokenWarning.
   ///
   /// In en, this message translates to:
-  /// **'Note: This link contains a secret token. Do not share it publicly.'**
+  /// **'This link contains a secret token. Do not share it publicly.'**
   String get icalExportTokenWarning;
 
   /// No description provided for @icalExportSyncTimeNote.
@@ -10875,7 +10881,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportPlatformUrlDesc.
   ///
   /// In en, this message translates to:
-  /// **'Use the correct URL for each platform. Each link is filtered to prevent circular synchronization.'**
+  /// **'Select where you\'ll paste this URL. Platform links are filtered to prevent duplicates.'**
   String get icalExportPlatformUrlDesc;
 
   /// No description provided for @icalExportOtherCalendar.
@@ -10887,8 +10893,56 @@ abstract class AppLocalizations {
   /// No description provided for @icalExportHubSpokeNote.
   ///
   /// In en, this message translates to:
-  /// **'Each platform gets a filtered URL that excludes its own bookings. This prevents duplicate imports when syncing bidirectionally.'**
+  /// **'Each platform URL excludes that platform\'s own bookings, preventing duplicates during two-way sync.'**
   String get icalExportHubSpokeNote;
+
+  /// No description provided for @icalExportGeneralUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'General URL'**
+  String get icalExportGeneralUrl;
+
+  /// No description provided for @icalExportPlatformSpecificUrls.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform-Specific URLs'**
+  String get icalExportPlatformSpecificUrls;
+
+  /// No description provided for @icalExportSelectPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination platform'**
+  String get icalExportSelectPlatform;
+
+  /// No description provided for @icalExportExcludesFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Excludes reservations from'**
+  String get icalExportExcludesFrom;
+
+  /// No description provided for @icalExportNoPlatformFeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up import feeds in iCal Sync to unlock platform-specific filtered URLs.'**
+  String get icalExportNoPlatformFeeds;
+
+  /// No description provided for @icalExportGoToImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Up Import Feeds'**
+  String get icalExportGoToImport;
+
+  /// No description provided for @icalExportGenericUrlWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows ALL reservations — for personal calendars only. Do NOT paste into booking platforms!'**
+  String get icalExportGenericUrlWarning;
+
+  /// No description provided for @icalExportLoadingFeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your platforms...'**
+  String get icalExportLoadingFeeds;
 
   /// No description provided for @errorWithMessage.
   ///
@@ -15141,6 +15195,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add'**
   String get add;
+
+  /// No description provided for @monthCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Month Calendar'**
+  String get monthCalendarTitle;
+
+  /// No description provided for @monthCalendarScheduleView.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule View'**
+  String get monthCalendarScheduleView;
+
+  /// No description provided for @monthCalendarMonthView.
+  ///
+  /// In en, this message translates to:
+  /// **'Month View'**
+  String get monthCalendarMonthView;
+
+  /// No description provided for @monthCalendarAllUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'All Units'**
+  String get monthCalendarAllUnits;
+
+  /// No description provided for @monthCalendarNoBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookings'**
+  String get monthCalendarNoBookings;
+
+  /// No description provided for @monthCalendarNoBookingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This unit has no bookings for the visible period'**
+  String get monthCalendarNoBookingsSubtitle;
+
+  /// No description provided for @monthCalendarCreateBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Booking'**
+  String get monthCalendarCreateBooking;
+
+  /// No description provided for @monthCalendarSelectUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get monthCalendarSelectUnit;
+
+  /// No description provided for @ownerDrawerTimelineCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get ownerDrawerTimelineCalendar;
+
+  /// No description provided for @ownerDrawerMonthCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Month Calendar'**
+  String get ownerDrawerMonthCalendar;
 }
 
 class _AppLocalizationsDelegate

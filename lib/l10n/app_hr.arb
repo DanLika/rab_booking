@@ -3575,8 +3575,6 @@
   "monthCalendarNoBookingsSubtitle": "Ovaj smještajni objekt nema rezervacija za vidljivo razdoblje",
   "monthCalendarCreateBooking": "Kreiraj rezervaciju",
   "monthCalendarSelectUnit": "Smještajni objekt",
-  "monthCalendarTimelineView": "Timeline prikaz",
-  "monthCalendarBlocked": "Blokirano",
   "ownerDrawerTimelineCalendar": "Timeline kalendar",
   "ownerDrawerMonthCalendar": "Mjesečni kalendar"
 }

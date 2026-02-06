@@ -47,12 +47,25 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
-            // Kalendar
-            _DrawerItem(
+            // Kalendar (expandable with Timeline + Month Calendar)
+            _PremiumExpansionTile(
               icon: Icons.calendar_today_outlined,
               title: l10n.ownerDrawerCalendar,
-              isSelected: currentRoute.startsWith('calendar'),
-              onTap: () => context.go(OwnerRoutes.calendarTimeline),
+              isExpanded: currentRoute.startsWith('calendar'),
+              children: [
+                _DrawerSubItem(
+                  title: l10n.ownerDrawerTimelineCalendar,
+                  icon: Icons.view_timeline_outlined,
+                  isSelected: currentRoute == 'calendar/timeline',
+                  onTap: () => context.go(OwnerRoutes.calendarTimeline),
+                ),
+                _DrawerSubItem(
+                  title: l10n.ownerDrawerMonthCalendar,
+                  icon: Icons.calendar_month_outlined,
+                  isSelected: currentRoute == 'calendar/month',
+                  onTap: () => context.go(OwnerRoutes.calendarMonth),
+                ),
+              ],
             ),
 
             const SizedBox(height: 4),

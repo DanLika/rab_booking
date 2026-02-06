@@ -15244,18 +15244,6 @@ abstract class AppLocalizations {
   /// **'Unit'**
   String get monthCalendarSelectUnit;
 
-  /// No description provided for @monthCalendarTimelineView.
-  ///
-  /// In en, this message translates to:
-  /// **'Timeline View'**
-  String get monthCalendarTimelineView;
-
-  /// No description provided for @monthCalendarBlocked.
-  ///
-  /// In en, this message translates to:
-  /// **'Blocked'**
-  String get monthCalendarBlocked;
-
   /// No description provided for @ownerDrawerTimelineCalendar.
   ///
   /// In en, this message translates to:

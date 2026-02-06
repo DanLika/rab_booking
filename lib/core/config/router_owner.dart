@@ -32,6 +32,7 @@ import '../../features/owner_dashboard/presentation/screens/change_password_scre
 import '../../features/owner_dashboard/presentation/screens/notification_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/about_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/calendar/month_calendar_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/platform_connections_screen.dart';
@@ -79,6 +80,7 @@ class OwnerRoutes {
   static const String overview = '/owner/overview';
   static const String properties = '/owner/properties';
   static const String calendarTimeline = '/owner/calendar/timeline';
+  static const String calendarMonth = '/owner/calendar/month';
   static const String bookings = '/owner/bookings';
   static const String propertyNew = '/owner/properties/new';
   static const String propertyEdit = '/owner/properties/:id/edit';
@@ -498,12 +500,19 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.properties,
         redirect: (context, state) => OwnerRoutes.unitHub,
       ),
-      // Calendar route
+      // Calendar routes
       GoRoute(
         path: OwnerRoutes.calendarTimeline,
         pageBuilder: (context, state) => PageTransitions.fade(
           key: state.pageKey,
           child: const OwnerTimelineCalendarScreen(),
+        ),
+      ),
+      GoRoute(
+        path: OwnerRoutes.calendarMonth,
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const MonthCalendarScreen(),
         ),
       ),
       GoRoute(

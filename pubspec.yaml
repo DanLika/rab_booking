@@ -96,6 +96,9 @@ dependencies:
   # Charts
   graphic: ^2.6.0
 
+  # Syncfusion Calendar (Month/Schedule view for mobile-friendly calendar)
+  syncfusion_flutter_calendar: ^28.1.33
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

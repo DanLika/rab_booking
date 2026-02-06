@@ -764,7 +764,29 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-06 | **Version**: 6.58
+**Last Updated**: 2026-02-07 | **Version**: 6.59
+
+**Changelog 6.59**: Syncfusion Month Calendar with Custom Cell Builder:
+- **New Screen** (`calendar/month_calendar_screen.dart`):
+  - Syncfusion Flutter Calendar with Month + Schedule views (2-view toggle)
+  - Custom `monthCellBuilder` — date number (top-left), booking count badge (top-right), status dots (bottom)
+  - Today highlight with `CircleAvatar`, leading/trailing month dates faded
+  - Min/max date boundaries (1 year back, 2 years forward)
+  - Unit filter dropdown with `InputDecorationHelper` styling
+  - Status legend bar (confirmed/pending/completed/cancelled)
+  - Custom `appointmentBuilder` with platform icons and conflict warnings
+  - Schedule view with detailed appointment cards (guest name, unit, nights, status badge)
+  - Tap appointment → `BookingInlineEditDialog`, tap empty date → `BookingCreateDialog`
+  - Skeleton loader while data loads
+- **Drawer Navigation** (`owner_app_drawer.dart`):
+  - Calendar now uses expandable `_PremiumExpansionTile` with two sub-items:
+    - Timeline Calendar (`/owner/calendar/timeline`)
+    - Month Calendar (`/owner/calendar/month`)
+- **Router** (`router_owner.dart`):
+  - Added `OwnerRoutes.calendarMonth = '/owner/calendar/month'`
+  - Added GoRoute with fade transition for `MonthCalendarScreen`
+- **Dependencies**: `syncfusion_flutter_calendar: ^28.2.6` added to `pubspec.yaml`
+- **Key files**: `month_calendar_screen.dart`, `router_owner.dart`, `owner_app_drawer.dart`
 
 **Changelog 6.58**: Dynamic iCal Export URLs from Firestore Feeds:
 - **Dynamic Platform Dropdown** (`ical_export_list_screen.dart`):

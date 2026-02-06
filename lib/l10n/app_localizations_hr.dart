@@ -8515,12 +8515,6 @@ class AppLocalizationsHr extends AppLocalizations {
   String get monthCalendarSelectUnit => 'Smještajni objekt';
 
   @override
-  String get monthCalendarTimelineView => 'Timeline prikaz';
-
-  @override
-  String get monthCalendarBlocked => 'Blokirano';
-
-  @override
   String get ownerDrawerTimelineCalendar => 'Timeline kalendar';
 
   @override

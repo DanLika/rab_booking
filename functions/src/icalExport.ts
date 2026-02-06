@@ -2,6 +2,8 @@ import { onRequest } from "firebase-functions/v2/https";
 import * as crypto from "crypto";
 import { admin } from "./firebase";
 import { logInfo, logError } from "./logger";
+import { getClientIp, hashIp } from "./utils/ipUtils";
+import { checkRateLimit } from "./utils/rateLimit";
 
 // =============================================================================
 // CONFIGURATION
@@ -88,6 +90,15 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
   // Set CORS headers
   response.set("Access-Control-Allow-Origin", "*");
   response.set("Access-Control-Allow-Methods", "GET");
+
+  // SECURITY: IP-based rate limiting to prevent DoS (60 requests per hour per IP)
+  const clientIp = getClientIp(request);
+  const ipHash = hashIp(clientIp);
+  if (!checkRateLimit(`ical_feed_${ipHash}`, 60, 3600)) {
+    logError("[iCal Feed] Rate limit exceeded", { propertyId: request.path, ipHash });
+    response.status(429).send("Too many requests. Please try again later.");
+    return;
+  }
 
   if (request.method === "OPTIONS") {
     response.status(204).send("");
@@ -702,7 +713,8 @@ function buildDescription(booking: any, unitName: string): string {
     parts.push(`Payment: ${booking.payment_status}`);
   }
 
-  if (booking.notes) parts.push(`Notes: ${booking.notes}`);
+  // SECURITY: Explicitly exclude notes from public iCal feed (privacy risk)
+  // if (booking.notes) parts.push(`Notes: ${booking.notes}`);
 
   parts.push(`Booking ID: ${booking.id}`);
 

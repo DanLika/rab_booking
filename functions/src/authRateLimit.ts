@@ -15,6 +15,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {logInfo, logWarn} from "./logger";
+import {getClientIp, hashIp} from "./utils/ipUtils";
 
 /**
  * Rate limit configuration for login attempts
@@ -31,48 +32,6 @@ const REGISTER_RATE_LIMIT = {
   maxCalls: 5, // 5 registration attempts per IP per hour
   windowSeconds: 60 * 60, // 1 hour
 };
-
-/**
- * Extract client IP from request headers
- *
- * Firebase Functions provide the client IP via:
- * 1. x-forwarded-for header (when behind load balancer)
- * 2. rawRequest.ip (direct connection)
- *
- * @param request - Cloud Function request
- * @return Client IP address or "unknown"
- */
-function getClientIp(request: {rawRequest?: {ip?: string; headers?: Record<string, string | string[] | undefined>}}): string {
-  // Try x-forwarded-for first (most common in production)
-  const forwardedFor = request.rawRequest?.headers?.["x-forwarded-for"];
-  if (forwardedFor) {
-    // x-forwarded-for can be comma-separated list, take first IP
-    const firstIp = Array.isArray(forwardedFor) ?
-      forwardedFor[0] :
-      forwardedFor.split(",")[0]?.trim();
-    if (firstIp) return firstIp;
-  }
-
-  // Fall back to direct IP
-  if (request.rawRequest?.ip) {
-    return request.rawRequest.ip;
-  }
-
-  return "unknown";
-}
-
-/**
- * Hash IP address for privacy (don't store raw IPs)
- *
- * Uses simple base64 encoding - not cryptographically secure but
- * sufficient for rate limiting key generation.
- *
- * @param ip - Client IP address
- * @return Hashed IP string
- */
-function hashIp(ip: string): string {
-  return Buffer.from(ip).toString("base64").substring(0, 16);
-}
 
 /**
  * Check login rate limit before authentication

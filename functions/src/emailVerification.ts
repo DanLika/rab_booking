@@ -6,6 +6,8 @@ import {sendEmailVerificationCode as sendVerificationEmail} from "./emailService
 import {validateEmail} from "./utils/emailValidation";
 import {sanitizeEmail} from "./utils/inputSanitization";
 import {setUser} from "./sentry";
+import {getClientIp, hashIp} from "./utils/ipUtils";
+import {checkRateLimit} from "./utils/rateLimit";
 
 /**
  * Get UTC day string (YYYY-MM-DD) for consistent daily reset across timezones
@@ -54,6 +56,17 @@ function hashEmail(email: string): string {
 export const sendEmailVerificationCode = onCall(
   {cors: true, secrets: ["RESEND_API_KEY"]},
   async (request) => {
+    // SECURITY: IP-based rate limiting to prevent spam (10 requests per hour per IP)
+    const clientIp = getClientIp(request);
+    const ipHash = hashIp(clientIp);
+    if (!checkRateLimit(`send_verification_${ipHash}`, 10, 3600)) {
+      logWarn("[EmailVerification] IP Rate limit exceeded", {ipHash});
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many requests from your location. Please try again later."
+      );
+    }
+
     try {
       const {email} = request.data;
 

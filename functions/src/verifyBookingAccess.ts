@@ -4,6 +4,8 @@ import {logInfo, logError, logWarn} from "./logger";
 import {verifyAccessToken} from "./bookingAccessToken";
 import {setUser} from "./sentry";
 import {safeToDate} from "./utils/dateValidation";
+import {getClientIp, hashIp} from "./utils/ipUtils";
+import {checkRateLimit} from "./utils/rateLimit";
 
 /**
  * Cloud Function: Verify Booking Access
@@ -15,6 +17,17 @@ import {safeToDate} from "./utils/dateValidation";
  * Returns sanitized booking details if verification succeeds.
  */
 export const verifyBookingAccess = onCall(async (request) => {
+  // SECURITY: IP-based rate limiting to prevent brute-force (30 requests per hour per IP)
+  const clientIp = getClientIp(request);
+  const ipHash = hashIp(clientIp);
+  if (!checkRateLimit(`verify_access_${ipHash}`, 30, 3600)) {
+    logWarn("[VerifyBookingAccess] Rate limit exceeded", {ipHash});
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many attempts. Please try again in an hour."
+    );
+  }
+
   const data = request.data;
 
   const {

@@ -5871,6 +5871,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Important: If you import from a platform AND export to the same platform, use the filtered URL to avoid re-importing your own bookings as duplicates.';
 
   @override
+  String get icalExportLinkTitle => 'Calendar Export Link';
+
+  @override
+  String get icalExportLinkDesc =>
+      'Use this URL to sync your BookBed calendar with external platforms.';
+
+  @override
+  String get icalExportUniversalNote =>
+      'This link works with all platforms: Booking.com, Airbnb, Adriagate, Google Calendar, and any other service that supports iCal import.';
+
+  @override
   String errorWithMessage(String message) {
     return 'Error: $message';
   }

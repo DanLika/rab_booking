@@ -2365,6 +2365,9 @@
   "icalExportForAdriagate": "Za Adriagate",
   "icalExportForAdriagateDesc": "Isključuje Adriagate rezervacije (sprječava duplikate)",
   "icalExportCircularSyncWarning": "Važno: Ako uvozite s neke platforme I izvozite na istu platformu, koristite filtrirani URL kako biste izbjegli ponovni uvoz vlastitih rezervacija kao duplikata.",
+  "icalExportLinkTitle": "Link za izvoz kalendara",
+  "icalExportLinkDesc": "Koristite ovaj URL za sinkronizaciju BookBed kalendara s vanjskim platformama.",
+  "icalExportUniversalNote": "Ovaj link radi sa svim platformama: Booking.com, Airbnb, Adriagate, Google Calendar i bilo kojim drugim servisom koji podržava iCal uvoz.",
 
   "errorWithMessage": "Greška: {message}",
   "@errorWithMessage": {

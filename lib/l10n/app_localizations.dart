@@ -10854,6 +10854,24 @@ abstract class AppLocalizations {
   /// **'Important: If you import from a platform AND export to the same platform, use the filtered URL to avoid re-importing your own bookings as duplicates.'**
   String get icalExportCircularSyncWarning;
 
+  /// No description provided for @icalExportLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar Export Link'**
+  String get icalExportLinkTitle;
+
+  /// No description provided for @icalExportLinkDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this URL to sync your BookBed calendar with external platforms.'**
+  String get icalExportLinkDesc;
+
+  /// No description provided for @icalExportUniversalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This link works with all platforms: Booking.com, Airbnb, Adriagate, Google Calendar, and any other service that supports iCal import.'**
+  String get icalExportUniversalNote;
+
   /// No description provided for @errorWithMessage.
   ///
   /// In en, this message translates to:

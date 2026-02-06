@@ -5907,6 +5907,17 @@ class AppLocalizationsHr extends AppLocalizations {
       'Važno: Ako uvozite s neke platforme I izvozite na istu platformu, koristite filtrirani URL kako biste izbjegli ponovni uvoz vlastitih rezervacija kao duplikata.';
 
   @override
+  String get icalExportLinkTitle => 'Link za izvoz kalendara';
+
+  @override
+  String get icalExportLinkDesc =>
+      'Koristite ovaj URL za sinkronizaciju BookBed kalendara s vanjskim platformama.';
+
+  @override
+  String get icalExportUniversalNote =>
+      'Ovaj link radi sa svim platformama: Booking.com, Airbnb, Adriagate, Google Calendar i bilo kojim drugim servisom koji podržava iCal uvoz.';
+
+  @override
   String errorWithMessage(String message) {
     return 'Greška: $message';
   }

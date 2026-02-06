@@ -2359,6 +2359,9 @@
   "icalExportForAdriagate": "For Adriagate",
   "icalExportForAdriagateDesc": "Excludes Adriagate reservations (prevents duplicates)",
   "icalExportCircularSyncWarning": "Important: If you import from a platform AND export to the same platform, use the filtered URL to avoid re-importing your own bookings as duplicates.",
+  "icalExportLinkTitle": "Calendar Export Link",
+  "icalExportLinkDesc": "Use this URL to sync your BookBed calendar with external platforms.",
+  "icalExportUniversalNote": "This link works with all platforms: Booking.com, Airbnb, Adriagate, Google Calendar, and any other service that supports iCal import.",
 
   "errorWithMessage": "Error: {message}",
   "@errorWithMessage": {

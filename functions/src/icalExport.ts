@@ -237,33 +237,16 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       blockedDaysSnapshot.docs.map((doc) => truncateTime(doc.data().date?.toDate() || new Date()))
     );
 
-    // 7d. Fetch imported events from ical_events
-    // CRITICAL: Without this, external platforms won't see events imported from OTHER platforms!
-    // Example: If Adriagate reservation is imported, Booking.com must see it to prevent overbooking
-    const icalEventsSnapshot = await db
-      .collection("properties")
-      .doc(propertyId)
-      .collection("ical_events")
-      .where("unit_id", "==", unitId)
-      .where("start_date", ">=", Timestamp.fromDate(pastDate))
-      .where("start_date", "<=", Timestamp.fromDate(futureDate))
-      .orderBy("start_date", "asc")
-      .limit(ICAL_CONFIG.MAX_ICAL_EVENTS)
-      .get();
-
-    // Filter out events from the excluded source (circular sync prevention)
-    // Example: When exporting to Booking.com (?exclude=booking_com), don't include Booking.com events
-    const icalEvents = icalEventsSnapshot.docs
-      .filter((doc) => {
-        if (!excludeSource) return true;
-        const source = (doc.data().source || "").toLowerCase();
-        return source !== excludeSource;
-      })
-      .map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-        isExternal: true,
-      }));
+    // 7d. DO NOT export imported ical_events
+    // WHY: Re-exporting imported events causes circular sync problems:
+    //   - Platform A exports off-season block
+    //   - BookBed imports it
+    //   - BookBed re-exports to Platform B
+    //   - Platform B receives Platform A's data through us = confusion!
+    // SOLUTION: Only export native BookBed bookings + our own blocked dates.
+    // Each platform should only receive BookBed-native data.
+    // The ?exclude= parameter is no longer needed since we don't export ical_events at all.
+    const icalEvents: any[] = [];
 
     logInfo("[iCal Feed] Fetched data", {
       propertyId,

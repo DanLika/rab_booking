@@ -130,6 +130,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
                 final startDate = icalConverter.fromJson(data['start_date']);
                 final endDate = icalConverter.fromJson(data['end_date']);
                 if (startDate == null || endDate == null) return null;
+                // Skip confirmed echoes — they don't block dates
+                if (data['status'] == 'confirmed_echo') return null;
                 return {
                   'id': doc.id,
                   'start_date': startDate,
@@ -303,6 +305,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
                 final startDate = icalConverter.fromJson(data['start_date']);
                 final endDate = icalConverter.fromJson(data['end_date']);
                 if (startDate == null || endDate == null) return null;
+                // Skip confirmed echoes — they don't block dates
+                if (data['status'] == 'confirmed_echo') return null;
                 return {
                   'id': doc.id,
                   'start_date': startDate,

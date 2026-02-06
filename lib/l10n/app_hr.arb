@@ -1858,7 +1858,7 @@
   "icalSyncNoActiveFeeds": "Nema aktivnih feedova",
   "icalSyncWhyTitle": "Zašto iCal Sinkronizacija?",
   "icalSyncAutoSync": "Automatska sinkronizacija",
-  "icalSyncAutoSyncDesc": "Rezervacije se automatski uvoze sa booking platformi svakih 60 minuta",
+  "icalSyncAutoSyncDesc": "Rezervacije se automatski uvoze sa booking platformi svakih 15 minuta",
   "icalSyncPreventDouble": "Sprječavanje dvostrukog rezerviranja",
   "icalSyncPreventDoubleDesc": "Blokirajte termine na svim platformama automatski",
   "icalSyncCompatibility": "Kompatibilnost",
@@ -2368,6 +2368,9 @@
   "icalExportLinkTitle": "Link za izvoz kalendara",
   "icalExportLinkDesc": "Koristite ovaj URL za sinkronizaciju BookBed kalendara s vanjskim platformama.",
   "icalExportUniversalNote": "Ovaj link radi sa svim platformama: Booking.com, Airbnb, Adriagate, Google Calendar i bilo kojim drugim servisom koji podržava iCal uvoz.",
+  "icalExportPlatformUrlDesc": "Koristite ispravan URL za svaku platformu. Svaki link je filtriran kako bi se spriječila kružna sinkronizacija.",
+  "icalExportOtherCalendar": "Ostalo / Google Calendar",
+  "icalExportHubSpokeNote": "Svaka platforma dobiva filtrirani URL koji isključuje vlastite rezervacije. To sprječava duple uvoze kod dvosmjerne sinkronizacije.",
 
   "errorWithMessage": "Greška: {message}",
   "@errorWithMessage": {
@@ -2595,7 +2598,7 @@
   "icalNoActiveFeeds": "Nema aktivnih feedova",
   "icalWhySync": "Zašto iCal Sinkronizacija?",
   "icalAutoSync": "Automatska sinkronizacija",
-  "icalAutoSyncDesc": "Rezervacije se automatski uvoze sa booking platformi svakih 60 minuta",
+  "icalAutoSyncDesc": "Rezervacije se automatski uvoze sa booking platformi svakih 15 minuta",
   "icalPreventDoubleBooking": "Sprječavanje dvostrukog rezerviranja",
   "icalPreventDoubleBookingDesc": "Blokirajte termine na svim platformama automatski",
   "icalCompatibility": "Kompatibilnost",
@@ -2675,6 +2678,26 @@
   "icalCustomPlatformName": "Naziv platforme *",
   "icalCustomPlatformNameHint": "npr. Adriagate, Smoobu, Google Calendar",
   "icalCustomPlatformNameRequired": "Molimo unesite naziv platforme",
+  "icalImportEnabled": "Uvoz rezervacija",
+  "icalImportEnabledDescription": "Uvozi rezervacije iz ovog kalendara u BookBed",
+  "icalImportDisabledNote": "Samo izvoz - vaše rezervacije su vidljive ovoj platformi, ali se njihovi događaji neće uvoziti. Koristite za platforme koje re-exportaju uvezene podatke (sprječava echo loop).",
+  "icalImportDisabledWarning": "Uvoz je onemogućen za ovaj feed",
+  "icalEchoStatusActive": "Aktivno",
+  "icalEchoStatusNeedsReview": "Potrebna provjera",
+  "icalEchoStatusConfirmedEcho": "Potvrđeni echo",
+  "icalEchoStatusConfirmedOverbooking": "Potvrđeni overbooking",
+  "icalEchoReviewTitle": "Moguća duplikatna rezervacija",
+  "icalEchoReviewDescription": "Ovaj događaj može biti duplikat postojeće rezervacije koja je ponovno eksportirana od strane platforme. Molimo pregledajte i potvrdite.",
+  "icalEchoConfidence": "Echo pouzdanost: {confidence}%",
+  "@icalEchoConfidence": {
+    "placeholders": {
+      "confidence": { "type": "int" }
+    }
+  },
+  "icalEchoMarkAsEcho": "Označi kao echo (odbaci)",
+  "icalEchoMarkAsReal": "Označi kao stvarnu rezervaciju",
+  "icalEchoAutoSkipped": "Automatski preskočeno (echo)",
+  "icalEchoFlaggedForReview": "Označeno za provjeru",
   "icalUrlLabel": "iCal URL *",
   "icalUrlHint": "https://...",
   "icalPasteFromClipboard": "Zalijepi iz clipboard-a",
@@ -2688,7 +2711,7 @@
     }
   },
   "icalAutoSyncInfo": "Automatska sinkronizacija",
-  "icalAutoSyncInfoDesc": "Rezervacije će se automatski sinkronizirati svakih 60 minuta. Početna sinkronizacija će se pokrenuti odmah nakon dodavanja.",
+  "icalAutoSyncInfoDesc": "Rezervacije će se automatski sinkronizirati svakih 15 minuta. Početna sinkronizacija će se pokrenuti odmah nakon dodavanja.",
   "icalAdd": "Dodaj",
   "icalInitialSyncStarting": "Feed uspješno dodan! Pokrećem početnu sinkronizaciju...",
   "icalInitialSyncSuccess": "Početna sinkronizacija završena! Uvezeno: {count} rezervacija",

@@ -745,6 +745,28 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 l10n.icalLastSynced(feed.getTimeSinceLastSync()),
                 style: theme.textTheme.bodySmall,
               ),
+              if (!feed.importEnabled)
+                Row(
+                  children: [
+                    Icon(
+                      Icons.upload_outlined,
+                      size: 14,
+                      color: Colors.orange.shade600,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        l10n.icalImportDisabledWarning,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.orange.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               if (feed.hasError && feed.lastError != null)
                 Text(
                   l10n.icalErrorPrefix(feed.lastError!),
@@ -1069,6 +1091,16 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
 
   void _syncFeedNow(IcalFeed feed) async {
     final l10n = AppLocalizations.of(context);
+
+    // Check if import is disabled - show warning and skip
+    if (!feed.importEnabled) {
+      ErrorDisplayUtils.showWarningSnackBar(
+        context,
+        l10n.icalImportDisabledWarning,
+      );
+      return;
+    }
+
     LoggingService.log(
       'Manual sync triggered for feed: ${feed.id} (${feed.platformDisplayName})',
       tag: 'ICAL_SYNC',
@@ -1256,6 +1288,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   String?
   _selectedPropertyId; // OPTIMIZED: Store property ID to avoid re-reading provider
   IcalPlatform _selectedPlatform = IcalPlatform.bookingCom;
+  bool _importEnabled = true; // Phase 0: Toggle for import/export-only mode
   bool _isSaving = false;
   String? _platformMismatchWarning;
 
@@ -1272,6 +1305,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
       _selectedUnitId = widget.existingFeed!.unitId;
       _selectedPropertyId = widget.existingFeed!.propertyId;
       _selectedPlatform = widget.existingFeed!.platform;
+      _importEnabled = widget.existingFeed!.importEnabled;
     }
     // Check initial URL for platform mismatch AFTER first frame
     // (context is not ready during initState)
@@ -1563,6 +1597,103 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                             ),
                           ),
                         ],
+                        // Import enabled toggle (Phase 0: echo loop prevention)
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.black.withValues(alpha: 0.03),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.1)
+                                  : Colors.black.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l10n.icalImportEnabled,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          l10n.icalImportEnabledDescription,
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withValues(alpha: 0.7),
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Switch(
+                                    value: _importEnabled,
+                                    onChanged: (value) {
+                                      setState(() => _importEnabled = value);
+                                    },
+                                    activeTrackColor: theme.colorScheme.primary,
+                                    activeThumbColor: Colors.white,
+                                  ),
+                                ],
+                              ),
+                              // Show note when import is disabled
+                              if (!_importEnabled) ...[
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline,
+                                        size: 18,
+                                        color: isDark
+                                            ? Colors.orange.shade300
+                                            : Colors.orange.shade700,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          l10n.icalImportDisabledNote,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: isDark
+                                                ? Colors.orange.shade200
+                                                : Colors.orange.shade900,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -1709,6 +1840,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           icalUrl: _icalUrlController.text.trim(),
           platform: _selectedPlatform,
           customPlatformName: customName,
+          importEnabled: _importEnabled,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
@@ -1719,6 +1851,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           icalUrl: _icalUrlController.text.trim(),
           platform: _selectedPlatform,
           customPlatformName: customName,
+          importEnabled: _importEnabled,
         );
         await repository.updateIcalFeed(updatedFeed);
         feedIdForSync = widget.existingFeed!.id;
@@ -1744,7 +1877,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
 
         // FIX: Auto-trigger sync BEFORE Navigator.pop() while context is still valid
         // This runs in the background - user doesn't need to wait
-        _triggerAutoSync(feedIdForSync, syncPropertyId, syncPlatform);
+        // Skip auto-sync if import is disabled (export-only mode)
+        if (_importEnabled) {
+          _triggerAutoSync(feedIdForSync, syncPropertyId, syncPlatform);
+        }
 
         // Pop AFTER triggering sync (gives time for snackbar to appear)
         Navigator.pop(context);

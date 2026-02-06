@@ -1858,7 +1858,7 @@
   "icalSyncNoActiveFeeds": "No active feeds",
   "icalSyncWhyTitle": "Why iCal Synchronization?",
   "icalSyncAutoSync": "Automatic Synchronization",
-  "icalSyncAutoSyncDesc": "Reservations are automatically imported from booking platforms every 60 minutes",
+  "icalSyncAutoSyncDesc": "Reservations are automatically imported from booking platforms every 15 minutes",
   "icalSyncPreventDouble": "Prevent Double Booking",
   "icalSyncPreventDoubleDesc": "Block dates on all platforms automatically",
   "icalSyncCompatibility": "Compatibility",
@@ -2362,6 +2362,9 @@
   "icalExportLinkTitle": "Calendar Export Link",
   "icalExportLinkDesc": "Use this URL to sync your BookBed calendar with external platforms.",
   "icalExportUniversalNote": "This link works with all platforms: Booking.com, Airbnb, Adriagate, Google Calendar, and any other service that supports iCal import.",
+  "icalExportPlatformUrlDesc": "Use the correct URL for each platform. Each link is filtered to prevent circular synchronization.",
+  "icalExportOtherCalendar": "Other / Google Calendar",
+  "icalExportHubSpokeNote": "Each platform gets a filtered URL that excludes its own bookings. This prevents duplicate imports when syncing bidirectionally.",
 
   "errorWithMessage": "Error: {message}",
   "@errorWithMessage": {
@@ -2589,7 +2592,7 @@
   "icalNoActiveFeeds": "No active feeds",
   "icalWhySync": "Why iCal Synchronization?",
   "icalAutoSync": "Automatic Synchronization",
-  "icalAutoSyncDesc": "Reservations are automatically imported from booking platforms every 60 minutes",
+  "icalAutoSyncDesc": "Reservations are automatically imported from booking platforms every 15 minutes",
   "icalPreventDoubleBooking": "Prevent Double Booking",
   "icalPreventDoubleBookingDesc": "Block dates on all platforms automatically",
   "icalCompatibility": "Compatibility",
@@ -2669,6 +2672,26 @@
   "icalCustomPlatformName": "Platform name *",
   "icalCustomPlatformNameHint": "e.g. Adriagate, Smoobu, Google Calendar",
   "icalCustomPlatformNameRequired": "Please enter platform name",
+  "icalImportEnabled": "Import reservations",
+  "icalImportEnabledDescription": "Import reservations from this calendar into BookBed",
+  "icalImportDisabledNote": "Export only mode - your bookings are visible to this platform, but their events won't be imported. Use this for platforms that re-export imported data (prevents echo loops).",
+  "icalImportDisabledWarning": "Import is disabled for this feed",
+  "icalEchoStatusActive": "Active",
+  "icalEchoStatusNeedsReview": "Needs review",
+  "icalEchoStatusConfirmedEcho": "Confirmed echo",
+  "icalEchoStatusConfirmedOverbooking": "Confirmed overbooking",
+  "icalEchoReviewTitle": "Possible echo detected",
+  "icalEchoReviewDescription": "This event may be a duplicate of an existing booking that was re-exported by the platform. Please review and confirm.",
+  "icalEchoConfidence": "Echo confidence: {confidence}%",
+  "@icalEchoConfidence": {
+    "placeholders": {
+      "confidence": { "type": "int" }
+    }
+  },
+  "icalEchoMarkAsEcho": "Mark as echo (dismiss)",
+  "icalEchoMarkAsReal": "Mark as real booking",
+  "icalEchoAutoSkipped": "Auto-skipped (echo)",
+  "icalEchoFlaggedForReview": "Flagged for review",
   "icalUrlLabel": "iCal URL *",
   "icalUrlHint": "https://...",
   "icalPasteFromClipboard": "Paste from clipboard",
@@ -2682,7 +2705,7 @@
     }
   },
   "icalAutoSyncInfo": "Automatic synchronization",
-  "icalAutoSyncInfoDesc": "Reservations will be automatically synchronized every 60 minutes. Initial synchronization will start immediately after adding.",
+  "icalAutoSyncInfoDesc": "Reservations will be automatically synchronized every 15 minutes. Initial synchronization will start immediately after adding.",
   "icalAdd": "Add",
   "icalInitialSyncStarting": "Feed successfully added! Starting initial synchronization...",
   "icalInitialSyncSuccess": "Initial synchronization completed! Imported: {count} reservations",

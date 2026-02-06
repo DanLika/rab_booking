@@ -4604,7 +4604,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalSyncAutoSyncDesc =>
-      'Rezervacije se automatski uvoze sa booking platformi svakih 60 minuta';
+      'Rezervacije se automatski uvoze sa booking platformi svakih 15 minuta';
 
   @override
   String get icalSyncPreventDouble => 'Sprječavanje dvostrukog rezerviranja';
@@ -5918,6 +5918,17 @@ class AppLocalizationsHr extends AppLocalizations {
       'Ovaj link radi sa svim platformama: Booking.com, Airbnb, Adriagate, Google Calendar i bilo kojim drugim servisom koji podržava iCal uvoz.';
 
   @override
+  String get icalExportPlatformUrlDesc =>
+      'Koristite ispravan URL za svaku platformu. Svaki link je filtriran kako bi se spriječila kružna sinkronizacija.';
+
+  @override
+  String get icalExportOtherCalendar => 'Ostalo / Google Calendar';
+
+  @override
+  String get icalExportHubSpokeNote =>
+      'Svaka platforma dobiva filtrirani URL koji isključuje vlastite rezervacije. To sprječava duple uvoze kod dvosmjerne sinkronizacije.';
+
+  @override
   String errorWithMessage(String message) {
     return 'Greška: $message';
   }
@@ -6373,7 +6384,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalAutoSyncDesc =>
-      'Rezervacije se automatski uvoze sa booking platformi svakih 60 minuta';
+      'Rezervacije se automatski uvoze sa booking platformi svakih 15 minuta';
 
   @override
   String get icalPreventDoubleBooking => 'Sprječavanje dvostrukog rezerviranja';
@@ -6524,6 +6535,56 @@ class AppLocalizationsHr extends AppLocalizations {
   String get icalCustomPlatformNameRequired => 'Molimo unesite naziv platforme';
 
   @override
+  String get icalImportEnabled => 'Uvoz rezervacija';
+
+  @override
+  String get icalImportEnabledDescription =>
+      'Uvozi rezervacije iz ovog kalendara u BookBed';
+
+  @override
+  String get icalImportDisabledNote =>
+      'Samo izvoz - vaše rezervacije su vidljive ovoj platformi, ali se njihovi događaji neće uvoziti. Koristite za platforme koje re-exportaju uvezene podatke (sprječava echo loop).';
+
+  @override
+  String get icalImportDisabledWarning => 'Uvoz je onemogućen za ovaj feed';
+
+  @override
+  String get icalEchoStatusActive => 'Aktivno';
+
+  @override
+  String get icalEchoStatusNeedsReview => 'Potrebna provjera';
+
+  @override
+  String get icalEchoStatusConfirmedEcho => 'Potvrđeni echo';
+
+  @override
+  String get icalEchoStatusConfirmedOverbooking => 'Potvrđeni overbooking';
+
+  @override
+  String get icalEchoReviewTitle => 'Moguća duplikatna rezervacija';
+
+  @override
+  String get icalEchoReviewDescription =>
+      'Ovaj događaj može biti duplikat postojeće rezervacije koja je ponovno eksportirana od strane platforme. Molimo pregledajte i potvrdite.';
+
+  @override
+  String icalEchoConfidence(int confidence) {
+    return 'Echo pouzdanost: $confidence%';
+  }
+
+  @override
+  String get icalEchoMarkAsEcho => 'Označi kao echo (odbaci)';
+
+  @override
+  String get icalEchoMarkAsReal => 'Označi kao stvarnu rezervaciju';
+
+  @override
+  String get icalEchoAutoSkipped => 'Automatski preskočeno (echo)';
+
+  @override
+  String get icalEchoFlaggedForReview => 'Označeno za provjeru';
+
+  @override
   String get icalUrlLabel => 'iCal URL *';
 
   @override
@@ -6551,7 +6612,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalAutoSyncInfoDesc =>
-      'Rezervacije će se automatski sinkronizirati svakih 60 minuta. Početna sinkronizacija će se pokrenuti odmah nakon dodavanja.';
+      'Rezervacije će se automatski sinkronizirati svakih 15 minuta. Početna sinkronizacija će se pokrenuti odmah nakon dodavanja.';
 
   @override
   String get icalAdd => 'Dodaj';

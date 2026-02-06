@@ -4573,7 +4573,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalSyncAutoSyncDesc =>
-      'Reservations are automatically imported from booking platforms every 60 minutes';
+      'Reservations are automatically imported from booking platforms every 15 minutes';
 
   @override
   String get icalSyncPreventDouble => 'Prevent Double Booking';
@@ -5882,6 +5882,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'This link works with all platforms: Booking.com, Airbnb, Adriagate, Google Calendar, and any other service that supports iCal import.';
 
   @override
+  String get icalExportPlatformUrlDesc =>
+      'Use the correct URL for each platform. Each link is filtered to prevent circular synchronization.';
+
+  @override
+  String get icalExportOtherCalendar => 'Other / Google Calendar';
+
+  @override
+  String get icalExportHubSpokeNote =>
+      'Each platform gets a filtered URL that excludes its own bookings. This prevents duplicate imports when syncing bidirectionally.';
+
+  @override
   String errorWithMessage(String message) {
     return 'Error: $message';
   }
@@ -6327,7 +6338,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalAutoSyncDesc =>
-      'Reservations are automatically imported from booking platforms every 60 minutes';
+      'Reservations are automatically imported from booking platforms every 15 minutes';
 
   @override
   String get icalPreventDoubleBooking => 'Prevent Double Booking';
@@ -6478,6 +6489,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get icalCustomPlatformNameRequired => 'Please enter platform name';
 
   @override
+  String get icalImportEnabled => 'Import reservations';
+
+  @override
+  String get icalImportEnabledDescription =>
+      'Import reservations from this calendar into BookBed';
+
+  @override
+  String get icalImportDisabledNote =>
+      'Export only mode - your bookings are visible to this platform, but their events won\'t be imported. Use this for platforms that re-export imported data (prevents echo loops).';
+
+  @override
+  String get icalImportDisabledWarning => 'Import is disabled for this feed';
+
+  @override
+  String get icalEchoStatusActive => 'Active';
+
+  @override
+  String get icalEchoStatusNeedsReview => 'Needs review';
+
+  @override
+  String get icalEchoStatusConfirmedEcho => 'Confirmed echo';
+
+  @override
+  String get icalEchoStatusConfirmedOverbooking => 'Confirmed overbooking';
+
+  @override
+  String get icalEchoReviewTitle => 'Possible echo detected';
+
+  @override
+  String get icalEchoReviewDescription =>
+      'This event may be a duplicate of an existing booking that was re-exported by the platform. Please review and confirm.';
+
+  @override
+  String icalEchoConfidence(int confidence) {
+    return 'Echo confidence: $confidence%';
+  }
+
+  @override
+  String get icalEchoMarkAsEcho => 'Mark as echo (dismiss)';
+
+  @override
+  String get icalEchoMarkAsReal => 'Mark as real booking';
+
+  @override
+  String get icalEchoAutoSkipped => 'Auto-skipped (echo)';
+
+  @override
+  String get icalEchoFlaggedForReview => 'Flagged for review';
+
+  @override
   String get icalUrlLabel => 'iCal URL *';
 
   @override
@@ -6505,7 +6566,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get icalAutoSyncInfoDesc =>
-      'Reservations will be automatically synchronized every 60 minutes. Initial synchronization will start immediately after adding.';
+      'Reservations will be automatically synchronized every 15 minutes. Initial synchronization will start immediately after adding.';
 
   @override
   String get icalAdd => 'Add';

@@ -408,6 +408,9 @@ class CalendarDataService {
     required DateTime todayNormalized,
   }) {
     for (final event in icalEvents) {
+      // Skip confirmed echoes — they don't block dates
+      if (event.isConfirmedEcho) continue;
+
       final checkIn = DateTime.utc(
         event.startDate.year,
         event.startDate.month,
@@ -517,6 +520,9 @@ class CalendarDataService {
     }
 
     for (final event in icalEvents) {
+      // Skip confirmed echoes — they don't block dates
+      if (event.isConfirmedEcho) continue;
+
       allReservations.add(
         _ReservationPeriod(
           checkIn: DateTime.utc(

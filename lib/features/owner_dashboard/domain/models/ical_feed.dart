@@ -122,6 +122,12 @@ class IcalFeed with _$IcalFeed {
 
     /// Custom platform name when platform is "other" (e.g., "Adriagate", "Smoobu")
     String? customPlatformName,
+
+    /// Whether to import events from this feed (default: true)
+    /// Set to false for platforms that re-export imported data (e.g., Holiday-Home)
+    /// When false, the feed is export-only: our bookings are visible to them,
+    /// but we don't import their events (prevents echo loops)
+    @Default(true) bool importEnabled,
     @Default(60) int syncIntervalMinutes,
     DateTime? lastSynced,
     @Default(IcalStatus.active) IcalStatus status,
@@ -146,6 +152,7 @@ class IcalFeed with _$IcalFeed {
       platform: IcalPlatform.fromString(data['platform'] as String?),
       icalUrl: data['ical_url'] as String? ?? '',
       customPlatformName: data['custom_platform_name'] as String?,
+      importEnabled: data['import_enabled'] as bool? ?? true,
       syncIntervalMinutes: data['sync_interval_minutes'] as int? ?? 60,
       lastSynced: (data['last_synced'] as Timestamp?)?.toDate(),
       status: IcalStatus.fromString(data['status'] as String?),
@@ -165,6 +172,7 @@ class IcalFeed with _$IcalFeed {
       'platform': platform.toFirestoreValue(),
       'ical_url': icalUrl,
       'custom_platform_name': customPlatformName,
+      'import_enabled': importEnabled,
       'sync_interval_minutes': syncIntervalMinutes,
       'last_synced': lastSynced != null
           ? Timestamp.fromDate(lastSynced!)
@@ -214,6 +222,35 @@ class IcalFeed with _$IcalFeed {
   }
 }
 
+/// Echo detection status for imported iCal events
+enum IcalEventStatus {
+  @JsonValue('active')
+  active,
+  @JsonValue('needs_review')
+  needsReview,
+  @JsonValue('confirmed_echo')
+  confirmedEcho,
+  @JsonValue('confirmed_overbooking')
+  confirmedOverbooking;
+
+  /// Parse from Firestore string value
+  static IcalEventStatus fromString(String? value) => switch (value) {
+    'active' => IcalEventStatus.active,
+    'needs_review' => IcalEventStatus.needsReview,
+    'confirmed_echo' => IcalEventStatus.confirmedEcho,
+    'confirmed_overbooking' => IcalEventStatus.confirmedOverbooking,
+    _ => IcalEventStatus.active,
+  };
+
+  /// Convert to Firestore string value
+  String toFirestoreValue() => switch (this) {
+    IcalEventStatus.active => 'active',
+    IcalEventStatus.needsReview => 'needs_review',
+    IcalEventStatus.confirmedEcho => 'confirmed_echo',
+    IcalEventStatus.confirmedOverbooking => 'confirmed_overbooking',
+  };
+}
+
 /// iCal event imported from external calendar
 /// Path: properties/{propertyId}/ical_events/{eventId}
 @freezed
@@ -230,6 +267,24 @@ class IcalEvent with _$IcalEvent {
     required String source,
     required String externalId,
     String? description,
+
+    // Echo detection fields
+    @Default(IcalEventStatus.active) IcalEventStatus status,
+    double? echoConfidence,
+    String? echoReason,
+
+    /// Points to original iCal event if this is an echo
+    String? parentEventId,
+
+    /// Points to native booking if this is an echo
+    String? parentBookingId,
+
+    /// When the owner reviewed this event
+    DateTime? reviewedAt,
+
+    /// Who reviewed this event (owner UID)
+    String? reviewedBy,
+
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _IcalEvent;
@@ -253,6 +308,14 @@ class IcalEvent with _$IcalEvent {
       source: data['source'] as String? ?? 'other',
       externalId: data['external_id'] as String? ?? '',
       description: data['description'] as String?,
+      // Echo detection fields
+      status: IcalEventStatus.fromString(data['status'] as String?),
+      echoConfidence: (data['echo_confidence'] as num?)?.toDouble(),
+      echoReason: data['echo_reason'] as String?,
+      parentEventId: data['parent_event_id'] as String?,
+      parentBookingId: data['parent_booking_id'] as String?,
+      reviewedAt: (data['reviewed_at'] as Timestamp?)?.toDate(),
+      reviewedBy: data['reviewed_by'] as String?,
       createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
@@ -269,6 +332,14 @@ class IcalEvent with _$IcalEvent {
       'source': source,
       'external_id': externalId,
       'description': description,
+      // Echo detection fields
+      'status': status.toFirestoreValue(),
+      if (echoConfidence != null) 'echo_confidence': echoConfidence,
+      if (echoReason != null) 'echo_reason': echoReason,
+      if (parentEventId != null) 'parent_event_id': parentEventId,
+      if (parentBookingId != null) 'parent_booking_id': parentBookingId,
+      if (reviewedAt != null) 'reviewed_at': Timestamp.fromDate(reviewedAt!),
+      if (reviewedBy != null) 'reviewed_by': reviewedBy,
       'created_at': Timestamp.fromDate(createdAt),
       'updated_at': Timestamp.fromDate(updatedAt),
     };
@@ -281,4 +352,13 @@ class IcalEvent with _$IcalEvent {
   bool overlaps(DateTime checkIn, DateTime checkOut) {
     return startDate.isBefore(checkOut) && endDate.isAfter(checkIn);
   }
+
+  /// Whether this event needs owner review
+  bool get needsReview => status == IcalEventStatus.needsReview;
+
+  /// Whether this event was confirmed as an echo (should not block dates)
+  bool get isConfirmedEcho => status == IcalEventStatus.confirmedEcho;
+
+  /// Whether this event blocks dates (everything except confirmed echoes)
+  bool get blocksDates => status != IcalEventStatus.confirmedEcho;
 }

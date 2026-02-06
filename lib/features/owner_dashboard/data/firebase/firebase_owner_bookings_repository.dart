@@ -601,6 +601,10 @@ class FirebaseOwnerBookingsRepository {
       for (final doc in icalSnapshot.docs) {
         try {
           final data = doc.data();
+
+          // Skip confirmed echoes — they don't block dates
+          if (data['status'] == 'confirmed_echo') continue;
+
           final startDateTimestamp = data['start_date'] as Timestamp;
           final endDateTimestamp = data['end_date'] as Timestamp;
           final eventStartDate = startDateTimestamp.toDate();

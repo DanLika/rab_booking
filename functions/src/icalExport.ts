@@ -237,16 +237,37 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       blockedDaysSnapshot.docs.map((doc) => truncateTime(doc.data().date?.toDate() || new Date()))
     );
 
-    // 7d. DO NOT export imported ical_events
-    // WHY: Re-exporting imported events causes circular sync problems:
-    //   - Platform A exports off-season block
-    //   - BookBed imports it
-    //   - BookBed re-exports to Platform B
-    //   - Platform B receives Platform A's data through us = confusion!
-    // SOLUTION: Only export native BookBed bookings + our own blocked dates.
-    // Each platform should only receive BookBed-native data.
-    // The ?exclude= parameter is no longer needed since we don't export ical_events at all.
-    const icalEvents: any[] = [];
+    // 7d. Fetch imported ical_events for cross-platform sync (hub-and-spoke)
+    // Industry standard: All major channel managers (Smoobu, Lodgify, Guesty, Hostaway)
+    // use hub-and-spoke with per-channel filtered re-export.
+    //
+    // These events from other platforms MUST be exported so ALL platforms see ALL unavailability.
+    // The excludeSource filter prevents circular sync:
+    // - Export to Booking.com: exclude events where source = 'booking_com'
+    // - Export to Airbnb: exclude events where source = 'airbnb'
+    // - Export to Adriagate: exclude events where source = 'adriagate'
+    //
+    // Example: Adriagate booking → BookBed imports → BookBed exports to Booking.com
+    //          (but NOT back to Adriagate, thanks to ?exclude=adriagate)
+    const icalEventsSnapshot = await db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("ical_events")
+      .where("unit_id", "==", unitId)
+      .where("start_date", ">=", Timestamp.fromDate(pastDate))
+      .where("start_date", "<=", Timestamp.fromDate(futureDate))
+      .orderBy("start_date", "asc")
+      .limit(ICAL_CONFIG.MAX_ICAL_EVENTS)
+      .get();
+
+    // Filter by excludeSource to prevent circular sync
+    const icalEvents = icalEventsSnapshot.docs
+      .filter((doc) => {
+        if (!excludeSource) return true;
+        const source = (doc.data().source || "").toLowerCase();
+        return source !== excludeSource;
+      })
+      .map((doc) => ({...doc.data(), id: doc.id, isExternal: true}));
 
     logInfo("[iCal Feed] Fetched data", {
       propertyId,

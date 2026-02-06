@@ -233,7 +233,12 @@ class IcalExportService {
           .orderBy('start_date')
           .get();
 
-      final events = snapshot.docs.map(IcalEvent.fromFirestore).toList();
+      final events = snapshot.docs
+          .map(IcalEvent.fromFirestore)
+          .where(
+            (e) => !e.isConfirmedEcho,
+          ) // Exclude confirmed echoes from export
+          .toList();
 
       return events;
     } catch (e) {

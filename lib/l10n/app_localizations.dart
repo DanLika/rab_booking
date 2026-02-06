@@ -8529,7 +8529,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalSyncAutoSyncDesc.
   ///
   /// In en, this message translates to:
-  /// **'Reservations are automatically imported from booking platforms every 60 minutes'**
+  /// **'Reservations are automatically imported from booking platforms every 15 minutes'**
   String get icalSyncAutoSyncDesc;
 
   /// No description provided for @icalSyncPreventDouble.
@@ -10872,6 +10872,24 @@ abstract class AppLocalizations {
   /// **'This link works with all platforms: Booking.com, Airbnb, Adriagate, Google Calendar, and any other service that supports iCal import.'**
   String get icalExportUniversalNote;
 
+  /// No description provided for @icalExportPlatformUrlDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the correct URL for each platform. Each link is filtered to prevent circular synchronization.'**
+  String get icalExportPlatformUrlDesc;
+
+  /// No description provided for @icalExportOtherCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Other / Google Calendar'**
+  String get icalExportOtherCalendar;
+
+  /// No description provided for @icalExportHubSpokeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Each platform gets a filtered URL that excludes its own bookings. This prevents duplicate imports when syncing bidirectionally.'**
+  String get icalExportHubSpokeNote;
+
   /// No description provided for @errorWithMessage.
   ///
   /// In en, this message translates to:
@@ -11577,7 +11595,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalAutoSyncDesc.
   ///
   /// In en, this message translates to:
-  /// **'Reservations are automatically imported from booking platforms every 60 minutes'**
+  /// **'Reservations are automatically imported from booking platforms every 15 minutes'**
   String get icalAutoSyncDesc;
 
   /// No description provided for @icalPreventDoubleBooking.
@@ -11844,6 +11862,96 @@ abstract class AppLocalizations {
   /// **'Please enter platform name'**
   String get icalCustomPlatformNameRequired;
 
+  /// No description provided for @icalImportEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Import reservations'**
+  String get icalImportEnabled;
+
+  /// No description provided for @icalImportEnabledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Import reservations from this calendar into BookBed'**
+  String get icalImportEnabledDescription;
+
+  /// No description provided for @icalImportDisabledNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Export only mode - your bookings are visible to this platform, but their events won\'t be imported. Use this for platforms that re-export imported data (prevents echo loops).'**
+  String get icalImportDisabledNote;
+
+  /// No description provided for @icalImportDisabledWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Import is disabled for this feed'**
+  String get icalImportDisabledWarning;
+
+  /// No description provided for @icalEchoStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get icalEchoStatusActive;
+
+  /// No description provided for @icalEchoStatusNeedsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs review'**
+  String get icalEchoStatusNeedsReview;
+
+  /// No description provided for @icalEchoStatusConfirmedEcho.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed echo'**
+  String get icalEchoStatusConfirmedEcho;
+
+  /// No description provided for @icalEchoStatusConfirmedOverbooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed overbooking'**
+  String get icalEchoStatusConfirmedOverbooking;
+
+  /// No description provided for @icalEchoReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible echo detected'**
+  String get icalEchoReviewTitle;
+
+  /// No description provided for @icalEchoReviewDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This event may be a duplicate of an existing booking that was re-exported by the platform. Please review and confirm.'**
+  String get icalEchoReviewDescription;
+
+  /// No description provided for @icalEchoConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo confidence: {confidence}%'**
+  String icalEchoConfidence(int confidence);
+
+  /// No description provided for @icalEchoMarkAsEcho.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as echo (dismiss)'**
+  String get icalEchoMarkAsEcho;
+
+  /// No description provided for @icalEchoMarkAsReal.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as real booking'**
+  String get icalEchoMarkAsReal;
+
+  /// No description provided for @icalEchoAutoSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-skipped (echo)'**
+  String get icalEchoAutoSkipped;
+
+  /// No description provided for @icalEchoFlaggedForReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Flagged for review'**
+  String get icalEchoFlaggedForReview;
+
   /// No description provided for @icalUrlLabel.
   ///
   /// In en, this message translates to:
@@ -11892,7 +12000,7 @@ abstract class AppLocalizations {
   /// No description provided for @icalAutoSyncInfoDesc.
   ///
   /// In en, this message translates to:
-  /// **'Reservations will be automatically synchronized every 60 minutes. Initial synchronization will start immediately after adding.'**
+  /// **'Reservations will be automatically synchronized every 15 minutes. Initial synchronization will start immediately after adding.'**
   String get icalAutoSyncInfoDesc;
 
   /// No description provided for @icalAdd.

@@ -311,6 +311,10 @@ class AvailabilityChecker implements IAvailabilityChecker {
 
           if (eventStart == null || eventEnd == null) continue;
 
+          // Skip confirmed echoes — they don't block availability
+          final status = data['status'] as String?;
+          if (status == 'confirmed_echo') continue;
+
           final source = data['source'] as String? ?? 'iCal';
 
           if (_hasDateOverlap(

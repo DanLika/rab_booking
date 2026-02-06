@@ -5,6 +5,7 @@ import * as http from "http";
 import {admin} from "./firebase";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
 import {setUser} from "./sentry";
+import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
 
 /**
  * SECURITY: Validate iCal URL to prevent SSRF attacks
@@ -130,9 +131,20 @@ export const scheduledIcalSync = onSchedule(
           continue;
         }
 
+        // Skip if import is disabled (export-only mode)
+        // Used for platforms that re-export imported data (e.g., Holiday-Home)
+        if (feedData.import_enabled === false) {
+          logInfo("[Scheduled iCal Sync] Skipping feed - import disabled (export-only mode)", {
+            feedId,
+            propertyId,
+            platform: feedData.platform,
+          });
+          continue;
+        }
+
         // Skip if sync interval hasn't elapsed (check last_synced)
         const lastSynced = feedData.last_synced?.toDate();
-        const syncIntervalMinutes = feedData.sync_interval_minutes || 30;
+        const syncIntervalMinutes = feedData.sync_interval_minutes || 15;
 
         if (lastSynced) {
           const nextSyncTime = new Date(lastSynced.getTime() + syncIntervalMinutes * 60 * 1000);
@@ -231,6 +243,22 @@ export const syncIcalFeedNow = onCall(async (request) => {
 
     const feedData = feedDoc.data()!;
 
+    // Check if import is disabled (export-only mode)
+    // Used for platforms that re-export imported data (e.g., Holiday-Home)
+    if (feedData.import_enabled === false) {
+      logInfo("[iCal Sync] Manual sync skipped - import disabled (export-only mode)", {
+        feedId,
+        propertyId,
+        platform: feedData.platform,
+      });
+      return {
+        success: true,
+        message: "Import is disabled for this feed (export-only mode)",
+        bookingsCreated: 0,
+        skipped: true,
+      };
+    }
+
     // Sync the feed
     const bookingsCreated = await syncSingleFeed(db, feedId, propertyId, feedData);
 
@@ -293,25 +321,40 @@ async function syncSingleFeed(
 
     logInfo("[iCal Sync] Parsed events from platform", {platform, eventCount: events.length});
 
+    // Fetch existing bookings/events for echo detection BEFORE deleting old events
+    // We need to compare against native bookings + events from OTHER feeds
+    const existingBookings = await fetchExistingBookingsForUnit(db, propertyId, unit_id, feedId);
+
     // Delete old events for this feed
     await deleteOldEvents(db, feedId, propertyId);
 
-    // Insert new events
-    const insertedCount = await insertNewEvents(db, feedId, unit_id, propertyId, platform, custom_platform_name, events);
+    // Insert new events with echo detection
+    const source = (platform === "other" && custom_platform_name)
+      ? sanitizeSource(custom_platform_name)
+      : platform;
+
+    const result = await insertNewEventsWithEchoDetection(
+      db, feedId, unit_id, propertyId, source, events, existingBookings
+    );
 
     // Update feed metadata in subcollection
     await feedRef.update({
       last_synced: admin.firestore.Timestamp.now(),
       sync_count: admin.firestore.FieldValue.increment(1),
-      event_count: insertedCount,
+      event_count: result.insertedCount,
       status: "active",
       last_error: null,
       updated_at: admin.firestore.Timestamp.now(),
     });
 
-    logSuccess("[iCal Sync] Successfully synced feed", {feedId, eventCount: insertedCount});
+    logSuccess("[iCal Sync] Successfully synced feed", {
+      feedId,
+      eventCount: result.insertedCount,
+      skippedEchoes: result.skippedEchoes,
+      flaggedForReview: result.flaggedForReview,
+    });
 
-    return insertedCount; // Return number of bookings created
+    return result.insertedCount; // Return number of bookings created
   } catch (error) {
     logError("[iCal Sync] Error syncing feed", error, {feedId});
 
@@ -500,40 +543,180 @@ async function deleteOldEvents(
 }
 
 /**
- * Insert new events for a feed
- * NEW STRUCTURE: Use property-level subcollection
+ * Fetch existing bookings and ical_events for a unit (for echo detection)
+ * Returns all bookings + events from OTHER feeds (not the one being synced)
  */
-async function insertNewEvents(
+async function fetchExistingBookingsForUnit(
+  db: FirebaseFirestore.Firestore,
+  propertyId: string,
+  unitId: string,
+  currentFeedId: string
+): Promise<ExistingBooking[]> {
+  const existingBookings: ExistingBooking[] = [];
+
+  // Date range: only check recent/future bookings
+  const pastDate = new Date();
+  pastDate.setDate(pastDate.getDate() - 90);
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + 365);
+
+  try {
+    // 1. Fetch native bookings for this unit
+    const bookingsSnapshot = await db
+      .collectionGroup("bookings")
+      .where("unit_id", "==", unitId)
+      .where("status", "in", ["confirmed", "pending", "completed"])
+      .where("check_in", ">=", admin.firestore.Timestamp.fromDate(pastDate))
+      .where("check_in", "<=", admin.firestore.Timestamp.fromDate(futureDate))
+      .limit(500)
+      .get();
+
+    for (const doc of bookingsSnapshot.docs) {
+      const data = doc.data();
+      const checkIn = data.check_in?.toDate();
+      const checkOut = data.check_out?.toDate();
+      if (checkIn && checkOut) {
+        existingBookings.push({
+          id: doc.id,
+          type: "booking",
+          checkIn,
+          checkOut,
+          source: data.source || "direct",
+          importedAt: data.created_at?.toDate() || checkIn,
+        });
+      }
+    }
+
+    // 2. Fetch ical_events from OTHER feeds (not the current feed being synced)
+    const icalEventsSnapshot = await db
+      .collection("properties")
+      .doc(propertyId)
+      .collection("ical_events")
+      .where("unit_id", "==", unitId)
+      .where("start_date", ">=", admin.firestore.Timestamp.fromDate(pastDate))
+      .where("start_date", "<=", admin.firestore.Timestamp.fromDate(futureDate))
+      .limit(500)
+      .get();
+
+    for (const doc of icalEventsSnapshot.docs) {
+      const data = doc.data();
+      // Skip events from the current feed (they'll be deleted and re-imported)
+      if (data.feed_id === currentFeedId) continue;
+
+      const startDate = data.start_date?.toDate();
+      const endDate = data.end_date?.toDate();
+      if (startDate && endDate) {
+        existingBookings.push({
+          id: doc.id,
+          type: "ical_event",
+          checkIn: startDate,
+          checkOut: endDate,
+          source: data.source || "other",
+          importedAt: data.created_at?.toDate() || startDate,
+        });
+      }
+    }
+
+    logInfo("[iCal Sync] Fetched existing bookings for echo detection", {
+      propertyId,
+      unitId,
+      nativeBookings: bookingsSnapshot.size,
+      otherIcalEvents: existingBookings.length - bookingsSnapshot.size,
+      total: existingBookings.length,
+    });
+  } catch (error) {
+    logError("[iCal Sync] Error fetching existing bookings for echo detection", error, {
+      propertyId,
+      unitId,
+    });
+    // Return empty array — echo detection will fall back to saving all events
+  }
+
+  return existingBookings;
+}
+
+/**
+ * Insert new events with echo detection
+ * For each event: run echo detection, then skip/flag/save accordingly
+ */
+async function insertNewEventsWithEchoDetection(
   db: FirebaseFirestore.Firestore,
   feedId: string,
   unitId: string,
   propertyId: string,
-  platform: string,
-  customPlatformName: string | undefined,
-  events: any[]
-): Promise<number> {
+  source: string,
+  events: any[],
+  existingBookings: ExistingBooking[]
+): Promise<{insertedCount: number; skippedEchoes: number; flaggedForReview: number}> {
   if (events.length === 0) {
-    return 0;
+    return {insertedCount: 0, skippedEchoes: 0, flaggedForReview: 0};
   }
 
-  // Determine the source value for ical_events
-  // If platform is "other" and customPlatformName is set, use sanitized custom name
-  // This enables proper filtering with ?exclude={source} parameter
-  // e.g., "Adriagate" -> "adriagate", "Smoobu PMS" -> "smoobu-pms"
-  const source = (platform === "other" && customPlatformName)
-    ? sanitizeSource(customPlatformName)
-    : platform;
+  let insertedCount = 0;
+  let skippedEchoes = 0;
+  let flaggedForReview = 0;
 
   // Firestore batch can handle max 500 operations
   const batchSize = 500;
-  let insertedCount = 0;
+  const eventsToInsert: any[] = [];
 
-  for (let i = 0; i < events.length; i += batchSize) {
+  for (const event of events) {
+    // Run echo detection
+    const echoResult = analyzeEvent(
+      {
+        checkIn: event.startDate,
+        checkOut: event.endDate,
+        source: source,
+        importedAt: new Date(),
+      },
+      existingBookings
+    );
+
+    if (echoResult.recommendedAction === "auto_skip") {
+      // High confidence echo — skip entirely
+      logInfo("[iCal Sync] Auto-skipped probable echo", {
+        feedId,
+        confidence: echoResult.confidence.toFixed(2),
+        reasons: echoResult.reasons.join("; "),
+        matchedId: echoResult.matchedEventId || echoResult.matchedBookingId,
+        eventDates: `${event.startDate.toISOString()} - ${event.endDate.toISOString()}`,
+      });
+      skippedEchoes++;
+      continue;
+    }
+
+    // Determine event status based on echo detection
+    const eventStatus = echoResult.recommendedAction === "flag_review"
+      ? "needs_review"
+      : "active";
+
+    if (echoResult.recommendedAction === "flag_review") {
+      flaggedForReview++;
+      logInfo("[iCal Sync] Flagged event for review", {
+        feedId,
+        confidence: echoResult.confidence.toFixed(2),
+        reasons: echoResult.reasons.join("; "),
+        matchedId: echoResult.matchedEventId || echoResult.matchedBookingId,
+        eventDates: `${event.startDate.toISOString()} - ${event.endDate.toISOString()}`,
+      });
+    }
+
+    eventsToInsert.push({
+      ...event,
+      eventStatus,
+      echoConfidence: echoResult.confidence,
+      echoReason: echoResult.reasons.join("; "),
+      parentEventId: echoResult.matchedEventId || null,
+      parentBookingId: echoResult.matchedBookingId || null,
+    });
+  }
+
+  // Batch insert events that passed echo detection
+  for (let i = 0; i < eventsToInsert.length; i += batchSize) {
     const batch = db.batch();
-    const batchEvents = events.slice(i, i + batchSize);
+    const batchEvents = eventsToInsert.slice(i, i + batchSize);
 
     batchEvents.forEach((event) => {
-      // NEW STRUCTURE: Write to property-level subcollection
       const docRef = db
         .collection("properties")
         .doc(propertyId)
@@ -543,13 +726,19 @@ async function insertNewEvents(
       batch.set(docRef, {
         feed_id: feedId,
         unit_id: unitId,
-        property_id: propertyId, // Add property_id for reference
+        property_id: propertyId,
         source: source,
         external_id: event.externalId,
         start_date: admin.firestore.Timestamp.fromDate(event.startDate),
         end_date: admin.firestore.Timestamp.fromDate(event.endDate),
-        guest_name: event.summary || `${capitalizeFirstLetter(platform)} Gost`,
+        guest_name: event.summary || `${capitalizeFirstLetter(source)} Gost`,
         description: event.description,
+        // Echo detection fields
+        status: event.eventStatus,
+        echo_confidence: event.echoConfidence > 0 ? event.echoConfidence : null,
+        echo_reason: event.echoReason || null,
+        parent_event_id: event.parentEventId,
+        parent_booking_id: event.parentBookingId,
         // Use original booking date from iCal (CREATED/DTSTAMP), not import time
         created_at: admin.firestore.Timestamp.fromDate(event.createdAt),
         updated_at: admin.firestore.Timestamp.now(),
@@ -560,10 +749,19 @@ async function insertNewEvents(
     insertedCount += batchEvents.length;
   }
 
-  logInfo("[iCal Sync] Inserted new events for feed", {feedId, propertyId, source, count: insertedCount});
+  logInfo("[iCal Sync] Inserted events with echo detection", {
+    feedId,
+    propertyId,
+    source,
+    inserted: insertedCount,
+    skippedEchoes,
+    flaggedForReview,
+  });
 
-  return insertedCount;
+  return {insertedCount, skippedEchoes, flaggedForReview};
 }
+
+// Legacy insertNewEvents removed — replaced by insertNewEventsWithEchoDetection above
 
 /**
  * Sanitize custom platform name for use as source identifier

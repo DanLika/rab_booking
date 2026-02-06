@@ -764,7 +764,55 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-05 | **Version**: 6.56
+**Last Updated**: 2026-02-06 | **Version**: 6.58
+
+**Changelog 6.58**: Dynamic iCal Export URLs from Firestore Feeds:
+- **Dynamic Platform Dropdown** (`ical_export_list_screen.dart`):
+  - Replaced hardcoded 5-platform list with dynamic URLs from user's actual iCal import feeds
+  - Dropdown selector auto-generates `?exclude=` URL per platform
+  - Generic "Other / Google Calendar" option always available (no exclude param)
+  - Deduplication by exclude value (2 Booking.com feeds → 1 URL card)
+  - `_sanitizeSource()` mirrors Cloud Functions `sanitizeSource()` exactly
+- **Dialog Redesign**:
+  - Custom `Dialog` with dark/light theme support (was `AlertDialog`)
+  - Uses `DropdownButton` (not `DropdownButtonFormField` — causes `child!.hasSize` crash in `Flexible > SingleChildScrollView`)
+  - `StatefulBuilder` for local state, `icalFeedsStreamProvider.future` for async data
+  - Platform icons/colors derived from `IcalFeed.platform` and `customPlatformName`
+- **Documentation Sections Improved**:
+  - Benefits: removed repetition (was 4 overlapping points → 4 distinct: Calendar Sync, Platform Sync, Auto Updates, Reminders)
+  - Steps: rewritten for dropdown flow (was describing old all-cards-at-once UI)
+  - Dialog texts: consolidated `platformUrlDesc` and `hubSpokeNote` (were saying the same thing)
+  - Hero card: fixed bug showing "no units" text even when units exist (new `icalExportHeroDesc` key)
+- **Key files**: `ical_export_list_screen.dart`, `app_en.arb`, `app_hr.arb`
+
+**Changelog 6.57**: iCal Echo Detection Engine with Containment Analysis:
+- **Echo Detection Engine** (`functions/src/utils/echoDetection.ts`):
+  - 5-factor weighted scoring: Date Match (25%), Duration Match (25%), Export Correlation (25%), Platform Re-export (15%), Temporal (10%)
+  - Export correlation INFERRED from existing data (no separate tracking needed): native booking + known re-exporter = 1.0
+  - Confidence thresholds: >=95% auto-skip, 85-94% flag for review, <85% save as unique
+  - **Containment analysis** for merged echoes (N:1 matching): detects when aggregator merges N adjacent bookings into 1 VEVENT
+  - Checks if 100% of incoming nights are already blocked by union of existing bookings
+  - Interval union matching verifies contiguous booking chain coverage
+  - Safety: only runs for aggregator sources when 1:1 matching gives <95%
+- **Platform Classification** (`functions/src/utils/platformClassification.ts`):
+  - Authoritative: Booking.com, Airbnb (safe, no re-export)
+  - Aggregator: Adriagate (re-exports, merges blocks), Holiday-Home (re-exports + corrupts dates)
+  - Atraveo: aggregator with `&dontincludeimported=1` opt-out
+- **Hub-and-Spoke Export** (`icalExport.ts`):
+  - Per-channel filtered re-export using `?exclude=` query parameter
+  - Each platform receives events from OTHER platforms, not its own
+  - Prevents circular sync while maintaining full availability visibility
+- **Import Controls** (`icalSync.ts`, `ical_feed.dart`):
+  - `importEnabled` field for export-only mode (disable import for echo-prone platforms)
+  - Echo detection integrated into import pipeline: analyzeEvent() called per event
+  - Echo detection fields stored on ical_events: `echo_confidence`, `echo_reason`, `status`
+  - Sync interval default changed from 30 to 15 minutes
+- **Flutter UI** (`ical_sync_settings_screen.dart`, `ical_export_list_screen.dart`):
+  - Import toggle in Add/Edit Feed dialog with explanatory note
+  - Per-platform export URL cards with `?exclude=` parameter
+  - Orange "Import disabled" indicator in feed list
+  - ical_events filtering added to calendar/availability consumer files
+- **Verified in production**: Adriagate simple echo auto-skipped at 100% confidence, merged blocks with native Adriagate bookings correctly imported
 
 **Changelog 6.56**: iCal Sync Improvements — Custom Platform Names, GDPR Export, 15-min Sync:
 - **Custom Platform Name for iCal Import** (`ical_feed.dart`, `ical_sync_settings_screen.dart`):

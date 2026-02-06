@@ -5929,7 +5929,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get icalExportHubSpokeNote =>
-      'URL za svaku platformu isključuje njene vlastite rezervacije, čime se sprječavaju duplikati pri dvosmernoj sinkronizaciji.';
+      'URL za svaku platformu isključuje njene vlastite rezervacije, čime se sprječavaju duplikati pri dvosmjernoj sinkronizaciji.';
 
   @override
   String get icalExportGeneralUrl => 'Opći URL';
@@ -8513,6 +8513,12 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get monthCalendarSelectUnit => 'Smještajni objekt';
+
+  @override
+  String get monthCalendarTimelineView => 'Timeline prikaz';
+
+  @override
+  String get monthCalendarBlocked => 'Blokirano';
 
   @override
   String get ownerDrawerTimelineCalendar => 'Timeline kalendar';

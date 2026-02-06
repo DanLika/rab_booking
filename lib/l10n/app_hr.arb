@@ -2371,7 +2371,7 @@
   "icalExportUniversalNote": "Ovaj link radi sa svim platformama: Booking.com, Airbnb, Adriagate, Google Calendar i bilo kojim drugim servisom koji podržava iCal uvoz.",
   "icalExportPlatformUrlDesc": "Odaberite gdje ćete zalijepiti ovaj URL. Linkovi za platforme su filtrirani kako bi se spriječili duplikati.",
   "icalExportOtherCalendar": "Ostalo / Google Calendar",
-  "icalExportHubSpokeNote": "URL za svaku platformu isključuje njene vlastite rezervacije, čime se sprječavaju duplikati pri dvosmernoj sinkronizaciji.",
+  "icalExportHubSpokeNote": "URL za svaku platformu isključuje njene vlastite rezervacije, čime se sprječavaju duplikati pri dvosmjernoj sinkronizaciji.",
   "icalExportGeneralUrl": "Opći URL",
   "icalExportPlatformSpecificUrls": "URL-ovi za platforme",
   "icalExportSelectPlatform": "Odredišna platforma",
@@ -3575,6 +3575,8 @@
   "monthCalendarNoBookingsSubtitle": "Ovaj smještajni objekt nema rezervacija za vidljivo razdoblje",
   "monthCalendarCreateBooking": "Kreiraj rezervaciju",
   "monthCalendarSelectUnit": "Smještajni objekt",
+  "monthCalendarTimelineView": "Timeline prikaz",
+  "monthCalendarBlocked": "Blokirano",
   "ownerDrawerTimelineCalendar": "Timeline kalendar",
   "ownerDrawerMonthCalendar": "Mjesečni kalendar"
 }

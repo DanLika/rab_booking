@@ -20,6 +20,7 @@ import '../../providers/owner_calendar_provider.dart';
 import '../../providers/platform_connections_provider.dart';
 import '../../../utils/booking_overlap_detector.dart';
 import '../dialogs/update_booking_warning_dialog.dart';
+import 'shared/calendar_booking_actions.dart';
 
 /// Inline booking edit dialog
 /// Quick edit for booking dates, guest count, status, and notes
@@ -338,22 +339,64 @@ class _BookingInlineEditDialogState
                             ),
                           ),
                           const SizedBox(height: 8),
-                          // Cancel button (full width on mobile)
-                          TextButton(
-                            onPressed: _isSaving
-                                ? null
-                                : () => Navigator.of(context).pop(),
-                            child: AutoSizeText(
-                              l10n.bookingInlineEditCancel,
-                              maxLines: 1,
-                              minFontSize: 11,
-                            ),
+                          // Delete and Cancel buttons side by side
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextButton.icon(
+                                  onPressed: _isSaving ? null : _deleteBooking,
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 18,
+                                    color: AppColors.error,
+                                  ),
+                                  label: AutoSizeText(
+                                    l10n.calendarActionsDelete,
+                                    style: const TextStyle(
+                                      color: AppColors.error,
+                                    ),
+                                    maxLines: 1,
+                                    minFontSize: 11,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: TextButton(
+                                  onPressed: _isSaving
+                                      ? null
+                                      : () => Navigator.of(context).pop(),
+                                  child: AutoSizeText(
+                                    l10n.bookingInlineEditCancel,
+                                    maxLines: 1,
+                                    minFontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       )
                     : Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
+                          // Delete button aligned left
+                          Flexible(
+                            child: TextButton.icon(
+                              onPressed: _isSaving ? null : _deleteBooking,
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: AppColors.error,
+                              ),
+                              label: AutoSizeText(
+                                l10n.calendarActionsDelete,
+                                style: const TextStyle(color: AppColors.error),
+                                maxLines: 1,
+                                minFontSize: 11,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          // Cancel + Save aligned right
                           Flexible(
                             child: TextButton(
                               onPressed: _isSaving
@@ -592,6 +635,14 @@ class _BookingInlineEditDialogState
           }
         }
       });
+    }
+  }
+
+  Future<void> _deleteBooking() async {
+    // Close this dialog first, then delegate to shared delete action
+    Navigator.of(context).pop();
+    if (mounted) {
+      await CalendarBookingActions.deleteBooking(context, ref, widget.booking);
     }
   }
 

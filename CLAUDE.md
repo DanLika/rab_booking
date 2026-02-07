@@ -764,7 +764,40 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-07 | **Version**: 6.60
+**Last Updated**: 2026-02-07 | **Version**: 6.61
+
+**Changelog 6.61**: AI Chatbot, Timeline Scroll Sync Fix & Booking Card Improvements:
+- **AI Assistant Chatbot** (`ai_assistant_screen.dart`, `ai_chat_provider.dart`):
+  - Gemini 2.5 Flash Lite via Firebase AI Logic (`FirebaseAI.googleAI()`)
+  - Knowledge base loaded from `assets/kb/bookbed_knowledge_base.md`
+  - Predefined answers for common questions (pricing, Stripe, iCal, widget, units)
+  - Blocked keywords filter for off-topic technical questions
+  - GDPR consent stored in Firestore (`users/{uid}/data/ai_consent`)
+  - Chat history in Firestore (`users/{uid}/ai_chats/{chatId}`)
+  - Daily message limit: 30 messages per day
+  - Streaming responses with real-time UI updates
+  - Language detection (HR/EN) for responses
+  - Firestore rules deployed for `ai_chats` subcollection
+- **Timeline Calendar Scroll Sync Fix** (`timeline_calendar_widget.dart`, `owner_timeline_calendar_screen.dart`):
+  - Split `_updateVisibleRange()`: date reporting runs ALWAYS (except TELEPORT), window management gated by flags
+  - Removed `_isProgrammaticNavigation` from parent — `forceScrollKey` prevents feedback loop
+  - Auto-extend forward when scrolling near end of visible window
+  - Debug log cleanup: removed 68+ print statements
+- **Month Calendar Fixes** (`month_calendar_screen.dart`):
+  - FittedBox fix: replaced with Flexible + TextOverflow.ellipsis per text widget
+  - DRY `_getBookingColor` as static method (reused by `_BookingDataSource`)
+  - DateTime negative difference: `.clamp(0, 9999)` in booking_inline_edit_dialog
+- **Booking Card Header** (`booking_card_header.dart`):
+  - Status badge AND booking reference both fully visible
+  - Replaced `Spacer()` with `SizedBox(width: 8)` gap
+  - Badge: `Flexible(flex: 0)`, Reference: `Expanded` + `Align(centerRight)`
+  - Removed unused `importedGuestName` parameter
+- **Imported Reservation Visibility** (`booking_action_menu.dart`, `smart_booking_tooltip.dart`):
+  - Platform name prominently displayed in purple header (16px bold white)
+  - "Manage on" text enlarged from 12→14px with w600 weight
+  - External booking badge enlarged in tooltip (icon 14px, text 12px, w700)
+- **Dependencies**: `firebase_app_check` upgraded `^0.3.1+6` → `^0.4.1+4`
+- **Key files**: `ai_chat_provider.dart`, `ai_assistant_screen.dart`, `ai_chat_repository.dart`, `ai_chat.dart`
 
 **Changelog 6.60**: Security Hardening, Code Quality & Test Coverage:
 - **IP-Based Rate Limiting on 4 Endpoints** (Cloud Functions):

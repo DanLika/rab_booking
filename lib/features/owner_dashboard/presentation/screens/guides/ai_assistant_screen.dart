@@ -263,6 +263,34 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         title: l10n.aiAssistantTitle,
         leadingIcon: Icons.menu,
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: TextButton.icon(
+              onPressed: () {
+                ref.read(aiChatNotifierProvider.notifier).createNewChat();
+              },
+              icon: const Icon(Icons.add, color: Colors.white, size: 20),
+              label: Text(
+                l10n.aiAssistantNewChat,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.15),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
@@ -275,11 +303,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
             ),
             VerticalDivider(width: 1, color: context.gradients.sectionBorder),
             // Right: active chat or welcome
-            Expanded(
-              child: chatState.currentChat != null || chatState.isStreaming
-                  ? _buildChatArea(chatState, l10n)
-                  : _buildWelcomeView(chatState, l10n),
-            ),
+            Expanded(child: _buildChatArea(chatState, l10n)),
           ],
         ),
       ),
@@ -345,9 +369,10 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     AsyncValue<List<AiChat>> chatsAsync,
     AppLocalizations l10n,
   ) {
+    final hasChats = chatsAsync.valueOrNull?.isNotEmpty ?? false;
     return Column(
       children: [
-        // Chat list or empty state
+        // Chat list or empty state (empty state includes New Chat button)
         Expanded(
           child: chatsAsync.when(
             data: (chats) {
@@ -365,8 +390,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
             error: (e, st) => _buildEmptyState(l10n),
           ),
         ),
-        // New Chat button at bottom
-        Center(child: _buildNewChatButton(l10n)),
+        // New Chat button at bottom — only when chat list is shown
+        if (hasChats) Center(child: _buildNewChatButton(l10n)),
       ],
     );
   }
@@ -400,6 +425,22 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: 200,
+            child: ElevatedButton.icon(
+              onPressed: _onNewChatPressed,
+              icon: const Icon(Icons.chat_outlined, size: 18),
+              label: Text(l10n.aiAssistantNewChat),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -411,6 +452,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     AsyncValue<List<AiChat>> chatsAsync,
     AppLocalizations l10n,
   ) {
+    final hasChats = chatsAsync.valueOrNull?.isNotEmpty ?? false;
     return Column(
       children: [
         Expanded(
@@ -430,28 +472,29 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
             error: (e, st) => _buildEmptyState(l10n),
           ),
         ),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: SizedBox(
-              width: 200,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  ref.read(aiChatNotifierProvider.notifier).createNewChat();
-                },
-                icon: const Icon(Icons.chat_outlined, size: 18),
-                label: Text(l10n.aiAssistantNewChat),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+        if (hasChats)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: SizedBox(
+                width: 200,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    ref.read(aiChatNotifierProvider.notifier).createNewChat();
+                  },
+                  icon: const Icon(Icons.chat_outlined, size: 18),
+                  label: Text(l10n.aiAssistantNewChat),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    foregroundColor: Colors.white,
                   ),
-                  foregroundColor: Colors.white,
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -716,106 +759,113 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                 ),
               ),
             ],
-            Container(
-              constraints: BoxConstraints(
-                maxWidth:
-                    MediaQuery.sizeOf(context).width * (isUser ? 0.8 : 0.72),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: isUser
-                    ? LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withValues(alpha: 0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: isUser
-                    ? null
-                    : (isDark ? const Color(0xFF2D2D2E) : Colors.white),
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(isUser ? 20 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 20),
+            Flexible(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth:
+                      MediaQuery.sizeOf(context).width * (isUser ? 0.8 : 0.72),
                 ),
-                border: !isUser
-                    ? Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.black.withValues(alpha: 0.05),
-                      )
-                    : null,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  gradient: isUser
+                      ? LinearGradient(
+                          colors: [
+                            theme.colorScheme.primary,
+                            theme.colorScheme.primary.withValues(alpha: 0.8),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: isUser
+                      ? null
+                      : (isDark ? const Color(0xFF2D2D2E) : Colors.white),
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(isUser ? 20 : 4),
+                    bottomRight: Radius.circular(isUser ? 4 : 20),
                   ),
-                ],
-              ),
-              child: isUser
-                  ? Text(
-                      message.content,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        height: 1.4,
+                  border: !isUser
+                      ? Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.05),
+                        )
+                      : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.2 : 0.05,
                       ),
-                    )
-                  : MarkdownBody(
-                      data: message.content,
-                      selectable: true,
-                      styleSheet: MarkdownStyleSheet(
-                        p: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 14,
-                          height: 1.5,
-                        ),
-                        strong: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        listBullet: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 14,
-                        ),
-                        code: TextStyle(
-                          backgroundColor: isDark
-                              ? const Color(0xFF1A1A1A)
-                              : const Color(0xFFE8E8E8),
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 13,
-                        ),
-                        h1: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        h2: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        h3: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        blockSpacing: 8,
-                      ),
-                      onTapLink: (text, href, title) {
-                        if (href != null) {
-                          launchUrl(
-                            Uri.parse(href),
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      },
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
+                  ],
+                ),
+                child: isUser
+                    ? Text(
+                        message.content,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      )
+                    : MarkdownBody(
+                        data: message.content,
+                        selectable: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                          strong: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          listBullet: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 14,
+                          ),
+                          code: TextStyle(
+                            backgroundColor: isDark
+                                ? const Color(0xFF1A1A1A)
+                                : const Color(0xFFE8E8E8),
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 13,
+                          ),
+                          h1: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          h2: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          h3: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          blockSpacing: 8,
+                        ),
+                        onTapLink: (text, href, title) {
+                          if (href != null) {
+                            launchUrl(
+                              Uri.parse(href),
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        },
+                      ),
+              ),
             ),
           ],
         ),
@@ -826,125 +876,6 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   // ---------------------------------------------------------------------------
   // Quick reply chips + welcome
   // ---------------------------------------------------------------------------
-
-  Widget _buildWelcomeView(AiChatState chatState, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.secondary,
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/images/assistant_illustration.png',
-                    width: 120,
-                    height: 120,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              l10n.aiAssistantWelcome,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: theme.colorScheme.onSurface,
-                letterSpacing: -0.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                l10n.aiAssistantWelcomeSubtitle,
-                style: TextStyle(
-                  fontSize: 15,
-                  height: 1.5,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 40),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.lightbulb_outline,
-                        size: 18,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.aiAssistantSuggestions,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildQuickChips(chatState, l10n),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              l10n.aiAssistantDisclaimer,
-              style: TextStyle(
-                fontSize: 11,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildQuickReplies(AiChatState chatState, AppLocalizations l10n) {
     final theme = Theme.of(context);

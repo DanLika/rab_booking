@@ -15337,7 +15337,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiAssistantDisclaimer.
   ///
   /// In en, this message translates to:
-  /// **'AI Assistant provides guidance based on BookBed documentation. For account-specific issues, contact support@bookbed.io'**
+  /// **'The AI Assistant provides guidance based on BookBed documentation. For account issues, contact info@book-bed.com'**
   String get aiAssistantDisclaimer;
 
   /// No description provided for @aiAssistantChipAddUnit.
@@ -15399,6 +15399,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I understand, let\'s start'**
   String get aiConsentAccept;
+
+  /// No description provided for @webDevReferralContactDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact: dusko@book-bed.com'**
+  String get webDevReferralContactDetails;
 }
 
 class _AppLocalizationsDelegate

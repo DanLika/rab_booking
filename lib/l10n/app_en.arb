@@ -3584,7 +3584,7 @@
   "aiAssistantDailyLimit": "You have reached the daily message limit (30 messages). Please try again tomorrow.",
   "aiAssistantAiError": "Something went wrong. Please try again.",
   "aiAssistantError": "Failed to load chats",
-  "aiAssistantDisclaimer": "AI Assistant provides guidance based on BookBed documentation. For account-specific issues, contact support@bookbed.io",
+  "aiAssistantDisclaimer": "AI Assistant provides guidance based on BookBed documentation. For account-specific issues, contact dusko@book-bed.com",
   "aiAssistantChipAddUnit": "How to add a unit?",
   "aiAssistantChipPricing": "Set up pricing",
   "aiAssistantChipStripe": "Connect Stripe",
@@ -3594,5 +3594,7 @@
   "aiConsentStorage": "Chat history is stored for 1 year and then automatically deleted.",
   "aiConsentDeletion": "You can delete any chat at any time by swiping left on it.",
   "aiConsentPrivacy": "Do not share sensitive data such as passwords or financial information.",
-  "aiConsentAccept": "I understand, let's start"
+  "aiConsentAccept": "I understand, let's start",
+  "webDevReferralContactDetails": "Contact: dusko@book-bed.com",
+  "aiAssistantDisclaimer": "The AI Assistant provides guidance based on BookBed documentation. For account issues, contact info@book-bed.com"
 }

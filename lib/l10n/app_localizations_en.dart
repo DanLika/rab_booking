@@ -8494,7 +8494,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiAssistantDisclaimer =>
-      'AI Assistant provides guidance based on BookBed documentation. For account-specific issues, contact support@bookbed.io';
+      'The AI Assistant provides guidance based on BookBed documentation. For account issues, contact info@book-bed.com';
 
   @override
   String get aiAssistantChipAddUnit => 'How to add a unit?';
@@ -8529,4 +8529,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiConsentAccept => 'I understand, let\'s start';
+
+  @override
+  String get webDevReferralContactDetails => 'Contact: dusko@book-bed.com';
 }

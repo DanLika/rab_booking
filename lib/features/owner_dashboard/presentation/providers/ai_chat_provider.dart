@@ -185,177 +185,6 @@ const _blockedKeywords = [
   'programski jezik',
 ];
 
-/// Predefined answers for common questions (keyword → answer).
-/// Checked before calling Gemini to save API costs.
-const _predefinedAnswers = <_PredefinedAnswer>[
-  _PredefinedAnswer(
-    keywords: [
-      'cijena',
-      'pricing',
-      'price',
-      'postavi cijene',
-      'set up pricing',
-      'koliko kosta',
-      'how much',
-    ],
-    answerHr: '''Da biste postavili cijene za vaš smještaj:
-
-1. Otvorite **Smještajne jedinice** u izborniku
-2. Odaberite jedinicu i idite na tab **Cjenovnik**
-3. Postavite **baznu cijenu po noćenju**
-4. Po potrebi dodajte **vikend cijene** (petkom i subotom)
-5. Za sezonske cijene, koristite **kalendar cijena** gdje možete označiti datume i postaviti prilagođene cijene
-
-Cijene se automatski prikazuju u vašem widgetu za rezervacije.''',
-    answerEn: '''To set up pricing for your accommodation:
-
-1. Open **Units** from the menu
-2. Select a unit and go to the **Pricing** tab
-3. Set your **base price per night**
-4. Optionally add **weekend prices** (Friday and Saturday)
-5. For seasonal pricing, use the **price calendar** where you can select dates and set custom prices
-
-Prices are automatically displayed in your booking widget.''',
-  ),
-  _PredefinedAnswer(
-    keywords: [
-      'stripe',
-      'placanje',
-      'plaćanje',
-      'payment',
-      'kartice',
-      'card',
-      'connect stripe',
-      'poveži stripe',
-    ],
-    answerHr: '''Da biste omogućili plaćanje karticom:
-
-1. Otvorite **Integracije → Stripe plaćanja** u izborniku
-2. Kliknite **Poveži Stripe račun**
-3. Slijedite Stripe upute za kreiranje ili povezivanje računa
-4. Nakon povezivanja, omogućite kartično plaćanje u **postavkama widgeta** za svaku jedinicu
-
-Novac od rezervacija ide direktno na vaš Stripe račun. BookBed trenutno ne naplaćuje proviziju.''',
-    answerEn: '''To enable card payments:
-
-1. Open **Integrations → Stripe Payments** from the menu
-2. Click **Connect Stripe Account**
-3. Follow the Stripe instructions to create or link an account
-4. After connecting, enable card payments in **widget settings** for each unit
-
-Reservation payments go directly to your Stripe account. BookBed currently does not charge a commission.''',
-  ),
-  _PredefinedAnswer(
-    keywords: [
-      'ical',
-      'sync',
-      'sinkronizacija',
-      'booking.com',
-      'airbnb',
-      'kalendar sync',
-      'calendar sync',
-    ],
-    answerHr: '''Za sinkronizaciju kalendara s Booking.com ili Airbnb:
-
-**Import (primanje rezervacija):**
-1. Otvorite **Integracije → Uvoz rezervacija**
-2. Kliknite **Dodaj novi feed**
-3. Zalijepite iCal URL iz Booking.com/Airbnb panela
-4. BookBed automatski sinkronizira svakih 15 minuta
-
-**Export (slanje dostupnosti):**
-1. Otvorite **Integracije → Izvoz kalendara**
-2. Kopirajte URL za svaku platformu
-3. Zalijepite URL u Booking.com/Airbnb panel za uvoz
-
-Svaka platforma dobiva poseban URL koji isključuje njene vlastite rezervacije.''',
-    answerEn: '''To sync your calendar with Booking.com or Airbnb:
-
-**Import (receiving bookings):**
-1. Open **Integrations → Import Bookings**
-2. Click **Add New Feed**
-3. Paste the iCal URL from your Booking.com/Airbnb panel
-4. BookBed automatically syncs every 15 minutes
-
-**Export (sending availability):**
-1. Open **Integrations → Export Calendar**
-2. Copy the URL for each platform
-3. Paste the URL in your Booking.com/Airbnb import panel
-
-Each platform gets a separate URL that excludes its own bookings.''',
-  ),
-  _PredefinedAnswer(
-    keywords: [
-      'widget',
-      'embed',
-      'ugraditi',
-      'ugradi',
-      'iframe',
-      'web stranica',
-      'website',
-    ],
-    answerHr: '''Da biste ugradili BookBed widget na svoju web stranicu:
-
-1. Otvorite **Integracije → Widget za ugradnju**
-2. Odaberite jedinicu za koju želite widget
-3. Kopirajte iframe kod
-4. Zalijepite kod na svoju web stranicu
-
-Widget automatski prikazuje kalendar dostupnosti, cijene i obrazac za rezervaciju.''',
-    answerEn: '''To embed the BookBed widget on your website:
-
-1. Open **Integrations → Embed Widget**
-2. Select the unit you want the widget for
-3. Copy the iframe code
-4. Paste the code on your website
-
-The widget automatically shows availability calendar, prices, and booking form.''',
-  ),
-  _PredefinedAnswer(
-    keywords: [
-      'apartman',
-      'unit',
-      'smještaj',
-      'dodati',
-      'add',
-      'kreirati',
-      'create',
-      'novi',
-      'new unit',
-    ],
-    answerHr: '''Da biste dodali novi smještaj:
-
-1. Otvorite **Smještajne jedinice** u izborniku
-2. Kliknite **Dodaj jedinicu** (ili koristite čarobnjak za brzo postavljanje)
-3. Ispunite osnovne podatke: naziv, opis, kapacitet
-4. Postavite cijene na tabu **Cjenovnik**
-5. Po potrebi konfigurirajte postavke widgeta
-
-Jedinica će automatski biti dostupna za rezervacije nakon postavljanja cijena.''',
-    answerEn: '''To add a new accommodation unit:
-
-1. Open **Units** from the menu
-2. Click **Add Unit** (or use the wizard for quick setup)
-3. Fill in basic details: name, description, capacity
-4. Set prices on the **Pricing** tab
-5. Optionally configure widget settings
-
-The unit will automatically be available for bookings after pricing is set up.''',
-  ),
-];
-
-class _PredefinedAnswer {
-  final List<String> keywords;
-  final String answerHr;
-  final String answerEn;
-
-  const _PredefinedAnswer({
-    required this.keywords,
-    required this.answerHr,
-    required this.answerEn,
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Chat Notifier
 // ---------------------------------------------------------------------------
@@ -411,28 +240,10 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         final lang = _detectLanguage(text);
         if (lang == 'hr') {
           return 'Mogu pomoći samo s korištenjem BookBed funkcionalnosti. '
-              'Za tehnička pitanja, kontaktirajte support@bookbed.io';
+              'Za tehnička pitanja, kontaktirajte dusko@book-bed.com';
         }
         return 'I can only help with BookBed features. '
-            'For technical questions, please contact support@bookbed.io';
-      }
-    }
-    return null;
-  }
-
-  /// Check predefined answers map
-  String? _checkPredefinedAnswers(String text) {
-    final lower = text.toLowerCase();
-    final lang = _detectLanguage(text);
-
-    for (final entry in _predefinedAnswers) {
-      int matchCount = 0;
-      for (final keyword in entry.keywords) {
-        if (lower.contains(keyword)) matchCount++;
-      }
-      // Require at least 1 keyword match
-      if (matchCount >= 1) {
-        return lang == 'hr' ? entry.answerHr : entry.answerEn;
+            'For technical questions, please contact dusko@book-bed.com';
       }
     }
     return null;
@@ -452,6 +263,8 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
   /// Create a new chat
   Future<void> createNewChat() async {
+    // ignore: avoid_print
+    print('[AiChat] createNewChat called');
     _chatSession = null;
     state = state.copyWith(
       clearChat: true,
@@ -459,6 +272,8 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       isStreaming: false,
       streamingText: '',
     );
+    // ignore: avoid_print
+    print('[AiChat] State updated: currentChat=${state.currentChat?.id}');
   }
 
   /// Load an existing chat
@@ -561,29 +376,13 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       return;
     }
 
-    // 3. Check predefined answers
-    // ignore: avoid_print
-    print('[AiChat] Step 3: Checking predefined answers...');
-    final predefined = _checkPredefinedAnswers(text);
-    if (predefined != null) {
-      // ignore: avoid_print
-      print('[AiChat] PREDEFINED answer found');
-      await _handleCannedResponse(
-        userId: userId,
-        response: predefined,
-        updatedChat: updatedChat,
-        isNewChat: isNewChat,
-      );
-      return;
-    }
-
-    // 4. Call Gemini
+    // 3. Call Gemini
     try {
       // ignore: avoid_print
-      print('[AiChat] Step 4: Loading Gemini model...');
+      print('[AiChat] Step 3: Loading Gemini model...');
       final model = await _ref.read(_aiModelProvider.future);
       // ignore: avoid_print
-      print('[AiChat] Step 4b: Model loaded OK');
+      print('[AiChat] Step 3b: Model loaded OK');
 
       // Create or reuse chat session
       if (_chatSession == null) {
@@ -602,7 +401,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
       // Stream response
       // ignore: avoid_print
-      print('[AiChat] Step 4c: Sending to Gemini...');
+      print('[AiChat] Step 3c: Sending to Gemini...');
       final responseStream = _chatSession!.sendMessageStream(
         Content.text(text.trim()),
       );
@@ -622,9 +421,9 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         timestamp: DateTime.now(),
       );
 
-      existingMessages.add(assistantMessage);
+      final newMessages = [...existingMessages, assistantMessage];
       updatedChat = updatedChat.copyWith(
-        messages: existingMessages,
+        messages: newMessages,
         updatedAt: DateTime.now(),
       );
 
@@ -633,11 +432,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         final chatId = await _repo.createChat(userId, updatedChat);
         updatedChat = updatedChat.copyWith(id: chatId);
       } else {
-        await _repo.updateChat(
-          userId,
-          updatedChat.id,
-          messages: existingMessages,
-        );
+        await _repo.updateChat(userId, updatedChat.id, messages: newMessages);
       }
 
       state = state.copyWith(

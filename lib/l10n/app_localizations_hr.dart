@@ -8564,7 +8564,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get aiAssistantDisclaimer =>
-      'AI Asistent pruža smjernice na temelju BookBed dokumentacije. Za probleme s računom, kontaktirajte support@bookbed.io';
+      'AI Asistent pruža smjernice na temelju BookBed dokumentacije. Za probleme s računom, kontaktirajte info@book-bed.com';
 
   @override
   String get aiAssistantChipAddUnit => 'Kako dodati apartman?';
@@ -8599,4 +8599,7 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get aiConsentAccept => 'Razumijem, započni';
+
+  @override
+  String get webDevReferralContactDetails => 'Kontakt: dusko@book-bed.com';
 }

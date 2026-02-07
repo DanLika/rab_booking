@@ -1211,19 +1211,6 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.apartment_rounded,
-                    size: 22,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

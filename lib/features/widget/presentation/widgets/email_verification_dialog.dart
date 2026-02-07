@@ -44,21 +44,18 @@ class _EmailVerificationDialogState
   @override
   void initState() {
     super.initState();
-    // ignore: avoid_print
-    print('[EmailVerification] initState called');
+    LoggingService.logDebug('[EmailVerification] initState called');
     // Auto-send code on dialog open
     // IMPORTANT: Must use addPostFrameCallback because _sendVerificationCode
     // calls setState(), which cannot be done during initState
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // ignore: avoid_print
-      print(
+      LoggingService.logDebug(
         '[EmailVerification] addPostFrameCallback executed, mounted: $mounted',
       );
       if (mounted) {
         _sendVerificationCode();
       } else {
-        // ignore: avoid_print
-        print(
+        LoggingService.logDebug(
           '[EmailVerification] Widget not mounted, skipping sendVerificationCode',
         );
       }
@@ -73,8 +70,9 @@ class _EmailVerificationDialogState
   }
 
   Future<void> _sendVerificationCode() async {
-    // ignore: avoid_print
-    print('[EmailVerification] START - sending code to ${widget.email}');
+    LoggingService.logDebug(
+      '[EmailVerification] START - sending code to ${widget.email}',
+    );
 
     setState(() {
       _isResending = true;
@@ -86,8 +84,7 @@ class _EmailVerificationDialogState
         '[EmailVerification] Sending code to ${widget.email}',
       );
 
-      // ignore: avoid_print
-      print('[EmailVerification] Calling Cloud Function...');
+      LoggingService.logDebug('[EmailVerification] Calling Cloud Function...');
       final functions = FirebaseFunctions.instance;
       final callable = functions.httpsCallable(
         'sendEmailVerificationCode',
@@ -95,8 +92,9 @@ class _EmailVerificationDialogState
       );
 
       final result = await callable.call({'email': widget.email});
-      // ignore: avoid_print
-      print('[EmailVerification] Cloud Function returned: ${result.data}');
+      LoggingService.logDebug(
+        '[EmailVerification] Cloud Function returned: ${result.data}',
+      );
 
       LoggingService.logSuccess('[EmailVerification] Code sent successfully');
 
@@ -135,8 +133,7 @@ class _EmailVerificationDialogState
         });
       }
     } on FirebaseFunctionsException catch (e) {
-      // ignore: avoid_print
-      print(
+      LoggingService.logDebug(
         '[EmailVerification] FirebaseFunctionsException: ${e.code} - ${e.message}',
       );
 
@@ -197,11 +194,11 @@ class _EmailVerificationDialogState
         }
       }
     } catch (e, stackTrace) {
-      // ignore: avoid_print
-      print('[EmailVerification] Unexpected error: $e');
-      // ignore: avoid_print
-      print('[EmailVerification] Stack trace: $stackTrace');
-      await LoggingService.logError('[EmailVerification] Unexpected error', e);
+      await LoggingService.logError(
+        '[EmailVerification] Unexpected error during code send',
+        e,
+        stackTrace,
+      );
 
       if (mounted) {
         setState(() {
@@ -210,8 +207,9 @@ class _EmailVerificationDialogState
         });
       }
     } finally {
-      // ignore: avoid_print
-      print('[EmailVerification] FINALLY block - mounted: $mounted');
+      LoggingService.logDebug(
+        '[EmailVerification] FINALLY block - mounted: $mounted',
+      );
       if (mounted) {
         setState(() {
           _isResending = false;

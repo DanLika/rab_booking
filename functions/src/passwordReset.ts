@@ -7,12 +7,14 @@
 
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {getAuth} from "firebase-admin/auth";
-import {logError, logSuccess, logOperation} from "./logger";
+import {logError, logSuccess, logOperation, logWarn} from "./logger";
 import {validateEmail} from "./utils/emailValidation";
 import {sanitizeEmail} from "./utils/inputSanitization";
 import {sendPasswordResetEmailV2} from "./email";
 import {Resend} from "resend";
 import {setUser} from "./sentry";
+import {getClientIp, hashIp} from "./utils/ipUtils";
+import {checkRateLimit} from "./utils/rateLimit";
 
 // Lazy initialization of Resend client
 let resend: Resend | null = null;
@@ -56,6 +58,17 @@ function getFromName(): string {
 export const sendPasswordResetEmail = onCall(
   {cors: true, secrets: ["RESEND_API_KEY"]},
   async (request) => {
+    // SECURITY: IP-based rate limiting to prevent spam (5 requests per hour per IP)
+    const clientIp = getClientIp(request);
+    const ipHash = hashIp(clientIp);
+    if (!checkRateLimit(`password_reset_${ipHash}`, 5, 3600)) {
+      logWarn("[PasswordReset] IP Rate limit exceeded", {ipHash});
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many password reset attempts from your location. Please try again later."
+      );
+    }
+
     try {
       const {email} = request.data;
 

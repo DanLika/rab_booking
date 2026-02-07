@@ -62,6 +62,13 @@ jest.mock("../src/notificationService", () => ({
   createPaymentNotification: jest.fn(),
 }));
 
+jest.mock("../src/logger", () => ({
+  logInfo: jest.fn(),
+  logError: jest.fn(),
+  logSuccess: jest.fn(),
+  logWarn: jest.fn(),
+}));
+
 jest.mock("../src/utils/rateLimit", () => ({
   checkRateLimit: jest.fn().mockReturnValue(true), // Default to allow
 }));
@@ -450,5 +457,6 @@ describe("Stripe Payment Functions", () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.send).toHaveBeenCalledWith("Webhook signature verification failed");
     });
+
   });
 });

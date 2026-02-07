@@ -764,7 +764,34 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-07 | **Version**: 6.59
+**Last Updated**: 2026-02-07 | **Version**: 6.60
+
+**Changelog 6.60**: Security Hardening, Code Quality & Test Coverage:
+- **IP-Based Rate Limiting on 4 Endpoints** (Cloud Functions):
+  - Created shared `functions/src/utils/ipUtils.ts` — `getClientIp()` + `hashIp()` (SHA-256)
+  - `emailVerification.ts`: 10 req/hr per IP (send verification code)
+  - `passwordReset.ts`: 5 req/hr per IP (password reset email)
+  - `verifyBookingAccess.ts`: 30 req/hr per IP (booking lookup)
+  - `icalExport.ts`: 60 req/hr per IP (iCal feed requests, returns 429)
+  - `authRateLimit.ts`: Refactored to use shared `ipUtils.ts` (was inline)
+  - All use in-memory `checkRateLimit()` — resets on cold start, per-instance
+  - Fixed missing `logWarn` imports in `emailVerification.ts` and `passwordReset.ts`
+- **print() → LoggingService Migration** (Flutter):
+  - `analytics_service.dart`: Full rewrite — all 20+ `print()` → `LoggingService.logDebug()`
+  - `firebase_owner_bookings_repository.dart`: Warning log for failed booking parse
+  - `email_verification_dialog.dart`: 8x `print()` → `LoggingService.logDebug/logError()`
+  - Errors now include stack traces and go to Sentry automatically
+- **Test Coverage** (manually copied from `test-coverage-improvement` branch):
+  - `atomicBooking.test.ts`: 6 tests — validation, pricing, permissions
+  - `authRateLimit.test.ts`: 5 tests — login/registration rate limiting (updated for SHA-256 hash)
+  - `bookingManagement.test.ts`: 6 tests — CRUD operations
+  - `passwordHistory.test.ts`: 6 tests — password history checks
+  - `stripePayment.test.ts`: +8 lines — mock logger (fixes test isolation)
+  - All 115 tests passing
+- **UI Fix**: Removed unit icons from iCal Export page unit list (cleaner layout)
+- **Branches Analyzed & Skipped**:
+  - `security-scan-2025-02-03`: Encryption improvement (random IV) — useful but rollback risk
+  - `security-scan-2025-02-03`: iCal notes removal — dead code (already removed in 6.56 GDPR)
 
 **Changelog 6.59**: Syncfusion Month Calendar with Custom Cell Builder:
 - **New Screen** (`calendar/month_calendar_screen.dart`):

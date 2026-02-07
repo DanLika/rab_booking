@@ -3,6 +3,8 @@ import * as crypto from "crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "./firebase";
 import { logInfo, logError } from "./logger";
+import { getClientIp, hashIp } from "./utils/ipUtils";
+import { checkRateLimit } from "./utils/rateLimit";
 
 // =============================================================================
 // CONFIGURATION
@@ -91,6 +93,15 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
   // Set CORS headers
   response.set("Access-Control-Allow-Origin", "*");
   response.set("Access-Control-Allow-Methods", "GET");
+
+  // SECURITY: IP-based rate limiting to prevent DoS (60 requests per hour per IP)
+  const clientIp = getClientIp(request);
+  const ipHash = hashIp(clientIp);
+  if (!checkRateLimit(`ical_feed_${ipHash}`, 60, 3600)) {
+    logError("[iCal Feed] Rate limit exceeded", {ipHash});
+    response.status(429).send("Too many requests. Please try again later.");
+    return;
+  }
 
   if (request.method === "OPTIONS") {
     response.status(204).send("");

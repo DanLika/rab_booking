@@ -1,5 +1,5 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:flutter/foundation.dart';
+import 'logging_service.dart';
 
 /// Firebase Analytics Service - Phase 3 Feature
 ///
@@ -38,18 +38,26 @@ class AnalyticsService {
   Future<void> setUserId(String userId) async {
     try {
       await _analytics.setUserId(id: userId);
-      if (kDebugMode) print('[Analytics] User ID set: $userId');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error setting user ID: $e');
+      LoggingService.logDebug('[Analytics] User ID set: $userId');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error setting user ID',
+        e,
+        stackTrace,
+      );
     }
   }
 
   Future<void> setUserProperty(String name, String value) async {
     try {
       await _analytics.setUserProperty(name: name, value: value);
-      if (kDebugMode) print('[Analytics] User property set: $name = $value');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error setting user property: $e');
+      LoggingService.logDebug('[Analytics] User property set: $name = $value');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error setting user property',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -73,9 +81,13 @@ class AnalyticsService {
           'source': source ?? 'widget',
         },
       );
-      if (kDebugMode) print('[Analytics] Booking created: $bookingId');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging booking_created: $e');
+      LoggingService.logDebug('[Analytics] Booking created: $bookingId');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging booking_created',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -89,9 +101,13 @@ class AnalyticsService {
         currency: 'EUR',
         parameters: {'booking_id': bookingId, 'transaction_id': bookingId},
       );
-      if (kDebugMode) print('[Analytics] Booking confirmed: $bookingId');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging booking_confirmed: $e');
+      LoggingService.logDebug('[Analytics] Booking confirmed: $bookingId');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging booking_confirmed',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -104,9 +120,13 @@ class AnalyticsService {
         name: 'booking_cancelled',
         parameters: {'booking_id': bookingId, 'reason': reason},
       );
-      if (kDebugMode) print('[Analytics] Booking cancelled: $bookingId');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging booking_cancelled: $e');
+      LoggingService.logDebug('[Analytics] Booking cancelled: $bookingId');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging booking_cancelled',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -125,9 +145,13 @@ class AnalyticsService {
           ),
         ],
       );
-      if (kDebugMode) print('[Analytics] Property viewed: $propertyName');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging property_viewed: $e');
+      LoggingService.logDebug('[Analytics] Property viewed: $propertyName');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging property_viewed',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -147,9 +171,13 @@ class AnalyticsService {
           ),
         ],
       );
-      if (kDebugMode) print('[Analytics] Unit viewed: $unitName');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging unit_viewed: $e');
+      LoggingService.logDebug('[Analytics] Unit viewed: $unitName');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging unit_viewed',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -157,9 +185,13 @@ class AnalyticsService {
   Future<void> logAddPropertyStart() async {
     try {
       await _analytics.logEvent(name: 'add_property_start');
-      if (kDebugMode) print('[Analytics] Add property started');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging add_property_start: $e');
+      LoggingService.logDebug('[Analytics] Add property started');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging add_property_start',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -172,9 +204,13 @@ class AnalyticsService {
         name: 'property_created',
         parameters: {'property_id': propertyId, 'property_name': propertyName},
       );
-      if (kDebugMode) print('[Analytics] Property created: $propertyName');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging property_created: $e');
+      LoggingService.logDebug('[Analytics] Property created: $propertyName');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging property_created',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -185,11 +221,15 @@ class AnalyticsService {
         name: 'view_subscription',
         parameters: {'current_unit_count': currentUnitCount},
       );
-      if (kDebugMode) {
-        print('[Analytics] View subscription (units: $currentUnitCount)');
-      }
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging view_subscription: $e');
+      LoggingService.logDebug(
+        '[Analytics] View subscription (units: $currentUnitCount)',
+      );
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging view_subscription',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -210,9 +250,13 @@ class AnalyticsService {
           ),
         ],
       );
-      if (kDebugMode) print('[Analytics] Begin checkout: $planId');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging begin_checkout: $e');
+      LoggingService.logDebug('[Analytics] Begin checkout: $planId');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging begin_checkout',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -235,11 +279,13 @@ class AnalyticsService {
           ),
         ],
       );
-      if (kDebugMode) print('[Analytics] Subscription purchased: $planId');
-    } catch (e) {
-      if (kDebugMode) {
-        print('[Analytics] Error logging subscription_purchase: $e');
-      }
+      LoggingService.logDebug('[Analytics] Subscription purchased: $planId');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging subscription_purchase',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -247,18 +293,26 @@ class AnalyticsService {
   Future<void> logLogin(String method) async {
     try {
       await _analytics.logLogin(loginMethod: method);
-      if (kDebugMode) print('[Analytics] Login: $method');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging login: $e');
+      LoggingService.logDebug('[Analytics] Login: $method');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging login',
+        e,
+        stackTrace,
+      );
     }
   }
 
   Future<void> logSignUp(String method) async {
     try {
       await _analytics.logSignUp(signUpMethod: method);
-      if (kDebugMode) print('[Analytics] Sign up: $method');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging sign_up: $e');
+      LoggingService.logDebug('[Analytics] Sign up: $method');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging sign_up',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -272,27 +326,39 @@ class AnalyticsService {
         name: 'widget_loaded',
         parameters: {'unit_id': unitId, 'referrer': referrer ?? 'direct'},
       );
-      if (kDebugMode) print('[Analytics] Widget loaded: $unitId');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging widget_loaded: $e');
+      LoggingService.logDebug('[Analytics] Widget loaded: $unitId');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging widget_loaded',
+        e,
+        stackTrace,
+      );
     }
   }
 
   Future<void> logDateSelectionStarted() async {
     try {
       await _analytics.logEvent(name: 'date_selection_started');
-      if (kDebugMode) print('[Analytics] Date selection started');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging event: $e');
+      LoggingService.logDebug('[Analytics] Date selection started');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging date_selection_started',
+        e,
+        stackTrace,
+      );
     }
   }
 
   Future<void> logGuestDetailsEntered() async {
     try {
       await _analytics.logEvent(name: 'guest_details_entered');
-      if (kDebugMode) print('[Analytics] Guest details entered');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging event: $e');
+      LoggingService.logDebug('[Analytics] Guest details entered');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging guest_details_entered',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -313,15 +379,15 @@ class AnalyticsService {
           'is_in_iframe': isInIframe,
         },
       );
-      if (kDebugMode) {
-        print(
-          '[Analytics] Stripe payment initiated: $method ($browser, $deviceType)',
-        );
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('[Analytics] Error logging stripe_payment_initiated: $e');
-      }
+      LoggingService.logDebug(
+        '[Analytics] Stripe payment initiated: $method ($browser, $deviceType)',
+      );
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging stripe_payment_initiated',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -334,13 +400,15 @@ class AnalyticsService {
         name: 'stripe_popup_blocked',
         parameters: {'browser': browser, 'device_type': deviceType},
       );
-      if (kDebugMode) {
-        print('[Analytics] Stripe popup blocked: $browser, $deviceType');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('[Analytics] Error logging stripe_popup_blocked: $e');
-      }
+      LoggingService.logDebug(
+        '[Analytics] Stripe popup blocked: $browser, $deviceType',
+      );
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging stripe_popup_blocked',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -362,15 +430,15 @@ class AnalyticsService {
           'time_to_complete_seconds': timeToCompleteSeconds,
         },
       );
-      if (kDebugMode) {
-        print(
-          '[Analytics] Stripe payment completed: $sessionId ($method, ${timeToCompleteSeconds}s)',
-        );
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('[Analytics] Error logging stripe_payment_completed: $e');
-      }
+      LoggingService.logDebug(
+        '[Analytics] Stripe payment completed: $sessionId ($method, ${timeToCompleteSeconds}s)',
+      );
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging stripe_payment_completed',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -378,9 +446,13 @@ class AnalyticsService {
   Future<void> logSearch(String searchTerm) async {
     try {
       await _analytics.logSearch(searchTerm: searchTerm);
-      if (kDebugMode) print('[Analytics] Search: $searchTerm');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging search: $e');
+      LoggingService.logDebug('[Analytics] Search: $searchTerm');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging search',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -391,9 +463,13 @@ class AnalyticsService {
   ) async {
     try {
       await _analytics.logEvent(name: eventName, parameters: parameters);
-      if (kDebugMode) print('[Analytics] Custom event: $eventName');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging custom event: $e');
+      LoggingService.logDebug('[Analytics] Custom event: $eventName');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging custom event',
+        e,
+        stackTrace,
+      );
     }
   }
 
@@ -401,9 +477,13 @@ class AnalyticsService {
   Future<void> logScreenView(String screenName) async {
     try {
       await _analytics.logScreenView(screenName: screenName);
-      if (kDebugMode) print('[Analytics] Screen view: $screenName');
-    } catch (e) {
-      if (kDebugMode) print('[Analytics] Error logging screen_view: $e');
+      LoggingService.logDebug('[Analytics] Screen view: $screenName');
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        '[Analytics] Error logging screen_view',
+        e,
+        stackTrace,
+      );
     }
   }
 }

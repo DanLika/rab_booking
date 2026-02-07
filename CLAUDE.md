@@ -764,7 +764,34 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-07 | **Version**: 6.61
+**Last Updated**: 2026-02-07 | **Version**: 6.62
+
+**Changelog 6.62**: AI Assistant Redesign, KB Consolidation & Quick Edit Delete:
+- **AI Assistant UI Redesign** (`ai_assistant_screen.dart`):
+  - New glassmorphism illustration, redesigned chat bubbles with gradients/shadows
+  - Desktop split view with chat list + active chat panel
+  - Streaming fix: duplicate bubbles resolved (new list per state update)
+  - Empty state: illustration/title/subtitle/New Chat button grouped in same Column
+  - Consent screen with privacy items before first use
+- **AI Knowledge Base Consolidation**:
+  - Removed 8 separate chatbot KB files (`docs/AI_Chatbot_Instructions/`)
+  - Consolidated into single `assets/kb/bookbed_knowledge_base.md` (gitignored, in pubspec assets)
+  - Professional tone ("BookBed tim" instead of personal references)
+  - Added Section 10: AI Assistant documentation
+  - Removed specific web dev pricing (directs to consultation instead)
+  - Contact emails: `info@book-bed.com` for support, `dusko@book-bed.com` for web dev only
+- **AI Provider Cleanup** (`ai_chat_provider.dart`):
+  - Removed hardcoded predefined answers and blocked keywords
+  - Consolidated to unified KB-driven approach
+  - Switched from `FirebaseAI.vertexAI()` to `FirebaseAI.googleAI()` (Gemini Developer API)
+  - Model: `gemini-2.5-flash-lite` (cheapest, replaces retired 2.0-flash-lite)
+- **Booking Quick Edit Delete Button** (`booking_inline_edit_dialog.dart`):
+  - Added red "Delete" button to footer alongside Cancel/Save
+  - Mobile: Delete + Cancel side by side below Save button
+  - Desktop: Delete left-aligned, Cancel + Save right-aligned
+  - Uses shared `CalendarBookingActions.deleteBooking()` with confirmation dialog
+- **Localization**: Updated EN/HR strings for AI chatbot consent and UI changes
+- **Key files**: `ai_assistant_screen.dart`, `ai_chat_provider.dart`, `booking_inline_edit_dialog.dart`, `assets/kb/bookbed_knowledge_base.md`
 
 **Changelog 6.61**: AI Chatbot, Timeline Scroll Sync Fix & Booking Card Improvements:
 - **AI Assistant Chatbot** (`ai_assistant_screen.dart`, `ai_chat_provider.dart`):

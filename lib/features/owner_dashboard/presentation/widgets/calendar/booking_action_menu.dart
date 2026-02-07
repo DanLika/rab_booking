@@ -92,6 +92,20 @@ class BookingActionBottomSheet extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // For external bookings: show platform name prominently above guest name
+                              if (booking.isExternalBooking) ...[
+                                Text(
+                                  booking.sourceDisplayName,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white.withAlpha(
+                                      (0.9 * 255).toInt(),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                              ],
                               Text(
                                 booking.guestName ??
                                     l10n.bookingActionUnknownGuest,
@@ -507,10 +521,14 @@ class BookingActionBottomSheet extends ConsumerWidget {
                     color: Colors.orange.shade800,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   l10n.tooltipManageOn(booking.sourceDisplayName),
-                  style: TextStyle(fontSize: 12, color: Colors.orange.shade700),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade800,
+                  ),
                 ),
               ],
             ),

@@ -47,16 +47,6 @@ String _safeErrorToString(dynamic error) {
   }
 }
 
-/// Debug logging for Timeline Calendar - helps track scroll issues
-void _timelineLog(String message, {String? category, Object? data}) {
-  final prefix = category != null ? '[Timeline:$category]' : '[Timeline]';
-  if (data != null) {
-    debugPrint('$prefix $message | Data: $data');
-  } else {
-    debugPrint('$prefix $message');
-  }
-}
-
 /// BedBooking-style Timeline Calendar
 /// Gantt/Timeline layout: Units vertical, Dates horizontal
 /// Starts from today, horizontal scroll, pinch-to-zoom support
@@ -138,15 +128,7 @@ class _TimelineCalendarWidgetState
   late DateTime _fixedEndDate;
   bool _isInitialScrolling = true;
 
-  // Debounce timer for visible range updates (improves web performance)
-  Timer? _visibleRangeDebounceTimer;
-
-  // Throttle timer for vertical scroll sync (improves Android web performance)
-  Timer? _verticalScrollThrottleTimer;
   double _lastVerticalScrollOffset = 0.0;
-
-  // Throttle timer for horizontal scroll sync (improves Android web performance)
-  Timer? _horizontalScrollThrottleTimer;
   double _lastHorizontalScrollOffset = 0.0;
 
   // Flag to track programmatic scrolls (prevents infinite loop with onVisibleDateRangeChanged)
@@ -166,11 +148,6 @@ class _TimelineCalendarWidgetState
   List<DateTime>? _cachedVisibleDateRange;
   int _cachedVisibleStartIndex = -1;
 
-  // Problem #6 fix: Save scroll position for debugging and potential restoration
-  // Currently used in _updateVisibleRange() to track last known position
-  // ignore: unused_field
-  double? _savedScrollOffset;
-
   // Problem #7 fix: Memoization for _buildTimelineView()
   // Cache the build result to avoid rebuilding with identical data
   int? _lastBuildDataHash;
@@ -186,7 +163,6 @@ class _TimelineCalendarWidgetState
   @override
   void initState() {
     super.initState();
-    _timelineLog('initState() called', category: 'Lifecycle');
     // IMPORTANT: _initializeDateRange() must be called FIRST because it creates
     // _horizontalScrollController with the correct initialScrollOffset
     _initializeDateRange();
@@ -198,26 +174,6 @@ class _TimelineCalendarWidgetState
   @override
   void didUpdateWidget(TimelineCalendarWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // Problem #17 fix: Always log didUpdateWidget for debugging
-    _timelineLog(
-      'didUpdateWidget called',
-      category: 'Lifecycle',
-      data: {
-        'oldDate': oldWidget.initialScrollToDate?.toIso8601String().substring(
-          0,
-          10,
-        ),
-        'newDate': widget.initialScrollToDate?.toIso8601String().substring(
-          0,
-          10,
-        ),
-        'datesEqual':
-            widget.initialScrollToDate == oldWidget.initialScrollToDate,
-        'oldForceKey': oldWidget.forceScrollKey,
-        'newForceKey': widget.forceScrollKey,
-      },
-    );
 
     // FEEDBACK LOOP FIX: Only scroll when user EXPLICITLY requests it via toolbar
     // Previously: scrolled whenever initialScrollToDate changed (including from scroll updates)
@@ -262,14 +218,6 @@ class _TimelineCalendarWidgetState
           // forceScrollKeyChanged means user clicked toolbar button (Today, arrows, date picker)
           if (scrollDifference < skipThreshold && !forceScrollKeyChanged) {
             shouldSkipScroll = true;
-            _timelineLog(
-              'didUpdateWidget: SKIPPING scroll - target already visible',
-              category: 'Lifecycle',
-              data: {
-                'scrollDiff': scrollDifference.toStringAsFixed(0),
-                'threshold': skipThreshold.toStringAsFixed(0),
-              },
-            );
           }
         } catch (e) {
           // If calculation fails, proceed with scroll
@@ -282,24 +230,10 @@ class _TimelineCalendarWidgetState
       // then onVisibleDateRangeChanged updates parent, which triggers didUpdateWidget
       // with the OLD target date. Without this check, we'd scroll back to the old target.
       if (_isScrollAnimating) {
-        _timelineLog(
-          'didUpdateWidget: SKIPPING scroll - animation already in progress',
-          category: 'Lifecycle',
-        );
         shouldSkipScroll = true;
       }
 
       if (!shouldSkipScroll) {
-        _timelineLog(
-          'didUpdateWidget: scroll triggered by forceScrollKey',
-          category: 'Lifecycle',
-          data: {
-            'forceScrollKeyChanged': forceScrollKeyChanged,
-            'oldKey': oldWidget.forceScrollKey,
-            'newKey': widget.forceScrollKey,
-            'targetDate': targetDate.toIso8601String().substring(0, 10),
-          },
-        );
         // Problem #12 fix: Set flag to prevent infinite loop
         // When we scroll, onVisibleDateRangeChanged would update parent, which would
         // change initialScrollToDate again, causing another scroll
@@ -367,20 +301,6 @@ class _TimelineCalendarWidgetState
     _horizontalScrollController = ScrollController(
       initialScrollOffset: initialScrollOffset,
     );
-
-    _timelineLog(
-      '_initializeDateRange (FIXED)',
-      category: 'DateRange',
-      data: {
-        'initialDate': initialDate.toIso8601String().substring(0, 10),
-        'fixedStart': _fixedStartDate.toIso8601String().substring(0, 10),
-        'fixedEnd': _fixedEndDate.toIso8601String().substring(0, 10),
-        'totalDays': totalDays,
-        'daysSinceStart': daysSinceStart,
-        'visibleStartIndex': _visibleStartIndex,
-        'initialScrollOffset': initialScrollOffset.toStringAsFixed(0),
-      },
-    );
   }
 
   void _setupScrollListeners() {
@@ -447,18 +367,6 @@ class _TimelineCalendarWidgetState
 
     // Skip if offset hasn't changed significantly (reduces unnecessary work)
     if ((mainOffset - _lastVerticalScrollOffset).abs() < 0.5) return;
-
-    // Log only large jumps (>100px) to detect sync issues without flooding console
-    if ((mainOffset - _lastVerticalScrollOffset).abs() > 100) {
-      _timelineLog(
-        '_performVerticalScrollSync: large jump detected',
-        category: 'ScrollSync',
-        data: {
-          'from': _lastVerticalScrollOffset.toStringAsFixed(1),
-          'to': mainOffset.toStringAsFixed(1),
-        },
-      );
-    }
     _lastVerticalScrollOffset = mainOffset;
 
     _isSyncingScroll = true;
@@ -480,14 +388,6 @@ class _TimelineCalendarWidgetState
     final newScale = matrix.getMaxScaleOnAxis();
 
     if ((newScale - _zoomScale).abs() > 0.01) {
-      _timelineLog(
-        '_onTransformChanged: zoom scale changed',
-        category: 'Zoom',
-        data: {
-          'from': _zoomScale.toStringAsFixed(2),
-          'to': newScale.toStringAsFixed(2),
-        },
-      );
       setState(() {
         _zoomScale = newScale.clamp(
           kTimelineMinZoomScale,
@@ -497,6 +397,10 @@ class _TimelineCalendarWidgetState
     }
   }
 
+  // Frame-based throttle state for visible date reporting
+  DateTime? _pendingVisibleStartDate;
+  bool _visibleRangeFrameScheduled = false;
+
   void _updateVisibleRange() {
     if (!_horizontalScrollController.hasClients || !mounted) return;
 
@@ -504,85 +408,60 @@ class _TimelineCalendarWidgetState
     final scrollOffset = _horizontalScrollController.offset;
     final dayWidth = dimensions.dayWidth;
 
-    // Problem #6 fix: Save scroll position for potential restoration after rebuild
-    _savedScrollOffset = scrollOffset;
-
-    // Calculate total available days (fixed range - no dynamic extension)
     final totalDays = _fixedEndDate.difference(_fixedStartDate).inDays;
-    if (totalDays <= 0) return; // Invalid state, skip update
+    if (totalDays <= 0) return;
 
-    final firstVisibleDay = (scrollOffset / dayWidth).floor();
+    // round() instead of floor(): toolbar updates when day is >=50% visible,
+    // not when 1px appears at the left edge. Fixes backward-scroll offset.
+    final firstVisibleDay = (scrollOffset / dayWidth).round();
     final daysInViewport = dimensions.daysInViewport;
 
-    // Clamp newStartIndex to valid range [0, totalDays - 1]
+    // === SECTION 1: Report visible date to parent (ALWAYS, except TELEPORT) ===
+    // During TELEPORT, scroll position is invalid (old position + new content).
+    // During normal animation (Next/Prev), position IS valid — toolbar should track.
+    if (widget.onVisibleDateRangeChanged != null &&
+        !_isInitialScrolling &&
+        _teleportTargetStartIndex == null) {
+      final visibleStartDate = _fixedStartDate.add(
+        Duration(days: firstVisibleDay.clamp(0, totalDays - 1)),
+      );
+      _pendingVisibleStartDate = visibleStartDate;
+      if (!_visibleRangeFrameScheduled) {
+        _visibleRangeFrameScheduled = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _visibleRangeFrameScheduled = false;
+          if (mounted && _pendingVisibleStartDate != null) {
+            widget.onVisibleDateRangeChanged!(_pendingVisibleStartDate!);
+            _pendingVisibleStartDate = null;
+          }
+        });
+      }
+    }
+
+    // === SECTION 2: Window management (skip during programmatic scroll) ===
+    if (_isProgrammaticScroll || _forceVisibleStartIndex) return;
+    if (_teleportTargetStartIndex != null) return;
+
     final newStartIndex = (firstVisibleDay - kTimelineBufferDays).clamp(
       0,
       totalDays - 1,
     );
-    // Clamp newDayCount to not exceed available days from startIndex
     final maxDayCount = totalDays - newStartIndex;
     final newDayCount = (daysInViewport + (2 * kTimelineBufferDays)).clamp(
       1,
       maxDayCount,
     );
 
-    // Only update if range changed significantly (reduces rebuilds)
-    // OPTIMIZATION: Use higher threshold during scroll animation to reduce rebuilds
-    // During animation, we don't need fine-grained updates since the final position is known
     final threshold = _isScrollAnimating
-        ? kTimelineVisibleRangeUpdateThreshold *
-              3 // 30 days during animation
-        : kTimelineVisibleRangeUpdateThreshold; // 10 days normally
-
-    // CRITICAL FIX: Skip updating _visibleStartIndex during programmatic scroll
-    // When scrolling programmatically (e.g., date picker jump to October), we've already
-    // set _visibleStartIndex to the target position. Updating it here would overwrite
-    // that with the CURRENT scroll position (which is changing during animation),
-    // causing the 90-day window to shift back to the old position.
-    //
-    // BUG FIX: Also skip when _forceVisibleStartIndex is true.
-    // After TELEPORT, timer resets _isProgrammaticScroll=false but _forceVisibleStartIndex
-    // may still be true (not consumed because _teleportTargetStartIndex was used instead).
-    // Without this check, scroll listener would overwrite _visibleStartIndex before
-    // the forced value is used in _calculateVisibleStartIndex.
-    if (_isProgrammaticScroll || _forceVisibleStartIndex) {
-      return; // Don't update visible range during programmatic scroll or pending force
-    }
+        ? kTimelineVisibleRangeUpdateThreshold * 3
+        : kTimelineVisibleRangeUpdateThreshold;
 
     if ((newStartIndex - _visibleStartIndex).abs() > threshold ||
         (newDayCount - _visibleDayCount).abs() > threshold) {
-      // TELEPORT PROTECTION: Don't overwrite _visibleStartIndex during active TELEPORT
-      // The TELEPORT code sets _visibleStartIndex to target position, and we must not
-      // overwrite it based on current scroll position (which may be at old location)
-      if (_teleportTargetStartIndex != null || _forceVisibleStartIndex) {
-        _timelineLog(
-          '_updateVisibleRange: BLOCKED - TELEPORT in progress',
-          category: 'Scroll',
-          data: {
-            'teleportTarget': _teleportTargetStartIndex,
-            'forceFlag': _forceVisibleStartIndex,
-            'wouldSetTo': newStartIndex,
-          },
-        );
-        return;
-      }
-
-      // Invalidate memoization caches when visible range changes significantly
       _cachedVisibleDateRange = null;
       _cachedVisibleStartIndex = -1;
       _cachedTimelineContent = null;
       _lastBuildDataHash = null;
-
-      _timelineLog(
-        '_updateVisibleRange: UPDATING _visibleStartIndex',
-        category: 'Scroll',
-        data: {
-          'oldStartIndex': _visibleStartIndex,
-          'newStartIndex': newStartIndex,
-          'scrollOffset': scrollOffset.toStringAsFixed(0),
-          'firstVisibleDay': firstVisibleDay,
-        },
-      );
 
       setState(() {
         _visibleStartIndex = newStartIndex;
@@ -590,53 +469,19 @@ class _TimelineCalendarWidgetState
       });
     }
 
-    // DYNAMIC EXTENSION: Extend range when approaching edges
-    // Only extend forward (to the right) - no scroll compensation needed
-    // Extend backward (to the left) would require compensation which causes scroll issues
-    // TELEPORT FIX: Skip during programmatic scroll to prevent unwanted range extension
-    if (!_isProgrammaticScroll) {
-      _extendDateRangeIfNeeded(firstVisibleDay, totalDays);
+    // Auto-extend range forward when approaching the end.
+    // Safe because content is appended (scroll position unchanged).
+    // Backward extension is NOT done — it would shift all positions.
+    final lastVisibleDay = firstVisibleDay + daysInViewport;
+    const extensionBuffer = 30; // Extend when within 30 days of edge
+    if (lastVisibleDay > totalDays - extensionBuffer) {
+      _fixedEndDate = _fixedEndDate.add(const Duration(days: 180));
+      _cachedFullDateRange = null;
+      _cachedVisibleDateRange = null;
+      _cachedVisibleStartIndex = -1;
+      _cachedTimelineContent = null;
+      _lastBuildDataHash = null;
     }
-
-    // Notify parent of visible date change (debounced to prevent scroll interference)
-    // Problem #12 fix: Skip notification during programmatic scroll to prevent infinite loop
-    // ANDROID FIX: Debounce on ALL platforms to prevent bounce-back during user scroll
-    // Without debounce, instant parent updates trigger didUpdateWidget → _scrollToDate loop
-    if (widget.onVisibleDateRangeChanged != null &&
-        !_isInitialScrolling &&
-        !_isProgrammaticScroll) {
-      // BUG FIX: Report CENTER of visible range instead of START
-      // Previously: reported firstVisibleDay (leftmost date)
-      // Problem: didUpdateWidget tries to CENTER that date, causing backward scroll
-      // Fix: report the center date so centering doesn't shift position
-      final centerVisibleDay = firstVisibleDay + (daysInViewport ~/ 2);
-      final visibleCenterDate = _fixedStartDate.add(
-        Duration(days: centerVisibleDay),
-      );
-
-      // Debounce on ALL platforms to prevent scroll position "corrections" during user scroll
-      // Previously instant on Android which caused bounce-back behavior
-      _visibleRangeDebounceTimer?.cancel();
-      _visibleRangeDebounceTimer = Timer(const Duration(milliseconds: 150), () {
-        if (mounted) {
-          widget.onVisibleDateRangeChanged!(visibleCenterDate);
-        }
-      });
-    }
-  }
-
-  /// Dynamically extend the date range when user approaches edges.
-  ///
-  /// DISABLED: This function is no longer needed because TELEPORT handles range
-  /// extension when user picks a date via date picker. The initial 1-year range
-  /// (6 months before/after today) is sufficient for manual scrolling, and TELEPORT
-  /// extends it automatically when jumping to dates outside this range.
-  ///
-  /// Keeping this function disabled prevents race conditions where scroll events
-  /// during TELEPORT would trigger unwanted range extensions.
-  void _extendDateRangeIfNeeded(int firstVisibleDay, int totalDays) {
-    // NO-OP: Range extension is handled by TELEPORT in _scrollToDate()
-    return;
   }
 
   /// Wait for layout completion and then finalize initial scroll setup.
@@ -651,10 +496,6 @@ class _TimelineCalendarWidgetState
         10; // Reduced from 15 since initialScrollOffset handles positioning
     if (retryCount >= maxRetries) {
       // Timeout - just complete setup without scrolling
-      _timelineLog(
-        '_scrollToTodayWithRetry: TIMEOUT - completing setup',
-        category: 'Scroll',
-      );
       _isInitialScrolling = false;
       _restoreVerticalScrollPosition();
       return;
@@ -672,23 +513,12 @@ class _TimelineCalendarWidgetState
     }
 
     if (!hasClients || maxScrollExtent <= 0) {
-      // Only log on first and every 5th retry to reduce noise
-      if (retryCount == 0 || retryCount % 5 == 0) {
-        _timelineLog(
-          '_scrollToTodayWithRetry: waiting for layout... (retry $retryCount)',
-          category: 'Scroll',
-        );
-      }
       Future.delayed(const Duration(milliseconds: 50), () {
         if (mounted) _scrollToTodayWithRetry(retryCount: retryCount + 1);
       });
       return;
     }
 
-    _timelineLog(
-      '_scrollToTodayWithRetry: layout ready after $retryCount retries',
-      category: 'Scroll',
-    );
     _scrollToToday();
   }
 
@@ -711,30 +541,11 @@ class _TimelineCalendarWidgetState
     bool forceScroll = false,
     int retryCount = 0,
   }) {
-    _timelineLog(
-      '_scrollToDate called (SIMPLIFIED)',
-      category: 'Scroll',
-      data: {
-        'target': targetDate.toIso8601String().substring(0, 10),
-        'isInitial': isInitialScroll,
-        'forceScroll': forceScroll,
-        'isProgrammatic': _isProgrammaticScroll,
-        'isAnimating': _isScrollAnimating,
-        'fixedStartDate': _fixedStartDate.toIso8601String().substring(0, 10),
-        'fixedEndDate': _fixedEndDate.toIso8601String().substring(0, 10),
-        'retryCount': retryCount,
-      },
-    );
-
     // FIXED: Instead of skipping when animation is in progress, cancel it and start new one
     // This ensures toolbar navigation buttons work with single click
     // Previous behavior: Skip scroll if _isScrollAnimating -> caused 2-click issue
     // New behavior: Cancel current animation and start new one immediately
     if (_isScrollAnimating && !isInitialScroll) {
-      _timelineLog(
-        '_scrollToDate: CANCELING previous animation to start new one',
-        category: 'Scroll',
-      );
       // Cancel current animation by jumping to current position
       // This stops the animation immediately without side effects
       _horizontalScrollController.jumpTo(_horizontalScrollController.offset);
@@ -746,10 +557,6 @@ class _TimelineCalendarWidgetState
     if (!_horizontalScrollController.hasClients) {
       const maxRetries = 5;
       if (retryCount < maxRetries) {
-        _timelineLog(
-          '_scrollToDate: NO CLIENTS - scheduling retry ${retryCount + 1}/$maxRetries',
-          category: 'Scroll',
-        );
         Future.delayed(const Duration(milliseconds: 50), () {
           if (mounted) {
             _scrollToDate(
@@ -760,11 +567,6 @@ class _TimelineCalendarWidgetState
             );
           }
         });
-      } else {
-        _timelineLog(
-          '_scrollToDate: NO CLIENTS - max retries reached, aborting',
-          category: 'Scroll',
-        );
       }
       return;
     }
@@ -782,25 +584,9 @@ class _TimelineCalendarWidgetState
     // This allows scrolling to any date selected by user
     bool rangeExtended = false;
     if (clampedTarget.isBefore(_fixedStartDate)) {
-      _timelineLog(
-        '_scrollToDate: extending range START to include target',
-        category: 'Scroll',
-        data: {
-          'oldStart': _fixedStartDate.toIso8601String().substring(0, 10),
-          'target': clampedTarget.toIso8601String().substring(0, 10),
-        },
-      );
       _fixedStartDate = DateTime.utc(clampedTarget.year, clampedTarget.month);
       rangeExtended = true;
     } else if (clampedTarget.isAfter(_fixedEndDate)) {
-      _timelineLog(
-        '_scrollToDate: extending range END to include target',
-        category: 'Scroll',
-        data: {
-          'oldEnd': _fixedEndDate.toIso8601String().substring(0, 10),
-          'target': clampedTarget.toIso8601String().substring(0, 10),
-        },
-      );
       // Extend to end of target month + 1 month buffer
       _fixedEndDate = DateTime.utc(clampedTarget.year, clampedTarget.month + 2);
       rangeExtended = true;
@@ -813,15 +599,6 @@ class _TimelineCalendarWidgetState
       // resetting _teleportTargetStartIndex to null before we can use it.
       _programmaticScrollResetTimer?.cancel();
       _isProgrammaticScroll = true;
-
-      _timelineLog(
-        '_scrollToDate: TELEPORT (range extended)',
-        category: 'Scroll',
-        data: {
-          'newStart': _fixedStartDate.toIso8601String().substring(0, 10),
-          'newEnd': _fixedEndDate.toIso8601String().substring(0, 10),
-        },
-      );
 
       // Invalidate ALL caches
       _cachedFullDateRange = null;
@@ -859,27 +636,11 @@ class _TimelineCalendarWidgetState
         double.maxFinite,
       );
 
-      _timelineLog(
-        '_scrollToDate: TELEPORT (range extended) - calculated positions',
-        category: 'Scroll',
-        data: {
-          'targetDaysSinceStart': targetDaysSinceStart,
-          'visibleStartIndex': _visibleStartIndex,
-          'offsetWidth': offsetWidth.toStringAsFixed(0),
-          'teleportScrollPosition': teleportScrollPosition.toStringAsFixed(1),
-        },
-      );
-
       // Trigger rebuild, then jumpTo (NO recursive _scrollToDate call!)
       setState(() {});
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _horizontalScrollController.hasClients) {
           _horizontalScrollController.jumpTo(teleportScrollPosition);
-
-          _timelineLog(
-            '_scrollToDate: TELEPORT (range extended) COMPLETE',
-            category: 'Scroll',
-          );
 
           _programmaticScrollResetTimer?.cancel();
           _programmaticScrollResetTimer = Timer(
@@ -915,17 +676,6 @@ class _TimelineCalendarWidgetState
             clampedTarget.isAfter(visibleEnd.add(const Duration(days: 5))));
 
     if (targetOutsideWindow && forceScroll) {
-      _timelineLog(
-        '_scrollToDate: TELEPORT - target outside visible window',
-        category: 'Scroll',
-        data: {
-          'target': clampedTarget.toIso8601String().substring(0, 10),
-          'visibleStart': visibleStart.toIso8601String().substring(0, 10),
-          'visibleEnd': visibleEnd.toIso8601String().substring(0, 10),
-          'daysSinceStart': daysSinceStart,
-        },
-      );
-
       // CRITICAL: Cancel previous timer FIRST to prevent race condition
       // A previous timer might fire between setState and postFrameCallback,
       // resetting _teleportTargetStartIndex to null before we can use it.
@@ -966,25 +716,12 @@ class _TimelineCalendarWidgetState
         double.maxFinite,
       );
 
-      _timelineLog(
-        '_scrollToDate: TELEPORT - calculated positions',
-        category: 'Scroll',
-        data: {
-          'visibleStartIndex': _visibleStartIndex,
-          'offsetWidth': offsetWidth.toStringAsFixed(0),
-          'newWindowTargetDay': newWindowTargetDay,
-          'teleportScrollPosition': teleportScrollPosition.toStringAsFixed(1),
-        },
-      );
-
       // Trigger rebuild, then jumpTo (NO recursive _scrollToDate call!)
       setState(() {});
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _horizontalScrollController.hasClients) {
           // Use jumpTo - instant, no animation, no race conditions
           _horizontalScrollController.jumpTo(teleportScrollPosition);
-
-          _timelineLog('_scrollToDate: TELEPORT COMPLETE', category: 'Scroll');
 
           // Reset flags after short delay
           _programmaticScrollResetTimer?.cancel();
@@ -1033,30 +770,8 @@ class _TimelineCalendarWidgetState
     final scrollDifference = (targetScroll - currentScroll).abs();
     final skipThreshold = dimensions.dayWidth * 2;
     if (scrollDifference < skipThreshold && !isInitialScroll && !forceScroll) {
-      _timelineLog(
-        '_scrollToDate: SKIPPING - target already visible (diff: ${scrollDifference.toStringAsFixed(1)}, threshold: ${skipThreshold.toStringAsFixed(1)})',
-        category: 'Scroll',
-      );
       return;
     }
-
-    _timelineLog(
-      '_scrollToDate: scroll calculation details',
-      category: 'Scroll',
-      data: {
-        'clampedTarget': clampedTarget.toIso8601String().substring(0, 10),
-        'daysSinceStart': daysSinceStart,
-        'scrollPosition': scrollPosition.toStringAsFixed(1),
-        'currentScroll': currentScroll.toStringAsFixed(1),
-        'targetScroll': targetScroll.toStringAsFixed(1),
-        'offset25pct': (visibleWidth * 0.25).toStringAsFixed(1),
-        'scrollDifference': scrollDifference.toStringAsFixed(1),
-        'skipThreshold': skipThreshold.toStringAsFixed(1),
-        'maxScroll': maxScroll.toStringAsFixed(1),
-        'visibleWidth': visibleWidth.toStringAsFixed(1),
-        'dayWidth': dimensions.dayWidth.toStringAsFixed(1),
-      },
-    );
 
     // Set flags before starting scroll
     _isProgrammaticScroll = true;
@@ -1067,10 +782,6 @@ class _TimelineCalendarWidgetState
     // causing _getVisibleDateRange() to use currentScroll (0.0) instead of target
     // Result: user sees start of range (2023-12) instead of today (2025-12)
     if (isInitialScroll) {
-      _timelineLog(
-        '_scrollToDate: using JUMPTO for initial scroll',
-        category: 'Scroll',
-      );
       _horizontalScrollController.jumpTo(targetScroll);
 
       // Immediately complete setup
@@ -1089,10 +800,6 @@ class _TimelineCalendarWidgetState
         },
       );
 
-      _timelineLog(
-        '_scrollToDate: initial scroll COMPLETED (jumpTo)',
-        category: 'Scroll',
-      );
       return;
     }
 
@@ -1104,21 +811,12 @@ class _TimelineCalendarWidgetState
           curve: Curves.easeInOut,
         )
         .then((_) {
-          _timelineLog(
-            '_scrollToDate: animation COMPLETED',
-            category: 'Scroll',
-          );
           if (mounted) {
             // Restore vertical scroll position if provided (preserves position on toolbar navigation)
             _restoreVerticalScrollPosition();
           }
         })
         .catchError((error) {
-          _timelineLog(
-            '_scrollToDate: animation ERROR',
-            category: 'Scroll',
-            data: error,
-          );
           return null;
         })
         .whenComplete(() {
@@ -1141,14 +839,7 @@ class _TimelineCalendarWidgetState
   /// Scroll to a specific month when month header is tapped
   /// SIMPLIFIED: With fixed date range, no more dynamic extension needed
   void _scrollToMonth(DateTime month) {
-    _timelineLog(
-      '_scrollToMonth called (SIMPLIFIED)',
-      category: 'Scroll',
-      data: {'month': '${month.year}-${month.month}'},
-    );
-
     if (!_horizontalScrollController.hasClients) {
-      _timelineLog('_scrollToMonth: NO CLIENTS - aborting', category: 'Scroll');
       return;
     }
 
@@ -1162,25 +853,9 @@ class _TimelineCalendarWidgetState
     // This allows user to navigate to any month via date picker
     bool rangeExtended = false;
     if (targetDate.isBefore(_fixedStartDate)) {
-      _timelineLog(
-        '_scrollToMonth: extending range START to include target',
-        category: 'Scroll',
-        data: {
-          'oldStart': _fixedStartDate.toIso8601String().substring(0, 10),
-          'target': targetDate.toIso8601String().substring(0, 10),
-        },
-      );
       _fixedStartDate = DateTime.utc(targetDate.year, targetDate.month);
       rangeExtended = true;
     } else if (targetDate.isAfter(_fixedEndDate)) {
-      _timelineLog(
-        '_scrollToMonth: extending range END to include target',
-        category: 'Scroll',
-        data: {
-          'oldEnd': _fixedEndDate.toIso8601String().substring(0, 10),
-          'target': targetDate.toIso8601String().substring(0, 10),
-        },
-      );
       // Extend to end of target month + 1 month buffer
       _fixedEndDate = DateTime.utc(targetDate.year, targetDate.month + 2);
       rangeExtended = true;
@@ -1192,15 +867,6 @@ class _TimelineCalendarWidgetState
       // Without this, _updateVisibleRange() reports current scroll position to parent,
       // parent updates _currentRange to that position, and didUpdateWidget overrides our target
       _isProgrammaticScroll = true;
-
-      _timelineLog(
-        '_scrollToMonth: range extended, scheduling scroll after rebuild',
-        category: 'Scroll',
-        data: {
-          'newStart': _fixedStartDate.toIso8601String().substring(0, 10),
-          'newEnd': _fixedEndDate.toIso8601String().substring(0, 10),
-        },
-      );
 
       // CRITICAL FIX: Invalidate ALL caches so rebuild creates new grid with correct dimensions
       // Without this, cached build returns old (shorter) grid and maxScrollExtent is wrong
@@ -1225,16 +891,6 @@ class _TimelineCalendarWidgetState
       // CRITICAL FIX #3: Set flag to force using _visibleStartIndex during rebuild
       // Without this, _calculateVisibleStartIndex() ignores _visibleStartIndex when hasClients=true
       _forceVisibleStartIndex = true;
-
-      _timelineLog(
-        '_scrollToMonth: setting _visibleStartIndex for target date',
-        category: 'Scroll',
-        data: {
-          'targetDaysSinceStart': targetDaysSinceStart,
-          'visibleStartIndex': _visibleStartIndex,
-          'forceFlag': _forceVisibleStartIndex,
-        },
-      );
 
       // Use setState to trigger rebuild, then scroll in post-frame callback
       setState(() {});
@@ -1266,11 +922,6 @@ class _TimelineCalendarWidgetState
           }
         })
         .catchError((error) {
-          _timelineLog(
-            '_scrollToMonth: animation ERROR',
-            category: 'Scroll',
-            data: error,
-          );
           return null;
         })
         .whenComplete(() {
@@ -1314,21 +965,8 @@ class _TimelineCalendarWidgetState
   /// Scroll to a specific conflict location (date and unit)
   /// Public method that can be called from parent widget via GlobalKey
   void scrollToConflict(String unitId, DateTime conflictDate) {
-    _timelineLog(
-      'scrollToConflict called',
-      category: 'Scroll',
-      data: {
-        'unitId': unitId,
-        'date': conflictDate.toIso8601String().substring(0, 10),
-      },
-    );
-
     if (!_horizontalScrollController.hasClients ||
         !_verticalScrollController.hasClients) {
-      _timelineLog(
-        'scrollToConflict: NO CLIENTS - deferring',
-        category: 'Scroll',
-      );
       // Wait for controllers to be ready
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) scrollToConflict(unitId, conflictDate);
@@ -1358,22 +996,8 @@ class _TimelineCalendarWidgetState
     final units = unitsAsync.value!;
     final unitIndex = units.indexWhere((unit) => unit.id == unitId);
     if (unitIndex < 0) {
-      _timelineLog(
-        'scrollToConflict: UNIT NOT FOUND',
-        category: 'Scroll',
-        data: {'unitId': unitId},
-      );
       return; // Unit not found
     }
-
-    _timelineLog(
-      'scrollToConflict: animating to conflict',
-      category: 'Scroll',
-      data: {
-        'unitIndex': unitIndex,
-        'targetHScroll': targetHorizontalScroll.toStringAsFixed(1),
-      },
-    );
 
     // Calculate vertical scroll position (each unit row is ~60px tall)
     const unitRowHeight = 60.0;
@@ -1489,19 +1113,6 @@ class _TimelineCalendarWidgetState
   int _calculateVisibleStartIndex() {
     final totalDays = _getDateRange().length;
 
-    // DEBUG: Log all state at start of calculation
-    _timelineLog(
-      '_calculateVisibleStartIndex: STATE CHECK',
-      category: 'Scroll',
-      data: {
-        'teleportTarget': _teleportTargetStartIndex,
-        'forceFlag': _forceVisibleStartIndex,
-        'visibleStartIndex': _visibleStartIndex,
-        'isProgrammatic': _isProgrammaticScroll,
-        'totalDays': totalDays,
-      },
-    );
-
     if (totalDays == 0) return 0;
 
     // TELEPORT FIX (PRIMARY): If _teleportTargetStartIndex is set, use it unconditionally.
@@ -1509,10 +1120,6 @@ class _TimelineCalendarWidgetState
     // TELEPORT completes. This is the most reliable way to ensure correct date range.
     if (_teleportTargetStartIndex != null) {
       final targetIndex = _teleportTargetStartIndex!;
-      _timelineLog(
-        '_calculateVisibleStartIndex: TELEPORT TARGET $_teleportTargetStartIndex',
-        category: 'Scroll',
-      );
       return targetIndex.clamp(0, totalDays - 1);
     }
 
@@ -1521,10 +1128,6 @@ class _TimelineCalendarWidgetState
     // far (e.g., from January to October) - we must build the 90-day window
     // around the TARGET date, not the current scroll position.
     if (_forceVisibleStartIndex) {
-      _timelineLog(
-        '_calculateVisibleStartIndex: FORCING to $_visibleStartIndex',
-        category: 'Scroll',
-      );
       // Reset flag after use - it's a one-time override
       _forceVisibleStartIndex = false;
       return _visibleStartIndex.clamp(0, totalDays - 1);
@@ -1533,10 +1136,6 @@ class _TimelineCalendarWidgetState
     // TELEPORT FIX (SECONDARY): During programmatic scroll, keep using _visibleStartIndex
     // to prevent the window from jumping back to old position.
     if (_isProgrammaticScroll) {
-      _timelineLog(
-        '_calculateVisibleStartIndex: KEEPING $_visibleStartIndex (programmatic scroll)',
-        category: 'Scroll',
-      );
       return _visibleStartIndex.clamp(0, totalDays - 1);
     }
 
@@ -1568,12 +1167,7 @@ class _TimelineCalendarWidgetState
 
   @override
   void dispose() {
-    _timelineLog('dispose() called', category: 'Lifecycle');
-
-    // Bug #4 fix: Cancel all timers to prevent callbacks after dispose
-    _visibleRangeDebounceTimer?.cancel();
-    _verticalScrollThrottleTimer?.cancel();
-    _horizontalScrollThrottleTimer?.cancel();
+    // Cancel timer to prevent callbacks after dispose
     _programmaticScrollResetTimer?.cancel();
 
     // Reset flags
@@ -1838,10 +1432,6 @@ class _TimelineCalendarWidgetState
     );
 
     if (_lastBuildDataHash == dataHash && _cachedTimelineContent != null) {
-      _timelineLog(
-        '_buildTimelineView: RETURNING CACHED (hash: $dataHash)',
-        category: 'Build',
-      );
       return _cachedTimelineContent!;
     }
 
@@ -1895,51 +1485,6 @@ class _TimelineCalendarWidgetState
     // NOTE: Grid should ALWAYS render when units exist, even if bookingsByUnit is empty
     // Empty bookings is a valid state (e.g., new property with no reservations)
     // User needs the grid to navigate dates, see unit rows, and add new bookings
-
-    // DEBUG: Log timeline build info (totalBookings already calculated above for hash)
-    _timelineLog(
-      '_buildTimelineView: building timeline',
-      category: 'Build',
-      data: {
-        'unitsCount': visibleUnits.length,
-        'totalBookings': totalBookings,
-        'datesCount': dates.length,
-        'datesFirst': dates.isNotEmpty
-            ? dates.first.toIso8601String().substring(0, 10)
-            : 'empty',
-        'datesLast': dates.isNotEmpty
-            ? dates.last.toIso8601String().substring(0, 10)
-            : 'empty',
-        'offsetWidth': offsetWidth.toStringAsFixed(1),
-        'dayWidth': dimensions.dayWidth.toStringAsFixed(2),
-        'totalGridWidth': (dates.length * dimensions.dayWidth).toStringAsFixed(
-          1,
-        ),
-      },
-    );
-
-    // DEBUG: Log first few bookings for each unit
-    for (final entry in bookingsByUnit.entries.take(3)) {
-      final unitBookings = entry.value;
-      if (unitBookings.isNotEmpty) {
-        final booking = unitBookings.first;
-        _timelineLog(
-          '_buildTimelineView: sample booking',
-          category: 'Build',
-          data: {
-            'unitId': entry.key.length >= 8
-                ? entry.key.substring(0, 8)
-                : entry.key,
-            'bookingId': booking.id.length >= 8
-                ? booking.id.substring(0, 8)
-                : booking.id,
-            'checkIn': booking.checkIn.toIso8601String().substring(0, 10),
-            'checkOut': booking.checkOut.toIso8601String().substring(0, 10),
-            'status': booking.status.name,
-          },
-        );
-      }
-    }
 
     final result = _buildTimelineContent(
       visibleUnits,
@@ -2145,12 +1690,6 @@ class _TimelineCalendarWidgetState
   }
 
   void _showBookingActionMenu(BookingModel booking) async {
-    _timelineLog(
-      '_showBookingActionMenu called',
-      category: 'BookingAction',
-      data: {'bookingId': booking.id, 'status': booking.status.name},
-    );
-
     // Get bookings data to detect conflicts
     final bookingsAsync = ref.read(timelineCalendarBookingsProvider);
     final bookingsByUnit = bookingsAsync.value ?? {};
@@ -2175,12 +1714,6 @@ class _TimelineCalendarWidgetState
       ),
     );
 
-    _timelineLog(
-      '_showBookingActionMenu: action received',
-      category: 'BookingAction',
-      data: {'action': action, 'mounted': mounted},
-    );
-
     if (!mounted || action == null) return;
 
     final l10n = AppLocalizations.of(context);
@@ -2192,28 +1725,14 @@ class _TimelineCalendarWidgetState
           builder: (context) => BookingInlineEditDialog(booking: booking),
         );
       case 'approve':
-        _timelineLog('approve: showing dialog', category: 'BookingAction');
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => const BookingApproveDialog(),
         );
-        _timelineLog(
-          'approve: dialog result',
-          category: 'BookingAction',
-          data: {'confirmed': confirmed, 'mounted': mounted},
-        );
         if (confirmed == true && mounted) {
           try {
-            _timelineLog(
-              'approve: calling repository',
-              category: 'BookingAction',
-            );
             final repository = ref.read(ownerBookingsRepositoryProvider);
             await repository.approveBooking(booking.id);
-            _timelineLog(
-              'approve: repository SUCCESS',
-              category: 'BookingAction',
-            );
             if (mounted) {
               ErrorDisplayUtils.showSuccessSnackBar(
                 context,
@@ -2223,11 +1742,6 @@ class _TimelineCalendarWidgetState
               ref.invalidate(timelineCalendarBookingsProvider);
             }
           } catch (e) {
-            _timelineLog(
-              'approve: repository ERROR',
-              category: 'BookingAction',
-              data: e,
-            );
             if (mounted) {
               ErrorDisplayUtils.showErrorSnackBar(
                 context,
@@ -2238,30 +1752,16 @@ class _TimelineCalendarWidgetState
           }
         }
       case 'reject':
-        _timelineLog('reject: showing dialog', category: 'BookingAction');
         final reason = await showDialog<String?>(
           context: context,
           builder: (dialogContext) => const BookingRejectDialog(),
         );
-        _timelineLog(
-          'reject: dialog result',
-          category: 'BookingAction',
-          data: {'reason': reason, 'mounted': mounted},
-        );
         if (reason != null && mounted) {
           try {
-            _timelineLog(
-              'reject: calling repository',
-              category: 'BookingAction',
-            );
             final repository = ref.read(ownerBookingsRepositoryProvider);
             await repository.rejectBooking(
               booking.id,
               reason: reason.isEmpty ? null : reason,
-            );
-            _timelineLog(
-              'reject: repository SUCCESS',
-              category: 'BookingAction',
             );
             if (mounted) {
               ErrorDisplayUtils.showWarningSnackBar(
@@ -2271,11 +1771,6 @@ class _TimelineCalendarWidgetState
               ref.invalidate(timelineCalendarBookingsProvider);
             }
           } catch (e) {
-            _timelineLog(
-              'reject: repository ERROR',
-              category: 'BookingAction',
-              data: e,
-            );
             if (mounted) {
               ErrorDisplayUtils.showErrorSnackBar(
                 context,
@@ -2286,31 +1781,17 @@ class _TimelineCalendarWidgetState
           }
         }
       case 'cancel':
-        _timelineLog('cancel: showing dialog', category: 'BookingAction');
         final result = await showDialog<Map<String, dynamic>?>(
           context: context,
           builder: (dialogContext) => const BookingCancelDialog(),
         );
-        _timelineLog(
-          'cancel: dialog result',
-          category: 'BookingAction',
-          data: {'result': result, 'mounted': mounted},
-        );
         if (result != null && mounted) {
           try {
-            _timelineLog(
-              'cancel: calling repository',
-              category: 'BookingAction',
-            );
             final repository = ref.read(ownerBookingsRepositoryProvider);
             await repository.cancelBooking(
               booking.id,
               result['reason'] as String,
               sendEmail: result['sendEmail'] as bool,
-            );
-            _timelineLog(
-              'cancel: repository SUCCESS',
-              category: 'BookingAction',
             );
             if (mounted) {
               ErrorDisplayUtils.showWarningSnackBar(
@@ -2320,11 +1801,6 @@ class _TimelineCalendarWidgetState
               ref.invalidate(timelineCalendarBookingsProvider);
             }
           } catch (e) {
-            _timelineLog(
-              'cancel: repository ERROR',
-              category: 'BookingAction',
-              data: e,
-            );
             if (mounted) {
               ErrorDisplayUtils.showErrorSnackBar(
                 context,

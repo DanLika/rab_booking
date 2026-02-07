@@ -49,10 +49,6 @@ class _OwnerTimelineCalendarScreenState
   int _visibleDays =
       30; // Default to 30 days, will be updated based on screen size
 
-  // FIXED: Flag to prevent onVisibleDateRangeChanged from overwriting _currentRange
-  // during programmatic navigation (Today, Previous, Next, DatePicker)
-  bool _isProgrammaticNavigation = false;
-
   // Track vertical scroll position to preserve it during toolbar navigation
   // When user clicks left/right arrows, widget rebuilds but we restore scroll position
   double _verticalScrollOffset = 0.0;
@@ -408,12 +404,6 @@ class _OwnerTimelineCalendarScreenState
                                   ),
                               onUnitNameTap: _showUnitFutureBookings,
                               onVisibleDateRangeChanged: (startDate) {
-                                // FIXED: Only update toolbar when user scrolls MANUALLY
-                                // Skip update during programmatic navigation (Today, arrows, date picker)
-                                // to prevent overwriting the intended navigation target
-                                if (_isProgrammaticNavigation) return;
-
-                                // Update toolbar date range when user scrolls manually
                                 setState(() {
                                   _currentRange = DateRangeSelection.days(
                                     startDate,
@@ -608,23 +598,9 @@ class _OwnerTimelineCalendarScreenState
   }
 
   /// Helper: Navigate to a new date range programmatically
-  /// Sets flag to prevent onVisibleDateRangeChanged from overwriting the target
   void _navigateTo(DateRangeSelection newRange) {
     setState(() {
-      _isProgrammaticNavigation = true;
       _currentRange = newRange;
-    });
-
-    // Problem #16 fix: Increased timeout from 600ms to 1000ms
-    // Timeline animation takes 500ms, then there's a 150ms delay before flag reset
-    // Total time needed: ~700-800ms. Using 1000ms for safety margin.
-    // Old value (600ms) caused race condition where onVisibleDateRangeChanged
-    // would fire after flag reset, causing toolbar to "jump back" to old position.
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (!mounted || !context.mounted) return;
-      setState(() {
-        _isProgrammaticNavigation = false;
-      });
     });
   }
 

@@ -8519,4 +8519,84 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get ownerDrawerMonthCalendar => 'Mjesečni kalendar';
+
+  @override
+  String get aiAssistantDrawerTitle => 'AI Asistent';
+
+  @override
+  String get aiAssistantTitle => 'AI Asistent';
+
+  @override
+  String get aiAssistantNewChat => 'Novi razgovor';
+
+  @override
+  String get aiAssistantWelcome => 'BookBed Asistent';
+
+  @override
+  String get aiAssistantWelcomeSubtitle =>
+      'Pitajte me bilo što o postavljanju i upravljanju vašim smještajem';
+
+  @override
+  String get aiAssistantPlaceholder => 'Postavite pitanje...';
+
+  @override
+  String get aiAssistantSuggestions => 'Isprobajte jedno od ovih pitanja';
+
+  @override
+  String get aiAssistantNoChats => 'Još nema razgovora';
+
+  @override
+  String get aiAssistantDeleteChat => 'Obriši razgovor';
+
+  @override
+  String get aiAssistantDeleteConfirm =>
+      'Jeste li sigurni da želite obrisati ovaj razgovor?';
+
+  @override
+  String get aiAssistantDailyLimit =>
+      'Dostigli ste dnevni limit poruka (30 poruka). Pokušajte ponovo sutra.';
+
+  @override
+  String get aiAssistantAiError => 'Nešto je pošlo po krivu. Pokušajte ponovo.';
+
+  @override
+  String get aiAssistantError => 'Greška pri učitavanju razgovora';
+
+  @override
+  String get aiAssistantDisclaimer =>
+      'AI Asistent pruža smjernice na temelju BookBed dokumentacije. Za probleme s računom, kontaktirajte support@bookbed.io';
+
+  @override
+  String get aiAssistantChipAddUnit => 'Kako dodati apartman?';
+
+  @override
+  String get aiAssistantChipPricing => 'Postavi cijene';
+
+  @override
+  String get aiAssistantChipStripe => 'Poveži Stripe';
+
+  @override
+  String get aiAssistantChipIcal => 'iCal sinkronizacija';
+
+  @override
+  String get aiAssistantChipEmbed => 'Ugradi widget';
+
+  @override
+  String get aiConsentProcessing =>
+      'Vaše poruke obrađuje AI (Google Gemini) kako bi pružio korisne odgovore.';
+
+  @override
+  String get aiConsentStorage =>
+      'Povijest razgovora čuva se 1 godinu, a zatim se automatski briše.';
+
+  @override
+  String get aiConsentDeletion =>
+      'Možete izbrisati bilo koji razgovor u bilo kojem trenutku povlačenjem ulijevo.';
+
+  @override
+  String get aiConsentPrivacy =>
+      'Ne dijelite osjetljive podatke poput lozinki ili financijskih informacija.';
+
+  @override
+  String get aiConsentAccept => 'Razumijem, započni';
 }

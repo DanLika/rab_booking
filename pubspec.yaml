@@ -90,6 +90,13 @@ dependencies:
   web: ^1.0.0
   collection: ^1.18.0  # Collection utilities (firstWhereOrNull, etc.)
 
+  # AI Chat (Gemini via Firebase)
+  firebase_ai: ^3.6.0
+  firebase_app_check: ^0.4.1+4
+
+  # Markdown rendering (for AI chat responses)
+  flutter_markdown: ^0.7.4+3
+
   # Error Tracking (Web - Crashlytics doesn't support web)
   sentry_flutter: ^8.12.0
 
@@ -171,6 +178,7 @@ flutter:
     - assets/google_fonts/PlayfairDisplay-Italic.ttf
     - assets/images/
     - assets/images/platforms/
+    - assets/kb/
 
   # Custom Fonts
   fonts:

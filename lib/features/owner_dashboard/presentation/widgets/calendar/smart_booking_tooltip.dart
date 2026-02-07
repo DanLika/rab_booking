@@ -218,7 +218,7 @@ class _TooltipContent extends StatelessWidget {
           if (booking.isExternalBooking) ...[
             const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.orange.withAlpha((0.15 * 255).toInt()),
                 borderRadius: BorderRadius.circular(12),
@@ -229,14 +229,18 @@ class _TooltipContent extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.link, size: 12, color: Colors.orange),
-                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.link,
+                    size: isCompact ? 14 : 16,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(width: 6),
                   Text(
                     booking.sourceDisplayName,
                     style: TextStyle(
-                      fontSize: isCompact ? 10 : 11,
+                      fontSize: isCompact ? 12 : 13,
                       color: Colors.orange[800],
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],

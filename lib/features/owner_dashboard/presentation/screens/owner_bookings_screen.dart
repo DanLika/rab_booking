@@ -983,10 +983,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  l10n.ownerBookingsFiltersAndView,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Flexible(
+                  child: Text(
+                    l10n.ownerBookingsFiltersAndView,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Spacer(),

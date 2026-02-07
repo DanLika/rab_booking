@@ -15255,6 +15255,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Month Calendar'**
   String get ownerDrawerMonthCalendar;
+
+  /// No description provided for @aiAssistantDrawerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get aiAssistantDrawerTitle;
+
+  /// No description provided for @aiAssistantTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get aiAssistantTitle;
+
+  /// No description provided for @aiAssistantNewChat.
+  ///
+  /// In en, this message translates to:
+  /// **'New Chat'**
+  String get aiAssistantNewChat;
+
+  /// No description provided for @aiAssistantWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'BookBed Assistant'**
+  String get aiAssistantWelcome;
+
+  /// No description provided for @aiAssistantWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask me anything about setting up and managing your accommodation'**
+  String get aiAssistantWelcomeSubtitle;
+
+  /// No description provided for @aiAssistantPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a question...'**
+  String get aiAssistantPlaceholder;
+
+  /// No description provided for @aiAssistantSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Try one of these questions'**
+  String get aiAssistantSuggestions;
+
+  /// No description provided for @aiAssistantNoChats.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats yet'**
+  String get aiAssistantNoChats;
+
+  /// No description provided for @aiAssistantDeleteChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Chat'**
+  String get aiAssistantDeleteChat;
+
+  /// No description provided for @aiAssistantDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this chat?'**
+  String get aiAssistantDeleteConfirm;
+
+  /// No description provided for @aiAssistantDailyLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You have reached the daily message limit (30 messages). Please try again tomorrow.'**
+  String get aiAssistantDailyLimit;
+
+  /// No description provided for @aiAssistantAiError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get aiAssistantAiError;
+
+  /// No description provided for @aiAssistantError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load chats'**
+  String get aiAssistantError;
+
+  /// No description provided for @aiAssistantDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant provides guidance based on BookBed documentation. For account-specific issues, contact support@bookbed.io'**
+  String get aiAssistantDisclaimer;
+
+  /// No description provided for @aiAssistantChipAddUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'How to add a unit?'**
+  String get aiAssistantChipAddUnit;
+
+  /// No description provided for @aiAssistantChipPricing.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up pricing'**
+  String get aiAssistantChipPricing;
+
+  /// No description provided for @aiAssistantChipStripe.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Stripe'**
+  String get aiAssistantChipStripe;
+
+  /// No description provided for @aiAssistantChipIcal.
+  ///
+  /// In en, this message translates to:
+  /// **'iCal sync'**
+  String get aiAssistantChipIcal;
+
+  /// No description provided for @aiAssistantChipEmbed.
+  ///
+  /// In en, this message translates to:
+  /// **'Embed widget'**
+  String get aiAssistantChipEmbed;
+
+  /// No description provided for @aiConsentProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Your messages are processed by AI (Google Gemini) to provide helpful responses.'**
+  String get aiConsentProcessing;
+
+  /// No description provided for @aiConsentStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat history is stored for 1 year and then automatically deleted.'**
+  String get aiConsentStorage;
+
+  /// No description provided for @aiConsentDeletion.
+  ///
+  /// In en, this message translates to:
+  /// **'You can delete any chat at any time by swiping left on it.'**
+  String get aiConsentDeletion;
+
+  /// No description provided for @aiConsentPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not share sensitive data such as passwords or financial information.'**
+  String get aiConsentPrivacy;
+
+  /// No description provided for @aiConsentAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand, let\'s start'**
+  String get aiConsentAccept;
 }
 
 class _AppLocalizationsDelegate

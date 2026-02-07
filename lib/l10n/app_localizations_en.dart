@@ -8449,4 +8449,84 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ownerDrawerMonthCalendar => 'Month Calendar';
+
+  @override
+  String get aiAssistantDrawerTitle => 'AI Assistant';
+
+  @override
+  String get aiAssistantTitle => 'AI Assistant';
+
+  @override
+  String get aiAssistantNewChat => 'New Chat';
+
+  @override
+  String get aiAssistantWelcome => 'BookBed Assistant';
+
+  @override
+  String get aiAssistantWelcomeSubtitle =>
+      'Ask me anything about setting up and managing your accommodation';
+
+  @override
+  String get aiAssistantPlaceholder => 'Ask a question...';
+
+  @override
+  String get aiAssistantSuggestions => 'Try one of these questions';
+
+  @override
+  String get aiAssistantNoChats => 'No chats yet';
+
+  @override
+  String get aiAssistantDeleteChat => 'Delete Chat';
+
+  @override
+  String get aiAssistantDeleteConfirm =>
+      'Are you sure you want to delete this chat?';
+
+  @override
+  String get aiAssistantDailyLimit =>
+      'You have reached the daily message limit (30 messages). Please try again tomorrow.';
+
+  @override
+  String get aiAssistantAiError => 'Something went wrong. Please try again.';
+
+  @override
+  String get aiAssistantError => 'Failed to load chats';
+
+  @override
+  String get aiAssistantDisclaimer =>
+      'AI Assistant provides guidance based on BookBed documentation. For account-specific issues, contact support@bookbed.io';
+
+  @override
+  String get aiAssistantChipAddUnit => 'How to add a unit?';
+
+  @override
+  String get aiAssistantChipPricing => 'Set up pricing';
+
+  @override
+  String get aiAssistantChipStripe => 'Connect Stripe';
+
+  @override
+  String get aiAssistantChipIcal => 'iCal sync';
+
+  @override
+  String get aiAssistantChipEmbed => 'Embed widget';
+
+  @override
+  String get aiConsentProcessing =>
+      'Your messages are processed by AI (Google Gemini) to provide helpful responses.';
+
+  @override
+  String get aiConsentStorage =>
+      'Chat history is stored for 1 year and then automatically deleted.';
+
+  @override
+  String get aiConsentDeletion =>
+      'You can delete any chat at any time by swiping left on it.';
+
+  @override
+  String get aiConsentPrivacy =>
+      'Do not share sensitive data such as passwords or financial information.';
+
+  @override
+  String get aiConsentAccept => 'I understand, let\'s start';
 }

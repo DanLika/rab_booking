@@ -77,284 +77,228 @@ class _BookingInlineEditDialogState
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       insetPadding: ResponsiveDialogUtils.getDialogInsetPadding(context),
-      child: Container(
-        width: dialogWidth,
-        constraints: BoxConstraints(
-          maxHeight:
-              MediaQuery.of(context).size.height *
-              ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
-        ),
-        decoration: BoxDecoration(
-          gradient: context.gradients.sectionBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.gradients.sectionBorder.withAlpha(
-              (0.5 * 255).toInt(),
-            ),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Container(
+          width: dialogWidth,
+          constraints: BoxConstraints(
+            maxHeight:
+                MediaQuery.of(context).size.height *
+                ResponsiveSpacingHelper.getDialogMaxHeightPercent(context),
           ),
-          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header with gradient - matches CommonAppBar height (52px)
-            Container(
-              height: ResponsiveDialogUtils.kHeaderHeight,
-              padding: EdgeInsets.symmetric(horizontal: headerPadding),
-              decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(11),
+          decoration: BoxDecoration(
+            gradient: context.gradients.sectionBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: context.gradients.sectionBorder.withAlpha(
+                (0.5 * 255).toInt(),
+              ),
+            ),
+            boxShadow: isDark
+                ? AppShadows.elevation4Dark
+                : AppShadows.elevation4,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with gradient - matches CommonAppBar height (52px)
+              Container(
+                height: ResponsiveDialogUtils.kHeaderHeight,
+                padding: EdgeInsets.symmetric(horizontal: headerPadding),
+                decoration: BoxDecoration(
+                  gradient: context.gradients.brandPrimary,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(11),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.edit,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: AutoSizeText(
+                        l10n.bookingInlineEditTitle,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        maxLines: 1,
+                        minFontSize: 14,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: AutoSizeText(
-                      l10n.bookingInlineEditTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+
+              // Content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Guest name (read-only)
+                      _buildInfoRow(
+                        l10n.bookingInlineEditGuest,
+                        widget.booking.guestName ?? 'N/A',
+                        Icons.person,
                       ),
-                      maxLines: 1,
-                      minFontSize: 14,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
+                      const SizedBox(height: 16),
 
-            // Content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(screenWidth < 400 ? 12 : 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Guest name (read-only)
-                    _buildInfoRow(
-                      l10n.bookingInlineEditGuest,
-                      widget.booking.guestName ?? 'N/A',
-                      Icons.person,
-                    ),
-                    const SizedBox(height: 16),
+                      // Dates section title
+                      _SectionHeader(
+                        icon: Icons.calendar_today_outlined,
+                        title: l10n.bookingInlineEditDates,
+                      ),
+                      const SizedBox(height: 12),
 
-                    // Dates section title
-                    _SectionHeader(
-                      icon: Icons.calendar_today_outlined,
-                      title: l10n.bookingInlineEditDates,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Date fields - responsive layout
-                    if (isMobile)
-                      Column(
-                        children: [
-                          _buildDateField(
-                            label: l10n.bookingInlineEditCheckIn,
-                            date: _checkIn,
-                            onTap: () => _selectDate(context, isCheckIn: true),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildDateField(
-                            label: l10n.bookingInlineEditCheckOut,
-                            date: _checkOut,
-                            onTap: () => _selectDate(context, isCheckIn: false),
-                          ),
-                        ],
-                      )
-                    else
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDateField(
+                      // Date fields - responsive layout
+                      if (isMobile)
+                        Column(
+                          children: [
+                            _buildDateField(
                               label: l10n.bookingInlineEditCheckIn,
                               date: _checkIn,
                               onTap: () =>
                                   _selectDate(context, isCheckIn: true),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildDateField(
+                            const SizedBox(height: 12),
+                            _buildDateField(
                               label: l10n.bookingInlineEditCheckOut,
                               date: _checkOut,
                               onTap: () =>
                                   _selectDate(context, isCheckIn: false),
                             ),
-                          ),
-                        ],
-                      ),
-
-                    const SizedBox(height: 12),
-
-                    // Nights badge - styled like booking_create_dialog
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withAlpha(
-                          (0.1 * 255).toInt(),
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withAlpha(
-                            (0.3 * 255).toInt(),
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.nights_stay,
-                            size: 18,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${_checkOut.difference(_checkIn).inDays} ${_checkOut.difference(_checkIn).inDays == 1 ? l10n.bookingInlineEditNightSingular : l10n.bookingInlineEditNightPlural}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Guest count
-                    _buildGuestCountField(),
-                    const SizedBox(height: 16),
-
-                    // Status
-                    _buildStatusField(),
-                    const SizedBox(height: 16),
-
-                    // Internal notes
-                    _buildNotesField(),
-                  ],
-                ),
-              ),
-            ),
-
-            // Footer buttons
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth < 400 ? 8 : 16,
-                vertical: 12,
-              ),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.dialogFooterDark
-                    : AppColors.dialogFooterLight,
-                border: Border(
-                  top: BorderSide(
-                    color: isDark
-                        ? AppColors.sectionDividerDark
-                        : AppColors.sectionDividerLight,
-                  ),
-                ),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(11),
-                ),
-              ),
-              child: isMobile
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Save button (full width on mobile) with gradient
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: context.gradients.brandPrimary,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(8),
-                            ),
-                          ),
-                          child: ElevatedButton.icon(
-                            onPressed: _isSaving ? null : _saveChanges,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              // Keep same colors when disabled (loading state)
-                              disabledBackgroundColor: Colors.transparent,
-                              disabledForegroundColor: Colors.white,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildDateField(
+                                label: l10n.bookingInlineEditCheckIn,
+                                date: _checkIn,
+                                onTap: () =>
+                                    _selectDate(context, isCheckIn: true),
                               ),
                             ),
-                            icon: _isSaving
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.save, color: Colors.white),
-                            label: AutoSizeText(
-                              _isSaving
-                                  ? l10n.bookingInlineEditSaving
-                                  : l10n.bookingInlineEditSave,
-                              style: const TextStyle(color: Colors.white),
-                              maxLines: 1,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildDateField(
+                                label: l10n.bookingInlineEditCheckOut,
+                                date: _checkOut,
+                                onTap: () =>
+                                    _selectDate(context, isCheckIn: false),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        // Cancel button (full width on mobile)
-                        TextButton(
-                          onPressed: _isSaving
-                              ? null
-                              : () => Navigator.of(context).pop(),
-                          child: AutoSizeText(
-                            l10n.bookingInlineEditCancel,
-                            maxLines: 1,
-                            minFontSize: 11,
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Flexible(
-                          child: TextButton(
-                            onPressed: _isSaving
-                                ? null
-                                : () => Navigator.of(context).pop(),
-                            child: AutoSizeText(
-                              l10n.bookingInlineEditCancel,
-                              maxLines: 1,
-                              minFontSize: 11,
+
+                      const SizedBox(height: 12),
+
+                      // Nights badge - styled like booking_create_dialog
+                      Builder(
+                        builder: (context) {
+                          final nights = _checkOut
+                              .difference(_checkIn)
+                              .inDays
+                              .clamp(0, 9999);
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withAlpha(
+                                (0.1 * 255).toInt(),
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: theme.colorScheme.primary.withAlpha(
+                                  (0.3 * 255).toInt(),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Container(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.nights_stay,
+                                  size: 18,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '$nights ${nights == 1 ? l10n.bookingInlineEditNightSingular : l10n.bookingInlineEditNightPlural}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Guest count
+                      _buildGuestCountField(),
+                      const SizedBox(height: 16),
+
+                      // Status
+                      _buildStatusField(),
+                      const SizedBox(height: 16),
+
+                      // Internal notes
+                      _buildNotesField(),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Footer buttons
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth < 400 ? 8 : 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.dialogFooterDark
+                      : AppColors.dialogFooterLight,
+                  border: Border(
+                    top: BorderSide(
+                      color: isDark
+                          ? AppColors.sectionDividerDark
+                          : AppColors.sectionDividerLight,
+                    ),
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(11),
+                  ),
+                ),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Save button (full width on mobile) with gradient
+                          Container(
                             decoration: BoxDecoration(
                               gradient: context.gradients.brandPrimary,
                               borderRadius: const BorderRadius.all(
@@ -366,6 +310,9 @@ class _BookingInlineEditDialogState
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 foregroundColor: Colors.white,
+                                // Keep same colors when disabled (loading state)
+                                disabledBackgroundColor: Colors.transparent,
+                                disabledForegroundColor: Colors.white,
                                 shadowColor: Colors.transparent,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -390,11 +337,82 @@ class _BookingInlineEditDialogState
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-            ),
-          ],
+                          const SizedBox(height: 8),
+                          // Cancel button (full width on mobile)
+                          TextButton(
+                            onPressed: _isSaving
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                            child: AutoSizeText(
+                              l10n.bookingInlineEditCancel,
+                              maxLines: 1,
+                              minFontSize: 11,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: TextButton(
+                              onPressed: _isSaving
+                                  ? null
+                                  : () => Navigator.of(context).pop(),
+                              child: AutoSizeText(
+                                l10n.bookingInlineEditCancel,
+                                maxLines: 1,
+                                minFontSize: 11,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: context.gradients.brandPrimary,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(8),
+                                ),
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: _isSaving ? null : _saveChanges,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: Colors.white,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                icon: _isSaving
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.save,
+                                        color: Colors.white,
+                                      ),
+                                label: AutoSizeText(
+                                  _isSaving
+                                      ? l10n.bookingInlineEditSaving
+                                      : l10n.bookingInlineEditSave,
+                                  style: const TextStyle(color: Colors.white),
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

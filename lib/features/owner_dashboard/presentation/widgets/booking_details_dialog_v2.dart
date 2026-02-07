@@ -128,12 +128,15 @@ class BookingDetailsDialogV2 extends ConsumerWidget {
                               showTooltip: false,
                             ),
                             const SizedBox(width: 5),
-                            Text(
-                              booking.sourceDisplayName,
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
+                            Flexible(
+                              child: Text(
+                                booking.sourceDisplayName,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],

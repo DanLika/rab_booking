@@ -143,125 +143,123 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
     // Build semantic label for accessibility
     final semanticLabel = _buildSemanticLabel(booking, hasConflict);
 
-    return RepaintBoundary(
-      child: Semantics(
-        label: semanticLabel,
-        button: true,
-        enabled: true,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: PlatformUtils.supportsHover
-              ? (event) {
-                  setState(() => _isHovered = true);
-                  SmartBookingTooltip.show(
-                    context: context,
-                    booking: booking,
-                    position: event.position,
-                    hasConflict: hasConflict,
-                    conflictingBookings: conflictingBookings,
-                  );
-                }
-              : null,
-          onExit: PlatformUtils.supportsHover
-              ? (_) {
-                  setState(() => _isHovered = false);
-                  SmartBookingTooltip.hide();
-                }
-              : null,
-          child: GestureDetector(
-            onTap: widget.onTap,
-            onLongPress: widget.onLongPress,
-            child: AnimatedContainer(
+    return Semantics(
+      label: semanticLabel,
+      button: true,
+      enabled: true,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: PlatformUtils.supportsHover
+            ? (event) {
+                setState(() => _isHovered = true);
+                SmartBookingTooltip.show(
+                  context: context,
+                  booking: booking,
+                  position: event.position,
+                  hasConflict: hasConflict,
+                  conflictingBookings: conflictingBookings,
+                );
+              }
+            : null,
+        onExit: PlatformUtils.supportsHover
+            ? (_) {
+                setState(() => _isHovered = false);
+                SmartBookingTooltip.hide();
+              }
+            : null,
+        child: GestureDetector(
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          child: AnimatedContainer(
+            duration: kTimelineBookingBlockHoverAnimationDuration,
+            curve: Curves.easeOut,
+            width: width - (kTimelineBookingBlockHorizontalMargin * 2),
+            height: blockHeight,
+            margin: const EdgeInsets.symmetric(
+              horizontal: kTimelineBookingBlockHorizontalMargin,
+            ),
+            transform: _isHovered
+                ? Matrix4.diagonal3Values(
+                    kTimelineBookingBlockHoverScale,
+                    kTimelineBookingBlockHoverScale,
+                    1.0,
+                  )
+                : Matrix4.identity(),
+            transformAlignment: Alignment.center,
+            child: AnimatedOpacity(
               duration: kTimelineBookingBlockHoverAnimationDuration,
-              curve: Curves.easeOut,
-              width: width - (kTimelineBookingBlockHorizontalMargin * 2),
-              height: blockHeight,
-              margin: const EdgeInsets.symmetric(
-                horizontal: kTimelineBookingBlockHorizontalMargin,
-              ),
-              transform: _isHovered
-                  ? Matrix4.diagonal3Values(
-                      kTimelineBookingBlockHoverScale,
-                      kTimelineBookingBlockHoverScale,
-                      1.0,
-                    )
-                  : Matrix4.identity(),
-              transformAlignment: Alignment.center,
-              child: AnimatedOpacity(
-                duration: kTimelineBookingBlockHoverAnimationDuration,
-                opacity: _isHovered
-                    ? kTimelineBookingBlockHoverOpacity
-                    : kTimelineBookingBlockNormalOpacity,
-                child: Stack(
-                  alignment: Alignment
-                      .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
-                  children: [
-                    // Background layer with skewed parallelogram
-                    // dayWidth is used to calculate skewOffset for turnover day alignment
-                    CustomPaint(
-                      painter: SkewedBookingPainter(
-                        backgroundColor: booking.status.color,
-                        borderColor: booking.status.color,
-                        dayWidth: dayWidth,
-                        hasConflict: hasConflict,
-                        // Theme-aware separator color for diagonal lines
-                        separatorColor:
-                            Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white.withValues(alpha: 0.3)
-                            : Colors.black.withValues(alpha: 0.2),
-                      ),
-                      // FIXED: Match container width to prevent visual overflow
-                      // Container width is: width - (margin * 2), so painter should match
-                      size: Size(
-                        width - (kTimelineBookingBlockHorizontalMargin * 2),
-                        blockHeight,
-                      ),
+              opacity: _isHovered
+                  ? kTimelineBookingBlockHoverOpacity
+                  : kTimelineBookingBlockNormalOpacity,
+              child: Stack(
+                alignment: Alignment
+                    .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
+                children: [
+                  // Background layer with skewed parallelogram
+                  // dayWidth is used to calculate skewOffset for turnover day alignment
+                  CustomPaint(
+                    painter: SkewedBookingPainter(
+                      backgroundColor: booking.status.color,
+                      borderColor: booking.status.color,
+                      dayWidth: dayWidth,
+                      hasConflict: hasConflict,
+                      // Theme-aware separator color for diagonal lines
+                      separatorColor:
+                          Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.3)
+                          : Colors.black.withValues(alpha: 0.2),
                     ),
+                    // FIXED: Match container width to prevent visual overflow
+                    // Container width is: width - (margin * 2), so painter should match
+                    size: Size(
+                      width - (kTimelineBookingBlockHorizontalMargin * 2),
+                      blockHeight,
+                    ),
+                  ),
 
-                    // Conflict indicator (single centered warning icon)
-                    if (hasConflict)
-                      Positioned.fill(
-                        child: Center(
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade700,
-                              shape: BoxShape.circle,
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black54,
-                                  blurRadius: 4,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.warning_rounded,
-                              size: 16,
-                              color: Colors.white,
-                            ),
+                  // Conflict indicator (single centered warning icon)
+                  if (hasConflict)
+                    Positioned.fill(
+                      child: Center(
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade700,
+                            shape: BoxShape.circle,
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black54,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.warning_rounded,
+                            size: 16,
+                            color: Colors.white,
                           ),
                         ),
                       ),
+                    ),
 
-                    // Platform icon for external bookings (Booking.com, Airbnb, etc.)
-                    // Only show for external platforms, not for widget/direct bookings
-                    if (PlatformIcon.shouldShowIcon(booking.source))
-                      Positioned(
-                        top: 2,
-                        right: hasConflict
-                            ? 28
-                            : 4, // Offset if conflict icon present
-                        child: PlatformIcon(
-                          source: booking.source,
-                          size: 14,
-                          showTooltip:
-                              false, // Tooltip handled by SmartBookingTooltip
-                        ),
+                  // Platform icon for external bookings (Booking.com, Airbnb, etc.)
+                  // Only show for external platforms, not for widget/direct bookings
+                  if (PlatformIcon.shouldShowIcon(booking.source))
+                    Positioned(
+                      top: 2,
+                      right: hasConflict
+                          ? 28
+                          : 4, // Offset if conflict icon present
+                      child: PlatformIcon(
+                        source: booking.source,
+                        size: 14,
+                        showTooltip:
+                            false, // Tooltip handled by SmartBookingTooltip
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
           ),

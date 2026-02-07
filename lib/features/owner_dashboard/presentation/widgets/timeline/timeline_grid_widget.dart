@@ -332,20 +332,15 @@ class _TimelineUnitRow extends StatelessWidget {
         Positioned(
           left: left,
           top: topPosition,
-          // RepaintBoundary isolates repaints for better web performance
-          child: RepaintBoundary(
-            child: TimelineBookingBlock(
-              booking: booking,
-              width: width,
-              unitRowHeight: unitRowHeight,
-              dayWidth: dayWidth,
-              onTap: onBookingTap != null
-                  ? () => onBookingTap!(booking)
-                  : () {},
-              onLongPress: onBookingLongPress != null
-                  ? () => onBookingLongPress!(booking)
-                  : () {},
-            ),
+          child: TimelineBookingBlock(
+            booking: booking,
+            width: width,
+            unitRowHeight: unitRowHeight,
+            dayWidth: dayWidth,
+            onTap: onBookingTap != null ? () => onBookingTap!(booking) : () {},
+            onLongPress: onBookingLongPress != null
+                ? () => onBookingLongPress!(booking)
+                : () {},
           ),
         ),
       );

@@ -80,6 +80,17 @@ class OwnerAppDrawer extends ConsumerWidget {
 
             const SizedBox(height: 4),
 
+            // AI Asistent
+            _DrawerItem(
+              icon: Icons.smart_toy_outlined, // Fallback icon
+              imagePath: 'assets/images/assistant_illustration.png',
+              title: l10n.aiAssistantDrawerTitle,
+              isSelected: currentRoute == 'ai-assistant',
+              onTap: () => context.go(OwnerRoutes.aiAssistant),
+            ),
+
+            const SizedBox(height: 4),
+
             // Smještajne Jedinice
             _DrawerItem(
               icon: Icons.bed_outlined,
@@ -315,12 +326,14 @@ class OwnerAppDrawer extends ConsumerWidget {
 /// Premium Drawer Item with hover effect
 class _DrawerItem extends StatefulWidget {
   final IconData icon;
+  final String? imagePath;
   final String title;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _DrawerItem({
     required this.icon,
+    this.imagePath,
     required this.title,
     required this.isSelected,
     required this.onTap,
@@ -367,20 +380,29 @@ class _DrawerItemState extends State<_DrawerItem> {
           ),
           child: ListTile(
             leading: Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(widget.imagePath != null ? 0 : 8),
               decoration: BoxDecoration(
                 color: widget.isSelected
                     ? selectedTextColor.withValues(alpha: 0.12)
                     : theme.colorScheme.onSurface.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                widget.icon,
-                color: widget.isSelected
-                    ? selectedTextColor
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.75),
-                size: 20,
-              ),
+              child: widget.imagePath != null
+                  ? ClipOval(
+                      child: Image.asset(
+                        widget.imagePath!,
+                        width: 36,
+                        height: 36,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Icon(
+                      widget.icon,
+                      color: widget.isSelected
+                          ? selectedTextColor
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                      size: 20,
+                    ),
             ),
             title: Text(
               widget.title,

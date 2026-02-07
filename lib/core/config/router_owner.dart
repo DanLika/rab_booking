@@ -37,6 +37,7 @@ import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_setti
 import '../../features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/platform_connections_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
+import '../../features/owner_dashboard/presentation/screens/guides/ai_assistant_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
 import '../../features/auth/presentation/screens/cookies_policy_screen.dart';
 import '../../features/widget/presentation/screens/booking_widget_screen.dart';
@@ -122,6 +123,7 @@ class OwnerRoutes {
   // Guides
   static const String guideEmbedWidget = '/owner/guides/embed-widget';
   static const String guideFaq = '/owner/guides/faq';
+  static const String aiAssistant = '/owner/ai-assistant';
   static const String notFound = '/404';
 }
 
@@ -755,6 +757,13 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
         path: OwnerRoutes.guideFaq,
         pageBuilder: (context, state) =>
             PageTransitions.fade(key: state.pageKey, child: const FAQScreen()),
+      ),
+      GoRoute(
+        path: OwnerRoutes.aiAssistant,
+        pageBuilder: (context, state) => PageTransitions.fade(
+          key: state.pageKey,
+          child: const AiAssistantScreen(),
+        ),
       ),
 
       // Cookies Policy route - SlideRight (linked from auth screens)

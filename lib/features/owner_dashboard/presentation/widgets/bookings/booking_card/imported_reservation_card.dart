@@ -61,7 +61,6 @@ class ImportedReservationCard extends ConsumerWidget {
                   BookingCardHeader(
                     isMobile: isMobile,
                     importedSource: event.source,
-                    importedGuestName: event.guestName,
                     hasConflict: hasConflict,
                   ),
 

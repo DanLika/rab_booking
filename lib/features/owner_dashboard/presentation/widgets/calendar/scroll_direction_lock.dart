@@ -86,19 +86,11 @@ class _ScrollDirectionLockState extends State<ScrollDirectionLock> {
       setState(() {
         _lockedAxis = newAxis;
       });
-
-      debugPrint(
-        '[ScrollDirectionLock] Locked to: ${newAxis.name} (dx: ${dx.toStringAsFixed(1)}, dy: ${dy.toStringAsFixed(1)})',
-      );
     }
   }
 
   void _onPointerUp(PointerEvent event) {
     // Reset for next gesture
-    if (_lockedAxis != null) {
-      debugPrint('[ScrollDirectionLock] Released lock');
-    }
-
     setState(() {
       _lockedAxis = null;
       _startPosition = null;

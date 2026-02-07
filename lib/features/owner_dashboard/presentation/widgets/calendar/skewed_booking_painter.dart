@@ -62,6 +62,9 @@ class SkewedBookingPainter extends CustomPainter {
       return; // Skip painting if size is invalid
     }
 
+    // Cache size for hitTest (hitTest doesn't receive size parameter)
+    _lastSize = size;
+
     final path = _createSkewedPath(size);
 
     // Draw filled background
@@ -148,6 +151,23 @@ class SkewedBookingPainter extends CustomPainter {
     path.close();
 
     return path;
+  }
+
+  /// Cached size from last paint call, used for hitTest
+  Size _lastSize = Size.zero;
+
+  @override
+  bool? hitTest(Offset position) {
+    if (_lastSize == Size.zero) return null;
+    // Only register hits inside the parallelogram path, not the rectangular bounds.
+    // This improves tap accuracy on turnover days where parallelogram corners overlap.
+    final path = Path()
+      ..moveTo(skewOffset, 0)
+      ..lineTo(_lastSize.width, 0)
+      ..lineTo(_lastSize.width - skewOffset, _lastSize.height)
+      ..lineTo(0, _lastSize.height)
+      ..close();
+    return path.contains(position);
   }
 
   @override

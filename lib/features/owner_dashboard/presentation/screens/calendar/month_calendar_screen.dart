@@ -1,4 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -33,8 +35,22 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
   String? _selectedUnitId;
 
   @override
+  void initState() {
+    super.initState();
+    // Lock orientation to portrait for calendar view
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  }
+
+  @override
   void dispose() {
     _calendarController.dispose();
+    // Reset orientation preferences when leaving screen
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     super.dispose();
   }
 
@@ -143,23 +159,36 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
 
             return RefreshIndicator(
               onRefresh: _refreshData,
-              child: Column(
-                children: [
-                  // Unit filter dropdown
-                  _buildUnitFilter(units, unitNameMap, isDark, theme, l10n),
-                  // Status legend
-                  _buildStatusLegend(isDark, theme),
-                  // Calendar or empty state
-                  Expanded(
-                    child: filteredBookings.isEmpty
-                        ? _buildEmptyState()
-                        : _buildCalendar(
-                            filteredBookings,
-                            unitNameMap,
-                            conflictingBookingIds,
-                            isDark,
-                            theme,
-                          ),
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _buildUnitFilter(
+                      units,
+                      unitNameMap,
+                      isDark,
+                      theme,
+                      l10n,
+                    ),
+                  ),
+                  SliverToBoxAdapter(child: _buildStatusLegend(isDark, theme)),
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: math.max(
+                        600,
+                        MediaQuery.of(context).size.height -
+                            kToolbarHeight -
+                            140,
+                      ),
+                      child: filteredBookings.isEmpty
+                          ? _buildEmptyState()
+                          : _buildCalendar(
+                              filteredBookings,
+                              unitNameMap,
+                              conflictingBookingIds,
+                              isDark,
+                              theme,
+                            ),
+                    ),
                   ),
                 ],
               ),
@@ -363,7 +392,11 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
           300.0,
         );
 
+        final screenHeight = MediaQuery.of(context).size.height;
+        final isMobile = screenWidth < 600 || screenHeight < 500;
+
         return SfCalendar(
+          key: ValueKey('calendar_${isMobile}_${agendaHeight}'),
           controller: _calendarController,
           view: _currentView,
           minDate: minDate,
@@ -378,12 +411,12 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
           monthViewSettings: MonthViewSettings(
             showAgenda: true,
             agendaViewHeight: agendaHeight,
-            agendaItemHeight: 56,
+            agendaItemHeight: isMobile ? 54 : 56,
             appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
             monthCellStyle: MonthCellStyle(
               textStyle: TextStyle(
                 color: theme.colorScheme.onSurface,
-                fontSize: 12,
+                fontSize: isMobile ? 12 : 14,
               ),
               trailingDatesTextStyle: TextStyle(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
@@ -706,24 +739,43 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     final booking = appointment.booking;
     final hasConflict = conflictingBookingIds.contains(booking.id);
     final unitName = unitNameMap[booking.unitId] ?? '';
-    final isScheduleView = _currentView == CalendarView.schedule;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = screenWidth < 600 || screenHeight < 500;
+
+    // Differentiate between small cell bars and large agenda/schedule items
+    // Syncfusion returns larger bounds for agenda items
+    final isDetailedView =
+        _currentView == CalendarView.schedule || details.bounds.height > 40;
 
     // Status-based color
     final color = _getBookingColor(booking.status, isDark);
 
+    // Prevent rendering if height is too small to avoid negative radius/size issues
+    if (details.bounds.height < 2) return const SizedBox.shrink();
+
     return Container(
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(
+          math.min(4, details.bounds.height / 2),
+        ),
         border: hasConflict ? Border.all(color: Colors.red, width: 2) : null,
       ),
       padding: EdgeInsets.symmetric(
-        horizontal: isScheduleView ? 12 : 4,
-        vertical: isScheduleView ? 8 : 2,
+        horizontal: isDetailedView ? 12 : (isMobile ? 2 : 4),
+        vertical: isDetailedView ? (isMobile ? 2 : 8) : (isMobile ? 1 : 2),
       ),
-      child: isScheduleView
+      child: isDetailedView
           ? _buildScheduleAppointment(booking, unitName, hasConflict, isDark)
-          : _buildMonthAppointment(booking, unitName, hasConflict),
+          : _buildMonthAppointment(
+              booking,
+              unitName,
+              hasConflict,
+              isMobile,
+              details.bounds.width,
+            ),
     );
   }
 
@@ -732,7 +784,13 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     BookingModel booking,
     String unitName,
     bool hasConflict,
+    bool isMobile,
+    double width,
   ) {
+    // Smart-hiding: Hide text if the bar is too thin (e.g., 1 day on narrow screen)
+    // 40px is a reasonable threshold for showing at least a few characters
+    if (width < 40) return const SizedBox.shrink();
+
     return Row(
       children: [
         if (hasConflict) ...[
@@ -742,9 +800,9 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         Expanded(
           child: Text(
             booking.guestName ?? unitName,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 10,
+              fontSize: isMobile ? 9 : 11,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 1,
@@ -773,6 +831,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         // Booking info
         Expanded(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -782,19 +841,32 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
                     const Icon(Icons.warning, color: Colors.white, size: 14),
                     const SizedBox(width: 4),
                   ],
-                  Expanded(
-                    child: Text(
-                      booking.guestName ??
-                          PlatformIcon.getDisplayName(booking.source),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                  if (booking.guestName != null)
+                    Flexible(
+                      child: Text(
+                        booking.guestName!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    )
+                  else if (!PlatformIcon.shouldShowIcon(booking.source))
+                    Flexible(
+                      child: Text(
+                        PlatformIcon.getDisplayName(booking.source),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(height: 2),
@@ -830,7 +902,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     );
   }
 
-  Color _getBookingColor(BookingStatus status, bool isDark) {
+  static Color _getBookingColor(BookingStatus status, bool isDark) {
     switch (status) {
       case BookingStatus.confirmed:
         return isDark ? const Color(0xFF2E7D32) : const Color(0xFF43A047);
@@ -901,17 +973,10 @@ class _BookingDataSource extends CalendarDataSource {
   @override
   Color getColor(int index) {
     final apt = appointments![index] as _BookingAppointment;
-    final booking = apt.booking;
-    switch (booking.status) {
-      case BookingStatus.confirmed:
-        return apt.isDark ? const Color(0xFF2E7D32) : const Color(0xFF43A047);
-      case BookingStatus.pending:
-        return apt.isDark ? const Color(0xFFE65100) : const Color(0xFFF57C00);
-      case BookingStatus.cancelled:
-        return apt.isDark ? const Color(0xFF616161) : const Color(0xFF9E9E9E);
-      case BookingStatus.completed:
-        return apt.isDark ? const Color(0xFF1565C0) : const Color(0xFF1E88E5);
-    }
+    return _MonthCalendarScreenState._getBookingColor(
+      apt.booking.status,
+      apt.isDark,
+    );
   }
 
   @override

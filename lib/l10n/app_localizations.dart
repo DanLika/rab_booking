@@ -9267,7 +9267,7 @@ abstract class AppLocalizations {
   /// No description provided for @embedGuideSimpleStepsTitle.
   ///
   /// In en, this message translates to:
-  /// **'3 Simple Steps'**
+  /// **'4 Simple Steps'**
   String get embedGuideSimpleStepsTitle;
 
   /// No description provided for @embedGuideSimpleStep1.
@@ -9287,6 +9287,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save and publish'**
   String get embedGuideSimpleStep3;
+
+  /// No description provided for @embedGuideSimpleStep4.
+  ///
+  /// In en, this message translates to:
+  /// **'Test the widget using the preview on the right'**
+  String get embedGuideSimpleStep4;
 
   /// No description provided for @embedGuideNeedHelp.
   ///

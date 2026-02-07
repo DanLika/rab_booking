@@ -5018,7 +5018,7 @@ class AppLocalizationsHr extends AppLocalizations {
       '• Osvježite stranicu (Ctrl+F5 za hard refresh)\n• Kalendar se automatski ažurira svakih 5 minuta';
 
   @override
-  String get embedGuideSimpleStepsTitle => '3 Jednostavna Koraka';
+  String get embedGuideSimpleStepsTitle => '4 Jednostavna Koraka';
 
   @override
   String get embedGuideSimpleStep1 => 'Kopirajte kod za vaš apartman';
@@ -5028,6 +5028,10 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get embedGuideSimpleStep3 => 'Spremite i objavite';
+
+  @override
+  String get embedGuideSimpleStep4 =>
+      'Testirajte widget koristeći pregled s desne strane';
 
   @override
   String get embedGuideNeedHelp => 'Trebate pomoć?';

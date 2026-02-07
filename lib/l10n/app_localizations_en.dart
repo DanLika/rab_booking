@@ -4987,7 +4987,7 @@ class AppLocalizationsEn extends AppLocalizations {
       '• Refresh page (Ctrl+F5 for hard refresh)\n• Calendar automatically updates every 5 minutes';
 
   @override
-  String get embedGuideSimpleStepsTitle => '3 Simple Steps';
+  String get embedGuideSimpleStepsTitle => '4 Simple Steps';
 
   @override
   String get embedGuideSimpleStep1 => 'Copy the embed code for your unit';
@@ -4997,6 +4997,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get embedGuideSimpleStep3 => 'Save and publish';
+
+  @override
+  String get embedGuideSimpleStep4 =>
+      'Test the widget using the preview on the right';
 
   @override
   String get embedGuideNeedHelp => 'Need help?';

@@ -2028,10 +2028,11 @@
   "embedGuideNoProperties": "Nemate nekretnina. Kreirajte nekretninu da biste dobili kodove.",
   "embedGuideNoUnits": "Nemate apartmana. Kreirajte apartman da biste dobili kod.",
 
-  "embedGuideSimpleStepsTitle": "3 Jednostavna Koraka",
+  "embedGuideSimpleStepsTitle": "4 Jednostavna Koraka",
   "embedGuideSimpleStep1": "Kopirajte kod za vaš apartman",
   "embedGuideSimpleStep2": "Zalijepite ga u HTML vaše web stranice",
   "embedGuideSimpleStep3": "Spremite i objavite",
+  "embedGuideSimpleStep4": "Testirajte widget koristeći pregled s desne strane",
   "embedGuideNeedHelp": "Trebate pomoć?",
   "embedGuideInstallationGuide": "Vodič za Instalaciju",
   "embedGuideLanguageNote": "Widget ima ugrađen odabir jezika. Korisnici mogu birati između HR, EN, DE, IT.",

@@ -2022,10 +2022,11 @@
   "embedGuideTroubleOldData": "Calendar shows old data",
   "embedGuideTroubleOldDataSolution": "• Refresh page (Ctrl+F5 for hard refresh)\n• Calendar automatically updates every 5 minutes",
 
-  "embedGuideSimpleStepsTitle": "3 Simple Steps",
+  "embedGuideSimpleStepsTitle": "4 Simple Steps",
   "embedGuideSimpleStep1": "Copy the embed code for your unit",
   "embedGuideSimpleStep2": "Paste it into your website's HTML",
   "embedGuideSimpleStep3": "Save and publish",
+  "embedGuideSimpleStep4": "Test the widget using the preview on the right",
   "embedGuideNeedHelp": "Need help?",
   "embedGuideInstallationGuide": "Installation Guide",
   "embedGuideLanguageNote": "Widget has a built-in language selector. Users can switch between HR, EN, DE, IT.",

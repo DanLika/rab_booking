@@ -679,7 +679,9 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           ),
           child: FilterChip(
             label: Text(
-              amenity.displayName,
+              amenity.localizedName(
+                Localizations.localeOf(context).languageCode,
+              ),
               style: TextStyle(
                 color: isSelected
                     ? theme.colorScheme.onPrimary

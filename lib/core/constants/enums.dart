@@ -158,6 +158,59 @@ enum PropertyAmenity {
     }
   }
 
+  /// Get Croatian display name for the amenity
+  String get displayNameHR {
+    switch (this) {
+      case PropertyAmenity.wifi:
+        return 'WiFi';
+      case PropertyAmenity.parking:
+        return 'Parking';
+      case PropertyAmenity.pool:
+        return 'Bazen';
+      case PropertyAmenity.airConditioning:
+        return 'Klima uređaj';
+      case PropertyAmenity.heating:
+        return 'Grijanje';
+      case PropertyAmenity.kitchen:
+        return 'Kuhinja';
+      case PropertyAmenity.washingMachine:
+        return 'Perilica rublja';
+      case PropertyAmenity.tv:
+        return 'TV';
+      case PropertyAmenity.balcony:
+        return 'Balkon/Terasa';
+      case PropertyAmenity.seaView:
+        return 'Pogled na more';
+      case PropertyAmenity.petFriendly:
+        return 'Kućni ljubimci';
+      case PropertyAmenity.bbq:
+        return 'Roštilj';
+      case PropertyAmenity.outdoorFurniture:
+        return 'Vrtni namještaj';
+      case PropertyAmenity.beachAccess:
+        return 'Pristup plaži';
+      case PropertyAmenity.fireplace:
+        return 'Kamin';
+      case PropertyAmenity.gym:
+        return 'Teretana';
+      case PropertyAmenity.hotTub:
+        return 'Jacuzzi';
+      case PropertyAmenity.sauna:
+        return 'Sauna';
+      case PropertyAmenity.bicycleRental:
+        return 'Najam bicikala';
+      case PropertyAmenity.boatMooring:
+        return 'Vez za brod';
+      case PropertyAmenity.restaurant:
+        return 'Restoran';
+    }
+  }
+
+  /// Get localized display name based on locale
+  String localizedName(String languageCode) {
+    return languageCode == 'hr' ? displayNameHR : displayName;
+  }
+
   /// Get icon name for the amenity (Material Icons)
   String get iconName {
     switch (this) {

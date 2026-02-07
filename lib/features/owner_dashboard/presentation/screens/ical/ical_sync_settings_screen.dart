@@ -80,6 +80,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             currentRoute: 'integrations/ical/import',
           ),
           body: Container(
+            constraints: const BoxConstraints.expand(),
             decoration: BoxDecoration(
               gradient: context.gradients.pageBackground,
             ),

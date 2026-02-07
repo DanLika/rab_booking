@@ -283,22 +283,33 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
   /// Build empty state when unit has no bookings
   Widget _buildEmptyState() {
     final l10n = AppLocalizations.of(context);
-    return ListView(
-      children: [
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.5,
+    return Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: AnimatedEmptyState(
-            icon: Icons.event_available_outlined,
+            icon: Icons.event_note_outlined,
+            iconSize: 120,
             title: l10n.monthCalendarNoBookings,
             subtitle: l10n.monthCalendarNoBookingsSubtitle,
             actionButton: FilledButton.icon(
               onPressed: () => _openCreateDialog(DateTime.now()),
               icon: const Icon(Icons.add),
               label: Text(l10n.monthCalendarCreateBooking),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -396,7 +407,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         final isMobile = screenWidth < 600 || screenHeight < 500;
 
         return SfCalendar(
-          key: ValueKey('calendar_${isMobile}_${agendaHeight}'),
+          key: ValueKey('calendar_${isMobile}_$agendaHeight'),
           controller: _calendarController,
           view: _currentView,
           minDate: minDate,
@@ -756,6 +767,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     if (details.bounds.height < 2) return const SizedBox.shrink();
 
     return Container(
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(
@@ -765,7 +777,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
       ),
       padding: EdgeInsets.symmetric(
         horizontal: isDetailedView ? 12 : (isMobile ? 2 : 4),
-        vertical: isDetailedView ? (isMobile ? 2 : 8) : (isMobile ? 1 : 2),
+        vertical: isDetailedView ? 4 : (isMobile ? 1 : 2),
       ),
       child: isDetailedView
           ? _buildScheduleAppointment(booking, unitName, hasConflict, isDark)
@@ -835,49 +847,53 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  if (hasConflict) ...[
-                    const Icon(Icons.warning, color: Colors.white, size: 14),
-                    const SizedBox(width: 4),
+              Flexible(
+                child: Row(
+                  children: [
+                    if (hasConflict) ...[
+                      const Icon(Icons.warning, color: Colors.white, size: 14),
+                      const SizedBox(width: 4),
+                    ],
+                    if (booking.guestName != null)
+                      Flexible(
+                        child: Text(
+                          booking.guestName!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )
+                    else if (!PlatformIcon.shouldShowIcon(booking.source))
+                      Flexible(
+                        child: Text(
+                          PlatformIcon.getDisplayName(booking.source),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                   ],
-                  if (booking.guestName != null)
-                    Flexible(
-                      child: Text(
-                        booking.guestName!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )
-                  else if (!PlatformIcon.shouldShowIcon(booking.source))
-                    Flexible(
-                      child: Text(
-                        PlatformIcon.getDisplayName(booking.source),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '$unitName  ·  ${booking.numberOfNights}n',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontSize: 12,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 1),
+              Flexible(
+                child: Text(
+                  '$unitName  ·  ${booking.numberOfNights}n',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),

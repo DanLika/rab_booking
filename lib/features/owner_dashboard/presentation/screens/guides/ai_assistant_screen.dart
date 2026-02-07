@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../../core/config/router_owner.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -106,112 +108,120 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
-      appBar: CommonAppBar(
-        title: l10n.aiAssistantTitle,
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-      ),
-      body: Container(
-        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/assistant_illustration.png',
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.cover,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(OwnerRoutes.overview);
+      },
+      child: Scaffold(
+        drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
+        appBar: CommonAppBar(
+          title: l10n.aiAssistantTitle,
+          leadingIcon: Icons.menu,
+          onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+        ),
+        body: Container(
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/assistant_illustration.png',
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    l10n.aiAssistantTitle,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF2D2D2D)
-                          : const Color(0xFFF5F5F5),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: AppShadows.getElevation(1, isDark: isDark),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildConsentItem(
-                          Icons.psychology_outlined,
-                          l10n.aiConsentProcessing,
-                          theme,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildConsentItem(
-                          Icons.history,
-                          l10n.aiConsentStorage,
-                          theme,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildConsentItem(
-                          Icons.delete_outline,
-                          l10n.aiConsentDeletion,
-                          theme,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildConsentItem(
-                          Icons.shield_outlined,
-                          l10n.aiConsentPrivacy,
-                          theme,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: 220,
-                    child: ElevatedButton(
-                      onPressed: _acceptConsent,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        foregroundColor: Colors.white,
+                    const SizedBox(height: 20),
+                    Text(
+                      l10n.aiAssistantTitle,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
                       ),
-                      child: Text(l10n.aiConsentAccept),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.aiAssistantDisclaimer,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF2D2D2D)
+                            : const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: AppShadows.getElevation(1, isDark: isDark),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildConsentItem(
+                            Icons.psychology_outlined,
+                            l10n.aiConsentProcessing,
+                            theme,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildConsentItem(
+                            Icons.history,
+                            l10n.aiConsentStorage,
+                            theme,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildConsentItem(
+                            Icons.delete_outline,
+                            l10n.aiConsentDeletion,
+                            theme,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildConsentItem(
+                            Icons.shield_outlined,
+                            l10n.aiConsentPrivacy,
+                            theme,
+                          ),
+                        ],
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: 220,
+                      child: ElevatedButton(
+                        onPressed: _acceptConsent,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(l10n.aiConsentAccept),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.aiAssistantDisclaimer,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.4,
+                        ),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -257,54 +267,64 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     AsyncValue<List<AiChat>> chatsAsync,
     AppLocalizations l10n,
   ) {
-    return Scaffold(
-      drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
-      appBar: CommonAppBar(
-        title: l10n.aiAssistantTitle,
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: TextButton.icon(
-              onPressed: () {
-                ref.read(aiChatNotifierProvider.notifier).createNewChat();
-              },
-              icon: const Icon(Icons.add, color: Colors.white, size: 20),
-              label: Text(
-                l10n.aiAssistantNewChat,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(OwnerRoutes.overview);
+      },
+      child: Scaffold(
+        drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
+        appBar: CommonAppBar(
+          title: l10n.aiAssistantTitle,
+          leadingIcon: Icons.menu,
+          onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: TextButton.icon(
+                onPressed: () {
+                  ref.read(aiChatNotifierProvider.notifier).createNewChat();
+                },
+                icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                label: Text(
+                  l10n.aiAssistantNewChat,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.15),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.15),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: Row(
-          children: [
-            // Left: chat list (desktop new chat opens in right panel)
-            SizedBox(
-              width: 320,
-              child: _buildDesktopChatListContent(chatState, chatsAsync, l10n),
-            ),
-            VerticalDivider(width: 1, color: context.gradients.sectionBorder),
-            // Right: active chat or welcome
-            Expanded(child: _buildChatArea(chatState, l10n)),
           ],
+        ),
+        body: Container(
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+          child: Row(
+            children: [
+              // Left: chat list (desktop new chat opens in right panel)
+              SizedBox(
+                width: 320,
+                child: _buildDesktopChatListContent(
+                  chatState,
+                  chatsAsync,
+                  l10n,
+                ),
+              ),
+              VerticalDivider(width: 1, color: context.gradients.sectionBorder),
+              // Right: active chat or welcome
+              Expanded(child: _buildChatArea(chatState, l10n)),
+            ],
+          ),
         ),
       ),
     );
@@ -319,16 +339,22 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     AsyncValue<List<AiChat>> chatsAsync,
     AppLocalizations l10n,
   ) {
-    return Scaffold(
-      drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
-      appBar: CommonAppBar(
-        title: l10n.aiAssistantTitle,
-        leadingIcon: Icons.menu,
-        onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
-      ),
-      body: Container(
-        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: _buildChatListContent(chatState, chatsAsync, l10n),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(OwnerRoutes.overview);
+      },
+      child: Scaffold(
+        drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
+        appBar: CommonAppBar(
+          title: l10n.aiAssistantTitle,
+          leadingIcon: Icons.menu,
+          onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
+        ),
+        body: Container(
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+          child: _buildChatListContent(chatState, chatsAsync, l10n),
+        ),
       ),
     );
   }
@@ -655,21 +681,36 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     AppLocalizations l10n, {
     bool showBackButton = false,
   }) {
-    return Scaffold(
-      drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
-      appBar: CommonAppBar(
-        title: chatState.currentChat?.title ?? l10n.aiAssistantNewChat,
-        leadingIcon: showBackButton ? Icons.arrow_back : Icons.menu,
-        onLeadingIconTap: showBackButton
-            ? (_) {
-                ref.read(aiChatNotifierProvider.notifier).createNewChat();
-                setState(() => _showNewChat = false);
-              }
-            : (context) => Scaffold.of(context).openDrawer(),
-      ),
-      body: Container(
-        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: _buildChatArea(chatState, l10n),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          if (showBackButton) {
+            // Go back to chat list
+            ref.read(aiChatNotifierProvider.notifier).createNewChat();
+            setState(() => _showNewChat = false);
+          } else {
+            // Go to dashboard
+            context.go(OwnerRoutes.overview);
+          }
+        }
+      },
+      child: Scaffold(
+        drawer: const OwnerAppDrawer(currentRoute: 'ai-assistant'),
+        appBar: CommonAppBar(
+          title: chatState.currentChat?.title ?? l10n.aiAssistantNewChat,
+          leadingIcon: showBackButton ? Icons.arrow_back : Icons.menu,
+          onLeadingIconTap: showBackButton
+              ? (_) {
+                  ref.read(aiChatNotifierProvider.notifier).createNewChat();
+                  setState(() => _showNewChat = false);
+                }
+              : (context) => Scaffold.of(context).openDrawer(),
+        ),
+        body: Container(
+          decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+          child: _buildChatArea(chatState, l10n),
+        ),
       ),
     );
   }

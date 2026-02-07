@@ -1198,11 +1198,11 @@ export async function sendTrialExpiringEmail(
   <title>Your Trial is Expiring Soon</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F9FAFB;">
-  <div style="max-width: 560px; margin: 0 auto; padding: 20px;">
+  <div style="max-width: 560px; margin: 0 auto; padding: 12px;">
     <div style="background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);">
-      
+
       <!-- Header -->
-      <div style="text-align: center; padding: 32px 24px; background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);">
+      <div style="text-align: center; padding: 32px 16px; background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);">
         <div style="font-size: 48px; margin-bottom: 16px;">⏰</div>
         <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #1F2937;">
           Your Trial Expires in ${daysRemaining} Day${daysRemaining === 1 ? "" : "s"}
@@ -1213,16 +1213,16 @@ export async function sendTrialExpiringEmail(
       </div>
       
       <!-- Content -->
-      <div style="padding: 24px;">
+      <div style="padding: 24px 16px;">
         <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
           Hi ${sanitizeText(name)},
         </p>
-        
+
         <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">
-          Your free trial of BookBed will expire in <strong>${daysRemaining} day${daysRemaining === 1 ? "" : "s"}</strong>. 
+          Your free trial of BookBed will expire in <strong>${daysRemaining} day${daysRemaining === 1 ? "" : "s"}</strong>.
           To continue managing your bookings without interruption, please upgrade to a paid plan.
         </p>
-        
+
         <!-- Warning Box -->
         <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 16px; margin: 20px 0;">
           <div style="display: flex; align-items: flex-start;">
@@ -1252,7 +1252,7 @@ export async function sendTrialExpiringEmail(
       </div>
       
       <!-- Footer -->
-      <div style="text-align: center; padding: 24px; border-top: 1px solid #E5E7EB;">
+      <div style="text-align: center; padding: 20px 16px; border-top: 1px solid #E5E7EB;">
         <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
           This email was sent by BookBed. You're receiving this because your trial is expiring soon.
         </p>
@@ -1323,11 +1323,11 @@ export async function sendTrialExpiredEmail(
   <title>Your Trial Has Expired</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F9FAFB;">
-  <div style="max-width: 560px; margin: 0 auto; padding: 20px;">
+  <div style="max-width: 560px; margin: 0 auto; padding: 12px;">
     <div style="background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);">
-      
+
       <!-- Header -->
-      <div style="text-align: center; padding: 32px 24px; background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);">
+      <div style="text-align: center; padding: 32px 16px; background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);">
         <div style="font-size: 48px; margin-bottom: 16px;">😢</div>
         <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #1F2937;">
           Your Trial Has Expired
@@ -1338,17 +1338,17 @@ export async function sendTrialExpiredEmail(
       </div>
       
       <!-- Content -->
-      <div style="padding: 24px;">
+      <div style="padding: 24px 16px;">
         <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
           Hi ${sanitizeText(name)},
         </p>
-        
+
         <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">
-          Your free trial of BookBed has ended. Your account is now in read-only mode, 
-          which means you can view your existing data but can't create new bookings or 
+          Your free trial of BookBed has ended. Your account is now in read-only mode,
+          which means you can view your existing data but can't create new bookings or
           access premium features.
         </p>
-        
+
         <!-- Info Box -->
         <div style="background-color: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 16px; margin: 20px 0;">
           <div style="display: flex; align-items: flex-start;">
@@ -1378,7 +1378,7 @@ export async function sendTrialExpiredEmail(
       </div>
       
       <!-- Footer -->
-      <div style="text-align: center; padding: 24px; border-top: 1px solid #E5E7EB;">
+      <div style="text-align: center; padding: 20px 16px; border-top: 1px solid #E5E7EB;">
         <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
           This email was sent by BookBed. You're receiving this because your trial has expired.
         </p>

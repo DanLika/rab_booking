@@ -1069,13 +1069,14 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
   }
 
   Widget _buildAmenitiesGrid() {
+    final locale = Localizations.localeOf(context).languageCode;
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: PropertyAmenity.values.map((amenity) {
         final isSelected = _selectedAmenities.contains(amenity);
         return AppFilterChip(
-          label: amenity.displayName,
+          label: amenity.localizedName(locale),
           selected: isSelected,
           icon: _getAmenityIcon(amenity.iconName),
           onSelected: () {

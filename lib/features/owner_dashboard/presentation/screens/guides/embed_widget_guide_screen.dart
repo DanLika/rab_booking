@@ -149,6 +149,11 @@ class _EmbedWidgetGuideScreenState
                     text: l10n.embedGuideSimpleStep3,
                     theme: theme,
                   ),
+                  _buildCompactStep(
+                    number: '4',
+                    text: l10n.embedGuideSimpleStep4,
+                    theme: theme,
+                  ),
                 ],
               ),
             ),
@@ -435,6 +440,12 @@ class _EmbedWidgetGuideScreenState
               _buildModernStep(
                 number: '3',
                 text: l10n.embedGuideSimpleStep3,
+                theme: theme,
+                isLast: false,
+              ),
+              _buildModernStep(
+                number: '4',
+                text: l10n.embedGuideSimpleStep4,
                 theme: theme,
                 isLast: true,
               ),

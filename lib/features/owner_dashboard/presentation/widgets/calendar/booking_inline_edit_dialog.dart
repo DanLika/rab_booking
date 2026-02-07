@@ -379,75 +379,59 @@ class _BookingInlineEditDialogState
                     : Row(
                         children: [
                           // Delete button aligned left
-                          Flexible(
-                            child: TextButton.icon(
-                              onPressed: _isSaving ? null : _deleteBooking,
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                size: 18,
-                                color: AppColors.error,
-                              ),
-                              label: AutoSizeText(
-                                l10n.calendarActionsDelete,
-                                style: const TextStyle(color: AppColors.error),
-                                maxLines: 1,
-                                minFontSize: 11,
-                              ),
+                          TextButton.icon(
+                            onPressed: _isSaving ? null : _deleteBooking,
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              size: 18,
+                              color: AppColors.error,
+                            ),
+                            label: Text(
+                              l10n.calendarActionsDelete,
+                              style: const TextStyle(color: AppColors.error),
                             ),
                           ),
                           const Spacer(),
                           // Cancel + Save aligned right
-                          Flexible(
-                            child: TextButton(
-                              onPressed: _isSaving
-                                  ? null
-                                  : () => Navigator.of(context).pop(),
-                              child: AutoSizeText(
-                                l10n.bookingInlineEditCancel,
-                                maxLines: 1,
-                                minFontSize: 11,
-                              ),
-                            ),
+                          TextButton(
+                            onPressed: _isSaving
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                            child: Text(l10n.bookingInlineEditCancel),
                           ),
                           const SizedBox(width: 8),
-                          Flexible(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: context.gradients.brandPrimary,
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(8),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: context.gradients.brandPrimary,
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(8),
+                              ),
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: _isSaving ? null : _saveChanges,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              child: ElevatedButton.icon(
-                                onPressed: _isSaving ? null : _saveChanges,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  foregroundColor: Colors.white,
-                                  shadowColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                icon: _isSaving
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.save,
+                              icon: _isSaving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
                                         color: Colors.white,
                                       ),
-                                label: AutoSizeText(
-                                  _isSaving
-                                      ? l10n.bookingInlineEditSaving
-                                      : l10n.bookingInlineEditSave,
-                                  style: const TextStyle(color: Colors.white),
-                                  maxLines: 1,
-                                ),
+                                    )
+                                  : const Icon(Icons.save, color: Colors.white),
+                              label: Text(
+                                _isSaving
+                                    ? l10n.bookingInlineEditSaving
+                                    : l10n.bookingInlineEditSave,
+                                style: const TextStyle(color: Colors.white),
                               ),
                             ),
                           ),
@@ -639,10 +623,11 @@ class _BookingInlineEditDialogState
   }
 
   Future<void> _deleteBooking() async {
-    // Close this dialog first, then delegate to shared delete action
-    Navigator.of(context).pop();
+    // Execute delete action FIRST (shows confirmation dialog on top of this one)
+    // Then close this dialog after completion
+    await CalendarBookingActions.deleteBooking(context, ref, widget.booking);
     if (mounted) {
-      await CalendarBookingActions.deleteBooking(context, ref, widget.booking);
+      Navigator.of(context).pop();
     }
   }
 

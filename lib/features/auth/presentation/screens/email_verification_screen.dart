@@ -8,7 +8,6 @@ import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../widgets/auth_logo_icon.dart';
 
 /// Email Verification Screen with resend functionality
 class EmailVerificationScreen extends ConsumerStatefulWidget {
@@ -454,13 +453,12 @@ class _EmailVerificationScreenState
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(enhancedAuthProvider);
-    // Prefer Firestore email (userModel) which is updated immediately after email change
-    // Firebase Auth email only updates AFTER user clicks verification link
     final email =
         authState.userModel?.email ??
         authState.firebaseUser?.email ??
         'your email';
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -468,11 +466,10 @@ class _EmailVerificationScreenState
         title: AppLocalizations.of(context).authEmailVerificationTitle,
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (_) async {
-          // Use this.context instead of passed context for proper navigation
           try {
             await ref.read(enhancedAuthProvider.notifier).signOut();
           } catch (e) {
-            // Ignore sign out errors, just navigate
+            // Ignore sign out errors
           }
           if (mounted) {
             this.context.go(OwnerRoutes.login);
@@ -487,85 +484,114 @@ class _EmailVerificationScreenState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo
-                AuthLogoIcon(
-                  isWhite: Theme.of(context).brightness == Brightness.dark,
+                // 1. Hero Icon
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.mark_email_unread_outlined,
+                    size: 64,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
                 const SizedBox(height: 32),
 
-                // Title
+                // 2. Title
                 Text(
                   AppLocalizations.of(context).authCheckInbox,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
 
-                // Description
+                // 3. Description
                 Text(
                   AppLocalizations.of(context).authEmailVerificationSentTo,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  email,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                   textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+
+                // 4. Email Chip
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Text(
+                    email,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 const SizedBox(height: 32),
 
-                // Instructions
+                // 5. Info / Tip Container
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withAlpha((0.1 * 255).toInt()),
-                    borderRadius: BorderRadius.circular(8),
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withAlpha((0.2 * 255).toInt()),
-                      width: 0.5,
+                      color: theme.colorScheme.outline.withValues(alpha: 0.2),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: Column(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
+                      Icon(
+                        Icons.info_outline_rounded,
+                        color: theme.colorScheme.primary,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
                               AppLocalizations.of(
                                 context,
                               ).authClickLinkToVerify,
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                fontSize: 14,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        AppLocalizations.of(context).authEmailArrivalHint,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant
-                              .withAlpha((0.8 * 255).toInt()),
-                          fontSize: 12,
+                            const SizedBox(height: 4),
+                            Text(
+                              AppLocalizations.of(context).authEmailArrivalHint,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -573,84 +599,81 @@ class _EmailVerificationScreenState
                 ),
                 const SizedBox(height: 32),
 
-                // Resend Button
-                OutlinedButton(
-                  onPressed: _resendCooldown > 0 || _isResending
-                      ? null
-                      : _resendVerificationEmail,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 32,
+                // 6. Resend Button (Prominent)
+                SizedBox(
+                  width: 250, // Reduced width
+                  height: 50,
+                  child: FilledButton(
+                    onPressed: _resendCooldown > 0 || _isResending
+                        ? null
+                        : _resendVerificationEmail,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme
+                          .colorScheme
+                          .primary, // Explicitly use primary color
+                      foregroundColor: Colors.white, // Explicitly white text
+                      elevation: 2,
+                      shadowColor: theme.colorScheme.primary.withValues(
+                        alpha: 0.3,
+                      ),
                     ),
+                    child: _isResending
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_resendCooldown > 0)
+                                const Padding(
+                                  padding: EdgeInsets.only(right: 8.0),
+                                  child: Icon(Icons.timer_outlined, size: 18),
+                                ),
+                              Text(
+                                _resendCooldown > 0
+                                    ? AppLocalizations.of(
+                                        context,
+                                      ).authResendInSeconds(_resendCooldown)
+                                    : AppLocalizations.of(
+                                        context,
+                                      ).authResendVerificationEmail,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                   ),
-                  child: _isResending
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(
-                          _resendCooldown > 0
-                              ? AppLocalizations.of(
-                                  context,
-                                ).authResendInSeconds(_resendCooldown)
-                              : AppLocalizations.of(
-                                  context,
-                                ).authResendVerificationEmail,
-                        ),
                 ),
-                const SizedBox(height: 32),
 
-                // Action Buttons - Vertical Layout
-                Column(
-                  mainAxisSize: MainAxisSize.min,
+                const SizedBox(height: 24),
+
+                // 7. Secondary Actions
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    // Change Email Button
-                    TextButton.icon(
+                    TextButton(
                       onPressed: _showChangeEmailDialog,
-                      style: TextButton.styleFrom(
-                        foregroundColor: theme.colorScheme.onSurfaceVariant,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.edit_outlined,
-                        size: 18,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      label: Text(
-                        AppLocalizations.of(context).authWrongEmail,
-                        style: const TextStyle(fontSize: 14),
-                      ),
+                      child: Text(AppLocalizations.of(context).authWrongEmail),
                     ),
-                    const SizedBox(height: 8),
-                    // Back to Login Button
-                    TextButton.icon(
+                    Text(
+                      '•',
+                      style: TextStyle(color: theme.colorScheme.outline),
+                    ),
+                    TextButton(
                       onPressed: () async {
                         await ref.read(enhancedAuthProvider.notifier).signOut();
                         if (mounted) {
                           this.context.go(OwnerRoutes.login);
                         }
                       },
-                      style: TextButton.styleFrom(
-                        foregroundColor: theme.colorScheme.onSurfaceVariant,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.logout_rounded,
-                        size: 18,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      label: Text(
-                        AppLocalizations.of(context).authBackToLogin,
-                        style: const TextStyle(fontSize: 14),
-                      ),
+                      child: Text(AppLocalizations.of(context).authBackToLogin),
                     ),
                   ],
                 ),

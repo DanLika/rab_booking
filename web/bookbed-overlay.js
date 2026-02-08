@@ -1,58 +1,64 @@
 /**
- * BookBed Overlay — prevents iframe scroll trapping on all devices.
+ * BookBed Overlay — prevents iframe scroll trapping on desktop.
  *
- * Usage: Add <script src="https://view.bookbed.io/bookbed-overlay.js"></script>
- * to any page that contains a .bookbed-widget wrapper.
+ * Usage: Add this single line anywhere on your page:
+ *   <script src="https://view.bookbed.io/bookbed-overlay.js" defer></script>
  *
- * How it works:
- * Desktop (mouse/trackpad):
- *   - Overlay captures mouse wheel so parent page scrolls normally
- *   - Click on widget → overlay hides → widget interactive
- *   - Mouse leaves widget area → overlay restores
+ * The script auto-detects BookBed iframes (src containing view.bookbed.io)
+ * and wraps them with a scroll-protection overlay. No manual HTML changes needed.
  *
- * Mobile/Touch:
- *   - Overlay has touch-action:pan-y — vertical swipes scroll parent page
- *   - Tap widget → overlay hides → widget interactive
- *   - Touch outside widget → overlay restores
+ * How it works (desktop only — mobile/touch unaffected):
+ *   - Transparent overlay sits on top of iframe
+ *   - Mouse wheel scrolls the parent page (not trapped by iframe)
+ *   - Click on widget → overlay hides → widget becomes interactive
+ *   - Mouse leaves widget → overlay restores → page scrollable again
  */
 (function () {
   'use strict';
 
-  var hasPointerFine = window.matchMedia('(pointer: fine)').matches;
+  // Only apply on desktop (mouse/trackpad) — touch devices don't trap scroll
+  if (!window.matchMedia('(pointer: fine)').matches) return;
 
-  function initOverlay(widget) {
-    var overlay = widget.querySelector('.bookbed-overlay');
-    if (!overlay) return;
-    if (overlay.dataset.bbInit) return;
-    overlay.dataset.bbInit = '1';
+  function wrapIframe(iframe) {
+    if (iframe.dataset.bbInit) return;
+    iframe.dataset.bbInit = '1';
 
-    // Enable overlay on all devices
-    overlay.style.pointerEvents = 'auto';
+    // Create wrapper
+    var wrapper = document.createElement('div');
+    wrapper.className = 'bookbed-widget';
+    wrapper.style.cssText = 'position:relative;width:100%;max-width:100%;';
 
-    // On touch devices, allow parent page to scroll through the overlay
-    if (!hasPointerFine) {
-      overlay.style.touchAction = 'pan-y';
-    }
+    // Insert wrapper where iframe is, then move iframe inside
+    iframe.parentNode.insertBefore(wrapper, iframe);
+    wrapper.appendChild(iframe);
+
+    // Create overlay
+    var overlay = document.createElement('div');
+    overlay.className = 'bookbed-overlay';
+    overlay.style.cssText =
+      'position:absolute;top:0;left:0;width:100%;height:100%;' +
+      'cursor:pointer;z-index:1;pointer-events:auto;';
+    wrapper.appendChild(overlay);
 
     var active = false;
 
-    // Click/tap dismisses overlay → widget becomes interactive
+    // Click dismisses overlay → widget interactive
     overlay.addEventListener('click', function () {
       overlay.style.pointerEvents = 'none';
       active = true;
     });
 
-    // Desktop: mouseleave restores overlay
-    widget.addEventListener('mouseleave', function () {
+    // Mouse leaves widget → restore overlay
+    wrapper.addEventListener('mouseleave', function () {
       overlay.style.pointerEvents = 'auto';
       active = false;
     });
 
-    // Desktop fallback: cross-origin iframe swallows mouse events,
+    // Fallback: cross-origin iframe swallows mouse events,
     // so mouseleave may not fire. Detect mouse re-entering parent page.
     document.addEventListener('mousemove', function (e) {
       if (!active) return;
-      var r = widget.getBoundingClientRect();
+      var r = wrapper.getBoundingClientRect();
       if (
         e.clientX < r.left ||
         e.clientX > r.right ||
@@ -63,39 +69,25 @@
         active = false;
       }
     });
-
-    // Touch: detect touch outside widget to restore overlay
-    document.addEventListener('touchstart', function (e) {
-      if (!active) return;
-      var touch = e.touches[0];
-      var r = widget.getBoundingClientRect();
-      if (
-        touch.clientX < r.left ||
-        touch.clientX > r.right ||
-        touch.clientY < r.top ||
-        touch.clientY > r.bottom
-      ) {
-        overlay.style.pointerEvents = 'auto';
-        active = false;
-      }
-    });
   }
 
   function initAll() {
-    var widgets = document.querySelectorAll('.bookbed-widget');
-    for (var i = 0; i < widgets.length; i++) {
-      initOverlay(widgets[i]);
+    var iframes = document.querySelectorAll(
+      'iframe[src*="view.bookbed.io"]'
+    );
+    for (var i = 0; i < iframes.length; i++) {
+      wrapIframe(iframes[i]);
     }
   }
 
-  // Initialize now and on DOM ready
+  // Initialize on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAll);
   } else {
     initAll();
   }
 
-  // Also observe DOM for dynamically added widgets (React, SPA, etc.)
+  // Observe DOM for dynamically added iframes (React, SPA, etc.)
   if (window.MutationObserver) {
     new MutationObserver(function () {
       initAll();

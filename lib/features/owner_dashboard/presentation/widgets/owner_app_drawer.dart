@@ -11,6 +11,7 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../auth/presentation/widgets/auth_logo_icon.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../providers/notifications_provider.dart';
+import '../providers/overbooking_detection_provider.dart';
 import '../providers/owner_bookings_provider.dart';
 
 /// Premium Owner App Navigation Drawer
@@ -24,6 +25,9 @@ class OwnerAppDrawer extends ConsumerWidget {
     final user = FirebaseAuth.instance.currentUser;
     final authState = ref.watch(enhancedAuthProvider);
     final l10n = AppLocalizations.of(context);
+
+    // Watch conflict count for calendar badge
+    final conflictCount = ref.watch(overbookingConflictCountProvider);
 
     return Drawer(
       child: Container(
@@ -52,6 +56,7 @@ class OwnerAppDrawer extends ConsumerWidget {
               icon: Icons.calendar_today_outlined,
               title: l10n.ownerDrawerCalendar,
               isExpanded: currentRoute.startsWith('calendar'),
+              conflictCount: conflictCount,
               children: [
                 _DrawerSubItem(
                   title: l10n.ownerDrawerTimelineCalendar,
@@ -843,12 +848,14 @@ class _PremiumExpansionTile extends StatelessWidget {
   final String title;
   final bool isExpanded;
   final List<Widget> children;
+  final int conflictCount;
 
   const _PremiumExpansionTile({
     required this.icon,
     required this.title,
     required this.isExpanded,
     required this.children,
+    this.conflictCount = 0,
   });
 
   @override
@@ -895,14 +902,50 @@ class _PremiumExpansionTile extends StatelessWidget {
           ),
           iconColor: iconColor,
           collapsedIconColor: iconColor,
-          title: Text(
-            title,
-            style: TextStyle(
-              fontSize: 15,
-              // Match _DrawerItem: w600 when expanded/selected, w500 otherwise
-              fontWeight: isExpanded ? FontWeight.w600 : FontWeight.w500,
-              color: isExpanded ? selectedTextColor : normalTextColor,
-            ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    // Match _DrawerItem: w600 when expanded/selected, w500 otherwise
+                    fontWeight: isExpanded ? FontWeight.w600 : FontWeight.w500,
+                    color: isExpanded ? selectedTextColor : normalTextColor,
+                  ),
+                ),
+              ),
+              if (conflictCount > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade600,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        size: 12,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '$conflictCount',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
           initiallyExpanded: isExpanded,
           shape: RoundedRectangleBorder(

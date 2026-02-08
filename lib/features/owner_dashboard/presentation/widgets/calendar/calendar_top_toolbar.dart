@@ -199,176 +199,167 @@ class CalendarTopToolbar extends StatelessWidget {
 
           // RIGHT GROUP: Action buttons
           if (isCompact)
-            // COMPACT MODE: Only overflow menu with styled items
-            PopupMenuButton<String>(
-              icon: _buildCompactMenuIcon(theme, notificationCount),
-              tooltip: l10n.ownerCalendarOptions,
-              position: PopupMenuPosition.under,
-              offset: const Offset(0, 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              color: theme.brightness == Brightness.dark
-                  ? const Color(0xFF252530)
-                  : Colors.white,
-              elevation: 8,
-              onSelected: (value) {
-                switch (value) {
-                  case 'conflicts':
-                    onOverbookingBadgeTap?.call();
-                    break;
-                  case 'today':
-                    onToday();
-                    break;
-                  case 'search':
-                    onSearchTap?.call();
-                    break;
-                  case 'refresh':
-                    onRefresh?.call();
-                    break;
-                  case 'filter':
-                    onFilterTap?.call();
-                    break;
-                  case 'notifications':
-                    onNotificationsTap?.call();
-                    break;
-                  case 'analytics':
-                    onSummaryToggleChanged?.call(!isSummaryVisible);
-                    break;
-                  case 'emptyUnits':
-                    onEmptyUnitsToggleChanged?.call(!isEmptyUnitsVisible);
-                    break;
-                }
-              },
-              itemBuilder: (context) {
-                final l10n = AppLocalizations.of(context);
-                final isDark = Theme.of(context).brightness == Brightness.dark;
-                return [
-                  // Conflict badge (if any conflicts exist)
-                  if (overbookingConflictCount != null &&
-                      overbookingConflictCount! > 0)
-                    PopupMenuItem<String>(
-                      value: 'conflicts',
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
+            // COMPACT MODE: Conflict badge (separate) + overflow menu
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Conflict badge as standalone IconButton (not in menu)
+                if (overbookingConflictCount != null &&
+                    overbookingConflictCount! > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 2),
+                    child: InkWell(
+                      onTap: onOverbookingBadgeTap,
+                      borderRadius: BorderRadius.circular(8),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 10,
+                          horizontal: 6,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.red.shade200),
+                          color: Colors.red.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade300),
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade100,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Badge(
-                                label: Text(
-                                  '$overbookingConflictCount',
-                                  style: const TextStyle(fontSize: 10),
-                                ),
-                                backgroundColor: Colors.red.shade700,
-                                child: Icon(
-                                  Icons.warning_amber_rounded,
-                                  size: 20,
-                                  color: Colors.red.shade700,
-                                ),
-                              ),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              size: 16,
+                              color: Colors.red.shade700,
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                '$overbookingConflictCount ${overbookingConflictCount == 1 ? 'conflict' : 'conflicts'}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: Colors.red.shade700,
-                                ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '$overbookingConflictCount',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red.shade700,
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  _buildStyledMenuItem(
-                    value: 'today',
-                    icon: Icons.today,
-                    iconColor: AppColors.primary,
-                    label: l10n.ownerCalendarToday,
-                    isDark: isDark,
                   ),
-                  if (onNotificationsTap != null)
-                    _buildStyledMenuItem(
-                      value: 'notifications',
-                      icon: Icons.notifications_outlined,
-                      iconColor: AppColors.warning,
-                      label: l10n.ownerCalendarNotifications,
-                      isDark: isDark,
-                      badge: notificationCount,
-                    ),
-                  if (onSearchTap != null)
-                    _buildStyledMenuItem(
-                      value: 'search',
-                      icon: Icons.search,
-                      iconColor: AppColors.info,
-                      label: l10n.ownerCalendarSearch,
-                      isDark: isDark,
-                    ),
-                  if (onRefresh != null)
-                    _buildStyledMenuItem(
-                      value: 'refresh',
-                      icon: Icons.refresh,
-                      iconColor: AppColors.success,
-                      label: l10n.ownerCalendarRefresh,
-                      isDark: isDark,
-                    ),
-                  if (onFilterTap != null)
-                    _buildStyledMenuItem(
-                      value: 'filter',
-                      icon: Icons.tune,
-                      iconColor: AppColors.warning,
-                      label: l10n.ownerCalendarFilters,
-                      isDark: isDark,
-                    ),
-                  if (showSummaryToggle && onSummaryToggleChanged != null)
-                    _buildStyledMenuItem(
-                      value: 'analytics',
-                      icon: isSummaryVisible
-                          ? Icons.bar_chart
-                          : Icons.bar_chart_outlined,
-                      iconColor: isSummaryVisible
-                          ? AppColors.primary
-                          : AppColors.info,
-                      label: isSummaryVisible
-                          ? l10n.ownerCalendarHideStats
-                          : l10n.ownerCalendarShowStats,
-                      isDark: isDark,
-                    ),
-                  if (showEmptyUnitsToggle && onEmptyUnitsToggleChanged != null)
-                    _buildStyledMenuItem(
-                      value: 'emptyUnits',
-                      icon: isEmptyUnitsVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      iconColor: isEmptyUnitsVisible
-                          ? AppColors.primary
-                          : AppColors.info,
-                      label: isEmptyUnitsVisible
-                          ? l10n.ownerCalendarHideEmptyUnits
-                          : l10n.ownerCalendarShowEmptyUnits,
-                      isDark: isDark,
-                    ),
-                ];
-              },
+
+                // Overflow menu with remaining items
+                PopupMenuButton<String>(
+                  icon: _buildCompactMenuIcon(theme, notificationCount),
+                  tooltip: l10n.ownerCalendarOptions,
+                  position: PopupMenuPosition.under,
+                  offset: const Offset(0, 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  color: theme.brightness == Brightness.dark
+                      ? const Color(0xFF252530)
+                      : Colors.white,
+                  elevation: 8,
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'today':
+                        onToday();
+                        break;
+                      case 'search':
+                        onSearchTap?.call();
+                        break;
+                      case 'refresh':
+                        onRefresh?.call();
+                        break;
+                      case 'filter':
+                        onFilterTap?.call();
+                        break;
+                      case 'notifications':
+                        onNotificationsTap?.call();
+                        break;
+                      case 'analytics':
+                        onSummaryToggleChanged?.call(!isSummaryVisible);
+                        break;
+                      case 'emptyUnits':
+                        onEmptyUnitsToggleChanged?.call(!isEmptyUnitsVisible);
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    final isDark =
+                        Theme.of(context).brightness == Brightness.dark;
+                    return [
+                      _buildStyledMenuItem(
+                        value: 'today',
+                        icon: Icons.today,
+                        iconColor: AppColors.primary,
+                        label: l10n.ownerCalendarToday,
+                        isDark: isDark,
+                      ),
+                      if (onNotificationsTap != null)
+                        _buildStyledMenuItem(
+                          value: 'notifications',
+                          icon: Icons.notifications_outlined,
+                          iconColor: AppColors.warning,
+                          label: l10n.ownerCalendarNotifications,
+                          isDark: isDark,
+                          badge: notificationCount,
+                        ),
+                      if (onSearchTap != null)
+                        _buildStyledMenuItem(
+                          value: 'search',
+                          icon: Icons.search,
+                          iconColor: AppColors.info,
+                          label: l10n.ownerCalendarSearch,
+                          isDark: isDark,
+                        ),
+                      if (onRefresh != null)
+                        _buildStyledMenuItem(
+                          value: 'refresh',
+                          icon: Icons.refresh,
+                          iconColor: AppColors.success,
+                          label: l10n.ownerCalendarRefresh,
+                          isDark: isDark,
+                        ),
+                      if (onFilterTap != null)
+                        _buildStyledMenuItem(
+                          value: 'filter',
+                          icon: Icons.tune,
+                          iconColor: AppColors.warning,
+                          label: l10n.ownerCalendarFilters,
+                          isDark: isDark,
+                        ),
+                      if (showSummaryToggle && onSummaryToggleChanged != null)
+                        _buildStyledMenuItem(
+                          value: 'analytics',
+                          icon: isSummaryVisible
+                              ? Icons.bar_chart
+                              : Icons.bar_chart_outlined,
+                          iconColor: isSummaryVisible
+                              ? AppColors.primary
+                              : AppColors.info,
+                          label: isSummaryVisible
+                              ? l10n.ownerCalendarHideStats
+                              : l10n.ownerCalendarShowStats,
+                          isDark: isDark,
+                        ),
+                      if (showEmptyUnitsToggle &&
+                          onEmptyUnitsToggleChanged != null)
+                        _buildStyledMenuItem(
+                          value: 'emptyUnits',
+                          icon: isEmptyUnitsVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          iconColor: isEmptyUnitsVisible
+                              ? AppColors.primary
+                              : AppColors.info,
+                          label: isEmptyUnitsVisible
+                              ? l10n.ownerCalendarHideEmptyUnits
+                              : l10n.ownerCalendarShowEmptyUnits,
+                          isDark: isDark,
+                        ),
+                    ];
+                  },
+                ),
+              ],
             )
           else
             // DESKTOP MODE: Show all buttons with styled containers

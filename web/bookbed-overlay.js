@@ -8,12 +8,13 @@
  * No wrapper divs or manual HTML changes needed.
  *
  * How it works (desktop only — mobile/touch unaffected):
- *   - Transparent guard div sits on top of each BookBed iframe
+ *   - Fixed-position guard div sits on top of each BookBed iframe
  *   - Mouse wheel scrolls the parent page normally (not trapped)
  *   - Click on widget area → guard hides → widget becomes interactive
  *   - Mouse leaves widget area → guard restores → page scrollable again
  *
  * Does NOT wrap/move iframes in the DOM (that causes reload).
+ * Uses getBoundingClientRect + position:fixed — works in any DOM structure.
  */
 (function () {
   'use strict';
@@ -25,36 +26,41 @@
     if (iframe.dataset.bbGuard) return;
     iframe.dataset.bbGuard = '1';
 
-    var parent = iframe.parentElement;
-    if (!parent) return;
-
-    // Parent must be a positioning context for the guard
-    if (getComputedStyle(parent).position === 'static') {
-      parent.style.position = 'relative';
-    }
-
-    // Transparent guard div covering the iframe — blocks scroll trapping
+    // Guard lives on <body>, positioned fixed over the iframe
     var guard = document.createElement('div');
+    document.body.appendChild(guard);
+
+    var rafId = 0;
 
     function sync() {
+      var r = iframe.getBoundingClientRect();
       guard.style.cssText =
-        'position:absolute;z-index:10;cursor:pointer;' +
-        'top:' + iframe.offsetTop + 'px;' +
-        'left:' + iframe.offsetLeft + 'px;' +
-        'width:' + iframe.offsetWidth + 'px;' +
-        'height:' + iframe.offsetHeight + 'px;';
+        'position:fixed;z-index:9;cursor:pointer;' +
+        'top:' + r.top + 'px;' +
+        'left:' + r.left + 'px;' +
+        'width:' + r.width + 'px;' +
+        'height:' + r.height + 'px;';
     }
 
-    parent.appendChild(guard);
+    function scheduleSync() {
+      if (!rafId) {
+        rafId = requestAnimationFrame(function () {
+          sync();
+          rafId = 0;
+        });
+      }
+    }
+
     sync();
 
-    // Keep guard aligned when iframe resizes (e.g. postMessage height change)
-    window.addEventListener('resize', sync);
+    // Track iframe position as page scrolls/resizes
+    window.addEventListener('scroll', scheduleSync, { passive: true });
+    window.addEventListener('resize', scheduleSync);
     if (window.ResizeObserver) {
-      new ResizeObserver(sync).observe(iframe);
+      new ResizeObserver(scheduleSync).observe(iframe);
     }
 
-    // Click guard → hide it → iframe becomes interactive
+    // Click guard → hide → iframe becomes interactive
     guard.addEventListener('click', function () {
       guard.style.display = 'none';
     });

@@ -79,30 +79,14 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   /// Responsive height using aspect-ratio with min/max constraints
   /// Always uses view.bookbed.io (no subdomain) - property/unit IDs are sufficient
   String get _iframeEmbedCode {
-    // Always use default URL for iframe embeds - no subdomain needed
-    // Subdomains are optional and may not be configured for all properties
     final url =
         '$_defaultWidgetBaseUrl/?property=${widget.propertyId}&unit=${widget.unitId}&embed=true';
     final title = widget.unitName ?? 'Booking Widget';
-    // Wrapper div with scroll-trap overlay (Google Maps pattern):
-    // - Overlay captures mouse wheel so parent page scrolls normally
-    // - Click removes overlay for widget interaction
-    // - Mouseleave restores overlay protection
-    // - Skipped on non-mouse devices (pointer: fine = mouse/trackpad)
-    return '''<div class="bookbed-widget" style="position:relative;width:100%;max-width:100%;">
-  <iframe src="$url"
-    style="width:100%;border:none;aspect-ratio:1/1.4;min-height:500px;max-height:850px;display:block;"
-    title="$title" loading="lazy"></iframe>
-  <div class="bookbed-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:pointer;z-index:1;"></div>
-  <script>
-  (function(){
-    if(!window.matchMedia('(pointer: fine)').matches)return;
-    var w=document.currentScript.parentElement,o=w.querySelector('.bookbed-overlay');
-    o.addEventListener('click',function(){o.style.pointerEvents='none';});
-    w.addEventListener('mouseleave',function(){o.style.pointerEvents='auto';});
-  })();
-  </script>
-</div>''';
+    return '''<iframe
+  src="$url"
+  style="width: 100%; border: none; aspect-ratio: 1/1.4; min-height: 500px; max-height: 850px;"
+  title="$title"
+></iframe>''';
   }
 
   void _copyToClipboard(String text, String label) {

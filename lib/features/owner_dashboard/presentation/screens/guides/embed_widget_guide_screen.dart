@@ -47,20 +47,11 @@ class _EmbedWidgetGuideScreenState
     // Subdomains are optional and may not be configured for all properties
     const baseUrl = 'https://$_subdomainBaseDomain';
     final url = '$baseUrl/?property=$propertyId&unit=${unit.id}&embed=true';
-    return '''<div class="bookbed-widget" style="position:relative;width:100%;max-width:100%;">
-  <iframe src="$url"
-    style="width:100%;border:none;aspect-ratio:1/1.4;min-height:500px;max-height:850px;display:block;"
-    title="${unit.name}" loading="lazy"></iframe>
-  <div class="bookbed-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:pointer;z-index:1;"></div>
-  <script>
-  (function(){
-    if(!window.matchMedia('(pointer: fine)').matches)return;
-    var w=document.currentScript.parentElement,o=w.querySelector('.bookbed-overlay');
-    o.addEventListener('click',function(){o.style.pointerEvents='none';});
-    w.addEventListener('mouseleave',function(){o.style.pointerEvents='auto';});
-  })();
-  </script>
-</div>''';
+    return '''<iframe
+  src="$url"
+  style="width: 100%; border: none; aspect-ratio: 1/1.4; min-height: 500px; max-height: 850px;"
+  title="${unit.name}"
+></iframe>''';
   }
 
   /// Show quick help bottom sheet - simplified overview with link to full help
@@ -621,6 +612,88 @@ class _EmbedWidgetGuideScreenState
                   label: l10n.embedGuideDeveloperResponsive,
                   example: 'width: 100%; height: 100vh;',
                   theme: theme,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0D1A2D) : const Color(0xFFF0F4FF),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.swap_vert,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.embedGuideDeveloperScrollProtection,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.embedGuideDeveloperScrollProtectionDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SelectableText(
+                        '<script src="https://view.bookbed.io/bookbed-overlay.js" defer></script>',
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () {
+                        Clipboard.setData(
+                          const ClipboardData(
+                            text:
+                                '<script src="https://view.bookbed.io/bookbed-overlay.js" defer></script>',
+                          ),
+                        );
+                        ErrorDisplayUtils.showSuccessSnackBar(
+                          context,
+                          l10n.embedCodeCopied('Script'),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.copy,
+                          size: 16,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

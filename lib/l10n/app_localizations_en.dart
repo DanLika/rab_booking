@@ -5064,6 +5064,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get embedGuideDeveloperResponsive => 'Responsive layout';
 
   @override
+  String get embedGuideDeveloperScrollProtection =>
+      'Scroll protection (React/Angular/Vue)';
+
+  @override
+  String get embedGuideDeveloperScrollProtectionDesc =>
+      'If the embed code\'s inline script doesn\'t work on your site, add this line to your page\'s <head>:';
+
+  @override
   String get embedGuideDeveloperWarning =>
       'Do not modify the src URL - it contains required property and unit identifiers.';
 

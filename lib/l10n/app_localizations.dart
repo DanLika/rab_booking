@@ -9402,6 +9402,18 @@ abstract class AppLocalizations {
   /// **'Responsive layout'**
   String get embedGuideDeveloperResponsive;
 
+  /// No description provided for @embedGuideDeveloperScrollProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll protection (React/Angular/Vue)'**
+  String get embedGuideDeveloperScrollProtection;
+
+  /// No description provided for @embedGuideDeveloperScrollProtectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If the embed code\'s inline script doesn\'t work on your site, add this line to your page\'s <head>:'**
+  String get embedGuideDeveloperScrollProtectionDesc;
+
   /// No description provided for @embedGuideDeveloperWarning.
   ///
   /// In en, this message translates to:

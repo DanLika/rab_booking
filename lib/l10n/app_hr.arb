@@ -2052,6 +2052,8 @@
   "embedGuideDeveloperWidth": "Prilagođene dimenzije",
   "embedGuideDeveloperBorder": "Okvir i stilizacija",
   "embedGuideDeveloperResponsive": "Responzivni layout",
+  "embedGuideDeveloperScrollProtection": "Scroll zaštita (React/Angular/Vue)",
+  "embedGuideDeveloperScrollProtectionDesc": "Ako inline script iz embed koda ne radi na vašoj stranici, dodajte ovu liniju u <head>:",
   "embedGuideDeveloperWarning": "Ne mijenjajte src URL - sadrži potrebne identifikatore nekretnine i apartmana.",
 
   "embedHelpTitle": "Pomoć za ugradnju widgeta",

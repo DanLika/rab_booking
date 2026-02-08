@@ -2046,6 +2046,8 @@
   "embedGuideDeveloperWidth": "Custom dimensions",
   "embedGuideDeveloperBorder": "Border & styling",
   "embedGuideDeveloperResponsive": "Responsive layout",
+  "embedGuideDeveloperScrollProtection": "Scroll protection (React/Angular/Vue)",
+  "embedGuideDeveloperScrollProtectionDesc": "If the embed code's inline script doesn't work on your site, add this line to your page's <head>:",
   "embedGuideDeveloperWarning": "Do not modify the src URL - it contains required property and unit identifiers.",
 
   "embedHelpTitle": "Embed Widget Help",

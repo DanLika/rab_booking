@@ -5095,6 +5095,14 @@ class AppLocalizationsHr extends AppLocalizations {
   String get embedGuideDeveloperResponsive => 'Responzivni layout';
 
   @override
+  String get embedGuideDeveloperScrollProtection =>
+      'Scroll zaštita (React/Angular/Vue)';
+
+  @override
+  String get embedGuideDeveloperScrollProtectionDesc =>
+      'Ako inline script iz embed koda ne radi na vašoj stranici, dodajte ovu liniju u <head>:';
+
+  @override
   String get embedGuideDeveloperWarning =>
       'Ne mijenjajte src URL - sadrži potrebne identifikatore nekretnine i apartmana.';
 

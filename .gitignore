@@ -82,6 +82,9 @@ firebase-service-account-key.json
 .claude/memory.json
 # Whitelist docs directory .md files (project documentation)
 !docs/**/*.md
+# Whitelist AI knowledge base assets
+!assets/kb/
+!assets/kb/*.md
 *.sql
 *.stackdump
 build_output.txt

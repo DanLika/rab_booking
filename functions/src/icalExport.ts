@@ -108,7 +108,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     return;
   }
 
-  if (request.method !== "GET") {
+  if (request.method !== "GET" && request.method !== "HEAD") {
     response.status(405).send("Method Not Allowed");
     return;
   }

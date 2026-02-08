@@ -300,7 +300,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             ? constraints.maxWidth
             : 1200.0; // Fallback to reasonable default
         // No horizontal padding subtraction - parent container provides horizontal padding
-        final availableWidth = maxWidth.clamp(300.0, maxWidth);
+        final availableWidth = maxWidth;
         // Get cell size that fits within available width
         final cellSize = ResponsiveHelper.getYearCellSizeForWidth(
           availableWidth,

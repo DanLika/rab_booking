@@ -84,13 +84,16 @@ class CalendarTooltipBuilder {
     }
 
     // Clamp to screen bounds with padding
+    // Use max() to prevent ArgumentError when screen is narrower than tooltip
+    final maxX = screenWidth - _tooltipWidth - _screenPadding;
     xPosition = xPosition.clamp(
-      _screenPadding,
-      screenWidth - _tooltipWidth - _screenPadding,
+      maxX < _screenPadding ? maxX : _screenPadding,
+      maxX < _screenPadding ? _screenPadding : maxX,
     );
+    final maxY = screenHeight - tooltipHeight - _screenPadding;
     yPosition = yPosition.clamp(
-      _screenPadding,
-      screenHeight - tooltipHeight - _screenPadding,
+      maxY < _screenPadding ? maxY : _screenPadding,
+      maxY < _screenPadding ? _screenPadding : maxY,
     );
 
     // For pending bookings, show "Pending" status instead of "Booked"

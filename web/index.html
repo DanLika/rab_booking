@@ -13,12 +13,19 @@
 
   <style>
     /* Prevent any scroll on html/body level */
+    /* Transparent background — parent website shows through iframe */
     html,
     body {
       height: 100%;
       margin: 0;
       padding: 0;
       overflow: hidden;
+      background: transparent !important;
+    }
+
+    /* Ensure Flutter canvas is transparent so iframe shows parent background */
+    flt-glass-pane {
+      background: transparent !important;
     }
 
     /* ========== NATIVE HTML SPLASH SCREEN ========== */
@@ -33,8 +40,8 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background-color: #FAFAFA;
-      /* Light mode default */
+      background-color: transparent;
+      /* Transparent — parent site shows through */
       z-index: 999999;
       transition: opacity 0.3s ease-out;
     }
@@ -42,7 +49,7 @@
     /* Dark mode support - minimalist black/white like BookBed Loader */
     @media (prefers-color-scheme: dark) {
       #native-splash {
-        background-color: #000000;
+        background-color: transparent;
       }
 
       #native-splash .splash-logo-text {

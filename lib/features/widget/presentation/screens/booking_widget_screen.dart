@@ -2067,7 +2067,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // In iframe: false (host site handles keyboard resize)
       // In standalone: true (browser handles keyboard resize, prevents black space)
       resizeToAvoidBottomInset: !isInIframe,
-      backgroundColor: minimalistColors.backgroundPrimary,
+      // In iframe: transparent so parent website background shows through
+      // Standalone: use theme background (white/black)
+      backgroundColor: isInIframe
+          ? Colors.transparent
+          : minimalistColors.backgroundPrimary,
 
       // Support Icon - Bottom Left FAB (Micro Size)
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,

@@ -130,7 +130,7 @@ dev_dependencies:
   sentry_dart_plugin: ^3.2.1
 
   # Icon Generation
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.3
 
 flutter_launcher_icons:

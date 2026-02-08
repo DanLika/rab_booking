@@ -764,7 +764,33 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-07 | **Version**: 6.62
+**Last Updated**: 2026-02-08 | **Version**: 6.63
+
+**Changelog 6.63**: Scroll Overlay v5, iCal HEAD Fix & Conflict Badge UI:
+- **Scroll Overlay v5 — Universal iframe scroll-trap fix** (`web/bookbed-overlay.js`):
+  - External JS served at `view.bookbed.io/bookbed-overlay.js` — host pages add single `<script>` tag
+  - Auto-detects BookBed iframes (`src*="view.bookbed.io"`), no wrapper divs needed
+  - Uses `position:fixed` + `getBoundingClientRect()` — works in any DOM structure (WordPress, React, Tailwind, etc.)
+  - Guard div on `<body>` with RAF-throttled scroll/resize sync
+  - Desktop only (`pointer: fine` media query) — mobile/touch unaffected
+  - Click to interact → mouseleave restores scroll protection (Google Maps pattern)
+  - MutationObserver watches for dynamically added iframes (SPA support)
+  - **Previous versions failed**: v2 caused iframe reload (DOM move), v3 left iframe non-interactive, v4 wrong positioning with `offsetTop` in nested containers
+- **iCal Export HEAD Request Fix** (`functions/src/icalExport.ts`):
+  - iCal validators send HEAD requests to check content-type before GET
+  - Was rejected with 405 Method Not Allowed — now allows HEAD alongside GET
+  - Deployed to production
+- **Calendar Conflict Badge** (`calendar_top_toolbar.dart`, `owner_app_drawer.dart`):
+  - Conflict badge extracted from popup menu to standalone badge next to overflow menu icon
+  - Always visible when conflicts exist (not hidden in dropdown)
+  - Conflict count badge added to Calendar expansion tile in drawer
+  - Uses `overbookingConflictCountProvider` for real-time count
+- **Embed Guide — Scroll Protection Section** (`embed_widget_guide_screen.dart`):
+  - "For Developers" section now includes scroll protection script tag with copy button
+  - Explains the overlay pattern and provides the `<script>` tag to copy
+- **.gitignore KB File Exception**: Fixed `assets/kb/bookbed_knowledge_base.md` being gitignored by `*.md` rule — CI fix
+- **Version bump**: 1.0.9+18 deployed to Play Store
+- **Key files**: `web/bookbed-overlay.js`, `calendar_top_toolbar.dart`, `owner_app_drawer.dart`, `icalExport.ts`
 
 **Changelog 6.62**: AI Assistant Redesign, KB Consolidation & Quick Edit Delete:
 - **AI Assistant UI Redesign** (`ai_assistant_screen.dart`):

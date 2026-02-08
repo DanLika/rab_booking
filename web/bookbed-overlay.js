@@ -8,11 +8,12 @@
  * No wrapper divs or manual HTML changes needed.
  *
  * How it works (desktop only — mobile/touch unaffected):
- *   - Sets pointer-events:none on iframe so mouse wheel scrolls parent page
- *   - Click on iframe area → pointer-events restored → widget interactive
- *   - Mouse leaves iframe area → pointer-events:none again → page scrollable
+ *   - Transparent guard div sits on top of each BookBed iframe
+ *   - Mouse wheel scrolls the parent page normally (not trapped)
+ *   - Click on widget area → guard hides → widget becomes interactive
+ *   - Mouse leaves widget area → guard restores → page scrollable again
  *
- * IMPORTANT: Does NOT move/wrap the iframe in the DOM (that causes reload).
+ * Does NOT wrap/move iframes in the DOM (that causes reload).
  */
 (function () {
   'use strict';
@@ -21,48 +22,61 @@
   if (!window.matchMedia('(pointer: fine)').matches) return;
 
   function initIframe(iframe) {
-    if (iframe.dataset.bbInit) return;
-    iframe.dataset.bbInit = '1';
+    if (iframe.dataset.bbGuard) return;
+    iframe.dataset.bbGuard = '1';
 
-    // Block pointer events so mouse wheel passes through to parent page
-    iframe.style.pointerEvents = 'none';
+    var parent = iframe.parentElement;
+    if (!parent) return;
 
-    var active = false;
+    // Parent must be a positioning context for the guard
+    if (getComputedStyle(parent).position === 'static') {
+      parent.style.position = 'relative';
+    }
 
-    // Click within iframe bounds → enable interaction
-    document.addEventListener('mousedown', function (e) {
-      var r = iframe.getBoundingClientRect();
-      if (
-        e.clientX >= r.left &&
-        e.clientX <= r.right &&
-        e.clientY >= r.top &&
-        e.clientY <= r.bottom
-      ) {
-        iframe.style.pointerEvents = 'auto';
-        active = true;
-      }
+    // Transparent guard div covering the iframe — blocks scroll trapping
+    var guard = document.createElement('div');
+
+    function sync() {
+      guard.style.cssText =
+        'position:absolute;z-index:10;cursor:pointer;' +
+        'top:' + iframe.offsetTop + 'px;' +
+        'left:' + iframe.offsetLeft + 'px;' +
+        'width:' + iframe.offsetWidth + 'px;' +
+        'height:' + iframe.offsetHeight + 'px;';
+    }
+
+    parent.appendChild(guard);
+    sync();
+
+    // Keep guard aligned when iframe resizes (e.g. postMessage height change)
+    window.addEventListener('resize', sync);
+    if (window.ResizeObserver) {
+      new ResizeObserver(sync).observe(iframe);
+    }
+
+    // Click guard → hide it → iframe becomes interactive
+    guard.addEventListener('click', function () {
+      guard.style.display = 'none';
     });
 
-    // Mouse moves outside iframe → restore scroll protection
+    // Mouse leaves iframe area → restore guard → page scrollable again
     document.addEventListener('mousemove', function (e) {
-      if (!active) return;
+      if (guard.style.display !== 'none') return;
       var r = iframe.getBoundingClientRect();
       if (
-        e.clientX < r.left ||
-        e.clientX > r.right ||
-        e.clientY < r.top ||
-        e.clientY > r.bottom
+        e.clientX < r.left - 5 ||
+        e.clientX > r.right + 5 ||
+        e.clientY < r.top - 5 ||
+        e.clientY > r.bottom + 5
       ) {
-        iframe.style.pointerEvents = 'none';
-        active = false;
+        guard.style.display = '';
+        sync();
       }
     });
   }
 
-  function initAll() {
-    var iframes = document.querySelectorAll(
-      'iframe[src*="view.bookbed.io"]'
-    );
+  function scanAll() {
+    var iframes = document.querySelectorAll('iframe[src*="view.bookbed.io"]');
     for (var i = 0; i < iframes.length; i++) {
       initIframe(iframes[i]);
     }
@@ -70,15 +84,15 @@
 
   // Initialize on DOM ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAll);
+    document.addEventListener('DOMContentLoaded', scanAll);
   } else {
-    initAll();
+    scanAll();
   }
 
-  // Observe DOM for dynamically added iframes (React, SPA, etc.)
+  // Watch for dynamically added iframes (React, SPA, etc.)
   if (window.MutationObserver) {
     new MutationObserver(function () {
-      initAll();
+      scanAll();
     }).observe(document.body || document.documentElement, {
       childList: true,
       subtree: true,

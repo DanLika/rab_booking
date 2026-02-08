@@ -47,11 +47,20 @@ class _EmbedWidgetGuideScreenState
     // Subdomains are optional and may not be configured for all properties
     const baseUrl = 'https://$_subdomainBaseDomain';
     final url = '$baseUrl/?property=$propertyId&unit=${unit.id}&embed=true';
-    return '''<iframe
-  src="$url"
-  style="width: 100%; border: none; aspect-ratio: 1/1.4; min-height: 500px; max-height: 850px;"
-  title="${unit.name}"
-></iframe>''';
+    return '''<div class="bookbed-widget" style="position:relative;width:100%;max-width:100%;">
+  <iframe src="$url"
+    style="width:100%;border:none;aspect-ratio:1/1.4;min-height:500px;max-height:850px;display:block;"
+    title="${unit.name}" loading="lazy"></iframe>
+  <div class="bookbed-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:pointer;z-index:1;"></div>
+  <script>
+  (function(){
+    if(!window.matchMedia('(pointer: fine)').matches)return;
+    var w=document.currentScript.parentElement,o=w.querySelector('.bookbed-overlay');
+    o.addEventListener('click',function(){o.style.pointerEvents='none';});
+    w.addEventListener('mouseleave',function(){o.style.pointerEvents='auto';});
+  })();
+  </script>
+</div>''';
   }
 
   /// Show quick help bottom sheet - simplified overview with link to full help

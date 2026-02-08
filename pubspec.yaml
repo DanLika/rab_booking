@@ -82,7 +82,7 @@ dependencies:
   # Utilities
   share_plus: ^12.0.1
   shared_preferences: ^2.3.4
-  package_info_plus: ^8.1.2  # App version info
+  package_info_plus: ^9.0.0  # App version info
   flutter_secure_storage: ^9.0.0  # Secure credential storage
   uuid: ^4.5.1
   crypto: ^3.0.3

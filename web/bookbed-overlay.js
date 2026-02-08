@@ -1,5 +1,5 @@
 /**
- * BookBed Scroll Guard — prevents iframe scroll trapping on desktop.
+ * BookBed Scroll Guard v8 — prevents iframe scroll trapping.
  *
  * Usage: Add this single line anywhere on your page:
  *   <script src="https://view.bookbed.io/bookbed-overlay.js" defer></script>
@@ -7,78 +7,76 @@
  * Auto-detects BookBed iframes (src containing view.bookbed.io).
  * No wrapper divs or manual HTML changes needed.
  *
- * How it works (desktop only — mobile/touch unaffected):
- *   - Fixed-position guard div sits on top of each BookBed iframe
- *   - Mouse wheel scrolls the parent page normally (not trapped)
- *   - Click on widget area → guard hides → widget becomes interactive
- *   - Mouse leaves widget area → guard restores → page scrollable again
+ * How it works (Google Maps cooperative pattern):
+ *   - Creates an absolute-positioned overlay inside iframe's parent element
+ *   - Default state: overlay captures mouse/touch events → parent page scrolls
+ *   - Click/tap on widget → overlay becomes transparent → widget interactive
+ *   - Mouse leave (desktop), touch outside iframe (mobile), or page scroll → restores
+ *   - touch-action CSS lets browser handle mobile scroll natively
  *
  * Does NOT wrap/move iframes in the DOM (that causes reload).
- * Uses getBoundingClientRect + position:fixed — works in any DOM structure.
+ * Uses position:absolute inside parent — works in any DOM structure.
  */
 (function () {
   'use strict';
-
-  // Only apply on desktop (mouse/trackpad) — touch devices don't trap scroll
-  if (!window.matchMedia('(pointer: fine)').matches) return;
 
   function initIframe(iframe) {
     if (iframe.dataset.bbGuard) return;
     iframe.dataset.bbGuard = '1';
 
-    // Guard lives on <body>, positioned fixed over the iframe
-    var guard = document.createElement('div');
-    document.body.appendChild(guard);
+    var parent = iframe.parentElement;
+    if (!parent) return;
 
-    var rafId = 0;
-
-    function sync() {
-      var r = iframe.getBoundingClientRect();
-      guard.style.cssText =
-        'position:fixed;z-index:9;cursor:pointer;' +
-        'top:' + r.top + 'px;' +
-        'left:' + r.left + 'px;' +
-        'width:' + r.width + 'px;' +
-        'height:' + r.height + 'px;';
+    // Ensure parent is a positioning context for absolute overlay
+    var pos = getComputedStyle(parent).position;
+    if (pos === 'static' || pos === '') {
+      parent.style.position = 'relative';
     }
 
-    function scheduleSync() {
-      if (!rafId) {
-        rafId = requestAnimationFrame(function () {
-          sync();
-          rafId = 0;
-        });
-      }
+    // Create overlay as sibling of iframe (NOT wrapping — no reload)
+    var overlay = document.createElement('div');
+    overlay.style.cssText =
+      'position:absolute;top:0;left:0;width:100%;height:100%;' +
+      'z-index:2;cursor:pointer;' +
+      'touch-action:pan-y pan-x;';
+
+    // Insert after iframe (stays in same parent, no DOM restructuring)
+    parent.insertBefore(overlay, iframe.nextSibling);
+
+    function restore() {
+      overlay.style.pointerEvents = 'auto';
     }
 
-    sync();
-
-    // Track iframe position as page scrolls/resizes
-    window.addEventListener('scroll', scheduleSync, { passive: true });
-    window.addEventListener('resize', scheduleSync);
-    if (window.ResizeObserver) {
-      new ResizeObserver(scheduleSync).observe(iframe);
-    }
-
-    // Click guard → hide → iframe becomes interactive
-    guard.addEventListener('click', function () {
-      guard.style.display = 'none';
+    // Click/tap → pointer-events:none → events pass through to iframe
+    overlay.addEventListener('click', function () {
+      overlay.style.pointerEvents = 'none';
     });
 
-    // Mouse leaves iframe area → restore guard → page scrollable again
-    document.addEventListener('mousemove', function (e) {
-      if (guard.style.display !== 'none') return;
+    // Desktop: mouse leaves parent → restore overlay protection
+    parent.addEventListener('mouseleave', restore);
+
+    // Mobile: touch outside iframe visual bounds → restore
+    document.addEventListener('touchstart', function (e) {
+      if (overlay.style.pointerEvents !== 'none') return;
+      var touch = e.touches[0];
+      if (!touch) return;
       var r = iframe.getBoundingClientRect();
       if (
-        e.clientX < r.left - 5 ||
-        e.clientX > r.right + 5 ||
-        e.clientY < r.top - 5 ||
-        e.clientY > r.bottom + 5
+        touch.clientX < r.left ||
+        touch.clientX > r.right ||
+        touch.clientY < r.top ||
+        touch.clientY > r.bottom
       ) {
-        guard.style.display = '';
-        sync();
+        restore();
       }
-    });
+    }, { passive: true });
+
+    // Safety net: any page scroll → restore (user moved on from widget)
+    window.addEventListener('scroll', function () {
+      if (overlay.style.pointerEvents === 'none') {
+        restore();
+      }
+    }, { passive: true });
   }
 
   function scanAll() {
@@ -97,11 +95,9 @@
 
   // Watch for dynamically added iframes (React, SPA, etc.)
   if (window.MutationObserver) {
-    new MutationObserver(function () {
-      scanAll();
-    }).observe(document.body || document.documentElement, {
-      childList: true,
-      subtree: true,
-    });
+    new MutationObserver(scanAll).observe(
+      document.body || document.documentElement,
+      { childList: true, subtree: true }
+    );
   }
 })();

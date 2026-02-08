@@ -9405,14 +9405,32 @@ abstract class AppLocalizations {
   /// No description provided for @embedGuideDeveloperScrollProtection.
   ///
   /// In en, this message translates to:
-  /// **'Scroll protection (React/Angular/Vue)'**
+  /// **'Scroll protection (recommended)'**
   String get embedGuideDeveloperScrollProtection;
 
   /// No description provided for @embedGuideDeveloperScrollProtectionDesc.
   ///
   /// In en, this message translates to:
-  /// **'If the embed code\'s inline script doesn\'t work on your site, add this line to your page\'s <head>:'**
+  /// **'Prevents scroll from getting trapped inside the widget.'**
   String get embedGuideDeveloperScrollProtectionDesc;
+
+  /// No description provided for @embedGuideDeveloperScrollHowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How scroll protection works'**
+  String get embedGuideDeveloperScrollHowTitle;
+
+  /// No description provided for @embedGuideDeveloperScrollHowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'When an iframe takes up a large portion of the page, mouse wheel and touch scroll can get trapped inside it — users can\'t scroll past the widget.\n\nThis script automatically detects BookBed iframes and adds an invisible overlay that lets the page scroll normally.\n\nDesktop: Users click the widget to interact. Scroll protection restores when the mouse leaves the widget area.\n\nMobile: Users tap the widget to interact. Scroll protection restores when they tap outside or scroll the page.\n\nWorks with any framework — React, Vue, Angular, WordPress, plain HTML.'**
+  String get embedGuideDeveloperScrollHowDesc;
+
+  /// No description provided for @embedGuideDeveloperScrollExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Example: place both lines where you want the widget'**
+  String get embedGuideDeveloperScrollExample;
 
   /// No description provided for @embedGuideDeveloperWarning.
   ///

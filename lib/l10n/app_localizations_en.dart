@@ -5065,11 +5065,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get embedGuideDeveloperScrollProtection =>
-      'Scroll protection (React/Angular/Vue)';
+      'Scroll protection (recommended)';
 
   @override
   String get embedGuideDeveloperScrollProtectionDesc =>
-      'If the embed code\'s inline script doesn\'t work on your site, add this line to your page\'s <head>:';
+      'Prevents scroll from getting trapped inside the widget.';
+
+  @override
+  String get embedGuideDeveloperScrollHowTitle => 'How scroll protection works';
+
+  @override
+  String get embedGuideDeveloperScrollHowDesc =>
+      'When an iframe takes up a large portion of the page, mouse wheel and touch scroll can get trapped inside it — users can\'t scroll past the widget.\n\nThis script automatically detects BookBed iframes and adds an invisible overlay that lets the page scroll normally.\n\nDesktop: Users click the widget to interact. Scroll protection restores when the mouse leaves the widget area.\n\nMobile: Users tap the widget to interact. Scroll protection restores when they tap outside or scroll the page.\n\nWorks with any framework — React, Vue, Angular, WordPress, plain HTML.';
+
+  @override
+  String get embedGuideDeveloperScrollExample =>
+      'Example: place both lines where you want the widget';
 
   @override
   String get embedGuideDeveloperWarning =>

@@ -5096,11 +5096,23 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get embedGuideDeveloperScrollProtection =>
-      'Scroll zaštita (React/Angular/Vue)';
+      'Scroll zaštita (preporučeno)';
 
   @override
   String get embedGuideDeveloperScrollProtectionDesc =>
-      'Ako inline script iz embed koda ne radi na vašoj stranici, dodajte ovu liniju u <head>:';
+      'Sprječava da scroll ostane zarobljen unutar widgeta.';
+
+  @override
+  String get embedGuideDeveloperScrollHowTitle =>
+      'Kako scroll zaštita funkcionira';
+
+  @override
+  String get embedGuideDeveloperScrollHowDesc =>
+      'Kada iframe zauzima veliki dio stranice, scroll mišem i dodirom može ostati zarobljen unutar njega — korisnici ne mogu proći pored widgeta.\n\nOvaj script automatski detektira BookBed iframe i dodaje nevidljivi overlay koji omogućava normalan scroll stranice.\n\nDesktop: Korisnici kliknu na widget za interakciju. Scroll zaštita se vraća kada miš napusti područje widgeta.\n\nMobitel: Korisnici tapnu na widget za interakciju. Scroll zaštita se vraća kada tapnu izvan ili scrollaju stranicu.\n\nRadi s bilo kojim frameworkom — React, Vue, Angular, WordPress, čisti HTML.';
+
+  @override
+  String get embedGuideDeveloperScrollExample =>
+      'Primjer: stavite obje linije gdje želite widget';
 
   @override
   String get embedGuideDeveloperWarning =>

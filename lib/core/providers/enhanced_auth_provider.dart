@@ -392,7 +392,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
     final userModel = UserModel(
       id: firebaseUser.uid,
-      email: firebaseUser.email!,
+      email: firebaseUser.email ?? '',
       firstName: firstName,
       lastName: lastName,
       role: UserRole.owner, // Default to owner (was guest before)
@@ -1676,10 +1676,39 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           nonce: nonce,
         );
 
+        // Log credential details for debugging (no PII)
+        LoggingService.log(
+          'APPLE_SIGNIN_CREDENTIAL: '
+          'hasIdToken=${appleCredential.identityToken != null}, '
+          'hasAuthCode=${appleCredential.authorizationCode != null}, '
+          'hasEmail=${appleCredential.email != null}, '
+          'hasGivenName=${appleCredential.givenName != null}',
+          tag: 'AUTH_DEBUG',
+        );
+
+        // Guard against null identityToken (indicates entitlements/provisioning issue)
+        if (appleCredential.identityToken == null) {
+          unawaited(
+            LoggingService.logError(
+              'APPLE_SIGNIN_NO_IDENTITY_TOKEN',
+              Exception(
+                'Apple Sign-In returned null identityToken — '
+                'check entitlements and provisioning profile',
+              ),
+            ),
+          );
+          const errorMessage =
+              'Apple Sign-In is temporarily unavailable. '
+              'Please try again or use another sign-in method.';
+          state = state.copyWith(isLoading: false, error: errorMessage);
+          throw errorMessage;
+        }
+
         // Create OAuth credential for Firebase
         final oauthCredential = OAuthProvider('apple.com').credential(
           idToken: appleCredential.identityToken,
           rawNonce: rawNonce,
+          accessToken: appleCredential.authorizationCode,
         );
 
         userCredential = await _auth.signInWithCredential(oauthCredential);
@@ -1893,9 +1922,21 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           nonce: nonce,
         );
 
+        // Guard against null identityToken
+        if (appleCredential.identityToken == null) {
+          unawaited(
+            LoggingService.logError(
+              'APPLE_REAUTH_NO_IDENTITY_TOKEN',
+              Exception('Apple re-auth returned null identityToken'),
+            ),
+          );
+          throw 'Apple re-authentication failed. Please try again.';
+        }
+
         final oauthCredential = OAuthProvider('apple.com').credential(
           idToken: appleCredential.identityToken,
           rawNonce: rawNonce,
+          accessToken: appleCredential.authorizationCode,
         );
 
         await _auth.currentUser!.reauthenticateWithCredential(oauthCredential);

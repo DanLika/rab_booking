@@ -2052,8 +2052,11 @@
   "embedGuideDeveloperWidth": "Prilagođene dimenzije",
   "embedGuideDeveloperBorder": "Okvir i stilizacija",
   "embedGuideDeveloperResponsive": "Responzivni layout",
-  "embedGuideDeveloperScrollProtection": "Scroll zaštita (React/Angular/Vue)",
-  "embedGuideDeveloperScrollProtectionDesc": "Ako inline script iz embed koda ne radi na vašoj stranici, dodajte ovu liniju u <head>:",
+  "embedGuideDeveloperScrollProtection": "Scroll zaštita (preporučeno)",
+  "embedGuideDeveloperScrollProtectionDesc": "Sprječava da scroll ostane zarobljen unutar widgeta.",
+  "embedGuideDeveloperScrollHowTitle": "Kako scroll zaštita funkcionira",
+  "embedGuideDeveloperScrollHowDesc": "Kada iframe zauzima veliki dio stranice, scroll mišem i dodirom može ostati zarobljen unutar njega — korisnici ne mogu proći pored widgeta.\n\nOvaj script automatski detektira BookBed iframe i dodaje nevidljivi overlay koji omogućava normalan scroll stranice.\n\nDesktop: Korisnici kliknu na widget za interakciju. Scroll zaštita se vraća kada miš napusti područje widgeta.\n\nMobitel: Korisnici tapnu na widget za interakciju. Scroll zaštita se vraća kada tapnu izvan ili scrollaju stranicu.\n\nRadi s bilo kojim frameworkom — React, Vue, Angular, WordPress, čisti HTML.",
+  "embedGuideDeveloperScrollExample": "Primjer: stavite obje linije gdje želite widget",
   "embedGuideDeveloperWarning": "Ne mijenjajte src URL - sadrži potrebne identifikatore nekretnine i apartmana.",
 
   "embedHelpTitle": "Pomoć za ugradnju widgeta",

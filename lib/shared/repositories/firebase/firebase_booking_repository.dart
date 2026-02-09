@@ -130,7 +130,12 @@ class FirebaseBookingRepository implements BookingRepository {
         .collection('bookings')
         .add(booking.toJson());
 
-    return booking.copyWith(id: docRef.id);
+    // Generate booking_reference from Firestore document ID
+    // Same format as Cloud Functions: BK-{FIRST_12_CHARS_UPPERCASE}
+    final bookingReference = 'BK-${docRef.id.substring(0, 12).toUpperCase()}';
+    await docRef.update({'booking_reference': bookingReference});
+
+    return booking.copyWith(id: docRef.id, bookingReference: bookingReference);
   }
 
   @override

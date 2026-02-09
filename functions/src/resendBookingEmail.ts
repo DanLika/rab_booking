@@ -7,6 +7,7 @@ import {
   calculateTokenExpiration,
 } from "./bookingAccessToken";
 import {findBookingById} from "./utils/bookingLookup";
+import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {setUser} from "./sentry";
 
 /**
@@ -141,11 +142,24 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"]}, async (r
       booking.advance_amount ||
       0;
 
+    // Generate booking_reference if missing (admin-created bookings don't have one)
+    let bookingReference = booking.booking_reference;
+    if (!bookingReference) {
+      bookingReference = generateBookingReference(bookingDoc.ref.id);
+      await bookingDoc.ref.update({
+        booking_reference: bookingReference,
+      });
+      logInfo("[ResendBookingEmail] Generated missing booking_reference", {
+        bookingId,
+        bookingReference,
+      });
+    }
+
     // Log email parameters for debugging
     logInfo("[ResendBookingEmail] Preparing to send email", {
       guestEmail: booking.guest_email,
       guestName: booking.guest_name,
-      bookingReference: booking.booking_reference,
+      bookingReference,
       checkIn: booking.check_in?.toDate?.() ? booking.check_in.toDate().toISOString() : String(booking.check_in),
       checkOut: booking.check_out?.toDate?.() ? booking.check_out.toDate().toISOString() : String(booking.check_out),
       totalPrice: booking.total_price,
@@ -159,7 +173,7 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"]}, async (r
     await sendBookingConfirmationEmail(
       booking.guest_email,
       booking.guest_name,
-      booking.booking_reference,
+      bookingReference,
       toDate(booking.check_in),
       toDate(booking.check_out),
       booking.total_price,

@@ -128,7 +128,7 @@ class IcalFeed with _$IcalFeed {
     /// When false, the feed is export-only: our bookings are visible to them,
     /// but we don't import their events (prevents echo loops)
     @Default(true) bool importEnabled,
-    @Default(60) int syncIntervalMinutes,
+    @Default(15) int syncIntervalMinutes,
     DateTime? lastSynced,
     @Default(IcalStatus.active) IcalStatus status,
     String? lastError,
@@ -153,7 +153,7 @@ class IcalFeed with _$IcalFeed {
       icalUrl: data['ical_url'] as String? ?? '',
       customPlatformName: data['custom_platform_name'] as String?,
       importEnabled: data['import_enabled'] as bool? ?? true,
-      syncIntervalMinutes: data['sync_interval_minutes'] as int? ?? 60,
+      syncIntervalMinutes: data['sync_interval_minutes'] as int? ?? 15,
       lastSynced: (data['last_synced'] as Timestamp?)?.toDate(),
       status: IcalStatus.fromString(data['status'] as String?),
       lastError: data['last_error'] as String?,

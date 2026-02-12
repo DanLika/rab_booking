@@ -44,7 +44,25 @@ export const checkTrialExpiration = onSchedule(
         return;
       }
 
-      const expiredUsersCount = expiredTrialsSnapshot.docs.length;
+      // Safety net: skip users whose accountType has been upgraded (e.g., premium, lifetime)
+      const eligibleDocs = expiredTrialsSnapshot.docs.filter((doc) => {
+        const accountType = doc.data().accountType;
+        return !accountType || accountType === "trial";
+      });
+
+      if (eligibleDocs.length === 0) {
+        logInfo("[Trial Expiration] No eligible expired trials (all upgraded)");
+        return;
+      }
+
+      if (eligibleDocs.length < expiredTrialsSnapshot.docs.length) {
+        logInfo("[Trial Expiration] Skipped upgraded users", {
+          total: expiredTrialsSnapshot.docs.length,
+          skipped: expiredTrialsSnapshot.docs.length - eligibleDocs.length,
+        });
+      }
+
+      const expiredUsersCount = eligibleDocs.length;
       logInfo("[Trial Expiration] Found expired trials", {count: expiredUsersCount});
 
       // Process in batches
@@ -52,7 +70,7 @@ export const checkTrialExpiration = onSchedule(
       let batch = db.batch();
       let batchCount = 0;
 
-      for (const doc of expiredTrialsSnapshot.docs) {
+      for (const doc of eligibleDocs) {
         const userData = doc.data();
         const userRef = doc.ref;
 

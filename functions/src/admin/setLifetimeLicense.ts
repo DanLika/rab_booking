@@ -82,9 +82,12 @@ export const setLifetimeLicense = onCall(
         const userEmail = userData?.email || "unknown";
 
         if (grant) {
-          // Grant lifetime license
+          // Grant lifetime license + sync accountStatus to stop trial emails
           const updatePayload = {
             accountType: "lifetime",
+            accountStatus: "active",
+            statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+            statusChangedBy: adminUid,
             lifetime_license_granted_at: admin.firestore.FieldValue.serverTimestamp(),
             lifetime_license_granted_by: adminUid,
             updated_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -101,6 +104,9 @@ export const setLifetimeLicense = onCall(
           // Revoke lifetime license - revert to trial
           const updatePayload = {
             accountType: "trial",
+            accountStatus: "trial",
+            statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+            statusChangedBy: adminUid,
             lifetime_license_granted_at: admin.firestore.FieldValue.delete(),
             lifetime_license_granted_by: admin.firestore.FieldValue.delete(),
             updated_at: admin.firestore.FieldValue.serverTimestamp(),

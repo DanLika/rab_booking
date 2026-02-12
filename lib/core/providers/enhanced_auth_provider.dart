@@ -331,6 +331,12 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
         // Update last login time (non-blocking to speed up auth)
         unawaited(_updateLastLogin(firebaseUser.uid));
+
+        // Check Apple credential state (iOS only, non-blocking)
+        // Signs out if user revoked Apple access in Settings
+        if (!kIsWeb && userModel.lastProvider == 'apple.com') {
+          _checkAppleCredentialState(firebaseUser);
+        }
       } else {
         LoggingService.log(
           'User profile NOT found, creating new profile...',
@@ -366,10 +372,43 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
+  /// Check if Apple credentials are still valid (iOS only).
+  /// If user revoked Apple Sign-In access (Settings → Apple ID → Sign-In),
+  /// sign them out gracefully. Fire-and-forget — does not block app launch.
+  void _checkAppleCredentialState(User firebaseUser) {
+    final appleProviderData = firebaseUser.providerData
+        .where((info) => info.providerId == 'apple.com')
+        .firstOrNull;
+
+    if (appleProviderData == null) return;
+
+    final appleUserId = appleProviderData.uid;
+    if (appleUserId == null || appleUserId.isEmpty) return;
+
+    SignInWithApple.getCredentialState(appleUserId)
+        .then((credentialState) {
+          if (credentialState == CredentialState.revoked ||
+              credentialState == CredentialState.notFound) {
+            LoggingService.log(
+              'Apple credential state: $credentialState — signing out',
+              tag: 'AUTH_APPLE',
+            );
+            signOut();
+          }
+        })
+        .catchError((e) {
+          // SignInWithAppleNotSupportedException on non-Apple platforms
+          // or network errors — silently ignore
+          LoggingService.log(
+            'Apple credential state check failed (non-critical): $e',
+            tag: 'AUTH_APPLE',
+          );
+        });
+  }
+
   /// Create user profile in Firestore
   ///
   /// [providerId] - The authentication provider ID (e.g., 'google.com', 'apple.com', 'password')
-  /// For social sign-in users, sets profileCompleted=false to trigger profile completion flow.
   Future<void> _createUserProfile(
     User firebaseUser, {
     String? providerId,
@@ -403,8 +442,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       phone: firebaseUser.phoneNumber,
       avatarUrl: firebaseUser.photoURL,
       createdAt: DateTime.now(),
-      // Social sign-in: profile needs completion (phone, address, etc.)
-      profileCompleted: !isSocialSignIn,
       lastProvider: providerId,
     );
 
@@ -427,8 +464,32 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       'lastProvider': userModel.lastProvider,
     });
 
+    // Pre-populate profile sub-doc so Edit Profile shows Apple/Google data
+    // (Apple Guideline 4.0: don't ask for info already provided by Sign in with Apple)
+    if (isSocialSignIn) {
+      await _firestore
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .collection('data')
+          .doc('profile')
+          .set({
+            'displayName': firebaseUser.displayName ?? '',
+            'emailContact': firebaseUser.email ?? '',
+            'phoneE164': firebaseUser.phoneNumber ?? '',
+            'address': {
+              'country': '',
+              'city': '',
+              'street': '',
+              'postalCode': '',
+            },
+            'social': {'website': '', 'facebook': ''},
+            'propertyType': '',
+            'logoUrl': firebaseUser.photoURL ?? '',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+    }
+
     // Set isLoading to false when user profile is created (initial check complete)
-    // For social sign-in, set requiresProfileCompletion flag
     // For email/password sign-in, check if email verification is required
     final requiresVerification =
         !isSocialSignIn &&
@@ -440,7 +501,6 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       userModel: userModel,
       isLoading: false,
       requiresEmailVerification: requiresVerification,
-      requiresProfileCompletion: isSocialSignIn,
     );
 
     // BUG FIX: Initialize FCM for newly created users (Google/Apple sign-in)
@@ -1680,7 +1740,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         LoggingService.log(
           'APPLE_SIGNIN_CREDENTIAL: '
           'hasIdToken=${appleCredential.identityToken != null}, '
-          'hasAuthCode=${appleCredential.authorizationCode != null}, '
+          'hasAuthCode=${appleCredential.authorizationCode.isNotEmpty}, '
           'hasEmail=${appleCredential.email != null}, '
           'hasGivenName=${appleCredential.givenName != null}',
           tag: 'AUTH_DEBUG',

@@ -1,7 +1,7 @@
 name: bookbed
 description: "BookBed - Modern booking management platform for vacation rentals."
 publish_to: 'none'
-version: 1.0.10+19
+version: 1.0.10+20
 
 environment:
   sdk: ^3.9.0
@@ -25,7 +25,7 @@ dependencies:
   # Backend & Database - Firebase
   firebase_core: ^4.4.0
   firebase_auth: ^6.1.4
-  cloud_firestore: ^6.1.0
+  cloud_firestore: ^6.1.2
   firebase_storage: ^13.0.6
   cloud_functions: ^6.0.6
   firebase_analytics: ^12.1.1
@@ -115,7 +115,7 @@ dev_dependencies:
 
   # Code Generation
   build_runner: ^2.4.6
-  freezed: ^2.5.7
+  freezed: ^2.5.8
   json_serializable: ^6.7.1
   riverpod_generator: ^2.4.3
 

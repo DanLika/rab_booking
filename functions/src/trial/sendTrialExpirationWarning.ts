@@ -77,16 +77,36 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
       return;
     }
 
+    // Safety net: skip users whose accountType has been upgraded (e.g., premium, lifetime)
+    // This handles the case where admin changed accountType but accountStatus wasn't synced
+    const eligibleDocs = usersToWarnSnapshot.docs.filter((doc) => {
+      const accountType = doc.data().accountType;
+      return !accountType || accountType === "trial";
+    });
+
+    if (eligibleDocs.length === 0) {
+      logInfo(`[Trial Warning] No eligible users expiring in ${days} day(s) (all upgraded)`);
+      return;
+    }
+
+    if (eligibleDocs.length < usersToWarnSnapshot.docs.length) {
+      logInfo("[Trial Warning] Skipped upgraded users", {
+        days,
+        total: usersToWarnSnapshot.docs.length,
+        skipped: usersToWarnSnapshot.docs.length - eligibleDocs.length,
+      });
+    }
+
     logInfo("[Trial Warning] Found users to warn", {
       days,
-      count: usersToWarnSnapshot.docs.length,
+      count: eligibleDocs.length,
     });
 
     const batch = db.batch();
     let emailsSent = 0;
     let pushSent = 0;
 
-    for (const doc of usersToWarnSnapshot.docs) {
+    for (const doc of eligibleDocs) {
       const userData = doc.data();
       const userRef = doc.ref;
 
@@ -138,21 +158,21 @@ async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
     logSuccess(`[Trial Warning] Sent ${days}-day warnings`, {
       emailsSent,
       pushSent,
-      totalUsers: usersToWarnSnapshot.docs.length,
+      totalUsers: eligibleDocs.length,
     });
 
     // Track successful batch in Sentry for monitoring
     addBreadcrumb(`Trial warning batch completed: ${days} days`, "trial", {
       emailsSent,
       pushSent,
-      totalUsers: usersToWarnSnapshot.docs.length,
+      totalUsers: eligibleDocs.length,
     });
 
     // Alert if push delivery rate is low (< 50%)
-    const pushDeliveryRate = usersToWarnSnapshot.docs.length > 0 ?
-      pushSent / usersToWarnSnapshot.docs.length :
+    const pushDeliveryRate = eligibleDocs.length > 0 ?
+      pushSent / eligibleDocs.length :
       1;
-    if (pushDeliveryRate < 0.5 && usersToWarnSnapshot.docs.length >= 5) {
+    if (pushDeliveryRate < 0.5 && eligibleDocs.length >= 5) {
       captureMessage("[Trial Warning] Low push notification delivery rate", "warning", {
         days,
         pushSent,

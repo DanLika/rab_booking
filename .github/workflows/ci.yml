@@ -346,19 +346,14 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          format: 'table'
           severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
+          exit-code: '1' # Fail the job if vulnerabilities are found
 
   # Job 10: CodeQL Analysis (for Cloud Functions TypeScript)
   codeql-analysis:
     name: CodeQL Analysis
+    if: false # Disabled because Code Scanning is not enabled for this repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

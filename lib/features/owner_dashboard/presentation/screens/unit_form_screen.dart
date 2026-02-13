@@ -119,7 +119,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
           if (context.canPop()) {
             context.pop();
           } else {
-            context.go('/owner/properties');
+            context.go(OwnerRoutes.unitHub);
           }
         }
       },
@@ -135,7 +135,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
               if (context.canPop()) {
                 context.pop();
               } else {
-                context.go('/owner/properties');
+                context.go(OwnerRoutes.unitHub);
               }
             },
           ),
@@ -983,7 +983,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
 
       if (mounted) {
         final l10nSuccess = AppLocalizations.of(context);
-        Navigator.of(context).pop();
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(OwnerRoutes.unitHub);
+        }
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
           _isEditing

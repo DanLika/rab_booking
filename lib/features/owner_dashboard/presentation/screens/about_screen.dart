@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -20,7 +22,13 @@ class AboutScreen extends StatelessWidget {
       appBar: CommonAppBar(
         title: l10n.aboutTitle,
         leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        onLeadingIconTap: (context) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(OwnerRoutes.profile);
+          }
+        },
       ),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),

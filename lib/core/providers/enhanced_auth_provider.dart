@@ -1611,7 +1611,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
       if (isNewUser) {
         // Create user profile in Firestore for new users
-        // Pass provider ID to set profileCompleted=false for profile completion flow
+        // Pass provider ID for analytics and tracking
         await _createUserProfile(
           userCredential.user!,
           providerId: 'google.com',
@@ -1784,7 +1784,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       if (isNewUser) {
         // Create user profile in Firestore for new users
         // Note: Apple may not provide display name on subsequent logins (only on first sign-in)
-        // Pass provider ID to set profileCompleted=false for profile completion flow
+        // Pass provider ID for analytics and tracking
         await _createUserProfile(userCredential.user!, providerId: 'apple.com');
         unawaited(AnalyticsService.instance.logSignUp('apple'));
       } else {

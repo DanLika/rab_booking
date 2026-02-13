@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -165,7 +167,13 @@ class _NotificationSettingsScreenState
       appBar: CommonAppBar(
         title: l10n.notificationSettingsTitle,
         leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (context) => Navigator.of(context).pop(),
+        onLeadingIconTap: (context) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(OwnerRoutes.profile);
+          }
+        },
       ),
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),

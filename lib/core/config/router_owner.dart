@@ -100,7 +100,6 @@ class OwnerRoutes {
   static const String profileNotifications = '/owner/profile/notifications';
   static const String about = '/owner/about';
   static const String subscription = '/owner/subscription';
-  static const String widgetSettings = '/owner/widget-settings';
   // Integrations
   static const String stripeIntegration = '/owner/integrations/stripe';
   static const String stripeReturn = '/owner/stripe-return';
@@ -111,15 +110,9 @@ class OwnerRoutes {
       '/owner/integrations/ical/import'; // iCal Sync Settings (Import)
   static const String icalExportList =
       '/owner/integrations/ical/export-list'; // iCal Export List (for owners to export all bookings)
-  static const String icalGuide = '/owner/guides/ical'; // iCal Guide
   // Platform connections (API integrations)
   static const String platformConnections =
       '/owner/integrations/platform-connections';
-  // DEPRECATED routes - will be removed in future versions
-  @Deprecated('Use icalImport instead')
-  static const String icalIntegration = '/owner/integrations/ical';
-  @Deprecated('Use icalGuide instead')
-  static const String guideIcal = '/owner/guides/ical'; // Same path as icalGuide
   // Guides
   static const String guideEmbedWidget = '/owner/guides/embed-widget';
   static const String guideFaq = '/owner/guides/faq';

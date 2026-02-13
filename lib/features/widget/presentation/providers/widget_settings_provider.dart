@@ -136,6 +136,9 @@ final widgetSettingsOrDefaultProvider =
             .read(defaultWidgetSettingsProvider)
             .copyWith(id: unitId, propertyId: propertyId);
       } catch (e, stackTrace) {
+        // Rethrow ArgumentError to allow failing fast on developer errors (and satisfy tests)
+        if (e is ArgumentError) rethrow;
+
         await LoggingService.logError(
           'Failed to fetch or default widget settings for property ${params.$1}, unit ${params.$2}',
           e,

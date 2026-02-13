@@ -1,4 +1,4 @@
-import { calculateMinStayGapBlocks, truncateTime, BlockedRange } from "../src/icalExport";
+import { calculateMinStayGapBlocks, truncateTime, BlockedRange } from "../src/utils/icalUtils";
 import { Timestamp } from "firebase-admin/firestore";
 
 describe("iCal Export Helpers", () => {

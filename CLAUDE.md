@@ -15,16 +15,16 @@
 
 | Komponenta | Razlog |
 |------------|--------|
-| Cjenovnik tab (`unified_unit_hub_screen.dart`) | FROZEN - referentna implementacija |
+| Cjenovnik tab (`lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart`) | FROZEN - referentna implementacija |
 | Unit Wizard publish flow | 3 Firestore docs redoslijed kriti
 an |
 | Timeline Calendar z-index | Cancelled bookings at base level (drawn first), confirmed on top |
-| Calendar Repository (`firebase_booking_calendar_repository.dart`) | 989 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |
+| Calendar Repository (`lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart`) | 989 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |
 | Owner email u `atomicBooking.ts` | UVIJEK aalje - NE vraaj conditional check |
 | Subdomain validation regex | `/^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/` (3-30 chars) |
 | `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |
 | Navigator.push za confirmation | NE vraaj state-based navigaciju |
-| Timeline Calendar fixed dimensions (`timeline_dimensions.dart`) | FIXED 50/42/100/60px za SVE uređaje — NE vraćaj responsive breakpoints |
+| Timeline Calendar fixed dimensions (`lib/features/owner_dashboard/presentation/widgets/timeline/timeline_dimensions.dart`) | FIXED 50/42/100/60px za SVE uređaje — NE vraćaj responsive breakpoints |
 
 ---
 
@@ -283,7 +283,7 @@ match /{path=**}/bookings/{bookingId} {
 # pubspec.yaml - NE UPGRADEATI bez testiranja!
 flutter_riverpod: ^2.5.1      # NE 3.x - breaking changes
 riverpod_annotation: ^2.3.5   # NE 3.x
-freezed: ^2.5.7               # NE 3.x - zahtijeva sealed class
+freezed: ^2.5.8               # NE 3.x - zahtijeva sealed class
 freezed_annotation: ^2.4.4    # NE 3.x
 ```
 
@@ -764,7 +764,7 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-08 | **Version**: 6.63
+**Last Updated**: 2026-02-13 | **Version**: 6.64
 
 **Changelog 6.63**: Scroll Overlay v5, iCal HEAD Fix & Conflict Badge UI:
 - **Scroll Overlay v5 — Universal iframe scroll-trap fix** (`web/bookbed-overlay.js`):

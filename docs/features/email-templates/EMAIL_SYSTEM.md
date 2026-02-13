@@ -48,6 +48,12 @@ BookBed koristi Resend API za slanje transakcijskih emailova. Svi template-i kor
 | `email-verification.ts` | User | Verifikacija email adrese |
 | `password-reset.ts` | User | Reset passworda |
 
+### Trial (2)
+| Template | Primatelj | Trigger |
+|----------|-----------|---------|
+| `trial-expired.ts` | Owner | Trial period istekao |
+| `trial-expiring-soon.ts` | Owner | Trial period ističe uskoro |
+
 ### Custom (1)
 | Template | Primatelj | Trigger |
 |----------|-----------|---------|
@@ -76,6 +82,8 @@ functions/src/email/
 │   ├── overbooking-detected.ts
 │   ├── email-verification.ts
 │   ├── password-reset.ts
+│   ├── trial-expired.ts
+│   ├── trial-expiring-soon.ts
 │   └── custom-email.ts
 ├── utils/
 │   └── template-helpers.ts          ← Helper funkcije (escapeHtml, generateCard, etc.)

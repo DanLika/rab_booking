@@ -240,7 +240,7 @@ class OverbookingAutoResolver extends _$OverbookingAutoResolver {
             'Auto-resolved conflict ${conflict.id}: Cancelled ${bookingToReject.id}',
           );
         } catch (e, stackTrace) {
-          LoggingService.logError(
+          await LoggingService.logError(
             'Error auto-resolving conflict ${conflict.id}',
             e,
             stackTrace,

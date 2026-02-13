@@ -216,7 +216,7 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       return true;
     } catch (e, stackTrace) {
       // Log error for debugging
-      LoggingService.logError('Failed to move booking', e, stackTrace);
+      await LoggingService.logError('Failed to move booking', e, stackTrace);
 
       // FIXED: Use ErrorDisplayUtils to hide stack traces from users
       if (context.mounted) {
@@ -257,7 +257,8 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
         );
       }
     } catch (e, stackTrace) {
-      LoggingService.logError('Failed to undo booking move', e, stackTrace);
+      await LoggingService.logError(
+          'Failed to undo booking move', e, stackTrace);
       if (context.mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
           context,

@@ -41,11 +41,11 @@ class _EmailVerificationScreenState
     _startInitialCooldown();
   }
 
-  /// Start initial 60-second cooldown when screen opens
-  /// Firebase Auth has an internal rate limit (~60s) on sendEmailVerification()
+  /// Start initial 30-second cooldown when screen opens
+  /// Firebase Auth has an internal rate limit (~30s) on sendEmailVerification()
   /// Since email is already sent during registration, we must wait before allowing resend
   void _startInitialCooldown() {
-    _resendCooldown = 60;
+    _resendCooldown = 30;
     _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -279,11 +279,11 @@ class _EmailVerificationScreenState
     );
   }
 
-  /// Start 60 second cooldown after sending verification email
+  /// Start 30 second cooldown after sending verification email
   void _startCooldown() {
     _cooldownTimer?.cancel();
     setState(() {
-      _resendCooldown = 60;
+      _resendCooldown = 30;
     });
 
     _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {

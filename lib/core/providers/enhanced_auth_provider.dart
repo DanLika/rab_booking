@@ -412,6 +412,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   Future<void> _createUserProfile(
     User firebaseUser, {
     String? providerId,
+    String? firstName,
+    String? lastName,
   }) async {
     // Determine if this is a social sign-in (Google, Apple)
     final isSocialSignIn =
@@ -419,26 +421,34 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
     // Parse display name for first/last name
     // Note: Apple only provides name on FIRST sign-in, subsequent logins may have empty name
-    String firstName = '';
-    String lastName = '';
+    String finalFirstName = firstName ?? '';
+    String finalLastName = lastName ?? '';
 
-    if (firebaseUser.displayName != null &&
-        firebaseUser.displayName!.isNotEmpty) {
-      final nameParts = firebaseUser.displayName!.split(' ');
-      firstName = nameParts.first;
-      lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+    // If explicit names not provided, try parsing from displayName
+    if (finalFirstName.isEmpty && finalLastName.isEmpty) {
+      if (firebaseUser.displayName != null &&
+          firebaseUser.displayName!.isNotEmpty) {
+        final nameParts = firebaseUser.displayName!.split(' ');
+        finalFirstName = nameParts.first;
+        finalLastName =
+            nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      }
     }
 
     final userModel = UserModel(
       id: firebaseUser.uid,
       email: firebaseUser.email ?? '',
-      firstName: firstName,
-      lastName: lastName,
+      firstName: finalFirstName,
+      lastName: finalLastName,
       role: UserRole.owner, // Default to owner (was guest before)
       emailVerified:
           firebaseUser.emailVerified ||
           isSocialSignIn, // Social sign-in emails are verified
-      displayName: firebaseUser.displayName,
+      displayName:
+          firebaseUser.displayName ??
+          (finalFirstName.isNotEmpty
+              ? '$finalFirstName $finalLastName'.trim()
+              : null),
       phone: firebaseUser.phoneNumber,
       avatarUrl: firebaseUser.photoURL,
       createdAt: DateTime.now(),
@@ -1715,6 +1725,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
 
     try {
       final UserCredential userCredential;
+      String? firstName;
+      String? lastName;
+
       if (kIsWeb) {
         // Web: Use signInWithPopup with AppleAuthProvider
         await _auth.setPersistence(Persistence.LOCAL);
@@ -1735,6 +1748,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           ],
           nonce: nonce,
         );
+
+        firstName = appleCredential.givenName;
+        lastName = appleCredential.familyName;
 
         // Log credential details for debugging (no PII)
         LoggingService.log(
@@ -1784,8 +1800,13 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       if (isNewUser) {
         // Create user profile in Firestore for new users
         // Note: Apple may not provide display name on subsequent logins (only on first sign-in)
-        // Pass provider ID to set profileCompleted=false for profile completion flow
-        await _createUserProfile(userCredential.user!, providerId: 'apple.com');
+        // Pass provider ID and name components explicitly
+        await _createUserProfile(
+          userCredential.user!,
+          providerId: 'apple.com',
+          firstName: firstName,
+          lastName: lastName,
+        );
         unawaited(AnalyticsService.instance.logSignUp('apple'));
       } else {
         // Update last login and provider for existing users

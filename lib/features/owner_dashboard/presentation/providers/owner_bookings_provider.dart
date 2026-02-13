@@ -5,12 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../domain/models/windowed_bookings_state.dart';
 import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
-import '../../../../core/services/logging_service.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 
 part 'owner_bookings_provider.g.dart';
@@ -662,8 +662,13 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
 
       // Fetch the specific booking directly
       return await repository.getOwnerBookingById(bookingId);
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Booking not found or error fetching
+      await LoggingService.logError(
+        'Failed to fetch specific booking $bookingId',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../data/admin_users_repository.dart';
 
@@ -20,7 +21,8 @@ class UsersListScreen extends ConsumerStatefulWidget {
   ConsumerState<UsersListScreen> createState() => _UsersListScreenState();
 }
 
-class _UsersListScreenState extends ConsumerState<UsersListScreen> {
+class _UsersListScreenState extends ConsumerState<UsersListScreen>
+    with AndroidKeyboardDismissFix {
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -129,12 +131,15 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < _mobileBreakpoint;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Section
+    return KeyedSubtree(
+      key: ValueKey('users_list_$keyboardFixRebuildKey'),
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        backgroundColor: Colors.transparent,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Section
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(

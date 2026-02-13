@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../domain/models/unified_booking_item.dart';
 import '../../domain/models/ical_feed.dart';
 import 'owner_bookings_provider.dart';
@@ -41,8 +42,13 @@ Future<List<UnifiedBookingItem>> unifiedBookings(Ref ref) async {
   List<IcalEvent> importedEvents = [];
   try {
     importedEvents = await ref.watch(allOwnerIcalEventsProvider.future);
-  } catch (_) {
-    // If imported events fail to load, just show regular bookings
+  } catch (e, stackTrace) {
+    // If imported events fail to load, log error and show regular bookings
+    await LoggingService.logError(
+      'Failed to fetch unified imported events',
+      e,
+      stackTrace,
+    );
   }
 
   final importedBookings = importedEvents.map(ImportedBookingItem.new).toList();

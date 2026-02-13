@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../domain/models/widget_mode.dart';
 import '../../../../shared/providers/widget_repository_providers.dart';
@@ -18,13 +19,24 @@ final widgetSettingsProvider =
       ref,
       params,
     ) async {
-      final (propertyId, unitId) = params;
-      final repository = ref.read(widgetSettingsRepositoryProvider);
+      try {
+        final (propertyId, unitId) = params;
+        final repository = ref.read(widgetSettingsRepositoryProvider);
 
-      return await repository.getWidgetSettings(
-        propertyId: propertyId,
-        unitId: unitId,
-      );
+        return await repository.getWidgetSettings(
+          propertyId: propertyId,
+          unitId: unitId,
+        );
+      } catch (e, stackTrace) {
+        await LoggingService.logError(
+          'Failed to fetch widget settings for property ${params.$1}, unit ${params.$2}',
+          e,
+          stackTrace,
+        );
+        // Return null to indicate "not found" or "failed",
+        // allowing callers to decide (e.g. use default)
+        return null;
+      }
     });
 
 /// Stream provider for real-time widget settings updates
@@ -101,25 +113,37 @@ final widgetSettingsOrDefaultProvider =
       ref,
       params,
     ) async {
-      final (propertyId, unitId) = params;
+      try {
+        final (propertyId, unitId) = params;
 
-      // Defensive check: ensure unitId and propertyId are not empty
-      // This check must be done early, before any repository calls
-      if (unitId.isEmpty || propertyId.isEmpty) {
-        throw ArgumentError('unitId and propertyId must not be empty');
+        // Defensive check: ensure unitId and propertyId are not empty
+        // This check must be done early, before any repository calls
+        if (unitId.isEmpty || propertyId.isEmpty) {
+          throw ArgumentError('unitId and propertyId must not be empty');
+        }
+
+        // Try to get custom settings
+        final customSettings = await ref.read(
+          widgetSettingsProvider((propertyId, unitId)).future,
+        );
+
+        if (customSettings != null) {
+          return customSettings;
+        }
+
+        // Fall back to default settings
+        return ref
+            .read(defaultWidgetSettingsProvider)
+            .copyWith(id: unitId, propertyId: propertyId);
+      } catch (e, stackTrace) {
+        await LoggingService.logError(
+          'Failed to fetch or default widget settings for property ${params.$1}, unit ${params.$2}',
+          e,
+          stackTrace,
+        );
+        // Final fallback if everything fails
+        return ref
+            .read(defaultWidgetSettingsProvider)
+            .copyWith(id: params.$2, propertyId: params.$1);
       }
-
-      // Try to get custom settings
-      final customSettings = await ref.read(
-        widgetSettingsProvider((propertyId, unitId)).future,
-      );
-
-      if (customSettings != null) {
-        return customSettings;
-      }
-
-      // Fall back to default settings
-      return ref
-          .read(defaultWidgetSettingsProvider)
-          .copyWith(id: unitId, propertyId: propertyId);
     });

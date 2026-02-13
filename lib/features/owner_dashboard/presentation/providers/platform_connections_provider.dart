@@ -2,6 +2,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/async_utils.dart';
 import '../../domain/models/platform_connection.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -92,28 +93,37 @@ Future<Map<String, dynamic>> connectAirbnb(
 /// Remove platform connection
 @riverpod
 Future<void> removePlatformConnection(Ref ref, String connectionId) async {
-  final authState = ref.read(enhancedAuthProvider);
-  final userId = authState.userModel?.id;
-  if (userId == null) {
-    throw Exception('User not authenticated');
+  try {
+    final authState = ref.read(enhancedAuthProvider);
+    final userId = authState.userModel?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final firestore = ref.watch(firestoreProvider);
+    final connectionDoc = await firestore
+        .collection('platform_connections')
+        .doc(connectionId)
+        .get();
+
+    if (!connectionDoc.exists) {
+      throw Exception('Connection not found');
+    }
+
+    final connectionData = connectionDoc.data()!;
+    if (connectionData['owner_id'] != userId) {
+      throw Exception('Unauthorized');
+    }
+
+    await connectionDoc.reference.delete();
+  } catch (e, stackTrace) {
+    await LoggingService.logError(
+      'Failed to remove platform connection $connectionId',
+      e,
+      stackTrace,
+    );
+    rethrow;
   }
-
-  final firestore = ref.watch(firestoreProvider);
-  final connectionDoc = await firestore
-      .collection('platform_connections')
-      .doc(connectionId)
-      .get();
-
-  if (!connectionDoc.exists) {
-    throw Exception('Connection not found');
-  }
-
-  final connectionData = connectionDoc.data()!;
-  if (connectionData['owner_id'] != userId) {
-    throw Exception('Unauthorized');
-  }
-
-  await connectionDoc.reference.delete();
 }
 
 /// Test platform connection

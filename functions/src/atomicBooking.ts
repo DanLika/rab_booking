@@ -11,7 +11,7 @@ import {
   sendOwnerNotificationEmail,
   sendPendingBookingOwnerNotification,
 } from "./emailService";
-import {sendPendingBookingPushNotification} from "./fcmService";
+import {sendPendingBookingPushNotification, sendBookingPushNotification} from "./fcmService";
 import {createBookingNotification} from "./notificationService";
 import {sendEmailIfAllowed} from "./emailNotificationHelper";
 import {validateEmail} from "./utils/emailValidation";
@@ -1411,6 +1411,19 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
           sanitizedGuestName,
           "created"
         ).catch((e) => logError("[AtomicBooking] In-app notification failed", e));
+
+        // Send push notification for auto-confirmed booking (if not Stripe)
+        // Stripe payments are handled in stripePayment.ts
+        if (paymentMethod !== "stripe") {
+          sendBookingPushNotification(
+            ownerId,
+            result.bookingId,
+            sanitizedGuestName,
+            "confirmed",
+            checkInDate.toDate(),
+            checkOutDate.toDate()
+          ).catch((e) => logError("[AtomicBooking] Confirmed push notification failed", e));
+        }
       }
     } catch (emailError) {
       // Log error but don't fail the booking

@@ -346,6 +346,53 @@ export async function sendPaymentPushNotification(
 }
 
 /**
+ * Send booking status change notification via push (Croatian localized)
+ * Notifies owner when a booking is confirmed, cancelled, or updated
+ */
+export async function sendBookingPushNotification(
+  userId: string,
+  bookingId: string,
+  guestName: string,
+  status: string,
+  checkInDate: Date,
+  checkOutDate: Date
+): Promise<boolean> {
+  let title = "Nova rezervacija";
+  let body = `${guestName} ima novu rezervaciju.`;
+  const dateRange = formatDateRange(checkInDate, checkOutDate);
+
+  switch (status) {
+  case "confirmed":
+    title = "Rezervacija potvrđena";
+    body = `Rezervacija za ${guestName} (${dateRange}) je potvrđena.`;
+    break;
+  case "cancelled":
+    title = "Rezervacija otkazana";
+    body = `Rezervacija za ${guestName} (${dateRange}) je otkazana.`;
+    break;
+  case "updated":
+    title = "Rezervacija izmijenjena";
+    body = `Rezervacija za ${guestName} (${dateRange}) je izmijenjena.`;
+    break;
+  default:
+    title = "Status rezervacije promijenjen";
+    body = `Rezervacija za ${guestName} (${dateRange}) je sada ${status}.`;
+  }
+
+  return sendPushNotification({
+    userId,
+    title,
+    body,
+    category: "bookings",
+    data: {
+      bookingId,
+      action: "booking_status_change",
+      status,
+    },
+  });
+}
+
+/**
  * Send pending booking notification via push (Croatian localized)
  * Notifies owner when a new booking request comes in from widget
  */

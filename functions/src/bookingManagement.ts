@@ -17,6 +17,7 @@ import {
   BookingEmailTracking,
 } from "./utils/bookingHelpers";
 import {safeToDate} from "./utils/dateValidation";
+import {sendBookingPushNotification} from "./fcmService";
 import {
   generateBookingAccessToken,
   calculateTokenExpiration,
@@ -137,6 +138,24 @@ export const autoCancelExpiredBookings = onSchedule(
               booking.guest_email,
               error
             );
+          }
+        }
+
+        // Send push notification to owner about cancellation
+        if (booking.owner_id) {
+          try {
+            const checkIn = safeToDate(booking.check_in, "check_in");
+            const checkOut = safeToDate(booking.check_out, "check_out");
+            await sendBookingPushNotification(
+              booking.owner_id,
+              doc.id,
+              booking.guest_name || "Guest",
+              "cancelled",
+              checkIn,
+              checkOut
+            );
+          } catch (error) {
+            logError("Failed to send cancellation push notification", error, {bookingId: doc.id});
           }
         }
 
@@ -273,6 +292,31 @@ export const onBookingStatusChange = onDocumentUpdated(
         from: before.status,
         to: after.status,
       });
+
+      // Send push notification for status change (confirmed/cancelled)
+      // Skip if Stripe (handled by stripePayment) or Guest Cancel (handled by guestCancelBooking)
+      if (after.owner_id) {
+        const shouldSendPush =
+          (after.status === "confirmed" && after.payment_method !== "stripe") ||
+          (after.status === "cancelled" && after.cancelled_by !== "guest");
+
+        if (shouldSendPush) {
+          try {
+            const checkIn = safeToDate(after.check_in, "check_in");
+            const checkOut = safeToDate(after.check_out, "check_out");
+            await sendBookingPushNotification(
+              after.owner_id,
+              event.params.bookingId,
+              after.guest_name || "Guest",
+              after.status,
+              checkIn,
+              checkOut
+            );
+          } catch (pushError) {
+            logError("Failed to send status change push", pushError, {bookingId: event.params.bookingId});
+          }
+        }
+      }
 
       // If booking was approved (pending -> confirmed with approved_at timestamp)
       if (before.status === "pending" && after.status === "confirmed" && after.approved_at) {
@@ -536,6 +580,40 @@ export const onBookingStatusChange = onDocumentUpdated(
           logError("Failed to create in-app cancellation notification", notificationError);
           // Continue - notification failure shouldn't break the flow
         }
+      }
+    } else {
+      // Check if dates changed (status didn't change)
+      try {
+        const beforeCheckIn = safeToDate(before.check_in, "check_in");
+        const afterCheckIn = safeToDate(after.check_in, "check_in");
+        const beforeCheckOut = safeToDate(before.check_out, "check_out");
+        const afterCheckOut = safeToDate(after.check_out, "check_out");
+
+        if (beforeCheckIn.getTime() !== afterCheckIn.getTime() ||
+            beforeCheckOut.getTime() !== afterCheckOut.getTime()) {
+          logInfo("Booking dates changed", {
+            bookingId: event.params.bookingId,
+            from: `${beforeCheckIn.toISOString()} - ${beforeCheckOut.toISOString()}`,
+            to: `${afterCheckIn.toISOString()} - ${afterCheckOut.toISOString()}`,
+          });
+
+          if (after.owner_id) {
+            try {
+              await sendBookingPushNotification(
+                after.owner_id,
+                event.params.bookingId,
+                after.guest_name || "Guest",
+                "updated",
+                afterCheckIn,
+                afterCheckOut
+              );
+            } catch (error) {
+              logError("Failed to send update push notification", error, {bookingId: event.params.bookingId});
+            }
+          }
+        }
+      } catch (dateError) {
+        logError("Error checking for date changes", dateError, {bookingId: event.params.bookingId});
       }
     }
   }

@@ -346,52 +346,48 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          format: 'table'
+          exit-code: '1'
           severity: 'CRITICAL,HIGH'
 
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-
   # Job 10: CodeQL Analysis (for Cloud Functions TypeScript)
-  codeql-analysis:
-    name: CodeQL Analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: javascript-typescript
-          # Only scan Cloud Functions folder (TypeScript)
-          # Dart/Flutter is not supported by CodeQL
-          source-root: functions
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: functions/package-lock.json
-
-      - name: Install dependencies
-        run: cd functions && npm install
-
-      - name: Build TypeScript
-        run: cd functions && npm run build
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:javascript-typescript"
+  # DISABLED: GitHub Code Scanning is not enabled for this repository.
+  # To enable: Settings -> Security -> Code scanning -> Setup (CodeQL)
+  # codeql-analysis:
+  #   name: CodeQL Analysis
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 20
+  #   permissions:
+  #     security-events: write
+  #     actions: read
+  #     contents: read
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v6
+  #
+  #     - name: Initialize CodeQL
+  #       uses: github/codeql-action/init@v4
+  #       with:
+  #         languages: javascript-typescript
+  #         # Only scan Cloud Functions folder (TypeScript)
+  #         # Dart/Flutter is not supported by CodeQL
+  #         source-root: functions
+  #
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v6
+  #       with:
+  #         node-version: '20'
+  #         cache: 'npm'
+  #         cache-dependency-path: functions/package-lock.json
+  #
+  #     - name: Install dependencies
+  #       run: cd functions && npm install
+  #
+  #     - name: Build TypeScript
+  #       run: cd functions && npm run build
+  #
+  #     - name: Perform CodeQL Analysis
+  #       uses: github/codeql-action/analyze@v4
+  #       with:
+  #         category: "/language:javascript-typescript"

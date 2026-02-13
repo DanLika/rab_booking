@@ -5,6 +5,7 @@ import { db } from "./firebase";
 import { logInfo, logError } from "./logger";
 import { getClientIp, hashIp } from "./utils/ipUtils";
 import { checkRateLimit } from "./utils/rateLimit";
+import { setUser } from "./sentry";
 
 // =============================================================================
 // CONFIGURATION
@@ -90,6 +91,9 @@ function setCacheHeaders(
  * - Any RFC 5545 compatible calendar app
  */
 export const getUnitIcalFeed = onRequest(async (request, response) => {
+  // Set user context for Sentry error tracking (public endpoint - no user)
+  setUser(null);
+
   // Set CORS headers
   response.set("Access-Control-Allow-Origin", "*");
   response.set("Access-Control-Allow-Methods", "GET");
@@ -214,9 +218,9 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 
     // 6. Calculate date range for DoS protection
     const pastDate = new Date();
-    pastDate.setDate(pastDate.getDate() - ICAL_CONFIG.PAST_DAYS);
+    pastDate.setUTCDate(pastDate.getUTCDate() - ICAL_CONFIG.PAST_DAYS);
     const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + ICAL_CONFIG.FUTURE_DAYS);
+    futureDate.setUTCDate(futureDate.getUTCDate() + ICAL_CONFIG.FUTURE_DAYS);
 
     // 7a. Fetch bookings using collection group query
     const bookingsSnapshot = await db
@@ -705,7 +709,7 @@ function generatePlaceholderEvent(unitName: string): string[] {
   // DTSTART/DTEND - Today as an all-day event
   lines.push(`DTSTART;VALUE=DATE:${formatDate(now)}`);
   const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
   lines.push(`DTEND;VALUE=DATE:${formatDate(tomorrow)}`);
 
   // SUMMARY - Minimal placeholder text

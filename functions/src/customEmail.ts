@@ -2,6 +2,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {sendCustomEmailToGuest as sendCustomGuestEmailService} from "./emailService";
 import {logError, logInfo} from "./logger";
 import {validateEmail} from "./utils/emailValidation";
+import {sanitizeText, sanitizeEmail} from "./utils/inputSanitization";
 import {enforceRateLimit} from "./utils/rateLimit";
 import {db} from "./firebase";
 import {findBookingById} from "./utils/bookingLookup";
@@ -50,6 +51,19 @@ export const sendCustomEmailToGuest = onCall({secrets: ["RESEND_API_KEY"]}, asyn
     );
   }
 
+  // Sanitize inputs
+  const sanitizedEmail = sanitizeEmail(guestEmail);
+  const sanitizedName = sanitizeText(guestName);
+  const sanitizedSubject = sanitizeText(subject);
+  const sanitizedMessage = sanitizeText(message);
+
+  if (!sanitizedEmail || !sanitizedName || !sanitizedSubject || !sanitizedMessage) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid input data. Please check your inputs and try again."
+    );
+  }
+
   // Find booking using helper (avoids FieldPath.documentId bug with collectionGroup)
   logInfo("[sendCustomEmailToGuest] Looking up booking", {bookingId, userId});
 
@@ -70,7 +84,8 @@ export const sendCustomEmailToGuest = onCall({secrets: ["RESEND_API_KEY"]}, asyn
   }
 
   // Check: Does the guest email match the booking?
-  if (bookingData.guest_email !== guestEmail) {
+  // Use sanitized email for comparison
+  if (bookingData.guest_email !== sanitizedEmail) {
     throw new HttpsError(
       "permission-denied",
       "Guest email does not match the booking record"
@@ -83,21 +98,21 @@ export const sendCustomEmailToGuest = onCall({secrets: ["RESEND_API_KEY"]}, asyn
   const MAX_SUBJECT_LENGTH = 998; // RFC 5321
   const MAX_MESSAGE_LENGTH = 50000; // ~50KB message body
 
-  if (typeof guestEmail !== "string" || guestEmail.length > MAX_EMAIL_LENGTH) {
+  if (sanitizedEmail.length > MAX_EMAIL_LENGTH) {
     throw new HttpsError("invalid-argument", "Email address too long");
   }
-  if (typeof guestName !== "string" || guestName.length > MAX_NAME_LENGTH) {
+  if (sanitizedName.length > MAX_NAME_LENGTH) {
     throw new HttpsError("invalid-argument", "Guest name too long");
   }
-  if (typeof subject !== "string" || subject.length > MAX_SUBJECT_LENGTH) {
+  if (sanitizedSubject.length > MAX_SUBJECT_LENGTH) {
     throw new HttpsError("invalid-argument", "Subject too long");
   }
-  if (typeof message !== "string" || message.length > MAX_MESSAGE_LENGTH) {
+  if (sanitizedMessage.length > MAX_MESSAGE_LENGTH) {
     throw new HttpsError("invalid-argument", "Message too long (max 50KB)");
   }
 
   // RFC-compliant email validation
-  if (!validateEmail(guestEmail)) {
+  if (!validateEmail(sanitizedEmail)) {
     throw new HttpsError(
       "invalid-argument",
       "Invalid email address. Please provide a valid email with a proper domain (e.g., example@domain.com)."
@@ -127,10 +142,10 @@ export const sendCustomEmailToGuest = onCall({secrets: ["RESEND_API_KEY"]}, asyn
 
     // Send email with property context
     await sendCustomGuestEmailService(
-      guestEmail,
-      guestName,
-      subject,
-      message,
+      sanitizedEmail,
+      sanitizedName,
+      sanitizedSubject,
+      sanitizedMessage,
       ownerEmail, // Pass owner email (fetched from users collection)
       propertyData?.name // Pass property name for email signature
     );

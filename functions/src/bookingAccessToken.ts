@@ -89,7 +89,7 @@ export function calculateTokenExpiration(
     EXPIRATION_DAYS;
 
   const expiration = new Date(checkOut);
-  expiration.setDate(expiration.getDate() + expirationDays);
+  expiration.setUTCDate(expiration.getUTCDate() + expirationDays);
 
   return admin.firestore.Timestamp.fromDate(expiration);
 }

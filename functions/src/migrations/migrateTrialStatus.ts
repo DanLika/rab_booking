@@ -102,7 +102,7 @@ export const migrateTrialStatus = onCall(
 
         // Calculate trial end date
         const trialEndDate = new Date(createdAt);
-        trialEndDate.setDate(trialEndDate.getDate() + TRIAL_DURATION_DAYS);
+        trialEndDate.setUTCDate(trialEndDate.getUTCDate() + TRIAL_DURATION_DAYS);
         const trialExpiresAt = admin.firestore.Timestamp.fromDate(trialEndDate);
 
         // Determine if trial is already expired

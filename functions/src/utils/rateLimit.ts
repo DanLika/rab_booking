@@ -269,7 +269,6 @@ export async function enforceRateLimit(
  *   maxCalls: 10,
  *   windowMs: 60000,
  * });
- * console.log(`Calls remaining: ${status.remaining}`);
  */
 export async function getRateLimitStatus(
   userId: string,

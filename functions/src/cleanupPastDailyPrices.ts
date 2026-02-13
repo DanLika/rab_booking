@@ -36,7 +36,7 @@ export const cleanupPastDailyPrices = onSchedule(
     today.setUTCHours(0, 0, 0, 0);
 
     const cutoffDate = new Date(today);
-    cutoffDate.setDate(cutoffDate.getDate() - 365);
+    cutoffDate.setUTCDate(cutoffDate.getUTCDate() - 365);
 
     // Convert to Firestore Timestamp for comparison
     // IMPORTANT: daily_prices.date is stored as Timestamp, not string

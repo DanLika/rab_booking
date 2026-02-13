@@ -47,14 +47,14 @@ export const sendTrialExpirationWarning = onSchedule(
 async function sendWarningsForInterval(now: Date, days: number): Promise<void> {
   // Calculate the target date range
   const targetDate = new Date(now);
-  targetDate.setDate(now.getDate() + days);
+  targetDate.setUTCDate(now.getUTCDate() + days);
 
   // Create a range for the query (entire day)
   const startOfDay = new Date(targetDate);
-  startOfDay.setHours(0, 0, 0, 0);
+  startOfDay.setUTCHours(0, 0, 0, 0);
 
   const endOfDay = new Date(targetDate);
-  endOfDay.setHours(23, 59, 59, 999);
+  endOfDay.setUTCHours(23, 59, 59, 999);
 
   const startTimestamp = admin.firestore.Timestamp.fromDate(startOfDay);
   const endTimestamp = admin.firestore.Timestamp.fromDate(endOfDay);

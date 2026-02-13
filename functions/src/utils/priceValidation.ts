@@ -181,7 +181,7 @@ export async function calculateBookingPrice(
 
   for (let i = 0; i < expectedNights; i++) {
     const dateStr = currentDate.toISOString().split("T")[0];
-    const dayOfWeek = currentDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+    const dayOfWeek = currentDate.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
     let nightPrice: number;
 
@@ -234,7 +234,7 @@ export async function calculateBookingPrice(
     breakdown.push({date: dateStr, price: nightPrice});
 
     // Move to next day
-    currentDate.setDate(currentDate.getDate() + 1);
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1);
   }
 
   // Round to 2 decimal places to avoid floating point issues

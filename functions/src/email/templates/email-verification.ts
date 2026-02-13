@@ -7,6 +7,7 @@
  */
 
 import {Resend} from "resend";
+import {logInfo} from "../../logger";
 import {generateEmailHtml} from "./base";
 import {getInfoIcon} from "../utils/svg-icons";
 import {
@@ -116,7 +117,6 @@ export async function sendEmailVerificationEmailV2(
 
   // Log successful send with Resend email ID for debugging
   if (typedResult.data?.id) {
-    // eslint-disable-next-line no-console
-    console.log(`[EmailVerification] Resend email sent, ID: ${typedResult.data.id}`);
+    logInfo(`[EmailVerification] Resend email sent, ID: ${typedResult.data.id}`);
   }
 }

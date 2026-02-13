@@ -59,11 +59,11 @@ export const checkInTomorrowReminder = onSchedule(
       // Calculate tomorrow's date range (00:00 - 23:59)
       const now = new Date();
       const tomorrow = new Date(now);
-      tomorrow.setDate(now.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
+      tomorrow.setUTCDate(now.getUTCDate() + 1);
+      tomorrow.setUTCHours(0, 0, 0, 0);
 
       const tomorrowEnd = new Date(tomorrow);
-      tomorrowEnd.setHours(23, 59, 59, 999);
+      tomorrowEnd.setUTCHours(23, 59, 59, 999);
 
       const tomorrowStart = admin.firestore.Timestamp.fromDate(tomorrow);
       const tomorrowEndTs = admin.firestore.Timestamp.fromDate(tomorrowEnd);
@@ -167,10 +167,10 @@ export const checkOutTodayReminder = onSchedule(
       // Calculate today's date range (00:00 - 23:59)
       const now = new Date();
       const today = new Date(now);
-      today.setHours(0, 0, 0, 0);
+      today.setUTCHours(0, 0, 0, 0);
 
       const todayEnd = new Date(today);
-      todayEnd.setHours(23, 59, 59, 999);
+      todayEnd.setUTCHours(23, 59, 59, 999);
 
       const todayStart = admin.firestore.Timestamp.fromDate(today);
       const todayEndTs = admin.firestore.Timestamp.fromDate(todayEnd);
@@ -382,12 +382,12 @@ export const comebackReminder = onSchedule(
     try {
       // Find users who haven't been active in 5 days
       const fiveDaysAgo = new Date();
-      fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-      fiveDaysAgo.setHours(0, 0, 0, 0);
+      fiveDaysAgo.setUTCDate(fiveDaysAgo.getUTCDate() - 5);
+      fiveDaysAgo.setUTCHours(0, 0, 0, 0);
 
       const sixDaysAgo = new Date();
-      sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
-      sixDaysAgo.setHours(0, 0, 0, 0);
+      sixDaysAgo.setUTCDate(sixDaysAgo.getUTCDate() - 6);
+      sixDaysAgo.setUTCHours(0, 0, 0, 0);
 
       const fiveDaysAgoTs = admin.firestore.Timestamp.fromDate(fiveDaysAgo);
       const sixDaysAgoTs = admin.firestore.Timestamp.fromDate(sixDaysAgo);
@@ -483,8 +483,8 @@ export const biweeklySummary = onSchedule(
       // Calculate date range (last 15 days)
       const now = new Date();
       const fifteenDaysAgo = new Date(now);
-      fifteenDaysAgo.setDate(now.getDate() - 15);
-      fifteenDaysAgo.setHours(0, 0, 0, 0);
+      fifteenDaysAgo.setUTCDate(now.getUTCDate() - 15);
+      fifteenDaysAgo.setUTCHours(0, 0, 0, 0);
 
       const startTs = admin.firestore.Timestamp.fromDate(fifteenDaysAgo);
 
@@ -589,8 +589,9 @@ export const monthlyRevenueReport = onSchedule(
     try {
       // Calculate previous month's date range
       const now = new Date();
-      const firstDayPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const lastDayPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      const firstDayPrevMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+      // Last day of previous month: Day 0 of current month in UTC
+      const lastDayPrevMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0, 23, 59, 59, 999));
 
       const startTs = admin.firestore.Timestamp.fromDate(firstDayPrevMonth);
       const endTs = admin.firestore.Timestamp.fromDate(lastDayPrevMonth);

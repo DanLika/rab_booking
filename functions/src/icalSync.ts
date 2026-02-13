@@ -471,7 +471,7 @@ async function parseIcalData(icalData: string): Promise<any[]> {
 
           // Skip events in the past (older than 30 days)
           const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
 
           if (endDate < thirtyDaysAgo) {
             logInfo("[iCal Sync] Skipping past event", {uid});
@@ -556,9 +556,9 @@ async function fetchExistingBookingsForUnit(
 
   // Date range: only check recent/future bookings
   const pastDate = new Date();
-  pastDate.setDate(pastDate.getDate() - 90);
+  pastDate.setUTCDate(pastDate.getUTCDate() - 90);
   const futureDate = new Date();
-  futureDate.setDate(futureDate.getDate() + 365);
+  futureDate.setUTCDate(futureDate.getUTCDate() + 365);
 
   try {
     // 1. Fetch native bookings for this unit

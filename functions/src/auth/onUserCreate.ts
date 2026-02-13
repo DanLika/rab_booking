@@ -48,7 +48,7 @@ export const onUserCreate = onDocumentCreated(
 
     // Calculate trial expiration date
     const trialEndDate = new Date();
-    trialEndDate.setDate(now.getDate() + TRIAL_DURATION_DAYS);
+    trialEndDate.setUTCDate(now.getUTCDate() + TRIAL_DURATION_DAYS);
     const trialExpiresAt = admin.firestore.Timestamp.fromDate(trialEndDate);
 
     try {

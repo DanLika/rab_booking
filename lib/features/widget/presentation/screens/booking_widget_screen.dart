@@ -1837,26 +1837,31 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _firstNameController.removeListener(_saveFormDataDebounced);
     } catch (e) {
       // Ignore - listener might not be added or controller already disposed
+      LoggingService.logDebug('Ignored error removing listener: $e');
     }
     try {
       _lastNameController.removeListener(_saveFormDataDebounced);
     } catch (e) {
       // Ignore - listener might not be added or controller already disposed
+      LoggingService.logDebug('Ignored error removing listener: $e');
     }
     try {
       _emailController.removeListener(_saveFormDataDebounced);
     } catch (e) {
       // Ignore - listener might not be added or controller already disposed
+      LoggingService.logDebug('Ignored error removing listener: $e');
     }
     try {
       _phoneController.removeListener(_saveFormDataDebounced);
     } catch (e) {
       // Ignore - listener might not be added or controller already disposed
+      LoggingService.logDebug('Ignored error removing listener: $e');
     }
     try {
       _notesController.removeListener(_saveFormDataDebounced);
     } catch (e) {
       // Ignore - listener might not be added or controller already disposed
+      LoggingService.logDebug('Ignored error removing listener: $e');
     }
 
     // Dispose all form controllers via centralized state
@@ -1865,6 +1870,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _formState.dispose();
     } catch (e) {
       // Ignore - formState might already be disposed
+      LoggingService.logDebug('Ignored error disposing form state: $e');
     }
 
     // Dispose cross-tab communication resources
@@ -1872,16 +1878,19 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _tabMessageSubscription?.cancel();
     } catch (e) {
       // Ignore - subscription might already be cancelled
+      LoggingService.logDebug('Ignored error cancelling subscription: $e');
     }
     try {
       _tabCommunicationService?.dispose();
     } catch (e) {
       // Ignore - service might already be disposed
+      LoggingService.logDebug('Ignored error disposing tab service: $e');
     }
     try {
       _postMessageListenerCleanup?.call();
     } catch (e) {
       // Ignore - cleanup might already be called or throw
+      LoggingService.logDebug('Ignored error cleaning up postMessage: $e');
     }
 
     // Cancel payment completion timeout

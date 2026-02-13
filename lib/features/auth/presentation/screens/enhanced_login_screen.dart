@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import '../../../../core/config/router_owner.dart';
 import '../../../../core/constants/auth_feature_flags.dart';
 import '../../../../core/constants/breakpoints.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -83,9 +86,15 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           _rememberMe = true;
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Silently fail - secure storage might not be available
-      debugPrint('[LOGIN_SCREEN] Failed to load saved email: $e');
+      unawaited(
+        LoggingService.logError(
+          '[LOGIN_SCREEN] Failed to load saved email',
+          e,
+          stackTrace,
+        ),
+      );
     }
   }
 
@@ -147,13 +156,15 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       final authState = ref.read(enhancedAuthProvider);
 
-      debugPrint(
+      LoggingService.logDebug(
         '[LOGIN_SCREEN] After signIn - isAuthenticated: ${authState.isAuthenticated}, error: ${authState.error}, requiresEmailVerification: ${authState.requiresEmailVerification}',
       );
 
       if (authState.error != null) {
         if (!mounted) return;
-        debugPrint('[LOGIN_SCREEN] Auth state has error, showing snackbar');
+        LoggingService.logDebug(
+          '[LOGIN_SCREEN] Auth state has error, showing snackbar',
+        );
 
         final errorMsg = authState.error!;
         final isPassError = _isPasswordError(errorMsg);
@@ -188,7 +199,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       if (authState.requiresEmailVerification) {
         if (!mounted) return;
-        debugPrint('[LOGIN_SCREEN] Email verification required, redirecting');
+        LoggingService.logDebug(
+          '[LOGIN_SCREEN] Email verification required, redirecting',
+        );
         // Keep loader visible during navigation (widget will dispose naturally)
         context.go(OwnerRoutes.emailVerification);
         return;
@@ -199,18 +212,26 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       // Keep loader visible during navigation to dashboard
       // (will be disposed when widget unmounts)
-      debugPrint('[LOGIN_SCREEN] Login successful, navigating to dashboard');
+      LoggingService.logDebug(
+        '[LOGIN_SCREEN] Login successful, navigating to dashboard',
+      );
       if (mounted) {
         context.go(OwnerRoutes.overview);
       }
-    } catch (e) {
-      debugPrint('[LOGIN_SCREEN] Caught exception: ${e.runtimeType} = $e');
+    } catch (e, stackTrace) {
+      unawaited(
+        LoggingService.logError(
+          '[LOGIN_SCREEN] Caught exception',
+          e,
+          stackTrace,
+        ),
+      );
       if (!mounted) return;
 
       // Get error message from exception (prefer thrown message over state)
       // When a string is thrown directly, toString() returns the string itself
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
-      debugPrint(
+      LoggingService.logDebug(
         '[LOGIN_SCREEN] Error message after processing: $errorMessage',
       );
 
@@ -229,7 +250,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       final isPassError = _isPasswordError(errorMessage);
       final isEmailErr = _isEmailError(errorMessage);
-      debugPrint(
+      LoggingService.logDebug(
         '[LOGIN_SCREEN] Is password error: $isPassError, Is email error: $isEmailErr',
       );
 

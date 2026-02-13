@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/services/logging_service.dart';
 
 /// Repository for handling subscription-related data and operations
 class SubscriptionRepository {
@@ -29,7 +33,14 @@ class SubscriptionRepository {
       }
 
       return data['url'] as String;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      unawaited(
+        LoggingService.logError(
+          'Failed to create subscription session',
+          e,
+          stackTrace,
+        ),
+      );
       // Allow specific Firebase errors to bubble up or wrap them
       throw Exception('Failed to create subscription session: $e');
     }
@@ -45,7 +56,14 @@ class SubscriptionRepository {
       final data =
           result.data as Map; // Use Map instead of Map<String, dynamic>
       return data['url'] as String;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      unawaited(
+        LoggingService.logError(
+          'Failed to create portal session',
+          e,
+          stackTrace,
+        ),
+      );
       throw Exception('Failed to create portal session: $e');
     }
   }

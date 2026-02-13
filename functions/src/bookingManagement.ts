@@ -1,4 +1,3 @@
-import {onSchedule} from "firebase-functions/v2/scheduler";
 import {
   onDocumentUpdated,
   onDocumentCreated,
@@ -61,96 +60,7 @@ function trackEmailFailure(
   });
 }
 
-/**
- * Cloud Function: Auto-cancel expired pending bookings
- *
- * Runs daily to check for bookings that exceeded payment deadline
- */
-export const autoCancelExpiredBookings = onSchedule(
-  {
-    schedule: "every 24 hours",
-    secrets: ["RESEND_API_KEY"],
-  },
-  async () => {
-    const now = admin.firestore.Timestamp.now();
-
-    try {
-      // Only cancel PENDING bookings (awaiting owner approval or payment)
-      // Confirmed bookings are NOT auto-cancelled - owner confirmation = payment received
-      // This is intentional: bank_transfer and pay_on_arrival always require owner approval,
-      // so they stay pending until owner confirms (which means payment was received)
-      const expiredBookings = await db
-        .collectionGroup("bookings")
-        .where("status", "==", "pending")
-        .where("payment_deadline", "<", now)
-        .get();
-
-      logInfo("Auto-cancel check completed", {
-        expiredCount: expiredBookings.size,
-      });
-
-      const cancelPromises = expiredBookings.docs.map(async (doc) => {
-        const booking = doc.data();
-
-        await doc.ref.update({
-          status: "cancelled",
-          cancellation_reason: "Payment not received within deadline",
-          cancelled_at: admin.firestore.FieldValue.serverTimestamp(),
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
-        });
-
-        // Send cancellation email to guest with retry
-        if (booking.guest_email) {
-          try {
-            // Fetch property and unit names using shared utility
-            const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
-              booking.property_id,
-              booking.unit_id,
-              "autoCancelExpired"
-            );
-
-            await sendEmailWithRetry(
-              async () => {
-                await sendBookingCancellationEmail(
-                  booking.guest_email,
-                  booking.guest_name || "Guest",
-                  booking.booking_reference,
-                  propertyName,
-                  unitName,
-                  safeToDate(booking.check_in, "check_in"),
-                  safeToDate(booking.check_out, "check_out"),
-                  undefined, // refundAmount
-                  booking.property_id, // propertyId
-                  booking.cancellation_reason || "Payment not received within deadline", // cancellationReason
-                  true // cancelledByOwner
-                );
-              },
-              "Auto-Cancel Notification",
-              booking.guest_email
-            );
-          } catch (error) {
-            logError("Failed to send cancellation email after retries", error, {bookingId: doc.id});
-            // Track failure for monitoring/alerting
-            trackEmailFailure(
-              doc.id,
-              "auto_cancel_notification",
-              booking.guest_email,
-              error
-            );
-          }
-        }
-
-        logInfo("Auto-cancelled booking due to payment timeout", {bookingId: doc.id});
-      });
-
-      await Promise.all(cancelPromises);
-
-      logSuccess("Auto-cancelled expired bookings", {count: expiredBookings.size});
-    } catch (error) {
-      logError("Error auto-cancelling bookings", error);
-    }
-  }
-);
+// NOTE: autoCancelExpiredBookings moved to cleanupExpiredPendingBookings.ts
 
 /**
  * Firestore trigger: Send initial booking email with bank transfer instructions
@@ -540,4 +450,3 @@ export const onBookingStatusChange = onDocumentUpdated(
     }
   }
 );
-

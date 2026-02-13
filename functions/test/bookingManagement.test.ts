@@ -12,6 +12,7 @@ jest.mock("../src/firebase", () => {
     collection: jest.fn().mockReturnThis(),
     collectionGroup: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
     get: jest.fn(),
     doc: jest.fn().mockReturnThis(),
     update: jest.fn().mockResolvedValue(true),
@@ -66,10 +67,12 @@ jest.mock("../src/bookingAccessToken", () => ({
 
 // Import the functions to be tested
 import {
-  autoCancelExpiredBookings,
   onBookingCreated,
   onBookingStatusChange,
 } from "../src/bookingManagement";
+import {
+  cleanupExpiredPendingBookings,
+} from "../src/cleanupExpiredPendingBookings";
 
 describe("Booking Management Functions", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,7 +83,7 @@ describe("Booking Management Functions", () => {
     mockDb = require("../src/firebase").db;
   });
 
-  describe("autoCancelExpiredBookings", () => {
+  describe("cleanupExpiredPendingBookings", () => {
     it("should cancel expired pending bookings", async () => {
       // Arrange
       const mockExpiredBooking = {
@@ -96,20 +99,31 @@ describe("Booking Management Functions", () => {
           check_out: new Date(),
         }),
       };
-      mockDb.collectionGroup().where().where().get.mockResolvedValue({
+      mockDb.collectionGroup().where().where().limit().get.mockResolvedValue({
         size: 1,
         docs: [mockExpiredBooking],
       });
 
-      const wrapped = test.wrap(autoCancelExpiredBookings);
+      // Mock batch
+      const mockBatch = {
+        update: jest.fn(),
+        delete: jest.fn(),
+        commit: jest.fn().mockResolvedValue(true),
+      };
+      mockDb.batch = jest.fn().mockReturnValue(mockBatch);
+
+      const wrapped = test.wrap(cleanupExpiredPendingBookings);
 
       // Act
       await wrapped({});
 
       // Assert
-      expect(mockExpiredBooking.ref.update).toHaveBeenCalledWith(
+      expect(mockBatch.update).toHaveBeenCalledWith(
+        mockExpiredBooking.ref,
         expect.objectContaining({ status: "cancelled" })
       );
+      expect(mockBatch.commit).toHaveBeenCalled();
+
       const { sendBookingCancellationEmail } = require("../src/emailService");
       expect(sendBookingCancellationEmail).toHaveBeenCalled();
     });

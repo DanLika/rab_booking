@@ -284,6 +284,14 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
   const sanitizedGuestPhone = guestPhone ? sanitizePhone(guestPhone) : null;
   const sanitizedNotes = notes ? sanitizeText(notes) : null;
 
+  // SECURITY FIX (SF-008): Limit notes length to 1000 chars to prevent storage abuse
+  if (sanitizedNotes && sanitizedNotes.length > 1000) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Notes are too long. Maximum 1000 characters allowed."
+    );
+  }
+
   // Validate sanitized email with RFC-compliance
   if (!sanitizedGuestEmail || !validateEmail(sanitizedGuestEmail)) {
     throw new HttpsError(

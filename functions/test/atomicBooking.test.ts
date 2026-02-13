@@ -236,5 +236,16 @@ describe("Atomic Booking Functions", () => {
       const wrapped = wrap(createBookingAtomic);
       await expect(wrapped({ data: validData })).rejects.toThrow();
     });
+
+    it("should throw error if notes exceed 1000 characters", async () => {
+      const mockDb = require("../src/firebase").db;
+      mockDb.collection().doc().get.mockResolvedValueOnce(mockPropertyDoc);
+
+      const wrapped = wrap(createBookingAtomic);
+      const longNotes = "a".repeat(1001);
+      const invalidData = { ...validData, notes: longNotes };
+
+      await expect(wrapped({ data: invalidData })).rejects.toThrow("Notes are too long");
+    });
   });
 });

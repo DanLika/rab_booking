@@ -65,7 +65,7 @@ export * from "./resendGuestBookingEmail";
 // Export subdomain management functions
 export * from "./subdomainService";
 
-// Export cleanup scheduled functions (Stripe pending bookings)
+// Export cleanup scheduled functions (Stripe pending & 7-day pending bookings)
 export * from "./cleanupExpiredPendingBookings";
 
 // REMOVED: checkPaymentDeadlines - Replaced by pendingPaymentReminder in scheduledPushNotifications.ts

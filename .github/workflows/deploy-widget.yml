@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -45,6 +45,9 @@ jobs:
 
       - name: Copy embed.js to build
         run: cp public/embed.js build/web_widget/
+
+      - name: Copy overlay script to build
+        run: cp web/bookbed-overlay.js build/web_widget/
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0

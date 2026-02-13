@@ -12,10 +12,12 @@
  */
 
 import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {admin, db} from "./firebase";
 import {checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
-import {logInfo, logWarn} from "./logger";
+import {logInfo, logWarn, logError} from "./logger";
 import {getClientIp, hashIp} from "./utils/ipUtils";
+import {sanitizeEmail} from "./utils/inputSanitization";
 
 /**
  * Rate limit configuration for login attempts
@@ -146,5 +148,204 @@ export const checkRegistrationRateLimit = onCall(
     });
 
     return {allowed: true};
+  }
+);
+
+/**
+ * Get login rate limit status for an email
+ *
+ * Checks Firestore loginAttempts collection.
+ * Automatically resets expired attempts (> 1 hour).
+ */
+export const getLoginRateLimitStatus = onCall(
+  {region: "europe-west1"},
+  async (request) => {
+    const {email} = request.data as {email?: string};
+    if (!email) {
+      throw new HttpsError("invalid-argument", "Email is required");
+    }
+
+    const sanitizedEmail = sanitizeEmail(email);
+    if (!sanitizedEmail) {
+      throw new HttpsError("invalid-argument", "Invalid email format");
+    }
+
+    // Rate limit params (match Dart service)
+    const MAX_ATTEMPTS = 5;
+    const ATTEMPT_RESET_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
+    try {
+      const docRef = db.collection("loginAttempts").doc(sanitizedEmail);
+      const doc = await docRef.get();
+
+      if (!doc.exists) {
+        return {attemptCount: 0, isLocked: false, lockedUntil: null};
+      }
+
+      const data = doc.data()!;
+      const lastAttemptAt = data.lastAttemptAt?.toDate()?.getTime() || 0;
+      const now = Date.now();
+
+      // Reset attempts if last attempt was > 1 hour ago
+      if (now - lastAttemptAt > ATTEMPT_RESET_DURATION_MS) {
+        await docRef.delete();
+        return {attemptCount: 0, isLocked: false, lockedUntil: null};
+      }
+
+      const isLocked = data.attemptCount >= MAX_ATTEMPTS;
+      const lockedUntil = data.lockedUntil?.toDate()?.toISOString() || null;
+
+      // Check if lock expired
+      const isActuallyLocked = isLocked && lockedUntil ? new Date(lockedUntil).getTime() > now : false;
+
+      return {
+        attemptCount: data.attemptCount,
+        isLocked: isActuallyLocked,
+        lockedUntil: lockedUntil,
+      };
+    } catch (error) {
+      logError("Failed to get login rate limit status", error);
+      throw new HttpsError("internal", "Failed to check rate limit status");
+    }
+  }
+);
+
+/**
+ * Record a failed login attempt
+ *
+ * Increments attempt count in Firestore.
+ * Sets lockedUntil if max attempts exceeded.
+ */
+export const recordFailedLoginAttempt = onCall(
+  {region: "europe-west1"},
+  async (request) => {
+    const {email} = request.data as {email?: string};
+    if (!email) {
+      throw new HttpsError("invalid-argument", "Email is required");
+    }
+
+    const sanitizedEmail = sanitizeEmail(email);
+    if (!sanitizedEmail) {
+      throw new HttpsError("invalid-argument", "Invalid email format");
+    }
+
+    const MAX_ATTEMPTS = 5;
+    const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+    const ATTEMPT_RESET_DURATION_MS = 60 * 60 * 1000; // 1 hour
+
+    try {
+      const docRef = db.collection("loginAttempts").doc(sanitizedEmail);
+
+      const result = await db.runTransaction(async (transaction) => {
+        const doc = await transaction.get(docRef);
+        const now = admin.firestore.Timestamp.now();
+        const nowMs = now.toMillis();
+
+        let newCount = 1;
+        let lockedUntil: admin.firestore.Timestamp | null = null;
+
+        if (!doc.exists) {
+          // First attempt
+          transaction.set(docRef, {
+            email: email, // Store original email for reference
+            attemptCount: 1,
+            lastAttemptAt: now,
+            lockedUntil: null,
+          });
+        } else {
+          const data = doc.data()!;
+          const lastAttemptAt = data.lastAttemptAt?.toDate()?.getTime() || 0;
+
+          // Reset if last attempt was > 1 hour ago
+          if (nowMs - lastAttemptAt > ATTEMPT_RESET_DURATION_MS) {
+            newCount = 1;
+            lockedUntil = null;
+          } else {
+            newCount = (data.attemptCount || 0) + 1;
+
+            // Check if should lock
+            // Lock if >= max attempts.
+            // If already locked and lock expired, we re-lock because they failed again immediately.
+            // (If they waited for lock to expire and then failed, they get locked again?
+            //  Yes, standard brute force protection.)
+            if (newCount >= MAX_ATTEMPTS) {
+              lockedUntil = admin.firestore.Timestamp.fromMillis(nowMs + LOCKOUT_DURATION_MS);
+            } else if (data.lockedUntil) {
+              // Preserve existing lock if not expired and still < max (shouldn't happen)
+              // or if we are refreshing
+              // Actually, if newCount < MAX_ATTEMPTS, we shouldn't be locked.
+              // So if previously locked (e.g. attempt 5), and we are now at attempt 6 (after expiry reset? No, count increases).
+              // If attempt 5 locked it.
+              // 16 mins later, attempt 6.
+              // newCount = 6. >= MAX_ATTEMPTS.
+              // lockedUntil = now + 15 mins.
+              // Correct.
+            }
+          }
+
+          transaction.update(docRef, {
+            attemptCount: newCount,
+            lastAttemptAt: now,
+            lockedUntil: lockedUntil,
+          });
+        }
+
+        return {
+          attemptCount: newCount,
+          lockedUntil: lockedUntil?.toDate()?.toISOString() || null,
+          isLocked: lockedUntil ? lockedUntil.toMillis() > nowMs : false,
+        };
+      });
+
+      return result;
+    } catch (error) {
+      logError("Failed to record login attempt", error);
+      throw new HttpsError("internal", "Failed to record login attempt");
+    }
+  }
+);
+
+/**
+ * Reset login attempts (after successful login)
+ *
+ * Requires authentication.
+ */
+export const resetLoginAttempts = onCall(
+  {region: "europe-west1"},
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const {email} = request.data as {email?: string};
+    if (!email) {
+      throw new HttpsError("invalid-argument", "Email is required");
+    }
+
+    const sanitizedEmail = sanitizeEmail(email);
+    if (!sanitizedEmail) {
+      throw new HttpsError("invalid-argument", "Invalid email format");
+    }
+
+    // Verify email matches authenticated user
+    // This prevents User A from resetting User B's attempts
+    const tokenEmail = request.auth.token.email;
+    if (!tokenEmail || tokenEmail.toLowerCase() !== email.toLowerCase()) {
+      logWarn("Unauthorized reset attempt", {
+        uid: request.auth.uid,
+        authEmail: tokenEmail,
+        targetEmail: email,
+      });
+      throw new HttpsError("permission-denied", "Can only reset attempts for your own email");
+    }
+
+    try {
+      await db.collection("loginAttempts").doc(sanitizedEmail).delete();
+      logInfo("Login attempts reset", {email: sanitizedEmail});
+      return {success: true};
+    } catch (error) {
+      logError("Failed to reset login attempts", error);
+      throw new HttpsError("internal", "Failed to reset login attempts");
+    }
   }
 );

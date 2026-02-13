@@ -54,39 +54,39 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin() || isAdminFromFirestore();
 
       // Users can update their own data, but NOT protected status fields.
-      // Admins can update anything.
-      // Protected fields: subscription status, trial dates, account type, lifetime license
-      allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
-          'accountStatus', 'trialStartDate', 'trialExpiresAt',
+      // Admin updates must go through Cloud Functions.
+      // Protected fields: role, subscription status, trial dates, account type, lifetime license
+      allow create: if isOwner(userId) && !request.resource.data.keys().hasAny([
+          'role', 'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by'
-        ])) || isAdmin() || isAdminFromFirestore();
-      allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'accountStatus', 'trialStartDate', 'trialExpiresAt',
+        ]);
+      allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'role', 'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by'
-        ])) || isAdmin() || isAdminFromFirestore();
-      allow delete: if isAdmin() || isAdminFromFirestore(); // Users cannot delete themselves directly, must use Cloud Function
+        ]);
+      allow delete: if false; // Only Cloud Functions can delete users
 
       // User data subcollection (profile, company, preferences)
       match /data/{document} {
         allow read: if isOwner(userId) || isAdmin();
         // Same logic as parent document: user can't change status fields.
-        allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
-            'accountStatus', 'trialStartDate', 'trialExpiresAt',
+        allow create: if isOwner(userId) && !request.resource.data.keys().hasAny([
+            'role', 'accountStatus', 'trialStartDate', 'trialExpiresAt',
             'statusChangedAt', 'statusChangedBy',
             'account_type', 'admin_override_account_type',
             'lifetime_license_granted_at', 'lifetime_license_granted_by'
-          ])) || isAdmin();
-        allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-            'accountStatus', 'trialStartDate', 'trialExpiresAt',
+          ]);
+        allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'role', 'accountStatus', 'trialStartDate', 'trialExpiresAt',
             'statusChangedAt', 'statusChangedBy',
             'account_type', 'admin_override_account_type',
             'lifetime_license_granted_at', 'lifetime_license_granted_by'
-          ])) || isAdmin();
-        allow delete: if isOwner(userId) || isAdmin();
+          ]);
+        allow delete: if isOwner(userId);
       }
 
       // AI chat sessions subcollection

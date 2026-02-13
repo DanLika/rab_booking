@@ -34,6 +34,7 @@ class EnhancedAuthState {
   final bool requiresEmailVerification;
   final bool requiresOnboarding;
   final bool requiresProfileCompletion;
+  final bool isAdminClaim;
 
   const EnhancedAuthState({
     this.firebaseUser,
@@ -43,12 +44,13 @@ class EnhancedAuthState {
     this.requiresEmailVerification = false,
     this.requiresOnboarding = false,
     this.requiresProfileCompletion = false,
+    this.isAdminClaim = false,
   });
 
   bool get isAuthenticated => firebaseUser != null && userModel != null;
   bool get isAnonymous => firebaseUser?.isAnonymous ?? false;
   bool get isOwner => userModel?.isOwner ?? false;
-  bool get isAdmin => userModel?.isAdmin ?? false;
+  bool get isAdmin => (userModel?.isAdmin ?? false) || isAdminClaim;
   bool get isEmployee => userModel?.isEmployee ?? false;
 
   EnhancedAuthState copyWith({
@@ -59,6 +61,7 @@ class EnhancedAuthState {
     bool? requiresEmailVerification,
     bool? requiresOnboarding,
     bool? requiresProfileCompletion,
+    bool? isAdminClaim,
   }) {
     return EnhancedAuthState(
       firebaseUser: firebaseUser ?? this.firebaseUser,
@@ -70,6 +73,7 @@ class EnhancedAuthState {
       requiresOnboarding: requiresOnboarding ?? this.requiresOnboarding,
       requiresProfileCompletion:
           requiresProfileCompletion ?? this.requiresProfileCompletion,
+      isAdminClaim: isAdminClaim ?? this.isAdminClaim,
     );
   }
 }
@@ -291,6 +295,18 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         // Check profile completion status (for social sign-in users)
         final requiresProfileCompletion = !userModel.profileCompleted;
 
+        // Check for admin custom claim (primary admin verification method)
+        bool isAdminClaim = false;
+        try {
+          final idTokenResult = await firebaseUser.getIdTokenResult();
+          isAdminClaim = idTokenResult.claims?['isAdmin'] == true;
+        } catch (e) {
+          LoggingService.log(
+            'Failed to get ID token result for admin claim check: $e',
+            tag: 'ENHANCED_AUTH',
+          );
+        }
+
         // Set isLoading to false when user profile is loaded (initial check complete)
         state = EnhancedAuthState(
           firebaseUser: firebaseUser,
@@ -299,6 +315,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           requiresEmailVerification: requiresVerification,
           requiresOnboarding: requiresOnboarding,
           requiresProfileCompletion: requiresProfileCompletion,
+          isAdminClaim: isAdminClaim,
         );
 
         // Set user context for Sentry/Crashlytics error tracking

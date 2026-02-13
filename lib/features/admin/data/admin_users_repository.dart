@@ -42,14 +42,6 @@ class AdminUsersRepository {
     return UserModel.fromJson(data);
   }
 
-  /// Update user's account type
-  Future<void> updateAccountType(String userId, AccountType accountType) async {
-    await _firestore.collection('users').doc(userId).update({
-      'accountType': accountType.name,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-  }
-
   /// Get total counts for dashboard
   Future<Map<String, int>> getDashboardStats() async {
     // Total owners count
@@ -120,28 +112,41 @@ class AdminUsersRepository {
     return doc.data()?['accountStatus'] as String?;
   }
 
-  /// Update admin-controlled flags for a user
+  /// Update admin-controlled flags for a user via Cloud Function
   Future<void> updateAdminFlags(
     String userId, {
     bool? hideSubscription,
     AccountType? adminOverrideAccountType,
     bool clearOverride = false,
   }) async {
-    final Map<String, dynamic> updates = {
-      'updated_at': FieldValue.serverTimestamp(),
-    };
+    try {
+      final callable = FirebaseFunctions.instanceFor(
+        region: 'europe-west1',
+      ).httpsCallable('updateAdminFlags');
 
-    if (hideSubscription != null) {
-      updates['hide_subscription'] = hideSubscription;
+      await callable.call<Map<String, dynamic>>({
+        'userId': userId,
+        if (hideSubscription != null) 'hideSubscription': hideSubscription,
+        if (clearOverride)
+          'clearOverride': true
+        else if (adminOverrideAccountType != null)
+          'adminOverrideAccountType': adminOverrideAccountType.name,
+      });
+    } on FirebaseFunctionsException catch (e) {
+      await LoggingService.logError(
+        'updateAdminFlags failed: userId=$userId, code=${e.code}',
+        e,
+        StackTrace.current,
+      );
+      rethrow;
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        'updateAdminFlags unexpected error: userId=$userId',
+        e,
+        stackTrace,
+      );
+      rethrow;
     }
-
-    if (clearOverride) {
-      updates['admin_override_account_type'] = FieldValue.delete();
-    } else if (adminOverrideAccountType != null) {
-      updates['admin_override_account_type'] = adminOverrideAccountType.name;
-    }
-
-    await _firestore.collection('users').doc(userId).update(updates);
   }
 
   /// Update user's account status via Cloud Function (with audit trail)

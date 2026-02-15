@@ -1121,6 +1121,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         // Activate user subscription
         await db.collection("users").doc(userId).update({
           accountStatus: "active",
+          accountType: "premium",
           stripeCustomerId: customerId,
           stripeSubscriptionId: subscriptionId,
           stripeSubscriptionStatus: "active",

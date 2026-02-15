@@ -764,7 +764,30 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-08 | **Version**: 6.63
+**Last Updated**: 2026-02-15 | **Version**: 6.64
+
+**Changelog 6.64**: AI Branch Audit — Cherry-picked Security & CI Fixes:
+- **CI Fix** (`.github/workflows/ci.yml`):
+  - Disabled CodeQL Analysis job (requires GitHub Advanced Security — not available on private repos)
+  - Changed Trivy security scan from SARIF upload to table output (SARIF upload also requires Code Scanning)
+  - Both jobs were failing on every CI run — now skipped cleanly
+- **EMAIL_SYSTEM.md** — Added `trial-expired.ts` and `trial-expiring-soon.ts` to template table and directory tree (existed since Feb 3 but were missing from docs, count 16→18)
+- **Stripe accountType sync** (`functions/src/stripePayment.ts`):
+  - Added `accountType: "premium"` to subscription activation webhook
+  - Prevents accountStatus/accountType desync (MEMORY.md #23) when owner subscribes
+  - Currently inactive code path (subscriptions not yet enabled), but ready for future
+- **SF-008 server-side completion** (`functions/src/atomicBooking.ts`):
+  - Added 1000 char limit on booking notes server-side
+  - Client-side validation existed, server-side was missing
+- **Firestore rules** (`firestore.rules`):
+  - Added explicit `allow read, write: if false` for `oauth_states` and `sync_failures` collections
+  - Both are Cloud Functions-only collections (Admin SDK bypasses rules)
+  - Makes implicit default-deny explicit and documented
+- **8 AI branches audited** (Jules/Sentinel/Bolt monthly audit Feb 2026):
+  - All had dependency downgrades (branch forked before `3a29695c` bump) — skipped
+  - All had same CI fix — applied once
+  - Skipped: UTC timezone changes (theoretical), min-stay gap re-add (would revert `42157fa2`), auto-cancel refactor (risky rename), FCM push feature (new feature), Navigator.pop fixes (saved as TODO)
+- **Key files**: `ci.yml`, `stripePayment.ts`, `atomicBooking.ts`, `firestore.rules`, `EMAIL_SYSTEM.md`
 
 **Changelog 6.63**: Scroll Overlay v5, iCal HEAD Fix & Conflict Badge UI:
 - **Scroll Overlay v5 — Universal iframe scroll-trap fix** (`web/bookbed-overlay.js`):

@@ -429,5 +429,17 @@ service cloud.firestore {
       allow create: if isAuthenticated(); // User can log their own security events
       allow update, delete: if false; // Immutable audit log
     }
+
+    // OAuth states - for Booking.com/Airbnb integration
+    // Handled by Cloud Functions only (Admin SDK bypasses rules)
+    match /oauth_states/{state} {
+      allow read, write: if false;
+    }
+
+    // Sync failures - for iCal sync monitoring
+    // Handled by Cloud Functions only (Admin SDK bypasses rules)
+    match /sync_failures/{failureId} {
+      allow read, write: if false;
+    }
   }
 }

@@ -173,7 +173,7 @@ class _AdminDrawer extends ConsumerWidget {
                     label: 'Dashboard',
                     isSelected: navIndex == 0,
                     onTap: () {
-                      Navigator.of(context).pop();
+                      if (context.canPop()) context.pop();
                       context.go('/dashboard');
                     },
                   ),
@@ -184,7 +184,7 @@ class _AdminDrawer extends ConsumerWidget {
                     label: 'Users Management',
                     isSelected: navIndex == 1,
                     onTap: () {
-                      Navigator.of(context).pop();
+                      if (context.canPop()) context.pop();
                       context.go('/users');
                     },
                   ),
@@ -195,7 +195,7 @@ class _AdminDrawer extends ConsumerWidget {
                     label: 'Activity Log',
                     isSelected: navIndex == 2,
                     onTap: () {
-                      Navigator.of(context).pop();
+                      if (context.canPop()) context.pop();
                       context.go('/activity-log');
                     },
                   ),
@@ -262,7 +262,7 @@ class _AdminDrawer extends ConsumerWidget {
                         const SizedBox(height: 2),
                         InkWell(
                           onTap: () async {
-                            Navigator.of(context).pop();
+                            if (context.canPop()) context.pop();
                             await ref
                                 .read(enhancedAuthProvider.notifier)
                                 .signOut();

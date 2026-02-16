@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../utils/booking_overlap_detector.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../domain/models/overbooking_conflict.dart';
@@ -236,11 +236,15 @@ class OverbookingAutoResolver extends _$OverbookingAutoResolver {
           // Invalidate calendar provider to refresh UI
           ref.invalidate(calendarBookingsProvider);
 
-          debugPrint(
+          LoggingService.logInfo(
             'Auto-resolved conflict ${conflict.id}: Cancelled ${bookingToReject.id}',
           );
-        } catch (e) {
-          debugPrint('Error auto-resolving conflict ${conflict.id}: $e');
+        } catch (e, stackTrace) {
+          await LoggingService.logError(
+            'Error auto-resolving conflict ${conflict.id}',
+            e,
+            stackTrace,
+          );
         }
       }
     }

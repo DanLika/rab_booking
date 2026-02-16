@@ -5,6 +5,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/repositories/booking_repository.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../utils/booking_overlap_detector.dart';
 import 'owner_calendar_provider.dart';
@@ -213,7 +214,9 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
       // Clear drag state
       state = const DragDropState();
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await LoggingService.logError('Failed to move booking', e, stackTrace);
+
       // FIXED: Use ErrorDisplayUtils to hide stack traces from users
       if (context.mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
@@ -252,7 +255,12 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
           'Booking restored to original position',
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        'Failed to undo booking move',
+        e,
+        stackTrace,
+      );
       if (context.mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
           context,

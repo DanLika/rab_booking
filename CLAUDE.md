@@ -508,11 +508,12 @@ ne sekcije
 - **Collection group index** = query preko SVIH subcollections (`collectionGroup('bookings')`)
 - ⚠️ **Collection group index NE pokriva collection query i obrnuto!**
 
-### Widget Potrebni Indexi (svi postoje):
+### Potrebni Indexi (Widget & Cloud Functions):
 | Collection | Fields | Scope |
 |------------|--------|-------|
 | `bookings` | `unit_id` + `status` | Collection Group |
 | `bookings` | `unit_id` + `check_in` | Collection Group |
+| `bookings` | `owner_id` + `created_at` | Collection Group |
 | `daily_prices` | `unit_id` + `date` | Collection Group |
 | `daily_prices` | `unit_id` + `available` | Collection Group |
 | `ical_events` | `unit_id` + `start_date` | Collection Group |
@@ -764,7 +765,37 @@ VersionCheck: current=1.0.2, min=1.0.0, latest=1.0.3, status=optionalUpdate
 
 ---
 
-**Last Updated**: 2026-02-15 | **Version**: 6.64
+**Last Updated**: 2026-02-16 | **Version**: 6.65
+
+**Changelog 6.65**: AI Branch Audit #2 — Cherry-picked Bug Fixes from 3 Branches:
+- **4 branches audited** (`fix-memory-resource-leaks`, `audit-ci-cd-updates`, `audit-auth-user-management`, `audit-monthly-architecture-audit`):
+  - All 4 had same regressions: dependency downgrades, SF-008 removal, accountType sync removal, firestore rules rollback, docs rollback — all skipped
+- **Apple Sign-In Name Propagation Fix** (`enhanced_auth_provider.dart`):
+  - **REAL BUG** confirmed by Firestore data — native iOS Apple Sign-In users had empty `first_name`/`last_name`
+  - Root cause: `appleCredential.givenName`/`familyName` available from Apple SDK but never passed to `_createUserProfile()`
+  - Firebase does NOT auto-set `displayName` from native OAuthCredential flow (confirmed: both Apple users had `displayName: null`)
+  - Fix: Added `firstName`/`lastName` params to `_createUserProfile()`, capture from `appleCredential`, fallback to `displayName` parsing
+  - `displayName` now constructed from names if Firebase doesn't set it
+- **AI Chat StateNotifier Mounted Checks** (`ai_chat_provider.dart`):
+  - Added `if (!mounted) break/return` at 4 points during streaming response
+  - Prevents "Bad state: Tried to use StateNotifier after dispose" if user navigates away during AI streaming
+- **TextEditingController Disposal** (`email_verification_screen.dart`):
+  - Wrapped both `showDialog` calls in `try/finally` with `controller.dispose()`
+  - Minor memory leak fix — controllers created in methods weren't disposed
+- **Widget Deploy Pipeline Fix** (`deploy-widget.yml`):
+  - Added `cp web/bookbed-overlay.js build/web_widget/` step before Firebase deploy
+  - Fixes MEMORY #21 critical deploy bug — overlay.js was never included in CI deploys
+  - Without this, iframe scroll-trap fix didn't work on external sites after CI deploy
+- **Navigator.pop → Safe GoRouter Pattern** (`admin_shell_screen.dart`, `unit_form_screen.dart`):
+  - Replaced `Navigator.of(context).pop()` with `context.canPop()` + `context.pop()` + fallback `context.go()`
+  - 4 places in admin drawer + 1 in unit form save — prevents crash when no previous route on stack
+- **Sentry/Logging Improvements** (5 provider files):
+  - `calendar_drag_drop_provider.dart` — stackTrace added to move/undo catch blocks
+  - `overbooking_detection_provider.dart` — `debugPrint` → `LoggingService.logInfo/logError`
+  - `owner_bookings_provider.dart` — error logging for fetch booking by ID
+  - `unified_bookings_provider.dart` — error logging for iCal events fetch (was empty `catch (_)`)
+  - `platform_connections_provider.dart` — try/catch with logging + rethrow for remove connection
+- **Key files**: `enhanced_auth_provider.dart`, `ai_chat_provider.dart`, `email_verification_screen.dart`, `deploy-widget.yml`, `admin_shell_screen.dart`, `unit_form_screen.dart`
 
 **Changelog 6.64**: AI Branch Audit — Cherry-picked Security & CI Fixes:
 - **CI Fix** (`.github/workflows/ci.yml`):

@@ -983,7 +983,11 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
 
       if (mounted) {
         final l10nSuccess = AppLocalizations.of(context);
-        Navigator.of(context).pop();
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/owner/properties');
+        }
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
           _isEditing

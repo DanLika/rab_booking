@@ -408,12 +408,15 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       final buffer = StringBuffer();
 
       await for (final chunk in responseStream) {
+        if (!mounted) break;
         final chunkText = chunk.text;
         if (chunkText != null) {
           buffer.write(chunkText);
           state = state.copyWith(streamingText: buffer.toString());
         }
       }
+
+      if (!mounted) return;
 
       final assistantMessage = AiChatMessage(
         role: 'assistant',
@@ -434,6 +437,8 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       } else {
         await _repo.updateChat(userId, updatedChat.id, messages: newMessages);
       }
+
+      if (!mounted) return;
 
       state = state.copyWith(
         currentChat: updatedChat,
@@ -464,6 +469,8 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       } catch (_) {
         // Ignore Firestore save errors in error path
       }
+
+      if (!mounted) return;
 
       // Show actual error for debugging (TODO: remove after fixing)
       final errorMsg = e.toString();

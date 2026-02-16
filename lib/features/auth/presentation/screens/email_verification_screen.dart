@@ -193,90 +193,94 @@ class _EmailVerificationScreenState
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
-    return showDialog(
-      context: context,
-      builder: (context) {
-        final l10n = AppLocalizations.of(context);
-        return AlertDialog(
-          title: Text(l10n.authResendVerificationEmail),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l10n.authPasswordHelper,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
-                Builder(
-                  builder: (ctx) => TextFormField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecorationHelper.buildDecoration(
-                      labelText: l10n.authPasswordLabel,
-                      prefixIcon: const Icon(Icons.lock),
-                      context: ctx,
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.passwordRequired;
-                      }
-                      return null;
-                    },
+    try {
+      return await showDialog(
+        context: context,
+        builder: (context) {
+          final l10n = AppLocalizations.of(context);
+          return AlertDialog(
+            title: Text(l10n.authResendVerificationEmail),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.authPasswordHelper,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Builder(
+                    builder: (ctx) => TextFormField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: InputDecorationHelper.buildDecoration(
+                        labelText: l10n.authPasswordLabel,
+                        prefixIcon: const Icon(Icons.lock),
+                        context: ctx,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.passwordRequired;
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.cancel),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
 
-                final navigator = Navigator.of(context);
-                navigator.pop();
+                  final navigator = Navigator.of(context);
+                  navigator.pop();
 
-                setState(() => _isResending = true);
+                  setState(() => _isResending = true);
 
-                try {
-                  // Re-authenticate and resend verification
-                  await ref
-                      .read(enhancedAuthProvider.notifier)
-                      .updateEmail(
-                        newEmail: newEmail,
-                        currentPassword: passwordController.text,
+                  try {
+                    // Re-authenticate and resend verification
+                    await ref
+                        .read(enhancedAuthProvider.notifier)
+                        .updateEmail(
+                          newEmail: newEmail,
+                          currentPassword: passwordController.text,
+                        );
+
+                    if (mounted) {
+                      ErrorDisplayUtils.showSuccessSnackBar(
+                        this.context,
+                        l10n.authVerifyEmailSuccess,
+                        duration: const Duration(seconds: 3),
                       );
-
-                  if (mounted) {
-                    ErrorDisplayUtils.showSuccessSnackBar(
-                      this.context,
-                      l10n.authVerifyEmailSuccess,
-                      duration: const Duration(seconds: 3),
-                    );
-                    _startCooldown();
+                      _startCooldown();
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() => _isResending = false);
+                    }
                   }
-                } catch (e) {
-                  if (mounted) {
-                    ErrorDisplayUtils.showErrorSnackBar(this.context, e);
-                  }
-                } finally {
-                  if (mounted) {
-                    setState(() => _isResending = false);
-                  }
-                }
-              },
-              child: Text(l10n.submit),
-            ),
-          ],
-        );
-      },
-    );
+                },
+                child: Text(l10n.submit),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      passwordController.dispose();
+    }
   }
 
   /// Start 60 second cooldown after sending verification email
@@ -306,148 +310,156 @@ class _EmailVerificationScreenState
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
-    return showDialog(
-      context: context,
-      builder: (context) {
-        final l10n = AppLocalizations.of(context);
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.email_outlined, color: Theme.of(context).primaryColor),
-              const SizedBox(width: 8),
-              Text(l10n.authChangeEmailTitle),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l10n.authChangeEmailDesc,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 20),
-                  Builder(
-                    builder: (ctx) => TextFormField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        labelText: l10n.authNewEmailLabel,
-                        prefixIcon: const Icon(Icons.email),
-                        context: ctx,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return l10n.emailRequired;
-                        }
-                        if (!value.contains('@') || !value.contains('.')) {
-                          return l10n.validEmailRequired;
-                        }
-                        return null;
-                      },
+    try {
+      return await showDialog(
+        context: context,
+        builder: (context) {
+          final l10n = AppLocalizations.of(context);
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(
+                  Icons.email_outlined,
+                  color: Theme.of(context).primaryColor,
+                ),
+                const SizedBox(width: 8),
+                Text(l10n.authChangeEmailTitle),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.authChangeEmailDesc,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Builder(
-                    builder: (ctx) => TextFormField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: InputDecorationHelper.buildDecoration(
-                        labelText: l10n.authPasswordLabel,
-                        prefixIcon: const Icon(Icons.lock),
-                        helperText: l10n.authPasswordHelper,
-                        context: ctx,
+                    const SizedBox(height: 20),
+                    Builder(
+                      builder: (ctx) => TextFormField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: l10n.authNewEmailLabel,
+                          prefixIcon: const Icon(Icons.email),
+                          context: ctx,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return l10n.emailRequired;
+                          }
+                          if (!value.contains('@') || !value.contains('.')) {
+                            return l10n.validEmailRequired;
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return l10n.passwordRequired;
-                        }
-                        return null;
-                      },
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
+                    const SizedBox(height: 16),
+                    Builder(
+                      builder: (ctx) => TextFormField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration: InputDecorationHelper.buildDecoration(
+                          labelText: l10n.authPasswordLabel,
+                          prefixIcon: const Icon(Icons.lock),
+                          helperText: l10n.authPasswordHelper,
+                          context: ctx,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return l10n.passwordRequired;
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.tertiary,
+                        ).colorScheme.tertiary.withAlpha((0.1 * 255).toInt()),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.tertiary.withAlpha((0.3 * 255).toInt()),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            l10n.authLogoutHint,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.tertiary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.authLogoutHint,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.cancel),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(foregroundColor: Colors.white),
+                onPressed: () async {
+                  if (!formKey.currentState!.validate()) return;
 
-                final navigator = Navigator.of(context);
-                navigator.pop();
+                  final navigator = Navigator.of(context);
+                  navigator.pop();
 
-                try {
-                  // Re-authenticate and update email via provider
-                  await ref
-                      .read(enhancedAuthProvider.notifier)
-                      .updateEmail(
-                        newEmail: emailController.text.trim(),
-                        currentPassword: passwordController.text,
+                  try {
+                    // Re-authenticate and update email via provider
+                    await ref
+                        .read(enhancedAuthProvider.notifier)
+                        .updateEmail(
+                          newEmail: emailController.text.trim(),
+                          currentPassword: passwordController.text,
+                        );
+
+                    if (mounted) {
+                      ErrorDisplayUtils.showSuccessSnackBar(
+                        this.context,
+                        l10n.authUpdateEmailSuccess,
                       );
-
-                  if (mounted) {
-                    ErrorDisplayUtils.showSuccessSnackBar(
-                      this.context,
-                      l10n.authUpdateEmailSuccess,
-                    );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ErrorDisplayUtils.showErrorSnackBar(this.context, e);
+                    }
                   }
-                } catch (e) {
-                  if (mounted) {
-                    ErrorDisplayUtils.showErrorSnackBar(this.context, e);
-                  }
-                }
-              },
-              child: Text(l10n.authChangeEmail),
-            ),
-          ],
-        );
-      },
-    );
+                },
+                child: Text(l10n.authChangeEmail),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      emailController.dispose();
+      passwordController.dispose();
+    }
   }
 
   @override

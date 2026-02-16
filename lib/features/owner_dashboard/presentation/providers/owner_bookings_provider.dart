@@ -662,8 +662,13 @@ class WindowedBookingsNotifier extends _$WindowedBookingsNotifier {
 
       // Fetch the specific booking directly
       return await repository.getOwnerBookingById(bookingId);
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Booking not found or error fetching
+      await LoggingService.logError(
+        'Failed to fetch specific booking $bookingId',
+        e,
+        stackTrace,
+      );
       return null;
     }
   }

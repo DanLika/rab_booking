@@ -5106,4 +5106,23 @@ class WidgetTranslations {
         return 'Copied to clipboard';
     }
   }
+
+  // ============================================================================
+  // BRANDING
+  // ============================================================================
+
+  /// "Powered by BookBed" attribution text
+  String get poweredByBookBed {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Pokreće BookBed';
+      case 'de':
+        return 'Bereitgestellt von BookBed';
+      case 'it':
+        return 'Offerto da BookBed';
+      case 'en':
+      default:
+        return 'Powered by BookBed';
+    }
+  }
 }

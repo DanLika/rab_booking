@@ -2393,8 +2393,24 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                       ),
                                     ),
                                   ),
+
                                   // Contact info removed from calendar-only mode
                                   // Host website handles its own contact information
+
+                                  // "Powered by BookBed" branding footer
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 12,
+                                      bottom: 4,
+                                    ),
+                                    child: _PoweredByBadge(
+                                      text: WidgetTranslations.of(
+                                        context,
+                                        ref,
+                                      ).poweredByBookBed,
+                                      color: minimalistColors.textSecondary,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -4730,5 +4746,47 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
       rethrow;
     }
+  }
+}
+
+/// Small "Powered by BookBed" link with hover effect.
+class _PoweredByBadge extends StatefulWidget {
+  final String text;
+  final Color color;
+
+  const _PoweredByBadge({required this.text, required this.color});
+
+  @override
+  State<_PoweredByBadge> createState() => _PoweredByBadgeState();
+}
+
+class _PoweredByBadgeState extends State<_PoweredByBadge> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveColor = _isHovered
+        ? widget.color
+        : widget.color.withValues(alpha: 0.85);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: () => launchUrl(
+          Uri.parse('https://bookbed.io'),
+          mode: LaunchMode.externalApplication,
+        ),
+        child: Text(
+          widget.text,
+          style: TextStyle(
+            fontSize: 11,
+            color: effectiveColor,
+            decoration: TextDecoration.underline,
+            decorationColor: effectiveColor,
+          ),
+        ),
+      ),
+    );
   }
 }

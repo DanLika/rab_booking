@@ -29,7 +29,7 @@ if [ -f "$OWNER_INDEX" ]; then
     sed -i '' 's|content="#0066FF"|content="#6B4CE6"|g' "$OWNER_INDEX" 2>/dev/null || true
     
     # Copy og-image to build folder
-    cp "$PROJECT_ROOT/web/og-image.png" "$PROJECT_ROOT/build/web_owner/og-image.png" 2>/dev/null || true
+    cp "$PROJECT_ROOT/public/og-image.png" "$PROJECT_ROOT/build/web_owner/og-image.png" 2>/dev/null || true
     echo "  - Updated theme-color to #6B4CE6"
     echo "  - Copied og-image.png"
 else
@@ -50,7 +50,7 @@ if [ -f "$WIDGET_INDEX" ]; then
     sed -i '' 's|content="#0066FF"|content="#6B4CE6"|g' "$WIDGET_INDEX" 2>/dev/null || true
     
     # Copy og-image to build folder
-    cp "$PROJECT_ROOT/web/og-image.png" "$PROJECT_ROOT/build/web_widget/og-image.png" 2>/dev/null || true
+    cp "$PROJECT_ROOT/public/og-image.png" "$PROJECT_ROOT/build/web_widget/og-image.png" 2>/dev/null || true
     echo "  - Updated OG URL to view.bookbed.io"
     echo "  - Updated OG titles for booking widget"
     echo "  - Updated theme-color to #6B4CE6"
@@ -72,7 +72,7 @@ if [ -f "$ADMIN_INDEX" ]; then
     sed -i '' 's|content="#0066FF"|content="#6B4CE6"|g' "$ADMIN_INDEX" 2>/dev/null || true
     
     # Copy og-image to build folder
-    cp "$PROJECT_ROOT/web/og-image.png" "$PROJECT_ROOT/build/web_admin/og-image.png" 2>/dev/null || true
+    cp "$PROJECT_ROOT/public/og-image.png" "$PROJECT_ROOT/build/web_admin/og-image.png" 2>/dev/null || true
     echo "  - Updated OG URL to bookbed-admin.web.app"
     echo "  - Updated OG title for admin dashboard"
     echo "  - Updated theme-color to #6B4CE6"

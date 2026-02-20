@@ -472,13 +472,11 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
       if (!mounted) return;
 
-      // Show actual error for debugging (TODO: remove after fixing)
-      final errorMsg = e.toString();
       state = state.copyWith(
         currentChat: updatedChat,
         isStreaming: false,
         streamingText: '',
-        error: 'DEBUG: $errorMsg',
+        error: 'Sorry, I encountered an error. Please try again.',
       );
       _ref.invalidate(aiChatsProvider);
     }

@@ -57,13 +57,21 @@ jest.mock("../src/sentry", () => ({
   setUser: jest.fn(),
 }));
 
+// Mock analyzeEvent to verify it's called
+const mockAnalyzeEvent = jest.fn().mockReturnValue({
+  isProbableEcho: false,
+  confidence: 0,
+  reasons: [],
+  recommendedAction: "save_unique",
+});
+
 jest.mock("../src/utils/echoDetection", () => ({
-  analyzeEvent: jest.fn().mockReturnValue({
-    isProbableEcho: false,
-    confidence: 0,
-    reasons: [],
-    recommendedAction: "save_unique",
-  }),
+  analyzeEvent: mockAnalyzeEvent,
+}));
+
+// Mock node-ical
+jest.mock("node-ical", () => ({
+  parseICS: jest.fn(),
 }));
 
 // Mock https for fetchIcalData
@@ -87,6 +95,7 @@ jest.mock("https", () => ({
 import { syncIcalFeedNow, scheduledIcalSync } from "../src/icalSync";
 import * as https from "https";
 import { db } from "../src/firebase";
+import * as nodeIcal from "node-ical";
 
 const { wrap } = test;
 
@@ -108,6 +117,14 @@ describe("iCal Sync Functions", () => {
       commit: jest.fn().mockResolvedValue(true),
     });
 
+    // Reset analyzeEvent default return
+    mockAnalyzeEvent.mockReturnValue({
+      isProbableEcho: false,
+      confidence: 0,
+      reasons: [],
+      recommendedAction: "save_unique",
+    });
+
     // Setup default mock request/response behavior
     (https.get as jest.Mock).mockImplementation((url, callback) => {
       callback(mockResponse);
@@ -115,8 +132,20 @@ describe("iCal Sync Functions", () => {
     });
 
     mockResponse.on.mockImplementation((event, callback) => {
-      if (event === "data") callback("BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:123\nDTSTART:20260101\nDTEND:20260105\nEND:VEVENT\nEND:VCALENDAR");
+      if (event === "data") callback("BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:123\nDTSTART:20300101\nDTEND:20300105\nEND:VEVENT\nEND:VCALENDAR");
       if (event === "end") callback();
+    });
+
+    // Default node-ical parseICS mock
+    // Use dates far in the future to avoid "past event" filtering
+    (nodeIcal.parseICS as jest.Mock).mockReturnValue({
+      "123": {
+        type: "VEVENT",
+        uid: "123",
+        start: new Date("2030-01-01"),
+        end: new Date("2030-01-05"),
+        summary: "Booking",
+      },
     });
   });
 
@@ -216,6 +245,95 @@ describe("iCal Sync Functions", () => {
 
       expect(result.success).toBe(true);
       expect(https.get).toHaveBeenCalled();
+      expect(mockAnalyzeEvent).toHaveBeenCalled(); // Echo detection called
+    });
+
+    it("should use echo detection results correctly", async () => {
+      // Mock echo detection to recommend auto_skip
+      mockAnalyzeEvent.mockReturnValueOnce({
+        isProbableEcho: true,
+        confidence: 0.96,
+        reasons: ["High confidence"],
+        recommendedAction: "auto_skip",
+      });
+
+      // Mock chain
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc)
+        .mockResolvedValueOnce(mockFeedDoc)
+        .mockResolvedValueOnce({ docs: [], size: 0 })
+        .mockResolvedValueOnce({ docs: [] })
+        .mockResolvedValueOnce({ docs: [], length: 0 });
+
+      const wrapped = wrap(syncIcalFeedNow);
+      const result = await wrapped({ data: validData, auth: mockAuth });
+
+      // Should skip saving the event
+      expect(result.bookingsCreated).toBe(0);
+      expect(mockDb.batch().set).not.toHaveBeenCalled();
+    });
+
+    it("should save flagged_review events with proper status", async () => {
+      // Mock echo detection to recommend flag_review
+      mockAnalyzeEvent.mockReturnValueOnce({
+        isProbableEcho: true,
+        confidence: 0.88,
+        reasons: ["Medium confidence"],
+        recommendedAction: "flag_review",
+      });
+
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc)
+        .mockResolvedValueOnce(mockFeedDoc)
+        .mockResolvedValueOnce({ docs: [], size: 0 })
+        .mockResolvedValueOnce({ docs: [] })
+        .mockResolvedValueOnce({ docs: [], length: 0 });
+
+      const wrapped = wrap(syncIcalFeedNow);
+      await wrapped({ data: validData, auth: mockAuth });
+
+      expect(mockDb.batch().set).toHaveBeenCalled();
+      const setCall = mockDb.batch().set.mock.calls[0];
+      const data = setCall[1];
+      expect(data.status).toBe("needs_review");
+      expect(data.echo_confidence).toBe(0.88);
+    });
+
+    it("should handle event parsing edge cases (past events, no dates)", async () => {
+      // Mock node-ical with various events
+      (nodeIcal.parseICS as jest.Mock).mockReturnValue({
+        "valid": {
+          type: "VEVENT", uid: "valid",
+          start: new Date("2030-06-01"), end: new Date("2030-06-05"),
+          summary: "Valid"
+        },
+        "past": {
+          type: "VEVENT", uid: "past",
+          start: new Date("2020-01-01"), end: new Date("2020-01-05"), // Very old
+          summary: "Past"
+        },
+        "no-dates": {
+          type: "VEVENT", uid: "no-dates",
+          summary: "No Dates"
+        },
+        "not-event": {
+          type: "VTODO", uid: "todo"
+        }
+      });
+
+      // Mock chain
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc)
+        .mockResolvedValueOnce(mockFeedDoc)
+        .mockResolvedValueOnce({ docs: [], size: 0 })
+        .mockResolvedValueOnce({ docs: [] })
+        .mockResolvedValueOnce({ docs: [], length: 0 });
+
+      const wrapped = wrap(syncIcalFeedNow);
+      const result = await wrapped({ data: validData, auth: mockAuth });
+
+      // Should only process the "valid" event
+      expect(result.bookingsCreated).toBe(1);
     });
   });
 

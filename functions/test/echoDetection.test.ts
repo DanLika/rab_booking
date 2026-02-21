@@ -236,4 +236,84 @@ describe("Echo Detection Engine", () => {
     // High confidence due to temporal match
     expect(result.confidence).toBeGreaterThanOrEqual(0.85);
   });
+
+  // Scenario 8: Export Correlation (Factor 3)
+  it("should detect echo when native booking correlates with known re-exporter", () => {
+    const checkIn = createDate(10);
+    const checkOut = createDate(15);
+
+    const newEvent = {
+      checkIn: checkIn,
+      checkOut: checkOut,
+      source: "adriagate", // Known re-exporter
+      importedAt: today,
+    };
+
+    const existingBookings: ExistingBooking[] = [
+      {
+        id: "booking-1",
+        type: "booking", // Native booking (always exported)
+        checkIn: checkIn,
+        checkOut: checkOut,
+        source: "direct",
+        importedAt: createDate(-1),
+      },
+    ];
+
+    const result = analyzeEvent(newEvent, existingBookings);
+
+    // Export correlation + Date match + Duration match should result in very high confidence
+    expect(result.confidence).toBeGreaterThanOrEqual(0.9);
+    expect(result.isProbableEcho).toBe(true);
+    expect(result.reasons.some(r => r.includes("exported to adriagate"))).toBe(true);
+  });
+
+  // Scenario 9: Containment with Rounding Errors (95%+)
+  it("should detect probable merged echo with slight date mismatch (containment > 95%)", () => {
+    // Use a gap scenario to ensure 1:1 matching fails
+    // Booking 1: 10-15 (5 nights)
+    // Gap: 15-16 (1 night)
+    // Booking 2: 16-36 (20 nights)
+    // Incoming: 10-36 (26 nights)
+    // Covered: 25 nights. Gap 1 night. Ratio 25/26 = 0.9615 > 0.95
+
+    const checkIn = createDate(10);
+    const checkOut = createDate(36); // 26 nights total
+
+    const newEvent = {
+      checkIn: checkIn,
+      checkOut: checkOut,
+      source: "adriagate",
+      importedAt: today,
+    };
+
+    const existingBookings: ExistingBooking[] = [
+      {
+        id: "booking-1",
+        type: "booking",
+        checkIn: createDate(10),
+        checkOut: createDate(15), // 5 nights
+        source: "direct",
+        importedAt: createDate(-1),
+      },
+      {
+        id: "booking-2",
+        type: "booking",
+        checkIn: createDate(16), // Gap 15-16
+        checkOut: createDate(36), // 20 nights
+        source: "direct",
+        importedAt: createDate(-1),
+      }
+    ];
+
+    const result = analyzeEvent(newEvent, existingBookings);
+
+    // 1:1 match against booking-1: Duration 26 vs 5 (Mismatch)
+    // 1:1 match against booking-2: Duration 26 vs 20 (Mismatch)
+    // Containment: 25/26 blocked = 96% -> 0.90 confidence
+
+    // Should be flagged for review but not auto-skipped
+    expect(result.recommendedAction).toBe("flag_review");
+    expect(result.reasons.some(r => r.includes("Probable merged echo"))).toBe(true);
+  });
 });

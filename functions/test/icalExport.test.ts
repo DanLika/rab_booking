@@ -296,4 +296,71 @@ describe("iCal Export Endpoint", () => {
     // Should contain Booking.com event
     expect(content).toContain("UID:ical-ev-2");
   });
+
+  it("should handle HEAD requests correctly", async () => {
+    req.method = "HEAD";
+
+    // 1. Widget Settings
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        ical_export_enabled: true,
+        ical_export_token: "valid-token",
+        ical_cache_content: "cached-ical",
+        ical_cache_generated_at: { toDate: () => new Date() }, // fresh
+        ical_cache_etag: '"etag-123"',
+      }),
+    });
+
+    await getUnitIcalFeed(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    // Function sends content, runtime handles body stripping for HEAD
+    expect(res.send).toHaveBeenCalledWith("cached-ical");
+  });
+
+  it("should export blocked days as VEVENT", async () => {
+    // 1. Widget Settings
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        ical_export_enabled: true,
+        ical_export_token: "valid-token",
+      }),
+      ref: { update: jest.fn() },
+    });
+
+    // 2. Unit Doc
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ name: "Test Unit" }),
+    });
+
+    // 3. Bookings
+    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] });
+
+    // 4. Blocked Days - 3 consecutive days blocked
+    mockDb.get.mockResolvedValueOnce({
+      size: 3,
+      docs: [
+        { data: () => ({ date: { toDate: () => new Date("2026-07-01") }, available: false }) },
+        { data: () => ({ date: { toDate: () => new Date("2026-07-02") }, available: false }) },
+        { data: () => ({ date: { toDate: () => new Date("2026-07-03") }, available: false }) },
+      ],
+    });
+
+    // 5. Imported Events
+    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] });
+
+    await getUnitIcalFeed(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const content = res.send.mock.calls[0][0];
+
+    // Should contain a blocked event spanning the range
+    expect(content).toContain("SUMMARY:Not Available");
+    // Date range should be 20260701 to 20260704 (exclusive end)
+    expect(content).toContain("DTSTART;VALUE=DATE:20260701");
+    expect(content).toContain("DTEND;VALUE=DATE:20260704");
+  });
 });

@@ -132,6 +132,7 @@ abstract class TabCommunicationService {
       params: {
         'bookingId': bookingId,
         'ref': ref,
+        // ignore: use_null_aware_elements
         if (sessionId != null && sessionId.isNotEmpty) 'sessionId': sessionId,
       },
     );
@@ -151,7 +152,7 @@ abstract class TabCommunicationService {
   void sendCalendarRefresh({String? unitId}) {
     final message = TabMessage(
       type: TabMessageType.calendarRefresh,
-      params: {if (unitId != null) 'unitId': unitId},
+      params: {'unitId': ?unitId},
     );
     send(message.serialize());
   }

@@ -41,6 +41,7 @@ class BookingLookupService {
       final result = await callable.call<Map<String, dynamic>>({
         'bookingReference': bookingReference,
         'email': email,
+        // ignore: use_null_aware_elements
         if (accessToken != null) 'accessToken': accessToken,
       });
 

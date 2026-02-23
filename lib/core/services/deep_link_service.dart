@@ -88,7 +88,9 @@ class DeepLinkService {
             path: '/owner/calendar',
             queryParameters: {
               'unit': unitId,
+              // ignore: use_null_aware_elements
               if (date != null) 'date': date,
+              // ignore: use_null_aware_elements
               if (conflictId != null) 'conflict': conflictId,
             },
           );

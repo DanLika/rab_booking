@@ -159,6 +159,7 @@ class AdminUsersRepository {
       final result = await callable.call<Map<String, dynamic>>({
         'userId': userId,
         'newStatus': newStatus,
+        // ignore: use_null_aware_elements
         if (reason != null) 'reason': reason,
       });
 

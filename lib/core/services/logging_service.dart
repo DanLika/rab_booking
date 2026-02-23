@@ -190,6 +190,7 @@ class LoggingService {
       data: {
         'method': method,
         'url': sanitizedUrl,
+        // ignore: use_null_aware_elements
         if (sanitizedParams != null) 'params': sanitizedParams,
       },
     );

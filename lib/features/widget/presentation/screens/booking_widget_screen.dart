@@ -1835,7 +1835,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // or controller might already be disposed
     try {
       _firstNameController.removeListener(_saveFormDataDebounced);
-    } catch (e, stackTrace) {
+    } catch (e) {
       // Non-critical: listener removal failed
       LoggingService.logWarning('Failed to remove firstName listener: $e');
     }

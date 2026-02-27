@@ -365,8 +365,7 @@ export const pendingPaymentReminder = onSchedule(
 // Reminds owners who haven't opened the app in 5 days
 //
 // NOTE: This function requires Flutter app to update 'lastActiveAt' field
-// on user login/app open. Without that, query returns 0 users.
-// TODO: Implement lastActiveAt update in enhanced_auth_provider.dart
+// on user login/app open. This is handled in enhanced_auth_provider.dart via _updateLastLogin
 // ============================================================================
 export const comebackReminder = onSchedule(
   {

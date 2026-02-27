@@ -168,7 +168,9 @@ class _BookingConfirmationScreenState
           Future.delayed(const Duration(seconds: 2), () {
             try {
               tabService.dispose();
-            } catch (_) {}
+            } catch (e) {
+              LoggingService.logWarning('Error disposing fallback service: $e');
+            }
           });
         } catch (fallbackError) {
           LoggingService.log(
@@ -189,7 +191,9 @@ class _BookingConfirmationScreenState
         Future.delayed(const Duration(seconds: 2), () {
           try {
             tabService.dispose();
-          } catch (_) {}
+          } catch (e) {
+            LoggingService.logWarning('Error disposing tab service: $e');
+          }
         });
       } catch (e) {
         LoggingService.log(

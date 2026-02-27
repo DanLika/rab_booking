@@ -1835,28 +1835,33 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // or controller might already be disposed
     try {
       _firstNameController.removeListener(_saveFormDataDebounced);
-    } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+    } catch (e, stackTrace) {
+      // Non-critical: listener removal failed
+      LoggingService.logWarning('Failed to remove firstName listener: $e');
     }
     try {
       _lastNameController.removeListener(_saveFormDataDebounced);
     } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+      // Non-critical: listener removal failed
+      LoggingService.logWarning('Failed to remove lastName listener: $e');
     }
     try {
       _emailController.removeListener(_saveFormDataDebounced);
     } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+      // Non-critical: listener removal failed
+      LoggingService.logWarning('Failed to remove email listener: $e');
     }
     try {
       _phoneController.removeListener(_saveFormDataDebounced);
     } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+      // Non-critical: listener removal failed
+      LoggingService.logWarning('Failed to remove phone listener: $e');
     }
     try {
       _notesController.removeListener(_saveFormDataDebounced);
     } catch (e) {
-      // Ignore - listener might not be added or controller already disposed
+      // Non-critical: listener removal failed
+      LoggingService.logWarning('Failed to remove notes listener: $e');
     }
 
     // Dispose all form controllers via centralized state
@@ -1864,73 +1869,33 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     try {
       _formState.dispose();
     } catch (e) {
-      // Ignore - formState might already be disposed
+      // Non-critical: form state dispose failed
+      LoggingService.logWarning('Failed to dispose form state: $e');
     }
 
     // Dispose cross-tab communication resources
     try {
       _tabMessageSubscription?.cancel();
     } catch (e) {
-      // Ignore - subscription might already be cancelled
+      // Non-critical: subscription cancel failed
+      LoggingService.logWarning('Failed to cancel tab subscription: $e');
     }
     try {
       _tabCommunicationService?.dispose();
     } catch (e) {
-      // Ignore - service might already be disposed
+      // Non-critical: service dispose failed
+      LoggingService.logWarning('Failed to dispose tab service: $e');
     }
     try {
       _postMessageListenerCleanup?.call();
     } catch (e) {
-      // Ignore - cleanup might already be called or throw
+      // Non-critical: cleanup failed
+      LoggingService.logWarning('Failed to cleanup post message listener: $e');
     }
 
     // Cancel payment completion timeout
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:1214',
-        'message': 'Dispose - cleanup entry',
-        'data': {
-          'hasTimeout': _paymentCompletionTimeout != null,
-          '_isProcessing': _isProcessing,
-          '_isDisposed': _isDisposed,
-        },
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'E',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
-
     _paymentCompletionTimeout?.cancel();
     _paymentCompletionTimeout = null;
-
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:1217',
-        'message': 'Dispose - cleanup exit',
-        'data': {'hasTimeout': _paymentCompletionTimeout != null},
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'E',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
 
     super.dispose();
   }
@@ -1997,17 +1962,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           duration: const Duration(seconds: 5),
                         );
                       } catch (e) {
-                        // Ignore errors if context is no longer valid
+                        // Context invalid, log only
+                        LoggingService.logWarning(
+                          'Could not show snackbar (context invalid): $e',
+                        );
                       }
                     }
                   } catch (e) {
-                    // Ignore errors if widget is disposed during setState
+                    // Widget disposed during setState
+                    LoggingService.logWarning(
+                      'Widget disposed during price error handling: $e',
+                    );
                   }
                 }
               },
             );
-          } catch (e) {
-            // Ignore errors if provider value is invalid or widget is disposed
+          } catch (e, stackTrace) {
+            LoggingService.logError(
+              'Error in price provider listener',
+              e,
+              stackTrace,
+            );
           }
         },
       );
@@ -2593,7 +2568,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 }
               }
             } catch (e) {
-              // Ignore errors if provider value is invalid or widget is disposed
+              LoggingService.logWarning(
+                'Error calculating additional services total: $e',
+              );
               servicesTotal = 0.0;
             }
           }
@@ -2835,7 +2812,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                           ],
                         );
                       } catch (e) {
-                        // Ignore errors if dates are invalid
+                        LoggingService.logWarning(
+                          'Invalid dates for additional services widget: $e',
+                        );
                         return const SizedBox.shrink();
                       }
                     },
@@ -2843,7 +2822,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     error: (_, _) => const SizedBox.shrink(),
                   );
                 } catch (e) {
-                  // Ignore errors if provider is invalid or widget is disposed
+                  LoggingService.logWarning(
+                    'Error building additional services section: $e',
+                  );
                   return const SizedBox.shrink();
                 }
               },

@@ -75,6 +75,39 @@ jobs:
       - name: Build web
         run: flutter build web --release
 
+      - name: Check bundle size
+        run: |
+          echo "📦 Bundle Size Report"
+          echo "===================="
+
+          # Main dart file
+          MAIN_JS=$(find build/web -name "main.dart.js" -type f 2>/dev/null | head -1)
+          if [ -n "$MAIN_JS" ]; then
+            SIZE=$(du -h "$MAIN_JS" | cut -f1)
+            BYTES=$(stat -c%s "$MAIN_JS" 2>/dev/null || stat -f%z "$MAIN_JS")
+            echo "main.dart.js: $SIZE ($BYTES bytes)"
+
+            # Fail if main.dart.js > 8MB (8388608 bytes)
+            # Flutter web apps are larger due to Dart runtime
+            if [ "$BYTES" -gt 8388608 ]; then
+              echo "❌ ERROR: main.dart.js exceeds 8MB limit!"
+              exit 1
+            elif [ "$BYTES" -gt 6291456 ]; then
+              echo "⚠️ Warning: main.dart.js is over 6MB"
+            else
+              echo "✅ Bundle size OK"
+            fi
+          fi
+
+          # Total build size
+          TOTAL=$(du -sh build/web | cut -f1)
+          echo "Total build: $TOTAL"
+
+          # List largest files
+          echo ""
+          echo "📊 Largest files:"
+          find build/web -type f -exec du -h {} + | sort -rh | head -10
+
       # The build-web job performs bundle size checks inline and does not
       # upload artifacts to GitHub Actions storage to avoid quota limits.
 
@@ -178,53 +211,7 @@ jobs:
       - name: Run tests
         run: cd functions && npm test
 
-  # Job 6: Bundle Size Check
-  bundle-size:
-    name: Check Bundle Size
-    runs-on: ubuntu-latest
-    needs: build-web
-    timeout-minutes: 10
-
-    steps:
-      - name: Download web build
-        uses: actions/download-artifact@v7
-        with:
-          name: web-build
-          path: build/web
-
-      - name: Check bundle size
-        run: |
-          echo "📦 Bundle Size Report"
-          echo "===================="
-
-          # Main dart file
-          MAIN_JS=$(find build/web -name "main.dart.js" -type f 2>/dev/null | head -1)
-          if [ -n "$MAIN_JS" ]; then
-            SIZE=$(du -h "$MAIN_JS" | cut -f1)
-            BYTES=$(stat -c%s "$MAIN_JS" 2>/dev/null || stat -f%z "$MAIN_JS")
-            echo "main.dart.js: $SIZE ($BYTES bytes)"
-
-            # Fail if main.dart.js > 8MB (8388608 bytes)
-            # Flutter web apps are larger due to Dart runtime
-            if [ "$BYTES" -gt 8388608 ]; then
-              echo "❌ ERROR: main.dart.js exceeds 8MB limit!"
-              exit 1
-            elif [ "$BYTES" -gt 6291456 ]; then
-              echo "⚠️ Warning: main.dart.js is over 6MB"
-            else
-              echo "✅ Bundle size OK"
-            fi
-          fi
-
-          # Total build size
-          TOTAL=$(du -sh build/web | cut -f1)
-          echo "Total build: $TOTAL"
-
-          # List largest files
-          echo ""
-          echo "📊 Largest files:"
-          find build/web -type f -exec du -h {} + | sort -rh | head -10
-
+  # Bundle Size Check is now performed inline in the build-web job
   # Job 7: Coverage Threshold
   coverage-check:
     name: Check Code Coverage

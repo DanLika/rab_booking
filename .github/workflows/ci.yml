@@ -75,12 +75,8 @@ jobs:
       - name: Build web
         run: flutter build web --release
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
-        with:
-          name: web-build
-          path: build/web/
-          retention-days: 7
+      # The build-web job performs bundle size checks inline and does not
+      # upload artifacts to GitHub Actions storage to avoid quota limits.
 
   # Job 3: Build Android (Owner App) - DISABLED
   # Android builds have known issues in CI:

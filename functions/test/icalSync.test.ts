@@ -217,6 +217,63 @@ describe("iCal Sync Functions", () => {
       expect(result.success).toBe(true);
       expect(https.get).toHaveBeenCalled();
     });
+
+    it("should correctly parse iCal events", async () => {
+      // Return a specific iCal event string
+      mockResponse.on.mockImplementation((event, callback) => {
+        if (event === "data") callback("BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:parsed-event-123\nDTSTART:20260201\nDTEND:20260205\nEND:VEVENT\nEND:VCALENDAR");
+        if (event === "end") callback();
+      });
+
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc) // 1
+        .mockResolvedValueOnce(mockFeedDoc) // 2
+        .mockResolvedValueOnce({ docs: [], size: 0 }) // 3
+        .mockResolvedValueOnce({ docs: [] }) // 4
+        .mockResolvedValueOnce({ docs: [], length: 0 }); // 5
+
+      const wrapped = wrap(syncIcalFeedNow);
+      const result = await wrapped({ data: validData, auth: mockAuth });
+
+      expect(result.success).toBe(true);
+      expect(result.bookingsCreated).toBe(1); // The function returns bookingsCreated
+
+      // Check batch set for the event
+      const mockBatch = mockDb.batch();
+      expect(mockBatch.set).toHaveBeenCalled();
+
+      // Verify parsed data
+      const setCallArgs = mockBatch.set.mock.calls[0];
+      const eventData = setCallArgs[1];
+      expect(eventData.external_id).toBe("parsed-event-123");
+    });
+
+    it("should integrate with echo detection", async () => {
+      const { analyzeEvent } = require("../src/utils/echoDetection");
+      analyzeEvent.mockClear();
+
+      // We must provide some events to trigger the insert loop where analyzeEvent is called
+      // We also must make sure it doesn't get skipped by the past event check (so use future dates)
+      // Use dates in 2030 to guarantee they aren't skipped by the "30 days in the past" check
+      mockResponse.on.mockImplementation((event, callback) => {
+        if (event === "data") callback("BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:echo-event-123\nDTSTART:20300101\nDTEND:20300105\nEND:VEVENT\nEND:VCALENDAR");
+        if (event === "end") callback();
+      });
+
+      // Setup mock chain
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc) // 1
+        .mockResolvedValueOnce(mockFeedDoc) // 2
+        .mockResolvedValueOnce({ docs: [], size: 0 }) // 3 native bookings
+        .mockResolvedValueOnce({ docs: [] }) // 4 other ical events
+        .mockResolvedValueOnce({ docs: [], length: 0 }); // 5 old events to delete
+
+      const wrapped = wrap(syncIcalFeedNow);
+      await wrapped({ data: validData, auth: mockAuth });
+
+      // verify that analyzeEvent was called during processing of the event
+      expect(analyzeEvent).toHaveBeenCalled();
+    });
   });
 
   describe("scheduledIcalSync", () => {

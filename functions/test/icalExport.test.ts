@@ -296,4 +296,52 @@ describe("iCal Export Endpoint", () => {
     // Should contain Booking.com event
     expect(content).toContain("UID:ical-ev-2");
   });
+
+  it("should correctly export blocked days", async () => {
+    // 1. Widget Settings
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        ical_export_enabled: true,
+        ical_export_token: "valid-token",
+      }),
+      ref: { update: jest.fn() },
+    });
+
+    // 2. Unit Doc
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ name: "Test Unit" }),
+    });
+
+    // 3. Bookings
+    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] });
+
+    // 4. Blocked Days
+    mockDb.get.mockResolvedValueOnce({
+      size: 1,
+      docs: [
+        {
+          id: "block-1",
+          data: () => ({
+            start_date: { toDate: () => new Date("2026-06-10") },
+            end_date: { toDate: () => new Date("2026-06-12") },
+            created_at: { toDate: () => new Date() },
+          }),
+        },
+      ],
+    });
+
+    // 5. Imported Events
+    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] });
+
+    await getUnitIcalFeed(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const content = res.send.mock.calls[0][0];
+    // The export script appears to generate UIDs differently for blocked days based on dates
+    // Just verify the SUMMARY and STATUS
+    expect(content).toContain("SUMMARY:Not Available");
+    expect(content).toContain("STATUS:CONFIRMED");
+  });
 });

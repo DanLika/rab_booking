@@ -28,15 +28,17 @@ const FLAG_REVIEW_THRESHOLD = 0.85;
 // Temporal analysis windows
 const ECHO_WINDOW_HOURS = 2; // Echoes typically arrive 2+ hours after original
 
-export type RecommendedAction = "auto_skip" | "flag_review" | "save_unique";
+export type RecommendedAction = "auto_skip" | "flag_review" | "save_unique" | "save_trimmed";
 
 export interface EchoMatchResult {
   isProbableEcho: boolean;
   confidence: number;
+  containmentRatio?: number;         // % of nights already blocked (0-1), only for aggregators
   matchedEventId?: string;
   matchedBookingId?: string;
   reasons: string[];
   recommendedAction: RecommendedAction;
+  trimmedRanges?: Array<{startDate: Date; endDate: Date}>;
 }
 
 export interface ExistingBooking {
@@ -95,41 +97,42 @@ export function analyzeEvent(
   }
 
   // Containment analysis for merged echoes (N:1 matching)
-  // Aggregators like Adriagate merge adjacent bookings into one large VEVENT.
-  // The merged event doesn't match any single booking, but ALL its nights
-  // are already blocked by the union of existing bookings.
-  if (highestConfidence < AUTO_SKIP_THRESHOLD && isAggregator(newEvent.source)) {
+  // Also handles partial echoes — trims to only genuinely new date ranges.
+  // Runs for ALL aggregator events regardless of 1:1 match confidence,
+  // because save_trimmed overrides flag_review (trimming is more precise).
+  if (isAggregator(newEvent.source)) {
     const containment = checkContainment(newEvent, existingBookings);
 
-    if (containment.containmentRatio === 1.0 && containment.isExactUnion) {
-      // Perfect containment + exact union = definite merged echo
-      highestConfidence = 1.0;
-      bestReasons = [
-        `Merged echo: all ${containment.totalNights} nights already blocked`,
-        `Exact union of ${containment.coveringBookingIds.length} existing bookings`,
-      ];
-    } else if (containment.containmentRatio === 1.0) {
-      // All nights blocked but not exact union (overlapping bookings cover it)
-      const containmentConfidence = 0.96;
-      if (containmentConfidence > highestConfidence) {
-        highestConfidence = containmentConfidence;
-        bestReasons = [
+    if (containment.containmentRatio === 1.0) {
+      // 100% containment = pure echo, skip entirely
+      return {
+        isProbableEcho: true,
+        confidence: containment.isExactUnion ? 1.0 : 0.96,
+        reasons: [
           `Merged echo: all ${containment.totalNights} nights already blocked`,
-          `Covered by ${containment.coveringBookingIds.length} existing bookings (overlapping)`,
-        ];
-      }
-    } else if (containment.containmentRatio >= 0.95) {
-      // Near-complete containment (1-2 nights off, likely rounding)
-      const containmentConfidence = 0.90;
-      if (containmentConfidence > highestConfidence) {
-        highestConfidence = containmentConfidence;
-        bestReasons = [
-          `Probable merged echo: ${containment.blockedNights}/${containment.totalNights} nights blocked (${(containment.containmentRatio * 100).toFixed(0)}%)`,
-          `${containment.totalNights - containment.blockedNights} unblocked nights may be rounding`,
-        ];
-      }
+          `Covered by ${containment.coveringBookingIds.length} existing bookings`,
+        ],
+        recommendedAction: "auto_skip",
+      };
+    } else if (containment.containmentRatio > 0 && containment.newNightRanges.length > 0) {
+      // Partial echo — save ONLY the new (unblocked) date ranges
+      // This overrides any 1:1 flag_review result — trimming is more precise
+      return {
+        isProbableEcho: true,
+        confidence: highestConfidence,
+        containmentRatio: containment.containmentRatio,
+        reasons: [
+          `Partial merged echo: ${containment.blockedNights}/${containment.totalNights} nights already blocked`,
+          `${containment.newNightRanges.length} new range(s) extracted via interval subtraction`,
+          `New dates: ${containment.newNightRanges.map((r) =>
+            `${r.startDate.toISOString().slice(0, 10)} to ${r.endDate.toISOString().slice(0, 10)}`
+          ).join(", ")}`,
+        ],
+        recommendedAction: "save_trimmed",
+        trimmedRanges: containment.newNightRanges,
+      };
     }
-    // <95% containment = significant unblocked dates, NOT a merged echo
+    // 0% containment = no overlap at all, fall through to normal 1:1 logic below
   }
 
   // If no match found at all (neither 1:1 nor containment)
@@ -431,6 +434,7 @@ interface ContainmentResult {
   totalNights: number;
   coveringBookingIds: string[];
   isExactUnion: boolean;
+  newNightRanges: Array<{startDate: Date; endDate: Date}>;
 }
 
 /**
@@ -446,7 +450,7 @@ function checkContainment(
   const incomingNights = generateNightSet(newEvent.checkIn, newEvent.checkOut);
 
   if (incomingNights.size === 0) {
-    return {containmentRatio: 0, blockedNights: 0, totalNights: 0, coveringBookingIds: [], isExactUnion: false};
+    return {containmentRatio: 0, blockedNights: 0, totalNights: 0, coveringBookingIds: [], isExactUnion: false, newNightRanges: []};
   }
 
   // 2. Filter: only use bookings from OTHER sources (not the same feed)
@@ -470,10 +474,19 @@ function checkContainment(
     if (coversAny) coveringBookingIds.push(booking.id);
   }
 
-  // 4. Calculate containment ratio
+  // 4. Compute NEW nights (not blocked by any existing booking)
+  const newNights = new Set<string>();
+  for (const night of incomingNights) {
+    if (!blockedNights.has(night)) {
+      newNights.add(night);
+    }
+  }
+  const newNightRanges = groupConsecutiveNights(newNights);
+
+  // 5. Calculate containment ratio
   const containmentRatio = blockedNights.size / incomingNights.size;
 
-  // 5. Interval union check: do covering bookings form a contiguous chain?
+  // 6. Interval union check: do covering bookings form a contiguous chain?
   const isExactUnion = checkIntervalUnion(newEvent, otherSourceBookings);
 
   return {
@@ -482,19 +495,47 @@ function checkContainment(
     totalNights: incomingNights.size,
     coveringBookingIds,
     isExactUnion,
+    newNightRanges,
   };
+}
+
+/**
+ * Convert a Date to YYYY-MM-DD string in Europe/Zagreb timezone.
+ * Uses en-CA locale which natively returns YYYY-MM-DD format.
+ * Includes fallback for environments where en-CA format differs.
+ */
+function toZagrebDateString(date: Date): string {
+  const result = date.toLocaleDateString("en-CA", {timeZone: "Europe/Zagreb"});
+  // Sanity check: en-CA should return YYYY-MM-DD, but verify
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(result)) {
+    // Fallback: manual extraction using Intl.DateTimeFormat
+    const opts: Intl.DateTimeFormatOptions = {timeZone: "Europe/Zagreb"};
+    const y = date.toLocaleString("en", {...opts, year: "numeric"});
+    const m = date.toLocaleString("en", {...opts, month: "2-digit"});
+    const d = date.toLocaleString("en", {...opts, day: "2-digit"});
+    return `${y}-${m}-${d}`;
+  }
+  return result;
 }
 
 /**
  * Generate set of night date strings (check-in inclusive, check-out exclusive)
  * e.g., May 1-4 → {"2026-05-01", "2026-05-02", "2026-05-03"}
+ *
+ * Uses Europe/Zagreb timezone to extract calendar dates, so both
+ * 2026-08-16T22:00:00Z (midnight Zagreb CEST) and 2026-08-17T06:00:00Z
+ * correctly resolve to "2026-08-17".
  */
 function generateNightSet(checkIn: Date, checkOut: Date): Set<string> {
   const nights = new Set<string>();
-  const current = new Date(checkIn);
-  current.setUTCHours(0, 0, 0, 0);
-  const end = new Date(checkOut);
-  end.setUTCHours(0, 0, 0, 0);
+
+  // Extract Zagreb calendar dates (handles UTC offsets correctly)
+  const startStr = toZagrebDateString(checkIn);
+  const endStr = toZagrebDateString(checkOut);
+
+  // Iterate using noon UTC — safe from DST boundary issues (clock change is at 2/3 AM)
+  const current = new Date(startStr + "T12:00:00Z");
+  const end = new Date(endStr + "T12:00:00Z");
 
   // Safety: max 365 nights to prevent infinite loop
   let safety = 0;
@@ -504,6 +545,46 @@ function generateNightSet(checkIn: Date, checkOut: Date): Set<string> {
     safety++;
   }
   return nights;
+}
+
+/**
+ * Group a set of night date strings into contiguous date ranges.
+ * Returns ranges with startDate (inclusive) and endDate (exclusive, check-out style).
+ * e.g., {"2026-08-07", "2026-08-08", "2026-08-09"} → [{startDate: Aug 7, endDate: Aug 10}]
+ */
+function groupConsecutiveNights(nights: Set<string>): Array<{startDate: Date; endDate: Date}> {
+  if (nights.size === 0) return [];
+
+  const sorted = Array.from(nights).sort();
+  const ranges: Array<{startDate: Date; endDate: Date}> = [];
+
+  let rangeStart = sorted[0];
+  let prevDate = sorted[0];
+
+  for (let i = 1; i <= sorted.length; i++) {
+    const current = sorted[i];
+
+    if (i === sorted.length || !isNextDay(prevDate, current)) {
+      // End of contiguous range — endDate is day AFTER last night (exclusive)
+      const lastNight = new Date(prevDate + "T00:00:00Z");
+      const endDate = new Date(lastNight);
+      endDate.setUTCDate(endDate.getUTCDate() + 1);
+      ranges.push({
+        startDate: new Date(rangeStart + "T00:00:00Z"),
+        endDate,
+      });
+      if (i < sorted.length) rangeStart = current;
+    }
+    prevDate = current;
+  }
+  return ranges;
+}
+
+function isNextDay(dateStr1: string, dateStr2: string): boolean {
+  const d1 = new Date(dateStr1 + "T00:00:00Z");
+  const d2 = new Date(dateStr2 + "T00:00:00Z");
+  const diff = d2.getTime() - d1.getTime();
+  return diff === 24 * 60 * 60 * 1000;
 }
 
 /**

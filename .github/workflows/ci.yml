@@ -76,7 +76,7 @@ jobs:
         run: flutter build web --release
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: web-build
           path: build/web/
@@ -112,7 +112,7 @@ jobs:
       - name: Build AAB (via wrapper — patches flutter_native_splash plugin registry)
         run: ./tool/build_aab.sh --release
       - name: Upload AAB
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: android-aab
           path: build/app/outputs/bundle/release/app-release.aab
@@ -142,7 +142,7 @@ jobs:
   #     - name: Build iOS (no codesign)
   #       run: flutter build ios --release --no-codesign
   #     - name: Upload iOS build
-  #       uses: actions/upload-artifact@v6
+  #       uses: actions/upload-artifact@v7
   #       with:
   #         name: ios-build
   #         path: build/ios/iphoneos/Runner.app

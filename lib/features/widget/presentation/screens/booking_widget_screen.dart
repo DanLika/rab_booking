@@ -4357,7 +4357,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     try {
       // Fetch booking from Firestore using booking ID
       final bookingRepo = ref.read(bookingRepositoryProvider);
-      var booking = await bookingRepo.fetchBookingById(bookingId);
+      var booking = await bookingRepo.fetchBookingById(
+        bookingId,
+        unitId: _unitId,
+      );
 
       if (booking == null) {
         if (mounted) {
@@ -4388,7 +4391,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           // CRITICAL: Check mounted after delay - widget may be disposed during polling
           if (!mounted) return;
 
-          final updatedBooking = await bookingRepo.fetchBookingById(bookingId);
+          final updatedBooking = await bookingRepo.fetchBookingById(
+            bookingId,
+            unitId: _unitId,
+          );
           if (updatedBooking == null) break;
 
           // Check if webhook has updated the booking

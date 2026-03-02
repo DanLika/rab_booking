@@ -32,7 +32,7 @@ final unitAdditionalServicesProvider =
       } catch (e, stackTrace) {
         // Log error and return empty list for graceful degradation
         await LoggingService.logError(
-          'AdditionalServicesProvider: Failed to fetch services for unit ${params.unitId}',
+          'AdditionalServicesProvider: Failed to fetch services for property=${params.propertyId} unit=${params.unitId}',
           e,
           stackTrace,
         );

@@ -19,7 +19,17 @@
       "SlashCommand(/misc:feature-plan)",
       "Skill(misc:code-explain)",
       "Skill(misc:feature-plan)",
-      "mcp__memory__create_entities"
+      "mcp__memory__create_entities",
+      "WebFetch(domain:api.holiday-home.org)",
+      "WebFetch(domain:rentistic.adriagate.com)",
+      "WebFetch(domain:us-central1-rab-booking-248fc.cloudfunctions.net)",
+      "WebFetch(domain:pub.dev)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:firebase.google.com)",
+      "mcp__memory__search_nodes",
+      "WebFetch(domain:icalendar.org)",
+      "WebFetch(domain:bookbed.io)",
+      "WebFetch(domain:ical.booking.com)"
     ],
     "deny": []
   }

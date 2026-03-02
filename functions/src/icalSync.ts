@@ -352,6 +352,7 @@ async function syncSingleFeed(
       eventCount: result.insertedCount,
       skippedEchoes: result.skippedEchoes,
       flaggedForReview: result.flaggedForReview,
+      trimmedCount: result.trimmedCount,
     });
 
     return result.insertedCount; // Return number of bookings created
@@ -647,14 +648,15 @@ async function insertNewEventsWithEchoDetection(
   source: string,
   events: any[],
   existingBookings: ExistingBooking[]
-): Promise<{insertedCount: number; skippedEchoes: number; flaggedForReview: number}> {
+): Promise<{insertedCount: number; skippedEchoes: number; flaggedForReview: number; trimmedCount: number}> {
   if (events.length === 0) {
-    return {insertedCount: 0, skippedEchoes: 0, flaggedForReview: 0};
+    return {insertedCount: 0, skippedEchoes: 0, flaggedForReview: 0, trimmedCount: 0};
   }
 
   let insertedCount = 0;
   let skippedEchoes = 0;
   let flaggedForReview = 0;
+  let trimmedCount = 0;
 
   // Firestore batch can handle max 500 operations
   const batchSize = 500;
@@ -682,6 +684,43 @@ async function insertNewEventsWithEchoDetection(
         eventDates: `${event.startDate.toISOString()} - ${event.endDate.toISOString()}`,
       });
       skippedEchoes++;
+      continue;
+    }
+
+    if (echoResult.recommendedAction === "save_trimmed" && echoResult.trimmedRanges) {
+      // Partial echo — save only the new date ranges
+      logInfo("[iCal Sync] Trimming partial echo to new ranges", {
+        feedId,
+        originalDates: `${event.startDate.toISOString()} - ${event.endDate.toISOString()}`,
+        trimmedCount: echoResult.trimmedRanges.length,
+        ranges: echoResult.trimmedRanges.map((r: {startDate: Date; endDate: Date}) =>
+          `${r.startDate.toISOString().slice(0, 10)} to ${r.endDate.toISOString().slice(0, 10)}`
+        ).join("; "),
+        containmentRatio: (echoResult.containmentRatio ?? 0).toFixed(2),
+        matchConfidence: echoResult.confidence.toFixed(2),
+        newNights: echoResult.trimmedRanges.reduce((sum: number, r: {startDate: Date; endDate: Date}) => {
+          const days = Math.round((r.endDate.getTime() - r.startDate.getTime()) / (24 * 60 * 60 * 1000));
+          return sum + days;
+        }, 0),
+        echoReasons: echoResult.reasons.join("; "),
+      });
+
+      // Create one ical_event per trimmed range
+      for (let j = 0; j < echoResult.trimmedRanges.length; j++) {
+        const range = echoResult.trimmedRanges[j];
+        eventsToInsert.push({
+          ...event,
+          startDate: range.startDate,
+          endDate: range.endDate,
+          externalId: event.externalId,
+          eventStatus: "active",
+          echoConfidence: echoResult.containmentRatio ?? echoResult.confidence,
+          echoReason: echoResult.reasons.join("; "),
+          parentEventId: echoResult.matchedEventId || null,
+          parentBookingId: echoResult.matchedBookingId || null,
+        });
+      }
+      trimmedCount += echoResult.trimmedRanges.length;
       continue;
     }
 
@@ -756,9 +795,10 @@ async function insertNewEventsWithEchoDetection(
     inserted: insertedCount,
     skippedEchoes,
     flaggedForReview,
+    trimmedCount,
   });
 
-  return {insertedCount, skippedEchoes, flaggedForReview};
+  return {insertedCount, skippedEchoes, flaggedForReview, trimmedCount};
 }
 
 // Legacy insertNewEvents removed — replaced by insertNewEventsWithEchoDetection above

@@ -863,7 +863,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
   const sig = req.headers["stripe-signature"];
 
   if (!sig) {
-    logError("Missing stripe-signature header");
+    logWarn("Missing stripe-signature header — likely bot/crawler");
     res.status(400).send("Missing signature");
     return;
   }

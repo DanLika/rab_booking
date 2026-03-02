@@ -500,6 +500,73 @@ describe("Echo Detection Engine", () => {
       expect(result.recommendedAction).toBe("auto_skip");
     });
 
+    // Real overbooking: single covering booking with different duration → flag_review
+    it("should flag_review when single booking covers all nights but duration differs", () => {
+      // Adriagate: Aug 7-14 (7 nights), BookBed: Aug 7-15 (8 nights)
+      // 100% contained but 7 ≠ 8 → NOT an echo → flag_review
+      const aug07 = new Date("2026-08-07T00:00:00Z");
+      const aug14 = new Date("2026-08-14T00:00:00Z");
+      const aug15 = new Date("2026-08-15T00:00:00Z");
+
+      const newEvent = {
+        checkIn: aug07,
+        checkOut: aug14, // 7 nights from Adriagate
+        source: "adriagate",
+        importedAt: new Date(),
+      };
+
+      const existingBookings: ExistingBooking[] = [
+        {
+          id: "booking-bb",
+          type: "booking",
+          checkIn: aug07,
+          checkOut: aug15, // 8 nights on BookBed
+          source: "direct",
+          importedAt: new Date("2026-08-01T00:00:00Z"),
+        },
+      ];
+
+      const result = analyzeEvent(newEvent, existingBookings);
+
+      // 100% contained but duration mismatch (7 vs 8) → flag_review
+      expect(result.recommendedAction).toBe("flag_review");
+      expect(result.isProbableEcho).toBe(false);
+      expect(result.containmentRatio).toBe(1.0);
+      expect(result.reasons.some(r => r.includes("overbooking"))).toBe(true);
+    });
+
+    // True echo: single covering booking with SAME duration → auto_skip
+    it("should auto_skip when single booking covers all nights with same duration", () => {
+      // Adriagate: Aug 7-15 (8 nights), BookBed: Aug 7-15 (8 nights)
+      // 100% contained AND 8 = 8 → echo → auto_skip
+      const aug07 = new Date("2026-08-07T00:00:00Z");
+      const aug15 = new Date("2026-08-15T00:00:00Z");
+
+      const newEvent = {
+        checkIn: aug07,
+        checkOut: aug15, // 8 nights from Adriagate
+        source: "adriagate",
+        importedAt: new Date(),
+      };
+
+      const existingBookings: ExistingBooking[] = [
+        {
+          id: "booking-bb",
+          type: "booking",
+          checkIn: aug07,
+          checkOut: aug15, // 8 nights on BookBed — same duration
+          source: "direct",
+          importedAt: new Date("2026-08-01T00:00:00Z"),
+        },
+      ];
+
+      const result = analyzeEvent(newEvent, existingBookings);
+
+      // Same duration → genuine echo → auto_skip
+      expect(result.recommendedAction).toBe("auto_skip");
+      expect(result.isProbableEcho).toBe(true);
+    });
+
     // Turnover day: checkout == checkin → no overlap on that night
     it("should handle turnover days correctly (checkout==checkin has no night overlap)", () => {
       // Event: days 15-22 (7 nights)

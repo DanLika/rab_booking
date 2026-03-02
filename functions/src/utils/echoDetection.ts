@@ -104,6 +104,31 @@ export function analyzeEvent(
     const containment = checkContainment(newEvent, existingBookings);
 
     if (containment.containmentRatio === 1.0) {
+      // Single-booking containment with different duration = suspicious.
+      // Echoes from a single booking always have the same duration.
+      // If durations differ, this may be a real overbooking (race condition).
+      if (containment.coveringBookingIds.length === 1) {
+        const coveringBooking = existingBookings.find(
+          (b) => b.id === containment.coveringBookingIds[0]
+        );
+        if (coveringBooking) {
+          const incomingNights = containment.totalNights;
+          const coveringNights = generateNightSet(coveringBooking.checkIn, coveringBooking.checkOut).size;
+          if (incomingNights !== coveringNights) {
+            return {
+              isProbableEcho: false,
+              confidence: 0,
+              containmentRatio: 1.0,
+              reasons: [
+                `Possible real overbooking: ${incomingNights} nights fully contained by 1 booking (${coveringNights} nights)`,
+                "Duration mismatch suggests different reservation, not echo",
+              ],
+              recommendedAction: "flag_review",
+            };
+          }
+        }
+      }
+
       // 100% containment = pure echo, skip entirely
       return {
         isProbableEcho: true,

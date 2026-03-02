@@ -4,7 +4,7 @@ import * as https from "https";
 import * as http from "http";
 import {admin} from "./firebase";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
-import {setUser} from "./sentry";
+import {setUser, captureMessage} from "./sentry";
 import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
 
 /**
@@ -704,6 +704,17 @@ async function insertNewEventsWithEchoDetection(
         }, 0),
         echoReasons: echoResult.reasons.join("; "),
       });
+      captureMessage("[iCal Sync] Partial echo trimmed to new ranges", "info", {
+        feedId,
+        unitId,
+        originalDates: `${event.startDate.toISOString()} - ${event.endDate.toISOString()}`,
+        trimmedRanges: echoResult.trimmedRanges.map((r: {startDate: Date; endDate: Date}) =>
+          `${r.startDate.toISOString().slice(0, 10)} to ${r.endDate.toISOString().slice(0, 10)}`
+        ).join("; "),
+        containmentRatio: (echoResult.containmentRatio ?? 0).toFixed(2),
+        matchConfidence: echoResult.confidence.toFixed(2),
+        reasons: echoResult.reasons.join("; "),
+      });
 
       // Create one ical_event per trimmed range
       for (let j = 0; j < echoResult.trimmedRanges.length; j++) {
@@ -737,6 +748,14 @@ async function insertNewEventsWithEchoDetection(
         reasons: echoResult.reasons.join("; "),
         matchedId: echoResult.matchedEventId || echoResult.matchedBookingId,
         eventDates: `${event.startDate.toISOString()} - ${event.endDate.toISOString()}`,
+      });
+      captureMessage("[iCal Sync] Event flagged for review — possible overbooking", "warning", {
+        feedId,
+        unitId,
+        eventDates: `${event.startDate.toISOString()} - ${event.endDate.toISOString()}`,
+        containmentRatio: echoResult.containmentRatio != null ? echoResult.containmentRatio.toFixed(2) : "N/A",
+        confidence: echoResult.confidence.toFixed(2),
+        reasons: echoResult.reasons.join("; "),
       });
     }
 

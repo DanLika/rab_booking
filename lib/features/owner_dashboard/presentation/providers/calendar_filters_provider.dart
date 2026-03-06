@@ -4,6 +4,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/calendar_filter_options.dart';
 import 'owner_calendar_provider.dart';
+import '../../../../core/services/logging_service.dart';
 
 /// Provider for calendar and bookings list filters
 /// Unified filter state shared across Week, Month, Timeline, and Bookings List
@@ -200,7 +201,9 @@ Future<Map<String, List<BookingModel>>> _applyFiltersOptimized({
   if (totalBookings > 100) {
     try {
       return await compute(_applyFiltersInBackground, params);
-    } catch (_) {
+    } catch (e, stack) {
+      // ignore: unawaited_futures
+      LoggingService.logError('Handled error', e, stack);
       // Fallback to synchronous filtering if compute() fails
       return _applyFiltersInBackground(params);
     }

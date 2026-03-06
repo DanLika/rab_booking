@@ -3,6 +3,7 @@ import '../../../../shared/models/booking_model.dart';
 import '../../presentation/widgets/revenue_chart_widget.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import 'firestore_repository_mixin.dart';
+import '../../../../core/services/logging_service.dart';
 
 /// Revenue statistics model
 class RevenueStats {
@@ -433,7 +434,9 @@ class FirebaseRevenueAnalyticsRepository with FirestoreRepositoryMixin {
       for (final doc in snapshot.docs) {
         try {
           bookings.add(_bookingFromDoc(doc));
-        } catch (_) {
+        } catch (e, stack) {
+          // ignore: unawaited_futures
+          LoggingService.logError('Handled error', e, stack);
           // Skip invalid bookings
         }
       }

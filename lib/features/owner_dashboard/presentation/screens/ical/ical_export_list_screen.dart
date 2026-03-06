@@ -199,7 +199,9 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       List<IcalFeed> allFeeds;
       try {
         allFeeds = await ref.read(icalFeedsStreamProvider.future);
-      } catch (_) {
+      } catch (e, stack) {
+        // ignore: unawaited_futures
+        LoggingService.logError('Handled error', e, stack);
         allFeeds = [];
       }
 

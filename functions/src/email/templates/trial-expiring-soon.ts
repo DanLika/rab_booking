@@ -8,7 +8,7 @@
 export const getTrialExpiringSoonTemplate = (userName: string, daysRemaining: number) => {
   const subject = `Vaš BookBed probni period ističe za ${daysRemaining} dan${daysRemaining > 1 ? "a" : ""}`;
 
-  // TODO: Create a visually appealing HTML template
+  // TODO(2026-03-06): Create a visually appealing HTML template
   const html = `
     <p>Poštovani ${userName},</p>
     <p>

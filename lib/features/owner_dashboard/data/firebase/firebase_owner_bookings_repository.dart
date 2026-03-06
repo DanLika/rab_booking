@@ -556,7 +556,9 @@ class FirebaseOwnerBookingsRepository {
             startDate: startDate,
             endDate: endDate,
           );
-        } catch (_) {
+        } catch (e, stack) {
+          // ignore: unawaited_futures
+          LoggingService.logError('Handled error', e, stack);
           // Graceful fallback - continue without iCal events
         }
       }
@@ -1788,7 +1790,9 @@ class FirebaseOwnerBookingsRepository {
           if (unitIds.contains(booking.unitId)) {
             allBookings.add(booking);
           }
-        } catch (_) {
+        } catch (e, stack) {
+          // ignore: unawaited_futures
+          LoggingService.logError('Handled error', e, stack);
           // Skip invalid bookings
         }
       }
@@ -1832,7 +1836,9 @@ class FirebaseOwnerBookingsRepository {
           if (unitIds.contains(booking.unitId)) {
             allBookings.add(booking);
           }
-        } catch (_) {
+        } catch (e, stack) {
+          // ignore: unawaited_futures
+          LoggingService.logError('Handled error', e, stack);
           // Skip invalid bookings
         }
       }

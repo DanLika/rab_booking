@@ -168,7 +168,9 @@ class _BookingConfirmationScreenState
           Future.delayed(const Duration(seconds: 2), () {
             try {
               tabService.dispose();
-            } catch (_) {}
+            } catch (e, stack) {
+              LoggingService.logError('Silenced error', e, stack);
+            }
           });
         } catch (fallbackError) {
           LoggingService.log(
@@ -189,7 +191,9 @@ class _BookingConfirmationScreenState
         Future.delayed(const Duration(seconds: 2), () {
           try {
             tabService.dispose();
-          } catch (_) {}
+          } catch (e, stack) {
+            LoggingService.logError('Silenced error', e, stack);
+          }
         });
       } catch (e) {
         LoggingService.log(

@@ -466,13 +466,15 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
             messages: existingMessages,
           );
         }
-      } catch (_) {
+      } catch (e, stack) {
+        // ignore: unawaited_futures
+        LoggingService.logError('Handled error', e, stack);
         // Ignore Firestore save errors in error path
       }
 
       if (!mounted) return;
 
-      // Show actual error for debugging (TODO: remove after fixing)
+      // Show actual error for debugging (TODO(2026-03-06): remove after fixing)
       final errorMsg = e.toString();
       state = state.copyWith(
         currentChat: updatedChat,

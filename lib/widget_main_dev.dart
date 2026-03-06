@@ -12,6 +12,7 @@ import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options_dev.dart'; // Import DEV options
+import 'core/services/logging_service.dart';
 
 // Sentry not used in DEV to avoid noise
 // const String _sentryDsn = ...
@@ -26,7 +27,9 @@ Future<void> _initializeFirebaseSafelyDev() async {
     bool needsInit = true;
     try {
       needsInit = Firebase.apps.isEmpty;
-    } catch (_) {
+    } catch (e, stack) {
+      // ignore: unawaited_futures
+      LoggingService.logError('Handled error', e, stack);
       needsInit = true;
     }
 

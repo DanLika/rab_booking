@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../shared/models/user_model.dart';
 import '../../data/admin_users_repository.dart';
+import '../../../../core/services/logging_service.dart';
 
 /// Responsive breakpoint for mobile layout
 const double _mobileBreakpoint = 900.0;
@@ -579,7 +580,9 @@ class _InfoRow extends StatelessWidget {
                                 ),
                               );
                             }
-                          } catch (_) {
+                          } catch (e, stack) {
+                            // ignore: unawaited_futures
+                            LoggingService.logError('Handled error', e, stack);
                             // Clipboard API can fail on some browsers
                           }
                         },

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../constants/widget_constants.dart';
+import '../../../../../core/services/logging_service.dart';
 
 /// iCal export configuration.
 ///
@@ -133,7 +134,9 @@ class ICalExportConfig {
       return uri.hasScheme &&
           (uri.scheme == 'http' || uri.scheme == 'https') &&
           uri.hasAuthority;
-    } catch (_) {
+    } catch (e, stack) {
+      // ignore: unawaited_futures
+      LoggingService.logError('Handled error', e, stack);
       return false;
     }
   }
@@ -151,7 +154,9 @@ class ICalExportConfig {
       return uri.hasScheme &&
           (uri.scheme == 'http' || uri.scheme == 'https') &&
           uri.hasAuthority;
-    } catch (_) {
+    } catch (e, stack) {
+      // ignore: unawaited_futures
+      LoggingService.logError('Handled error', e, stack);
       return false;
     }
   }

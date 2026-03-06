@@ -1,3 +1,5 @@
+import '../../../../core/services/logging_service.dart';
+
 /// Utility for generating consistent date keys for map lookups.
 ///
 /// Date keys are string representations of dates used as map keys
@@ -47,7 +49,9 @@ class DateKeyGenerator {
       if (day < 1 || day > 31) return null;
 
       return DateTime(year, month, day);
-    } catch (_) {
+    } catch (e, stack) {
+      // ignore: unawaited_futures
+      LoggingService.logError('Handled error', e, stack);
       return null;
     }
   }

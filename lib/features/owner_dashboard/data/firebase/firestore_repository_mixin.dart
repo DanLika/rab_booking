@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/services/logging_service.dart';
 
 /// Shared Firestore utilities for owner dashboard repositories.
 /// Eliminates code duplication across analytics, performance, and revenue repos.
@@ -78,7 +79,9 @@ mixin FirestoreRepositoryMixin {
       for (final doc in snapshot.docs) {
         try {
           results.add(mapper(doc));
-        } catch (_) {
+        } catch (e, stack) {
+          // ignore: unawaited_futures
+          LoggingService.logError('Handled error', e, stack);
           // Skip invalid documents
         }
       }

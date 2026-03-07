@@ -182,7 +182,7 @@ describe("iCal Sync Functions", () => {
       expect(result.message).toContain("Import is disabled");
     });
 
-    it("should fail for invalid iCal URL (SSRF check)", async () => {
+    it("should fail for invalid iCal URL (SSRF check - localhost)", async () => {
        // Setup mock chain
        mockDb.get
        .mockResolvedValueOnce(mockPropertyDoc) // property check
@@ -194,6 +194,74 @@ describe("iCal Sync Functions", () => {
 
       const wrapped = wrap(syncIcalFeedNow);
       await expect(wrapped({ data: validData, auth: mockAuth })).rejects.toThrow("Internal or localhost URLs are not allowed");
+    });
+
+    it("should fail for invalid iCal URL (SSRF check - internal IP)", async () => {
+       // Setup mock chain
+       mockDb.get
+       .mockResolvedValueOnce(mockPropertyDoc) // property check
+       .mockResolvedValueOnce({ // feed fetch
+         exists: true,
+         data: () => ({ ...mockFeedDoc.data(), ical_url: "https://192.168.1.1/hack" }),
+         ref: { update: jest.fn() }
+       });
+
+      const wrapped = wrap(syncIcalFeedNow);
+      await expect(wrapped({ data: validData, auth: mockAuth })).rejects.toThrow("Internal or localhost URLs are not allowed");
+    });
+
+    it("should fail for invalid protocol in URL", async () => {
+       // Setup mock chain
+       mockDb.get
+       .mockResolvedValueOnce(mockPropertyDoc) // property check
+       .mockResolvedValueOnce({ // feed fetch
+         exists: true,
+         data: () => ({ ...mockFeedDoc.data(), ical_url: "ftp://example.com/hack" }),
+         ref: { update: jest.fn() }
+       });
+
+      const wrapped = wrap(syncIcalFeedNow);
+      await expect(wrapped({ data: validData, auth: mockAuth })).rejects.toThrow("Invalid protocol");
+    });
+
+    it("should fail for invalid URL format", async () => {
+       // Setup mock chain
+       mockDb.get
+       .mockResolvedValueOnce(mockPropertyDoc) // property check
+       .mockResolvedValueOnce({ // feed fetch
+         exists: true,
+         data: () => ({ ...mockFeedDoc.data(), ical_url: "not-a-url" }),
+         ref: { update: jest.fn() }
+       });
+
+      const wrapped = wrap(syncIcalFeedNow);
+      await expect(wrapped({ data: validData, auth: mockAuth })).rejects.toThrow("Invalid URL format");
+    });
+
+    it("should sync successfully for valid input with unknown domain", async () => {
+      // Mock chain for complex calls
+      // 1. Property owner check
+      // 2. Feed fetch
+      // 3. Existing bookings fetch (native)
+      // 4. Existing ical events fetch (other)
+      // 5. Old events fetch (for deletion)
+
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc) // 1
+        .mockResolvedValueOnce({ // feed fetch
+          exists: true,
+          data: () => ({ ...mockFeedDoc.data(), ical_url: "https://some-unknown-pms.com/feed.ics" }),
+          ref: { update: jest.fn() }
+        }) // 2
+        .mockResolvedValueOnce({ docs: [], size: 0 }) // 3
+        .mockResolvedValueOnce({ docs: [] }) // 4
+        .mockResolvedValueOnce({ docs: [], length: 0 }); // 5
+
+      const wrapped = wrap(syncIcalFeedNow);
+      const result = await wrapped({ data: validData, auth: mockAuth });
+
+      expect(result.success).toBe(true);
+      expect(https.get).toHaveBeenCalled();
     });
 
     it("should sync successfully for valid input", async () => {

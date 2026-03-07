@@ -231,7 +231,15 @@ describe("iCal Export Endpoint", () => {
     });
 
     // 4. Blocked Days
-    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] });
+    mockDb.get.mockResolvedValueOnce({
+      size: 1,
+      docs: [{
+        data: () => ({
+          available: false,
+          date: { toDate: () => new Date("2026-06-10") },
+        })
+      }],
+    });
 
     // 5. Imported Events
     mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] });
@@ -243,6 +251,9 @@ describe("iCal Export Endpoint", () => {
     expect(content).toContain("BEGIN:VCALENDAR");
     expect(content).toContain("UID:booking-bk-1@bookbed.io");
     expect(content).toContain("SUMMARY:Reserved"); // GDPR check
+    // Blocked day format
+    expect(content).toContain("UID:blocked-");
+    expect(content).toContain("SUMMARY:Not Available");
   });
 
   it("should filter events when ?exclude= is used", async () => {

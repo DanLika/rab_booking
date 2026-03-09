@@ -18,28 +18,28 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # State Management
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
   state_notifier: ^1.0.0
 
   # Backend & Database - Firebase
-  firebase_core: ^4.4.0
-  firebase_auth: ^6.1.4
-  cloud_firestore: ^6.1.2
-  firebase_storage: ^13.0.6
-  cloud_functions: ^6.0.6
-  firebase_analytics: ^12.1.2
-  firebase_crashlytics: ^5.0.7
-  firebase_messaging: ^16.1.1  # Push notifications (hidden until mobile app release)
+  firebase_core: ^4.5.0
+  firebase_auth: ^6.2.0
+  cloud_firestore: ^6.1.3
+  firebase_storage: ^13.1.0
+  cloud_functions: ^6.0.7
+  firebase_analytics: ^12.1.3
+  firebase_crashlytics: ^5.0.8
+  firebase_messaging: ^16.1.2  # Push notifications (hidden until mobile app release)
 
   # Google Sign-In (native Android/iOS)
-  google_sign_in: ^6.2.2
+  google_sign_in: ^6.3.0
 
   # Apple Sign-In (native iOS)
   sign_in_with_apple: ^7.0.1
 
   # HTTP Client
-  http: ^1.2.0
+  http: ^1.6.0
 
   # Reactive Streams
   rxdart: ^0.28.0
@@ -48,19 +48,19 @@ dependencies:
   go_router: ^17.1.0
 
   # UI & Styling
-  google_fonts: ^6.2.1
+  google_fonts: ^6.3.3
 
   # Internationalization
-  intl: ^0.20.1
+  intl: ^0.20.2
 
   # Image Handling
   cached_network_image: ^3.4.1
-  image_picker: ^1.1.2
+  image_picker: ^1.2.1
 
   # PDF & Receipt Generation
-  pdf: ^3.10.8
-  printing: ^5.12.0
-  path_provider: ^2.1.2
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  path_provider: ^2.1.5
 
   # QR Code Generation
   qr_flutter: ^4.1.0
@@ -69,11 +69,11 @@ dependencies:
   shimmer: ^3.0.0
 
   # Animations & Scroll Effects (2025 UX)
-  flutter_animate: ^4.5.0  # Declarative animations - reduces boilerplate by ~70%
+  flutter_animate: ^4.5.2  # Declarative animations - reduces boilerplate by ~70%
   auto_size_text: ^3.0.0
 
   # URL Launcher
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.2
 
   # JSON Serialization
   freezed_annotation: ^2.4.4
@@ -81,30 +81,30 @@ dependencies:
 
   # Utilities
   share_plus: ^12.0.1
-  shared_preferences: ^2.3.4
-  package_info_plus: ^8.1.2  # App version info
-  flutter_secure_storage: ^9.0.0  # Secure credential storage
-  uuid: ^4.5.1
-  crypto: ^3.0.3
+  shared_preferences: ^2.5.4
+  package_info_plus: ^8.3.1  # App version info
+  flutter_secure_storage: ^9.2.4  # Secure credential storage
+  uuid: ^4.5.3
+  crypto: ^3.0.7
   connectivity_plus: ^7.0.0
-  web: ^1.0.0
-  collection: ^1.18.0  # Collection utilities (firstWhereOrNull, etc.)
+  web: ^1.1.1
+  collection: ^1.19.1  # Collection utilities (firstWhereOrNull, etc.)
 
   # AI Chat (Gemini via Firebase)
-  firebase_ai: ^3.8.0
-  firebase_app_check: ^0.4.1+4
+  firebase_ai: ^3.9.0
+  firebase_app_check: ^0.4.1+5
 
   # Markdown rendering (for AI chat responses)
-  flutter_markdown: ^0.7.4+3
+  flutter_markdown: ^0.7.7+1
 
   # Error Tracking (Web - Crashlytics doesn't support web)
-  sentry_flutter: ^8.12.0
+  sentry_flutter: ^8.14.2
 
   # Charts
-  graphic: ^2.6.0
+  graphic: ^2.7.0
 
   # Syncfusion Calendar (Month/Schedule view for mobile-friendly calendar)
-  syncfusion_flutter_calendar: ^28.1.33
+  syncfusion_flutter_calendar: ^28.2.12
 
 dev_dependencies:
   flutter_test:
@@ -114,10 +114,10 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code Generation
-  build_runner: ^2.4.6
+  build_runner: ^2.5.4
   freezed: ^2.5.8
-  json_serializable: ^6.7.1
-  riverpod_generator: ^2.4.3
+  json_serializable: ^6.9.5
+  riverpod_generator: ^2.6.4
 
   # Testing
   mocktail: ^1.0.4
@@ -131,7 +131,7 @@ dev_dependencies:
 
   # Icon Generation
   flutter_launcher_icons: ^0.13.1
-  flutter_native_splash: ^2.4.3
+  flutter_native_splash: ^2.4.7
 
 flutter_launcher_icons:
   android: "ic_launcher"

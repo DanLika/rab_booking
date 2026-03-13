@@ -106,7 +106,7 @@ class _EmailVerificationDialogState
         ).verificationCodeSent;
         setState(() {
           _successMessage = successText;
-          _resendCooldown = 60;
+          _resendCooldown = 30;
         });
 
         // Clear success message after 3 seconds

@@ -12,9 +12,11 @@ jest.mock("../src/firebase", () => {
     collection: jest.fn().mockReturnThis(),
     collectionGroup: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
     get: jest.fn(),
     doc: jest.fn().mockReturnThis(),
     update: jest.fn().mockResolvedValue(true),
+    batch: jest.fn(),
   };
   return {
     admin: {
@@ -78,6 +80,10 @@ describe("Booking Management Functions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockDb = require("../src/firebase").db;
+    mockDb.batch.mockReturnValue({
+      update: jest.fn(),
+      commit: jest.fn().mockResolvedValue(true),
+    });
   });
 
   describe("autoCancelExpiredBookings", () => {
@@ -96,7 +102,8 @@ describe("Booking Management Functions", () => {
           check_out: new Date(),
         }),
       };
-      mockDb.collectionGroup().where().where().get.mockResolvedValue({
+      mockDb.collectionGroup().where().where().limit().get.mockResolvedValue({
+        empty: false,
         size: 1,
         docs: [mockExpiredBooking],
       });
@@ -107,7 +114,8 @@ describe("Booking Management Functions", () => {
       await wrapped({});
 
       // Assert
-      expect(mockExpiredBooking.ref.update).toHaveBeenCalledWith(
+      expect(mockDb.batch().update).toHaveBeenCalledWith(
+        mockExpiredBooking.ref,
         expect.objectContaining({ status: "cancelled" })
       );
       const { sendBookingCancellationEmail } = require("../src/emailService");

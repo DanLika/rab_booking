@@ -224,3 +224,69 @@ async function deleteSubcollection(
 
   return totalDeleted;
 }
+
+/**
+ * Triggered when an iCal feed document is deleted.
+ * Automatically deletes all associated iCal events to prevent orphaned data.
+ */
+export const onIcalFeedDeleted = onDocumentDeleted(
+  {
+    document: "properties/{propertyId}/ical_feeds/{feedId}",
+    region: "europe-west1",
+  },
+  async (event) => {
+    const propertyId = event.params.propertyId;
+    const feedId = event.params.feedId;
+
+    logInfo("[PropertyManagement] iCal feed deleted, cleaning up associated events", {
+      propertyId,
+      feedId,
+    });
+
+    try {
+      const eventsRef = db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("ical_events");
+
+      let totalDeleted = 0;
+
+      // Process in batches
+      while (true) {
+        const snapshot = await eventsRef
+          .where("feed_id", "==", feedId)
+          .limit(BATCH_SIZE)
+          .get();
+
+        if (snapshot.empty) {
+          break;
+        }
+
+        const batch = db.batch();
+        snapshot.docs.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+        totalDeleted += snapshot.size;
+
+        // If we got less than BATCH_SIZE, we're done
+        if (snapshot.size < BATCH_SIZE) {
+          break;
+        }
+      }
+
+      logSuccess("[PropertyManagement] iCal feed events cleanup completed", {
+        propertyId,
+        feedId,
+        eventsDeleted: totalDeleted,
+      });
+    } catch (error) {
+      logError(
+        "[PropertyManagement] iCal feed events cleanup failed",
+        error as Error,
+        {propertyId, feedId}
+      );
+    }
+  }
+);

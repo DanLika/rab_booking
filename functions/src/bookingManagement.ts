@@ -83,69 +83,148 @@ export const autoCancelExpiredBookings = onSchedule(
         .collectionGroup("bookings")
         .where("status", "==", "pending")
         .where("payment_deadline", "<", now)
+        .limit(5000)
         .get();
+
+      if (expiredBookings.empty) {
+        logInfo("Auto-cancel check completed: No expired bookings found");
+        return;
+      }
+
+      // Filter out external/iCal bookings (read-only)
+      const bookingsToCancel = expiredBookings.docs.filter((doc) => {
+        const data = doc.data();
+        if (data.source && ["booking_com", "airbnb", "ical", "external"].includes(data.source.toLowerCase())) {
+          return false;
+        }
+        if (doc.id.startsWith("ical_")) {
+          return false;
+        }
+        return true;
+      });
 
       logInfo("Auto-cancel check completed", {
         expiredCount: expiredBookings.size,
+        eligibleCount: bookingsToCancel.length,
       });
 
-      const cancelPromises = expiredBookings.docs.map(async (doc) => {
-        const booking = doc.data();
+      const BATCH_SIZE = 400;
+      let successCount = 0;
+      let failedCount = 0;
 
-        await doc.ref.update({
-          status: "cancelled",
-          cancellation_reason: "Payment not received within deadline",
-          cancelled_at: admin.firestore.FieldValue.serverTimestamp(),
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
-        });
+      for (let i = 0; i < bookingsToCancel.length; i += BATCH_SIZE) {
+        const chunk = bookingsToCancel.slice(i, i + BATCH_SIZE);
+        const batch = db.batch();
 
-        // Send cancellation email to guest with retry
-        if (booking.guest_email) {
-          try {
-            // Fetch property and unit names using shared utility
-            const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
-              booking.property_id,
-              booking.unit_id,
-              "autoCancelExpired"
-            );
-
-            await sendEmailWithRetry(
-              async () => {
-                await sendBookingCancellationEmail(
-                  booking.guest_email,
-                  booking.guest_name || "Guest",
-                  booking.booking_reference,
-                  propertyName,
-                  unitName,
-                  safeToDate(booking.check_in, "check_in"),
-                  safeToDate(booking.check_out, "check_out"),
-                  undefined, // refundAmount
-                  booking.property_id, // propertyId
-                  booking.cancellation_reason || "Payment not received within deadline", // cancellationReason
-                  true // cancelledByOwner
-                );
-              },
-              "Auto-Cancel Notification",
-              booking.guest_email
-            );
-          } catch (error) {
-            logError("Failed to send cancellation email after retries", error, {bookingId: doc.id});
-            // Track failure for monitoring/alerting
-            trackEmailFailure(
-              doc.id,
-              "auto_cancel_notification",
-              booking.guest_email,
-              error
-            );
-          }
+        for (const doc of chunk) {
+          batch.update(doc.ref, {
+            status: "cancelled",
+            cancellation_reason: "Payment not received within deadline",
+            cancelled_at: admin.firestore.FieldValue.serverTimestamp(),
+            updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          });
         }
 
-        logInfo("Auto-cancelled booking due to payment timeout", {bookingId: doc.id});
+        try {
+          await batch.commit();
+
+          // Process emails after successful batch commit
+          const emailPromises = chunk.map(async (doc) => {
+            const booking = doc.data();
+            if (booking.guest_email) {
+              try {
+                const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
+                  booking.property_id,
+                  booking.unit_id,
+                  "autoCancelExpired"
+                );
+
+                await sendEmailWithRetry(
+                  async () => {
+                    await sendBookingCancellationEmail(
+                      booking.guest_email,
+                      booking.guest_name || "Guest",
+                      booking.booking_reference,
+                      propertyName,
+                      unitName,
+                      safeToDate(booking.check_in, "check_in"),
+                      safeToDate(booking.check_out, "check_out"),
+                      undefined,
+                      booking.property_id,
+                      booking.cancellation_reason || "Payment not received within deadline",
+                      true
+                    );
+                  },
+                  "Auto-Cancel Notification",
+                  booking.guest_email
+                );
+              } catch (error) {
+                logError("Failed to send cancellation email after retries", error, {bookingId: doc.id});
+                trackEmailFailure(doc.id, "auto_cancel_notification", booking.guest_email, error);
+              }
+            }
+          });
+          await Promise.all(emailPromises);
+          successCount += chunk.length;
+        } catch (batchError) {
+          logWarn("Batch commit failed, trying individual updates", { error: String(batchError) });
+
+          for (const doc of chunk) {
+            try {
+              await doc.ref.update({
+                status: "cancelled",
+                cancellation_reason: "Payment not received within deadline",
+                cancelled_at: admin.firestore.FieldValue.serverTimestamp(),
+                updated_at: admin.firestore.FieldValue.serverTimestamp(),
+              });
+
+              const booking = doc.data();
+              if (booking.guest_email) {
+                try {
+                  const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
+                    booking.property_id,
+                    booking.unit_id,
+                    "autoCancelExpired"
+                  );
+
+                  await sendEmailWithRetry(
+                    async () => {
+                      await sendBookingCancellationEmail(
+                        booking.guest_email,
+                        booking.guest_name || "Guest",
+                        booking.booking_reference,
+                        propertyName,
+                        unitName,
+                        safeToDate(booking.check_in, "check_in"),
+                        safeToDate(booking.check_out, "check_out"),
+                        undefined,
+                        booking.property_id,
+                        booking.cancellation_reason || "Payment not received within deadline",
+                        true
+                      );
+                    },
+                    "Auto-Cancel Notification",
+                    booking.guest_email
+                  );
+                } catch (emailError) {
+                  logError("Failed to send cancellation email after retries", emailError, {bookingId: doc.id});
+                  trackEmailFailure(doc.id, "auto_cancel_notification", booking.guest_email, emailError);
+                }
+              }
+              successCount++;
+            } catch (docError) {
+              failedCount++;
+              logError("Failed to cancel booking", docError, { bookingId: doc.id });
+            }
+          }
+        }
+      }
+
+      logSuccess("Auto-cancelled expired bookings", {
+        successCount,
+        failedCount,
+        totalEligible: bookingsToCancel.length
       });
-
-      await Promise.all(cancelPromises);
-
-      logSuccess("Auto-cancelled expired bookings", {count: expiredBookings.size});
     } catch (error) {
       logError("Error auto-cancelling bookings", error);
     }

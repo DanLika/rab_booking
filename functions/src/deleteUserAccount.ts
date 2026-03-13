@@ -390,6 +390,7 @@ async function deleteUserDocument(userId: string): Promise<void> {
     "notifications",
     "rate_limits",
     "devices",
+    "ai_chats",
   ];
 
   for (const subcollection of subcollections) {

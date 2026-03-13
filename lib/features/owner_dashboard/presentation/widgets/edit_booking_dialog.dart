@@ -20,6 +20,7 @@ import '../providers/owner_calendar_provider.dart';
 import '../providers/platform_connections_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
 import 'dialogs/update_booking_warning_dialog.dart';
+import '../../../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// Edit Booking Dialog - Phase 2 Feature
 ///
@@ -592,7 +593,7 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
       context: context,
       builder: (dialogContext) {
         final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(dialogL10n.ownerTableDeleteBooking),
           content: Text(dialogL10n.ownerTableDeleteBookingMessage),
           actions: [

@@ -20,6 +20,7 @@ import 'steps/step_1_basic_info.dart';
 import 'steps/step_2_capacity.dart';
 import 'steps/step_3_pricing.dart';
 import 'steps/step_4_review.dart';
+import '../../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Unit Wizard Screen - Multi-step wizard for creating/editing units
 ///
@@ -458,8 +459,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
                       ),
                     ],
                   ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const SkeletonLoader(),
                   error: (error, stack) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,

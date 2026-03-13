@@ -9,6 +9,7 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../domain/models/platform_connection.dart';
 import '../providers/platform_connections_provider.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../../../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// Screen for managing platform connections (Booking.com, Airbnb API integrations)
 class PlatformConnectionsScreen extends ConsumerStatefulWidget {
@@ -328,7 +329,7 @@ class _PlatformConnectionsScreenState
     // Show warning dialog first
     final proceed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CustomDialog(
         title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
@@ -399,7 +400,7 @@ class _PlatformConnectionsScreenState
     if (!mounted) return;
     final result = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CustomDialog(
         title: const Text('Connect Booking.com'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -471,7 +472,7 @@ class _PlatformConnectionsScreenState
     // Show warning dialog first
     final proceed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CustomDialog(
         title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
@@ -541,7 +542,7 @@ class _PlatformConnectionsScreenState
     if (!mounted) return;
     final result = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CustomDialog(
         title: const Text('Connect Airbnb'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -603,7 +604,7 @@ class _PlatformConnectionsScreenState
   Future<void> _handleRemoveConnection(PlatformConnection connection) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CustomDialog(
         title: const Text('Remove Connection'),
         content: Text(
           'Are you sure you want to remove the ${connection.platform.displayName} connection?',

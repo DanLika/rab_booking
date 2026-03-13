@@ -26,6 +26,7 @@ import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
 import '../widgets/units/unit_hub_empty_state.dart';
+import '../../../../shared/widgets/dialogs/custom_dialog.dart';
 
 // ============================================================================
 // CONSTANTS
@@ -848,7 +849,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       if (!dialogContext.mounted) return;
       await showDialog<void>(
         context: dialogContext,
-        builder: (ctx) => AlertDialog(
+        builder: (ctx) => CustomDialog(
           title: Text(l10n.unitHubCannotDelete),
           content: Text(l10n.unitHubCannotDeleteDesc(property.name, unitCount)),
           actions: [
@@ -864,7 +865,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     final confirmed = await showDialog<bool>(
       context: dialogContext,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => CustomDialog(
         title: Text(l10n.unitHubDeletePropertyTitle),
         content: Text(l10n.unitHubDeletePropertyConfirm(property.name)),
         actions: [
@@ -932,7 +933,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     final confirmed = await showDialog<bool>(
       context: dialogContext,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => CustomDialog(
         title: Text(l10n.unitHubDeleteUnitTitle),
         content: Text(l10n.unitHubDeleteUnitConfirm(unit.name)),
         actions: [

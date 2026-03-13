@@ -11,6 +11,8 @@ import '../../../../../../shared/models/additional_service_model.dart';
 import '../../../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
 import '../../../widgets/wizard/additional_service_dialog.dart';
 import '../state/unit_wizard_provider.dart';
+import '../../../../../../shared/widgets/dialogs/custom_dialog.dart';
+import '../../../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Step 2: Capacity & Space - Bedrooms, Bathrooms, Max Guests, Area,
 /// plus expandable sections for Extra Beds and Pets
@@ -192,7 +194,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => CustomDialog(
         title: Text(l10n.additionalServiceDeleteConfirm),
         content: Text(l10n.additionalServiceDeleteHint),
         actions: [
@@ -585,7 +587,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
                         initiallyExpanded: _services.isNotEmpty,
                         children: [
                           if (_servicesLoading)
-                            const Center(child: CircularProgressIndicator())
+                            const SkeletonLoader()
                           else if (_services.isEmpty)
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -680,7 +682,7 @@ class _Step2CapacityState extends ConsumerState<Step2Capacity>
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const SkeletonLoader(),
       error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
     );
   }

@@ -17,6 +17,7 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../domain/models/notification_model.dart';
 import '../providers/notifications_provider.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../../../../core/theme/theme_extensions.dart';
 
 /// Notifications screen for owner dashboard
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -267,7 +268,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             // Loading overlay during delete
             if (_isDeleting)
               Container(
-                color: Colors.black.withAlpha((0.3 * 255).toInt()),
+                color: context.textColor.withAlpha((0.3 * 255).toInt()),
                 child: Center(
                   child: Container(
                     padding: const EdgeInsets.all(24),

@@ -20,6 +20,7 @@ import '../providers/platform_connections_provider.dart';
 import '../state/price_calendar_state.dart';
 import 'calendar/calendar_day_cell.dart';
 import 'dialogs/unblock_warning_dialog.dart';
+import '../../../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// BedBooking-style Price List Calendar
 /// Displays one month at a time with dropdown selector
@@ -1166,7 +1167,7 @@ class _PriceListCalendarWidgetState
                                       );
                                       final confirmed = await showDialog<bool>(
                                         context: context,
-                                        builder: (context) => AlertDialog(
+                                        builder: (context) => CustomDialog(
                                           title: Text(
                                             l10nDialog
                                                 .priceCalendarDeleteConfirmTitle,
@@ -1676,7 +1677,7 @@ class _PriceListCalendarWidgetState
                                         // Show confirmation dialog before bulk update
                                         final confirmed = await showDialog<bool>(
                                           context: context,
-                                          builder: (context) => AlertDialog(
+                                          builder: (context) => CustomDialog(
                                             title: Text(
                                               l10nDialog
                                                   .priceCalendarConfirmation,
@@ -2179,7 +2180,7 @@ class _PriceListCalendarWidgetState
                                     // Show confirmation dialog before blocking dates
                                     final confirmed = await showDialog<bool>(
                                       context: context,
-                                      builder: (dialogContext) => AlertDialog(
+                                      builder: (dialogContext) => CustomDialog(
                                         title: Text(
                                           l10nDialog.priceCalendarConfirmation,
                                         ),

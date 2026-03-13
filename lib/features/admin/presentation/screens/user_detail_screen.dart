@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../shared/models/user_model.dart';
 import '../../data/admin_users_repository.dart';
+import '../../../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// Responsive breakpoint for mobile layout
 const double _mobileBreakpoint = 900.0;
@@ -444,7 +445,7 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
   ) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => CustomDialog(
         title: Text(title),
         content: Text(content),
         actions: [

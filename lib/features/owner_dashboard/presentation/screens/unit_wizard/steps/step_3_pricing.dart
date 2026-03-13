@@ -7,6 +7,7 @@ import '../../../../../../core/utils/keyboard_dismiss_fix_mixin.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 import '../state/unit_wizard_provider.dart';
+import '../../../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Step 3: Pricing & Availability - Price per night, Min stay, Year-round toggle
 class Step3Pricing extends ConsumerStatefulWidget {
@@ -779,7 +780,7 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const SkeletonLoader(),
       error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
     );
   }

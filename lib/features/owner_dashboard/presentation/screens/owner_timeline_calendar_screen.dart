@@ -27,6 +27,7 @@ import '../../../../l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/calendar/tutorial/calendar_tutorial_overlay.dart';
+import '../../../../core/constants/breakpoints.dart';
 
 /// Owner Timeline Calendar Screen
 /// Shows BedBooking-style Gantt chart with booking blocks spanning dates
@@ -303,8 +304,7 @@ class _OwnerTimelineCalendarScreenState
                               ),
                               onNotificationsTap: showNotificationsPanel,
                               // Show all icons on screens >= 600px
-                              isCompact:
-                                  MediaQuery.of(context).size.width < 600,
+                              isCompact: Breakpoints.isMobile(context),
                               // ENHANCED: Analytics toggle integrated in single row
                               showSummaryToggle: true,
                               isSummaryVisible: _showSummary,

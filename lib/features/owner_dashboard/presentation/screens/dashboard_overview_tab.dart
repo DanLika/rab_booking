@@ -27,6 +27,8 @@ import '../../../../core/services/logging_service.dart';
 import '../../../subscription/widgets/trial_banner.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/theme/theme_extensions.dart';
+import '../../../../core/constants/breakpoints.dart';
 
 /// Dashboard overview tab - UNIFIED
 /// Shows metrics, charts, and recent activity with time period selection
@@ -793,7 +795,7 @@ class DashboardOverviewTab extends ConsumerWidget {
                 ]
               : [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
+                    color: context.textColor.withValues(alpha: 0.06),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -931,7 +933,7 @@ class _RevenueChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = Breakpoints.isMobile(context);
 
     if (data.isEmpty) {
       return _buildEmptyState(
@@ -1115,7 +1117,7 @@ class _BookingsChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = Breakpoints.isMobile(context);
 
     if (data.isEmpty) {
       return _buildEmptyState(context, l10n, theme, Icons.event_busy_rounded);

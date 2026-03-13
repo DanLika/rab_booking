@@ -5,6 +5,7 @@ import '../../../core/design_tokens/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/common_app_bar.dart';
 import '../../owner_dashboard/presentation/widgets/owner_app_drawer.dart';
+import '../../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// Subscription Screen
 ///
@@ -391,7 +392,7 @@ class SubscriptionScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => CustomDialog(
         title: const Text('Upgrade to Pro'),
         content: Text(
           'Pro subscription coming soon! We\'re working on integrating '

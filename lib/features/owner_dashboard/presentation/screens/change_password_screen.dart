@@ -14,6 +14,7 @@ import '../../../auth/presentation/widgets/glass_card.dart';
 import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../../../auth/presentation/widgets/gradient_auth_button.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/breakpoints.dart';
 
 /// Change Password Screen
 ///
@@ -195,7 +196,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isCompact = MediaQuery.of(context).size.width < 400;
+    final isCompact = Breakpoints.isCompactMobile(context);
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) async {

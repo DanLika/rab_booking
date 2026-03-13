@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/constants/breakpoints.dart';
 
 /// Consistent skeleton colors for light and dark themes
 /// Aligned with AppColors design system for professional look
@@ -1021,7 +1022,7 @@ class AnalyticsListSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = Breakpoints.isMobile(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -1097,7 +1098,7 @@ class AnalyticsProgressCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = Breakpoints.isMobile(context);
 
     return Container(
       decoration: BoxDecoration(

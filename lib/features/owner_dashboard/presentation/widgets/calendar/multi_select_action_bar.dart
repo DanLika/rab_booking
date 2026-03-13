@@ -8,6 +8,7 @@ import '../../../../../shared/providers/repository_providers.dart';
 import '../../providers/multi_select_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// Action bar for multi-select mode
 /// Shows bulk actions when bookings are selected
@@ -165,7 +166,7 @@ class MultiSelectActionBar extends ConsumerWidget {
       context: context,
       builder: (context) {
         final l10n = AppLocalizations.of(context);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(l10n.ownerMultiSelectConfirmation),
           content: Text(
             l10n.ownerMultiSelectChangeStatusConfirm(
@@ -249,7 +250,7 @@ class MultiSelectActionBar extends ConsumerWidget {
       context: context,
       builder: (context) {
         final l10n = AppLocalizations.of(context);
-        return AlertDialog(
+        return CustomDialog(
           title: Row(
             children: [
               const Icon(Icons.warning_amber, color: Colors.orange),

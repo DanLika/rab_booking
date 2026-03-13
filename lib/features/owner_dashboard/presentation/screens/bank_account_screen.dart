@@ -15,6 +15,8 @@ import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/universal_loader.dart';
+import '../../../../shared/widgets/dialogs/custom_dialog.dart';
+import '../../../../core/constants/breakpoints.dart';
 
 /// Dedicated Bank Account Screen for bank transfer payment settings
 class BankAccountScreen extends ConsumerStatefulWidget {
@@ -341,7 +343,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
         if (!didPop && _isDirty) {
           final shouldPop = await showDialog<bool>(
             context: context,
-            builder: (ctx) => AlertDialog(
+            builder: (ctx) => CustomDialog(
               title: Text(l10n.bankAccountDiscardTitle),
               content: Text(l10n.bankAccountDiscardDesc),
               actions: [
@@ -391,7 +393,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
 
                 _loadData(effectiveCompany);
 
-                final isCompact = MediaQuery.of(context).size.width < 400;
+                final isCompact = Breakpoints.isCompactMobile(context);
 
                 return LayoutBuilder(
                   builder: (context, constraints) {

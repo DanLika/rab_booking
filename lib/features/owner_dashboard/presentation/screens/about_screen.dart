@@ -3,6 +3,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/theme_extensions.dart';
 
 /// About screen - App information, version, and credits
 class AboutScreen extends StatelessWidget {
@@ -50,7 +51,7 @@ class AboutScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(isMobile ? 20 : 24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
+                            color: context.textColor.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),

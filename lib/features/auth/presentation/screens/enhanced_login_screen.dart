@@ -405,9 +405,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                         padding: EdgeInsets.symmetric(
                           // RESPONSIVE: Use smaller padding on very small screens (<340px)
                           horizontal: isCompact
-                              ? (MediaQuery.of(context).size.width < 340
-                                    ? 8
-                                    : 12)
+                              ? (Breakpoints.isSmallMobile(context) ? 8 : 12)
                               : 20,
                           vertical: isSmallHeight ? 12 : (isCompact ? 16 : 20),
                         ),

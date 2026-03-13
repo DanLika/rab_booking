@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// Utility for displaying user-friendly error messages
 /// Hides technical details (stack traces) from users in production
@@ -294,7 +295,7 @@ class ErrorDisplayUtils {
 
     return showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => CustomDialog(
         title: Row(
           children: [
             Icon(

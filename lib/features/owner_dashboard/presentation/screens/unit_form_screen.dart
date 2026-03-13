@@ -540,7 +540,7 @@ class _UnitFormScreenState extends ConsumerState<UnitFormScreen>
                     // Loading Overlay
                     if (_isLoading)
                       Container(
-                        color: Colors.black.withAlpha((0.5 * 255).toInt()),
+                        color: context.textColor.withAlpha((0.5 * 255).toInt()),
                         child: Center(
                           child: Card(
                             elevation: 8,

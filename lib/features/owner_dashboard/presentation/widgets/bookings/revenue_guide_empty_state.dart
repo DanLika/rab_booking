@@ -6,6 +6,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../core/theme/app_shadows.dart';
+import '../../../../../core/design_tokens/animation_tokens.dart';
 
 /// Revenue Guide Empty State
 ///
@@ -46,22 +47,28 @@ class RevenueGuideEmptyState extends ConsumerWidget {
 
             // Title & Subtitle
             Text(
-              l10n.revenueGuideTitle,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
+                  l10n.revenueGuideTitle,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                )
+                .animate()
+                .fadeIn(delay: AnimationTokens.normal)
+                .slideY(begin: 0.2, end: 0),
 
             const SizedBox(height: 8),
 
             Text(
-              l10n.revenueGuideSubtitle,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+                  l10n.revenueGuideSubtitle,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                )
+                .animate()
+                .fadeIn(delay: AnimationTokens.normal)
+                .slideY(begin: 0.2, end: 0),
 
             const SizedBox(height: 32),
 
@@ -98,7 +105,7 @@ class RevenueGuideEmptyState extends ConsumerWidget {
                         ),
                       );
                     },
-                    delay: 600.ms,
+                    delay: AnimationTokens.normal,
                   ),
                 ],
               ),

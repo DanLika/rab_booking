@@ -19,6 +19,7 @@ import '../booking_details_dialog_v2.dart';
 import '../edit_booking_dialog.dart';
 import '../send_email_dialog.dart';
 import '../../../../../shared/widgets/platform_icon.dart';
+import '../../../../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// BedBooking-style Table View for bookings
 /// Desktop: Full data table with all columns
@@ -594,7 +595,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (dialogContext) {
         final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(dialogL10n.ownerTableConfirmBooking),
           content: Text(dialogL10n.ownerTableConfirmBookingMessage),
           actions: [
@@ -648,7 +649,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (dialogContext) {
         final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(dialogL10n.bookingRejectTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -719,7 +720,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (dialogContext) {
         final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(dialogL10n.ownerTableCompleteBooking),
           content: Text(dialogL10n.ownerTableCompleteBookingMessage),
           actions: [
@@ -774,7 +775,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (dialogContext) {
         final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(dialogL10n.ownerTableCancelBooking),
           content: SingleChildScrollView(
             child: Column(
@@ -887,7 +888,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (dialogContext) {
         final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(dialogL10n.ownerTableDeleteBooking),
           content: Text(dialogL10n.ownerTableDeleteBookingMessage),
           actions: [
@@ -941,7 +942,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (dialogContext) {
         final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(dialogL10n.ownerTableConfirmSelectedTitle),
           content: Text(
             dialogL10n.ownerTableConfirmSelectedMessage(count, label),
@@ -1007,7 +1008,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (dialogContext) {
         final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(dialogL10n.ownerTableRejectSelectedTitle),
           content: SingleChildScrollView(
             child: Column(
@@ -1097,7 +1098,7 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
       context: context,
       builder: (dialogContext) {
         final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
+        return CustomDialog(
           title: Text(dialogL10n.ownerTableDeleteSelectedTitle),
           content: Text(
             dialogL10n.ownerTableDeleteSelectedMessage(count, label),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../exceptions/app_exceptions.dart';
 import '../services/logging_service.dart';
+import '../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// Utility class for handling errors and converting them to user-friendly messages
 ///
@@ -106,7 +107,7 @@ class ErrorHandler {
   static void showErrorDialog(BuildContext context, dynamic error) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => CustomDialog(
         title: const Text('Greška'),
         content: Text(getUserFriendlyMessage(error)),
         actions: [

@@ -541,7 +541,7 @@ class _EmailVerificationScreenState
                   decoration: BoxDecoration(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.grey.shade100,
+                        : theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -569,7 +569,7 @@ class _EmailVerificationScreenState
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
+                        color: theme.colorScheme.shadow.withValues(alpha: 0.03),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),

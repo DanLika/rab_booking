@@ -13,6 +13,8 @@ import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../providers/ai_chat_provider.dart';
 import '../../widgets/owner_app_drawer.dart';
 import '../../../domain/models/ai_chat.dart';
+import '../../../../../shared/widgets/dialogs/custom_dialog.dart';
+import '../../../../../shared/widgets/animations/skeleton_loader.dart';
 
 class AiAssistantScreen extends ConsumerStatefulWidget {
   const AiAssistantScreen({super.key});
@@ -412,7 +414,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     _buildChatListItem(chats[index], l10n),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const SkeletonLoader(),
             error: (e, st) => _buildEmptyState(l10n),
           ),
         ),
@@ -494,7 +496,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                     _buildChatListItem(chats[index], l10n),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const SkeletonLoader(),
             error: (e, st) => _buildEmptyState(l10n),
           ),
         ),
@@ -548,7 +550,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         confirmDismiss: (_) async {
           return await showDialog<bool>(
             context: context,
-            builder: (context) => AlertDialog(
+            builder: (context) => CustomDialog(
               title: Text(l10n.aiAssistantDeleteChat),
               content: Text(l10n.aiAssistantDeleteConfirm),
               actions: [

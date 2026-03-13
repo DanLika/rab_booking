@@ -5,6 +5,8 @@ import 'package:uuid/uuid.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../../shared/models/additional_service_model.dart';
+import '../../../../../shared/widgets/dialogs/custom_dialog.dart';
+import '../../../../../core/constants/breakpoints.dart';
 
 /// Dialog for creating or editing an optional additional service.
 ///
@@ -81,9 +83,9 @@ class _AdditionalServiceDialogState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = Breakpoints.isMobile(context);
 
-    return AlertDialog(
+    return CustomDialog(
       title: Text(
         isEditing
             ? l10n.additionalServiceEditTitle

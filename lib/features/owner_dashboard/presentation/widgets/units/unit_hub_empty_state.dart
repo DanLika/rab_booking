@@ -6,6 +6,7 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../shared/widgets/card.dart';
+import '../../../../../core/design_tokens/animation_tokens.dart';
 
 /// Unit Hub Empty State
 ///
@@ -56,25 +57,34 @@ class UnitHubEmptyState extends StatelessWidget {
               size: 48,
               color: Colors.white,
             ),
-          ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
+          ).animate().scale(
+            duration: AnimationTokens.normal,
+            curve: Curves.easeOutBack,
+          ),
           const SizedBox(height: 24),
           Text(
-            l10n.unitHubEmptyWelcome,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0),
+                l10n.unitHubEmptyWelcome,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              )
+              .animate()
+              .fadeIn(delay: AnimationTokens.normal)
+              .slideY(begin: 0.2, end: 0),
           const SizedBox(height: 8),
           Text(
-            l10n.unitHubEmptyDescription,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+                l10n.unitHubEmptyDescription,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              )
+              .animate()
+              .fadeIn(delay: AnimationTokens.normal)
+              .slideY(begin: 0.2, end: 0),
         ],
       ),
     );

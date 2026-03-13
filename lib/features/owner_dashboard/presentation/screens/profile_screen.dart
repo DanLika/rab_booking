@@ -22,6 +22,7 @@ import '../../../../shared/widgets/premium_list_tile.dart';
 import '../../../../shared/widgets/logout_tile.dart';
 import '../../../../shared/widgets/delete_account_dialog.dart';
 import '../providers/user_profile_provider.dart';
+import '../../../../core/theme/theme_extensions.dart';
 
 /// Calculate profile completion from UserModel (fallback when UserProfile doesn't exist)
 /// This handles existing users who registered before profile subdocument was created
@@ -150,7 +151,7 @@ class ProfileScreen extends ConsumerWidget {
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withValues(
+                                            color: context.textColor.withValues(
                                               alpha: isDark ? 0.3 : 0.15,
                                             ),
                                             blurRadius: 12,

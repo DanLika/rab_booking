@@ -6,6 +6,7 @@ import '../../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../../shared/models/additional_service_model.dart';
 import '../../../../../../shared/repositories/firebase/firebase_additional_services_repository.dart';
 import '../state/unit_wizard_provider.dart';
+import '../../../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Step 4: Review & Publish - Final review before creating the unit
 class Step4Review extends ConsumerWidget {
@@ -301,7 +302,7 @@ class Step4Review extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const SkeletonLoader(),
       error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
     );
   }

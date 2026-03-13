@@ -19,6 +19,8 @@ import '../../../auth/presentation/widgets/premium_input_field.dart';
 import '../../../auth/presentation/widgets/profile_image_picker.dart';
 import '../providers/user_profile_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../shared/widgets/dialogs/custom_dialog.dart';
+import '../../../../core/constants/breakpoints.dart';
 
 /// Premium Edit Profile Screen with Auth Style Design
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -610,7 +612,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           final l10n = AppLocalizations.of(context);
           final shouldPop = await showDialog<bool>(
             context: context,
-            builder: (dialogContext) => AlertDialog(
+            builder: (dialogContext) => CustomDialog(
               title: Text(l10n.editProfileDiscardTitle),
               content: Text(l10n.editProfileDiscardMessage),
               actions: [
@@ -659,7 +661,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                   _loadData(effectiveUserData);
                   _currentAvatarUrl = authState.userModel?.avatarUrl;
                   final l10n = AppLocalizations.of(context);
-                  final isCompact = MediaQuery.of(context).size.width < 400;
+                  final isCompact = Breakpoints.isCompactMobile(context);
 
                   return LayoutBuilder(
                     builder: (context, constraints) {

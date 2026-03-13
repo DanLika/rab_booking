@@ -17,6 +17,7 @@ import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/owner_app_drawer.dart';
+import '../../../../shared/widgets/dialogs/custom_dialog.dart';
 
 /// Stripe Connect setup screen for property owners
 /// Redesigned: Premium feel with consistent theme support
@@ -176,7 +177,7 @@ class _StripeConnectSetupScreenState
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => CustomDialog(
         title: Text(l10n.stripeDisconnectTitle),
         content: Text(l10n.stripeDisconnectMessage),
         actions: [

@@ -143,7 +143,7 @@ Future<T?> showAnimatedBottomSheet<T>({
 /// showDialog(
 ///   context: context,
 ///   builder: (context) => AnimatedDialogWrapper(
-///     child: AlertDialog(...),
+///     child: CustomDialog(...),
 ///   ),
 /// );
 /// ```

@@ -1,3 +1,4 @@
+import '../../shared/widgets/dialogs/custom_dialog.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -165,7 +166,7 @@ class PlatformUtils {
 
     return showDialog<T>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => CustomDialog(
         title: Text(title),
         content: Text(content),
         actions: [

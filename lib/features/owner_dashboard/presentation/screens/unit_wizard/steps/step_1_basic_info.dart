@@ -7,6 +7,7 @@ import '../../../../../../core/utils/slug_utils.dart';
 import '../../../../../../core/constants/app_dimensions.dart';
 import '../../../../../../core/theme/gradient_extensions.dart';
 import '../state/unit_wizard_provider.dart';
+import '../../../../../../shared/widgets/animations/skeleton_loader.dart';
 
 /// Step 1: Basic Info - Name, Property, Description, Slug
 class Step1BasicInfo extends ConsumerStatefulWidget {
@@ -504,7 +505,7 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo>
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const SkeletonLoader(),
       error: (error, stack) => Center(child: Text('${l10n.error}: $error')),
     );
   }

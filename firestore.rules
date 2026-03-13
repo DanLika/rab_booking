@@ -54,21 +54,21 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin() || isAdminFromFirestore();
 
       // Users can update their own data, but NOT protected status fields.
-      // Admins can update anything.
+      // Admins CANNOT write to user documents directly (only via Cloud Functions).
       // Protected fields: subscription status, trial dates, account type, lifetime license
       allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by'
-        ])) || isAdmin() || isAdminFromFirestore();
+        ]));
       allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by'
-        ])) || isAdmin() || isAdminFromFirestore();
-      allow delete: if isAdmin() || isAdminFromFirestore(); // Users cannot delete themselves directly, must use Cloud Function
+        ]));
+      allow delete: if false; // Users cannot delete themselves directly, must use Cloud Function
 
       // User data subcollection (profile, company, preferences)
       match /data/{document} {

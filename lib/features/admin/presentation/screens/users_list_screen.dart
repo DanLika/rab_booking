@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../shared/models/user_model.dart';
 import '../../data/admin_users_repository.dart';
+import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 
 /// Responsive breakpoint for mobile layout
 const double _mobileBreakpoint = 800.0;
@@ -20,7 +21,8 @@ class UsersListScreen extends ConsumerStatefulWidget {
   ConsumerState<UsersListScreen> createState() => _UsersListScreenState();
 }
 
-class _UsersListScreenState extends ConsumerState<UsersListScreen> {
+class _UsersListScreenState extends ConsumerState<UsersListScreen>
+    with AndroidKeyboardDismissFixApproach1<UsersListScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -130,113 +132,153 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     final isMobile = width < _mobileBreakpoint;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.transparent,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Section
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).dividerColor,
-                  width: 0.5,
+      body: KeyedSubtree(
+        key: ValueKey('users_list_$keyboardFixRebuildKey'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header Section
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(context).dividerColor,
+                    width: 0.5,
+                  ),
                 ),
               ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Users Management',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            'Manage platform owners and licenses',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    FilledButton.icon(
-                      onPressed: notifier.loadInitial,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Refresh'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Search Bar
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search users by name or email...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                ),
-                const SizedBox(height: 12),
-                // Filters Row
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
+              child: Column(
+                children: [
+                  Row(
                     children: [
-                      // Account type filter chips
-                      for (final type in AccountType.values)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Users Management',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              'Manage platform owners and licenses',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      FilledButton.icon(
+                        onPressed: notifier.loadInitial,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Refresh'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Search Bar
+                  TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search users by name or email...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
+                    ),
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                  ),
+                  const SizedBox(height: 12),
+                  // Filters Row
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        // Account type filter chips
+                        for (final type in AccountType.values)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(type.name.toUpperCase()),
+                              selected: _selectedAccountTypes.contains(type),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    _selectedAccountTypes.add(type);
+                                  } else {
+                                    _selectedAccountTypes.remove(type);
+                                  }
+                                });
+                              },
+                              selectedColor: AppColors.primary.withValues(
+                                alpha: 0.15,
+                              ),
+                              checkmarkColor: AppColors.primary,
+                              labelStyle: TextStyle(
+                                fontSize: 11,
+                                fontWeight: _selectedAccountTypes.contains(type)
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: _selectedAccountTypes.contains(type)
+                                    ? AppColors.primary
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        // Date range chip
                         Padding(
                           padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text(type.name.toUpperCase()),
-                            selected: _selectedAccountTypes.contains(type),
-                            onSelected: (selected) {
-                              setState(() {
-                                if (selected) {
-                                  _selectedAccountTypes.add(type);
-                                } else {
-                                  _selectedAccountTypes.remove(type);
-                                }
-                              });
-                            },
-                            selectedColor: AppColors.primary.withValues(
-                              alpha: 0.15,
+                          child: ActionChip(
+                            avatar: Icon(
+                              Icons.date_range,
+                              size: 16,
+                              color: _dateRange != null
+                                  ? AppColors.primary
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                             ),
-                            checkmarkColor: AppColors.primary,
+                            label: Text(
+                              _dateRange != null
+                                  ? '${_dateRange!.start.day}.${_dateRange!.start.month}.${_dateRange!.start.year} - ${_dateRange!.end.day}.${_dateRange!.end.month}.${_dateRange!.end.year}'
+                                  : 'Date Range',
+                            ),
+                            onPressed: _pickDateRange,
+                            backgroundColor: _dateRange != null
+                                ? AppColors.primary.withValues(alpha: 0.15)
+                                : null,
                             labelStyle: TextStyle(
                               fontSize: 11,
-                              fontWeight: _selectedAccountTypes.contains(type)
+                              fontWeight: _dateRange != null
                                   ? FontWeight.bold
                                   : FontWeight.w500,
-                              color: _selectedAccountTypes.contains(type)
+                              color: _dateRange != null
                                   ? AppColors.primary
                                   : Theme.of(
                                       context,
@@ -244,161 +286,127 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                             ),
                           ),
                         ),
-                      // Date range chip
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ActionChip(
-                          avatar: Icon(
-                            Icons.date_range,
-                            size: 16,
-                            color: _dateRange != null
-                                ? AppColors.primary
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                        const SizedBox(width: 8),
+                        // Sort dropdown
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          label: Text(
-                            _dateRange != null
-                                ? '${_dateRange!.start.day}.${_dateRange!.start.month}.${_dateRange!.start.year} - ${_dateRange!.end.day}.${_dateRange!.end.month}.${_dateRange!.end.year}'
-                                : 'Date Range',
-                          ),
-                          onPressed: _pickDateRange,
-                          backgroundColor: _dateRange != null
-                              ? AppColors.primary.withValues(alpha: 0.15)
-                              : null,
-                          labelStyle: TextStyle(
-                            fontSize: 11,
-                            fontWeight: _dateRange != null
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                            color: _dateRange != null
-                                ? AppColors.primary
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<_SortField>(
+                              value: _sortField,
+                              isDense: true,
+                              icon: Icon(
+                                _sortAscending
+                                    ? Icons.arrow_upward
+                                    : Icons.arrow_downward,
+                                size: 14,
+                              ),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: _SortField.createdAt,
+                                  child: Text('Sort: Created'),
+                                ),
+                                DropdownMenuItem(
+                                  value: _SortField.name,
+                                  child: Text('Sort: Name'),
+                                ),
+                                DropdownMenuItem(
+                                  value: _SortField.email,
+                                  child: Text('Sort: Email'),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value == null) return;
+                                setState(() {
+                                  if (_sortField == value) {
+                                    _sortAscending = !_sortAscending;
+                                  } else {
+                                    _sortField = value;
+                                    _sortAscending =
+                                        value != _SortField.createdAt;
+                                  }
+                                });
+                              },
+                            ),
                           ),
                         ),
+                        // Clear filters button
+                        if (_hasActiveFilters)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: ActionChip(
+                              avatar: const Icon(
+                                Icons.clear_all,
+                                size: 16,
+                                color: Colors.red,
+                              ),
+                              label: const Text('Clear'),
+                              onPressed: _clearAllFilters,
+                              labelStyle: const TextStyle(
+                                fontSize: 11,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Expanded(
+              child: ownersAsync.when(
+                data: (owners) {
+                  final filtered = _filterAndSortOwners(owners);
+                  if (filtered.isEmpty) {
+                    return const _EmptyState();
+                  }
+                  // Hide Load More when filters are active - client-side
+                  // filtering on paginated data would be misleading
+                  final showLoadMore = notifier.hasMore && !_hasActiveFilters;
+                  return isMobile
+                      ? _UsersList(
+                          owners: filtered,
+                          hasMore: showLoadMore,
+                          onLoadMore: notifier.loadMore,
+                        )
+                      : _UsersTable(
+                          owners: filtered,
+                          hasMore: showLoadMore,
+                          onLoadMore: notifier.loadMore,
+                        );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, _) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Error loading users: $err'),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: notifier.loadInitial,
+                        child: const Text('Retry'),
                       ),
-                      const SizedBox(width: 8),
-                      // Sort dropdown
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<_SortField>(
-                            value: _sortField,
-                            isDense: true,
-                            icon: Icon(
-                              _sortAscending
-                                  ? Icons.arrow_upward
-                                  : Icons.arrow_downward,
-                              size: 14,
-                            ),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: _SortField.createdAt,
-                                child: Text('Sort: Created'),
-                              ),
-                              DropdownMenuItem(
-                                value: _SortField.name,
-                                child: Text('Sort: Name'),
-                              ),
-                              DropdownMenuItem(
-                                value: _SortField.email,
-                                child: Text('Sort: Email'),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() {
-                                if (_sortField == value) {
-                                  _sortAscending = !_sortAscending;
-                                } else {
-                                  _sortField = value;
-                                  _sortAscending =
-                                      value != _SortField.createdAt;
-                                }
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                      // Clear filters button
-                      if (_hasActiveFilters)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: ActionChip(
-                            avatar: const Icon(
-                              Icons.clear_all,
-                              size: 16,
-                              color: Colors.red,
-                            ),
-                            label: const Text('Clear'),
-                            onPressed: _clearAllFilters,
-                            labelStyle: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          // Content
-          Expanded(
-            child: ownersAsync.when(
-              data: (owners) {
-                final filtered = _filterAndSortOwners(owners);
-                if (filtered.isEmpty) {
-                  return const _EmptyState();
-                }
-                // Hide Load More when filters are active - client-side
-                // filtering on paginated data would be misleading
-                final showLoadMore = notifier.hasMore && !_hasActiveFilters;
-                return isMobile
-                    ? _UsersList(
-                        owners: filtered,
-                        hasMore: showLoadMore,
-                        onLoadMore: notifier.loadMore,
-                      )
-                    : _UsersTable(
-                        owners: filtered,
-                        hasMore: showLoadMore,
-                        onLoadMore: notifier.loadMore,
-                      );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Error loading users: $err'),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: notifier.loadInitial,
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

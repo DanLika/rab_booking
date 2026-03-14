@@ -27,6 +27,16 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
   final _focusNode = FocusNode();
   bool _showNewChat = false;
 
+  static final _prototypeChat = AiChat(
+    id: 'prototype',
+    title: 'Prototype Title',
+    language: 'en',
+    messages: const [],
+    createdAt: DateTime(2024),
+    updatedAt: DateTime(2024),
+    expiresAt: DateTime(2025),
+  );
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -408,6 +418,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
               return ListView.builder(
                 padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
                 itemCount: chats.length,
+                prototypeItem: _buildChatListItem(_prototypeChat, l10n),
                 itemBuilder: (context, index) =>
                     _buildChatListItem(chats[index], l10n),
               );
@@ -490,6 +501,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
               return ListView.builder(
                 padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
                 itemCount: chats.length,
+                prototypeItem: _buildChatListItem(_prototypeChat, l10n),
                 itemBuilder: (context, index) =>
                     _buildChatListItem(chats[index], l10n),
               );

@@ -7,7 +7,7 @@ import {sendGuestCancellationPushNotification} from "./fcmService";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
 import {safeToDate} from "./utils/dateValidation";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import {checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 
@@ -16,7 +16,8 @@ import {logRateLimitExceeded} from "./utils/securityMonitoring";
  * Lazy initialization to avoid loading Stripe SDK unless needed
  */
 function createStripeClient(secretKey: string): Stripe {
-  return new Stripe(secretKey, {
+  const StripeConstructor = require("stripe").default || require("stripe");
+  return new StripeConstructor(secretKey, {
     apiVersion: "2025-09-30.clover",
   });
 }

@@ -465,6 +465,10 @@ class _PlatformConnectionsScreenState
         }
       }
     }
+
+    hotelIdController.dispose();
+    roomTypeIdController.dispose();
+    unitIdController.dispose();
   }
 
   Future<void> _handleConnectAirbnb() async {
@@ -598,6 +602,9 @@ class _PlatformConnectionsScreenState
         }
       }
     }
+
+    listingIdController.dispose();
+    unitIdController.dispose();
   }
 
   Future<void> _handleRemoveConnection(PlatformConnection connection) async {

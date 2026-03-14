@@ -859,6 +859,9 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
         }
       }
     }
+
+    reasonController.dispose();
+    sendEmailNotifier.dispose();
   }
 
   void _editBooking(String bookingId) async {

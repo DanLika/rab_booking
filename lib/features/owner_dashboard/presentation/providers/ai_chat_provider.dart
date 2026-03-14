@@ -198,7 +198,11 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
   final Ref _ref;
   ChatSession? _chatSession;
 
-  AiChatNotifier(this._ref) : super(const AiChatState());
+  AiChatNotifier(this._ref) : super(const AiChatState()) {
+    _ref.onDispose(() {
+      _chatSession = null;
+    });
+  }
 
   String? get _userId => _ref.read(enhancedAuthProvider).firebaseUser?.uid;
 

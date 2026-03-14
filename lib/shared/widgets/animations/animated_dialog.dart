@@ -126,10 +126,6 @@ Future<T?> showAnimatedBottomSheet<T>({
     shape: shape,
     clipBehavior: clipBehavior,
     constraints: constraints,
-    transitionAnimationController: AnimationController(
-      duration: AnimationTokens.normal,
-      vsync: Navigator.of(context),
-    ),
     builder: builder,
   );
 }

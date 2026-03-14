@@ -73,7 +73,7 @@ Dodaju se u Firebase Console → Hosting → Add custom domain:
 # pubspec.yaml - NE UPGRADEATI bez testiranja!
 flutter_riverpod: ^2.5.1      # NE 3.x - breaking changes
 riverpod_annotation: ^2.3.5   # NE 3.x
-freezed: ^2.5.7               # NE 3.x - zahtijeva sealed class
+freezed: ^2.5.8               # NE 3.x - zahtijeva sealed class
 freezed_annotation: ^2.4.4    # NE 3.x
 ```
 

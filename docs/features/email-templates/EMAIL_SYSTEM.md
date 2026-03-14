@@ -31,7 +31,7 @@ BookBed koristi Resend API za slanje transakcijskih emailova. Svi template-i kor
 ### Reminders (3)
 | Template | Primatelj | Trigger |
 |----------|-----------|---------|
-| `check-in-reminder.ts` | Guest | **7 dana** prije check-in-a |
+| `check-in-reminder.ts` | Guest | **1 dan** prije check-in-a |
 | `check-out-reminder.ts` | Guest | 1 dan prije check-out-a |
 | `payment-reminder.ts` | Guest | **Dan 6** od 7 (1 dan prije isteka roka) |
 
@@ -106,7 +106,7 @@ functions/src/email/
 ### Reminders
 | Parametar | Vrijednost |
 |-----------|------------|
-| Check-in reminder | **7 dana** prije |
+| Check-in reminder | **1 dan** prije |
 | Check-out reminder | 1 dan prije |
 
 ---
@@ -315,7 +315,7 @@ await sendOwnerNotificationEmail(...);  // UVIJEK se šalje
 
 ### Check-In Reminder
 - **Trigger**: Scheduled Cloud Function (daily)
-- **Šalje se**: 7 dana prije check-in-a
+- **Šalje se**: 1 dan prije check-in-a
 - **Uvjet**: Booking status = `confirmed`
 
 ### Check-Out Reminder
@@ -358,7 +358,7 @@ await sendOwnerNotificationEmail(...);  // UVIJEK se šalje
 
 ### 2025-12-16
 - Uklonjen `suspicious-activity.ts` (TODO za budućnost)
-- Check-in reminder: 1 dan → **7 dana** prije
+- Check-in reminder: 1 dan prije
 - Payment rok: 3 dana → **7 dana**
 - Payment reminder: **Dan 6** (1 dan prije isteka)
 - Auto-cancel nakon 7 dana bez uplate

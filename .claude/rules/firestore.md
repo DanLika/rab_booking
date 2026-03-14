@@ -62,3 +62,10 @@ firebase deploy --only firestore:indexes
 ## Napomena o index ordering
 
 When combining range (`>=`) and equality/whereIn filters, equality fields must come FIRST in the index.
+
+## Nove Kolekcije & Subkolekcije
+
+| Collection | Subcollection | Pristup | Upotreba |
+|------------|---------------|---------|----------|
+| `users` | `ai_chats` | Owner Only (`userId`) | Čuva istoriju AI razgovora po korisniku (`users/{userId}/ai_chats/{chatId}`). |
+| `properties` | `ical_events` | Public Read, Owner Write | Sadrži događaje iz iCal importa uključujući echo detection polja: `echo_confidence`, `echo_reason`, `status`. Widget može čitati za availability check. |

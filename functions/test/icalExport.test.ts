@@ -245,6 +245,46 @@ describe("iCal Export Endpoint", () => {
     expect(content).toContain("SUMMARY:Reserved"); // GDPR check
   });
 
+  it("should export blocked days as well", async () => {
+    // 1. Widget Settings
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        ical_export_enabled: true,
+        ical_export_token: "valid-token",
+      }),
+      ref: { update: jest.fn() },
+    });
+
+    // 2. Unit Doc
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ name: "Test Unit" }),
+    });
+
+    // 3. Bookings
+    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] });
+
+    // 4. Blocked Days
+    mockDb.get.mockResolvedValueOnce({
+      size: 1,
+      docs: [
+        {
+          data: () => ({ date: { toDate: () => new Date("2026-06-10T00:00:00Z") } })
+        }
+      ]
+    });
+
+    // 5. Imported Events
+    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] });
+
+    await getUnitIcalFeed(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const content = res.send.mock.calls[0][0];
+    expect(content).toContain("UID:blocked");
+  });
+
   it("should filter events when ?exclude= is used", async () => {
     req.query.exclude = "airbnb";
 

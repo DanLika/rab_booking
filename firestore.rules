@@ -59,13 +59,13 @@ service cloud.firestore {
       allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
-          'account_type', 'admin_override_account_type',
+          'accountType', 'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by'
         ])) || isAdmin() || isAdminFromFirestore();
       allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
-          'account_type', 'admin_override_account_type',
+          'accountType', 'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by'
         ])) || isAdmin() || isAdminFromFirestore();
       allow delete: if isAdmin() || isAdminFromFirestore(); // Users cannot delete themselves directly, must use Cloud Function
@@ -77,13 +77,13 @@ service cloud.firestore {
         allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
             'accountStatus', 'trialStartDate', 'trialExpiresAt',
             'statusChangedAt', 'statusChangedBy',
-            'account_type', 'admin_override_account_type',
+            'accountType', 'account_type', 'admin_override_account_type',
             'lifetime_license_granted_at', 'lifetime_license_granted_by'
           ])) || isAdmin();
         allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
             'accountStatus', 'trialStartDate', 'trialExpiresAt',
             'statusChangedAt', 'statusChangedBy',
-            'account_type', 'admin_override_account_type',
+            'accountType', 'account_type', 'admin_override_account_type',
             'lifetime_license_granted_at', 'lifetime_license_granted_by'
           ])) || isAdmin();
         allow delete: if isOwner(userId) || isAdmin();
@@ -171,8 +171,9 @@ service cloud.firestore {
             ('booking_reference' in resource.data && resource.data.booking_reference != null);
           // SECURITY: Write access requires property ownership AND owner_id integrity
           // This ensures an owner cannot create a booking with a fake owner_id
-          allow create: if isPropertyOwner(propertyId) && request.resource.data.owner_id == request.auth.uid;
-          allow update, delete: if isPropertyOwner(propertyId);
+          allow create: if isPropertyOwner(propertyId) && request.resource.data.owner_id == request.auth.uid && !request.resource.data.keys().hasAny(['stripe_session_id', 'payment_intent_id']);
+          allow update: if isPropertyOwner(propertyId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['stripe_session_id', 'payment_intent_id']);
+          allow delete: if isPropertyOwner(propertyId);
         }
 
         // Daily prices subcollection
@@ -226,9 +227,26 @@ service cloud.firestore {
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }
 
+    // Collection group: notifications
+    // Used by: Notification fallback queries
+    match /{path=**}/notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      // User can only update isRead field
+      allow update: if isAuthenticated() && resource.data.ownerId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Collection group: additional_services
+    // Used by: Widget pricing calculation
+    match /{path=**}/additional_services/{serviceId} {
+      allow read: if true;
+    }
+
     // Collection group: widget_settings
     match /{path=**}/widget_settings/{unitId} {
-      allow read: if true;
+      allow read: if (isAuthenticated() && get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid) ||
+        ('unit_id' in resource.data);
       allow create: if isAuthenticated() &&
         ('property_id' in request.resource.data) &&
         get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
@@ -279,14 +297,16 @@ service cloud.firestore {
     // Collection group: daily_prices
     // Used by: Price calculator, Availability checker
     match /{path=**}/daily_prices/{priceId} {
-      allow read: if true;
+      allow read: if (isAuthenticated() && get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid) ||
+        ('unit_id' in resource.data && ('date' in resource.data || 'available' in resource.data));
       // Writes go through specific subcollection path above
     }
 
     // Collection group: ical_events
     // Used by: Availability checker (widget needs to check external calendar blocks)
     match /{path=**}/ical_events/{eventId} {
-      allow read: if true;
+      allow read: if (isAuthenticated() && get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid) ||
+        ('unit_id' in resource.data && 'start_date' in resource.data);
       // Writes go through specific subcollection path above
     }
 
@@ -308,7 +328,7 @@ service cloud.firestore {
 
     // DEPRECATED: Top-level units
     match /units/{unitId} {
-      allow read: if true;
+      allow read: if (isAuthenticated() && resource.data.owner_id == request.auth.uid) || ('property_id' in resource.data);
       allow create: if canCreateAsOwner();
       allow update, delete: if isResourceOwner();
     }
@@ -321,20 +341,21 @@ service cloud.firestore {
         ('unit_id' in resource.data && 'status' in resource.data) ||
         ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
         ('booking_reference' in resource.data && resource.data.booking_reference != null);
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      allow create: if canCreateAsOwner() && !request.resource.data.keys().hasAny(['stripe_session_id', 'payment_intent_id']);
+      allow update: if isResourceOwner() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['stripe_session_id', 'payment_intent_id']);
+      allow delete: if isResourceOwner();
     }
 
     // DEPRECATED: Top-level daily_prices
     match /daily_prices/{priceId} {
-      allow read: if true;
+      allow read: if (isAuthenticated() && resource.data.owner_id == request.auth.uid) || ('unit_id' in resource.data && ('date' in resource.data || 'available' in resource.data));
       allow create: if canCreateAsOwner();
       allow update, delete: if isResourceOwner();
     }
 
     // DEPRECATED: Top-level ical_events
     match /ical_events/{eventId} {
-      allow read: if true;
+      allow read: if (isAuthenticated() && get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid) || ('unit_id' in resource.data && 'start_date' in resource.data);
       allow create: if isAuthenticated() &&
         ('property_id' in request.resource.data) &&
         get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;

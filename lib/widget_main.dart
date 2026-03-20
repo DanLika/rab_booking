@@ -134,18 +134,25 @@ void main() async {
             );
           }
 
-          // Downgrade WebGL/CanvasKit errors to info level
+          // Drop WebGL/CanvasKit errors entirely
           // These are expected on some browsers (e.g., Chrome iOS) with automatic fallback
+          // and are completely unactionable — no need to track them
           if (exceptionString.contains('getparameter') ||
               exceptionString.contains('webgl') ||
               exceptionString.contains('canvaskit') ||
               message.contains('getparameter') ||
               message.contains('webgl') ||
               message.contains('canvaskit')) {
-            return event.copyWith(
-              level: SentryLevel.info,
-              tags: {...?event.tags, 'app_type': 'booking_widget'},
-            );
+            return null;
+          }
+
+          // Drop Firestore offline/unavailable errors
+          // Widget has no persistence — offline errors are expected in iframe
+          // contexts with intermittent connectivity. Retry logic handles recovery.
+          if (exceptionString.contains('client is offline') ||
+              (exceptionString.contains('cloud_firestore') &&
+                  exceptionString.contains('unavailable'))) {
+            return null;
           }
 
           // All other errors - add app_type tag

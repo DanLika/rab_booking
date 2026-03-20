@@ -16,10 +16,10 @@ part 'widget_context_provider.g.dart';
 typedef WidgetContextParams = ({String propertyId, String unitId});
 
 /// Maximum retry attempts for transient network errors
-const _maxRetryAttempts = 3;
+const _maxRetryAttempts = 4;
 
 /// Base delay for exponential backoff (milliseconds)
-const _baseDelayMs = 500;
+const _baseDelayMs = 800;
 
 /// Check if an error is likely transient (network issue) vs permanent (not found)
 bool _isTransientError(Object error) {
@@ -177,7 +177,12 @@ Future<WidgetContext> widgetContext(Ref ref, WidgetContextParams params) async {
     lastStackTrace,
   );
 
-  // Throw a generic, user-safe exception
+  // Throw user-safe exception with appropriate message based on error type
+  if (lastError != null && _isTransientError(lastError)) {
+    throw const WidgetContextException(
+      'Unable to load booking widget. Please check your internet connection and try again.',
+    );
+  }
   throw const WidgetContextException(
     'Unable to load booking widget configuration. Please check the property and unit IDs.',
   );

@@ -704,18 +704,6 @@ async function insertNewEventsWithEchoDetection(
         }, 0),
         echoReasons: echoResult.reasons.join("; "),
       });
-      captureMessage("[iCal Sync] Partial echo trimmed to new ranges", "info", {
-        feedId,
-        unitId,
-        originalDates: `${event.startDate.toISOString()} - ${event.endDate.toISOString()}`,
-        trimmedRanges: echoResult.trimmedRanges.map((r: {startDate: Date; endDate: Date}) =>
-          `${r.startDate.toISOString().slice(0, 10)} to ${r.endDate.toISOString().slice(0, 10)}`
-        ).join("; "),
-        containmentRatio: (echoResult.containmentRatio ?? 0).toFixed(2),
-        matchConfidence: echoResult.confidence.toFixed(2),
-        reasons: echoResult.reasons.join("; "),
-      });
-
       // Create one ical_event per trimmed range
       for (let j = 0; j < echoResult.trimmedRanges.length; j++) {
         const range = echoResult.trimmedRanges[j];

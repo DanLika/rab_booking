@@ -7,7 +7,7 @@
 export const getTrialExpiredTemplate = (userName: string) => {
   const subject = "Vaš BookBed probni period je istekao";
 
-  // TODO: Create a visually appealing HTML template
+  // TODO(2025-10-30): Create a visually appealing HTML template
   const html = `
     <p>Poštovani ${userName},</p>
     <p>

@@ -472,7 +472,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
       if (!mounted) return;
 
-      // Show actual error for debugging (TODO: remove after fixing)
+      // Display error directly to the user
       final errorMsg = e.toString();
       state = state.copyWith(
         currentChat: updatedChat,

@@ -187,11 +187,7 @@ class LoggingService {
     addBreadcrumb(
       '$method $sanitizedUrl',
       category: 'http',
-      data: {
-        'method': method,
-        'url': sanitizedUrl,
-        if (sanitizedParams != null) 'params': sanitizedParams,
-      },
+      data: {'method': method, 'url': sanitizedUrl, 'params': ?sanitizedParams},
     );
   }
 

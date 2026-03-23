@@ -41,7 +41,7 @@ class BookingLookupService {
       final result = await callable.call<Map<String, dynamic>>({
         'bookingReference': bookingReference,
         'email': email,
-        if (accessToken != null) 'accessToken': accessToken,
+        'accessToken': ?accessToken,
       });
 
       // Parse the response

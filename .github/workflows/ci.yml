@@ -75,13 +75,6 @@ jobs:
       - name: Build web
         run: flutter build web --release
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
-        with:
-          name: web-build
-          path: build/web/
-          retention-days: 7
-
   # Job 3: Build Android (Owner App) - DISABLED
   # Android builds have known issues in CI:
   # - Debug: firebase_storage Kotlin compilation bug (Flutter issue)

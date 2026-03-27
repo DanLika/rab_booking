@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -168,7 +170,15 @@ class _BookingConfirmationScreenState
           Future.delayed(const Duration(seconds: 2), () {
             try {
               tabService.dispose();
-            } catch (_) {}
+            } catch (e, stackTrace) {
+              unawaited(
+                LoggingService.logError(
+                  'Handled empty catch block',
+                  e,
+                  stackTrace,
+                ),
+              );
+            }
           });
         } catch (fallbackError) {
           LoggingService.log(
@@ -189,7 +199,15 @@ class _BookingConfirmationScreenState
         Future.delayed(const Duration(seconds: 2), () {
           try {
             tabService.dispose();
-          } catch (_) {}
+          } catch (e, stackTrace) {
+            unawaited(
+              LoggingService.logError(
+                'Handled empty catch block',
+                e,
+                stackTrace,
+              ),
+            );
+          }
         });
       } catch (e) {
         LoggingService.log(

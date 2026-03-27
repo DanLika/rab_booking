@@ -86,7 +86,7 @@ export * from "./airbnbApi";
 export * from "./overbookingNotifications";
 
 // Export SMS service
-// TODO: SMS feature not yet implemented - requires Twilio/SMS provider setup
+// TODO(2024-03-02): SMS feature not yet implemented - requires Twilio/SMS provider setup
 export * from "./smsService";
 
 // Export authentication rate limiting (IP-based)

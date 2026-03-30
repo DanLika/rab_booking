@@ -220,7 +220,7 @@ class TabCommunicationServiceWeb implements TabCommunicationService {
   void sendCalendarRefresh({String? unitId}) {
     final message = TabMessage(
       type: TabMessageType.calendarRefresh,
-      params: {if (unitId != null) 'unitId': unitId},
+      params: {'unitId': ?unitId},
     );
     send(message.serialize());
   }

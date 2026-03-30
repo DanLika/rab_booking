@@ -159,7 +159,7 @@ class AdminUsersRepository {
       final result = await callable.call<Map<String, dynamic>>({
         'userId': userId,
         'newStatus': newStatus,
-        if (reason != null) 'reason': reason,
+        'reason': ?reason,
       });
 
       final data = result.data;

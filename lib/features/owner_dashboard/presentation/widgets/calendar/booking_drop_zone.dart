@@ -105,7 +105,7 @@ class BookingDropZone extends ConsumerWidget {
                   .topLeft, // Explicit alignment to avoid TextDirection dependency on Chrome Mobile
               children: [
                 // Base child
-                if (child != null) child!,
+                if (child case final Widget c) c,
 
                 // Drop indicator overlay
                 if (isHovering)

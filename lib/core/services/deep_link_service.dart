@@ -88,8 +88,8 @@ class DeepLinkService {
             path: '/owner/calendar',
             queryParameters: {
               'unit': unitId,
-              if (date != null) 'date': date,
-              if (conflictId != null) 'conflict': conflictId,
+              'date': ?date,
+              'conflict': ?conflictId,
             },
           );
           context.go(safeUri.toString());

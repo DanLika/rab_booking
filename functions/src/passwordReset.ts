@@ -11,7 +11,7 @@ import {logError, logSuccess, logOperation, logWarn} from "./logger";
 import {validateEmail} from "./utils/emailValidation";
 import {sanitizeEmail} from "./utils/inputSanitization";
 import {sendPasswordResetEmailV2} from "./email";
-import {Resend} from "resend";
+import type {Resend} from "resend";
 import {setUser} from "./sentry";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
@@ -27,9 +27,10 @@ function getResendClient(): Resend {
         "Get your API key from: https://resend.com/api-keys"
       );
     }
-    resend = new Resend(apiKey);
+    const {Resend: ResendClient} = require("resend");
+    resend = new ResendClient(apiKey);
   }
-  return resend;
+  return resend as Resend;
 }
 
 // Get email configuration

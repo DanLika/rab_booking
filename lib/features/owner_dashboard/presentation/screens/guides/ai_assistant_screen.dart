@@ -408,6 +408,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
               return ListView.builder(
                 padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
                 itemCount: chats.length,
+                // FIXED: Adding itemExtent for list with fixed-height items to prevent variable-height layout overflow regressions
+                itemExtent: 72,
                 itemBuilder: (context, index) =>
                     _buildChatListItem(chats[index], l10n),
               );
@@ -490,6 +492,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
               return ListView.builder(
                 padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
                 itemCount: chats.length,
+                // FIXED: Adding itemExtent for list with fixed-height items to prevent variable-height layout overflow regressions
+                itemExtent: 72,
                 itemBuilder: (context, index) =>
                     _buildChatListItem(chats[index], l10n),
               );

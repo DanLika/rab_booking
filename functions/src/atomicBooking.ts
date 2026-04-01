@@ -1245,7 +1245,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
         }
 
         // Use retry mechanism for transient failures
-        await sendEmailWithRetry(
+        const guestEmailPromise = sendEmailWithRetry(
           async () => {
             await sendPendingBookingRequestEmail(
               sanitizedGuestEmail,
@@ -1259,21 +1259,23 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
           },
           "Pending Booking Request",
           sanitizedGuestEmail
-        );
-
-        logSuccess(
-          "[AtomicBooking] Pending booking request email sent to guest",
-          {
-            email: sanitizedGuestEmail,
-          }
-        );
+        ).then(() => {
+          logSuccess(
+            "[AtomicBooking] Pending booking request email sent to guest",
+            {
+              email: sanitizedGuestEmail,
+            }
+          );
+        });
 
         // Send "New Booking Needs Approval" email to owner
         const ownerDoc = await db.collection("users").doc(ownerId).get();
         const ownerData = ownerDoc.data();
+        let ownerEmailPromise = Promise.resolve();
+
         if (ownerData?.email) {
           // CRITICAL: Pending bookings FORCE send (owner must approve)
-          await sendEmailIfAllowed(
+          ownerEmailPromise = sendEmailIfAllowed(
             ownerId,
             "bookings",
             async () => {
@@ -1292,15 +1294,17 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
               );
             },
             true // forceIfCritical: owner MUST be notified to approve booking
-          );
-
-          logSuccess(
-            "[AtomicBooking] Pending booking owner notification sent",
-            {
-              email: ownerData.email,
-            }
-          );
+          ).then(() => {
+            logSuccess(
+              "[AtomicBooking] Pending booking owner notification sent",
+              {
+                email: ownerData.email,
+              }
+            );
+          }) as Promise<any>;
         }
+
+        await Promise.all([guestEmailPromise, ownerEmailPromise]);
 
         // Send push & in-app notifications for pending booking (non-blocking)
         sendPendingBookingPushNotification(
@@ -1320,7 +1324,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
       } else {
         // Auto-confirmed flow - send "Booking Confirmed" email to guest
         // Use retry mechanism for transient failures
-        await sendEmailWithRetry(
+        const guestEmailPromise = sendEmailWithRetry(
           async () => {
             await sendBookingConfirmationEmail(
               sanitizedGuestEmail,
@@ -1339,14 +1343,14 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
           },
           "Booking Confirmation",
           sanitizedGuestEmail
-        );
-
-        logSuccess(
-          "[AtomicBooking] Booking confirmation email sent to guest",
-          {
-            email: sanitizedGuestEmail,
-          }
-        );
+        ).then(() => {
+          logSuccess(
+            "[AtomicBooking] Confirmation email sent successfully",
+            {
+              email: sanitizedGuestEmail,
+            }
+          );
+        });
 
         // Send "New Booking Received" email to owner
         logInfo("[AtomicBooking] Attempting to send owner notification", {
@@ -1355,6 +1359,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
 
         const ownerDoc = await db.collection("users").doc(ownerId).get();
         const ownerData = ownerDoc.data();
+        let ownerEmailPromise = Promise.resolve();
 
         if (!ownerDoc.exists) {
           logError("[AtomicBooking] Owner document not found", {ownerId});
@@ -1373,7 +1378,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
             email: ownerData.email,
           });
 
-          await sendEmailIfAllowed(
+          ownerEmailPromise = sendEmailIfAllowed(
             ownerId,
             "bookings",
             async () => {
@@ -1400,15 +1405,17 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
               );
             },
             true // CRITICAL: Always send - owner must know about every booking
-          );
-
-          logSuccess(
-            "[AtomicBooking] Owner notification email sent (critical notification)",
-            {
-              email: ownerData.email,
-            }
-          );
+          ).then(() => {
+            logSuccess(
+              "[AtomicBooking] Owner notification email sent (critical notification)",
+              {
+                email: ownerData.email,
+              }
+            );
+          }) as Promise<any>;
         }
+
+        await Promise.all([guestEmailPromise, ownerEmailPromise]);
 
         // Send in-app notification for confirmed booking (non-blocking)
         // NOTE: Push notification removed for manual confirmations - owner is already in app.

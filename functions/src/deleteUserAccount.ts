@@ -223,9 +223,11 @@ async function deleteOwnedProperties(userId: string): Promise<void> {
     return;
   }
 
-  for (const propertyDoc of propertiesSnapshot.docs) {
-    await deletePropertyCascade(propertyDoc.ref);
-  }
+  await Promise.all(
+    propertiesSnapshot.docs.map((propertyDoc) =>
+      deletePropertyCascade(propertyDoc.ref)
+    )
+  );
 
   logInfo("[DeleteAccount] Properties deleted", {
     userId,
@@ -241,9 +243,9 @@ async function deletePropertyCascade(
 ): Promise<void> {
   // Delete units and their subcollections
   const unitsSnapshot = await propertyRef.collection("units").get();
-  for (const unitDoc of unitsSnapshot.docs) {
-    await deleteUnitCascade(unitDoc.ref);
-  }
+  await Promise.all(
+    unitsSnapshot.docs.map((unitDoc) => deleteUnitCascade(unitDoc.ref))
+  );
 
   // Delete widget_settings subcollection
   await deleteSubcollection(propertyRef, "widget_settings");

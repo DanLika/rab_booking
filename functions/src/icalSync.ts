@@ -561,76 +561,103 @@ async function fetchExistingBookingsForUnit(
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + 365);
 
-  try {
-    // 1. Fetch native bookings for this unit
-    const bookingsSnapshot = await db
-      .collectionGroup("bookings")
-      .where("unit_id", "==", unitId)
-      .where("status", "in", ["confirmed", "pending", "completed"])
-      .where("check_in", ">=", admin.firestore.Timestamp.fromDate(pastDate))
-      .where("check_in", "<=", admin.firestore.Timestamp.fromDate(futureDate))
-      .limit(500)
-      .get();
+  const maxAttempts = 3;
+  const baseDelayMs = 1000;
 
-    for (const doc of bookingsSnapshot.docs) {
-      const data = doc.data();
-      const checkIn = data.check_in?.toDate();
-      const checkOut = data.check_out?.toDate();
-      if (checkIn && checkOut) {
-        existingBookings.push({
-          id: doc.id,
-          type: "booking",
-          checkIn,
-          checkOut,
-          source: data.source || "direct",
-          importedAt: data.created_at?.toDate() || checkIn,
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      // 1. Fetch native bookings for this unit
+      const bookingsSnapshot = await db
+        .collectionGroup("bookings")
+        .where("unit_id", "==", unitId)
+        .where("status", "in", ["confirmed", "pending", "completed"])
+        .where("check_in", ">=", admin.firestore.Timestamp.fromDate(pastDate))
+        .where("check_in", "<=", admin.firestore.Timestamp.fromDate(futureDate))
+        .limit(500)
+        .get();
+
+      for (const doc of bookingsSnapshot.docs) {
+        const data = doc.data();
+        const checkIn = data.check_in?.toDate();
+        const checkOut = data.check_out?.toDate();
+        if (checkIn && checkOut) {
+          existingBookings.push({
+            id: doc.id,
+            type: "booking",
+            checkIn,
+            checkOut,
+            source: data.source || "direct",
+            importedAt: data.created_at?.toDate() || checkIn,
+          });
+        }
+      }
+
+      // 2. Fetch ical_events from OTHER feeds (not the current feed being synced)
+      const icalEventsSnapshot = await db
+        .collection("properties")
+        .doc(propertyId)
+        .collection("ical_events")
+        .where("unit_id", "==", unitId)
+        .where("start_date", ">=", admin.firestore.Timestamp.fromDate(pastDate))
+        .where("start_date", "<=", admin.firestore.Timestamp.fromDate(futureDate))
+        .limit(500)
+        .get();
+
+      for (const doc of icalEventsSnapshot.docs) {
+        const data = doc.data();
+        // Skip events from the current feed (they'll be deleted and re-imported)
+        if (data.feed_id === currentFeedId) continue;
+
+        const startDate = data.start_date?.toDate();
+        const endDate = data.end_date?.toDate();
+        if (startDate && endDate) {
+          existingBookings.push({
+            id: doc.id,
+            type: "ical_event",
+            checkIn: startDate,
+            checkOut: endDate,
+            source: data.source || "other",
+            importedAt: data.created_at?.toDate() || startDate,
+          });
+        }
+      }
+
+      logInfo("[iCal Sync] Fetched existing bookings for echo detection", {
+        propertyId,
+        unitId,
+        nativeBookings: bookingsSnapshot.size,
+        otherIcalEvents: existingBookings.length - bookingsSnapshot.size,
+        total: existingBookings.length,
+        ...(attempt > 1 ? {retriedAttempts: attempt} : {}),
+      });
+
+      return existingBookings;
+    } catch (error) {
+      const isLastAttempt = attempt === maxAttempts;
+      const errorStr = String(error).toLowerCase();
+      const isTransient = errorStr.includes("unavailable") ||
+        errorStr.includes("deadline") ||
+        errorStr.includes("internal") ||
+        errorStr.includes("failed_precondition") ||
+        errorStr.includes("resource_exhausted");
+
+      if (!isTransient || isLastAttempt) {
+        logWarn("[iCal Sync] Error fetching existing bookings for echo detection (fallback: skip echo detection)", {
+          propertyId,
+          unitId,
+          error: String(error),
+          attempts: attempt,
         });
+        // Return empty array — echo detection will fall back to saving all events
+        return existingBookings;
+      }
+
+      // Exponential backoff before retry
+      const delayMs = baseDelayMs * (attempt - 1);
+      if (delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
-
-    // 2. Fetch ical_events from OTHER feeds (not the current feed being synced)
-    const icalEventsSnapshot = await db
-      .collection("properties")
-      .doc(propertyId)
-      .collection("ical_events")
-      .where("unit_id", "==", unitId)
-      .where("start_date", ">=", admin.firestore.Timestamp.fromDate(pastDate))
-      .where("start_date", "<=", admin.firestore.Timestamp.fromDate(futureDate))
-      .limit(500)
-      .get();
-
-    for (const doc of icalEventsSnapshot.docs) {
-      const data = doc.data();
-      // Skip events from the current feed (they'll be deleted and re-imported)
-      if (data.feed_id === currentFeedId) continue;
-
-      const startDate = data.start_date?.toDate();
-      const endDate = data.end_date?.toDate();
-      if (startDate && endDate) {
-        existingBookings.push({
-          id: doc.id,
-          type: "ical_event",
-          checkIn: startDate,
-          checkOut: endDate,
-          source: data.source || "other",
-          importedAt: data.created_at?.toDate() || startDate,
-        });
-      }
-    }
-
-    logInfo("[iCal Sync] Fetched existing bookings for echo detection", {
-      propertyId,
-      unitId,
-      nativeBookings: bookingsSnapshot.size,
-      otherIcalEvents: existingBookings.length - bookingsSnapshot.size,
-      total: existingBookings.length,
-    });
-  } catch (error) {
-    logError("[iCal Sync] Error fetching existing bookings for echo detection", error, {
-      propertyId,
-      unitId,
-    });
-    // Return empty array — echo detection will fall back to saving all events
   }
 
   return existingBookings;

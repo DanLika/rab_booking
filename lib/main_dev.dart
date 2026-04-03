@@ -19,9 +19,11 @@ void main() async {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
     }
-  } catch (e) {
+  } catch (e, stackTrace) {
     // Ignore duplicate app error which can happen during hot restart
     if (!e.toString().contains('duplicate-app')) {
+      // Fallback logging since LoggingService is not imported properly
+      debugPrint('Firebase init error in DEV: $e\n$stackTrace');
       rethrow;
     }
   }

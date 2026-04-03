@@ -1,0 +1,664 @@
+lib/widget_main_dev.dart:29:    } catch (_) {
+lib/widget_main_dev.dart:36:  } catch (e) {
+lib/widget_main_dev.dart:57:  } catch (e) {
+lib/main_dev.dart:22:  } catch (e) {
+lib/features/auth/presentation/screens/enhanced_login_screen.dart:86:    } catch (e) {
+lib/features/auth/presentation/screens/enhanced_login_screen.dart:206:    } catch (e) {
+lib/features/auth/presentation/screens/enhanced_login_screen.dart:341:    } catch (e) {
+lib/features/auth/presentation/screens/forgot_password_screen.dart:69:    } catch (e) {
+lib/features/auth/presentation/screens/email_verification_screen.dart:97:    } catch (e) {
+lib/features/auth/presentation/screens/email_verification_screen.dart:156:    } catch (e) {
+lib/features/auth/presentation/screens/email_verification_screen.dart:265:                  } catch (e) {
+lib/features/auth/presentation/screens/email_verification_screen.dart:447:                  } catch (e) {
+lib/features/auth/presentation/screens/email_verification_screen.dart:483:          } catch (e) {
+lib/features/auth/presentation/screens/enhanced_register_screen.dart:178:    } catch (e) {
+lib/features/auth/presentation/widgets/profile_image_picker.dart:56:    } catch (e, stackTrace) {
+lib/features/subscription/data/subscription_repository.dart:32:    } catch (e) {
+lib/features/subscription/data/subscription_repository.dart:48:    } catch (e) {
+lib/features/subscription/screens/subscription_screen.dart:510:    } catch (e) {
+lib/features/widget/data/helpers/availability_checker.dart:267:        } catch (e) {
+lib/features/widget/data/helpers/availability_checker.dart:275:    } catch (e) {
+lib/features/widget/data/helpers/availability_checker.dart:328:        } catch (e) {
+lib/features/widget/data/helpers/availability_checker.dart:336:    } catch (e) {
+lib/features/widget/data/helpers/availability_checker.dart:381:        } catch (e) {
+lib/features/widget/data/helpers/availability_checker.dart:389:    } catch (e) {
+lib/features/widget/data/helpers/availability_checker.dart:460:    } catch (e) {
+lib/features/widget/data/helpers/booking_price_calculator.dart:145:    } catch (e) {
+lib/features/widget/data/helpers/booking_price_calculator.dart:210:    } catch (e) {
+lib/features/widget/data/helpers/booking_price_calculator.dart:253:      } catch (e, stackTrace) {
+lib/features/widget/data/helpers/booking_price_calculator.dart:380:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:54:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:71:          } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:118:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:135:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:152:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:169:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:186:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:206:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:219:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:234:            } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:244:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:261:    } catch (e) {
+lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:303:    } catch (e) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:41:    } catch (e, stackTrace) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:98:    } catch (e) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:133:    } catch (e) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:168:    } catch (e) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:248:    } catch (e) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:542:        } catch (e) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:567:        } catch (e) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:649:        } catch (e) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:674:        } catch (e) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:693:      } catch (e, stackTrace) {
+lib/features/widget/data/repositories/firebase_daily_price_repository.dart:785:    } catch (e) {
+lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:142:              } catch (e) {
+lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:172:          } catch (e, stackTrace) {
+lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:317:              } catch (e) {
+lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:347:          } catch (e, stackTrace) {
+lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:472:            } catch (e) {
+lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:500:        } catch (e, stackTrace) {
+lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:613:            } catch (e) {
+lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:641:        } catch (e, stackTrace) {
+lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:1436:    } catch (e) {
+lib/features/widget/data/services/email_verification_service.dart:131:    } on FirebaseFunctionsException catch (e) {
+lib/features/widget/data/services/email_verification_service.dart:134:    } catch (e) {
+lib/features/widget/data/services/email_verification_service.dart:165:    } on FirebaseFunctionsException catch (e) {
+lib/features/widget/data/services/email_verification_service.dart:168:    } catch (e) {
+lib/features/widget/data/services/email_verification_service.dart:204:    } on FirebaseFunctionsException catch (e) {
+lib/features/widget/data/services/email_verification_service.dart:207:    } catch (e) {
+lib/features/widget/utils/ics_download_stub.dart:68:  } catch (e, stackTrace) {
+lib/features/widget/utils/ics_download_web.dart:56:  } catch (e, stackTrace) {
+lib/features/widget/utils/email_notification_helper.dart:49:    } catch (e) {
+lib/features/widget/utils/date_key_generator.dart:50:    } catch (_) {
+lib/features/widget/domain/models/settings/ical_export_config.dart:136:    } catch (_) {
+lib/features/widget/domain/models/settings/ical_export_config.dart:154:    } catch (_) {
+lib/features/widget/domain/models/embed_url_params.dart:245:    } catch (e) {
+lib/features/widget/domain/use_cases/submit_booking_use_case.dart:111:  /// Widget should catch and handle errors with appropriate UI feedback.
+lib/features/widget/domain/services/subdomain_service.dart:69:    } catch (e) {
+lib/features/widget/domain/services/subdomain_service.dart:93:    } catch (e) {
+lib/features/widget/domain/services/subdomain_service.dart:166:    } catch (e) {
+lib/features/widget/domain/services/booking_url_state_service.dart:68:    } catch (e) {
+lib/features/widget/domain/services/booking_url_state_service.dart:107:    } catch (e) {
+lib/features/widget/domain/services/booking_url_state_service.dart:134:    } catch (e) {
+lib/features/widget/domain/services/booking_url_state_service.dart:152:    } catch (e) {
+lib/features/widget/domain/services/booking_url_state_service.dart:183:    } catch (e) {
+lib/features/widget/presentation/providers/booking_price_provider.dart:226:    } catch (e) {
+lib/features/widget/presentation/providers/widget_context_provider.dart:145:    } catch (e, stackTrace) {
+lib/features/widget/presentation/providers/widget_context_provider.dart:216:  } catch (e, stackTrace) {
+lib/features/widget/presentation/providers/owner_bank_details_provider.dart:23:  } catch (e, stackTrace) {
+lib/features/widget/presentation/providers/booking_lookup_provider.dart:55:    } on FirebaseFunctionsException catch (e) {
+lib/features/widget/presentation/providers/booking_lookup_provider.dart:76:    } catch (e, stackTrace) {
+lib/features/widget/presentation/providers/additional_services_provider.dart:32:      } catch (e, stackTrace) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:139:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:441:    } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:481:      } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:504:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:548:            } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:580:                } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:604:                } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:637:                } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:665:                } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:678:        } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:698:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:853:      } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:918:    } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1162:      } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1194:      } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1231:        } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1262:        } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1291:    } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1458:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1630:    } on WidgetContextException catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1637:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1639:      // HIGH: Check mounted in catch block before setState
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1834:    // Defensive: Wrap in try-catch to handle cases where listener might not be added
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1838:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1843:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1848:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1853:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1858:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1863:    // Defensive: Wrap in try-catch to handle edge cases
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1866:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1873:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1878:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1883:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1909:    } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1932:    } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1988:                      } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1999:                      } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:2003:                  } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:2009:          } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:2595:            } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:2610:        } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:2720:        } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:2837:                      } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:2845:                } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:3527:    // This catches expired verifications (e.g., user verified 31+ minutes ago)
+lib/features/widget/presentation/screens/booking_widget_screen.dart:3645:          // Fee anomaly detection: catch NaN, negative, or unreasonably large
+lib/features/widget/presentation/screens/booking_widget_screen.dart:3755:    } catch (e, stackTrace) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:3806:      } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:3891:    } on BookingConflictException catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:3909:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4060:      } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4212:              } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4242:            } catch (_) {}
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4324:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4499:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4557:  /// This is the FINAL check before booking submission to catch
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4635:    } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4716:      } catch (e) {
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4746:    } catch (e) {
+lib/features/widget/presentation/screens/booking_confirmation_screen.dart:150:      } catch (e) {
+lib/features/widget/presentation/screens/booking_confirmation_screen.dart:171:            } catch (_) {}
+lib/features/widget/presentation/screens/booking_confirmation_screen.dart:173:        } catch (fallbackError) {
+lib/features/widget/presentation/screens/booking_confirmation_screen.dart:192:          } catch (_) {}
+lib/features/widget/presentation/screens/booking_confirmation_screen.dart:194:      } catch (e) {
+lib/features/widget/presentation/screens/booking_confirmation_screen.dart:219:        } catch (e) {
+lib/features/widget/presentation/screens/booking_view_screen.dart:25:  } catch (e) {
+lib/features/widget/presentation/screens/booking_view_screen.dart:203:          } catch (navError) {
+lib/features/widget/presentation/screens/booking_view_screen.dart:214:        } catch (e) {
+lib/features/widget/presentation/screens/booking_view_screen.dart:247:          } catch (navError) {
+lib/features/widget/presentation/screens/booking_view_screen.dart:260:    } catch (e) {
+lib/features/widget/presentation/screens/booking_view_screen.dart:353:                        } catch (e) {
+lib/features/widget/presentation/screens/booking_details_screen.dart:63:    } catch (e) {
+lib/features/widget/presentation/screens/booking_details_screen.dart:102:    } catch (e) {
+lib/features/widget/presentation/screens/booking_details_screen.dart:213:    } catch (e) {
+lib/features/widget/presentation/theme/dynamic_theme_service.dart:158:    } catch (e) {
+lib/features/widget/presentation/widgets/booking/compact_pill_summary.dart:200:    } catch (e) {
+lib/features/widget/presentation/widgets/common/copyable_text_field.dart:150:              } catch (e) {
+lib/features/widget/presentation/widgets/popup_blocked_dialog.dart:183:    } catch (e) {
+lib/features/widget/presentation/widgets/bank_transfer/bank_details_section.dart:164:    } catch (e) {
+lib/features/widget/presentation/widgets/details/booking_dates_card.dart:62:    } catch (e) {
+lib/features/widget/presentation/widgets/details/details_reference_card.dart:44:    } catch (e) {
+lib/features/widget/presentation/widgets/details/bank_transfer_details_card.dart:244:    } catch (e) {
+lib/features/widget/presentation/widgets/details/payment_info_card.dart:246:    } catch (e) {
+lib/features/widget/presentation/widgets/confirmation/email_confirmation_card.dart:98:    } on FirebaseFunctionsException catch (e) {
+lib/features/widget/presentation/widgets/confirmation/email_confirmation_card.dart:117:    } catch (e) {
+lib/features/widget/presentation/widgets/confirmation/calendar_export_button.dart:18:  } catch (e) {
+lib/features/widget/presentation/widgets/confirmation/calendar_export_button.dart:88:    } catch (e) {
+lib/features/widget/presentation/widgets/confirmation/booking_reference_card.dart:46:    } catch (e) {
+lib/features/widget/presentation/widgets/confirmation/bank_transfer_instructions_card.dart:193:    } catch (e) {
+lib/features/widget/presentation/widgets/pwa/pwa_install_button.dart:88:    } catch (e) {
+lib/features/widget/presentation/widgets/email_verification_dialog.dart:135:    } on FirebaseFunctionsException catch (e) {
+lib/features/widget/presentation/widgets/email_verification_dialog.dart:196:    } catch (e, stackTrace) {
+lib/features/widget/presentation/widgets/email_verification_dialog.dart:259:    } on FirebaseFunctionsException catch (e) {
+lib/features/widget/presentation/widgets/email_verification_dialog.dart:272:    } catch (e) {
+lib/features/widget/presentation/widgets/year_calendar_widget.dart:678:    } catch (e) {
+lib/features/widget/services/form_persistence_service.dart:150:    } catch (e) {
+lib/features/widget/services/form_persistence_service.dart:205:    } on FormatException catch (e) {
+lib/features/widget/services/form_persistence_service.dart:213:    } catch (e) {
+lib/features/widget/services/form_persistence_service.dart:234:    } catch (e) {
+lib/features/admin/data/admin_users_repository.dart:167:    } on FirebaseFunctionsException catch (e) {
+lib/features/admin/data/admin_users_repository.dart:174:    } catch (e, stackTrace) {
+lib/features/admin/data/admin_users_repository.dart:236:    } on FirebaseFunctionsException catch (e) {
+lib/features/admin/data/admin_users_repository.dart:243:    } catch (e, stackTrace) {
+lib/features/admin/data/admin_users_repository.dart:288:    } catch (e, st) {
+lib/features/admin/data/admin_users_repository.dart:310:    } catch (e) {
+lib/features/admin/presentation/screens/admin_login_screen.dart:76:    } catch (e) {
+lib/features/admin/presentation/screens/user_detail_screen.dart:336:    } catch (e) {
+lib/features/admin/presentation/screens/user_detail_screen.dart:374:    } catch (e) {
+lib/features/admin/presentation/screens/user_detail_screen.dart:403:    } catch (e) {
+lib/features/admin/presentation/screens/user_detail_screen.dart:432:    } catch (e) {
+lib/features/admin/presentation/screens/user_detail_screen.dart:582:                          } catch (_) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:246:        } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:331:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:448:        } catch (icalError) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:460:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:559:        } catch (_) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:570:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:658:        } catch (parseError) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:706:    // Wrapped in try-catch because permission-denied is thrown if booking
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:727:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:764:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:835:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:877:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:916:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:943:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:977:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:997:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1032:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1062:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1203:        } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1225:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1271:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1295:      } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1336:      } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1390:      } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1541:        } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1573:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1791:        } catch (_) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1835:        } catch (_) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:117:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:172:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:230:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:251:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:270:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:289:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:304:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:336:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:362:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_revenue_analytics_repository.dart:436:        } catch (_) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:47:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:63:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:118:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:141:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:222:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:258:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:304:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:327:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:363:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:391:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:429:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:461:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:492:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:525:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_ical_repository.dart:552:    } catch (e, stack) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:132:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:150:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:161:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:214:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:237:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:260:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:271:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:286:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:337:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_property_performance_repository.dart:363:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:63:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:96:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:120:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:159:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:215:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:271:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:309:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:333:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:347:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:369:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:392:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:519:      } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:528:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:592:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:625:    } catch (e) {
+lib/features/owner_dashboard/data/firebase/firestore_repository_mixin.dart:81:        } catch (_) {
+lib/features/owner_dashboard/presentation/providers/owner_calendar_provider.dart:263:        } catch (e) {
+lib/features/owner_dashboard/presentation/providers/owner_calendar_provider.dart:271:    } catch (e) {
+lib/features/owner_dashboard/presentation/providers/unified_dashboard_provider.dart:168:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/unified_dashboard_provider.dart:207:      } catch (e) {
+lib/features/owner_dashboard/presentation/providers/unified_dashboard_provider.dart:249:      } catch (e) {
+lib/features/owner_dashboard/presentation/providers/calendar_drag_drop_provider.dart:217:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/calendar_drag_drop_provider.dart:258:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/overbooking_detection_provider.dart:242:        } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/platform_connections_provider.dart:119:  } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/unified_bookings_provider.dart:45:  } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/ai_chat_provider.dart:38:  } catch (e) {
+lib/features/owner_dashboard/presentation/providers/ai_chat_provider.dart:289:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/ai_chat_provider.dart:452:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/ai_chat_provider.dart:469:      } catch (_) {
+lib/features/owner_dashboard/presentation/providers/ai_chat_provider.dart:536:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/owner_bookings_provider.dart:278:    } catch (e) {
+lib/features/owner_dashboard/presentation/providers/owner_bookings_provider.dart:328:    } catch (e) {
+lib/features/owner_dashboard/presentation/providers/owner_bookings_provider.dart:459:    } catch (e) {
+lib/features/owner_dashboard/presentation/providers/owner_bookings_provider.dart:524:    } catch (e) {
+lib/features/owner_dashboard/presentation/providers/owner_bookings_provider.dart:588:    } catch (e) {
+lib/features/owner_dashboard/presentation/providers/owner_bookings_provider.dart:665:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/providers/calendar_filters_provider.dart:203:    } catch (_) {
+lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart:222:    // Safely get localizations - use try-catch to prevent errors if context is not ready
+lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart:226:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart:503:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/owner_timeline_calendar_screen.dart:557:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart:1229:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/guides/embed_help_screen.dart:375:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/platform_connections_screen.dart:462:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/platform_connections_screen.dart:595:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/platform_connections_screen.dart:633:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart:1145:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart:1176:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart:1207:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart:1247:        } catch (e) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart:1889:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart:1984:    } catch (e, stack) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart:81:    } catch (e, stack) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart:131:    } catch (e, stack) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart:202:      } catch (_) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart:507:                                        } catch (e) {
+lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart:704:    } catch (e, stack) {
+lib/features/owner_dashboard/presentation/screens/unit_pricing_screen.dart:713:        } catch (scaffoldError) {
+lib/features/owner_dashboard/presentation/screens/unit_pricing_screen.dart:717:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:66:    } catch (_) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:213:    } catch (error) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:265:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:434:          } catch (_) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:524:                } catch (e) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:537:          } catch (e) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:919:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:1890:      } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:1943:      } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:1983:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/owner_bookings_screen.dart:2025:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/widget_advanced_settings_screen.dart:145:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/widget_settings_screen.dart:111:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/widget_settings_screen.dart:596:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart:912:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/unified_unit_hub_screen.dart:979:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/notification_settings_screen.dart:58:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/notification_settings_screen.dart:131:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/profile_screen.dart:504:                                  } catch (e) {
+lib/features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart:80:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart:147:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/stripe_connect_setup_screen.dart:241:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/property_form_screen.dart:156:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/property_form_screen.dart:219:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/property_form_screen.dart:1161:          } catch (e) {
+lib/features/owner_dashboard/presentation/screens/property_form_screen.dart:1247:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/edit_profile_screen.dart:285:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/notifications_screen.dart:95:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/notifications_screen.dart:137:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/change_password_screen.dart:96:      } on FirebaseFunctionsException catch (e) {
+lib/features/owner_dashboard/presentation/screens/change_password_screen.dart:136:      } catch (e) {
+lib/features/owner_dashboard/presentation/screens/change_password_screen.dart:159:    } on FirebaseAuthException catch (e) {
+lib/features/owner_dashboard/presentation/screens/change_password_screen.dart:182:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/unit_wizard/steps/step_2_capacity.dart:91:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/unit_wizard/steps/step_2_capacity.dart:126:      } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/unit_wizard/steps/step_2_capacity.dart:173:      } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/unit_wizard/steps/step_2_capacity.dart:229:      } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/screens/unit_wizard/state/unit_wizard_provider.dart:22:      } catch (_) {
+lib/features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart:101:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart:362:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/bank_account_screen.dart:134:    } catch (e) {
+lib/features/owner_dashboard/presentation/screens/unit_form_screen.dart:998:    } catch (e) {
+lib/features/owner_dashboard/presentation/mixins/calendar_common_methods_mixin.dart:46:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart:1235:                                      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart:1378:                                      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart:1396:                                    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart:1805:                                        } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart:2109:                                    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart:2263:                                    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart:2373:                                    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/price_list_calendar_widget.dart:2483:                                    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/booking_details_dialog_v2.dart:457:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/calendar/calendar_search_dialog.dart:114:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/calendar/booking_inline_edit_dialog.dart:756:        } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/calendar/booking_inline_edit_dialog.dart:769:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/calendar/multi_select_action_bar.dart:224:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/calendar/multi_select_action_bar.dart:311:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/calendar/booking_action_menu.dart:893:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/calendar/shared/calendar_booking_actions.dart:76:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/calendar/shared/calendar_booking_actions.dart:143:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/booking_create_dialog.dart:853:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/widgets/bookings/bookings_table_view.dart:631:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/bookings/bookings_table_view.dart:702:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/bookings/bookings_table_view.dart:756:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/bookings/bookings_table_view.dart:852:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/bookings/bookings_table_view.dart:923:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/bookings/bookings_table_view.dart:988:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/bookings/bookings_table_view.dart:1075:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/bookings/bookings_table_view.dart:1149:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/bookings/bookings_table_view.dart:1179:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/notification_settings_bottom_sheet.dart:77:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/widgets/notification_settings_bottom_sheet.dart:150:    } catch (e, stackTrace) {
+lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart:44:  } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart:222:        } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart:510:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart:819:        .catchError((error) {
+lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart:924:        .catchError((error) {
+lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart:1744:          } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart:1773:          } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/timeline_calendar_widget.dart:1803:          } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/booking_details_dialog.dart:665:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/edit_booking_dialog.dart:632:      } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/edit_booking_dialog.dart:772:        } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/edit_booking_dialog.dart:788:    } catch (e) {
+lib/features/owner_dashboard/presentation/widgets/send_email_dialog.dart:645:    } catch (e) {
+lib/main_prod.dart:21:  } catch (e) {
+lib/widget_main.dart:42:/// This wrapper catches that error and proceeds with initialization
+lib/widget_main.dart:49:    } catch (_) {
+lib/widget_main.dart:59:  } catch (e) {
+lib/widget_main.dart:92:      } catch (e) {
+lib/main.dart:55:  } catch (e) {
+lib/main.dart:224:    } catch (e, stack) {
+lib/main.dart:247:  } catch (e, stack) {
+lib/main.dart:382:      // on Safari when the SDK hasn't fully initialized. Wrap in nested try-catch.
+lib/main.dart:388:      } catch (appsCheckError) {
+lib/main.dart:409:    } catch (e) {
+lib/main.dart:426:    } catch (e) {
+lib/main.dart:449:    } catch (e, stack) {
+lib/main.dart:458:      // Re-throw to be caught by outer catch block
+lib/main.dart:481:  } catch (e, stack) {
+lib/main.dart:534:  } catch (e) {
+lib/main.dart:575:    } catch (e) {
+lib/owner_main_dev.dart:19:  } catch (e) {
+lib/core/config/router_widget.dart:46:      // IMPORTANT: Must be defined BEFORE /:slug catch-all route!
+lib/core/config/router_widget.dart:109:      // SLUG ROUTE - Clean URL for standalone pages (MUST BE LAST - catch-all)
+lib/core/providers/enhanced_auth_provider.dart:201:        } catch (parseError, stackTrace) {
+lib/core/providers/enhanced_auth_provider.dart:271:          } catch (fallbackError) {
+lib/core/providers/enhanced_auth_provider.dart:319:          fcmService.initialize().catchError((e) {
+lib/core/providers/enhanced_auth_provider.dart:348:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:399:        .catchError((e) {
+lib/core/providers/enhanced_auth_provider.dart:521:      fcmService.initialize().catchError((e) {
+lib/core/providers/enhanced_auth_provider.dart:553:        } on FirebaseFunctionsException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:559:            // Throw message string to be caught by outer try/catch
+lib/core/providers/enhanced_auth_provider.dart:582:      // If Cloud limit throws, this await will throw and be caught by outer try/catch
+lib/core/providers/enhanced_auth_provider.dart:613:      } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:659:          } catch (queryError) {
+lib/core/providers/enhanced_auth_provider.dart:711:        } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:722:        _rateLimit.resetAttempts(email).catchError((e) {
+lib/core/providers/enhanced_auth_provider.dart:739:        } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:747:        } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:761:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:769:      // Determine error message, with rate limit check wrapped in try-catch
+lib/core/providers/enhanced_auth_provider.dart:781:      } catch (rateLimitError) {
+lib/core/providers/enhanced_auth_provider.dart:793:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:846:        } on FirebaseFunctionsException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:903:        } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:961:        } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:978:      } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:999:      } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1021:        fcmService.initialize().catchError((e) {
+lib/core/providers/enhanced_auth_provider.dart:1028:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1056:        } catch (_) {
+lib/core/providers/enhanced_auth_provider.dart:1089:      } catch (rateLimitError) {
+lib/core/providers/enhanced_auth_provider.dart:1101:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1146:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1181:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1216:    } catch (e, stackTrace) {
+lib/core/providers/enhanced_auth_provider.dart:1233:        } catch (_) {
+lib/core/providers/enhanced_auth_provider.dart:1291:      } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1299:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1307:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1328:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1386:    } on FirebaseFunctionsException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1392:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1477:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1514:      } catch (_) {
+lib/core/providers/enhanced_auth_provider.dart:1521:    } on FirebaseFunctionsException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1530:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1557:    } on FirebaseFunctionsException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1563:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1569:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1650:      } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1661:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1686:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1829:      } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1840:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1874:    } on SignInWithAppleAuthorizationException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1891:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1959:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:1965:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:2028:    } on SignInWithAppleAuthorizationException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:2037:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:2043:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:2062:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:2141:    } catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:2204:    } on FirebaseAuthException catch (e) {
+lib/core/providers/enhanced_auth_provider.dart:2207:    } catch (e) {
+lib/core/providers/theme_provider.dart:50:    } catch (e) {
+lib/core/providers/theme_provider.dart:88:    } catch (e) {
+lib/core/providers/language_provider.dart:65:    } catch (e) {
+lib/core/providers/language_provider.dart:101:    } catch (e) {
+lib/core/providers/connectivity_provider.dart:24:    } catch (e) {
+lib/core/utils/date_time_parser.dart:38:    } catch (e) {
+lib/core/utils/date_time_parser.dart:71:    } catch (e) {
+lib/core/utils/date_time_parser.dart:87:    } catch (e) {
+lib/core/utils/date_time_parser.dart:131:      } catch (e) {
+lib/core/utils/web_utils_web.dart:67:  } catch (e) {
+lib/core/utils/web_utils_web.dart:85:  } catch (e) {
+lib/core/utils/web_utils_web.dart:147:  } catch (e) {
+lib/core/utils/web_utils_web.dart:166:  } catch (e) {
+lib/core/utils/web_utils_web.dart:191:  } catch (e) {
+lib/core/utils/web_utils_web.dart:204:  } catch (e) {
+lib/core/utils/web_utils_web.dart:218:  } catch (e) {
+lib/core/utils/web_utils_web.dart:233:  } catch (e) {
+lib/core/utils/web_utils_web.dart:273:  } catch (e) {
+lib/core/utils/web_utils_web.dart:284:  } catch (e) {
+lib/core/utils/web_utils_web.dart:298:  } catch (e) {
+lib/core/utils/web_utils_web.dart:314:  } catch (e) {
+lib/core/utils/web_utils_web.dart:337:  } catch (e) {
+lib/core/utils/web_utils_web.dart:365:    } catch (e) {
+lib/core/utils/web_utils_web.dart:392:  } catch (e) {
+lib/core/utils/web_utils_web.dart:427:  } catch (e) {
+lib/core/utils/web_utils_web.dart:458:  } catch (e) {
+lib/core/utils/web_utils_web.dart:470:  // FIX #16: Safe cast with try-catch - target can be Document, Window, etc.
+lib/core/utils/web_utils_web.dart:474:  } catch (e) {
+lib/core/utils/web_utils_web.dart:576:  } catch (e) {
+lib/core/utils/web_utils_web.dart:598:  } catch (e) {
+lib/core/utils/web_utils_web.dart:638:  } catch (e) {
+lib/core/utils/web_utils_web.dart:653:  } catch (e) {
+lib/core/utils/web_utils_web.dart:693:  } catch (e) {
+lib/core/utils/web_utils_web.dart:729:  } catch (e) {
+lib/core/utils/web_utils_web.dart:758:      // Multiple delayed resets to catch async layout updates
+lib/core/utils/web_utils_web.dart:790:  } catch (e) {
+lib/core/utils/web_utils_web.dart:809:  } catch (e) {
+lib/core/utils/web_utils_web.dart:834:  } catch (e) {
+lib/core/utils/web_utils_web.dart:852:    } catch (_) {
+lib/core/utils/web_utils_web.dart:857:  } catch (e) {
+lib/core/utils/web_utils_web.dart:876:  } catch (e) {
+lib/core/utils/web_utils_web.dart:902:  } catch (e) {
+lib/core/utils/error_display_utils.dart:272:      } catch (e) {
+lib/core/utils/error_display_utils.dart:281:    } catch (e) {
+lib/core/utils/safe_cast.dart:117:    } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_web.dart:23:  } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_web.dart:55:  } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_web.dart:72:  } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_web.dart:96:  } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_web.dart:133:  } catch (e) {
+lib/core/utils/timestamp_converter.dart:56:    } catch (_) {
+lib/core/utils/timestamp_converter.dart:104:    } catch (_) {
+lib/core/utils/browser_detection_web.dart:31:    } catch (e) {
+lib/core/utils/browser_detection_web.dart:63:    } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_mixin.dart:81:      } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_mixin.dart:233:    } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_mixin.dart:248:    // Schedule multiple rebuilds to catch async layout updates
+lib/core/utils/keyboard_dismiss_fix_mixin.dart:275:          } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_mixin.dart:306:      } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_mixin.dart:329:    } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_mixin.dart:341:    } catch (e) {
+lib/core/utils/keyboard_dismiss_fix_mixin.dart:356:      } catch (e) {
+lib/core/error_handling/error_boundary.dart:16:  } catch (e) {
+lib/core/error_handling/error_boundary.dart:360:    } catch (e) {
+lib/core/error_handling/error_boundary.dart:371:    } catch (e) {
+lib/core/error_handling/error_boundary.dart:386:    } catch (e) {
+lib/core/error_handling/error_boundary.dart:397:    } catch (e) {
+lib/core/exceptions/app_exceptions.dart:8:// } catch (e) {
+lib/core/errors/error_handler.dart:13:/// } catch (e, stackTrace) {
+lib/core/widgets/force_update_dialog.dart:113:    } catch (e, stackTrace) {
+lib/core/widgets/keyboard_aware_constrained_box.dart:143:      } catch (e) {
+lib/core/widgets/keyboard_aware_constrained_box.dart:167:    } catch (e) {
+lib/core/widgets/owner_splash_screen.dart:165:        .catchError((e) {
+lib/core/widgets/owner_splash_screen.dart:311:        .catchError((e) {
+lib/core/widgets/owner_splash_screen.dart:373:    } catch (e) {
+lib/core/widgets/optional_update_dialog.dart:143:    } catch (e, stackTrace) {
+lib/core/services/ip_geolocation_service.dart:87:      } catch (e) {
+lib/core/services/email_notification_service.dart:98:    } catch (e) {
+lib/core/services/email_notification_service.dart:160:    } catch (e) {
+lib/core/services/email_notification_service.dart:224:    } catch (e) {
+lib/core/services/version_check_service.dart:38:    } catch (e, stackTrace) {
+lib/core/services/version_check_service.dart:65:    } catch (e, stackTrace) {
+lib/core/services/version_check_service.dart:103:    } catch (e) {
+lib/core/services/security_events_service.dart:70:      } on FirebaseException catch (e) {
+lib/core/services/security_events_service.dart:98:    } catch (e) {
+lib/core/services/security_events_service.dart:129:    } catch (e) {
+lib/core/services/security_events_service.dart:197:    } catch (e) {
+lib/core/services/security_events_service.dart:258:    } catch (e) {
+lib/core/services/security_events_service.dart:290:    } catch (e) {
+lib/core/services/security_events_service.dart:304:    } catch (e) {
+lib/core/services/security_events_service.dart:321:    } catch (e) {
+lib/core/services/security_events_service.dart:370:    } catch (e) {
+lib/core/services/stripe_service.dart:82:    } on FirebaseFunctionsException catch (e) {
+lib/core/services/stripe_service.dart:117:    } catch (e) {
+lib/core/services/stripe_service.dart:144:    } on FirebaseFunctionsException catch (e) {
+lib/core/services/stripe_service.dart:188:    } on FirebaseFunctionsException catch (e) {
+lib/core/services/rate_limit_service.dart:131:    } catch (e) {
+lib/core/services/rate_limit_service.dart:192:    } catch (e) {
+lib/core/services/rate_limit_service.dart:207:    } catch (e) {
+lib/core/services/notification_service.dart:72:    } catch (e) {
+lib/core/services/notification_service.dart:119:    } catch (e) {
+lib/core/services/notification_service.dart:157:    } catch (e) {
+lib/core/services/notification_service.dart:188:    } catch (e) {
+lib/core/services/notification_service.dart:214:    } catch (e) {
+lib/core/services/notification_service.dart:263:    } catch (e) {
+lib/core/services/notification_service.dart:296:    } catch (e) {
+lib/core/services/tab_communication_service.dart:52:    } catch (e) {
+lib/core/services/storage_service.dart:108:    } catch (e) {
+lib/core/services/storage_service.dart:119:    } catch (e) {
+lib/core/services/storage_service.dart:152:    } catch (e) {
+lib/core/services/storage_service.dart:188:    } catch (e) {
+lib/core/services/tab_communication_service_web.dart:66:    } catch (e) {
+lib/core/services/tab_communication_service_web.dart:156:      } catch (e) {
+lib/core/services/tab_communication_service_web.dart:185:    } catch (e) {
+lib/core/services/ical_export_service.dart:102:    } catch (e, stackTrace) {
+lib/core/services/ical_export_service.dart:131:    } catch (e) {
+lib/core/services/ical_export_service.dart:157:    } catch (e) {
+lib/core/services/ical_export_service.dart:186:    } catch (e) {
+lib/core/services/ical_export_service.dart:210:    } catch (e) {
+lib/core/services/ical_export_service.dart:244:    } catch (e) {
+lib/core/services/ical_export_service.dart:297:    } catch (e) {
+lib/core/services/ical_export_service.dart:323:    } catch (e) {
+lib/core/services/deep_link_service.dart:67:    } catch (e) {
+lib/core/services/deep_link_service.dart:153:    } catch (e) {
+lib/core/services/currency_service.dart:75:    } catch (e) {
+lib/core/services/currency_service.dart:97:    } catch (e) {
+lib/core/services/booking_service.dart:303:    } on FirebaseFunctionsException catch (e) {
+lib/core/services/booking_service.dart:331:    } catch (e) {
+lib/core/services/booking_service.dart:373:    } catch (e) {
+lib/core/services/booking_service.dart:400:    } catch (e) {
+lib/core/services/booking_service.dart:429:    } catch (e) {
+lib/core/services/booking_service.dart:462:    } catch (e) {
+lib/core/services/fcm_service.dart:100:    } catch (e, stackTrace) {
+lib/core/services/fcm_service.dart:140:    } catch (e, stackTrace) {
+lib/core/services/fcm_service.dart:194:    } catch (e, stackTrace) {
+lib/core/services/fcm_service.dart:222:    } catch (e) {
+lib/core/services/analytics_service.dart:42:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:55:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:85:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:105:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:124:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:149:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:175:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:189:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:208:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:227:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:254:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:283:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:297:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:310:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:330:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:343:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:356:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:385:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:406:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:436:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:450:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:467:    } catch (e, stackTrace) {
+lib/core/services/analytics_service.dart:481:    } catch (e, stackTrace) {
+lib/core/services/logging_service.dart:235:    } catch (e) {
+lib/core/services/logging_service.dart:352:    } catch (e) {
+lib/shared/providers/widget_repository_providers.dart:188:  } catch (e) {
+lib/shared/models/property_branding_model.dart:46:    } catch (_) {
+lib/shared/widgets/delete_account_dialog.dart:88:    } catch (e) {
+lib/shared/widgets/delete_account_dialog.dart:115:    } catch (e) {
+lib/shared/widgets/delete_account_dialog.dart:156:    } catch (e) {
+lib/shared/widgets/smart_tooltip.dart:186:    } catch (e) {
+lib/shared/widgets/smart_tooltip.dart:196:    } catch (e) {
+lib/shared/repositories/user_profile_repository.dart:60:    } catch (e) {
+lib/shared/repositories/user_profile_repository.dart:124:    } catch (e) {
+lib/shared/repositories/user_profile_repository.dart:182:    } catch (e) {
+lib/shared/repositories/firebase/firebase_unit_repository.dart:324:    } on FirebaseException catch (e) {

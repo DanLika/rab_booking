@@ -88,7 +88,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
     if (!checkRateLimit(`widget_booking:${clientIp}`, 10, 600)) { // 10 bookings per 10 minutes
       // Log security event (fire-and-forget)
       const ipHash = Buffer.from(clientIp).toString("base64").substring(0, 16);
-      logRateLimitExceeded(ipHash, "widget_booking").catch(() => {});
+      logRateLimitExceeded(ipHash, "widget_booking").catch((e) => logError("Failed to log rate limit", e));
 
       throw new HttpsError(
         "resource-exhausted",

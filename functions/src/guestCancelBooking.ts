@@ -80,7 +80,7 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
   // Sufficient for abuse prevention - no Firestore cost
   const ipHash = Buffer.from(clientIp).toString("base64").substring(0, 16);
   if (!checkRateLimit(`guest_cancel:${clientIp}`, 10, 60)) { // 10 attempts per minute
-    logRateLimitExceeded(ipHash, "guest_cancel").catch(() => {});
+    logRateLimitExceeded(ipHash, "guest_cancel").catch((e) => logError("Failed to log rate limit", e));
 
     throw new HttpsError(
       "resource-exhausted",
@@ -247,7 +247,7 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
 
       if (paymentStatus === "paid" && paidAmount > 0) {
         // User has paid - eligible for refund
-        // TODO: Add cancellation policy logic (full_refund/50_percent/no_refund)
+        // TODO[2024-03-24]: Add cancellation policy logic (full_refund/50_percent/no_refund)
         refundAmount = paidAmount; // Full refund for now
         refundStatus = paymentMethod === "stripe" ?
           "pending_stripe" :

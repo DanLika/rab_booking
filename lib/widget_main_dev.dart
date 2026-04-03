@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/router_widget.dart';
+import 'core/services/logging_service.dart';
 import 'core/utils/web_utils.dart'; // For hideNativeSplash
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
@@ -26,15 +27,21 @@ Future<void> _initializeFirebaseSafelyDev() async {
     bool needsInit = true;
     try {
       needsInit = Firebase.apps.isEmpty;
-    } catch (_) {
+    } catch (e, stackTrace) {
+      LoggingService.logError(
+        'Initialization error checking apps',
+        e,
+        stackTrace,
+      );
       needsInit = true;
     }
 
     if (needsInit) {
       await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
     }
-  } catch (e) {
+  } catch (e, stackTrace) {
     if (!e.toString().contains('duplicate-app')) {
+      LoggingService.logError('Initialization error', e, stackTrace);
       rethrow;
     }
   }

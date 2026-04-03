@@ -120,7 +120,7 @@ export function verifyAccessToken(
   if (clientIp && !checkRateLimit(`token_verify:${clientIp}`, 10, 60)) {
     logWarn("[Security] Token verification rate limit exceeded");
     // Log security event (fire-and-forget)
-    logRateLimitExceeded(clientIp, "token_verify").catch(() => {});
+    logRateLimitExceeded(clientIp, "token_verify").catch((e) => logError("Failed to log rate limit", e));
     return false;
   }
 

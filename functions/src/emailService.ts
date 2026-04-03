@@ -22,7 +22,7 @@
  *
  * ALL EMAIL FUNCTIONS FULLY MIGRATED! 🎉
  *
- * TODO: Suspicious Activity Email (deferred for future implementation)
+ * TODO: [2024-05-18] Suspicious Activity Email (deferred for future implementation)
  */
 
 import {Resend} from "resend";
@@ -972,7 +972,7 @@ export async function sendCheckOutReminderEmail(
 // ADDITIONAL EMAIL FUNCTIONS
 // ==========================================
 
-// NOTE: sendSuspiciousActivityEmail has been removed (TODO for future implementation)
+// NOTE: sendSuspiciousActivityEmail has been removed (TODO: [2024-05-18] for future implementation)
 
 /**
  * Bank details for bank transfer payments

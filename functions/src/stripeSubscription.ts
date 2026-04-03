@@ -41,7 +41,7 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
   }
 
   // PLACEHOLDER PRICE VALIDATION
-  // TODO: Replace with actual Stripe Price IDs from config/env
+  // TODO(2025-05-01): Replace with actual Stripe Price IDs from config/env when moving to production pricing
   // For now, we accept any string but in production we should whitelist allowed Price IDs
   // const ALLOWED_PRICES = ["price_monthly_pro", "price_yearly_pro"];
   // if (!ALLOWED_PRICES.includes(priceId)) { ... }

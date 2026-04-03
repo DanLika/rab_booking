@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'logging_service.dart';
 

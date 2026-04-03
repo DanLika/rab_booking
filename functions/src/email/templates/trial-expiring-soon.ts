@@ -8,7 +8,7 @@
 export const getTrialExpiringSoonTemplate = (userName: string, daysRemaining: number) => {
   const subject = `Vaš BookBed probni period ističe za ${daysRemaining} dan${daysRemaining > 1 ? "a" : ""}`;
 
-  // TODO: Create a visually appealing HTML template
+  // TODO[2026-04-03]: Create a visually appealing HTML email template for trial expiration warning.
   const html = `
     <p>Poštovani ${userName},</p>
     <p>

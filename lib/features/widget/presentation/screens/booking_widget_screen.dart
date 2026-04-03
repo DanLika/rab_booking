@@ -438,7 +438,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      unawaited(LoggingService.logError('Ignored error', e));
+    }
     // #endregion
 
     try {
@@ -478,7 +480,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_${logData['hypothesisId']}',
         );
-      } catch (_) {}
+      } catch (e) {
+        unawaited(LoggingService.logError('Ignored error', e));
+      }
       // #endregion
 
       // If in iframe, also listen for postMessage from popup windows
@@ -545,7 +549,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                 tag: 'DEBUG_${logData['hypothesisId']}',
               );
-            } catch (_) {}
+            } catch (e) {
+              unawaited(LoggingService.logError('Ignored error', e));
+            }
             // #endregion
 
             if (sessionId != null && status == 'success') {
@@ -577,7 +583,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e) {
+                  unawaited(LoggingService.logError('Ignored error', e));
+                }
                 // #endregion
 
                 _paymentCompletionTimeout!.cancel();
@@ -601,7 +609,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e) {
+                  unawaited(LoggingService.logError('Ignored error', e));
+                }
                 // #endregion
 
                 LoggingService.log(
@@ -634,7 +644,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e) {
+                  unawaited(LoggingService.logError('Ignored error', e));
+                }
                 // #endregion
 
                 // Reset processing state FIRST (before any async operations)
@@ -662,7 +674,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                     '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                     tag: 'DEBUG_${logData['hypothesisId']}',
                   );
-                } catch (_) {}
+                } catch (e) {
+                  unawaited(LoggingService.logError('Ignored error', e));
+                }
                 // #endregion
 
                 LoggingService.log(
@@ -915,7 +929,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      unawaited(LoggingService.logError('Ignored error', e));
+    }
     // #endregion
 
     final bookingId = message.bookingId;
@@ -1159,7 +1175,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_${logData['hypothesisId']}',
         );
-      } catch (_) {}
+      } catch (e) {
+        unawaited(LoggingService.logError('Ignored error', e));
+      }
     }
     // #endregion
 
@@ -1191,7 +1209,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_${logData['hypothesisId']}',
         );
-      } catch (_) {}
+      } catch (e) {
+        unawaited(LoggingService.logError('Ignored error', e));
+      }
       // #endregion
       if (!mounted) {
         LoggingService.log(
@@ -1228,7 +1248,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
             tag: 'DEBUG_${logData['hypothesisId']}',
           );
-        } catch (_) {}
+        } catch (e) {
+          unawaited(LoggingService.logError('Ignored error', e));
+        }
         // #endregion
 
         if (mounted) {
@@ -1259,7 +1281,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
             tag: 'DEBUG_${logData['hypothesisId']}',
           );
-        } catch (_) {}
+        } catch (e) {
+          unawaited(LoggingService.logError('Ignored error', e));
+        }
         // #endregion
 
         LoggingService.log(
@@ -1288,7 +1312,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      unawaited(LoggingService.logError('Ignored error', e));
+    }
     // #endregion
   }
 
@@ -1906,7 +1932,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      unawaited(LoggingService.logError('Ignored error', e));
+    }
     // #endregion
 
     _paymentCompletionTimeout?.cancel();
@@ -1929,7 +1957,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
         tag: 'DEBUG_${logData['hypothesisId']}',
       );
-    } catch (_) {}
+    } catch (e) {
+      unawaited(LoggingService.logError('Ignored error', e));
+    }
     // #endregion
 
     super.dispose();
@@ -3803,7 +3833,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
           tag: 'DEBUG_PRICE',
         );
-      } catch (_) {}
+      } catch (e) {
+        unawaited(LoggingService.logError('Ignored error', e));
+      }
       // #endregion
 
       // Breadcrumb: fee breakdown at submission time
@@ -4209,7 +4241,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                   tag: 'DEBUG_${logData['hypothesisId']}',
                 );
-              } catch (_) {}
+              } catch (e) {
+                unawaited(LoggingService.logError('Ignored error', e));
+              }
               // #endregion
 
               _startPaymentCompletionTimeout();
@@ -4239,7 +4273,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
                 tag: 'DEBUG_${logData['hypothesisId']}',
               );
-            } catch (_) {}
+            } catch (e) {
+              unawaited(LoggingService.logError('Ignored error', e));
+            }
             // #endregion
             // Iframe + mobile: redirect top-level window (not iframe)
             // NOTE: In redirect scenario, we reset _isProcessing immediately because

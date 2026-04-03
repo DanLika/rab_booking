@@ -7,7 +7,7 @@
 export const getTrialExpiredTemplate = (userName: string) => {
   const subject = "Vaš BookBed probni period je istekao";
 
-  // TODO: Create a visually appealing HTML template
+  // TODO[2026-04-03]: Create a visually appealing HTML email template for trial expired notification.
   const html = `
     <p>Poštovani ${userName},</p>
     <p>

@@ -30,7 +30,7 @@ import {setUser} from "./sentry";
 const BOOKING_COM_CLIENT_ID = process.env.BOOKING_COM_CLIENT_ID || "";
 const BOOKING_COM_CLIENT_SECRET = process.env.BOOKING_COM_CLIENT_SECRET || "";
 const BOOKING_COM_REDIRECT_URI = process.env.BOOKING_COM_REDIRECT_URI || "";
-// TODO: Update with actual API base URL after getting API access
+// TODO: [2026-04-10] Update with actual API base URL after getting API access
 // Placeholder - replace with actual Booking.com API endpoint
 const BOOKING_COM_API_BASE_URL = "https://distribution-xml.booking.com/2.3/json";
 
@@ -61,7 +61,7 @@ function getEncryptionKey(): string {
 export function encryptToken(token: string): string {
   // In production, use proper encryption (e.g., Google Cloud KMS)
   // For now, we'll use a simple base64 encoding (NOT secure for production)
-  // TODO: Implement proper encryption with KMS
+  // TODO: [2026-04-10] Implement proper encryption with KMS
   const encryptionKey = getEncryptionKey();
   // Generate a consistent IV from the key (not secure, but matches deprecated createCipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
@@ -77,7 +77,7 @@ export function encryptToken(token: string): string {
  */
 export function decryptToken(encryptedToken: string): string {
   // In production, use proper decryption (e.g., Google Cloud KMS)
-  // TODO: Implement proper decryption with KMS
+  // TODO: [2026-04-10] Implement proper decryption with KMS
   const encryptionKey = getEncryptionKey();
   // Generate a consistent IV from the key (not secure, but matches deprecated createDecipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
@@ -133,7 +133,7 @@ export const initiateBookingComOAuth = onCall(async (request) => {
       ),
     });
 
-    // TODO: Update with actual OAuth authorization URL after getting API access
+    // TODO: [2026-04-10] Update with actual OAuth authorization URL after getting API access
     // Placeholder - replace with actual Booking.com OAuth endpoint
     const authUrl = new URL("https://secure.booking.com/oauth/authorize");
     authUrl.searchParams.set("client_id", BOOKING_COM_CLIENT_ID);

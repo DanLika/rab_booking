@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -168,7 +169,11 @@ class _BookingConfirmationScreenState
           Future.delayed(const Duration(seconds: 2), () {
             try {
               tabService.dispose();
-            } catch (_) {}
+            } catch (e, st) {
+              unawaited(
+                LoggingService.logError('Caught unhandled exception', e, st),
+              );
+            }
           });
         } catch (fallbackError) {
           LoggingService.log(
@@ -189,7 +194,11 @@ class _BookingConfirmationScreenState
         Future.delayed(const Duration(seconds: 2), () {
           try {
             tabService.dispose();
-          } catch (_) {}
+          } catch (e, st) {
+            unawaited(
+              LoggingService.logError('Caught unhandled exception', e, st),
+            );
+          }
         });
       } catch (e) {
         LoggingService.log(

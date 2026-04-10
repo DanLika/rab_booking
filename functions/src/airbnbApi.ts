@@ -31,7 +31,7 @@ import {setUser} from "./sentry";
 const AIRBNB_CLIENT_ID = process.env.AIRBNB_CLIENT_ID || "";
 const AIRBNB_CLIENT_SECRET = process.env.AIRBNB_CLIENT_SECRET || "";
 const AIRBNB_REDIRECT_URI = process.env.AIRBNB_REDIRECT_URI || "";
-// TODO: Update with actual API base URL after getting API access
+// TODO: [2026-04-10] Update with actual API base URL after getting API access
 // Placeholder - replace with actual Airbnb API endpoint
 const AIRBNB_API_BASE_URL = "https://api.airbnb.com/v2";
 
@@ -78,7 +78,7 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
       ),
     });
 
-    // TODO: Update with actual OAuth authorization URL after getting API access
+    // TODO: [2026-04-10] Update with actual OAuth authorization URL after getting API access
     // Standard Airbnb OAuth endpoint (access restricted)
     const authUrl = new URL("https://www.airbnb.com/oauth2/auth");
     authUrl.searchParams.set("client_id", AIRBNB_CLIENT_ID);
@@ -138,7 +138,7 @@ export const handleAirbnbOAuthCallback = onRequest(
         return;
       }
 
-      // TODO: Update with actual OAuth token URL after getting API access
+      // TODO: [2026-04-10] Update with actual OAuth token URL after getting API access
       // Placeholder - replace with actual Airbnb OAuth token endpoint
       const tokenResponse = await fetch("https://www.airbnb.com/oauth2/token", {
         method: "POST",

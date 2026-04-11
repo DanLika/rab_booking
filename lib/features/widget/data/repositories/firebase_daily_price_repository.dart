@@ -26,17 +26,24 @@ class FirebaseDailyPriceRepository implements DailyPriceRepository {
       DateTime.utc(date.year, date.month, date.day, 23, 59, 59);
 
   /// Validate and check if document data has required fields
+  /// `unit_id` can be recovered from document path, so only `date` is required
   bool _isValidPriceDocument(Map<String, dynamic> data) =>
-      data['date'] != null &&
-      data['date'] is Timestamp &&
-      data['unit_id'] != null;
+      data['date'] != null && data['date'] is Timestamp;
 
   /// Parse Firestore document to DailyPriceModel (returns null on error)
+  ///
+  /// Injects `id` from `doc.id` and recovers `unit_id` from the document
+  /// path if the stored field is missing or null. Path structure:
+  /// `properties/{propertyId}/units/{unitId}/daily_prices/{dateStr}`
   DailyPriceModel? _parseDocument(QueryDocumentSnapshot doc) {
     try {
+      final data = doc.data() as Map<String, dynamic>;
+      final unitIdFromPath = doc.reference.parent.parent?.id;
       return DailyPriceModel.fromJson({
-        ...doc.data() as Map<String, dynamic>,
+        ...data,
         'id': doc.id,
+        if (data['unit_id'] == null && unitIdFromPath != null)
+          'unit_id': unitIdFromPath,
       });
     } catch (e, stackTrace) {
       // Log full document path for debugging problematic documents

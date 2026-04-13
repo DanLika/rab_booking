@@ -47,48 +47,46 @@ class TimelineBookingStacker {
       ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
 
     // Track active bookings at each stack level (normalized to midnight)
+    // We start active bookings at stack level 1 so that level 0 is reserved for inactive bookings.
     final List<DateTime?> stackEndDates = [];
 
-    // Assign stack levels to active bookings
+    // Assign stack level 0 to inactive bookings (they don't affect stacking)
+    // This ensures cancelled bookings are drawn first at the base z-index.
+    for (final booking in inactiveBookings) {
+      stackLevels[booking.id] = 0;
+    }
+
+    // Assign stack levels to active bookings (starting from level 1)
     for (final booking in sorted) {
       // Normalize check-in to midnight for comparison
       final normalizedCheckIn = _normalizeDate(booking.checkIn);
 
-      // Find the first available stack level
-      int assignedLevel = stackEndDates.length; // Default: new level
+      // Find the first available stack level, starting from index 0
+      int assignedLevelIndex = stackEndDates.length; // Default: new level
 
-      for (int level = 0; level < stackEndDates.length; level++) {
-        final endDate = stackEndDates[level];
+      for (int i = 0; i < stackEndDates.length; i++) {
+        final endDate = stackEndDates[i];
 
         // Check if this level is free (previous booking ended before this one starts)
-        // IMPORTANT: Same-day turnover is allowed (checkout = checkin on same day)
-        // Using !isBefore means: checkIn >= endDate (same day or later is OK)
-        // Dates are already normalized to midnight, so time components don't affect this
         if (endDate == null || !normalizedCheckIn.isBefore(endDate)) {
-          assignedLevel = level;
+          assignedLevelIndex = i;
           break;
         }
       }
 
       // Create new level if needed
-      // Store normalized checkout date for consistent comparison
       final normalizedCheckOut = _normalizeDate(booking.checkOut);
-      if (assignedLevel >= stackEndDates.length) {
+      if (assignedLevelIndex >= stackEndDates.length) {
         stackEndDates.add(normalizedCheckOut);
       } else {
-        // FIXED: Only update if this booking ends later than current end date
-        final currentEnd = stackEndDates[assignedLevel];
+        final currentEnd = stackEndDates[assignedLevelIndex];
         if (currentEnd == null || normalizedCheckOut.isAfter(currentEnd)) {
-          stackEndDates[assignedLevel] = normalizedCheckOut;
+          stackEndDates[assignedLevelIndex] = normalizedCheckOut;
         }
       }
 
-      stackLevels[booking.id] = assignedLevel;
-    }
-
-    // Assign stack level 0 to inactive bookings (they don't affect stacking)
-    for (final booking in inactiveBookings) {
-      stackLevels[booking.id] = 0;
+      // Active bookings are placed on top of inactive bookings
+      stackLevels[booking.id] = assignedLevelIndex + 1;
     }
 
     return stackLevels;

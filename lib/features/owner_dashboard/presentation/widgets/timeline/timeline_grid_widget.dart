@@ -258,7 +258,16 @@ class _TimelineUnitRow extends StatelessWidget {
         ? DateTime.utc(dates.last.year, dates.last.month, dates.last.day)
         : null;
 
-    for (final booking in bookings) {
+    final sortedBookings = List<BookingModel>.from(bookings)
+      ..sort((a, b) {
+        final aInactive = a.status == BookingStatus.cancelled || a.status == BookingStatus.completed;
+        final bInactive = b.status == BookingStatus.cancelled || b.status == BookingStatus.completed;
+        if (aInactive && !bInactive) return -1;
+        if (!aInactive && bInactive) return 1;
+        return 0;
+      });
+
+    for (final booking in sortedBookings) {
       // Normalize check-in/check-out dates to midnight UTC for accurate comparison
       // DST FIX: Use UTC to match fixedStartDate (also UTC) and avoid off-by-one
       // errors when Duration.inDays miscalculates due to DST timezone changes

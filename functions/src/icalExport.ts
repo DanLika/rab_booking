@@ -92,7 +92,7 @@ function setCacheHeaders(
 export const getUnitIcalFeed = onRequest(async (request, response) => {
   // Set CORS headers
   response.set("Access-Control-Allow-Origin", "*");
-  response.set("Access-Control-Allow-Methods", "GET");
+  response.set("Access-Control-Allow-Methods", "GET, HEAD");
 
   // SECURITY: IP-based rate limiting to prevent DoS (60 requests per hour per IP)
   const clientIp = getClientIp(request);
@@ -295,12 +295,76 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       id: doc.id,
     }));
 
+    // 7f. Calculate min-stay gap blocks
+    const unitMinStayNights = unitData?.min_stay_nights ?? 1;
+    if (unitMinStayNights > 1) {
+      // Collect all blocked date intervals
+      const blockedIntervals: {start: Date, end: Date}[] = [];
+
+      bookings.forEach((b: any) => {
+        if (b.check_in && b.check_out) {
+          blockedIntervals.push({
+            start: truncateTime(b.check_in.toDate()),
+            end: truncateTime(b.check_out.toDate())
+          });
+        }
+      });
+
+      icalEvents.forEach((e: any) => {
+        if (e.start_date && e.end_date) {
+          blockedIntervals.push({
+            start: truncateTime(e.start_date.toDate()),
+            end: truncateTime(e.end_date.toDate())
+          });
+        }
+      });
+
+      blockedRanges.forEach(r => {
+        const endDateExclusive = new Date(r.endDate);
+        endDateExclusive.setUTCDate(endDateExclusive.getUTCDate() + 1);
+        blockedIntervals.push({
+          start: truncateTime(r.startDate),
+          end: truncateTime(endDateExclusive)
+        });
+      });
+
+      // Sort intervals by start date
+      blockedIntervals.sort((a, b) => a.start.getTime() - b.start.getTime());
+
+      // Merge overlapping/adjacent intervals
+      const mergedIntervals: {start: Date, end: Date}[] = [];
+      if (blockedIntervals.length > 0) {
+        let current = blockedIntervals[0];
+        for (let i = 1; i < blockedIntervals.length; i++) {
+          const next = blockedIntervals[i];
+          if (next.start <= current.end) {
+            if (next.end > current.end) current.end = next.end;
+          } else {
+            mergedIntervals.push(current);
+            current = next;
+          }
+        }
+        mergedIntervals.push(current);
+      }
+
+      // Find gaps between merged intervals
+      for (let i = 0; i < mergedIntervals.length - 1; i++) {
+        const gapStart = mergedIntervals[i].end;
+        const gapEnd = mergedIntervals[i+1].start;
+        const gapDays = Math.round((gapEnd.getTime() - gapStart.getTime()) / (1000 * 60 * 60 * 24));
+        if (gapDays > 0 && gapDays < unitMinStayNights) {
+          const inclusiveEnd = new Date(gapEnd);
+          inclusiveEnd.setUTCDate(inclusiveEnd.getUTCDate() - 1);
+          blockedRanges.push({
+            startDate: gapStart,
+            endDate: inclusiveEnd
+          });
+        }
+      }
+    }
+
     // 8. Generate iCal content (bookings + imported events + blocked days)
-    // NOTE: Min-stay gap blocks intentionally NOT exported (industry standard).
-    // No channel manager (Guesty, Lodgify, Beds24, Hostaway) exports gap blocks.
-    // Min-stay enforcement is left to each OTA's own rules engine.
-    // Exporting gap blocks caused aggregators (Adriagate) to merge adjacent
-    // reservations + gaps into single VEVENTs, defeating echo detection.
+    // NOTE: Min-stay gap blocks are now calculated and exported per user request.
     const icalContent = generateIcalCalendar(
       unitName,
       bookings,

@@ -69,20 +69,20 @@ final aiChatsProvider = StreamProvider<List<AiChat>>((ref) {
 
 final _aiModelProvider = FutureProvider<GenerativeModel>((ref) async {
   // ignore: avoid_print
-  print('[AiChat] Loading KB from assets...');
+  LoggingService.logDebug('[AiChat] Loading KB from assets...');
   final kb = await rootBundle.loadString('assets/kb/bookbed_knowledge_base.md');
   // ignore: avoid_print
-  print('[AiChat] KB loaded: ${kb.length} chars');
+  LoggingService.logDebug('[AiChat] KB loaded: ${kb.length} chars');
 
   final ai = FirebaseAI.googleAI();
   // ignore: avoid_print
-  print('[AiChat] Creating generative model...');
+  LoggingService.logDebug('[AiChat] Creating generative model...');
   final model = ai.generativeModel(
     model: 'gemini-2.5-flash-lite',
     systemInstruction: Content.system(kb),
   );
   // ignore: avoid_print
-  print('[AiChat] Model created successfully');
+  LoggingService.logDebug('[AiChat] Model created successfully');
   return model;
 });
 
@@ -264,7 +264,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
   /// Create a new chat
   Future<void> createNewChat() async {
     // ignore: avoid_print
-    print('[AiChat] createNewChat called');
+    LoggingService.logDebug('[AiChat] createNewChat called');
     _chatSession = null;
     state = state.copyWith(
       clearChat: true,
@@ -273,7 +273,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       streamingText: '',
     );
     // ignore: avoid_print
-    print('[AiChat] State updated: currentChat=${state.currentChat?.id}');
+    LoggingService.logDebug('[AiChat] State updated: currentChat=${state.currentChat?.id}');
   }
 
   /// Load an existing chat
@@ -299,13 +299,13 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
   /// Send a message
   Future<void> sendMessage(String text) async {
     // ignore: avoid_print
-    print(
+    LoggingService.logDebug(
       '[AiChat] sendMessage called: "${text.substring(0, text.length > 30 ? 30 : text.length)}"',
     );
     final userId = _userId;
     if (userId == null) {
       // ignore: avoid_print
-      print('[AiChat] ERROR: userId is null!');
+      LoggingService.logDebug('[AiChat] ERROR: userId is null!');
       return;
     }
     if (text.trim().isEmpty) return;
@@ -362,11 +362,11 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
     // 2. Check blocked keywords
     // ignore: avoid_print
-    print('[AiChat] Step 2: Checking blocked keywords...');
+    LoggingService.logDebug('[AiChat] Step 2: Checking blocked keywords...');
     final blockedResponse = _checkBlockedKeywords(text);
     if (blockedResponse != null) {
       // ignore: avoid_print
-      print('[AiChat] BLOCKED keyword detected');
+      LoggingService.logDebug('[AiChat] BLOCKED keyword detected');
       await _handleCannedResponse(
         userId: userId,
         response: blockedResponse,
@@ -379,10 +379,10 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
     // 3. Call Gemini
     try {
       // ignore: avoid_print
-      print('[AiChat] Step 3: Loading Gemini model...');
+      LoggingService.logDebug('[AiChat] Step 3: Loading Gemini model...');
       final model = await _ref.read(_aiModelProvider.future);
       // ignore: avoid_print
-      print('[AiChat] Step 3b: Model loaded OK');
+      LoggingService.logDebug('[AiChat] Step 3b: Model loaded OK');
 
       // Create or reuse chat session
       if (_chatSession == null) {
@@ -401,7 +401,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
       // Stream response
       // ignore: avoid_print
-      print('[AiChat] Step 3c: Sending to Gemini...');
+      LoggingService.logDebug('[AiChat] Step 3c: Sending to Gemini...');
       final responseStream = _chatSession!.sendMessageStream(
         Content.text(text.trim()),
       );
@@ -451,7 +451,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       _ref.invalidate(aiChatsProvider);
     } catch (e, stackTrace) {
       // ignore: avoid_print
-      print('[AiChat] ERROR: $e');
+      LoggingService.logDebug('[AiChat] ERROR: $e');
       await LoggingService.logError('AiChat: Gemini error', e, stackTrace);
 
       // Still save the user message even if AI fails

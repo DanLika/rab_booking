@@ -247,7 +247,7 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
 
       if (paymentStatus === "paid" && paidAmount > 0) {
         // User has paid - eligible for refund
-        // TODO: Add cancellation policy logic (full_refund/50_percent/no_refund)
+        // TODO: [2026-04-24] Add cancellation policy logic (full_refund/50_percent/no_refund)
         refundAmount = paidAmount; // Full refund for now
         refundStatus = paymentMethod === "stripe" ?
           "pending_stripe" :

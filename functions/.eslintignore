@@ -1,3 +1,6 @@
 lib/**/*
 node_modules/**/*
 add_test_prices.js
+
+test/**/*
+test-emails-server.ts

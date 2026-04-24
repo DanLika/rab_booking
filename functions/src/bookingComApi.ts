@@ -30,9 +30,7 @@ import {setUser} from "./sentry";
 const BOOKING_COM_CLIENT_ID = process.env.BOOKING_COM_CLIENT_ID || "";
 const BOOKING_COM_CLIENT_SECRET = process.env.BOOKING_COM_CLIENT_SECRET || "";
 const BOOKING_COM_REDIRECT_URI = process.env.BOOKING_COM_REDIRECT_URI || "";
-// TODO: Update with actual API base URL after getting API access
-// Placeholder - replace with actual Booking.com API endpoint
-const BOOKING_COM_API_BASE_URL = "https://distribution-xml.booking.com/2.3/json";
+const BOOKING_COM_API_BASE_URL = process.env.BOOKING_COM_API_BASE_URL || "https://supply-xml.booking.com";
 
 /**
  * Get encryption key with validation (fail-fast approach)

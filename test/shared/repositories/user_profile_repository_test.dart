@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:bookbed/shared/repositories/user_profile_repository.dart';
 import 'package:bookbed/shared/models/user_profile_model.dart';
 import 'package:bookbed/shared/models/notification_preferences_model.dart';

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/shared/repositories/firebase/firebase_unit_repository.dart';
@@ -13,7 +12,7 @@ void main() {
     const testPropertyId = 'prop_123';
     const testUnitId = 'unit_123';
 
-    UnitModel createTestUnit({String id = testUnitId, String propertyId = testPropertyId, bool isAvailable = true}) {
+    UnitModel createTestUnit({String id = testUnitId, String propertyId = testPropertyId, bool? isAvailable, int? sortOrder}) {
       return UnitModel(
         id: id,
         propertyId: propertyId,
@@ -21,11 +20,8 @@ void main() {
         name: 'Test Unit $id',
         pricePerNight: 100.0,
         maxGuests: 2,
-        bedrooms: 1,
-        bathrooms: 1,
-        isAvailable: isAvailable,
-        minStayNights: 1,
-        sortOrder: 0,
+        isAvailable: isAvailable ?? true,
+        sortOrder: sortOrder ?? 0,
         createdAt: DateTime.now(),
       );
     }
@@ -42,8 +38,8 @@ void main() {
       });
 
       test('returns list of units for property', () async {
-        final unit1 = createTestUnit(id: '1', propertyId: testPropertyId).copyWith(sortOrder: 1);
-        final unit2 = createTestUnit(id: '2', propertyId: testPropertyId).copyWith(sortOrder: 0);
+        final unit1 = createTestUnit(id: '1', sortOrder: 1);
+        final unit2 = createTestUnit(id: '2', sortOrder: 0);
 
         // Add to firestore
         await fakeFirestore
@@ -256,8 +252,8 @@ void main() {
             .add({
               'unit_id': testUnitId,
               'status': 'confirmed',
-              'check_in': DateTime(2024, 1, 1).toIso8601String(),
-              'check_out': DateTime(2024, 1, 10).toIso8601String(),
+              'check_in': DateTime.utc(2024).toIso8601String(),
+              'check_out': DateTime.utc(2024, 1, 10).toIso8601String(),
             });
 
         final isAvailable = await repository.isUnitAvailable(
@@ -402,10 +398,10 @@ void main() {
 
     group('fetchFilteredUnits', () {
       test('returns filtered units by propertyId, maxPrice, minGuests, and availability', () async {
-        final unit1 = createTestUnit(id: 'u1', propertyId: 'prop_A').copyWith(pricePerNight: 50.0, maxGuests: 2, isAvailable: true);
-        final unit2 = createTestUnit(id: 'u2', propertyId: 'prop_A').copyWith(pricePerNight: 150.0, maxGuests: 4, isAvailable: true);
-        final unit3 = createTestUnit(id: 'u3', propertyId: 'prop_A').copyWith(pricePerNight: 80.0, maxGuests: 3, isAvailable: false);
-        final unit4 = createTestUnit(id: 'u4', propertyId: 'prop_B').copyWith(pricePerNight: 60.0, maxGuests: 2, isAvailable: true);
+        final unit1 = createTestUnit(id: 'u1', propertyId: 'prop_A').copyWith(pricePerNight: 50.0, maxGuests: 2);
+        final unit2 = createTestUnit(id: 'u2', propertyId: 'prop_A').copyWith(pricePerNight: 150.0, maxGuests: 4);
+        final unit3 = createTestUnit(id: 'u3', propertyId: 'prop_A', isAvailable: false).copyWith(pricePerNight: 80.0, maxGuests: 3);
+        final unit4 = createTestUnit(id: 'u4', propertyId: 'prop_B').copyWith(pricePerNight: 60.0, maxGuests: 2);
 
         for (final unit in [unit1, unit2, unit3]) {
           await fakeFirestore.collection('properties').doc('prop_A').collection('units').doc(unit.id).set(unit.toJson());
@@ -456,8 +452,8 @@ void main() {
 
     group('updateUnitsSortOrder', () {
       test('updates sort order for multiple units in batch', () async {
-        final unit1 = createTestUnit(id: 'u1').copyWith(sortOrder: 10);
-        final unit2 = createTestUnit(id: 'u2').copyWith(sortOrder: 20);
+        final unit1 = createTestUnit(id: 'u1', sortOrder: 10);
+        final unit2 = createTestUnit(id: 'u2', sortOrder: 20);
 
         await fakeFirestore.collection('properties').doc(testPropertyId).collection('units').doc(unit1.id).set(unit1.toJson());
         await fakeFirestore.collection('properties').doc(testPropertyId).collection('units').doc(unit2.id).set(unit2.toJson());

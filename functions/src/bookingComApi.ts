@@ -60,8 +60,9 @@ function getEncryptionKey(): string {
  */
 export function encryptToken(token: string): string {
   // In production, use proper encryption (e.g., Google Cloud KMS)
-  // For now, we'll use a simple base64 encoding (NOT secure for production)
-  // TODO: Implement proper encryption with KMS
+  // TODO: [2026-04-24] Implement proper encryption with KMS. Requires setting
+  // up external services (e.g. Google Cloud KMS), managing keys, and writing
+  // substantial new code.
   const encryptionKey = getEncryptionKey();
   // Generate a consistent IV from the key (not secure, but matches deprecated createCipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();
@@ -77,7 +78,9 @@ export function encryptToken(token: string): string {
  */
 export function decryptToken(encryptedToken: string): string {
   // In production, use proper decryption (e.g., Google Cloud KMS)
-  // TODO: Implement proper decryption with KMS
+  // TODO: [2026-04-24] Implement proper decryption with KMS. Requires setting
+  // up external services (e.g. Google Cloud KMS), managing keys, and writing
+  // substantial new code.
   const encryptionKey = getEncryptionKey();
   // Generate a consistent IV from the key (not secure, but matches deprecated createDecipher behavior)
   const key = crypto.createHash("sha256").update(encryptionKey).digest();

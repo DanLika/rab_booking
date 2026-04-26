@@ -223,9 +223,11 @@ async function deleteOwnedProperties(userId: string): Promise<void> {
     return;
   }
 
-  for (const propertyDoc of propertiesSnapshot.docs) {
-    await deletePropertyCascade(propertyDoc.ref);
-  }
+  await Promise.all(
+    propertiesSnapshot.docs.map((propertyDoc) =>
+      deletePropertyCascade(propertyDoc.ref)
+    )
+  );
 
   logInfo("[DeleteAccount] Properties deleted", {
     userId,
@@ -241,18 +243,20 @@ async function deletePropertyCascade(
 ): Promise<void> {
   // Delete units and their subcollections
   const unitsSnapshot = await propertyRef.collection("units").get();
-  for (const unitDoc of unitsSnapshot.docs) {
-    await deleteUnitCascade(unitDoc.ref);
-  }
 
-  // Delete widget_settings subcollection
-  await deleteSubcollection(propertyRef, "widget_settings");
+  const unitDeletions = unitsSnapshot.docs.map((unitDoc) =>
+    deleteUnitCascade(unitDoc.ref)
+  );
 
-  // Delete ical_events subcollection
-  await deleteSubcollection(propertyRef, "ical_events");
-
-  // Delete ical_feeds subcollection (feed configurations)
-  await deleteSubcollection(propertyRef, "ical_feeds");
+  await Promise.all([
+    ...unitDeletions,
+    // Delete widget_settings subcollection
+    deleteSubcollection(propertyRef, "widget_settings"),
+    // Delete ical_events subcollection
+    deleteSubcollection(propertyRef, "ical_events"),
+    // Delete ical_feeds subcollection (feed configurations)
+    deleteSubcollection(propertyRef, "ical_feeds"),
+  ]);
 
   // Delete the property document itself
   await propertyRef.delete();
@@ -264,11 +268,12 @@ async function deletePropertyCascade(
 async function deleteUnitCascade(
   unitRef: admin.firestore.DocumentReference
 ): Promise<void> {
-  // Delete bookings
-  await deleteSubcollection(unitRef, "bookings");
-
-  // Delete daily_prices
-  await deleteSubcollection(unitRef, "daily_prices");
+  await Promise.all([
+    // Delete bookings
+    deleteSubcollection(unitRef, "bookings"),
+    // Delete daily_prices
+    deleteSubcollection(unitRef, "daily_prices"),
+  ]);
 
   // Delete the unit document itself
   await unitRef.delete();
@@ -392,16 +397,17 @@ async function deleteUserDocument(userId: string): Promise<void> {
     "devices",
   ];
 
-  for (const subcollection of subcollections) {
-    await deleteSubcollection(userRef, subcollection);
-  }
+  await Promise.all(
+    subcollections.map((subcollection) =>
+      deleteSubcollection(userRef, subcollection)
+    )
+  );
 
   // Delete nested data subcollections (profile, company, preferences)
   const dataRef = userRef.collection("data");
   const dataSnapshot = await dataRef.get();
-  for (const doc of dataSnapshot.docs) {
-    await doc.ref.delete();
-  }
+
+  await Promise.all(dataSnapshot.docs.map((doc) => doc.ref.delete()));
 
   // Delete the user document itself
   await userRef.delete();

@@ -147,7 +147,8 @@ class FirebasePropertyRepository implements PropertyRepository {
     double radiusKm = 10,
   }) async {
     // Simple implementation - fetch all and filter client-side
-    // For production, use GeoFirestore or similar for geoqueries
+    // TODO: [2026-04-26] Use GeoFirestore or similar for geoqueries in production.
+    // This requires adding a geoflutterfire_plus dependency, updating PropertyModel with geohashes, and backfilling existing data.
     final snapshot = await _firestore.collection('properties').get();
     final properties = snapshot.docs
         .map((doc) => PropertyModel.fromJson({...doc.data(), 'id': doc.id}))

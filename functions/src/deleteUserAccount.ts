@@ -223,8 +223,16 @@ async function deleteOwnedProperties(userId: string): Promise<void> {
     return;
   }
 
-  for (const propertyDoc of propertiesSnapshot.docs) {
-    await deletePropertyCascade(propertyDoc.ref);
+  // Process properties concurrently in chunks to improve performance
+  // while avoiding memory spikes or hitting rate limits on large accounts.
+  const CHUNK_SIZE = 10;
+  const docs = propertiesSnapshot.docs;
+
+  for (let i = 0; i < docs.length; i += CHUNK_SIZE) {
+    const chunk = docs.slice(i, i + CHUNK_SIZE);
+    await Promise.all(
+      chunk.map((propertyDoc) => deletePropertyCascade(propertyDoc.ref))
+    );
   }
 
   logInfo("[DeleteAccount] Properties deleted", {

@@ -20,6 +20,19 @@ class FirstNameValidator {
 
     final trimmed = value.trim();
 
+    // Check if the name has at least one letter (must not be only special characters)
+    if (!RegExp(r'\p{L}', unicode: true).hasMatch(trimmed)) {
+      return 'First name must contain at least one letter';
+    }
+
+    // Check if the name improperly starts or ends with special characters
+    if (trimmed.startsWith('-') ||
+        trimmed.startsWith("'") ||
+        trimmed.endsWith('-') ||
+        trimmed.endsWith("'")) {
+      return 'First name cannot start or end with a special character';
+    }
+
     // Allow letters (including Unicode), apostrophes, hyphens, and common diacritics
     // Pattern: Letters (any Unicode letter), apostrophes, hyphens
     final namePattern = RegExp(r"^[\p{L}'\-]+$", unicode: true);

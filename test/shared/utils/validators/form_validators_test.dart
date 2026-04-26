@@ -44,6 +44,35 @@ void main() {
     test('rejects spaces (first name only)', () {
       expect(FirstNameValidator.validate('John Paul'), isNotNull);
     });
+
+    test('returns null for single letter name', () {
+      expect(FirstNameValidator.validate('A'), isNull);
+      expect(FirstNameValidator.validate('X'), isNull);
+    });
+
+    test('ignores leading and trailing whitespace', () {
+      expect(FirstNameValidator.validate('  John  '), isNull);
+    });
+
+    test('returns null for extremely long names', () {
+      expect(FirstNameValidator.validate('A' * 100), isNull);
+    });
+
+    test('rejects names with only special characters', () {
+      expect(FirstNameValidator.validate('-'), isNotNull);
+      expect(FirstNameValidator.validate("'"), isNotNull);
+      expect(FirstNameValidator.validate('--'), isNotNull);
+    });
+
+    test(
+      'rejects names improperly starting or ending with special characters',
+      () {
+        expect(FirstNameValidator.validate('-John'), isNotNull);
+        expect(FirstNameValidator.validate('John-'), isNotNull);
+        expect(FirstNameValidator.validate("'John"), isNotNull);
+        expect(FirstNameValidator.validate("John'"), isNotNull);
+      },
+    );
   });
 
   group('LastNameValidator', () {

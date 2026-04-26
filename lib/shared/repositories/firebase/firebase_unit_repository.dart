@@ -164,20 +164,20 @@ class FirebaseUnitRepository implements UnitRepository {
         .collectionGroup('bookings')
         .where('unit_id', isEqualTo: unitId)
         .where('status', whereIn: ['pending', 'confirmed', 'in_progress'])
+        .where('check_in', isLessThan: Timestamp.fromDate(checkOut))
         .get();
 
-    // Check for overlap in memory (client-side)
+    // Check for overlap using partial query + in memory filtering (client-side)
     // FIX: Use TimestampConverter to handle both Timestamp and ISO String formats
     const converter = TimestampConverter();
     final hasOverlap = snapshot.docs.any((doc) {
       final data = doc.data();
-      final bookingCheckIn = converter.fromJson(data['check_in']);
       final bookingCheckOut = converter.fromJson(data['check_out']);
 
       // Overlap logic: bookings overlap if:
       // (bookingCheckOut > checkIn) AND (bookingCheckIn < checkOut)
-      return bookingCheckOut.isAfter(checkIn) &&
-          bookingCheckIn.isBefore(checkOut);
+      // The second part is already handled by the Firestore query.
+      return bookingCheckOut.isAfter(checkIn);
     });
 
     return !hasOverlap; // Return true if NO overlap (unit is available)

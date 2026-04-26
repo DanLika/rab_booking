@@ -244,7 +244,12 @@ class LoggingService {
       if (_isSensitiveKey(key)) {
         copy[key] = '[REDACTED]';
       } else if (copy[key] is Map) {
-        copy[key] = _redactMap(copy[key] as Map<String, dynamic>);
+        final nestedMap = copy[key] as Map;
+        final nestedMapStringKeyed = <String, dynamic>{};
+        nestedMap.forEach((k, v) {
+          nestedMapStringKeyed[k.toString()] = v;
+        });
+        copy[key] = _redactMap(nestedMapStringKeyed);
       }
     }
     return copy;

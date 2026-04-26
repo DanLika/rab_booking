@@ -331,6 +331,60 @@ void main() {
       });
     });
 
+    group('limitLength', () {
+      test('returns input if shorter than maxLength', () {
+        final input = 'Hello';
+        final result = InputSanitizer.limitLength(input, 10);
+        expect(result, 'Hello');
+      });
+
+      test('returns input if exactly maxLength', () {
+        final input = 'Hello';
+        final result = InputSanitizer.limitLength(input, 5);
+        expect(result, 'Hello');
+      });
+
+      test('truncates and adds ellipsis by default', () {
+        final input = 'Hello World';
+        final result = InputSanitizer.limitLength(input, 5);
+        expect(result, 'Hello...');
+      });
+
+      test('truncates without ellipsis when addEllipsis is false', () {
+        final input = 'Hello World';
+        final result = InputSanitizer.limitLength(input, 5, addEllipsis: false);
+        expect(result, 'Hello');
+      });
+    });
+
+    group('escapeForDisplay', () {
+      test('escapes < and >', () {
+        final input = '<div>Test</div>';
+        final result = InputSanitizer.escapeForDisplay(input);
+        expect(result, '&lt;div&gt;Test&lt;/div&gt;');
+      });
+
+      test('escapes &', () {
+        final input = 'Tom & Jerry';
+        final result = InputSanitizer.escapeForDisplay(input);
+        expect(result, 'Tom &amp; Jerry');
+      });
+
+      test('escapes single and double quotes', () {
+        final input = 'He said "Don\'t do it"';
+        final result = InputSanitizer.escapeForDisplay(input);
+        expect(result, 'He said &quot;Don&#x27;t do it&quot;');
+      });
+
+      test('escapes ampersand before other characters correctly', () {
+        // If & was escaped after <, &lt; would become &amp;lt;
+        // The implementation does .replaceAll('&', '&amp;') first, which is correct
+        final input = '& < > " \'';
+        final result = InputSanitizer.escapeForDisplay(input);
+        expect(result, '&amp; &lt; &gt; &quot; &#x27;');
+      });
+    });
+
     group('Edge Cases & Security', () {
       test('sanitizeText handles deeply nested HTML', () {
         final input = '<div><div><script>alert(1)</script></div></div>';

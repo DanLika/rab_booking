@@ -126,6 +126,45 @@ void main() {
     test('returns null for email with subdomain', () {
       expect(EmailValidator.validate('user@mail.example.co.uk'), isNull);
     });
+
+    test('returns error for internal spaces', () {
+      expect(EmailValidator.validate('user @example.com'), isNotNull);
+      expect(EmailValidator.validate('user@ example.com'), isNotNull);
+      expect(EmailValidator.validate('user name@example.com'), isNotNull);
+    });
+
+    test('returns null for trailing/leading spaces', () {
+      expect(EmailValidator.validate(' user@example.com'), isNull);
+      expect(EmailValidator.validate('user@example.com '), isNull);
+    });
+
+    test('returns error for multiple @ symbols', () {
+      expect(EmailValidator.validate('user@@example.com'), isNotNull);
+      expect(EmailValidator.validate('user@domain@example.com'), isNotNull);
+    });
+
+    test('returns error for missing local part', () {
+      expect(EmailValidator.validate('@example.com'), isNotNull);
+    });
+
+    test('returns error for invalid characters', () {
+      expect(EmailValidator.validate('user"name"@example.com'), isNotNull);
+      expect(EmailValidator.validate('user!name@example.com'), isNotNull);
+      expect(EmailValidator.validate('user#name@example.com'), isNotNull);
+    });
+
+    test('returns error for IP domain', () {
+      expect(EmailValidator.validate('user@192.168.1.1'), isNotNull);
+    });
+
+    test('returns error for TLD with numbers', () {
+      expect(EmailValidator.validate('user@example.c0m'), isNotNull);
+    });
+
+    test('returns null for long TLDs', () {
+      expect(EmailValidator.validate('user@example.museum'), isNull);
+      expect(EmailValidator.validate('user@example.corporation'), isNull);
+    });
   });
 
   group('PhoneValidator', () {

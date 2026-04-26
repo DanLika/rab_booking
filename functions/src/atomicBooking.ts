@@ -1440,35 +1440,16 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
             "Booking created. Please complete payment.",
     };
   } catch (error: any) {
-    // ERROR HANDLING FIX: Properly handle different HttpsError codes
-    // Don't convert all errors to "internal" - preserve specific error codes
-
-    // Check if it's already an HttpsError with a specific code
-    if (error instanceof HttpsError || error.code) {
-      // Known error codes that should be passed through to client:
-      // - already-exists: Dates not available
-      // - invalid-argument: Guest count, booking duration, etc.
-      // - failed-precondition: Daily prices restrictions
-      // - not-found: Unit/property not found
-      // - permission-denied: Payment method disabled
-      const allowedErrorCodes = [
-        "already-exists",
-        "invalid-argument",
-        "failed-precondition",
-        "not-found",
-        "permission-denied",
-      ];
-
-      if (allowedErrorCodes.includes(error.code)) {
-        logInfo(`[AtomicBooking] Booking validation failed: ${error.code}`, {
-          unitId,
-          checkIn,
-          checkOut,
-          errorCode: error.code,
-          errorMessage: error.message,
-        });
-        throw error; // Re-throw with original code
-      }
+    // Check if it's already an HttpsError
+    if (error instanceof HttpsError) {
+      logInfo(`[AtomicBooking] Booking validation failed: ${error.code}`, {
+        unitId,
+        checkIn,
+        checkOut,
+        errorCode: error.code,
+        errorMessage: error.message,
+      });
+      throw error; // Re-throw with original code
     }
 
     // Unknown/unexpected error - log and convert to internal error

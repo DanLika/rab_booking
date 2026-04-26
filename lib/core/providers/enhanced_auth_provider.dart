@@ -471,6 +471,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       'displayName': userModel.displayName,
       'onboardingCompleted': userModel.onboardingCompleted,
       'createdAt': FieldValue.serverTimestamp(),
+      'lastActiveAt': FieldValue.serverTimestamp(),
       'profileCompleted': userModel.profileCompleted,
       'lastProvider': userModel.lastProvider,
     });
@@ -940,6 +941,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         'displayName': userModel.displayName,
         'onboardingCompleted': userModel.onboardingCompleted,
         'createdAt': FieldValue.serverTimestamp(),
+        'lastActiveAt': FieldValue.serverTimestamp(),
         'profileCompleted': userModel.profileCompleted,
         'newsletterOptIn': newsletterOptIn,
       });
@@ -1274,6 +1276,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           'displayName': 'Demo User',
           'onboardingCompleted': false,
           'createdAt': FieldValue.serverTimestamp(),
+          'lastActiveAt': FieldValue.serverTimestamp(),
           'profileCompleted': true,
         });
       } else {
@@ -2054,6 +2057,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     try {
       final updates = <String, dynamic>{
         'lastLoginAt': FieldValue.serverTimestamp(),
+        'lastActiveAt': FieldValue.serverTimestamp(),
       };
       if (provider != null) {
         updates['last_provider'] = provider;

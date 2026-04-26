@@ -19,10 +19,9 @@
  * ✅ sendEmailVerificationCode - Migrated to V2 template (Refined Premium)
  * ✅ sendPendingBookingOwnerNotification - Migrated to V2 template (Refined Premium)
  * ✅ sendBookingRejectedEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendSuspiciousActivityEmail - Added V2 template (Refined Premium)
  *
  * ALL EMAIL FUNCTIONS FULLY MIGRATED! 🎉
- *
- * TODO: Suspicious Activity Email (deferred for future implementation)
  */
 
 import {Resend} from "resend";
@@ -60,6 +59,8 @@ import {
   type PendingOwnerNotificationParams,
   sendBookingRejectedEmailV2,
   type BookingRejectedParams,
+  sendSuspiciousActivityEmailV2,
+  type SuspiciousActivityParams,
 } from "./email";
 
 // ==========================================
@@ -972,7 +973,41 @@ export async function sendCheckOutReminderEmail(
 // ADDITIONAL EMAIL FUNCTIONS
 // ==========================================
 
-// NOTE: sendSuspiciousActivityEmail has been removed (TODO for future implementation)
+/**
+ * Send Suspicious Activity Email
+ *
+ * Notifies the user of suspicious activity on their account.
+ *
+ * @param params - Email parameters (email, name, activityDescription, time, ipAddress, deviceInfo, location, actionUrl)
+ * @param userId - User ID for tracking (optional)
+ */
+export async function sendSuspiciousActivityEmail(
+  params: SuspiciousActivityParams,
+  userId?: string
+): Promise<void> {
+  try {
+    const resend = getResendClient();
+
+    // Send email using V2 template
+    await sendSuspiciousActivityEmailV2(
+      resend,
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Suspicious activity email sent", {
+      email: params.email,
+      userId,
+    });
+  } catch (error) {
+    logError("Error sending suspicious activity email", error, {
+      email: params.email,
+      userId,
+    });
+    throw error;
+  }
+}
 
 /**
  * Bank details for bank transfer payments

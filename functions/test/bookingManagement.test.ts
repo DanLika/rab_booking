@@ -15,6 +15,7 @@ jest.mock("../src/firebase", () => {
     get: jest.fn(),
     doc: jest.fn().mockReturnThis(),
     update: jest.fn().mockResolvedValue(true),
+    getAll: jest.fn().mockResolvedValue([]),
   };
   return {
     admin: {
@@ -100,6 +101,20 @@ describe("Booking Management Functions", () => {
         size: 1,
         docs: [mockExpiredBooking],
       });
+        mockDb.getAll.mockResolvedValue([
+          {
+            id: "prop-123",
+            exists: true,
+            ref: { parent: { id: "properties" } },
+            data: () => ({ name: "Test Property" }),
+          },
+          {
+            id: "unit-123",
+            exists: true,
+            ref: { parent: { id: "units", parent: { id: "prop-123" } } },
+            data: () => ({ name: "Test Unit" }),
+          },
+        ]);
 
       const wrapped = test.wrap(autoCancelExpiredBookings);
 

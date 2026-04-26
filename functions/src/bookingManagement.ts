@@ -89,6 +89,56 @@ export const autoCancelExpiredBookings = onSchedule(
         expiredCount: expiredBookings.size,
       });
 
+      // Batch fetch property and unit details to avoid N+1 queries
+      const propertyIds = new Set<string>();
+      const unitRefsMap = new Map<string, {pid: string, uid: string}>();
+
+      expiredBookings.docs.forEach((doc) => {
+        const booking = doc.data();
+        if (booking.guest_email) {
+          if (booking.property_id) propertyIds.add(booking.property_id);
+          if (booking.property_id && booking.unit_id) {
+            unitRefsMap.set(`${booking.property_id}_${booking.unit_id}`, {
+              pid: booking.property_id,
+              uid: booking.unit_id,
+            });
+          }
+        }
+      });
+
+      const refs: FirebaseFirestore.DocumentReference[] = [];
+      propertyIds.forEach((pid) => {
+        refs.push(db.collection("properties").doc(pid));
+      });
+      unitRefsMap.forEach(({pid, uid}) => {
+        refs.push(
+          db.collection("properties").doc(pid).collection("units").doc(uid)
+        );
+      });
+
+      const propertyNames = new Map<string, string>();
+      const unitNames = new Map<string, string>();
+
+      if (refs.length > 0) {
+        // Chunk batch fetches to avoid potential limits
+        for (let i = 0; i < refs.length; i += 100) {
+          const chunk = refs.slice(i, i + 100);
+          const docs = await db.getAll(...chunk);
+          docs.forEach((doc) => {
+            if (doc.exists) {
+              const data = doc.data();
+              if (doc.ref.parent.id === "properties") {
+                propertyNames.set(doc.id, data?.name || "Property");
+              } else if (doc.ref.parent.id === "units") {
+                // To safely get property ID from unit ref
+                const propId = doc.ref.parent.parent?.id;
+                unitNames.set(`${propId}_${doc.id}`, data?.name);
+              }
+            }
+          });
+        }
+      }
+
       const cancelPromises = expiredBookings.docs.map(async (doc) => {
         const booking = doc.data();
 
@@ -102,15 +152,16 @@ export const autoCancelExpiredBookings = onSchedule(
         // Send cancellation email to guest with retry
         if (booking.guest_email) {
           try {
-            // Fetch property and unit names using shared utility
-            const {propertyName, unitName} = await fetchPropertyAndUnitDetails(
-              booking.property_id,
-              booking.unit_id,
-              "autoCancelExpired"
-            );
+            const propId = booking.property_id;
+            const propertyName = propertyNames.get(propId) || "Property";
+            const unitName = booking.unit_id ?
+              unitNames.get(`${propId}_${booking.unit_id}`) :
+              undefined;
 
             await sendEmailWithRetry(
               async () => {
+                const cancelReason = booking.cancellation_reason ||
+                  "Payment not received within deadline";
                 await sendBookingCancellationEmail(
                   booking.guest_email,
                   booking.guest_name || "Guest",
@@ -121,7 +172,7 @@ export const autoCancelExpiredBookings = onSchedule(
                   safeToDate(booking.check_out, "check_out"),
                   undefined, // refundAmount
                   booking.property_id, // propertyId
-                  booking.cancellation_reason || "Payment not received within deadline", // cancellationReason
+                  cancelReason, // cancellationReason
                   true // cancelledByOwner
                 );
               },

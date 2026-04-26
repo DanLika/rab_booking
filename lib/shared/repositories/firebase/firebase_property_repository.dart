@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../property_repository.dart';
 import '../../models/property_model.dart';
 import '../../../core/exceptions/app_exceptions.dart';
+import '../../../core/constants/enums.dart';
 
 /// Firebase implementation of PropertyRepository
 class FirebasePropertyRepository implements PropertyRepository {
@@ -26,11 +27,33 @@ class FirebasePropertyRepository implements PropertyRepository {
       query = query.where('city', isEqualTo: filters!.location);
     }
 
+    // Apply server-side inequality filter (Firestore only allows one field for inequality)
     if (filters?.minGuests != null) {
       query = query.where(
         'max_guests',
         isGreaterThanOrEqualTo: filters!.minGuests,
       );
+    } else if (filters?.minPrice != null || filters?.maxPrice != null) {
+      if (filters?.minPrice != null) {
+        query = query.where(
+          'base_price',
+          isGreaterThanOrEqualTo: filters!.minPrice,
+        );
+      }
+      if (filters?.maxPrice != null) {
+        query = query.where(
+          'base_price',
+          isLessThanOrEqualTo: filters!.maxPrice,
+        );
+      }
+    } else if (filters?.minRating != null) {
+      query = query.where('rating', isGreaterThanOrEqualTo: filters!.minRating);
+    }
+
+    // Apply server-side array filter (Firestore only allows one array-contains per query)
+    if (filters?.amenities != null && filters!.amenities!.isNotEmpty) {
+      final firstAmenity = filters.amenities!.first;
+      query = query.where('amenities', arrayContains: firstAmenity.value);
     }
 
     final snapshot = await query.get();
@@ -38,28 +61,47 @@ class FirebasePropertyRepository implements PropertyRepository {
         .map((doc) => PropertyModel.fromJson({...doc.data(), 'id': doc.id}))
         .toList();
 
-    // Client-side filtering for complex conditions
+    // Client-side filtering for remaining conditions
     if (filters != null) {
-      if (filters.minPrice != null) {
-        properties = properties
-            .where((p) => (p.pricePerNight ?? 0) >= filters.minPrice!)
-            .toList();
+      // If we didn't use price for server-side inequality, we must filter it client-side
+      final bool usedPriceServerSide =
+          filters.minGuests == null &&
+          (filters.minPrice != null || filters.maxPrice != null);
+
+      if (!usedPriceServerSide) {
+        if (filters.minPrice != null) {
+          properties = properties
+              .where((p) => (p.pricePerNight ?? 0) >= filters.minPrice!)
+              .toList();
+        }
+        if (filters.maxPrice != null) {
+          properties = properties
+              .where(
+                (p) =>
+                    (p.pricePerNight ?? double.infinity) <= filters.maxPrice!,
+              )
+              .toList();
+        }
       }
-      if (filters.maxPrice != null) {
-        properties = properties
-            .where(
-              (p) => (p.pricePerNight ?? double.infinity) <= filters.maxPrice!,
-            )
-            .toList();
-      }
-      if (filters.minRating != null) {
+
+      // If we didn't use rating for server-side inequality, we must filter it client-side
+      final bool usedRatingServerSide =
+          filters.minGuests == null &&
+          filters.minPrice == null &&
+          filters.maxPrice == null &&
+          filters.minRating != null;
+
+      if (!usedRatingServerSide && filters.minRating != null) {
         properties = properties
             .where((p) => p.rating >= filters.minRating!)
             .toList();
       }
-      if (filters.amenities != null && filters.amenities!.isNotEmpty) {
+
+      // Remaining amenities
+      if (filters.amenities != null && filters.amenities!.length > 1) {
+        final remainingAmenities = filters.amenities!.skip(1).toList();
         properties = properties.where((p) {
-          return filters.amenities!.every(
+          return remainingAmenities.every(
             (amenity) => p.amenities.contains(amenity),
           );
         }).toList();

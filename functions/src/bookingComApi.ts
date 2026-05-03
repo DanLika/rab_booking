@@ -3,6 +3,9 @@ import {admin, db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import * as crypto from "crypto";
 import {setUser} from "./sentry";
+import {KeyManagementServiceClient} from "@google-cloud/kms";
+
+const kmsClient = new KeyManagementServiceClient();
 
 /**
  * Booking.com Calendar API Integration
@@ -35,57 +38,74 @@ const BOOKING_COM_REDIRECT_URI = process.env.BOOKING_COM_REDIRECT_URI || "";
 const BOOKING_COM_API_BASE_URL = "https://distribution-xml.booking.com/2.3/json";
 
 /**
- * Get encryption key with validation (fail-fast approach)
- * Throws HttpsError if key is not configured or uses insecure default
- * @return {string} The validated encryption key
+ * Get KMS key name with validation
+ * Throws HttpsError if key is not configured
+ * @return {string} The validated KMS key name
  */
-function getEncryptionKey(): string {
-  const encryptionKey = process.env.ENCRYPTION_KEY;
+function getKmsKeyName(): string {
+  const kmsKeyName = process.env.KMS_KEY_NAME;
 
-  if (!encryptionKey || encryptionKey === "default-key-change-in-production") {
+  if (!kmsKeyName) {
     logError(
-      "[Encryption] CRITICAL: ENCRYPTION_KEY not configured or insecure.",
-      new Error("ENCRYPTION_KEY is not configured.")
+      "[Encryption] CRITICAL: KMS_KEY_NAME not configured.",
+      new Error("KMS_KEY_NAME is not configured.")
     );
     throw new HttpsError(
       "internal",
       "The server is misconfigured. Unable to perform encryption."
     );
   }
-  return encryptionKey;
+  return kmsKeyName;
 }
 
 /**
  * Encrypt sensitive data (tokens) before storing in Firestore
  */
-export function encryptToken(token: string): string {
-  // In production, use proper encryption (e.g., Google Cloud KMS)
-  // For now, we'll use a simple base64 encoding (NOT secure for production)
-  // TODO: Implement proper encryption with KMS
-  const encryptionKey = getEncryptionKey();
-  // Generate a consistent IV from the key (not secure, but matches deprecated createCipher behavior)
-  const key = crypto.createHash("sha256").update(encryptionKey).digest();
-  const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
-  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
-  let encrypted = cipher.update(token, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  return encrypted;
+export async function encryptToken(token: string): Promise<string> {
+  const keyName = getKmsKeyName();
+  const plaintextBuffer = Buffer.from(token, "utf8");
+
+  try {
+    const [result] = await kmsClient.encrypt({
+      name: keyName,
+      plaintext: plaintextBuffer,
+    });
+
+    if (!result.ciphertext) {
+      throw new Error("Encryption failed: No ciphertext returned");
+    }
+
+    // Convert Uint8Array to base64 string
+    return Buffer.from(result.ciphertext).toString("base64");
+  } catch (error) {
+    logError("[Encryption] Error encrypting token", error);
+    throw new HttpsError("internal", "Failed to encrypt sensitive data");
+  }
 }
 
 /**
  * Decrypt sensitive data (tokens) from Firestore
  */
-export function decryptToken(encryptedToken: string): string {
-  // In production, use proper decryption (e.g., Google Cloud KMS)
-  // TODO: Implement proper decryption with KMS
-  const encryptionKey = getEncryptionKey();
-  // Generate a consistent IV from the key (not secure, but matches deprecated createDecipher behavior)
-  const key = crypto.createHash("sha256").update(encryptionKey).digest();
-  const iv = crypto.createHash("md5").update(encryptionKey).digest().slice(0, 16);
-  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
-  let decrypted = decipher.update(encryptedToken, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
+export async function decryptToken(encryptedToken: string): Promise<string> {
+  const keyName = getKmsKeyName();
+  const ciphertextBuffer = Buffer.from(encryptedToken, "base64");
+
+  try {
+    const [result] = await kmsClient.decrypt({
+      name: keyName,
+      ciphertext: ciphertextBuffer,
+    });
+
+    if (!result.plaintext) {
+      throw new Error("Decryption failed: No plaintext returned");
+    }
+
+    // Convert Uint8Array to utf8 string
+    return Buffer.from(result.plaintext).toString("utf8");
+  } catch (error) {
+    logError("[Encryption] Error decrypting token", error);
+    throw new HttpsError("internal", "Failed to decrypt sensitive data");
+  }
 }
 
 /**
@@ -237,8 +257,8 @@ export const handleBookingComOAuthCallback = onRequest(
         unit_id: stateData.unitId,
         external_property_id: stateData.hotelId,
         external_unit_id: stateData.roomTypeId,
-        access_token: encryptToken(access_token),
-        refresh_token: refresh_token ? encryptToken(refresh_token) : null,
+        access_token: await encryptToken(access_token),
+        refresh_token: refresh_token ? await encryptToken(refresh_token) : null,
         expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
         status: "active",
         created_at: admin.firestore.Timestamp.now(),
@@ -281,7 +301,7 @@ async function refreshBookingComToken(
       },
       body: new URLSearchParams({
         grant_type: "refresh_token",
-        refresh_token: decryptToken(refreshToken),
+        refresh_token: await decryptToken(refreshToken),
         client_id: BOOKING_COM_CLIENT_ID,
         client_secret: BOOKING_COM_CLIENT_SECRET,
       }),
@@ -297,7 +317,7 @@ async function refreshBookingComToken(
     // Update connection with new token
     const expiresAtTime = new Date(Date.now() + expires_in * 1000);
     await db.collection("platform_connections").doc(connectionId).update({
-      access_token: encryptToken(access_token),
+      access_token: await encryptToken(access_token),
       expires_at: admin.firestore.Timestamp.fromDate(expiresAtTime),
       updated_at: admin.firestore.Timestamp.now(),
     });
@@ -326,7 +346,7 @@ async function getValidAccessToken(connectionId: string): Promise<string> {
 
   const connectionData = connectionDoc.data()!;
   const expiresAt = connectionData.expires_at.toDate();
-  const accessToken = decryptToken(connectionData.access_token);
+  const accessToken = await decryptToken(connectionData.access_token);
   const refreshToken = connectionData.refresh_token;
 
   // Check if token is expired or will expire in next 5 minutes

@@ -2054,6 +2054,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     try {
       final updates = <String, dynamic>{
         'lastLoginAt': FieldValue.serverTimestamp(),
+        'lastActiveAt': FieldValue.serverTimestamp(),
       };
       if (provider != null) {
         updates['last_provider'] = provider;

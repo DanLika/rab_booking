@@ -119,6 +119,19 @@ export {
   type CustomGuestEmailParamsV2,
 } from "./templates/custom-email";
 
+// Trial
+export {
+  sendTrialExpiringSoonEmailV2,
+  generateTrialExpiringSoonEmailV2,
+  type TrialExpiringSoonParams,
+} from "./templates/trial-expiring-soon";
+
+export {
+  sendTrialExpiredEmailV2,
+  generateTrialExpiredEmailV2,
+  type TrialExpiredParams,
+} from "./templates/trial-expired";
+
 // ==========================================
 // BASE TEMPLATE & STYLES
 // ==========================================

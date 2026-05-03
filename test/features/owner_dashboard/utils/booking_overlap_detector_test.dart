@@ -66,8 +66,6 @@ void main() {
   });
 
   group('doBookingsOverlap', () {
-    final baseDate = DateTime(2024, 5, 10);
-
     test('returns false for non-overlapping sequential bookings', () {
       // B1: May 1 - May 5, B2: May 10 - May 15
       final b1Start = DateTime(2024, 5, 1);

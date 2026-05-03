@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import {onDocumentUpdated} from "firebase-functions/v2/firestore";
 import {admin, db} from "./firebase";
@@ -22,6 +23,8 @@ import {sendPushNotification} from "./fcmService";
  * Croatian plural helper for "rezervacija"
  * Rules: 1 → "rezervacija", 2-4 → "rezervacije", 5+ → "rezervacija"
  * Exception: 11-14 → "rezervacija" (not "rezervacije")
+ * @param {number} count The number of bookings
+ * @return {string} The correct plural form
  */
 function getBookingPluralHr(count: number): string {
   const lastDigit = count % 10;
@@ -37,6 +40,26 @@ function getBookingPluralHr(count: number): string {
   }
   // 1, 5-9, 0, 11-14, 21, 25-30... → "rezervacija"
   return "rezervacija";
+}
+
+
+/**
+ * Processes an array of items in concurrent chunks to avoid hitting rate limits
+ * or memory spikes while still running much faster than sequential processing.
+ * @param {T[]} items The items to process
+ * @param {number} chunkSize The size of each chunk
+ * @param {function} processItem The async function to process each item
+ * @return {Promise<void>} A promise that resolves when all chunks are processed
+ */
+async function processInChunks<T>(
+  items: T[],
+  chunkSize: number,
+  processItem: (item: T) => Promise<void>
+): Promise<void> {
+  for (let i = 0; i < items.length; i += chunkSize) {
+    const chunk = items.slice(i, i + chunkSize);
+    await Promise.all(chunk.map(processItem));
+  }
 }
 
 // ============================================================================
@@ -89,7 +112,7 @@ export const checkInTomorrowReminder = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const doc of bookingsSnapshot.docs) {
+      await processInChunks(bookingsSnapshot.docs, 50, async (doc) => {
         const booking = doc.data();
         const ownerId = booking.owner_id;
 
@@ -97,7 +120,7 @@ export const checkInTomorrowReminder = onSchedule(
           logWarn("[Check-in Reminder] Booking missing owner_id", {
             bookingId: doc.id,
           });
-          continue;
+          return;
         }
 
         const guestName = booking.guest_details?.name ||
@@ -106,14 +129,15 @@ export const checkInTomorrowReminder = onSchedule(
 
         // Skip if we already sent this reminder (prevent duplicates on retries)
         if (booking.checkInReminderSent) {
-          continue;
+          return;
         }
 
         try {
           await sendPushNotification({
             userId: ownerId,
             title: "Dolazak sutra",
-            body: `${guestName} dolazi sutra. Pobrinite se da je sve spremno!`,
+            body: `${guestName} dolazi sutra. ` +
+              "Pobrinite se da je sve spremno!",
             category: "calendar",
             data: {
               bookingId: doc.id,
@@ -134,7 +158,8 @@ export const checkInTomorrowReminder = onSchedule(
           });
           errorCount++;
         }
-      }
+      });
+
 
       logSuccess("[Check-in Reminder] Completed", {
         sent: sentCount,
@@ -196,7 +221,7 @@ export const checkOutTodayReminder = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const doc of bookingsSnapshot.docs) {
+      await processInChunks(bookingsSnapshot.docs, 50, async (doc) => {
         const booking = doc.data();
         const ownerId = booking.owner_id;
 
@@ -204,7 +229,7 @@ export const checkOutTodayReminder = onSchedule(
           logWarn("[Check-out Reminder] Booking missing owner_id", {
             bookingId: doc.id,
           });
-          continue;
+          return;
         }
 
         const guestName = booking.guest_details?.name ||
@@ -213,14 +238,15 @@ export const checkOutTodayReminder = onSchedule(
 
         // Skip if we already sent this reminder (prevent duplicates on retries)
         if (booking.checkOutReminderSent) {
-          continue;
+          return;
         }
 
         try {
           await sendPushNotification({
             userId: ownerId,
             title: "Odlazak danas",
-            body: `${guestName} odlazi danas. Ne zaboravite zakazati čišćenje!`,
+            body: `${guestName} odlazi danas. ` +
+              "Ne zaboravite zakazati čišćenje!",
             category: "calendar",
             data: {
               bookingId: doc.id,
@@ -241,7 +267,8 @@ export const checkOutTodayReminder = onSchedule(
           });
           errorCount++;
         }
-      }
+      });
+
 
       logSuccess("[Check-out Reminder] Completed", {
         sent: sentCount,
@@ -303,12 +330,12 @@ export const pendingPaymentReminder = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const doc of bookingsSnapshot.docs) {
+      await processInChunks(bookingsSnapshot.docs, 50, async (doc) => {
         const booking = doc.data();
         const ownerId = booking.owner_id;
 
         if (!ownerId) {
-          continue;
+          return;
         }
 
         const guestName = booking.guest_details?.name ||
@@ -317,7 +344,7 @@ export const pendingPaymentReminder = onSchedule(
 
         // Check if we already sent this reminder (prevent duplicates)
         if (booking.paymentReminderSent) {
-          continue;
+          return;
         }
 
         try {
@@ -346,7 +373,8 @@ export const pendingPaymentReminder = onSchedule(
           });
           errorCount++;
         }
-      }
+      });
+
 
       logSuccess("[Payment Reminder] Completed", {
         sent: sentCount,
@@ -415,21 +443,22 @@ export const comebackReminder = onSchedule(
       let skippedCount = 0;
       let errorCount = 0;
 
-      for (const doc of usersSnapshot.docs) {
+      await processInChunks(usersSnapshot.docs, 50, async (doc) => {
         const userId = doc.id;
         const userData = doc.data();
 
         // Skip if already sent (filter in code instead of query)
         if (userData.comebackReminderSent === true) {
           skippedCount++;
-          continue;
+          return;
         }
 
         try {
           await sendPushNotification({
             userId,
             title: "Nedostajete nam! 👋",
-            body: "Provjerite svoje rezervacije i pogledajte što je novo u BookBed-u.",
+            body: "Provjerite svoje rezervacije i pogledajte " +
+              "što je novo u BookBed-u.",
             category: "marketing",
             data: {
               action: "comeback_reminder",
@@ -449,7 +478,8 @@ export const comebackReminder = onSchedule(
           });
           errorCount++;
         }
-      }
+      });
+
 
       logSuccess("[Comeback Reminder] Completed", {
         sent: sentCount,
@@ -507,7 +537,7 @@ export const biweeklySummary = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const ownerDoc of ownersSnapshot.docs) {
+      await processInChunks(ownersSnapshot.docs, 50, async (ownerDoc) => {
         const ownerId = ownerDoc.id;
 
         try {
@@ -532,7 +562,7 @@ export const biweeklySummary = onSchedule(
 
           // Only send if there's activity
           if (bookingsCount === 0 && totalRevenue === 0) {
-            continue;
+            return;
           }
 
           const formattedRevenue = new Intl.NumberFormat("hr-HR", {
@@ -543,7 +573,9 @@ export const biweeklySummary = onSchedule(
           await sendPushNotification({
             userId: ownerId,
             title: "Vaš dvotjedni pregled 📊",
-            body: `Zadnjih 15 dana: ${bookingsCount} ${getBookingPluralHr(bookingsCount)}, ${formattedRevenue} prihoda.`,
+            body: `Zadnjih 15 dana: ${bookingsCount} ` +
+              `${getBookingPluralHr(bookingsCount)}, ` +
+              `${formattedRevenue} prihoda.`,
             category: "payments",
             data: {
               action: "biweekly_summary",
@@ -557,7 +589,8 @@ export const biweeklySummary = onSchedule(
           logError("[Bi-weekly Summary] Failed for owner", error, {ownerId});
           errorCount++;
         }
-      }
+      });
+
 
       logSuccess("[Bi-weekly Summary] Completed", {
         sent: sentCount,
@@ -617,7 +650,7 @@ export const monthlyRevenueReport = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const ownerDoc of ownersSnapshot.docs) {
+      await processInChunks(ownersSnapshot.docs, 50, async (ownerDoc) => {
         const ownerId = ownerDoc.id;
 
         try {
@@ -647,7 +680,7 @@ export const monthlyRevenueReport = onSchedule(
 
           // Only send if there's activity
           if (confirmedCount === 0 && cancelledCount === 0) {
-            continue;
+            return;
           }
 
           const formattedRevenue = new Intl.NumberFormat("hr-HR", {
@@ -658,7 +691,8 @@ export const monthlyRevenueReport = onSchedule(
           await sendPushNotification({
             userId: ownerId,
             title: `Izvještaj prihoda za ${monthName} 💰`,
-            body: `${confirmedCount} ${getBookingPluralHr(confirmedCount)}, ukupno ${formattedRevenue} prihoda.`,
+            body: `${confirmedCount} ${getBookingPluralHr(confirmedCount)}, ` +
+              `ukupno ${formattedRevenue} prihoda.`,
             category: "payments",
             data: {
               action: "monthly_report",
@@ -674,7 +708,8 @@ export const monthlyRevenueReport = onSchedule(
           logError("[Monthly Report] Failed for owner", error, {ownerId});
           errorCount++;
         }
-      }
+      });
+
 
       logSuccess("[Monthly Report] Completed", {
         sent: sentCount,
@@ -747,14 +782,14 @@ export const newAppUpdateNotification = onDocumentUpdated(
       let skippedCount = 0;
       let errorCount = 0;
 
-      for (const userDoc of usersSnapshot.docs) {
+      await processInChunks(usersSnapshot.docs, 50, async (userDoc) => {
         const userId = userDoc.id;
         const userData = userDoc.data();
 
         // Check if user was already notified for this version
         if (userData.lastNotifiedAppVersion === newVersion) {
           skippedCount++;
-          continue;
+          return;
         }
 
         try {
@@ -768,7 +803,7 @@ export const newAppUpdateNotification = onDocumentUpdated(
 
           if (!tokensDoc.exists || !tokensDoc.data()) {
             skippedCount++;
-            continue;
+            return;
           }
 
           const tokensData = tokensDoc.data();
@@ -776,14 +811,15 @@ export const newAppUpdateNotification = onDocumentUpdated(
 
           if (!hasTokens) {
             skippedCount++;
-            continue;
+            return;
           }
 
           // Send push notification
           const sent = await sendPushNotification({
             userId,
             title: "Nova verzija dostupna 🚀",
-            body: `BookBed ${newVersion} je sada dostupna s poboljšanjima i ispravkama.`,
+            body: `BookBed ${newVersion} je sada dostupna s ` +
+              "poboljšanjima i ispravkama.",
             category: "marketing",
             data: {
               action: "app_update",
@@ -805,7 +841,8 @@ export const newAppUpdateNotification = onDocumentUpdated(
           logError("[App Update] Failed for user", error, {userId});
           errorCount++;
         }
-      }
+      });
+
 
       logSuccess("[App Update] Notification complete", {
         platform,

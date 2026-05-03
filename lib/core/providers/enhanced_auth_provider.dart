@@ -473,6 +473,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       'createdAt': FieldValue.serverTimestamp(),
       'profileCompleted': userModel.profileCompleted,
       'lastProvider': userModel.lastProvider,
+      'lastActiveAt': FieldValue.serverTimestamp(),
+      'comebackReminderSent': false,
     });
 
     // Pre-populate profile sub-doc so Edit Profile shows Apple/Google data
@@ -942,6 +944,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         'createdAt': FieldValue.serverTimestamp(),
         'profileCompleted': userModel.profileCompleted,
         'newsletterOptIn': newsletterOptIn,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+        'comebackReminderSent': false,
       });
 
       // Update display name in Firebase Auth
@@ -1275,6 +1279,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
           'onboardingCompleted': false,
           'createdAt': FieldValue.serverTimestamp(),
           'profileCompleted': true,
+          'lastActiveAt': FieldValue.serverTimestamp(),
+          'comebackReminderSent': false,
         });
       } else {
         // Update last login for existing users
@@ -2054,6 +2060,8 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     try {
       final updates = <String, dynamic>{
         'lastLoginAt': FieldValue.serverTimestamp(),
+        'lastActiveAt': FieldValue.serverTimestamp(),
+        'comebackReminderSent': false,
       };
       if (provider != null) {
         updates['last_provider'] = provider;

@@ -60,6 +60,7 @@ import {
   type PendingOwnerNotificationParams,
   sendBookingRejectedEmailV2,
   type BookingRejectedParams,
+  sendTrialExpiringSoonEmailV2,
 } from "./email";
 
 // ==========================================
@@ -1184,115 +1185,12 @@ export async function sendTrialExpiringEmail(
   daysRemaining: number,
   userId: string
 ): Promise<void> {
-  try {
-    const resend = getResendClient();
-
-    const upgradeUrl = `https://app.bookbed.io/subscription?utm_source=trial_warning&utm_medium=email&days=${daysRemaining}`;
-
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Trial is Expiring Soon</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F9FAFB;">
-  <div style="max-width: 560px; margin: 0 auto; padding: 12px;">
-    <div style="background-color: #FFFFFF; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);">
-
-      <!-- Header -->
-      <div style="text-align: center; padding: 32px 16px; background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);">
-        <div style="font-size: 48px; margin-bottom: 16px;">⏰</div>
-        <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #1F2937;">
-          Your Trial Expires in ${daysRemaining} Day${daysRemaining === 1 ? "" : "s"}
-        </h1>
-        <p style="margin: 0; font-size: 14px; color: #6B7280;">
-          Don't lose access to your booking management tools
-        </p>
-      </div>
-      
-      <!-- Content -->
-      <div style="padding: 24px 16px;">
-        <p style="margin: 0 0 16px 0; font-size: 16px; color: #1F2937;">
-          Hi ${sanitizeText(name)},
-        </p>
-
-        <p style="margin: 0 0 16px 0; font-size: 15px; color: #6B7280; line-height: 1.6;">
-          Your free trial of BookBed will expire in <strong>${daysRemaining} day${daysRemaining === 1 ? "" : "s"}</strong>.
-          To continue managing your bookings without interruption, please upgrade to a paid plan.
-        </p>
-
-        <!-- Warning Box -->
-        <div style="background-color: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <div style="display: flex; align-items: flex-start;">
-            <span style="font-size: 18px; margin-right: 12px;">⚠️</span>
-            <div>
-              <strong style="display: block; font-size: 15px; color: #D97706; margin-bottom: 6px;">
-                What happens when your trial ends?
-              </strong>
-              <span style="font-size: 14px; color: #6B7280; line-height: 1.5;">
-                You'll lose access to the owner dashboard, booking management, and calendar sync features. 
-                Your existing bookings and data will be preserved.
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- CTA Button -->
-        <div style="text-align: center; margin: 24px 0;">
-          <a href="${upgradeUrl}" style="display: inline-block; background-color: #374151; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600;">
-            Upgrade Now
-          </a>
-        </div>
-        
-        <p style="margin: 0; font-size: 13px; color: #9CA3AF; text-align: center;">
-          Questions? Reply to this email and we'll help you out.
-        </p>
-      </div>
-      
-      <!-- Footer -->
-      <div style="text-align: center; padding: 20px 16px; border-top: 1px solid #E5E7EB;">
-        <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
-          This email was sent by BookBed. You're receiving this because your trial is expiring soon.
-        </p>
-      </div>
-    </div>
-  </div>
-</body>
-</html>
-    `.trim();
-
-    // IMPORTANT: Check the result object - Resend can return success with error inside
-    const result = await resend.emails.send({
-      from: `${FROM_NAME()} <${FROM_EMAIL()}>`,
-      to: email,
-      subject: `⏰ Your BookBed trial expires in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`,
-      html,
-    });
-
-    // Resend SDK returns { data, error } - check for error
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const typedResult = result as any;
-    if (typedResult.error) {
-      throw new Error(
-        `Resend API error: ${typedResult.error.message || JSON.stringify(typedResult.error)}`
-      );
-    }
-
-    logSuccess("[Trial Email] Expiring warning sent", {
-      email,
-      daysRemaining,
-      userId,
-    });
-  } catch (error) {
-    logError("[Trial Email] Failed to send expiring warning", error, {
-      email,
-      daysRemaining,
-      userId,
-    });
-    throw error;
-  }
+  return sendTrialExpiringSoonEmailV2({
+    email,
+    userName: name,
+    daysRemaining,
+    userId,
+  });
 }
 
 /**

@@ -135,7 +135,7 @@ export const initiateBookingComOAuth = onCall(async (request) => {
 
     // TODO: Update with actual OAuth authorization URL after getting API access
     // Placeholder - replace with actual Booking.com OAuth endpoint
-    const authUrl = new URL("https://secure.booking.com/oauth/authorize");
+    const authUrl = new URL("https://account.booking.com/oauth2/authorize");
     authUrl.searchParams.set("client_id", BOOKING_COM_CLIENT_ID);
     authUrl.searchParams.set("redirect_uri", BOOKING_COM_REDIRECT_URI);
     authUrl.searchParams.set("response_type", "code");

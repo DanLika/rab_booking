@@ -28,6 +28,24 @@ const db = admin.firestore();
 const BATCH_SIZE = 400; // Firestore limit is 500, keep margin for safety
 
 /**
+ * Helper to process array items in concurrent chunks using Promise.all
+ * Prevents timeouts on large accounts while avoiding memory/rate limit spikes
+ * @param {T[]} items Array of items to process
+ * @param {number} chunkSize Maximum concurrent operations (default 10)
+ * @param {Function} processor Async function to process each item
+ */
+async function processInChunks<T>(
+  items: T[],
+  chunkSize: number,
+  processor: (item: T) => Promise<void>
+): Promise<void> {
+  for (let i = 0; i < items.length; i += chunkSize) {
+    const chunk = items.slice(i, i + chunkSize);
+    await Promise.all(chunk.map(processor));
+  }
+}
+
+/**
  * Delete user account and all associated data
  *
  * This is a destructive operation that cannot be undone.
@@ -223,9 +241,9 @@ async function deleteOwnedProperties(userId: string): Promise<void> {
     return;
   }
 
-  for (const propertyDoc of propertiesSnapshot.docs) {
+  await processInChunks(propertiesSnapshot.docs, 10, async (propertyDoc) => {
     await deletePropertyCascade(propertyDoc.ref);
-  }
+  });
 
   logInfo("[DeleteAccount] Properties deleted", {
     userId,
@@ -241,9 +259,9 @@ async function deletePropertyCascade(
 ): Promise<void> {
   // Delete units and their subcollections
   const unitsSnapshot = await propertyRef.collection("units").get();
-  for (const unitDoc of unitsSnapshot.docs) {
+  await processInChunks(unitsSnapshot.docs, 10, async (unitDoc) => {
     await deleteUnitCascade(unitDoc.ref);
-  }
+  });
 
   // Delete widget_settings subcollection
   await deleteSubcollection(propertyRef, "widget_settings");
@@ -392,16 +410,16 @@ async function deleteUserDocument(userId: string): Promise<void> {
     "devices",
   ];
 
-  for (const subcollection of subcollections) {
+  await processInChunks(subcollections, 10, async (subcollection) => {
     await deleteSubcollection(userRef, subcollection);
-  }
+  });
 
   // Delete nested data subcollections (profile, company, preferences)
   const dataRef = userRef.collection("data");
   const dataSnapshot = await dataRef.get();
-  for (const doc of dataSnapshot.docs) {
+  await processInChunks(dataSnapshot.docs, 10, async (doc) => {
     await doc.ref.delete();
-  }
+  });
 
   // Delete the user document itself
   await userRef.delete();

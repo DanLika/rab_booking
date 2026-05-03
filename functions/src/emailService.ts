@@ -43,7 +43,6 @@ import {
   sendOwnerCancellationEmailV2,
   sendOwnerNotificationEmailV2,
   sendCustomGuestEmailV2,
-  type BookingConfirmationParams,
   type PendingBookingRequestParams,
   type BookingApprovedParams,
   type GuestCancellationParams,
@@ -408,7 +407,7 @@ export async function sendBookingConfirmationEmail(
     );
 
     // Build params for new template
-    const params: BookingConfirmationParams = {
+    const params = {
       guestEmail,
       guestName,
       bookingReference,

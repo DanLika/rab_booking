@@ -34,14 +34,21 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Global initialization state - tracks what has been initialized
 class AppInitState {
-  static final Completer<void> firebaseReady = Completer<void>();
-  static final Completer<SharedPreferences> prefsReady =
+  static Completer<void> firebaseReady = Completer<void>();
+  static Completer<SharedPreferences> prefsReady =
       Completer<SharedPreferences>();
-  static final Completer<void> allReady = Completer<void>();
+  static Completer<void> allReady = Completer<void>();
 
   static bool get isFirebaseReady => firebaseReady.isCompleted;
   static bool get isPrefsReady => prefsReady.isCompleted;
   static bool get isAllReady => allReady.isCompleted;
+
+  @visibleForTesting
+  static void reset() {
+    firebaseReady = Completer<void>();
+    prefsReady = Completer<SharedPreferences>();
+    allReady = Completer<void>();
+  }
 }
 
 /// Safely convert error to string, handling null and edge cases

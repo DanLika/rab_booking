@@ -33,7 +33,12 @@ const AIRBNB_CLIENT_SECRET = process.env.AIRBNB_CLIENT_SECRET || "";
 const AIRBNB_REDIRECT_URI = process.env.AIRBNB_REDIRECT_URI || "";
 // TODO: Update with actual API base URL after getting API access
 // Placeholder - replace with actual Airbnb API endpoint
-const AIRBNB_API_BASE_URL = "https://api.airbnb.com/v2";
+const AIRBNB_API_BASE_URL = process.env.AIRBNB_API_BASE_URL ||
+  "https://api.airbnb.com/v2";
+const AIRBNB_OAUTH_AUTH_URL = process.env.AIRBNB_OAUTH_AUTH_URL ||
+  "https://www.airbnb.com/oauth2/auth";
+const AIRBNB_OAUTH_TOKEN_URL = process.env.AIRBNB_OAUTH_TOKEN_URL ||
+  "https://www.airbnb.com/oauth2/token";
 
 /**
  * Initiate OAuth 2.0 flow for Airbnb
@@ -80,7 +85,7 @@ export const initiateAirbnbOAuth = onCall(async (request) => {
 
     // TODO: Update with actual OAuth authorization URL after getting API access
     // Standard Airbnb OAuth endpoint (access restricted)
-    const authUrl = new URL("https://www.airbnb.com/oauth2/auth");
+    const authUrl = new URL(AIRBNB_OAUTH_AUTH_URL);
     authUrl.searchParams.set("client_id", AIRBNB_CLIENT_ID);
     authUrl.searchParams.set("redirect_uri", AIRBNB_REDIRECT_URI);
     authUrl.searchParams.set("response_type", "code");
@@ -123,7 +128,10 @@ export const handleAirbnbOAuthCallback = onRequest(
       }
 
       // Verify state
-      const stateDoc = await db.collection("oauth_states").doc(state as string).get();
+      const stateDoc = await db
+        .collection("oauth_states")
+        .doc(state as string)
+        .get();
 
       if (!stateDoc.exists) {
         res.status(400).send("Invalid state parameter");
@@ -139,8 +147,8 @@ export const handleAirbnbOAuthCallback = onRequest(
       }
 
       // TODO: Update with actual OAuth token URL after getting API access
-      // Placeholder - replace with actual Airbnb OAuth token endpoint
-      const tokenResponse = await fetch("https://www.airbnb.com/oauth2/token", {
+      // Placeholder - replace with actual OAuth token endpoint
+      const tokenResponse = await fetch(AIRBNB_OAUTH_TOKEN_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -215,7 +223,7 @@ async function refreshAirbnbToken(
   try {
     logInfo("[Airbnb API] Refreshing access token", {connectionId});
 
-    const response = await fetch("https://www.airbnb.com/oauth2/token", {
+    const response = await fetch(AIRBNB_OAUTH_TOKEN_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

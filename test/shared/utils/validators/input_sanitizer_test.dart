@@ -378,5 +378,51 @@ void main() {
         expect(result, isNotNull); // Just verify it doesn't crash
       });
     });
+
+    group('limitLength', () {
+      test(
+        'returns original string if length is less than or equal to maxLength',
+        () {
+          expect(InputSanitizer.limitLength('short', 10), 'short');
+          expect(InputSanitizer.limitLength('exact_ten!', 10), 'exact_ten!');
+        },
+      );
+
+      test(
+        'truncates and adds ellipsis by default when length exceeds maxLength',
+        () {
+          expect(
+            InputSanitizer.limitLength('this is a very long string', 10),
+            'this is a ...',
+          );
+        },
+      );
+
+      test('truncates without ellipsis when addEllipsis is false', () {
+        expect(
+          InputSanitizer.limitLength(
+            'this is a very long string',
+            10,
+            addEllipsis: false,
+          ),
+          'this is a ',
+        );
+      });
+    });
+
+    group('escapeForDisplay', () {
+      test('escapes HTML special characters correctly', () {
+        final input = '<script>alert("XSS" & \'test\')</script>';
+        final expected =
+            '&lt;script&gt;alert(&quot;XSS&quot; &amp; &#x27;test&#x27;)&lt;/script&gt;';
+        expect(InputSanitizer.escapeForDisplay(input), expected);
+      });
+
+      test('escapes ampersand first to avoid double escaping', () {
+        final input = '& < >';
+        final expected = '&amp; &lt; &gt;';
+        expect(InputSanitizer.escapeForDisplay(input), expected);
+      });
+    });
   });
 }

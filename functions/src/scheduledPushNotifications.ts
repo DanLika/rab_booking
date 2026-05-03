@@ -303,12 +303,12 @@ export const pendingPaymentReminder = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const doc of bookingsSnapshot.docs) {
+      const promises = bookingsSnapshot.docs.map(async (doc) => {
         const booking = doc.data();
         const ownerId = booking.owner_id;
 
         if (!ownerId) {
-          continue;
+          return;
         }
 
         const guestName = booking.guest_details?.name ||
@@ -317,7 +317,7 @@ export const pendingPaymentReminder = onSchedule(
 
         // Check if we already sent this reminder (prevent duplicates)
         if (booking.paymentReminderSent) {
-          continue;
+          return;
         }
 
         try {
@@ -346,7 +346,9 @@ export const pendingPaymentReminder = onSchedule(
           });
           errorCount++;
         }
-      }
+      });
+
+      await Promise.all(promises);
 
       logSuccess("[Payment Reminder] Completed", {
         sent: sentCount,

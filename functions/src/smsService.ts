@@ -1,4 +1,6 @@
 import {logInfo, logError, logSuccess} from "./logger";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {enforceRateLimit} from "./utils/rateLimit";
 
 /**
  * SMS Service using Twilio
@@ -6,7 +8,8 @@ import {logInfo, logError, logSuccess} from "./logger";
  * Simple SMS sending for critical notifications
  *
  * Note: For MVP, this is a simplified version.
- * Full features (rate limiting, delivery tracking, webhooks) can be added later if needed.
+ * Full features (rate limiting, delivery tracking, webhooks)
+ * can be added later if needed.
  */
 
 // Configuration
@@ -25,6 +28,8 @@ interface SendSmsParams {
  * Send SMS via Twilio
  *
  * Simplified version for MVP - just sends SMS without complex tracking
+ * @param {SendSmsParams} params - The SMS parameters
+ * @return {Promise<boolean>} Success status
  */
 export async function sendSms(params: SendSmsParams): Promise<boolean> {
   const {to, message, ownerId} = params;
@@ -67,7 +72,10 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Basic ${Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64")}`,
+        "Authorization":
+          `Basic ${Buffer.from(
+            `${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`
+          ).toString("base64")}`,
       },
       body: new URLSearchParams({
         From: TWILIO_PHONE_NUMBER,
@@ -100,3 +108,81 @@ export async function sendSms(params: SendSmsParams): Promise<boolean> {
   }
 }
 
+/**
+ * Callable function to send SMS notifications
+ * Incorporates authentication, input validation, and rate limiting
+ */
+export const sendSMSNotification = onCall(
+  {
+    region: "europe-west1",
+    enforceAppCheck: false,
+  },
+  async (request) => {
+    // 1. Authentication Check
+    if (!request.auth) {
+      throw new HttpsError(
+        "unauthenticated",
+        "You must be logged in to send SMS notifications."
+      );
+    }
+    const userId = request.auth.uid;
+
+    const {to, message, category} = request.data as Partial<SendSmsParams>;
+
+    // 2. Input Validation
+    if (!to || typeof to !== "string" || !to.startsWith("+")) {
+      throw new HttpsError(
+        "invalid-argument",
+        "A valid phone number with country code is required."
+      );
+    }
+
+    if (!message || typeof message !== "string" || message.trim() === "") {
+      throw new HttpsError(
+        "invalid-argument",
+        "A non-empty message is required."
+      );
+    }
+
+    if (message.length > 1600) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Message exceeds the maximum length of 1600 characters."
+      );
+    }
+
+    const validCategories = ["bookings", "payments", "calendar", "marketing"];
+    if (!category || !validCategories.includes(category)) {
+      throw new HttpsError(
+        "invalid-argument",
+        "A valid category is required."
+      );
+    }
+
+    // 3. Rate Limiting
+    // Limit to 10 SMS per user per day (24 hours)
+    // to prevent abuse and manage costs
+    await enforceRateLimit(userId, "send_sms_notification", {
+      maxCalls: 10,
+      windowMs: 24 * 60 * 60 * 1000,
+      errorMessage: "Daily SMS notification limit exceeded.",
+    });
+
+    // 4. Send SMS
+    const success = await sendSms({
+      to,
+      message,
+      ownerId: userId,
+      category: category as "bookings" | "payments" | "calendar" | "marketing",
+    });
+
+    if (!success) {
+      throw new HttpsError(
+        "internal",
+        "Failed to send SMS notification. Please try again later."
+      );
+    }
+
+    return {success: true};
+  }
+);

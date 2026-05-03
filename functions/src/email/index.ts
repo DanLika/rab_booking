@@ -119,6 +119,13 @@ export {
   type CustomGuestEmailParamsV2,
 } from "./templates/custom-email";
 
+// Security
+export {
+  sendSuspiciousActivityEmailV2,
+  generateSuspiciousActivityEmailV2,
+  type SuspiciousActivityParams,
+} from "./templates/suspicious-activity";
+
 // ==========================================
 // BASE TEMPLATE & STYLES
 // ==========================================

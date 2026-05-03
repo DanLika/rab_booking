@@ -19,10 +19,9 @@
  * ✅ sendEmailVerificationCode - Migrated to V2 template (Refined Premium)
  * ✅ sendPendingBookingOwnerNotification - Migrated to V2 template (Refined Premium)
  * ✅ sendBookingRejectedEmail - Migrated to V2 template (Refined Premium)
+ * ✅ sendSuspiciousActivityEmail - Migrated to V2 template (Refined Premium)
  *
  * ALL EMAIL FUNCTIONS FULLY MIGRATED! 🎉
- *
- * TODO: Suspicious Activity Email (deferred for future implementation)
  */
 
 import {Resend} from "resend";
@@ -60,6 +59,8 @@ import {
   type PendingOwnerNotificationParams,
   sendBookingRejectedEmailV2,
   type BookingRejectedParams,
+  sendSuspiciousActivityEmailV2,
+  type SuspiciousActivityParams,
 } from "./email";
 
 // ==========================================
@@ -972,7 +973,36 @@ export async function sendCheckOutReminderEmail(
 // ADDITIONAL EMAIL FUNCTIONS
 // ==========================================
 
-// NOTE: sendSuspiciousActivityEmail has been removed (TODO for future implementation)
+/**
+ * Send suspicious activity email
+ * MIGRATED: Now uses V2 template (OPCIJA A: Refined Premium)
+ *
+ * @param params - The suspicious activity parameters
+ */
+export async function sendSuspiciousActivityEmail(
+  params: SuspiciousActivityParams
+): Promise<void> {
+  try {
+    // If adminEmail is not provided, we could fall back to a default admin email
+    // For now we'll require it to be passed in params
+    if (!params.adminEmail) {
+      throw new Error("adminEmail is required for suspicious activity alerts");
+    }
+
+    // Send email using V2 template
+    await sendSuspiciousActivityEmailV2(
+      getResendClient(),
+      params,
+      FROM_EMAIL(),
+      FROM_NAME()
+    );
+
+    logSuccess("Suspicious activity email sent (V2)", {eventType: params.eventType});
+  } catch (error) {
+    logError("Error sending suspicious activity email", error);
+    // We might not want to throw here to prevent blocking the main flow
+  }
+}
 
 /**
  * Bank details for bank transfer payments

@@ -112,6 +112,13 @@ export {
   type PasswordResetParams,
 } from "./templates/password-reset";
 
+// Trial
+export {
+  sendTrialExpiredEmailV2,
+  generateTrialExpiredEmailV2,
+  type TrialExpiredParams,
+} from "./templates/trial-expired";
+
 // Custom
 export {
   sendCustomGuestEmailV2,

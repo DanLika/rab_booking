@@ -32,7 +32,9 @@ const BOOKING_COM_CLIENT_SECRET = process.env.BOOKING_COM_CLIENT_SECRET || "";
 const BOOKING_COM_REDIRECT_URI = process.env.BOOKING_COM_REDIRECT_URI || "";
 // TODO: Update with actual API base URL after getting API access
 // Placeholder - replace with actual Booking.com API endpoint
-const BOOKING_COM_API_BASE_URL = "https://distribution-xml.booking.com/2.3/json";
+const BOOKING_COM_API_BASE_URL = process.env.BOOKING_COM_API_BASE_URL || "https://distribution-xml.booking.com/2.3/json";
+const BOOKING_COM_OAUTH_AUTH_URL = process.env.BOOKING_COM_OAUTH_AUTH_URL || "https://account.booking.com/oauth2/authorize";
+const BOOKING_COM_OAUTH_TOKEN_URL = process.env.BOOKING_COM_OAUTH_TOKEN_URL || "https://account.booking.com/oauth2/token";
 
 /**
  * Get encryption key with validation (fail-fast approach)
@@ -135,7 +137,7 @@ export const initiateBookingComOAuth = onCall(async (request) => {
 
     // TODO: Update with actual OAuth authorization URL after getting API access
     // Placeholder - replace with actual Booking.com OAuth endpoint
-    const authUrl = new URL("https://secure.booking.com/oauth/authorize");
+    const authUrl = new URL(BOOKING_COM_OAUTH_AUTH_URL);
     authUrl.searchParams.set("client_id", BOOKING_COM_CLIENT_ID);
     authUrl.searchParams.set("redirect_uri", BOOKING_COM_REDIRECT_URI);
     authUrl.searchParams.set("response_type", "code");
@@ -197,7 +199,7 @@ export const handleBookingComOAuthCallback = onRequest(
       // Note: This uses Client Credentials flow (Machine Account), effectively ignoring the 'code'
       // received from the redirect, as Booking.com Connectivity API uses pure machine-to-machine auth.
       // The 'code' flow is kept in the structure in case of future API changes supporting 3-legged OAuth.
-      const tokenResponse = await fetch("https://connectivity-authentication.booking.com/token-based-authentication/exchange", {
+      const tokenResponse = await fetch(process.env.BOOKING_COM_EXCHANGE_TOKEN_URL || "https://connectivity-authentication.booking.com/token-based-authentication/exchange", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -274,7 +276,7 @@ async function refreshBookingComToken(
   try {
     logInfo("[Booking.com API] Refreshing access token", {connectionId});
 
-    const response = await fetch("https://secure.booking.com/oauth/token", {
+    const response = await fetch(BOOKING_COM_OAUTH_TOKEN_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

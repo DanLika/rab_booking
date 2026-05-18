@@ -123,7 +123,7 @@ Ovi fajlovi se učitavaju SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-03-02 | **Version**: 7.0
+**Last Updated**: 2026-05-18 | **Version**: 7.1
 
 # context-mode — MANDATORY routing rules
 

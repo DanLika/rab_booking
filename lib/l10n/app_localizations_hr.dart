@@ -8584,6 +8584,10 @@ class AppLocalizationsHr extends AppLocalizations {
   String get aiAssistantAiError => 'Nešto je pošlo po krivu. Pokušajte ponovo.';
 
   @override
+  String get aiAssistantUnavailable =>
+      'AI Asistent trenutno nije dostupan. Pokušajte ponovno za nekoliko trenutaka.';
+
+  @override
   String get aiAssistantError => 'Greška pri učitavanju razgovora';
 
   @override

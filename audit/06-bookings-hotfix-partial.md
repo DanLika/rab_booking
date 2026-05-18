@@ -2,7 +2,7 @@
 
 **Branch**: `fix/bookings-hotfix-partial`
 **Date**: 2026-05-18
-**Status**: rules deployed to `bookbed-dev`; functions + Flutter widget changes in-branch (not yet deployed)
+**Status**: rules + `getBookingByStripeSession` Cloud Function + dev widget bundle all deployed to `bookbed-dev`. Prod (`rab-booking-248fc`) is untouched.
 
 ## 1. Scope
 
@@ -167,24 +167,29 @@ The interactive UI smoke tests cannot be executed from the audit session (no Flu
 | `stripe_session_id` clause actually removed | rules-unit-test "authenticated stranger reading by stripe_session_id alone is DENIED" | ✔ |
 | `booking_reference` clause actually removed | rules-unit-test "authenticated stranger reading by booking_reference alone is DENIED" | ✔ |
 
-### 6.2 Pending — requires interactive testing on dev
+### 6.2 Dev deploy sequencing — DONE (this session)
 
-Cannot run these offline. The new `getBookingByStripeSession` CF + the Flutter widget changes need to be deployed to dev first:
+After the rules deploy completed the live `bookbed-widget-dev.web.app` bundle was still calling `fetchBookingByStripeSessionId` (the now-blocked direct CG read). To avoid leaving dev in a half-deploy regression state, the supporting changes were also deployed:
 
 ```
-# 1. Deploy the new callable (functions deploy NOT done by this PR — scope was rules-only)
-cd functions
-npm run build
+# 1. Build + deploy the new callable
+cd functions && npm run build
 firebase deploy --only functions:getBookingByStripeSession --project bookbed-dev
+   → ✔ functions[getBookingByStripeSession(us-central1)] Successful create operation.
 
-# 2. Build + deploy the dev widget bundle
+# 2. Build the dev widget bundle (with bookbed-overlay sibling copy, per CLAUDE.md memory #21)
 flutter build web --target=lib/widget_main_dev.dart --release \
-  --dart-define=ENVIRONMENT=development -o build/web_widget
-cp web/bookbed-overlay.js build/web_widget/   # see CLAUDE.md memory #21
+  --dart-define=ENVIRONMENT=development --output build/web_widget
+   → ✓ Built build/web_widget
+cp web/bookbed-overlay.js build/web_widget/
+
+# 3. Deploy the dev widget bundle
 firebase deploy --only hosting:widget --project bookbed-dev
+   → ✔ hosting[bookbed-widget-dev]: release complete
+   → Hosting URL: https://bookbed-widget-dev.web.app
 ```
 
-Then manually exercise on `https://bookbed-widget-dev.web.app` (or whatever the dev widget origin resolves to):
+### 6.3 Pending — requires human UI testing on `https://bookbed-widget-dev.web.app`
 
 | Flow | Expected | What to verify |
 |---|---|---|

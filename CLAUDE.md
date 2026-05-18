@@ -55,6 +55,12 @@ try {
 }
 ```
 
+**Design tokens (NEW code):**
+- Koristi `BB*` iz `lib/core/design/tokens.dart` (`BBSpace`/`BBRadius`/`BBColor`/`BBType`/`BBShadow`) — canonical namespace
+- `AppColors`/`AppDimensions`/`AppTypography`/`AppShadows` su i dalje source of truth (BB* delegira na njih); **NE** refaktoriraj postojeće call sites in-place — bulk codemod je zaseban PR
+- 3 off-scale TODO consts (čekaju codemod podatke): `BBSpace.xs2=12`, `BBRadius.xs2=8`, svih 9 `BBType.*` (AppTypography nema scalar fontSize konstante)
+- Detalji: `audit/05-design.md` Section 8
+
 ---
 
 ## QUICK CHECKLIST

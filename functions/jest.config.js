@@ -3,6 +3,7 @@ module.exports = {
   testEnvironment: "node",
   roots: ["<rootDir>/test"],
   testMatch: ["**/*.test.ts"],
+  testPathIgnorePatterns: ["/node_modules/", "<rootDir>/test/firestore_rules/"],
   transform: {
     "^.+\\.tsx?$": "ts-jest",
   },

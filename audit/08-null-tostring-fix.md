@@ -155,10 +155,15 @@ flutter analyze lib/features/widget/presentation/screens/booking_view_screen.dar
 
 ### Test suite
 
-See "Test results" section below — recorded after this doc is committed alongside the
-fix; flutter test + functions rules tests are deferred to the commit moment due to
-parallel-agent thrashing in the shared working tree (this branch was hardened in an
-isolated `git worktree` at `/tmp/bookbed-null-fix`).
+Run in isolated worktree at `/tmp/bookbed-null-fix` after generating freezed/riverpod
+outputs (`flutter pub run build_runner build --delete-conflicting-outputs`):
+
+| Command | Result | Notes |
+|---|---|---|
+| `flutter analyze` (full repo) | **PASS** — `No issues found! (ran in 7.3s)` | 0 errors, 0 warnings |
+| `flutter analyze lib/features/widget/presentation/screens/booking_view_screen.dart` | **PASS** — `No issues found!` | Targeted re-check on edited file |
+| `flutter test` (full repo) | **PASS** — `01:27 +1100: All tests passed!` | 1100/1100 tests across 590 dart files |
+| `cd functions && npm test` (jest) | **PASS** — `Tests: 152 passed, 152 total` (Suites: 10/10) | The `npm run test:rules` script does not exist in `functions/package.json` — current `test` script runs jest across all `test/**/*.test.ts` files. The `firestore_rules/` test directory introduced during Wave 0 (`fallback.test.ts`, `cf-only.test.ts`) lives only as untracked files on `test/wave0-integration` and is therefore outside the scope of this branch. |
 
 ---
 

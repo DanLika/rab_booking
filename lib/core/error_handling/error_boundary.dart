@@ -350,6 +350,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
   }
 
   void _navigateToHome(BuildContext context) {
+    _resetErrorBoundary(context);
     // Primary: GoRouter (most reliable with GoRouter-based apps)
     try {
       final router = GoRouter.maybeOf(context);
@@ -376,6 +377,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
   }
 
   void _tryAgain(BuildContext context) {
+    _resetErrorBoundary(context);
     // Primary: GoRouter pop
     try {
       final router = GoRouter.maybeOf(context);
@@ -400,6 +402,17 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
 
     // Can't go back, go home instead
     _navigateToHome(context);
+  }
+
+  /// Clears the cached error so the boundary re-renders its child instead of
+  /// the error widget on the next frame. Without this, "Try Again" / "Go Home"
+  /// navigate but the boundary keeps painting the error UI.
+  void _resetErrorBoundary(BuildContext context) {
+    final state = context.findAncestorStateOfType<_ErrorBoundaryState>();
+    if (state != null && state.mounted) {
+      // ignore: invalid_use_of_protected_member
+      state.setState(() => state._errorDetails = null);
+    }
   }
 }
 

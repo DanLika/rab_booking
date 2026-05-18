@@ -450,8 +450,6 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       // Invalidate chat list
       _ref.invalidate(aiChatsProvider);
     } catch (e, stackTrace) {
-      // ignore: avoid_print
-      print('[AiChat] ERROR: $e');
       await LoggingService.logError('AiChat: Gemini error', e, stackTrace);
 
       // Still save the user message even if AI fails
@@ -472,16 +470,31 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
 
       if (!mounted) return;
 
-      // Show actual error for debugging (TODO: remove after fixing)
-      final errorMsg = e.toString();
       state = state.copyWith(
         currentChat: updatedChat,
         isStreaming: false,
         streamingText: '',
-        error: 'DEBUG: $errorMsg',
+        error: _classifyGeminiError(e),
       );
       _ref.invalidate(aiChatsProvider);
     }
+  }
+
+  /// Map a raw Gemini exception to a UI-safe sentinel. The UI maps the
+  /// sentinel to a localized string in `_buildErrorBanner`. Raw error text
+  /// must never reach the user — full detail is logged above for Sentry.
+  String _classifyGeminiError(Object e) {
+    // SDK-typed errors (`firebase_ai`) — API disabled, quota, location, etc.
+    if (e is FirebaseAIException) return 'ai_unavailable';
+    // Defence in depth: string-match in case the SDK wraps a raw GCP error.
+    final msg = e.toString().toLowerCase();
+    if (msg.contains('permission_denied') ||
+        msg.contains('has not been used') ||
+        msg.contains('unavailable') ||
+        msg.contains('resource_exhausted')) {
+      return 'ai_unavailable';
+    }
+    return 'ai_error';
   }
 
   /// Handle canned (predefined/blocked) responses without calling Gemini

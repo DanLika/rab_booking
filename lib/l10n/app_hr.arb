@@ -3596,6 +3596,7 @@
   "aiAssistantDeleteConfirm": "Jeste li sigurni da želite obrisati ovaj razgovor?",
   "aiAssistantDailyLimit": "Dostigli ste dnevni limit poruka (30 poruka). Pokušajte ponovo sutra.",
   "aiAssistantAiError": "Nešto je pošlo po krivu. Pokušajte ponovo.",
+  "aiAssistantUnavailable": "AI Asistent trenutno nije dostupan. Pokušajte ponovno za nekoliko trenutaka.",
   "aiAssistantError": "Greška pri učitavanju razgovora",
   "aiAssistantDisclaimer": "AI Asistent pruža smjernice na temelju BookBed dokumentacije. Za probleme s računom, kontaktirajte info@book-bed.com",
   "webDevReferralContactDetails": "Kontakt: dusko@book-bed.com",

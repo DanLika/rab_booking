@@ -15364,6 +15364,12 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Please try again.'**
   String get aiAssistantAiError;
 
+  /// No description provided for @aiAssistantUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant is temporarily unavailable. Please try again in a moment.'**
+  String get aiAssistantUnavailable;
+
   /// No description provided for @aiAssistantError.
   ///
   /// In en, this message translates to:

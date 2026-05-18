@@ -995,10 +995,13 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     String message;
     if (chatState.error == 'daily_limit') {
       message = l10n.aiAssistantDailyLimit;
+    } else if (chatState.error == 'ai_unavailable') {
+      message = l10n.aiAssistantUnavailable;
     } else if (chatState.error == 'ai_error') {
       message = l10n.aiAssistantAiError;
     } else {
-      message = chatState.error ?? l10n.aiAssistantError;
+      // Unknown sentinel — never display raw exception text.
+      message = l10n.aiAssistantError;
     }
 
     return Container(

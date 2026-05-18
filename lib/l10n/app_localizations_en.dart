@@ -8513,6 +8513,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiAssistantAiError => 'Something went wrong. Please try again.';
 
   @override
+  String get aiAssistantUnavailable =>
+      'AI Assistant is temporarily unavailable. Please try again in a moment.';
+
+  @override
   String get aiAssistantError => 'Failed to load chats';
 
   @override

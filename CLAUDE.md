@@ -102,6 +102,33 @@ ls -d ~/.pub-cache/hosted/pub.dev/firebase_core-* 2>/dev/null
 
 ---
 
+## TOOLING GOTCHA: `flutter build appbundle` puca — `GeneratedPluginRegistrant` stale
+
+`flutter build apk --release` prolazi, ali `flutter build appbundle --release` puca u `:app:compileReleaseJavaWithJavac` s `package net.jonhanson.flutter_native_splash does not exist`. Razlog: `flutter_native_splash` je build-time devDep, ali `GeneratedPluginRegistrant.java` ga import-uje kao runtime plugin (stale generated fajl).
+
+**Fix:** premjesti `flutter_native_splash` iz `dependencies:` u `dev_dependencies:` (ili obriši `android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java` i pusti Flutter da ga regeneriše). Detalji + 16 KB compliance kontekst: `docs/TODO.md` § "Android Release Blocker", `audit/06-android-16kb-compliance.md` § 6.
+
+## TOOLING GOTCHA: Gradle OOM na `:app:mergeReleaseNativeLibs`
+
+`android/gradle.properties` `org.gradle.jvmargs=-Xmx2G` OOM-a kod JetifyTransform Flutter engine JAR-a sa trenutnim dep tree-em. Workaround tokom build-a/audit-a: bump na `-Xmx6G`, `./gradlew --stop`, ponovi. Nakon `BUILD SUCCESSFUL` vrati na 2G (ili razmotri trajno 6G kao default).
+
+---
+
+## ANDROID 16 KB PAGE SIZE — VERIFIED COMPLIANT
+
+Status (2026-05-18, branch `chore/audit-16kb-compliance` commits `4caefd50` + `abadb781`): **PASS**. Svih 15 `.so` ALIGNED na 2¹⁴ ili 2¹⁶ kroz `arm64-v8a` + `x86_64` + `armeabi-v7a`. APK zip-storage alignment 10/10 64-bit `.so` OK. Detaljan izvještaj + re-verification recepts: `audit/06-android-16kb-compliance.md`.
+
+**Re-verify prije svakog Android release-a:**
+```bash
+export PATH="$ANDROID_HOME/build-tools/36.1.0:$PATH"
+flutter build apk --release --target lib/main.dart
+./check_elf_alignment.sh build/app/outputs/flutter-apk/app-release.apk
+```
+
+Očekivano: `Verification successful` (zip) + `ELF Verification Successful` (ELF) + svaki per-file ELF red završava sa `ALIGNED (2**14)` ili `ALIGNED (2**16)`. Bilo koji `UNALIGNED (2**12)` = Play upload reject za 64-bit ABI.
+
+---
+
 ## Path-Scoped Rules (`.claude/rules/`)
 
 Ovi fajlovi se učitavaju SAMO kad radiš na matchujućim fajlovima:

@@ -29,6 +29,58 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ---
 
+## 🚨 TODO: Android Release Blocker — AAB build broken (2026-05-18)
+
+**Prioritet:** **HIGH — blokira svaki Play Store update dok se ne popravi**
+**Izvor:** `audit/06-android-16kb-compliance.md` § 6
+**Deadline kontekst:** Sljedeći prozor za Android release ≈ **2026-05-31** (Google Play 16 KB rok — sam APK je već usklađen, ali AAB se ne buildaj).
+
+### Problem
+
+`flutter build appbundle --release --target lib/main.dart` puca u
+`:app:compileReleaseJavaWithJavac`:
+
+```
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java:69:
+  error: package net.jonhanson.flutter_native_splash does not exist
+```
+
+`flutter build apk --release` PROLAZI sa istim source-om — razlika je samo u
+`bundleRelease` putu kompilacije.
+
+### Root cause
+
+`flutter_native_splash: ^2.4.3` je u `pubspec.yaml` deklariran kao **`direct dev`**
+(build-time CLI za generisanje splash assets). Novije verzije više se ne
+auto-registruju kao runtime Flutter plugin, ali `GeneratedPluginRegistrant.java`
+i dalje import-uje nepostojeći `net.jonhanson.flutter_native_splash.FlutterNativeSplashPlugin`.
+
+### Fix (jedan od)
+
+1. Premjesti `flutter_native_splash` iz `dependencies:` u `dev_dependencies:`
+   (build tool, ne runtime plugin). Flutter će regenerisati registrant bez njega.
+2. Obriši `android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java`
+   i pusti Flutter da ga ponovo emit-uje na sljedeći `flutter build`.
+
+Verifikuj sa `flutter build appbundle --release --target lib/main.dart`.
+
+### 16 KB compliance — već OK
+
+Sam APK je 100% usklađen sa Google Play 16 KB page-size pravilom (15/15 .so
+ALIGNED 2¹⁴ ili 2¹⁶, sve 64-bit ABI). Pošto AAB pakuje iste `.so` outpute iz
+`:app:mergeReleaseNativeLibs`, 16 KB verdikt vrijedi i za AAB čim se ovaj
+registrant fix odradi. Nije potreban package upgrade.
+
+### Build-environment note (povezano)
+
+`android/gradle.properties` `org.gradle.jvmargs=-Xmx2G` je tačno na granici
+OOM-a za JetifyTransform Flutter engine JAR-a sa trenutnim dep tree-em. Tokom
+16 KB audit-a privremeno bumpovan na `-Xmx6G` da prođe; vraćen na 2G.
+Ako sljedeći Android build ponovo OOM-a na `:app:mergeReleaseNativeLibs`,
+razmotri trajno postavljanje `-Xmx6G` kao default za projekat.
+
+---
+
 ## 📝 TODO: V2 Trial Email Migration
 
 **Prioritet:** Medium

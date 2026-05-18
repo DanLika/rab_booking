@@ -2,7 +2,26 @@
 
 All version history from v4.6 to v6.65.
 
-**Last Updated**: 2026-03-02 | **Version**: 6.66
+**Last Updated**: 2026-05-18 | **Version**: 6.67
+
+---
+
+**Changelog 6.67**: Error-handling UX fixes (Wave 0 smoke follow-up):
+- **Sticky ErrorBoundary** (`lib/core/error_handling/error_boundary.dart`):
+  - `_tryAgain` / `_navigateToHome` only navigated — they never cleared the cached `_errorDetails`, so the boundary kept repainting the error widget even after the user "recovered". Reported in `audit/07-ios-smoke-test.md` issue #1.
+  - Fix: new private `_resetErrorBoundary(context)` walks up with `findAncestorStateOfType<_ErrorBoundaryState>()` and nulls `_errorDetails` via `setState`. Both action handlers call it first. `mounted` guard inside.
+- **Raw Gemini error leak in AI chat** (`lib/features/owner_dashboard/presentation/providers/ai_chat_provider.dart`, `…/screens/guides/ai_assistant_screen.dart`):
+  - When Vertex AI is disabled on a project (`firebasevertexai.googleapis.com` off), the SDK throws `ServiceApiNotEnabled` with a full GCP error message including project number + console URL. The notifier was setting `state.error = 'DEBUG: $errorMsg'` and the UI banner had a fall-through that displayed it verbatim. Reported in `audit/07-chrome-smoke-test.md` line 539 ("Gemini call — FAIL").
+  - Fix: new `_classifyGeminiError(Object e)` maps any `FirebaseAIException` (incl. `ServiceApiNotEnabled`, `QuotaExceeded`, `UnsupportedUserLocation`, `ServerException`, `InvalidApiKey`) to sentinel `'ai_unavailable'`, with string-match fallback on `permission_denied | has not been used | unavailable | resource_exhausted` for raw GCP errors that didn't get wrapped. Everything else → `'ai_error'`. UI banner branches on `'ai_unavailable'` → `l10n.aiAssistantUnavailable`. Unknown sentinels now fall back to the localized generic string instead of rendering raw exception text.
+  - Full exception still routed to `LoggingService.logError` for Sentry/Crashlytics.
+  - One stray `print('[AiChat] ERROR: $e')` in the same catch block removed (was leaking raw error to dev console). 13 other unrelated `print(` calls in `_aiModelProvider` / `sendMessage` instrumentation remain on `main` — separate cleanup.
+- **New l10n keys** (`lib/l10n/app_en.arb`, `lib/l10n/app_hr.arb`):
+  - `aiAssistantUnavailable` — "AI Assistant is temporarily unavailable. Please try again in a moment." / "AI Asistent trenutno nije dostupan. Pokušajte ponovno za nekoliko trenutaka."
+  - `flutter gen-l10n` regenerated `app_localizations*.dart`.
+- **StateNotifier deviation**: source prompt suggested routing l10n through `AppLocalizations.of(context)` inside the provider. `StateNotifier` has no `BuildContext`, so the provider sets a sentinel and UI does the lookup — same outcome, correct layering. Documented in `audit/08-error-handling-fixes.md`.
+- **Verification**: `flutter analyze` = 0 issues, `flutter test` = 1100 tests pass. Runtime (Marionette / chrome-devtools) verification deferred — no live sim / widget server in this session.
+- **Branch**: `fix/error-boundary-and-chat-ux` (NOT pushed, NOT merged).
+- **Audit doc**: `audit/08-error-handling-fixes.md`.
 
 ---
 

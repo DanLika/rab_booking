@@ -15,6 +15,7 @@ import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/config/environment.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
@@ -208,7 +209,7 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
       }
 
       // Construct Cloud Function URL (generic - works for ALL platforms)
-      const projectId = 'rab-booking-248fc';
+      final projectId = EnvironmentConfig.firebaseProjectId;
       const region = 'us-central1';
       final icalUrl =
           'https://$region-$projectId.cloudfunctions.net/getUnitIcalFeed/$propertyId/${unit.id}/$token.ics';

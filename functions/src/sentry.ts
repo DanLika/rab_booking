@@ -27,7 +27,9 @@ export function initSentry(): void {
   try {
     Sentry.init({
       dsn: SENTRY_DSN,
-      environment: process.env.FUNCTIONS_EMULATOR ? "development" : "production",
+      environment: process.env.FUNCTIONS_EMULATOR === "true"
+        ? "local"
+        : (process.env.GCP_PROJECT === "rab-booking-248fc" ? "production" : "development"),
       tracesSampleRate: 0.1, // 10% of transactions for performance monitoring
       // Tag all events as coming from cloud functions
       initialScope: {

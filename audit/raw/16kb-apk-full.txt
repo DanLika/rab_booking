@@ -1,0 +1,20 @@
+
+Recursively analyzing build/app/outputs/flutter-apk/app-release.apk
+
+=== APK zip-alignment ===
+ 3489792 lib/arm64-v8a/libapp.so (OK)
+17989632 lib/arm64-v8a/libdatastore_shared_counter.so (OK)
+18006016 lib/arm64-v8a/libflutter.so (OK)
+29114368 lib/arm64-v8a/libsentry-android.so (OK)
+29130752 lib/arm64-v8a/libsentry.so (OK)
+55361536 lib/x86_64/libapp.so (OK)
+70254592 lib/x86_64/libdatastore_shared_counter.so (OK)
+70270976 lib/x86_64/libflutter.so (OK)
+82624512 lib/x86_64/libsentry-android.so (OK)
+82640896 lib/x86_64/libsentry.so (OK)
+Verification successful
+=========================
+
+=== ELF alignment ===
+ELF Verification Successful
+=====================

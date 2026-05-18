@@ -1,0 +1,12 @@
+
+Recursively analyzing build/app/outputs/flutter-apk/app-release.apk
+
+NOTICE: Zip alignment check requires build-tools version 35.0.0-rc3 or higher.
+  You can install the latest build-tools by running the below command
+  and updating your $PATH:
+
+    sdkmanager "build-tools;35.0.0-rc3"
+
+=== ELF alignment ===
+ELF Verification Successful
+=====================

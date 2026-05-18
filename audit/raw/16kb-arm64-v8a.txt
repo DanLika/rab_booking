@@ -1,0 +1,8 @@
+
+=== ELF alignment ===
+/tmp/16kb-libs/lib/arm64-v8a/libsentry.so: \e[32mALIGNED\e[0m (2**14)
+/tmp/16kb-libs/lib/arm64-v8a/libflutter.so: \e[32mALIGNED\e[0m (2**16)
+/tmp/16kb-libs/lib/arm64-v8a/libapp.so: \e[32mALIGNED\e[0m (2**16)
+/tmp/16kb-libs/lib/arm64-v8a/libsentry-android.so: \e[32mALIGNED\e[0m (2**14)
+/tmp/16kb-libs/lib/arm64-v8a/libdatastore_shared_counter.so: \e[32mALIGNED\e[0m (2**14)
+=====================

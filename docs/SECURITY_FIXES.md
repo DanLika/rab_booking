@@ -24,7 +24,8 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 16. [SF-016: AnimatedGradientFAB ValueNotifier Optimization](#sf-016-animatedgradientfab-valuenotifier-optimization)
 17. [SF-017: Password Visibility Toggle Tooltips](#sf-017-password-visibility-toggle-tooltips)
 18. [SF-018: Common Password Blacklist](#sf-018-common-password-blacklist)
-19. [Neriješeni bugovi (Jules audit)](#-neriješeni-bugovi-jules-audit)
+19. [SF-019: Bookings Rule Public-Read Partial Close (HIGH)](#sf-019-bookings-rule-public-read-partial-close-high)
+20. [Neriješeni bugovi (Jules audit)](#-neriješeni-bugovi-jules-audit)
     - [BUG-001: iCal Feeds Provider - nedostaje autoDispose](#-bug-001-ical-feeds-provider---nedostaje-autodispose)
     - [BUG-002: IP Geolocation Service - nedostaje in-memory cache](#-bug-002-ip-geolocation-service---nedostaje-in-memory-cache)
     - [BUG-003: iCal Sync - sekvencijalno vs paralelno procesiranje](#-bug-003-ical-sync---sekvencijalno-vs-paralelno-procesiranje)
@@ -1244,6 +1245,103 @@ Veće liste (npr. 10,000 lozinki) bi:
 3. Bile overkill za client-side provjeru
 
 Server-side (Firebase Auth) već ima robustniju provjeru. Ova lista pokriva najčešće slučajeve.
+
+---
+
+## SF-019: Bookings Rule Public-Read Partial Close (HIGH)
+
+**Datum**: 2026-05-18
+**Prioritet**: 🔴 High (partial close — clause 1 remains, deferred to T11c)
+**Status**: ✅ Riješeno (T11-hotfix-partial — branch `fix/bookings-hotfix-partial`, commit `9f3d86b4`); deployed to `bookbed-dev` only — prod cutover pending
+**Zahvaćeni fajlovi**:
+- `firestore.rules` (3 mjesta: subcollection, collection-group, deprecated top-level)
+- `functions/src/getBookingByStripeSession.ts` (novi callable)
+- `functions/src/index.ts`
+- `lib/features/widget/presentation/providers/booking_lookup_provider.dart`
+- `lib/features/widget/presentation/screens/booking_widget_screen.dart`
+- `functions/test/firestore_rules/bookings.test.ts` (novi rules-unit-test harness)
+
+**Otkrio**: audit `audit/03-backend.md` §3.4 flag #1
+
+### Problem
+
+`firestore.rules` `match /bookings/{id}` (subcollection + `{path=**}/bookings/{id}` CG + deprecated top-level) je dopuštao `read` po **četiri** disjunktivna clause-a:
+
+1. `isPropertyOwner(propertyId)` — vlasnik property-ja.
+2. `(isAuthenticated() && resource.data.owner_id == request.auth.uid)` — vlasnik booking-a po polju.
+3. `('unit_id' in resource.data && 'status' in resource.data)` — public, "for calendar availability". **Svaki booking ima oba polja**, pa je ovaj clause efektivno bezuvjetno "public read".
+4. `('stripe_session_id' in resource.data && resource.data.stripe_session_id != null)` — public, "Stripe polling".
+5. `('booking_reference' in resource.data && resource.data.booking_reference != null)` — public, "guest booking view".
+
+Komentar u rules fajlu je tvrdio da app code filtrira PII na klijentu. **Klijentski filter NIJE access control** — direktan REST poziv sa validnim Firebase API ključem zaobilazi Flutter UI i čita guest email, telefon, ime, total amount, itd.
+
+### Rješenje
+
+**Skinuti 2 od 3 public clause-a; ostaviti clause 1 dok ne padne T11c availability CF.**
+
+`firestore.rules` (3 mjesta, identičan oblik):
+
+```diff
+  allow read: if
+    isPropertyOwner(propertyId) ||
+    (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
+-   ('unit_id' in resource.data && 'status' in resource.data) ||
+-   ('stripe_session_id' in resource.data && resource.data.stripe_session_id != null) ||
+-   ('booking_reference' in resource.data && resource.data.booking_reference != null);
++   // INTENTIONAL: unit_id+status clause kept here until T11c (after
++   // getUnitAvailability CF rollout). See audit/06-availability-cf-design.md.
++   ('unit_id' in resource.data && 'status' in resource.data);
+```
+
+`functions/src/getBookingByStripeSession.ts` (novi callable): Admin SDK lookup po `stripe_session_id`, 60 requests/h/IP rate limit, vraća isti `BookingDetailsModel` oblik kao `verifyBookingAccess`. Stripe session id (`cs_xxx`) je proof-of-purchase capability — keyspace nije brute-forceable pod ovim rate limitom.
+
+`lib/.../booking_widget_screen.dart::_handleStripeReturnWithSessionId`: polling petlja sada zove novi callable umjesto `bookingRepo.fetchBookingByStripeSessionId(...)` i izlazi kad `status == 'confirmed'`.
+
+### Što JE i NIJE pokriveno
+
+| Surface | Pre-fix | Post-fix |
+|---|---|---|
+| Owner direct read (rule 1 + 2) | ✅ allow | ✅ allow (no change) |
+| Widget calendar availability (clause `unit_id+status`) | ✅ allow (public) | ✅ allow (public) — **INTENTIONALLY KEPT, T11c** |
+| Guest read by `booking_reference` (direct) | ✅ allow (public) | ❌ deny → mora ići kroz `verifyBookingAccess` |
+| Stripe poll by `stripe_session_id` (direct) | ✅ allow (public) | ❌ deny → mora ići kroz `getBookingByStripeSession` |
+| Admin (custom claim + Firestore role) | ✅ allow | ✅ allow (no change) |
+
+### Testiranje
+
+**Automatizirani rules-unit-test harness** (`functions/test/firestore_rules/bookings.test.ts`, 8/8 zelene):
+
+```
+$ cd functions && npm run test:rules
+PASS test/firestore_rules/bookings.test.ts
+  bookings rule (T11-hotfix-partial)
+    ✓ unauthenticated reader is DENIED on subcollection booking when clause 1 missing
+    ✓ foreign authenticated uid is DENIED reading someone else's booking (clause 1 absent)
+    ✓ booking owner_id ALLOWED via owner_id clause
+    ✓ admin via isAdmin() custom claim ALLOWED
+    ✓ admin via Firestore /users/{uid}.role=='admin' ALLOWED
+    ✓ widget calendar (unit_id + status) clause STILL ALLOWS reads — kept until T11c
+    ✓ authenticated stranger reading by stripe_session_id alone is DENIED (clause removed)
+    ✓ authenticated stranger reading by booking_reference alone is DENIED (clause removed)
+```
+
+Manualni UI smoke (na `https://bookbed-widget-dev.web.app`, dev only za sada — checklist u `audit/06-bookings-hotfix-partial.md` §6.3):
+
+1. Stripe-success redirect → confirmation screen se hidrira preko `getBookingByStripeSession` CF (network panel).
+2. Guest cancel → kroz `verifyBookingAccess` + `guestCancelBooking` (network panel).
+3. Widget date picker → blokirani datumi se i dalje crtaju (clause 1 aktivan).
+4. Owner dashboard → realtime listeneri na `collectionGroup('bookings').where('owner_id', '==', uid)` rade.
+
+### Moguće nuspojave
+
+- **Cross-tab Stripe paths** (BroadcastChannel, postMessage iz popup-a, PaymentBridge) sada svi prolaze kroz novi CF; rate limit od 60/h/IP je dovoljan za 15-attempt polling petlju (svaka 2s), ali multi-user NAT IP scenariji mogu tripati ceiling — bump na 120/h ako se uoči u dev metrici.
+- **Dead code**: `firebase_booking_repository.dart::fetchBookingByStripeSessionId` i `booking_service.dart::getBookingByReference` nemaju više nijednog pozivaoca u `lib/`. Ostavljeno za zaseban cleanup PR.
+- **Prod nije migriran.** Sve gore se odnosi samo na `bookbed-dev`. Prod cutover sequence: deploy CF na prod → deploy widget bundle na prod hosting → deploy rules na prod (rules ide ZADNJE da live widget ne počne dobivati `permission-denied` prije nego što novi CF + bundle stignu).
+
+### Povezani bugovi
+
+- Audit T11c surface deferral: vidi `docs/TODO.md` (T11c — Drop `unit_id+status` clause from bookings rule) i `audit/06-availability-cf-design.md` za migracioni plan.
+- Memory note: "Multi-agent git branch race" — tijekom ovog hotfixa drugi paralelni agent je flipovao HEAD branch dva puta (vidi memory/multi-agent-git-race.md). Hotfix branch commits ostali su intakt na `fix/bookings-hotfix-partial`.
 
 ---
 

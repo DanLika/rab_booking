@@ -38,29 +38,55 @@ class EnvironmentConfig {
     }
   }
 
-  /// Widget URL for current environment
-  static String get widgetBaseUrl {
+  /// Bare hostname of the widget (no scheme/path).
+  /// Use for `Uri.host ==` checks and `host.endsWith()` allowlists.
+  /// Prod: `view.bookbed.io` | Staging: `staging.view.bookbed.io` |
+  /// Dev: `bookbed-widget-dev.web.app` (Firebase Hosting site).
+  static String get widgetHost {
     switch (_current) {
       case Environment.development:
-        return 'http://localhost:5000'; // Local dev server
+        return 'bookbed-widget-dev.web.app';
       case Environment.staging:
-        return 'https://staging.view.bookbed.io';
+        return 'staging.view.bookbed.io';
       case Environment.production:
-        return 'https://view.bookbed.io';
+        return 'view.bookbed.io';
     }
   }
 
-  /// Dashboard URL for current environment
-  static String get dashboardBaseUrl {
+  /// Bare hostname of the owner dashboard.
+  /// Prod: `app.bookbed.io` | Staging: `staging.app.bookbed.io` |
+  /// Dev: `bookbed-owner-dev.web.app`.
+  static String get dashboardHost {
     switch (_current) {
       case Environment.development:
-        return 'http://localhost:5001';
+        return 'bookbed-owner-dev.web.app';
       case Environment.staging:
-        return 'https://staging.app.bookbed.io';
+        return 'staging.app.bookbed.io';
       case Environment.production:
-        return 'https://app.bookbed.io';
+        return 'app.bookbed.io';
     }
   }
+
+  /// Bare hostname of the public marketing site.
+  /// No dev/staging Firebase Hosting target exists for marketing
+  /// (verified against firebase.json) — all environments share `bookbed.io`.
+  static String get marketingHost => 'bookbed.io';
+
+  /// Widget URL for current environment.
+  static String get widgetBaseUrl => 'https://$widgetHost';
+
+  /// Dashboard URL for current environment.
+  static String get dashboardBaseUrl => 'https://$dashboardHost';
+
+  /// True if [host] is the widget host itself or one of its subdomains
+  /// (e.g. `jasko-rab.view.bookbed.io`).
+  static bool isWidgetHost(String host) =>
+      host == widgetHost || host.endsWith('.$widgetHost');
+
+  /// True if [host] is the bare marketing domain (`bookbed.io` / `www.bookbed.io`).
+  /// Used to rewrite marketing-domain landings onto the widget host.
+  static bool isMarketingHost(String host) =>
+      host == marketingHost || host == 'www.$marketingHost';
 
   /// Whether to use Firebase emulators
   static bool get useEmulators => _current == Environment.development;

@@ -6,6 +6,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
+import '../../../../../core/config/environment.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
@@ -28,8 +29,6 @@ class EmbedWidgetGuideScreen extends ConsumerStatefulWidget {
 
 class _EmbedWidgetGuideScreenState
     extends ConsumerState<EmbedWidgetGuideScreen> {
-  static const String _subdomainBaseDomain = 'view.bookbed.io';
-
   /// Selected unit for live preview testing
   UnitModel? _selectedPreviewUnit;
   PropertyModel? _selectedPreviewProperty;
@@ -45,7 +44,7 @@ class _EmbedWidgetGuideScreenState
   ) {
     // Always use base domain for iframe embeds - no subdomain needed
     // Subdomains are optional and may not be configured for all properties
-    const baseUrl = 'https://$_subdomainBaseDomain';
+    final baseUrl = EnvironmentConfig.widgetBaseUrl;
     final url = '$baseUrl/?property=$propertyId&unit=${unit.id}&embed=true';
     return '''<iframe
   src="$url"
@@ -1104,7 +1103,7 @@ class _EmbedWidgetGuideScreenState
                                 _selectedPreviewProperty != null
                             ? () {
                                 final url =
-                                    'https://$_subdomainBaseDomain/?property=${_selectedPreviewProperty!.id}&unit=${_selectedPreviewUnit!.id}';
+                                    '${EnvironmentConfig.widgetBaseUrl}/?property=${_selectedPreviewProperty!.id}&unit=${_selectedPreviewUnit!.id}';
                                 _launchUrl(url, l10n);
                               }
                             : null,
@@ -1555,7 +1554,7 @@ class _EmbedWidgetGuideScreenState
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      '${property.subdomain}.$_subdomainBaseDomain',
+                      '${property.subdomain}.${EnvironmentConfig.widgetHost}',
                       style: TextStyle(
                         fontSize: 11,
                         color: theme.colorScheme.primary,

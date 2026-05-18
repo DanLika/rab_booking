@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import '../../../../core/config/environment.dart';
 import '../../../../shared/models/property_branding_model.dart';
 import '../../../../shared/models/property_model.dart';
 
@@ -47,8 +48,10 @@ class SubdomainService {
         return null;
       }
 
-      // Skip view.bookbed.io domain (booking details page, not a property subdomain)
-      if (host == 'view.bookbed.io' || host.startsWith('view.')) {
+      // Skip the bare widget host (booking details page, not a property
+      // subdomain). Client subdomains like `jasko-rab.view.bookbed.io` are
+      // still parsed below.
+      if (host == EnvironmentConfig.widgetHost) {
         return null;
       }
 

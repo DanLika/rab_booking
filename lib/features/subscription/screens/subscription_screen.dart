@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/config/environment.dart';
 import '../../../core/design_tokens/design_tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/common_app_bar.dart';
@@ -487,10 +488,8 @@ class SubscriptionScreen extends StatelessWidget {
     );
   }
 
-  static const String _webDashboardUrl = 'https://app.bookbed.io';
-
   Future<void> _launchWebDashboard(BuildContext context) async {
-    final uri = Uri.parse(_webDashboardUrl);
+    final uri = Uri.parse(EnvironmentConfig.dashboardBaseUrl);
     try {
       // Note: Don't use canLaunchUrl() - it returns false on Android 11+
       // even when launchUrl() would work. Just try to launch directly.
@@ -500,9 +499,9 @@ class SubscriptionScreen extends StatelessWidget {
       );
       if (!launched && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Could not open browser. Please visit app.bookbed.io manually.',
+              'Could not open browser. Please visit ${EnvironmentConfig.dashboardHost} manually.',
             ),
           ),
         );
@@ -510,9 +509,9 @@ class SubscriptionScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Could not open browser. Please visit app.bookbed.io manually.',
+              'Could not open browser. Please visit ${EnvironmentConfig.dashboardHost} manually.',
             ),
           ),
         );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/config/environment.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -36,16 +37,13 @@ class EmbedCodeGeneratorDialog extends StatefulWidget {
 }
 
 class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
-  static const String _defaultWidgetBaseUrl = 'https://view.bookbed.io';
-  static const String _subdomainBaseDomain = 'view.bookbed.io';
-
   /// Get the base URL - use subdomain if available, otherwise default
   String get _widgetBaseUrl {
     if (widget.propertySubdomain != null &&
         widget.propertySubdomain!.isNotEmpty) {
-      return 'https://${widget.propertySubdomain}.$_subdomainBaseDomain';
+      return 'https://${widget.propertySubdomain}.${EnvironmentConfig.widgetHost}';
     }
-    return _defaultWidgetBaseUrl;
+    return EnvironmentConfig.widgetBaseUrl;
   }
 
   /// Generate widget URL with query params (for iframe embeds)
@@ -72,7 +70,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   /// Note: Language not included - widget has its own language selector
   String get _slugUrl {
     if (!_hasSlugUrl) return '';
-    return 'https://${widget.propertySubdomain}.$_subdomainBaseDomain/${widget.unitSlug}';
+    return 'https://${widget.propertySubdomain}.${EnvironmentConfig.widgetHost}/${widget.unitSlug}';
   }
 
   /// Direct iframe embed code - works on any website without modifications
@@ -80,7 +78,7 @@ class _EmbedCodeGeneratorDialogState extends State<EmbedCodeGeneratorDialog> {
   /// Always uses view.bookbed.io (no subdomain) - property/unit IDs are sufficient
   String get _iframeEmbedCode {
     final url =
-        '$_defaultWidgetBaseUrl/?property=${widget.propertyId}&unit=${widget.unitId}&embed=true';
+        '${EnvironmentConfig.widgetBaseUrl}/?property=${widget.propertyId}&unit=${widget.unitId}&embed=true';
     final title = widget.unitName ?? 'Booking Widget';
     return '''<iframe
   src="$url"

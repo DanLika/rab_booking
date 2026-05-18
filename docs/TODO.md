@@ -4,6 +4,23 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ---
 
+## ✅ DONE: Widget `null.toString()` hardening (2026-05-18)
+
+**Branch**: `fix/null-tostring-hardening` (not yet merged)
+**Audit**: `audit/08-null-tostring-fix.md`
+
+Closed the Wave 0 smoke-test finding about `Uncaught TypeError: Cannot read properties of null (reading 'toString')` on the widget `/view` path. Root cause: `Uri.queryParameters` passes each value through `.toString()` during encoding, and dart2js compiles that into literal `null.toString()` when the value is nullable. Fixed 2 sites in `booking_view_screen.dart` with `?? ''` coercion. Full test suite green.
+
+## 🟡 TODO: Login submit crash on Flutter web (separate bug class)
+
+**Source**: `audit/07-chrome-smoke-test.md` line 524.
+
+The same JS-error-type appears on the login form submit, but the underlying cause is **CanvasKit text-input sync** — `_passwordController.text` reads empty even when the DOM `<input>` is populated. Form validator fails before any auth call fires. This is NOT the same Dart `null.toString()` bug, and the hardening branch does NOT address it. Needs:
+
+1. Repro on `bookbed-dev` with DevTools open, capture the actual stack trace (audit speculation was that it shares the null.toString class — proven wrong by the widget-side fix not affecting login).
+2. Investigate `keyboard_dismiss_fix_web.dart` interaction with autofill events.
+3. Workaround in production: direct JS `firebase_auth.signInWithEmailAndPassword` call (smoke test used this).
+
 ## 🔐 TODO: T11c — Drop `unit_id+status` clause from bookings rule (deferred from T11-hotfix-partial)
 
 **Prioritet:** HIGH (largest remaining public-read surface on `bookings`)

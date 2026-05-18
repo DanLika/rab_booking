@@ -2,7 +2,18 @@
 
 All version history from v4.6 to v6.65.
 
-**Last Updated**: 2026-03-02 | **Version**: 6.66
+**Last Updated**: 2026-05-18 | **Version**: 6.68
+
+---
+
+**Changelog 6.68**: `null.toString()` hardening in widget URL building (2026-05-18):
+
+- **Root cause** (`audit/08-null-tostring-fix.md`): `Uri()` constructor's `queryParameters` encoder calls `.toString()` on every value. In Flutter web (dart2js / CanvasKit) this becomes literal `null.toString()` at the JS layer and throws `TypeError: Cannot read properties of null (reading 'toString')`. Dart's sound null safety does not catch this because `Uri()` accepts `Map<String, dynamic>`.
+- **Fix** (`lib/features/widget/presentation/screens/booking_view_screen.dart:191-198, 235-242`): coerce nullable `widget.bookingRef` / `widget.email` with `?? ''` before passing to `Uri.queryParameters`. The `if (widget.token != null) 'token': widget.token` collection-if pattern is preserved (Dart's flow analysis correctly narrows inside the if body).
+- **Scope confirmed clean** via grep: `booking_widget_screen.dart`, `booking_confirmation_screen.dart`, `enhanced_login_screen.dart` — all `.toString()` and `jsonEncode` call sites already guarded by previously-merged T8 silent-catches work (e.g. `_safeErrorToString` helper at `booking_widget_screen.dart:131-143`).
+- **Validation**: `flutter analyze` clean, `flutter test` 1100/1100, jest 152/152.
+- **Out of scope**: Wave 0 smoke test also reported login-form submit crash with the same JS error type; that one is **CanvasKit text-input sync** (different bug class — TextEditingController drifts from DOM `<input>` value), tracked separately. Widget `additional_services` failed-precondition trigger was already closed by the dev composite-index deploy.
+- **Reserved v6.67**: the Wave 0 Chrome smoke test changelog entry currently lives only as a stash on `test/wave0-integration` (`stash@{5}` at time of writing). When that branch merges, v6.67 slots in before this entry.
 
 ---
 

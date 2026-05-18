@@ -11,7 +11,7 @@
     "logs": "firebase functions:log",
     "test": "jest --config jest.config.js",
     "test:watch": "jest --watch --config jest.config.js",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-bookbed-rules 'jest --config jest.config.js --testPathPatterns=test/firestore_rules --runInBand'"
+    "test:rules": "firebase emulators:exec --only firestore --project demo-bookbed-rules 'jest --config jest.config.js --testPathPatterns=test/firestore_rules --testPathIgnorePatterns=/node_modules/ --runInBand'"
   },
   "engines": {
     "node": "20"

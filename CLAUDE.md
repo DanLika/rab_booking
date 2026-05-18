@@ -26,6 +26,7 @@
 | `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |
 | Navigator.push za confirmation | NE vraćaj state-based navigaciju |
 | Timeline Calendar fixed dimensions (`timeline_dimensions.dart`) | FIXED 50/42/100/60px za SVE uređaje — NE vraćaj responsive breakpoints |
+| `bookings` read rule — `unit_id+status` clause 1 (`firestore.rules` x3) | INTENTIONALLY public until T11c lands `getUnitAvailability` CF. NE skidaj clause 1 bez prvog deploya CF-a + zamijene `collectionGroup('bookings').where('unit_id', ...)` poziva u widgetu. Drugi 2 clause-a (`stripe_session_id`/`booking_reference`) su zatvoreni u T11-hotfix-partial — vidi `audit/06-bookings-hotfix-partial.md`. |
 
 ---
 

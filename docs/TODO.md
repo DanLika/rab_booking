@@ -4,6 +4,39 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ---
 
+## 🔐 TODO: T11c — Drop `unit_id+status` clause from bookings rule (deferred from T11-hotfix-partial)
+
+**Prioritet:** HIGH (largest remaining public-read surface on `bookings`)
+**Status:** **DEFERRED** — clause 1 intentionally kept until availability CF ships
+**Izvor:** `audit/03-backend.md` §3.4 flag #1, `audit/06-bookings-hotfix-partial.md`, `audit/06-availability-cf-design.md`
+
+### Background
+
+**T11-hotfix-partial** (branch `fix/bookings-hotfix-partial`, commit `9f3d86b4`, deployed to `bookbed-dev` only — prod untouched) closed 2 of 3 public-read clauses on the `bookings` rule:
+
+- ❌ `stripe_session_id` field-presence — REMOVED. Replaced by callable `getBookingByStripeSession(sessionId)`.
+- ❌ `booking_reference` field-presence — REMOVED. Already had `verifyBookingAccess` as alternative.
+- ✅ **`unit_id` + `status` field-presence — KEPT**. Widget calendar depends on it for availability rendering.
+
+Clause 1 still makes every booking doc publicly readable to any Firebase API key holder. Closing it is **T11c**.
+
+### Sequence (in order — out-of-order will break the widget calendar)
+
+1. Ship `getUnitAvailability(unitId, dateRangeStart, dateRangeEnd)` Cloud Function (Admin SDK, returns sparse blocked-date array — zero PII).
+2. Replace widget calendar's `collectionGroup('bookings').where('unit_id', '==', ...)` queries (in `firebase_booking_calendar_repository.dart` + `realtime_booking_calendar_provider.dart`) with the new CF.
+3. Cut over deployment: deploy CF → deploy widget → only then drop clause 1.
+4. Update the rules-unit-test guard `widget calendar (unit_id + status) clause STILL ALLOWS reads` in `functions/test/firestore_rules/bookings.test.ts` — flip the assertion or replace with a CF-mediated test.
+
+### Production deploy of T11-hotfix-partial
+
+Currently dev-only. Before prod cutover:
+- Deploy `getBookingByStripeSession` CF to `rab-booking-248fc`.
+- Build + deploy the widget bundle to prod hosting.
+- Deploy `firestore.rules` to prod **last** (so the live widget never makes a now-blocked direct read).
+- Run the manual smoke checklist (§6.3 of `audit/06-bookings-hotfix-partial.md`) on the prod widget origin.
+
+---
+
 ## 🚨 TODO: Tech Debt Audit Findings (2026-05-18)
 
 **Prioritet:** Mixed (C1 critical, rest medium)

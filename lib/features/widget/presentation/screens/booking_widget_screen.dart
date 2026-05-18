@@ -27,6 +27,8 @@ import '../providers/submit_booking_provider.dart';
 import '../providers/subdomain_provider.dart';
 import '../providers/widget_context_provider.dart';
 import '../providers/widget_settings_provider.dart';
+import '../providers/booking_lookup_provider.dart';
+import '../../domain/models/booking_details_model.dart';
 import '../../domain/use_cases/submit_booking_use_case.dart';
 import '../../domain/models/calendar_view_type.dart';
 import '../../domain/models/widget_settings.dart';
@@ -1320,11 +1322,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
 
     try {
-      final bookingRepo = ref.read(bookingRepositoryProvider);
-      BookingModel? booking;
+      // T11-hotfix-partial: route through getBookingByStripeSession callable
+      // instead of direct Firestore CG read on `stripe_session_id` (rule clause
+      // removed from firestore.rules). CF uses Admin SDK + IP rate limiting.
+      final lookupService = ref.read(bookingLookupServiceProvider);
+      BookingDetailsModel? details;
 
-      // Poll for booking created by webhook (max 30 seconds)
-      // Webhook typically arrives within 1-5 seconds
+      // Poll until webhook flips placeholder to status == 'confirmed' (max 30s).
+      // 'not-found' from the CF is treated as "webhook in flight" → retry.
       const maxAttempts = 15;
       const pollInterval = Duration(seconds: 2);
 
@@ -1334,16 +1339,17 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           tag: 'STRIPE_SESSION',
         );
 
-        // Try to find booking by stripe_session_id
-        booking = await bookingRepo.fetchBookingByStripeSessionId(sessionId);
+        final fetched = await lookupService.getBookingByStripeSession(
+          sessionId,
+        );
 
-        if (booking != null) {
+        if (fetched != null && fetched.status == 'confirmed') {
+          details = fetched;
           LoggingService.log(
-            '[STRIPE_RETURN] ✅ Found booking: ${booking.id} (ref: ${booking.bookingReference})',
+            '[STRIPE_RETURN] ✅ Found booking: ${fetched.bookingId} (ref: ${fetched.bookingReference})',
             tag: 'STRIPE_SESSION',
           );
 
-          // Track payment completion with analytics
           final timeToComplete = DateTime.now()
               .toUtc()
               .difference(paymentStartTime)
@@ -1353,7 +1359,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           unawaited(
             AnalyticsService.instance.logStripePaymentCompleted(
               sessionId: sessionId,
-              method: 'redirect', // This is a redirect return
+              method: 'redirect',
               browser: browser,
               deviceType: deviceType,
               timeToCompleteSeconds: timeToComplete,
@@ -1363,35 +1369,27 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           break;
         }
 
-        // Not found yet, wait and try again
         if (i < maxAttempts - 1) {
           await Future.delayed(pollInterval);
-          // CRITICAL: Check mounted after delay - widget may be disposed during polling
           if (!mounted) return;
         }
       }
 
-      if (booking == null) {
-        // Webhook didn't create booking in time - show prominent dialog with poll + message
+      if (details == null) {
         LoggingService.log(
-          '[STRIPE_RETURN] ❌ Booking not found after ${maxAttempts * pollInterval.inSeconds} seconds',
+          '[STRIPE_RETURN] ❌ Booking not confirmed after ${maxAttempts * pollInterval.inSeconds} seconds',
           tag: 'STRIPE_SESSION',
         );
 
         if (mounted) {
-          // Show dialog with clear instructions (poll + message approach)
-          // Dialog explains that payment was successful but confirmation is delayed
-          // User can wait or check email for confirmation
           await _showPaymentDelayedDialog();
-
-          // Clear URL params and show calendar
           BookingUrlStateService.clearBookingParams();
           await _validateUnitAndProperty();
         }
         return;
       }
 
-      // Found booking! Load unit data if not already loaded
+      // Found booking — make sure unit/property data is loaded for downstream UI.
       if (_unit == null && _propertyId != null) {
         await _validateUnitAndProperty();
       }
@@ -1414,33 +1412,40 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       ref.invalidate(realtimeYearCalendarProvider);
       ref.invalidate(realtimeMonthCalendarProvider);
 
-      // Navigate to confirmation screen using Navigator.push
-      // booking is guaranteed non-null here due to null check above
-      final confirmedBooking = booking;
+      // Navigate to confirmation screen using Navigator.push.
+      // `details` (BookingDetailsModel) is the CF-sanitized projection of the
+      // booking — we no longer pass a full BookingModel here (was used for
+      // popup-window paymentComplete notification, which doesn't apply to the
+      // same-tab redirect path).
+      final confirmed = details;
+      final checkInDt = DateTime.parse(confirmed.checkIn);
+      final checkOutDt = DateTime.parse(confirmed.checkOut);
+      final totalGuests =
+          confirmed.guestCount.adults + confirmed.guestCount.children;
       if (mounted) {
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => BookingConfirmationScreen(
-              bookingReference:
-                  confirmedBooking.bookingReference ?? confirmedBooking.id,
-              guestEmail: confirmedBooking.guestEmail ?? '',
-              guestName: confirmedBooking.guestName ?? 'Guest',
-              checkIn: confirmedBooking.checkIn,
-              checkOut: confirmedBooking.checkOut,
-              totalPrice: confirmedBooking.totalPrice,
-              roomPrice: _lockedPriceCalculation?.roomPrice,
-              extraGuestFees: _lockedPriceCalculation?.extraGuestFees,
-              petFees: _lockedPriceCalculation?.petFees,
+              bookingReference: confirmed.bookingReference,
+              guestEmail: confirmed.guestEmail,
+              guestName: confirmed.guestName,
+              checkIn: checkInDt,
+              checkOut: checkOutDt,
+              totalPrice: confirmed.totalPrice,
+              roomPrice:
+                  _lockedPriceCalculation?.roomPrice ?? confirmed.roomPrice,
+              extraGuestFees:
+                  _lockedPriceCalculation?.extraGuestFees ??
+                  confirmed.extraGuestFees,
+              petFees: _lockedPriceCalculation?.petFees ?? confirmed.petFees,
               additionalServicesTotal:
-                  _lockedPriceCalculation?.additionalServicesTotal,
-              nights: confirmedBooking.checkOut
-                  .difference(confirmedBooking.checkIn)
-                  .inDays,
-              guests: confirmedBooking.guestCount,
-              propertyName: _unit?.name ?? 'Property',
-              unitName: _unit?.name,
+                  _lockedPriceCalculation?.additionalServicesTotal ??
+                  confirmed.servicesTotal,
+              nights: confirmed.nights,
+              guests: totalGuests,
+              propertyName: confirmed.propertyName,
+              unitName: confirmed.unitName,
               paymentMethod: 'stripe',
-              booking: confirmedBooking,
               emailConfig: _widgetSettings?.emailConfig,
               widgetSettings: _widgetSettings,
               propertyId: _propertyId,

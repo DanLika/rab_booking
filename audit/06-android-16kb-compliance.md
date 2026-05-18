@@ -41,9 +41,9 @@ Script source (canonical, AOSP):
 | AGP | 8.9.1 | Auto-passes `-Wl,-z,max-page-size=16384` to linker (AGP ≥ 8.5) |
 | Kotlin | 2.1.0 | n/a |
 | Gradle | 8.11.1 | n/a |
-| `compileSdk` | from `flutter.compileSdkVersion` (35) | OK |
-| `targetSdk` | from `flutter.targetSdkVersion` (35) | OK — Android 15 target |
-| `minSdk` | from `flutter.minSdkVersion` | OK |
+| `compileSdk` | **36** (Android 16) — from `flutter.compileSdkVersion` | resolved via `aapt2 dump badging` of built APK |
+| `targetSdk` | **36** (Android 16) — from `flutter.targetSdkVersion` | resolved via `aapt2 dump xmltree` of built APK |
+| `minSdk` | **24** (Android 7.0) | resolved via `aapt2 dump xmltree` of built APK |
 | APK | `build/app/outputs/flutter-apk/app-release.apk` (87.4 MB) | versionName 1.0.10, versionCode 20 |
 
 ### Build remediation applied during audit
@@ -205,6 +205,21 @@ upload reject for 64-bit ABIs (rule active since 2025-11-01).
 at `build/app/outputs/bundle/release/app-release.aab`. The shipped `.so`
 artifacts are produced by the same Gradle outputs, so the ELF result is
 equivalent; the zip-alignment is independently re-checked on the AAB.
+
+> **⚠️ Pre-existing AAB build failure (out of 16 KB scope):** This audit
+> *attempted* `flutter build appbundle --release` after the APK pass. The
+> bundle task fails with
+> `package net.jonhanson.flutter_native_splash does not exist`
+> in `android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java:69`.
+> The `flutter_native_splash: ^2.4.3` entry in `pubspec.yaml` is declared as
+> a **`direct dev`** dependency (build-time CLI tool, generates splash assets)
+> and recent versions no longer auto-register as a runtime Flutter plugin —
+> the `GeneratedPluginRegistrant` reference is stale. Likely fix: delete
+> `GeneratedPluginRegistrant.java` and let Flutter regenerate, or move
+> `flutter_native_splash` under `dev_dependencies:` so the registrant is
+> re-emitted without it. **Not blocking 16 KB compliance** (APK and AAB
+> share the exact same `.so` outputs from `:app:mergeReleaseNativeLibs`),
+> **but does block any actual Play upload** until fixed. Tracked separately.
 
 Add to CI (Android matrix) — fail the build if any line contains `UNALIGNED`
 or the zip section does not end with `Verification successful`.

@@ -49,10 +49,12 @@ BookBed koristi Resend API za slanje transakcijskih emailova. Svi template-i kor
 | `password-reset.ts` | User | Reset passworda |
 
 ### Trial (2)
-| Template | Primatelj | Trigger |
-|----------|-----------|---------|
-| `trial-expired.ts` | Owner | Trial period istekao |
-| `trial-expiring-soon.ts` | Owner | Trial period ističe uskoro |
+| Template | Primatelj | Trigger | Status |
+|----------|-----------|---------|--------|
+| `trial-expired.ts` | Owner | Trial period istekao | **V1 (legacy plain-HTML)** — TODO: migrate to V2 |
+| `trial-expiring-soon.ts` | Owner | Trial period ističe uskoro | **V1 (legacy plain-HTML)** — TODO: migrate to V2 |
+
+> **Note:** Sva ostala 16 template-a već koriste V2 (`generateEmailHtml` + helper funkcije iz `template-helpers.ts`). Trial template-i su jedini V1 stragglers — vidi `docs/TODO.md` § "V2 trial email migration" i audit `/audit/02-branches.md`.
 
 ### Custom (1)
 | Template | Primatelj | Trigger |

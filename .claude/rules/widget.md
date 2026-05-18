@@ -47,3 +47,34 @@ paths:
 - `pointer-events: auto/none` toggle (click to interact, mouseleave to restore)
 - Mobile: script exits immediately (touch doesn't trap scroll)
 - **CRITICAL deploy**: `cp web/bookbed-overlay.js build/web_widget/` before `firebase deploy --only hosting:widget`
+
+## Host comparisons — use `EnvironmentConfig`, never literals
+
+All `view.bookbed.io` / `app.bookbed.io` / `bookbed.io` host literals were centralized in T13 (`audit/08-environment-url-centralization.md`, commit `b0bad83c`). New widget code MUST use:
+
+```dart
+import '../../../core/config/environment.dart';
+
+// Exact bare widget host (skip subdomain parsing on view.bookbed.io itself)
+if (host == EnvironmentConfig.widgetHost) { … }
+
+// Widget host OR any client subdomain (e.g. jasko-rab.view.bookbed.io)
+if (EnvironmentConfig.isWidgetHost(host)) { … }
+
+// Bare marketing domain — rewrite onto widget host
+if (EnvironmentConfig.isMarketingHost(host)) {
+  host = EnvironmentConfig.widgetHost;
+}
+```
+
+Per-env values:
+- **prod** widget/dashboard: `view.bookbed.io` / `app.bookbed.io`
+- **staging**: `staging.view.bookbed.io` / `staging.app.bookbed.io`
+- **dev**: `bookbed-widget-dev.web.app` / `bookbed-owner-dev.web.app` — real Firebase Hosting sites (no more `localhost:5000`)
+- **marketing** (`bookbed.io`): all envs share prod — no dev/staging hosting target exists
+
+### Hardcoded `bookbed.io` exceptions
+
+These MUST stay literal:
+- **iCal UID domain** (`ical_generator.dart`, `functions/src/icalExport.ts`) — RFC 5545 stable-identifier namespace. Env-dependent UIDs cause calendar-client duplicate events on re-sync.
+- **Embed-snippet copy** (`embed_help_screen.dart`, `embed_widget_guide_screen.dart:679/694/757/760/1140`, `faq_screen.dart`) — HTML for owners to copy/paste into their own websites. MUST reference prod widget URL; staging/dev render shouldn't emit a broken link.

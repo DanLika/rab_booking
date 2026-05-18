@@ -1,8 +1,30 @@
 # BookBed Changelog
 
-All version history from v4.6 to v6.65.
+All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-03-02 | **Version**: 6.66
+**Last Updated**: 2026-05-18 | **Version**: 6.67
+
+---
+
+**Changelog 6.67**: Environment URL Centralization (T13):
+- **`EnvironmentConfig` API extended** (`lib/core/config/environment.dart`):
+  - New getters: `widgetHost`, `dashboardHost`, `marketingHost`, `isWidgetHost()`, `isMarketingHost()`.
+  - Dev `widgetBaseUrl`: `http://localhost:5000` → `https://bookbed-widget-dev.web.app` (real Firebase Hosting site, no emulator dependency).
+  - Dev `dashboardBaseUrl`: `http://localhost:5001` → `https://bookbed-owner-dev.web.app`.
+  - `marketingHost` returns `'bookbed.io'` for all envs (no dev/staging marketing hosting target exists in `firebase.json`).
+- **6 prod-path callsites refactored** (replaced `view.bookbed.io` / `app.bookbed.io` literals with `EnvironmentConfig` getters):
+  - `widget/subdomain_service.dart:51` — host-skip check
+  - `widget/booking_view_screen.dart:107` — host-skip check
+  - `widget/booking_widget_screen.dart:4036` — marketing-domain rewrite (uses `isMarketingHost()`)
+  - `owner_dashboard/embed_widget_guide_screen.dart` — removed `_subdomainBaseDomain` const + 3 usages
+  - `owner_dashboard/embed_code_generator_dialog.dart` — removed duplicate `_defaultWidgetBaseUrl` + `_subdomainBaseDomain` consts + 3 usages
+  - `subscription/subscription_screen.dart` — removed `_webDashboardUrl` const, snackbar copy now interpolates `dashboardHost`
+- **Latent staging bug fixed**: `host.startsWith('view.')` in `subdomain_service.dart:51` + `booking_view_screen.dart:107` would have parsed `'staging'` as a client subdomain on staging widget host. Replaced with `host == EnvironmentConfig.widgetHost`.
+- **Stays hardcoded** (intentional): iCal UID `@bookbed.io` (RFC 5545 stable identifier), embed-snippet HTML for owner paste targets.
+- **Follow-up**: `functions/src/stripePayment.ts` SSRF allowlist keyed on `.view.bookbed.io` — dev Stripe `returnUrl` now resolves to `bookbed-widget-dev.web.app` and will fail SSRF check. Backend env (`functions/.env.bookbed-dev`) needs `WIDGET_ALLOWED_HOSTS` extended.
+- **Branch**: `fix/environment-url-centralization` (NOT pushed, NOT merged).
+- **Audit doc**: `audit/08-environment-url-centralization.md`.
+- **Closes**: `audit/04c-hardcoded-urls.md` §3.1 (M7) + `audit/07-ios-smoke-test.md` "Hardcoded prod URLs".
 
 ---
 

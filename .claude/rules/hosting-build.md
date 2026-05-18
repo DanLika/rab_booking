@@ -58,6 +58,27 @@ Dodaju se u Firebase Console → Hosting → Add custom domain:
 - `jasko-rab.view.bookbed.io` → widget za Jasmina
 - Format: `{subdomain}.view.bookbed.io`
 
+## Per-env URLs in Dart code — use `EnvironmentConfig`
+
+`lib/core/config/environment.dart` is the single source of truth for hosts and base URLs. Never hardcode `view.bookbed.io` / `app.bookbed.io` / `bookbed.io` / project IDs in Dart code. T13 (`audit/08-environment-url-centralization.md`, commit `b0bad83c`) centralized all 6 prod-path callsites.
+
+API:
+```dart
+EnvironmentConfig.firebaseProjectId   // 'rab-booking-248fc' / 'bookbed-staging' / 'bookbed-dev'
+EnvironmentConfig.functionsBaseUrl    // https://us-central1-{project}.cloudfunctions.net
+EnvironmentConfig.widgetHost          // view.bookbed.io / staging.view.bookbed.io / bookbed-widget-dev.web.app
+EnvironmentConfig.dashboardHost       // app.bookbed.io / staging.app.bookbed.io / bookbed-owner-dev.web.app
+EnvironmentConfig.marketingHost       // 'bookbed.io' (all envs — no marketing hosting target)
+EnvironmentConfig.widgetBaseUrl       // https://{widgetHost}
+EnvironmentConfig.dashboardBaseUrl    // https://{dashboardHost}
+EnvironmentConfig.isWidgetHost(host)  // bare host OR client subdomain of widget
+EnvironmentConfig.isMarketingHost(host) // bare marketing OR www.{marketing}
+```
+
+Exceptions that stay hardcoded:
+- iCal UID domain `@bookbed.io` (RFC 5545 stable identifier)
+- Embed-snippet copy in `embed_help_screen.dart` / `embed_widget_guide_screen.dart` / `faq_screen.dart` (owner paste targets MUST be prod URL)
+
 ## Multi-Platform Build System
 
 | Platforma | Build mod | Hot Reload | Napomena |

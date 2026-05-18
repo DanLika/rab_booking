@@ -40,13 +40,28 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 // - app.bookbed.io = Owner Dashboard
 // - view.bookbed.io = Booking Widget (main domain)
 // - *.view.bookbed.io = Client subdomains (e.g., jasko-rab.view.bookbed.io)
-const ALLOWED_RETURN_DOMAINS = [
-  "https://bookbed.io", // Marketing site (for future use)
-  "https://app.bookbed.io", // Owner dashboard
-  "https://view.bookbed.io", // Booking widget (main domain)
-  "http://localhost", // Local development
-  "http://127.0.0.1", // Local development
-];
+//
+// Per-env dev/staging hosts are appended at request time based on GCP_PROJECT
+// so the prod allowlist stays minimal. See getAllowedReturnDomains().
+function getAllowedReturnDomains(): string[] {
+  const base = [
+    "https://bookbed.io", // Marketing site (for future use)
+    "https://app.bookbed.io", // Owner dashboard
+    "https://view.bookbed.io", // Booking widget (main domain)
+    "http://localhost", // Local development
+    "http://127.0.0.1", // Local development
+  ];
+  const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
+  if (projectId === "bookbed-dev" || process.env.FUNCTIONS_EMULATOR === "true") {
+    base.push("https://bookbed-widget-dev.web.app");
+    base.push("https://bookbed-owner-dev.web.app");
+  }
+  if (projectId === "bookbed-staging") {
+    base.push("https://bookbed-widget-staging.web.app");
+    base.push("https://bookbed-owner-staging.web.app");
+  }
+  return base;
+}
 
 // Allowed wildcard domains for custom client subdomains
 // Widget uses view.bookbed.io subdomain structure: {client}.view.bookbed.io
@@ -64,7 +79,8 @@ const ALLOWED_WILDCARD_DOMAINS = [
  */
 function isAllowedReturnUrl(returnUrl: string): boolean {
   // Check exact domain matches first
-  const exactMatch = ALLOWED_RETURN_DOMAINS.some((domain) =>
+  const allowedDomains = getAllowedReturnDomains();
+  const exactMatch = allowedDomains.some((domain) =>
     returnUrl.startsWith(domain)
   );
 
@@ -233,7 +249,7 @@ export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "R
       // SECURITY: Log details internally, generic message to client
       logError(`createStripeCheckoutSession: Invalid return URL (not in whitelist): ${returnUrl}`, null, {
         returnUrl: returnUrl,
-        allowedDomains: ALLOWED_RETURN_DOMAINS,
+        allowedDomains: getAllowedReturnDomains(),
         allowedWildcards: ALLOWED_WILDCARD_DOMAINS,
       });
       logSecurityEvent(

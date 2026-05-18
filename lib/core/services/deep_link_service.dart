@@ -156,31 +156,6 @@ class DeepLinkService {
     }
   }
 
-  /// Generate deep link URL for blocking dates on Booking.com
-  static String generateBookingComBlockUrl({
-    required String hotelId,
-    required String roomTypeId,
-    required DateTime checkIn,
-    required DateTime checkOut,
-  }) {
-    final checkInStr = checkIn.toIso8601String().split('T')[0];
-    final checkOutStr = checkOut.toIso8601String().split('T')[0];
-    // URLs to whitelisted domains are safe to construct like this
-    // The base domain is hardcoded and safe
-    return 'https://admin.booking.com/hotels/$hotelId/room-types/$roomTypeId/calendar?checkin=$checkInStr&checkout=$checkOutStr';
-  }
-
-  /// Generate deep link URL for blocking dates on Airbnb
-  static String generateAirbnbBlockUrl({
-    required String listingId,
-    required DateTime checkIn,
-    required DateTime checkOut,
-  }) {
-    final checkInStr = checkIn.toIso8601String().split('T')[0];
-    final checkOutStr = checkOut.toIso8601String().split('T')[0];
-    return 'https://www.airbnb.com/hosting/listings/$listingId/calendar?checkin=$checkInStr&checkout=$checkOutStr';
-  }
-
   /// Generate app deep link URL
   static String generateAppDeepLink({
     required String path,

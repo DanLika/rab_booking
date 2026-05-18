@@ -36,8 +36,6 @@ export interface OverbookingDetectedParams {
   booking2Source: string;
   conflictDates: Date[];
   viewConflictUrl?: string;
-  blockBookingComUrl?: string;
-  blockAirbnbUrl?: string;
   viewInAppUrl?: string;
 }
 
@@ -60,8 +58,6 @@ export function generateOverbookingDetectedEmailV2(
     booking1Source,
     booking2Source,
     conflictDates,
-    blockBookingComUrl,
-    blockAirbnbUrl,
     viewInAppUrl,
   } = params;
 
@@ -131,25 +127,6 @@ export function generateOverbookingDetectedEmailV2(
       })
     );
   }
-  if (blockBookingComUrl) {
-    buttons.push(
-      generateButton({
-        text: "Block on Booking.com",
-        url: blockBookingComUrl,
-        secondary: true,
-      })
-    );
-  }
-  if (blockAirbnbUrl) {
-    buttons.push(
-      generateButton({
-        text: "Block on Airbnb",
-        url: blockAirbnbUrl,
-        secondary: true,
-      })
-    );
-  }
-
   const instructionsAlert = generateAlert({
     type: "info",
     title: "What to do:",

@@ -186,13 +186,15 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
 
           // Defensive check: ensure GoRouter is available before navigation
           try {
-            // Navigate to booking details screen with both booking and settings
-            // Include query params in URL for page refresh support
+            // Navigate to booking details screen with both booking and settings.
+            // Uri.queryParameters calls .toString() on each value during encoding;
+            // a null value compiles to literal `null.toString()` in JS and throws.
+            // `_autoLookupBooking` already guards both fields, so `?? ''` is belt-and-braces.
             final detailsUrl = Uri(
               path: '/view/details',
               queryParameters: {
-                'ref': widget.bookingRef,
-                'email': widget.email,
+                'ref': widget.bookingRef ?? '',
+                'email': widget.email ?? '',
                 if (widget.token != null) 'token': widget.token,
               },
             ).toString();
@@ -231,12 +233,13 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
           // If widget settings fail to load, still show booking details
           // Defensive check: ensure GoRouter is available before navigation
           try {
-            // Include query params in URL for page refresh support
+            // Include query params in URL for page refresh support.
+            // Same null-toString guard as the success path above.
             final detailsUrl = Uri(
               path: '/view/details',
               queryParameters: {
-                'ref': widget.bookingRef,
-                'email': widget.email,
+                'ref': widget.bookingRef ?? '',
+                'email': widget.email ?? '',
                 if (widget.token != null) 'token': widget.token,
               },
             ).toString();

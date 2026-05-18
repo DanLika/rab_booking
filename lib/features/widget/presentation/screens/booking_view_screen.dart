@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/theme_provider.dart';
 import '../providers/booking_lookup_provider.dart';
 import '../providers/subdomain_provider.dart';
+import '../../../../../core/config/environment.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../shared/providers/widget_repository_providers.dart';
 import '../../domain/services/subdomain_service.dart' show SubdomainContext;
@@ -103,15 +104,14 @@ class _BookingViewScreenState extends ConsumerState<BookingViewScreen> {
       final uri = Uri.base;
       final host = uri.host;
 
-      // If host is view.bookbed.io, skip subdomain check and proceed with booking lookup
-      if (host == 'view.bookbed.io' || host.startsWith('view.')) {
-        // Store context as null (no subdomain needed for view.bookbed.io)
+      // If host is the bare widget host, skip subdomain check and proceed
+      // with booking lookup (a missing subdomain is expected there).
+      if (host == EnvironmentConfig.widgetHost) {
         if (mounted) {
           setState(() {
             _subdomainContext = null;
           });
         }
-        // Proceed with booking lookup (subdomain not required for view.bookbed.io)
         await _autoLookupBooking();
         return;
       }

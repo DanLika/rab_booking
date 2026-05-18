@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart' show PointerScrollEvent;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/config/environment.dart';
 import '../../../../core/utils/web_utils.dart';
 import '../../../../core/utils/browser_detection.dart';
 import '../../../../core/services/analytics_service.dart';
@@ -4034,12 +4035,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         throw Exception('Invalid base URL: scheme or host is empty');
       }
 
-      // CRITICAL: Use view.bookbed.io for return URL instead of bookbed.io
-      // This ensures the popup/redirect opens on the view subdomain
-      // which is the correct domain for the widget
+      // CRITICAL: Rewrite the bare marketing domain onto the widget host so
+      // the popup/redirect opens where the widget actually runs.
       String returnHost = baseUrl.host;
-      if (returnHost == 'bookbed.io' || returnHost == 'www.bookbed.io') {
-        returnHost = 'view.bookbed.io';
+      if (EnvironmentConfig.isMarketingHost(returnHost)) {
+        returnHost = EnvironmentConfig.widgetHost;
       }
 
       final returnUrlWithoutHash = Uri(

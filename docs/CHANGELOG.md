@@ -2,7 +2,30 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-18 | **Version**: 6.69
+**Last Updated**: 2026-05-18 | **Version**: 6.70
+
+---
+
+**Changelog 6.70**: Wave 0 promote wrap-up (2026-05-18):
+- **Scope**: 8 Wave 0 branches (T7/T8/T10/T11/T12) + 3 post-test fixes (null.toString hardening, ErrorBoundary reset + AI chat UX, env-url centralization) merged to `main`. Tags `pre-wave0-promote` (`eadec3cc`) and `post-wave0-stable` (`a480e5f3`) pushed to origin.
+- **Stripe SSRF allowlist made env-aware** (`functions/src/stripePayment.ts`): `const ALLOWED_RETURN_DOMAINS` → `function getAllowedReturnDomains()`. Reads `process.env.GCP_PROJECT` / `GCLOUD_PROJECT` / `FUNCTIONS_EMULATOR`; appends `bookbed-widget-dev.web.app` + `bookbed-owner-dev.web.app` for dev, `bookbed-widget-staging.web.app` + `bookbed-owner-staging.web.app` for staging. Two callers updated (`isAllowedReturnUrl()`, security-log branch). `ALLOWED_WILDCARD_DOMAINS` untouched. Deployed to `bookbed-dev` only (`createStripeCheckoutSession(us-central1)`); prod (`rab-booking-248fc`) and staging untouched.
+- **Jest config pre-existing fragility patched**: `functions/jest.config.js` now has `testPathIgnorePatterns: ["/node_modules/", "<rootDir>/test/firestore_rules/"]` so plain `npm test` skips the emulator-required suite (152/152). `functions/package.json` `test:rules` script adds CLI `--testPathIgnorePatterns=/node_modules/` to override the config-level ignore and re-include rules (8/8 with emulator). Don't change either side without testing both.
+- **Conflicts resolved during merges** (6 total across 3 merges):
+  - `fix/null-tostring-hardening`: 1 — `docs/TODO.md` (both sides added independent sections; kept both, null-tostring-related first).
+  - `fix/error-boundary-and-chat-ux`: 3 — `CLAUDE.md` (kept context-mode section + v7.1 bump), `docs/CHANGELOG.md` (dropped redundant "Reserved v6.67" placeholder), `ai_chat_provider.dart` (dropped orphan `final errorMsg = e.toString();` left by T7).
+  - `fix/environment-url-centralization`: 2 — `.claude/rules/widget.md` (dropped obsolete "Brittle host check" + "Hardcoded literals" sections, kept "Silent debug guards", took post-fix "Host comparisons"), `docs/CHANGELOG.md` (env-url entry bumped from claimed 6.67 → 6.69 to avoid collision with error-boundary 6.67).
+- **Resmoke** (Phase 4, against `bookbed-dev`):
+  - CF probes — `getBookingByStripeSession`: 404 ✓, `verifyBookingAccess`: 404 ✓, `createStripeCheckoutSession`: 400 INVALID_ARGUMENT ✓ (no 500 from SSRF regression).
+  - Live rules regression — `stripe_session_id` query 403 ✓, `booking_reference` query 403 ✓, `unit_id+status` query 200 ✓ (T11c-deferred, intentional).
+  - `flutter analyze` 0, `flutter test` 1100/1100, `npm test` 152/152, `npm run test:rules` 8/8.
+- **Outstanding** (deferred to Wave 1):
+  - 12 branches awaiting archive-and-delete (8 Wave 0 + 1 test/wave0-integration + 3 helper branches created mid-promote: `fix/stripe-dev-allowlist`, `chore/jest-exclude-rules-from-default`, `chore/jest-rules-script-fix`).
+  - 9 stashes awaiting triage (`stash@{0}-{8}` Wave 0-era; full table in `audit/09-wave0-promote-report.md`).
+  - Prod cutover (`rab-booking-248fc`) — Wave 0 changes are dev-only until separate prod deploy.
+  - Stripe allowlist proper env-var refactor (forward-looking — current pattern is project-id-conditional).
+  - T11c (drop `unit_id+status` clause) blocked on `getUnitAvailability` Cloud Function.
+- **Audit doc**: `audit/09-wave0-promote-report.md` (committed `31c47c78`).
+- **Multi-agent git race surfaced**: 5+ parallel claude sessions on host caused branch swaps during pre-flight. Documented in MEMORY → `wave0-promote-2026-05-18.md`. Future promote runs should serialize via external mutex.
 
 ---
 

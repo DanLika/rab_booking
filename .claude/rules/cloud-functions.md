@@ -74,3 +74,28 @@ After code changes to `functions/src/`, always deploy:
 cd functions && npm run deploy
 ```
 Changes in Git don't affect production until deployed!
+
+## Region split (audit 2026-05-18)
+
+**14 functions** deklariraju `region: 'europe-west1'`; ostalih ~22 default na `us-central1`. Klijentska Dart `EnvironmentConfig.functionsBaseUrl` hardkodira `us-central1-…`.
+
+eu-west1 callable funkcije MORAJU se zvati preko region-specific instance:
+```dart
+final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
+await functions.httpsCallable('setLifetimeLicense').call(...);
+```
+
+eu-west1 funkcije (provjeri prije dodavanja novih): `setLifetimeLicense`, `updateUserStatus`, `onUserCreate`, `checkLoginRateLimit`, `checkRegistrationRateLimit`, `scheduledIcalSync`, `syncIcalFeedNow`, `migrateTrialStatus`, `checkPasswordHistory`, `savePasswordToHistory`, `onPropertyDeleted`, `revokeAllRefreshTokens`, `checkTrialExpiration`, `sendTrialExpirationWarning`, `onUnitDeleted`, + 6 funkcija u `scheduledPushNotifications.ts`.
+
+## Sentry env tag bug (audit 2026-05-18)
+
+`functions/src/sentry.ts:30` deriviraju `environment` SAMO iz `FUNCTIONS_EMULATOR`. To znači dev Cloud Run deploy (`bookbed-dev`, ne emulator) šalje errore u Sentry tagovane kao `production` — miješaju se s pravim prod erorima.
+
+Fix prije bilo kojeg dev cloud deploy-a: derivirati iz `GCP_PROJECT`:
+```typescript
+environment: process.env.GCP_PROJECT === 'rab-booking-248fc' ? 'production' : 'development'
+```
+
+## v2 triggers, dva v1 importa zaostala
+
+Svi trigger-i su v2 (`onCall`, `onRequest`, `onSchedule`, `onDocument*`). `functions.config()` se nigdje ne koristi. Dvije lokacije ipak importaju v1 namespace radi non-trigger helpera: `firebase.ts:20` (Admin SDK init), `logger.ts:9` (logger objekt). To je OK; ne mijenjati u v1-removal čišćenju bez razloga.

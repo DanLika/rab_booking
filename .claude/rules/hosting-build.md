@@ -33,6 +33,30 @@ paths:
 | `widget` | `bookbed-widget` | `build/web_widget` | view.bookbed.io, *.view.bookbed.io |
 | `admin` | `bookbed-admin` | `build/web_admin` | bookbed-admin.web.app |
 
+## Tri Firebase projekta (`.firebaserc` aliasi)
+
+| Alias | Project ID | Notes |
+|---|---|---|
+| `default` / `production` | `rab-booking-248fc` | **PROD** — legacy naziv, sva produkcija (Stripe LIVE, Resend prod sender) |
+| `development` | `bookbed-dev` | Konfigurisan, projekat postoji. Site IDs: `bookbed-{owner,widget,admin}-dev` |
+| `staging` | `bookbed-staging` | Konfigurisan, projekat postoji. Site IDs: `bookbed-{owner,widget,admin}-staging` |
+
+Site IDs za `-dev` i `-staging` MORAJU postojati u Firebase Console prije deploy-a (target mapping ne kreira ih).
+
+Dart entrypoints po env: `lib/main.dart` (prod), `lib/main_dev.dart`, `lib/main_staging.dart` + matching `firebase_options{,_dev,_staging}.dart`. Admin nema dev entrypoint (samo prod + staging).
+
+### Footgun: hardcoded prod project ID
+`lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart:211` hardkodira `const projectId = 'rab-booking-248fc'`. Dev build-ovi će generirati iCal export URL-ove koji pokazuju na PROD Cloud Functions. Zamijeniti s `EnvironmentConfig.firebaseProjectId` prije dev deploy-a.
+
+### Footgun: GitHub Actions workflow
+`.github/workflows/deploy-widget.yml:57` hardkodira `projectId: rab-booking-248fc`. Workflow trenutno radi samo na prod.
+
+## Functions env layering po projektu
+
+`functions/.env` (default) + `functions/.env.<projectId>` (per-project, ako postoji).
+
+Trenutno postoji samo `.env.rab-booking-248fc`. Za `bookbed-dev` deploy: kreirati `functions/.env.bookbed-dev` sa minimum `FROM_EMAIL`, `FROM_NAME`, `WIDGET_URL` (dev), `BOOKING_DOMAIN`, `WEB_APP_URL`, `PASSWORD_RESET_REDIRECT_URL`. Bez toga dev fall-back-a na default `.env` koji ima prod URL-ove → guest emails iz dev pokazuju na prod.
+
 ## Build commands
 
 ```bash

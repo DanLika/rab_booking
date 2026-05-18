@@ -1,0 +1,1501 @@
+[1;33mdiff --git a/Users/duskolicanin/git/bookbed/firestore.indexes.json b/tmp/prod-indexes.json[m
+[1;33mindex e14c4d0f..e6ce4569 100644[m
+[1;33m--- a/Users/duskolicanin/git/bookbed/firestore.indexes.json[m
+[1;33m+++ b/tmp/prod-indexes.json[m
+[1;35m@@ -1,210 +1,206 @@[m
+{[m
+  "indexes": [[m
+    {[m
+      "collectionGroup": [31m"users",[m[32m"additional_services",[m
+      "queryScope": [31m"COLLECTION",[m[32m"COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"role",[m[32m"is_available",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"created_at",[m
+[31m          "order": "DESCENDING"[m
+[31m        }[m
+[31m      ][m
+[31m    },[m
+[31m    {[m
+[31m      "collectionGroup": "users",[m
+[31m      "queryScope": "COLLECTION",[m
+[31m      "fields": [[m
+[31m        {[m
+[31m          "fieldPath": "role",[m[32m"sort_order",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"created_at",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"users",[m[32m"additional_services",[m
+      "queryScope": [31m"COLLECTION",[m[32m"COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"accountStatus",[m[32m"owner_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"trialExpiresAt",[m
+[31m          "order": "ASCENDING"[m
+[31m        }[m
+[31m      ][m
+[31m    },[m
+[31m    {[m
+[31m      "collectionGroup": "users",[m
+[31m      "queryScope": "COLLECTION",[m
+[31m      "fields": [[m
+[31m        {[m
+[31m          "fieldPath": "accountStatus",[m[32m"deleted_at",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"trialWarning7DaysSent",[m[32m"sort_order",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"trialExpiresAt",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"users",[m[32m"additional_services",[m
+      "queryScope": "COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"accountStatus",[m[32m"is_available",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"trialWarning3DaysSent",[m[32m"sort_order",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"trialExpiresAt",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"users",[m[32m"additional_services",[m
+      "queryScope": "COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"accountStatus",[m[32m"owner_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"trialWarning1DaySent",[m[32m"is_available",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"trialExpiresAt",[m[32m"deleted_at",[m
+          "order": "ASCENDING"[m
+[31m}[m
+[31m      ][m        },[31m{[m
+[31m      "collectionGroup": "daily_prices",[m
+[31m      "queryScope": "COLLECTION_GROUP",[m
+[31m      "fields": [[m
+        {[m
+          "fieldPath": [31m"unit_id",[m[32m"sort_order",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"date",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"daily_prices",[m[32m"booking_services",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"unit_id",[m[32m"booking_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"available",[m[32m"created_at",[m
+          "order": [31m"ASCENDING"[m[32m"DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"daily_prices",[m[32m"booking_services",[m
+      "queryScope": [31m"COLLECTION_GROUP",[m[32m"COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"unit_id",[m[32m"booking_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"available",[m[32m"created_at",[m
+          "order": [31m"ASCENDING"[m[32m"DESCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"date",[m[32m"__name__",[m
+          "order": [31m"ASCENDING"[m[32m"DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"unit_id",[m[32m"created_at",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_in",[m[32m"status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"unit_id",[m[32m"owner_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"status",[m[32m"check_in",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_in",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"unit_id",[m[32m"owner_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"status",[m[32m"check_out",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"created_at",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"unit_id",[m[32m"owner_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"status",[m[32m"created_at",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+[1;35m@@ -217,8 +213,13 @@[m
+        {[m
+          "fieldPath": "created_at",[m
+          "order": "DESCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+[1;35m@@ -229,10 +230,15 @@[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"created_at",[m[32m"status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+[1;35m@@ -247,10 +253,15 @@[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"created_at",[m[32m"check_in",[m
+          "order": [31m"DESCENDING"[m[32m"ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+[1;35m@@ -265,24 +276,38 @@[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_in",[m[32m"created_at",[m
+          "order": [31m"ASCENDING"[m[32m"DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"owner_id",[m[32m"payment_method",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": "status",[m
+          "order": "ASCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "payment_deadline",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+[1;35m@@ -293,42 +318,57 @@[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"payment_deadline",[m[32m"check_in",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"payment_method",[m[32m"status",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"status",[m[32m"check_in",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"payment_deadline",[m[32m"check_out",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"user_id",[m[32m"status",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_in",[m[32m"check_out",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+[1;35m@@ -339,10 +379,15 @@[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"stripe_pending_expires_at",[m[32m"created_at",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+[1;35m@@ -353,83 +398,104 @@[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_in",[m[32m"payment_deadline",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_out",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": [31m"COLLECTION",[m[32m"COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": "status",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_in",[m[32m"stripe_pending_expires_at",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_out",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": [31m"COLLECTION",[m[32m"COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"status",[m[32m"unit_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_out",[m[32m"check_in",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_in",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"user_id",[m[32m"unit_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_out",[m[32m"status",[m
+          "order": [31m"DESCENDING"[m[32m"ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"created_at",[m[32m"unit_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": "status",[m
+          "order": "ASCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "check_in",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        [32m{[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+        {[m
+          "fieldPath": "status",[m
+          "order": "ASCENDING"[m
+[1;35m@@ -437,36 +503,51 @@[m
+        {[m
+          "fieldPath": "created_at",[m
+          "order": "ASCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"owner_id",[m[32m"user_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": "check_in",[m
+          "order": "ASCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"owner_id",[m[32m"user_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": "check_out",[m
+          "order": [31m"ASCENDING"[m[32m"DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+[1;35m@@ -479,12 +560,86 @@[m
+        {[m
+          "fieldPath": "status",[m
+          "order": "ASCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": [31m"COLLECTION_GROUP",[m[32m"COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "owner_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "created_at",[m
+[32m          "order": "DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "payment_method",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "payment_status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "created_at",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_in",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_out",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": "status",[m
+[1;35m@@ -493,53 +648,417 @@[m
+        {[m
+          "fieldPath": "check_out",[m
+          "order": "ASCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "check_in",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "queryScope": [31m"COLLECTION_GROUP",[m[32m"COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "payment_deadline",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "stripe_pending_expires_at",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_in",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_out",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_in",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_in",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_out",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_out",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "created_at",[m
+[32m          "order": "DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_in",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_in",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "check_out",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "queryScope": "COLLECTION",[m
+      "fields": [[m
+        [32m{[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+        {[m
+          "fieldPath": "status",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"check_in",[m[32m"created_at",[m
+[32m          "order": "DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "daily_prices",[m
+[32m      "queryScope": "COLLECTION_GROUP",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "available",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "daily_prices",[m
+[32m      "queryScope": "COLLECTION_GROUP",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "available",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "date",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "daily_prices",[m
+[32m      "queryScope": "COLLECTION_GROUP",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "date",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "daily_prices",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "date",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "ical_events",[m
+[32m      "queryScope": "COLLECTION_GROUP",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "start_date",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "ical_events",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "unit_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "start_date",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "notifications",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "ownerId",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "isRead",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"booking_services",[m[32m"notifications",[m
+      "queryScope": [31m"COLLECTION_GROUP",[m[32m"COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"booking_id",[m[32m"ownerId",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"created_at",[m[32m"timestamp",[m
+[32m          "order": "DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"ical_events",[m[32m"platform_connections",[m
+      "queryScope": [31m"COLLECTION_GROUP",[m[32m"COLLECTION",[m
+      "fields": [[m
+        [32m{[m
+[32m          "fieldPath": "owner_id",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+        {[m
+          "fieldPath": "unit_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"start_date",[m[32m"status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"ical_events",[m[32m"platform_connections",[m
+      "queryScope": "COLLECTION",[m
+      "fields": [[m
+        {[m
+[1;35m@@ -547,10 +1066,15 @@[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"start_date",[m[32m"status",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "properties",[m
+[1;35m@@ -563,8 +1087,13 @@[m
+        {[m
+          "fieldPath": "created_at",[m
+          "order": "DESCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "properties",[m
+[1;35m@@ -577,171 +1106,282 @@[m
+        {[m
+          "fieldPath": "is_active",[m
+          "order": "ASCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"units",[m[32m"securityEvents",[m
+      "queryScope": "COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"property_id",[m[32m"userId",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"created_at",[m[32m"timestamp",[m
+[32m          "order": "DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": "securityEvents",[m
+      "queryScope": [31m"COLLECTION_GROUP",[m[32m"COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"userId",[m[32m"type",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "timestamp",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "ASCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "securityEvents",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "type",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": "timestamp",[m
+          "order": "DESCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"platform_connections",[m[32m"sync_failures",[m
+      "queryScope": "COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"owner_id",[m[32m"next_retry_at",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"unit_id",[m[32m"retry_count",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"status",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"platform_connections",[m[32m"units",[m
+      "queryScope": [31m"COLLECTION",[m[32m"COLLECTION_GROUP",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"unit_id",[m[32m"property_id",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"status",[m[32m"created_at",[m
+[32m          "order": "DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "units",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "property_id",[m
+          "order": "ASCENDING"[m
+        [32m},[m
+[32m        {[m
+[32m          "fieldPath": "created_at",[m
+[32m          "order": "DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"sync_failures",[m[32m"users",[m
+      "queryScope": "COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"next_retry_at",[m[32m"accountStatus",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"retry_count",[m[32m"trialExpiresAt",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"additional_services",[m[32m"users",[m
+      "queryScope": [31m"COLLECTION_GROUP",[m[32m"COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"owner_id",[m[32m"accountStatus",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"deleted_at",[m[32m"trialWarning1DaySent",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"sort_order",[m[32m"trialExpiresAt",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"additional_services",[m[32m"users",[m
+      "queryScope": "COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"owner_id",[m[32m"accountStatus",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"is_available",[m[32m"trialWarning3DaysSent",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"deleted_at",[m[32m"trialExpiresAt",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"sort_order",[m[32m"__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"additional_services",[m[32m"users",[m
+      "queryScope": "COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"is_available",[m[32m"accountStatus",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"sort_order",[m[32m"trialWarning7DaysSent",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "trialExpiresAt",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+    },[m
+    {[m
+      "collectionGroup": [31m"additional_services",[m[32m"users",[m
+      "queryScope": [31m"COLLECTION_GROUP",[m[32m"COLLECTION",[m
+      "fields": [[m
+        {[m
+          "fieldPath": [31m"is_available",[m[32m"role",[m
+          "order": "ASCENDING"[m
+        },[m
+        {[m
+          "fieldPath": [31m"sort_order",[m[32m"created_at",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+          "order": "ASCENDING"[m
+        }[m
+      [31m][m[32m],[m
+[32m      "density": "SPARSE_ALL"[m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "users",[m
+[32m      "queryScope": "COLLECTION",[m
+[32m      "fields": [[m
+[32m        {[m
+[32m          "fieldPath": "role",[m
+[32m          "order": "ASCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "created_at",[m
+[32m          "order": "DESCENDING"[m
+[32m        },[m
+[32m        {[m
+[32m          "fieldPath": "__name__",[m
+[32m          "order": "DESCENDING"[m
+[32m        }[m
+[32m      ],[m
+[32m      "density": "SPARSE_ALL"[m
+    }[m
+  ],[m
+  "fieldOverrides": [[m
+    {[m
+      "collectionGroup": [31m"ical_events",[m[32m"bookings",[m
+      "fieldPath": [31m"unit_id",[m[32m"booking_reference",[m
+[32m      "ttl": false,[m
+      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+          "queryScope": "COLLECTION"[m
+        },[m
+[31m        {[m
+[31m          "order": "DESCENDING",[m
+[31m          "queryScope": "COLLECTION"[m
+[31m        },[m
+        {[m
+          "order": "ASCENDING",[m
+          "queryScope": "COLLECTION_GROUP"[m
+        [32m}[m
+[32m      ][m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "bookings",[m
+[32m      "fieldPath": "owner_id",[m
+[32m      "ttl": false,[m
+[32m      "indexes": [[m
+[32m        {[m
+[32m          "order": "ASCENDING",[m
+[32m          "queryScope": "COLLECTION"[m
+        },[m
+        {[m
+          "order": [31m"DESCENDING",[m[32m"ASCENDING",[m
+          "queryScope": "COLLECTION_GROUP"[m
+        }[m
+      ][m
+[1;35m@@ -749,6 +1389,7 @@[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "fieldPath": "stripe_session_id",[m
+      [32m"ttl": false,[m
+      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+[1;35m@@ -762,7 +1403,8 @@[m
+    },[m
+    {[m
+      "collectionGroup": "bookings",[m
+      "fieldPath": [31m"booking_reference",[m[32m"unit_id",[m
+[32m      "ttl": false,[m
+      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+[1;35m@@ -775,46 +1417,66 @@[m
+      ][m
+    },[m
+    {[m
+      "collectionGroup": [31m"bookings",[m[32m"caliaRateLimits",[m
+      "fieldPath": [31m"owner_id",[m[32m"expireAt",[m
+[32m      "ttl": true,[m
+      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+          "queryScope": "COLLECTION"[m
+        },[m
+        {[m
+          "order": [31m"ASCENDING",[m[32m"DESCENDING",[m
+          "queryScope": [31m"COLLECTION_GROUP"[m[32m"COLLECTION"[m
+[32m        },[m
+[32m        {[m
+[32m          "arrayConfig": "CONTAINS",[m
+[32m          "queryScope": "COLLECTION"[m
+        }[m
+      ][m
+    },[m
+    {[m
+      "collectionGroup": [31m"bookings",[m[32m"ical_events",[m
+      "fieldPath": "unit_id",[m
+      [32m"ttl": false,[m
+      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+          "queryScope": "COLLECTION"[m
+        },[m
+        [32m{[m
+[32m          "order": "DESCENDING",[m
+[32m          "queryScope": "COLLECTION"[m
+[32m        },[m
+        {[m
+          "order": "ASCENDING",[m
+          "queryScope": "COLLECTION_GROUP"[m
+        [32m},[m
+[32m        {[m
+[32m          "order": "DESCENDING",[m
+[32m          "queryScope": "COLLECTION_GROUP"[m
+        }[m
+      ][m
+    },[m
+    {[m
+      "collectionGroup": [31m"users",[m[32m"ical_feeds",[m
+      "fieldPath": [31m"stripeSubscriptionId",[m[32m"property_id",[m
+[32m      "ttl": false,[m
+      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+          "queryScope": "COLLECTION"[m
+        [32m},[m
+[32m        {[m
+[32m          "order": "ASCENDING",[m
+[32m          "queryScope": "COLLECTION_GROUP"[m
+        }[m
+      ][m
+    },[m
+    {[m
+      "collectionGroup": "ical_feeds",[m
+      "fieldPath": [31m"unit_id",[m[32m"status",[m
+[32m      "ttl": false,[m
+      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+[1;35m@@ -828,7 +1490,8 @@[m
+    },[m
+    {[m
+      "collectionGroup": "ical_feeds",[m
+      "fieldPath": [31m"status",[m[32m"unit_id",[m
+[32m      "ttl": false,[m
+      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+[1;35m@@ -841,18 +1504,34 @@[m
+      ][m
+    },[m
+    {[m
+      "collectionGroup": [31m"ical_feeds",[m[32m"system_rate_limits",[m
+      "fieldPath": [31m"property_id",[m[32m"expireAt",[m
+[32m      "ttl": true,[m
+      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+          "queryScope": "COLLECTION"[m
+        },[m
+        [32m{[m
+[32m          "order": "DESCENDING",[m
+[32m          "queryScope": "COLLECTION"[m
+[32m        },[m
+[32m        {[m
+[32m          "arrayConfig": "CONTAINS",[m
+[32m          "queryScope": "COLLECTION"[m
+[32m        }[m
+[32m      ][m
+[32m    },[m
+[32m    {[m
+[32m      "collectionGroup": "users",[m
+[32m      "fieldPath": "stripeSubscriptionId",[m
+[32m      "ttl": false,[m
+[32m      "indexes": [[m
+        {[m
+          "order": "ASCENDING",[m
+          "queryScope": [31m"COLLECTION_GROUP"[m[32m"COLLECTION"[m
+        }[m
+      ][m
+    }[m
+  ][m
+}

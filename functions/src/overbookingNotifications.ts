@@ -61,8 +61,6 @@ export async function sendOverbookingNotifications(
 
     // Generate deep links
     const viewInAppUrl = `https://app.bookbed.io/owner/calendar?unit=${conflict.unitId}&conflict=${conflict.conflictId}`;
-    const blockBookingComUrl = await generateBlockBookingComUrl(conflict);
-    const blockAirbnbUrl = await generateBlockAirbnbUrl(conflict);
 
     // Send all notification types in parallel
     await Promise.allSettled([
@@ -70,8 +68,6 @@ export async function sendOverbookingNotifications(
         ownerEmail,
         ownerName,
         viewInAppUrl,
-        blockBookingComUrl,
-        blockAirbnbUrl,
       }),
       sendOverbookingPushNotification(conflict, {
         ownerId: conflict.ownerId,
@@ -99,8 +95,6 @@ async function sendOverbookingEmailNotification(
     ownerEmail: string;
     ownerName: string;
     viewInAppUrl: string;
-    blockBookingComUrl?: string;
-    blockAirbnbUrl?: string;
   }
 ): Promise<void> {
   try {
@@ -119,8 +113,6 @@ async function sendOverbookingEmailNotification(
       booking2Source: conflict.booking2.source,
       conflictDates: conflict.conflictDates,
       viewConflictUrl: options.viewInAppUrl,
-      blockBookingComUrl: options.blockBookingComUrl,
-      blockAirbnbUrl: options.blockAirbnbUrl,
       viewInAppUrl: options.viewInAppUrl,
     };
 
@@ -220,68 +212,4 @@ async function createOverbookingFirestoreNotification(
   }
 }
 
-/**
- * Generate deep link URL for blocking dates on Booking.com
- */
-async function generateBlockBookingComUrl(
-  conflict: OverbookingConflictData
-): Promise<string | undefined> {
-  try {
-    // Get platform connection for this unit
-    const connectionsSnapshot = await db
-      .collection("platform_connections")
-      .where("unit_id", "==", conflict.unitId)
-      .where("platform", "==", "booking_com")
-      .where("status", "==", "active")
-      .limit(1)
-      .get();
-
-    if (connectionsSnapshot.empty) {
-      return undefined;
-    }
-
-    const connection = connectionsSnapshot.docs[0].data();
-    const hotelId = connection.external_property_id;
-    const roomTypeId = connection.external_unit_id;
-    const checkIn = conflict.conflictDates[0];
-    const checkOut = conflict.conflictDates[conflict.conflictDates.length - 1];
-
-    return `https://admin.booking.com/hotels/${hotelId}/room-types/${roomTypeId}/calendar?checkin=${checkIn.toISOString().split("T")[0]}&checkout=${checkOut.toISOString().split("T")[0]}`;
-  } catch (error) {
-    logError("[Overbooking Notifications] Failed to generate Booking.com URL", error);
-    return undefined;
-  }
-}
-
-/**
- * Generate deep link URL for blocking dates on Airbnb
- */
-async function generateBlockAirbnbUrl(
-  conflict: OverbookingConflictData
-): Promise<string | undefined> {
-  try {
-    // Get platform connection for this unit
-    const connectionsSnapshot = await db
-      .collection("platform_connections")
-      .where("unit_id", "==", conflict.unitId)
-      .where("platform", "==", "airbnb")
-      .where("status", "==", "active")
-      .limit(1)
-      .get();
-
-    if (connectionsSnapshot.empty) {
-      return undefined;
-    }
-
-    const connection = connectionsSnapshot.docs[0].data();
-    const listingId = connection.external_property_id;
-    const checkIn = conflict.conflictDates[0];
-    const checkOut = conflict.conflictDates[conflict.conflictDates.length - 1];
-
-    return `https://www.airbnb.com/hosting/listings/${listingId}/calendar?checkin=${checkIn.toISOString().split("T")[0]}&checkout=${checkOut.toISOString().split("T")[0]}`;
-  } catch (error) {
-    logError("[Overbooking Notifications] Failed to generate Airbnb URL", error);
-    return undefined;
-  }
-}
 

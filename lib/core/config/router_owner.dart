@@ -35,7 +35,6 @@ import '../../features/owner_dashboard/presentation/screens/stripe_connect_setup
 import '../../features/owner_dashboard/presentation/screens/calendar/month_calendar_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_sync_settings_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart';
-import '../../features/owner_dashboard/presentation/screens/platform_connections_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/embed_widget_guide_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/ai_assistant_screen.dart';
 import '../../features/owner_dashboard/presentation/screens/guides/faq_screen.dart';
@@ -112,9 +111,6 @@ class OwnerRoutes {
   static const String icalExportList =
       '/owner/integrations/ical/export-list'; // iCal Export List (for owners to export all bookings)
   static const String icalGuide = '/owner/guides/ical'; // iCal Guide
-  // Platform connections (API integrations)
-  static const String platformConnections =
-      '/owner/integrations/platform-connections';
   // DEPRECATED routes - will be removed in future versions
   @Deprecated('Use icalImport instead')
   static const String icalIntegration = '/owner/integrations/ical';
@@ -733,18 +729,6 @@ final ownerRouterProvider = Provider<GoRouter>((ref) {
           child: const IcalExportListScreen(),
         ),
       ),
-      // Platform Connections (API integrations)
-      GoRoute(
-        path: OwnerRoutes.platformConnections,
-        pageBuilder: (context, state) {
-          final unitId = state.uri.queryParameters['unit'];
-          return PageTransitions.fade(
-            key: state.pageKey,
-            child: PlatformConnectionsScreen(initialUnitId: unitId),
-          );
-        },
-      ),
-
       // Guide routes - Fade for drawer navigation
       GoRoute(
         path: OwnerRoutes.guideEmbedWidget,

@@ -84,9 +84,6 @@ export const deleteUserAccount = onCall(
       // Step 4.5: Delete legacy root-level iCal feeds (if any exist from old data)
       await deleteIcalFeedsLegacy(userId);
 
-      // Step 5: Delete platform connections (Booking.com, Airbnb OAuth)
-      await deletePlatformConnections(userId);
-
       // Step 6: Delete user document and all subcollections
       await deleteUserDocument(userId);
 
@@ -306,36 +303,6 @@ async function deleteSubcollection(
 
   for (const batch of batches) {
     await batch.commit();
-  }
-}
-
-/**
- * Delete platform connections (Booking.com, Airbnb OAuth tokens)
- */
-async function deletePlatformConnections(userId: string): Promise<void> {
-  try {
-    const connectionsSnapshot = await db
-      .collection("platform_connections")
-      .where("owner_id", "==", userId)
-      .get();
-
-    if (connectionsSnapshot.empty) return;
-
-    const batch = db.batch();
-    for (const doc of connectionsSnapshot.docs) {
-      batch.delete(doc.ref);
-    }
-    await batch.commit();
-
-    logInfo("[DeleteAccount] Platform connections deleted", {
-      userId,
-      count: connectionsSnapshot.size,
-    });
-  } catch (error) {
-    logWarn("[DeleteAccount] Platform connections deletion failed", {
-      userId,
-      error: String(error),
-    });
   }
 }
 

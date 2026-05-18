@@ -41,6 +41,9 @@ export * from "./icalExport";
 // Export booking access verification functions (Booking lookup)
 export * from "./verifyBookingAccess";
 
+// Export Stripe-session booking lookup (replaces public stripe_session_id read clause)
+export * from "./getBookingByStripeSession";
+
 // Export email verification functions (OTP for guest bookings)
 export * from "./emailVerification";
 

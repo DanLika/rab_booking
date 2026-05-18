@@ -1,0 +1,27 @@
+lib/core/design_tokens/typography_tokens.dart:58:  static const double fontSizeXXXL = 24.0;
+lib/core/design_tokens/typography_tokens.dart:76:      tablet: fontSizeXXXL,
+lib/core/design_tokens/typography_tokens.dart:77:      desktop: fontSizeXXXL,
+lib/core/design_tokens/typography_tokens.dart:130:    fontSize: fontSizeXXXL,
+lib/core/constants/app_dimensions.dart:36:  /// XXXL spacing: 96px (12 × base unit)
+lib/core/constants/app_dimensions.dart:37:  static const double spaceXXXL = 96.0;
+lib/widget_main.dart:69:  // This allows email links like /view?ref=XXX to work correctly
+lib/features/widget/presentation/screens/booking_widget_screen.dart:3951:    // Use server-generated booking reference (BK-XXXXXXXXXXXX format)
+lib/features/widget/presentation/theme/minimalist_theme.dart:324:        fontSize: TypographyTokens.fontSizeXXXL,
+lib/shared/utils/validators/phone_config.dart:3:  /// XX XXX XXXX (Croatia, Serbia)
+lib/shared/utils/validators/phone_config.dart:6:  /// XX XXX XXX (Bosnia)
+lib/shared/utils/validators/phone_config.dart:9:  /// XXX XXX XXXX (US, Canada, Germany)
+lib/shared/utils/validators/phone_config.dart:12:  /// XXXX XXX XXX (UK)
+lib/shared/utils/validators/phone_config.dart:15:  /// XXX XXX XXX (France, Italy, Spain)
+lib/shared/models/property_model.dart:30:    /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
+lib/shared/models/property_model.freezed.dart:40:  /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
+lib/shared/models/property_model.freezed.dart:654:  /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
+lib/shared/models/property_model.freezed.dart:966:  /// Used for email links: {subdomain}.view.bookbed.io/view?ref=XXX
+functions/src/utils/bookingReferenceGenerator.ts:22: * @return Unique booking reference in format BK-XXXXXXXXXXXX
+functions/src/utils/bookingLookup.ts:157: * @param bookingReference - The booking reference string (e.g., "BB-XXXX")
+functions/src/emailService.ts:296: *   Returns: https://{subdomain}.{BOOKING_DOMAIN}/view?ref=XXX&email=XXX&token=XXX&lang=XXX
+functions/src/emailService.ts:299: *   Returns: https://widget.web.app/view?subdomain=XXX&ref=XXX&email=XXX&token=XXX&lang=XXX
+functions/src/emailService.ts:302: *   Returns: https://widget.web.app/view?ref=XXX&email=XXX&token=XXX&lang=XXX (fallback)
+functions/src/emailService.ts:349:    // Production: view.bookbed.io/view?ref=XXX
+functions/src/emailService.ts:353:      // Production: subdomain.domain.com/view?ref=XXX
+functions/src/emailService.ts:356:      // Testing: widget.web.app/view?subdomain=XXX&ref=XXX
+functions/src/emailService.ts:361:    // Fallback: widget.web.app/view?ref=XXX

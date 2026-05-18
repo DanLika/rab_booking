@@ -1,0 +1,16 @@
+lib/features/owner_dashboard/presentation/providers/ai_chat_provider.dart:475:      // Show actual error for debugging (TODO: remove after fixing)
+functions/src/guestCancelBooking.ts:250:        // TODO: Add cancellation policy logic (full_refund/50_percent/no_refund)
+functions/src/stripeSubscription.ts:44:  // TODO: Replace with actual Stripe Price IDs from config/env
+functions/src/scheduledPushNotifications.ts:369:// TODO: Implement lastActiveAt update in enhanced_auth_provider.dart
+functions/src/index.ts:89:// TODO: SMS feature not yet implemented - requires Twilio/SMS provider setup
+functions/src/emailService.ts:25: * TODO: Suspicious Activity Email (deferred for future implementation)
+functions/src/emailService.ts:975:// NOTE: sendSuspiciousActivityEmail has been removed (TODO for future implementation)
+functions/src/bookingComApi.ts:33:// TODO: Update with actual API base URL after getting API access
+functions/src/bookingComApi.ts:64:  // TODO: Implement proper encryption with KMS
+functions/src/bookingComApi.ts:80:  // TODO: Implement proper decryption with KMS
+functions/src/bookingComApi.ts:136:    // TODO: Update with actual OAuth authorization URL after getting API access
+functions/src/email/templates/trial-expired.ts:10:  // TODO: Create a visually appealing HTML template
+functions/src/email/templates/trial-expiring-soon.ts:11:  // TODO: Create a visually appealing HTML template
+functions/src/airbnbApi.ts:34:// TODO: Update with actual API base URL after getting API access
+functions/src/airbnbApi.ts:81:    // TODO: Update with actual OAuth authorization URL after getting API access
+functions/src/airbnbApi.ts:141:      // TODO: Update with actual OAuth token URL after getting API access

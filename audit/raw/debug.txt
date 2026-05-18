@@ -1,0 +1,55 @@
+lib/core/providers/enhanced_auth_provider.dart:1764:          tag: 'AUTH_DEBUG',
+lib/core/services/logging_service.dart:164:      log(message, tag: 'DEBUG');
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1247:    // DEBUG: Log function parameters
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1352:    // DEBUG: Log merged results
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1367:    // DEBUG: Log filtering
+lib/features/owner_dashboard/data/firebase/firebase_owner_bookings_repository.dart:1418:    // DEBUG: Log final counts
+lib/features/owner_dashboard/presentation/providers/ai_chat_provider.dart:481:        error: 'DEBUG: $errorMsg',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:268:    // DEBUG: Log full URI to diagnose Stripe return detection
+lib/features/widget/presentation/screens/booking_widget_screen.dart:269:    LoggingService.log('[INIT] Uri.base: $uri', tag: 'STRIPE_RETURN_DEBUG');
+lib/features/widget/presentation/screens/booking_widget_screen.dart:272:      tag: 'STRIPE_RETURN_DEBUG',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:276:      tag: 'STRIPE_RETURN_DEBUG',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:280:      tag: 'STRIPE_RETURN_DEBUG',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:284:      tag: 'STRIPE_RETURN_DEBUG',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:288:      tag: 'STRIPE_RETURN_DEBUG',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:295:        tag: 'STRIPE_RETURN_DEBUG',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:438:        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:439:        tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:478:          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:479:          tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:545:                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:546:                tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:577:                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:578:                    tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:601:                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:602:                    tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:634:                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:635:                    tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:662:                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:663:                    tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:915:        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:916:        tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1159:          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1160:          tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1191:          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1192:          tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1228:            '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1229:            tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1259:            '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1260:            tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1288:        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1289:        tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1906:        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1907:        tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1929:        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:1930:        tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:3803:          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:3804:          tag: 'DEBUG_PRICE',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4209:                  '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4210:                  tag: 'DEBUG_${logData['hypothesisId']}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4239:                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
+lib/features/widget/presentation/screens/booking_widget_screen.dart:4240:                tag: 'DEBUG_${logData['hypothesisId']}',
+functions/src/utils/priceValidation.ts:88:  // PRICE MISMATCH DEBUG: Log query details BEFORE processing
+functions/src/utils/priceValidation.ts:107:    // PRICE MISMATCH DEBUG: Log each daily price found
+functions/src/logger.ts:16:  DEBUG = "debug",
+functions/src/atomicBooking.ts:259:  // DEBUG: Log payment method validation

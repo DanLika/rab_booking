@@ -83,6 +83,58 @@ class BookingLookupService {
       throw BookingException.lookupFailed(e);
     }
   }
+
+  /// Look up a booking by Stripe checkout session ID.
+  ///
+  /// Replaces the previous direct Firestore collectionGroup read on
+  /// `bookings.where('stripe_session_id', '==', sessionId)`. That clause
+  /// was removed from `firestore.rules` in the T11-hotfix-partial pass;
+  /// the lookup now goes through the `getBookingByStripeSession` callable
+  /// which runs as Admin SDK and is rate-limited per IP.
+  ///
+  /// Returns `null` when the booking is not yet visible (webhook in
+  /// flight). Throws on rate-limit, invalid session id, or unexpected
+  /// failure.
+  Future<BookingDetailsModel?> getBookingByStripeSession(
+    String sessionId,
+  ) async {
+    try {
+      final callable = _functions.httpsCallable('getBookingByStripeSession');
+      final result = await callable.call<Map<String, dynamic>>({
+        'sessionId': sessionId,
+      });
+      final response = BookingLookupResponse.fromJson(result.data);
+      if (!response.success) {
+        return null;
+      }
+      return response.booking;
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'not-found') {
+        // Webhook hasn't created the booking yet — caller retries.
+        return null;
+      }
+      if (e.code == 'invalid-argument') {
+        throw BookingException(
+          'Invalid Stripe session.',
+          code: 'booking/invalid-argument',
+        );
+      }
+      if (e.code == 'resource-exhausted') {
+        throw BookingException(
+          'Too many lookups. Please try again later.',
+          code: 'booking/rate-limited',
+        );
+      }
+      throw BookingException.lookupFailed(e.message);
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        'BookingLookupService: Unexpected error during Stripe session lookup',
+        e,
+        stackTrace,
+      );
+      throw BookingException.lookupFailed(e);
+    }
+  }
 }
 
 /// State provider for manual lookup form

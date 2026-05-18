@@ -1,29 +1,123 @@
 /**
- * Email template for notifying a user that their trial has expired.
+ * Trial Expired Email Template V2
+ * Minimalist Design using Helper Functions
  *
- * @param {string} userName - The display name of the user.
- * @return {object} An object containing the email subject and html content.
+ * Sent to users when their free trial has expired.
+ * Uses helper functions for clean, maintainable code.
+ * All user-provided content is HTML-escaped for security.
  */
-export const getTrialExpiredTemplate = (userName: string) => {
-  const subject = "Vaš BookBed probni period je istekao";
 
-  // TODO: Create a visually appealing HTML template
-  const html = `
-    <p>Poštovani ${userName},</p>
-    <p>
-      Vaš besplatni probni period za BookBed je istekao.
-    </p>
-    <p>
-      Vaš pristup nadzornoj ploči je sada ograničen, a vaš widget za rezervacije više nije aktivan. Vaši podaci su sačuvani i sigurni.
-    </p>
-    <p>
-      Da biste ponovno aktivirali svoj račun i dobili puni pristup, molimo vas da nas kontaktirate. Rado ćemo vam pomoći.
-    </p>
-    <p>
-      Srdačan pozdrav,<br>
-      BookBed Tim
-    </p>
+import {Resend} from "resend";
+import {generateEmailHtml} from "./base";
+import {
+  generateHeader,
+  generateGreeting,
+  generateIntro,
+  generateButton,
+  generateAlert,
+  escapeHtml,
+} from "../utils/template-helpers";
+
+export interface TrialExpiredParams {
+  email: string;
+  userName: string;
+  upgradeUrl: string;
+}
+
+/**
+ * Generate trial expired email HTML
+ *
+ * @param {TrialExpiredParams} params Parameters for the email
+ * @return {string} The generated HTML string
+ */
+export function generateTrialExpiredEmailV2(
+  params: TrialExpiredParams
+): string {
+  const {userName, upgradeUrl} = params;
+
+  // Header with warning icon (could be sad face but emoji fits the style)
+  const header = generateHeader({
+    emoji: "😢",
+    title: "Vaš probni period je istekao",
+    subtitle: "Ali još uvijek nije kasno za nastavak!",
+  });
+
+  const infoAlert = generateAlert({
+    type: "info",
+    title: "Vaši podaci su sigurni",
+    message: "Sve vaše rezervacije, nekretnine i postavke su sačuvane. " +
+      "Nadogradite račun u bilo kojem trenutku kako biste povratili " +
+      "potpuni pristup svim značajkama.",
+  });
+
+  const upgradeButton = generateButton({
+    text: "Nadogradi za nastavak",
+    url: upgradeUrl,
+  });
+
+  const introText = "Vaš besplatni probni period za BookBed je završio. " +
+    "Vaš račun je sada u načinu samo za čitanje, što znači da možete " +
+    "pregledavati svoje postojeće podatke, ali ne možete stvarati " +
+    "nove rezervacije niti pristupati premium značajkama.";
+
+  const footerText = "Trebate pomoć pri odluci? Odgovorite na ovaj email " +
+    "i rado ćemo odgovoriti na vaša pitanja.";
+
+  const footerHtml = "<p style=\"margin: 0; font-size: 13px; " +
+    "color: #9CA3AF; text-align: center;\">" + footerText + "</p>";
+
+  // Combine all content
+  const content = `
+    ${generateGreeting(escapeHtml(userName))}
+    ${generateIntro(introText)}
+    ${infoAlert}
+    ${upgradeButton}
+    ${footerHtml}
   `;
 
-  return {subject, html};
-};
+  // Generate complete email
+  return generateEmailHtml({
+    header,
+    content,
+    footer: {
+      additionalText: "Ovaj email je poslao BookBed jer " +
+        "je vaš probni period istekao.",
+    },
+  });
+}
+
+/**
+ * Send trial expired email via Resend
+ *
+ * @param {Resend} resendClient The Resend client
+ * @param {TrialExpiredParams} params Parameters for the email
+ * @param {string} fromEmail The sender email
+ * @param {string} fromName The sender name
+ * @return {Promise<void>} A promise that resolves when sent
+ */
+export async function sendTrialExpiredEmailV2(
+  resendClient: Resend,
+  params: TrialExpiredParams,
+  fromEmail: string,
+  fromName: string
+): Promise<void> {
+  const html = generateTrialExpiredEmailV2(params);
+  const subject = "Vaš BookBed probni period je istekao - Nadogradite račun";
+
+  // IMPORTANT: Check the result object
+  const result = await resendClient.emails.send({
+    from: `${fromName} <${fromEmail}>`,
+    to: params.email,
+    subject: subject,
+    html: html,
+  });
+
+  // Resend SDK returns { data, error } - check for error
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const typedResult = result as any;
+  if (typedResult.error) {
+    const errorMsg = typedResult.error.message ||
+      JSON.stringify(typedResult.error);
+    throw new Error(`Resend API error: ${errorMsg}`);
+  }
+}

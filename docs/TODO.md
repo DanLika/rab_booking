@@ -4,6 +4,66 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ---
 
+## 🚨 TODO: Tech Debt Audit Findings (2026-05-18)
+
+**Prioritet:** Mixed (C1 critical, rest medium)
+**Izvor:** `audit/04-techdebt.md`, `audit/04b-flutter-analyze-summary.md`, `audit/04c-hardcoded-urls.md`
+
+### Critical
+- **C1 — MD5 IV in `bookingComApi.encryptToken`** (`functions/src/bookingComApi.ts:64-90`). Static IV + AES-CBC leaks token equality. Replace with `crypto.randomBytes(16)` per-encryption (prepend to ciphertext) OR migrate to Cloud KMS per existing TODO.
+- **C3 — 2 silent catches in confirmation screen** (`lib/features/widget/presentation/screens/booking_confirmation_screen.dart:171,192`). Wrap `tabService.dispose()` failures with `LoggingService.logWarning` (debug-mode only, no Sentry noise). Attempted in branch `fix/widget-silent-catches` (commit `6f7419147`) but file reverted locally — re-apply.
+
+### High / Medium
+- **H2 — Stripe Price IDs hardcoded** (`functions/src/stripeSubscription.ts:44`). Replace with env-sourced IDs.
+- **M1 — Booking.com / Airbnb API stubs** are placeholder OAuth/API URLs. Finish or remove dead code.
+- **M2 — Trial expiry email templates** are TODO-marked plaintext. Migrate to V2 (see existing "V2 Trial Email Migration" TODO above for branch list).
+- **M4 — `rab-booking-248fc` hardcoded in `ical_export_list_screen.dart:211`**. Replace `const projectId = 'rab-booking-248fc'` with `EnvironmentConfig.firebaseProjectId`. Already in `.claude/rules/hosting-build.md`.
+- **M5 — Cancellation policy logic stub** (`functions/src/guestCancelBooking.ts:250`).
+- **M6 — 7 production `print()` calls** in widget config/helpers (`tax_legal_config.dart`, `booking_price_calculator.dart`, `ical_export_config.dart`, `embed_url_params.dart`, `email_verification_service.dart`, `availability_checker.dart`). Route through `LoggingService`.
+- **M7 — Centralize `bookbed.io` literals** in 6 sites (see `audit/04c-hardcoded-urls.md` §3.1). Add `widgetHost`/`dashboardHost`/`marketingHost`/`isMarketingHost()` getters to `EnvironmentConfig` (concrete code in §4).
+
+### Code-health
+- Fix brittle `host.startsWith('view.')` in `subdomain_service.dart:51` + `booking_view_screen.dart:107` → use `host.endsWith('.$widgetHost')` (won't match `staging.view.bookbed.io` today).
+- Consolidate duplicate `_subdomainBaseDomain` consts in `embed_widget_guide_screen.dart:31` + `embed_code_generator_dialog.dart:40`.
+- 2 discontinued + 133 outdated packages reported by `flutter pub outdated` — separate hygiene pass.
+
+---
+
+## 📝 TODO: V2 Trial Email Migration
+
+**Prioritet:** Medium
+**Kompleksnost:** ~30 min (cherry-pick + verify)
+**Izvor:** Audit `/audit/02-branches.md` (2026-05-18)
+
+### Opis
+
+`functions/src/email/templates/trial-expired.ts` (29 lines) i `trial-expiring-soon.ts` na main su jedini V1 plain-HTML template-i. Svih ostalih 16 koriste V2 (`generateEmailHtml` + `template-helpers`). Migracija je započeta ali nije završena — 6 Jules branch-eva propose istu V2 implementaciju, nijedan nije merge-an.
+
+### Branch-evi koji propose V2 (svi rebased na `eadec3cc`, 1 commit ahead main)
+
+| Branch | `expired` | `expiring-soon` | `emailService.ts` |
+|--------|:--:|:--:|:--:|
+| `refactor/trial-email-templates-v2-5763908700715533391` | ✓ | ✓ | ✓ |
+| `fix-trial-expired-email-templates-18008471850879630724` | ✓ | ✓ | ✓ |
+| `chore/email-template-v2-trial-862790160808869431` | ✓ | ✓ | ✗ |
+| `feat/trial-expiring-soon-email-v2-14525277221150061144` | ✗ | ✓ | ✓ |
+| `code-health/trial-email-template-7946221639053422749` | ✗ | ✓ | ✓ |
+| `fix/email-template-trial-expired-v2-3198370588912331709` | ✓ | ✗ | ✓ |
+
+### Akcioni plan
+
+1. Diff dva top kandidata (`refactor/…-v2-5763908700715533391` vs `fix-trial-expired-email-templates-…`) — biraj cleaner.
+2. Cherry-pick taj jedan commit (oba template-a + `emailService.ts` wiring).
+3. `cd functions && npm test` da provjeris da V2 escape-uje HTML kako treba.
+4. Deploy: `cd functions && npm run deploy` (Cloud Functions ne reflect-uju git bez deploy-a — vidi MEMORY.md #3).
+5. Kill ostalih 5 branch-eva (`git push origin --delete <branch>`).
+
+### Riziko
+
+Nizak. V2 helper-i (`escapeHtml`, `generateEmailHtml`) već postoje na main i koriste se u svim drugim template-ima. Trial-* su jedini stragglers.
+
+---
+
 ## 📝 TODO: Bookbed Website Documentation
 
 **Prioritet:** High

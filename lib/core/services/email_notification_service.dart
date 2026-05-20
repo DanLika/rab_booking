@@ -1,5 +1,4 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import '../../shared/models/booking_model.dart';
 import '../../shared/utils/html_utils.dart';
@@ -27,10 +26,10 @@ import '../exceptions/app_exceptions.dart';
 /// );
 /// ```
 class EmailNotificationService {
-  final http.Client _httpClient;
+  final FirebaseFunctions _functions;
 
-  EmailNotificationService({http.Client? httpClient})
-    : _httpClient = httpClient ?? http.Client();
+  EmailNotificationService({FirebaseFunctions? functions})
+    : _functions = functions ?? FirebaseFunctions.instance;
 
   /// Send booking confirmation email to guest
   ///
@@ -84,12 +83,13 @@ class EmailNotificationService {
       );
 
       await _sendEmail(
+        propertyId: booking.propertyId,
+        unitId: booking.unitId,
         to: booking.guestEmail!,
         subject: subject,
         html: html,
-        fromEmail: emailConfig.fromEmail!,
+        fromEmail: emailConfig.fromEmail,
         fromName: emailConfig.fromName ?? propertyName,
-        apiKey: emailConfig.resendApiKey!,
       );
 
       LoggingService.logSuccess(
@@ -146,12 +146,13 @@ class EmailNotificationService {
       );
 
       await _sendEmail(
+        propertyId: booking.propertyId,
+        unitId: booking.unitId,
         to: booking.guestEmail!,
         subject: subject,
         html: html,
-        fromEmail: emailConfig.fromEmail!,
+        fromEmail: emailConfig.fromEmail,
         fromName: emailConfig.fromName ?? propertyName,
-        apiKey: emailConfig.resendApiKey!,
       );
 
       LoggingService.logSuccess(
@@ -210,12 +211,13 @@ class EmailNotificationService {
       );
 
       await _sendEmail(
+        propertyId: booking.propertyId,
+        unitId: booking.unitId,
         to: ownerEmail,
         subject: subject,
         html: html,
-        fromEmail: emailConfig.fromEmail!,
+        fromEmail: emailConfig.fromEmail,
         fromName: emailConfig.fromName ?? propertyName,
-        apiKey: emailConfig.resendApiKey!,
       );
 
       LoggingService.logSuccess(
@@ -230,43 +232,46 @@ class EmailNotificationService {
     }
   }
 
-  /// Core method to send email via Resend API
+  /// Core method to send email through the `sendOwnerEmail` Cloud Function.
+  ///
+  /// The owner's Resend API key is loaded server-side from
+  /// `properties/{propertyId}/widget_secrets/{unitId}` and never reaches the
+  /// client. See `functions/src/email/sendOwnerEmail.ts`.
   Future<void> _sendEmail({
+    required String? propertyId,
+    required String unitId,
     required String to,
     required String subject,
     required String html,
-    required String fromEmail,
     required String fromName,
-    required String apiKey,
+    String? fromEmail,
   }) async {
-    const resendApiUrl = 'https://api.resend.com/emails';
-
-    final body = {
-      'from': '$fromName <$fromEmail>',
-      'to': [to],
-      'subject': subject,
-      'html': html,
-    };
-
-    final response = await _httpClient.post(
-      Uri.parse(resendApiUrl),
-      headers: {
-        'Authorization': 'Bearer $apiKey',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode(body),
-    );
-
-    if (response.statusCode != 200) {
+    if (propertyId == null || propertyId.isEmpty) {
+      // Without propertyId the CF cannot locate the owner's secret. Fail
+      // loudly so the booking flow doesn't silently swallow the send.
       throw NotificationException(
-        'Resend API error: ${response.statusCode} - ${response.body}',
+        'Missing propertyId for sendOwnerEmail callable',
         code: 'notification/email-send-failed',
       );
     }
 
-    LoggingService.logDebug(
-      '[EmailNotificationService] Resend API response: ${response.body}',
-    );
+    try {
+      final callable = _functions.httpsCallable('sendOwnerEmail');
+      await callable.call(<String, dynamic>{
+        'propertyId': propertyId,
+        'unitId': unitId,
+        'to': to,
+        'subject': subject,
+        'htmlBody': html,
+        'fromName': fromName,
+        if (fromEmail != null && fromEmail.isNotEmpty) 'fromEmail': fromEmail,
+      });
+    } on FirebaseFunctionsException catch (e) {
+      throw NotificationException(
+        'sendOwnerEmail failed: ${e.code} ${e.message ?? ''}'.trim(),
+        code: 'notification/email-send-failed',
+      );
+    }
   }
 
   /// Generate booking confirmation email HTML
@@ -882,10 +887,8 @@ class EmailNotificationService {
 ''';
   }
 
-  /// Dispose resources
-  void dispose() {
-    _httpClient.close();
-  }
+  /// Dispose resources (no-op since the callable client is shared)
+  void dispose() {}
 }
 
 /// Exception thrown when email service operations fail

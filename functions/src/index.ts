@@ -29,6 +29,11 @@ export * from "./stripeSubscription";
 // Export custom email functions (Phase 2)
 export * from "./customEmail";
 
+// Export owner email proxy (hotfix/widget-secrets-exfil — phase A9)
+// Replaces direct Resend HTTP calls from the Flutter widget so owner Resend
+// keys no longer have to ship to the client.
+export * from "./email/sendOwnerEmail";
+
 // Export iCal sync functions (Overbooking prevention)
 // Note: Scheduled function removed, only manual sync available
 export * from "./icalSync";

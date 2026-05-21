@@ -67,6 +67,16 @@ setUser(null, guestEmail);              // Za guest akcije (email verification, 
 captureMessage("Security: Price mismatch detected", "error", {unitId, clientPrice, serverPrice});
 ```
 
+### HttpsError client-fault filter (since 6.71)
+
+`Sentry.init` u `sentry.ts` ima `beforeSend` koji DROP-a event ako je original exception `HttpsError` sa client-fault `code`:
+- Dropped: `invalid-argument`, `unauthenticated`, `permission-denied`, `not-found`, `already-exists`, `failed-precondition`, `out-of-range`, `resource-exhausted`, `cancelled`
+- Sent: `internal`, `unknown`, `data-loss`, `unavailable`, `deadline-exceeded`, `aborted`
+
+**Why**: `@sentry/node` firebase otel auto-instrumentation (`mechanism: auto.firebase.otel.functions`) captures SVAKI thrown `HttpsError`, uključujući 4xx-class client mistakes. Bez filtera Sentry je preplavljen invalid-argument noise-om.
+
+**Implikacija za debug**: Ako misliš "ova funkcija throws X ali ne vidim ga u Sentry-u" — provjeri je li `code` u dropped set-u. Za genuine server bugs (`internal`) filter ne djeluje. Discriminator je `err.httpErrorCode !== undefined && err.code in clientFaultCodes` — non-Firebase greške s `.code` stringom (Firestore errors) NISU pogođene.
+
 ## Deployment
 
 After code changes to `functions/src/`, always deploy:

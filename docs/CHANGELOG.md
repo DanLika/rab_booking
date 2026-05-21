@@ -2,7 +2,22 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-18 | **Version**: 6.70
+**Last Updated**: 2026-05-21 | **Version**: 6.71
+
+---
+
+**Changelog 6.71**: Sentry HttpsError noise filter + prod orphan-function cleanup (2026-05-21):
+- **Filter** (`functions/src/sentry.ts`): added `beforeSend` to `Sentry.init` that drops events where the original exception is an `HttpsError` with a client-fault `code`. Dropped codes: `invalid-argument`, `unauthenticated`, `permission-denied`, `not-found`, `already-exists`, `failed-precondition`, `out-of-range`, `resource-exhausted`, `cancelled`. Server-fault codes (`internal`, `unknown`, `data-loss`, `unavailable`, `deadline-exceeded`, `aborted`) still report.
+- **Why**: Sentry's `@sentry/node` firebase otel auto-instrumentation (`mechanism: auto.firebase.otel.functions`) captures every thrown `HttpsError` from `onCall` handlers, including 4xx-equivalent client mistakes. Three noisy issues in Sentry (FLUTTER-6C `getBookingByStripeSession` `invalid-argument`, FLUTTER-6E `verifyBookingAccess` `invalid-argument`, FLUTTER-6G `verifyBookingAccess` `permission-denied`) were all of this class.
+- **Discriminator**: `err.httpErrorCode !== undefined && typeof err.code === "string" && clientFaultCodes.has(err.code)`. The `httpErrorCode` field is unique to firebase-functions `HttpsError` (set by `errorCodeMap[code]` in `https.js:81`) so non-Firebase errors with a `.code` string (Firestore errors etc.) are not falsely dropped.
+- **Deploy**: dev (`bookbed-dev`) commit 8c9ebf1d on `hotfix/widget-secrets-exfil` (deployed in-place); prod (`rab-booking-248fc`) via cherry-pick onto `main` (commit 16224575 → origin/main), then `firebase deploy --only functions --project production`.
+- **Prod orphan-function cleanup**: 5 functions still live on prod but already deleted from source (commits `ebddecaf feat(kill): remove comebackReminder` + `c3465034 feat(kill): remove Booking.com + Airbnb OAuth integration`). Dev had already pruned these; prod was out of sync. Deleted via `firebase functions:delete <name> --project production --force --region <region>`:
+  - `comebackReminder` (europe-west1)
+  - `handleAirbnbOAuthCallback`, `initiateAirbnbOAuth` (us-central1)
+  - `handleBookingComOAuthCallback`, `initiateBookingComOAuth` (us-central1)
+- **Branch**: `fix(sentry)` commit lives on both `hotfix/widget-secrets-exfil` (original) and `main` (cherry-pick).
+- **Future**: when `hotfix/widget-secrets-exfil` lands on prod, no Sentry-filter conflict — the same file change is already on prod. Cherry-pick will reconcile cleanly.
+- **NOT shipped on prod yet**: the rest of the `hotfix/widget-secrets-exfil` branch (widget_secrets split, `ICAL_TOKEN_PEPPER`, `ALLOWED_SUBSCRIPTION_PRICE_IDS`, `RESEND_API_KEY` allowlist enforcement). Three per-env prereqs required first — see `memory/widget-secrets-exfil-deploy-prereqs.md`.
 
 ---
 

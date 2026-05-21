@@ -26,7 +26,8 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 18. [SF-018: Common Password Blacklist](#sf-018-common-password-blacklist)
 19. [SF-019: Bookings Rule Public-Read Partial Close (HIGH)](#sf-019-bookings-rule-public-read-partial-close-high)
 20. [SF-020: Wave 0 iOS Firebase Project Contamination + Hardening (HIGH)](#sf-020-wave-0-ios-firebase-project-contamination--hardening-high)
-21. [Neriješeni bugovi (Jules audit)](#-neriješeni-bugovi-jules-audit)
+21. [SF-021: widget_settings Secret Exposure — widget_secrets Split (CRITICAL)](#sf-021-widget_settings-secret-exposure--widget_secrets-split-critical)
+22. [Neriješeni bugovi (Jules audit)](#-neriješeni-bugovi-jules-audit)
     - [BUG-001: iCal Feeds Provider - nedostaje autoDispose](#-bug-001-ical-feeds-provider---nedostaje-autodispose)
     - [BUG-002: IP Geolocation Service - nedostaje in-memory cache](#-bug-002-ip-geolocation-service---nedostaje-in-memory-cache)
     - [BUG-003: iCal Sync - sekvencijalno vs paralelno procesiranje](#-bug-003-ical-sync---sekvencijalno-vs-paralelno-procesiranje)
@@ -1446,6 +1447,106 @@ The contamination involved no real guest data (no bookings, no real-customer PII
 - `audit/15-prod-contamination-deep-check.md` — full deep check + cleanup execution log.
 - `memory/wave0-test-findings.md` — original "drop --flavor dev" gotcha that triggered the contamination.
 - `memory/sentry-runtime-verify-blocked.md` — why runtime Sentry verify can't be triggered externally on this codebase.
+
+---
+
+## SF-021: widget_settings Secret Exposure — widget_secrets Split (CRITICAL)
+
+**Datum**: 2026-05-21
+**Prioritet**: 🔴 Critical (live credential + PII exposure since launch)
+**Status**: 🔄 Phase A code complete + committed (`hotfix/widget-secrets-exfil`, commits `485ee112` + `3ed3c752`); NOT deployed — A7 deploy sequence blocked on operator prerequisites (Resend key rotation, `ICAL_TOKEN_PEPPER`, `ALLOWED_SUBSCRIPTION_PRICE_IDS`)
+**Zahvaćeni fajlovi**:
+- `firestore.rules` (`widget_secrets` rules + `noSecretsInWidgetSettings()` predicate on `widget_settings` writes)
+- `functions/src/email/sendOwnerEmail.ts` (new — owner email proxy callable)
+- `functions/src/index.ts` (export)
+- `functions/src/icalExport.ts` (peppered-hash token verification)
+- `functions/src/stripeSubscription.ts` (`ALLOWED_SUBSCRIPTION_PRICE_IDS` allowlist)
+- `functions/scripts/hotfix-widget-secrets.js` (new — migration)
+- `functions/scripts/cleanup-ical-plaintext.js` (new — A6 post-deploy cleanup)
+- `functions/scripts/count-owners-with-resend.js` (new — read-only pre-rotation audit)
+- `functions/test/firestore_rules/widget_secrets.test.ts` (new — 14 rules-unit-test cases)
+- `lib/core/services/email_notification_service.dart` (routes sends through `sendOwnerEmail`)
+- `lib/features/widget/domain/models/settings/email_notification_config.dart` (`isConfigured` no longer gates on `resendApiKey`)
+- `test/features/widget/domain/models/settings/email_notification_config_test.dart` (2 tests updated)
+
+**Otkrio**: `/vibe-security` audit, 2026-05-18.
+
+### Problem
+
+`properties/{propertyId}/widget_settings/{unitId}` had `allow read: if true` on **both** the subcollection rule and the collection-group rule (widget needs theme/branding/hours for public display). But the same doc stored two secret fields:
+
+1. **`email_config.resend_api_key`** — `WidgetSettings.toFirestore` (`widget_settings.dart:200`) serialized the whole `emailConfig.toMap()` into the `email_config` field, and `EmailNotificationConfig.toMap()` wrote `'resend_api_key': resendApiKey`. Any anonymous client could run `collectionGroup('widget_settings').get()` with the public widget Firebase key and harvest **every owner's Resend API key** — then send mail under the owner's identity, drain quota, or phish guests.
+2. **`ical_export_token`** — used by `getUnitIcalFeed` (`icalExport.ts:162`) as the sole auth gate on the iCal feed. Since the doc was public-read, the "secret" token was public too → anyone could enumerate every booking platform-wide (guest name, email, dates).
+
+Same class as SF-014 (PII in widget) and SF-019 (bookings public-read), but worse: the leaked Resend keys are usable **outside** the platform.
+
+Two adjacent issues fixed in the same touch:
+- `stripeSubscription.ts` accepted any client-supplied `priceId` (the function's own `TODO` comment confirmed the missing allowlist).
+- `firestore.rules` `loginAttempts/{email}` allows `get, create, update: if true` — **intentionally left open in Phase A** because `rate_limit_service.dart` writes there directly; closing it pre-refactor would break login platform-wide. Deferred to Phase B.
+
+### Rješenje (Phase A)
+
+**New owner-only subcollection `properties/{propertyId}/widget_secrets/{unitId}`.** Holds `resend_api_key` + `ical_export_token_hash`. `firestore.rules`:
+
+```
+function noSecretsInWidgetSettings(data) {
+  return !data.keys().hasAny(['ical_export_token']) &&
+    (!data.keys().hasAny(['email_config']) ||
+      !data.email_config.keys().hasAny(['resend_api_key']));
+}
+```
+
+- `widget_settings` stays anon-readable, but `create`/`update` are rejected if they carry `ical_export_token` or `email_config.resend_api_key` (predicate applied on both subcollection + collection-group write rules).
+- `widget_secrets/{unitId}` — owner-only `read, write` on both the direct path and the collection-group path.
+
+**iCal token → peppered hash.** `icalExport.ts` now verifies the URL token against `widget_secrets.ical_export_token_hash` = `SHA-256(token + ICAL_TOKEN_PEPPER)`, timing-safe. The pepper lives in Functions secrets, so a Firestore-only leak cannot recover the token. `getUnitIcalFeed` fetches `widget_settings` (display state) + `widget_secrets` (hash) in parallel.
+
+**Owner email proxy.** New `sendOwnerEmail` callable loads the owner Resend key from `widget_secrets` server-side (Admin SDK) and proxies all mail. Client `email_notification_service.dart` no longer holds the key; `EmailNotificationConfig.isConfigured` drops the `resendApiKey` gate (the client can't see the key anymore). Bare-minimum hardening in Phase A: IP rate limit + input size caps + platform-key fallback. Full hardening (Zod schema, guest-vs-owner caller checks, per-owner rate limit, audit log) is Phase B.
+
+**Stripe priceId allowlist.** `stripeSubscription.ts` enforces `ALLOWED_SUBSCRIPTION_PRICE_IDS` (comma-separated env param); unconfigured = fail closed.
+
+### Migracija
+
+`functions/scripts/hotfix-widget-secrets.js` (Admin SDK, idempotent, `--dry-run` + `--force`): per `widget_settings` doc — generate a fresh 32-byte iCal token, write `widget_secrets/{unitId}` with `ical_export_token_hash` + transitional `ical_export_token_plaintext` + the new Resend key (looked up from an operator-supplied `owner_id,new_resend_api_key` CSV), then strip `ical_export_token` + `email_config.resend_api_key` from `widget_settings` via `FieldValue.delete`. `cleanup-ical-plaintext.js` removes the transitional plaintext field after the deployed `icalExport.ts` is confirmed reading the hash.
+
+**Every unit's iCal token is rotated** regardless of whether the owner had a Resend key — so existing iCal subscribers (Airbnb, Booking.com, etc.) must re-subscribe with new feed URLs. Communicate this to owners.
+
+### Što JE i NIJE pokriveno
+
+| Surface | Pre-fix | Post-fix (Phase A) |
+|---|---|---|
+| Anon read of `widget_settings` theme/branding | ✅ allow | ✅ allow (unchanged) |
+| Anon read of owner Resend key | ✅ allow (leak) | ❌ moved to owner-only `widget_secrets` |
+| Anon read of iCal token | ✅ allow (leak) | ❌ only peppered hash stored, owner-only |
+| Owner write re-introducing secrets to `widget_settings` | ✅ allow | ❌ deny via `noSecretsInWidgetSettings` |
+| Subscription checkout with arbitrary `priceId` | ✅ allow | ❌ deny unless in `ALLOWED_SUBSCRIPTION_PRICE_IDS` |
+| `loginAttempts` public write | ✅ allow | ✅ allow — **INTENTIONALLY KEPT, Phase B** |
+
+### Testiranje
+
+`functions/test/firestore_rules/widget_secrets.test.ts` — 14/14 green (anon read of `widget_settings` still works; secret writes rejected; `widget_secrets` owner-only on direct + collection-group paths). Existing `bookings.test.ts` 8/8 still green → `npm run test:rules` 22/22.
+
+`flutter analyze` 0 issues. `flutter test` 1100/1100. `functions` `npm run build` clean.
+
+### Outstanding (Phase A deploy — A7)
+
+Blocked on operator prerequisites: (1) Resend key rotation + `owner_id,new_resend_api_key` CSV; (2) `ICAL_TOKEN_PEPPER` set on `bookbed-dev` + `rab-booking-248fc` (same value); (3) `ALLOWED_SUBSCRIPTION_PRICE_IDS` per project. Then deploy sequence: functions → client → rules → migration → smoke, dev first then prod, then `cleanup-ical-plaintext.js`.
+
+### Moguće nuspojave
+
+- **iCal subscribers break** on migration — every feed URL token is rotated. Owners must re-subscribe. Unavoidable given the tokens were public.
+- **Email sends in the A→B gap**: until Phase B hardens `sendOwnerEmail`, the callable is invocable by anyone (unauthenticated widget context is required for guest booking confirmations). Mitigated by IP rate limit + size caps; full caller-auth lands in Phase B.
+- **`isConfigured` semantic change**: now returns `true` even with no Resend key. The `sendOwnerEmail` CF returns `failed-precondition` if no key is set; `email_notification_service.dart` treats that as a non-blocking send failure (booking flow unaffected).
+
+### Phase B (NOT in this fix)
+
+Harden `sendOwnerEmail` (Zod, guest-vs-owner caller checks, per-owner rate limit, audit log); settings UI rewrite to write `resend_api_key` into `widget_secrets`; route `rate_limit_service.dart` through the `checkLoginRateLimit` callable, then flip `loginAttempts` to deny-all.
+
+### Povezani bugovi
+
+- SF-014 (PII in booking widget) i SF-019 (bookings public-read) — ista klasa "public-read Firestore doc sadrži osjetljive podatke".
+- `memory/multi-agent-git-race.md` — tijekom Phase A drugi paralelni agenti su flipovali HEAD branch; hotfix commits izolirani patch-fileom i preneseni na `hotfix/widget-secrets-exfil`.
+- Plan file: `~/.claude/plans/stop-both-wave-composed-hamming.md`.
 
 ---
 

@@ -288,6 +288,46 @@ No deploy-script bug needed for *this specific* contamination event. But the dep
 
 ---
 
+## Cleanup execution log (2026-05-21 20:23 UTC)
+
+User authorized Firestore + Auth cleanup with `--skip-stripe-check` flag (Stripe Connect dissolution deferred to manual dashboard action). Run via:
+
+```
+node scripts/cleanup-prod-wave0-orphans.js --skip-stripe-check --execute
+```
+
+Operations completed (full log: `audit/migrations/2026-05-21-prod-wave0-cleanup.log`):
+
+| Op | Result |
+|---|---|
+| Delete `properties/6VCCLt8rnSokrIani9oU/units/seg85UhyMQM8hw7ZpLhq` | ✓ deleted |
+| Delete `properties/6VCCLt8rnSokrIani9oU/units/seg85UhyMQM8hw7ZpLhq` (idempotent retry) | ✓ no-op |
+| Delete `properties/6VCCLt8rnSokrIani9oU/widget_settings/seg85UhyMQM8hw7ZpLhq` | ✓ deleted (NEW: subcollection walk found this — not flagged in earlier audit/14/15 checks) |
+| Delete `properties/6VCCLt8rnSokrIani9oU` | ✓ deleted |
+| Delete `users/qoN6aykKwqZI4n9REgqXfEFG8KM2` | ✓ deleted |
+| Delete auth user `qoN6aykKwqZI4n9REgqXfEFG8KM2` | ✓ deleted |
+
+### Post-cleanup verification
+
+Re-ran TASK 1 + TASK 5 queries against PROD:
+
+| Check | Before | After |
+|---|---|---|
+| `users/qoN6aykKwqZI4n9REgqXfEFG8KM2` doc | exists | **absent** ✓ |
+| `auth.getUserByEmail('wave0-smoke-202605181440@bookbed.test')` | UID qoN6... | `auth/user-not-found` ✓ |
+| `auth.getUser(qoN6...)` | UID qoN6... | `auth/user-not-found` ✓ |
+| `properties/6VCCLt8rnSokrIani9oU` | "Wave Test Vila" | **absent** ✓ |
+| Unit, widget_settings under it | 2 docs | **absent** ✓ |
+| Remaining subcollections on deleted property | — | none ✓ |
+| `properties.where('subdomain', '==', 'wave-test-vila')` | 1 | **0** ✓ |
+| Total PROD properties | 14 | **13** ✓ |
+
+### Outstanding — NOT addressed by this run
+
+- **Stripe Connect `acct_1TYSMdPWhhVc6lN0`** remains in BookBed live mode. Now orphaned (no linked Firestore user). User must dissolve manually via https://dashboard.stripe.com/connect/accounts (LIVE mode). The account had `details_submitted` unknown / `external_account` unknown at audit time — recommend verifying state before dissolution to capture for audit trail.
+
+---
+
 ## Open questions for next session
 
 1. **Is `STRIPE_SECRET_KEY` (Secret Manager v4) live or test?** If live → confirm dashboard cleanup. If test → severity drops to LOW.

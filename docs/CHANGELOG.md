@@ -2,7 +2,27 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-21 | **Version**: 6.71
+**Last Updated**: 2026-05-21 | **Version**: 6.72
+
+---
+
+**Changelog 6.72**: Sentry Dart env detection + iOS Firebase project contamination hardening + Wave 0 PROD cleanup (2026-05-21):
+
+- **Sentry Dart env detection** (`lib/core/utils/sentry_env.dart` new; `lib/widget_main.dart:115`, `lib/main.dart:499` edited): mirrors yesterday's `functions/src/sentry.ts detectEnvironment()` (audit/11) on the Flutter side. Reads `Firebase.app().options.projectId` at runtime instead of the hardcoded `'production'` literal. Maps `bookbed-dev` → `development`, `bookbed-staging` → `staging`, `rab-booking-248fc` → `production`, anything else → `unknown`. Uses runtime project ID rather than `EnvironmentConfig.firebaseProjectId` because `widget_main.dart` never calls `setEnvironment` (audit/13).
+- **iOS Firebase contamination hardening** (`lib/widget_main_staging.dart` new; 6 entry points edited): adds `kDebugMode` projectId asserts after every `Firebase.initializeApp` in `main.dart`, `main_dev.dart`, `main_staging.dart`, `main_prod.dart`, `widget_main.dart`, `widget_main_dev.dart`, and the new `widget_main_staging.dart`. Crashes early in debug if entry-point ↔ Firebase project mismatch. Defense against the Wave 0 root cause: `ios/Runner/GoogleService-Info.plist` hardcoded to PROD + default `flutter run` picks `lib/main.dart` (PROD options) + no native `FirebaseApp.configure()` → silent contamination on iOS dev testing. Documented in `.claude/rules/ios-development.md` (new) and referenced from `CLAUDE.md` Path-Scoped Rules table.
+- **Deploy script fixes** (`scripts/deploy_dev.sh:10`, `scripts/deploy_staging.sh:10`): widget build target swapped from `lib/widget_main.dart` (PROD options) to `lib/widget_main_dev.dart` / `lib/widget_main_staging.dart`. Closes the dev/staging widget → prod Firebase exposure surface (audit/14). Scripts have been broken since `widget_main_dev.dart` was added 2026-01-10 (`a85a33f5`).
+- **Sentry Dart fix deploy** (2026-05-21 ~20:50 UTC): owner+widget deployed to PROD via `firebase deploy --only hosting:owner,hosting:widget --project rab-booking-248fc`. Static-verified all 3 project ID literals + 4 env labels present in deployed `main.dart.js`. Runtime Sentry envelope verification structurally blocked by app's `PlatformDispatcher.instance.onError` swallower (`lib/main.dart:295-310`) which catches all uncaught errors and calls `LoggingService.log` (not `logError` → does not forward to Sentry). Code+static verify accepted by user.
+- **Staging owner deploy** (2026-05-21 ~20:30 UTC): owner deployed to `bookbed-owner-staging.web.app` via `firebase deploy --only hosting:owner --project bookbed-staging` to validate the helper before prod cutover.
+- **Wave 0 PROD contamination cleanup** (2026-05-21 ~20:23 UTC): deleted via `scripts/cleanup-prod-wave0-orphans.js --skip-stripe-check --execute`:
+  - Auth user `wave0-smoke-202605181440@bookbed.test` (UID `qoN6aykKwqZI4n9REgqXfEFG8KM2`)
+  - Firestore `users/qoN6...` doc
+  - `properties/6VCCLt8rnSokrIani9oU` "Wave Test Vila" + nested `units/seg85UhyMQM8hw7ZpLhq` "Apartman A" + `widget_settings/seg85UhyMQM8hw7ZpLhq` (latter was a subcollection-walk surprise — earlier audits had missed it)
+  - Total PROD properties 14 → 13. Verification rerun: all artifacts absent.
+  - **Stripe Connect `acct_1TYSMdPWhhVc6lN0` NOT dissolved by this run** — `--skip-stripe-check` flag bypasses precheck. Account remains active in BookBed live mode; orphan record now (no linked Firestore user). Manual dissolution still required via Stripe Dashboard.
+- **Audit artifacts added**: `audit/12-widget-e2e-dev.md` (partial widget E2E smoke, browser-drive blocked by missing Chrome DevTools MCP), `audit/13-sentry-dart-fix.md` (Sentry Dart fix narrative + verification posture), `audit/14-deploy-scripts-mismatch.md` (deploy script audit + Wave 0 contamination discovery), `audit/15-prod-contamination-deep-check.md` (Stripe Connect / FCM / OAuth deep check + cleanup execution log). Migration log: `audit/migrations/2026-05-21-prod-wave0-cleanup.log`.
+- **Commits**: `c8d0bf8f fix(sentry): detect Dart-side env from Firebase project ID`, `0357f80d Merge: Sentry Dart env detection`, `6d8dbad5 fix(env): iOS Firebase project contamination hardening`, `3986962f Merge: iOS Firebase env hardening + cleanup script (gated)` on `main`.
+- **Branch**: `fix/sentry-dart-env-and-seed` and `fix/ios-firebase-env-hardening` merged into `main` via `--no-ff`, both pushed to origin.
+- **NOT yet shipped**: dev + staging widget redeploys with the new env-correct entry points. Next ticket. Awaiting user manual Stripe Connect dissolution before declaring Wave 0 cleanup fully complete.
 
 ---
 

@@ -25,7 +25,8 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 17. [SF-017: Password Visibility Toggle Tooltips](#sf-017-password-visibility-toggle-tooltips)
 18. [SF-018: Common Password Blacklist](#sf-018-common-password-blacklist)
 19. [SF-019: Bookings Rule Public-Read Partial Close (HIGH)](#sf-019-bookings-rule-public-read-partial-close-high)
-20. [Neriješeni bugovi (Jules audit)](#-neriješeni-bugovi-jules-audit)
+20. [SF-020: Wave 0 iOS Firebase Project Contamination + Hardening (HIGH)](#sf-020-wave-0-ios-firebase-project-contamination--hardening-high)
+21. [Neriješeni bugovi (Jules audit)](#-neriješeni-bugovi-jules-audit)
     - [BUG-001: iCal Feeds Provider - nedostaje autoDispose](#-bug-001-ical-feeds-provider---nedostaje-autodispose)
     - [BUG-002: IP Geolocation Service - nedostaje in-memory cache](#-bug-002-ip-geolocation-service---nedostaje-in-memory-cache)
     - [BUG-003: iCal Sync - sekvencijalno vs paralelno procesiranje](#-bug-003-ical-sync---sekvencijalno-vs-paralelno-procesiranje)
@@ -1342,6 +1343,109 @@ Manualni UI smoke (na `https://bookbed-widget-dev.web.app`, dev only za sada —
 
 - Audit T11c surface deferral: vidi `docs/TODO.md` (T11c — Drop `unit_id+status` clause from bookings rule) i `audit/06-availability-cf-design.md` za migracioni plan.
 - Memory note: "Multi-agent git branch race" — tijekom ovog hotfixa drugi paralelni agent je flipovao HEAD branch dva puta (vidi memory/multi-agent-git-race.md). Hotfix branch commits ostali su intakt na `fix/bookings-hotfix-partial`.
+
+---
+
+## SF-020: Wave 0 iOS Firebase Project Contamination + Hardening (HIGH)
+
+**Datum**: 2026-05-21
+**Prioritet**: 🔴 High (PROD data contamination confirmed; live Stripe Connect orphan still outstanding)
+**Status**: ✅ Hardening shipped + Firestore/Auth cleanup executed; Stripe Connect dissolution pending manual action
+**Zahvaćeni fajlovi**:
+- `lib/widget_main_staging.dart` (new)
+- `lib/widget_main.dart`, `lib/widget_main_dev.dart`, `lib/main.dart`, `lib/main_dev.dart`, `lib/main_staging.dart`, `lib/main_prod.dart` (kDebugMode projectId asserts after `Firebase.initializeApp`)
+- `scripts/deploy_dev.sh:10`, `scripts/deploy_staging.sh:10` (widget target swap to env-correct entry points)
+- `lib/core/utils/sentry_env.dart` (new — projectId → Sentry env tag)
+- `.claude/rules/ios-development.md` (new — plist-swap procedure + warning signs)
+- `CLAUDE.md` (rules table entry)
+- `scripts/cleanup-prod-wave0-orphans.js` (new — dry-run-default, Stripe-rejection-gated cleanup script)
+
+**Otkrio**: `audit/12-widget-e2e-dev.md` (Sentry Dart hardcoded `production` finding) → `audit/14-deploy-scripts-mismatch.md` (PROD orphan property + owner found) → `audit/15-prod-contamination-deep-check.md` (live Stripe Connect account + iOS root cause crystallized).
+
+### Problem
+
+Two independent but related contamination surfaces, both routing dev/staging traffic to PROD Firebase:
+
+1. **Deploy scripts:** `scripts/deploy_dev.sh:10` and `scripts/deploy_staging.sh:10` built the prod widget entry (`lib/widget_main.dart`, which imports `firebase_options.dart` for `rab-booking-248fc`) and shipped it to dev/staging hosting sites. Widget at `bookbed-widget-dev.web.app` and `bookbed-widget-staging.web.app` therefore connected to PROD Firestore + Auth + Stripe LIVE for ~4 months (since `widget_main_dev.dart` was added 2026-01-10 in commit `a85a33f5`).
+2. **iOS testing path:** `ios/Runner/GoogleService-Info.plist` was hardcoded to PROD (`rab-booking-248fc`); a `.backup` variant existed with the dev project but manual swapping was required. `AppDelegate.swift` had no native `FirebaseApp.configure()` call, so whatever Dart-side `Firebase.initializeApp(options: …)` ran first became the source of truth. `flutter run` without explicit `--target` defaults to `lib/main.dart`, which imports prod `firebase_options.dart`. Combined: dropping `--flavor dev` (per `memory/wave0-test-findings.md`) AND not adding `--target lib/main_dev.dart` AND not swapping the plist = silent iOS contamination of PROD.
+
+### Concrete impact (PROD)
+
+During Wave 0 testing on 2026-05-18, the iOS contamination path created the following in PROD `rab-booking-248fc`:
+
+- Auth user `wave0-smoke-202605181440@bookbed.test` (UID `qoN6aykKwqZI4n9REgqXfEFG8KM2`), password provider, created 12:49:40 UTC
+- Firestore `users/qoN6...` doc with `accountType=trial`, `role=owner`, plus crucially `stripe_account_id = acct_1TYSMdPWhhVc6lN0` + `stripe_connected_at = 2026-05-18T16:01:54Z`
+- Firestore property `Wave Test Vila` (`6VCCLt8rnSokrIani9oU`, subdomain `wave-test-vila`), 1 unit `Apartman A` (`seg85UhyMQM8hw7ZpLhq`) base €50, no bookings
+- Stripe Connect Express account `acct_1TYSMdPWhhVc6lN0` on BookBed live Stripe platform (per `.claude/rules/stripe.md` PROD uses live mode; Secret Manager confirmation blocked from this session)
+
+What was NOT contaminated:
+- Zero bookings on the test property → zero Stripe sessions/payment intents
+- No real guest emails / PII in any PROD booking
+- No OAuth providers linked (password provider only → no Google/Apple tokens issued against prod CLIENT_ID)
+- No FCM device tokens persisted to Firestore
+- Other 13 PROD properties + 58 bookings unaffected
+
+### Rješenje — hardening (code)
+
+1. **Dart-level projectId assert** after every `Firebase.initializeApp` in all 6 entry points + the new staging widget. Pattern:
+   ```dart
+   if (kDebugMode) {
+     const expectedProjectId = 'bookbed-dev'; // or 'bookbed-staging' / 'rab-booking-248fc'
+     final actualProjectId = Firebase.app().options.projectId;
+     assert(
+       actualProjectId == expectedProjectId,
+       'X entry point connected to wrong Firebase project: ...',
+     );
+   }
+   ```
+   Crashes the app in debug mode if the runtime project doesn't match the entry point's declared target. Defense against future plist-swap forgetfulness.
+2. **Deploy script fixes:** `scripts/deploy_dev.sh:10` target → `lib/widget_main_dev.dart`. `scripts/deploy_staging.sh:10` target → `lib/widget_main_staging.dart` (newly created).
+3. **`.claude/rules/ios-development.md`**: documents the 2-step manual plist-swap procedure, restore commands, warning signs, and the Dart assert as the safety net.
+4. **Sentry Dart env detection** (`lib/core/utils/sentry_env.dart`): replaces hardcoded `options.environment = 'production'` in `lib/widget_main.dart:115` and `lib/main.dart:499` with a project-id-aware function — dev/staging Sentry events will now tag correctly instead of polluting the prod dashboard.
+
+### Rješenje — cleanup (data)
+
+`scripts/cleanup-prod-wave0-orphans.js` (new): dry-run-default, idempotent, with Stripe Connect pre-flight check that refuses to proceed if the connected account is still active. `--skip-stripe-check` flag bypasses the precheck when operator has manually dissolved the Stripe account.
+
+Executed 2026-05-21 20:23 UTC with `--skip-stripe-check --execute` (user authorized; Stripe dissolution deferred to manual dashboard action):
+
+| Delete | Status |
+|---|---|
+| `properties/6VCCLt8rnSokrIani9oU/units/seg85UhyMQM8hw7ZpLhq` | ✓ |
+| `properties/6VCCLt8rnSokrIani9oU/widget_settings/seg85UhyMQM8hw7ZpLhq` | ✓ (subcollection-walk found this — earlier audits had missed it) |
+| `properties/6VCCLt8rnSokrIani9oU` | ✓ |
+| `users/qoN6aykKwqZI4n9REgqXfEFG8KM2` | ✓ |
+| Auth user `qoN6aykKwqZI4n9REgqXfEFG8KM2` | ✓ |
+
+Post-cleanup verification: all artifacts absent. PROD properties 14 → 13. Migration log: `audit/migrations/2026-05-21-prod-wave0-cleanup.log`.
+
+### Outstanding
+
+**Stripe Connect `acct_1TYSMdPWhhVc6lN0` NOT dissolved.** Account is now orphaned in BookBed live Stripe platform (no linked Firestore user). User must manually:
+1. Open `https://dashboard.stripe.com/connect/accounts` (LIVE mode)
+2. Find `acct_1TYSMdPWhhVc6lN0` (or search by `wave0-smoke-202605181440@bookbed.test` / `Wave Zero Tester`)
+3. Capture state (charges_enabled, payouts_enabled, details_submitted, country, external_account count) — for audit trail
+4. Dissolve / reject the account
+
+After Stripe dissolution: SF-020 fully closed.
+
+### Moguće nuspojave
+
+- The `kDebugMode` asserts will crash debug builds that boot against the "wrong" project. Intentional — that's the whole point — but worth knowing if a teammate sees a sudden boot crash after pulling main.
+- Deploy script fixes mean next `scripts/deploy_dev.sh` / `scripts/deploy_staging.sh` invocation will build a different widget bundle (env-correct one). First post-fix deploy should be re-verified end-to-end before declaring the env split fully healed.
+
+### GDPR/Security implikacije
+
+The contamination involved no real guest data (no bookings, no real-customer PII). Test-domain account in PROD Auth is removed. The orphan Stripe Connect account is the residual risk vector — pending manual dissolution. No notification obligation triggered.
+
+### Povezani bugovi
+
+- `audit/12-widget-e2e-dev.md` — initial discovery of widget Sentry hardcoded env tag, which led to the cascade.
+- `audit/13-sentry-dart-fix.md` — Sentry Dart helper fix narrative; structural runtime-verify constraint.
+- `audit/14-deploy-scripts-mismatch.md` — deploy script audit + PROD contamination discovery.
+- `audit/15-prod-contamination-deep-check.md` — full deep check + cleanup execution log.
+- `memory/wave0-test-findings.md` — original "drop --flavor dev" gotcha that triggered the contamination.
+- `memory/sentry-runtime-verify-blocked.md` — why runtime Sentry verify can't be triggered externally on this codebase.
 
 ---
 

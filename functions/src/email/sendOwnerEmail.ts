@@ -84,6 +84,10 @@ function optionalString(
   return value;
 }
 
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 export const sendOwnerEmail = onCall(
   {secrets: [resendApiKeyParam]},
   async (request) => {
@@ -113,6 +117,31 @@ export const sendOwnerEmail = onCall(
       "fromEmail",
       MAX_FROM_EMAIL_LENGTH,
     );
+
+    if (!isValidEmail(to)) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Field \"to\" must be a valid email address",
+      );
+    }
+
+    // Per-unit rate limit: caps abuse of a single owner's Resend quota even
+    // when the caller rotates source IPs (the IP limit above is in-memory and
+    // per-instance). NOTE: this does not by itself close the open-relay
+    // surface — `to`/`htmlBody` are still caller-supplied. Full fix = the
+    // server-side structured templates planned for Phase B.
+    if (!checkRateLimit(
+      `send_owner_email_unit:${propertyId}:${unitId}`, 50, 3600,
+    )) {
+      logWarn("[sendOwnerEmail] Per-unit rate limit exceeded", {
+        propertyId,
+        unitId,
+      });
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many email sends for this unit. Please try again later.",
+      );
+    }
 
     // Owner key lookup. widget_secrets is owner-only (rules enforce); Admin SDK
     // bypasses rules.

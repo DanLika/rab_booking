@@ -10,6 +10,8 @@
 - [SECURITY_FIXES.md](./docs/SECURITY_FIXES.md) - Sigurnosne ispravke (SF-001, SF-002, ...)
 - [CHANGELOG.md](./docs/CHANGELOG.md) - Svi changelogi v4.6–v6.65
 - [TODO.md](./docs/TODO.md) - Planirani zadaci (Website Docs, Admin Controls, Security Fixes)
+- [audit/11-cloudfunctions-inventory.md](./audit/11-cloudfunctions-inventory.md) - CF inventory (dev/prod), orphans, P0/P1/P2 cleanup (2026-05-21)
+- [audit/11-sentry-env-fix.md](./audit/11-sentry-env-fix.md) - Sentry env-tag fix + Gen 2 `GCLOUD_PROJECT` finding (2026-05-21)
 
 ---
 

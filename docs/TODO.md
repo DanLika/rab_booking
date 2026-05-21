@@ -4,6 +4,32 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ---
 
+## 🚨 TODO: Cloud Functions audit follow-ups (2026-05-21)
+
+**Prioritet:** Mixed (P0 prod bugs, P1 cleanup, P2 hygiene, P3 long-term)
+**Izvor:** `audit/11-cloudfunctions-inventory.md`
+
+### P0 — production-affecting bugs
+
+1. **Deploy `getBookingByStripeSession` to prod** (`rab-booking-248fc`). Source on `main` + dev; widget booking-confirmation Flutter path calls it on prod and currently 404s. _(Same item as Wave 0 cutover §1 below — kept in both places intentionally.)_
+2. **Deploy `sendOwnerEmail` to prod**. Recent hotfix on `hotfix/widget-secrets-exfil` (commit `49af1625`) is dev-only; production owners do not currently receive widget inquiry emails.
+3. **Fix dead Flutter callsite `sendSuspiciousActivityAlert`** (`lib/core/services/security_events_service.dart:356`). Backend `securityEmail.ts` deleted in commit `4cb5a391`; every suspicious-login attempt logs an unhandled cloud-functions error. Either restore the backend or remove the caller.
+
+### P1 — source-state cleanup
+
+4. **Decide Airbnb / Booking.com OAuth fate.** Source on dev only (`airbnbApi.ts`, `bookingComApi.ts`), 4 months stale, Flutter UI still calls `initiateAirbnbOAuth` / `initiateBookingComOAuth`. Either ship (deploy + complete) or cut (delete source + UI + undeploy from dev). Cross-reference `audit/06-platform-connections-check.md` if applicable.
+
+### P2 — hygiene
+
+5. **Track Firebase Extensions in `firebase.json`.** Run `firebase ext:export --project rab-booking-248fc` so `delete-user-data` + `storage-resize-images` are version-controlled.
+6. **Add `functions/.env.bookbed-dev`** with dev-specific `WIDGET_URL`, `BOOKING_DOMAIN`, `FROM_EMAIL`, `FROM_NAME`. Per `.claude/rules/hosting-build.md` this is required to stop dev from sending emails with prod URLs.
+
+### P3 — long-term
+
+7. **Region consolidation roadmap.** Move Stripe + booking hot-path functions from `us-central1` → `europe-west1`. Needs dual-deploy phase + Stripe webhook URL update in Dashboard. ~+120ms latency win per call for EU/HR users.
+
+---
+
 ## 🚨 TODO: Wave 0 prod cutover
 
 **Prioritet:** HIGH (Wave 0 is dev-only until this lands)

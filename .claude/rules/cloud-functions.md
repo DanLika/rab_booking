@@ -85,26 +85,21 @@ cd functions && npm run deploy
 ```
 Changes in Git don't affect production until deployed!
 
-## Region split (audit 2026-05-18)
+## Region split (refreshed 2026-05-21 — audit/11-cloudfunctions-inventory.md)
 
-**14 functions** deklariraju `region: 'europe-west1'`; ostalih ~22 default na `us-central1`. Klijentska Dart `EnvironmentConfig.functionsBaseUrl` hardkodira `us-central1-…`.
-
-eu-west1 callable funkcije MORAJU se zvati preko region-specific instance:
+**PROD**: 32 funkcija u `us-central1`, 21 u `europe-west1`. **DEV**: 35/22. Klijentska Dart `EnvironmentConfig.functionsBaseUrl` hardkodira `us-central1-…` — eu-west1 callable funkcije MORAJU se zvati preko region-specific instance:
 ```dart
 final functions = FirebaseFunctions.instanceFor(region: 'europe-west1');
 await functions.httpsCallable('setLifetimeLicense').call(...);
 ```
 
-eu-west1 funkcije (provjeri prije dodavanja novih): `setLifetimeLicense`, `updateUserStatus`, `onUserCreate`, `checkLoginRateLimit`, `checkRegistrationRateLimit`, `scheduledIcalSync`, `syncIcalFeedNow`, `migrateTrialStatus`, `checkPasswordHistory`, `savePasswordToHistory`, `onPropertyDeleted`, `revokeAllRefreshTokens`, `checkTrialExpiration`, `sendTrialExpirationWarning`, `onUnitDeleted`, + 6 funkcija u `scheduledPushNotifications.ts`.
+eu-west1 funkcije (provjeri prije dodavanja novih): `setLifetimeLicense`, `updateUserStatus`, `onUserCreate`, `checkLoginRateLimit`, `checkRegistrationRateLimit`, `scheduledIcalSync`, `syncIcalFeedNow`, `migrateTrialStatus`, `checkPasswordHistory`, `savePasswordToHistory`, `onPropertyDeleted`, `revokeAllRefreshTokens`, `checkTrialExpiration`, `sendTrialExpirationWarning`, `onUnitDeleted`, `deleteUserAccount`, + 6 funkcija u `scheduledPushNotifications.ts`.
 
-## Sentry env tag bug (audit 2026-05-18)
+**Latency cost (P3 in audit/11)**: Stripe + booking hot-path (`createBookingAtomic`, `createStripeCheckoutSession`, `handleStripeWebhook`, `getUnitIcalFeed`, `onBookingCreated`, `onBookingStatusChange`) sve u `us-central1` → +120ms RTT za EU/HR korisnike po svakom callable pozivu. Migracija u `europe-west1` traži dual-deploy fazu (CF region je immutable) + Stripe webhook URL update. NE deploya nove funkcije u `us-central1` osim ako postoji konkretan razlog.
 
-`functions/src/sentry.ts:30` deriviraju `environment` SAMO iz `FUNCTIONS_EMULATOR`. To znači dev Cloud Run deploy (`bookbed-dev`, ne emulator) šalje errore u Sentry tagovane kao `production` — miješaju se s pravim prod erorima.
+## Dead Flutter callsite: `sendSuspiciousActivityAlert`
 
-Fix prije bilo kojeg dev cloud deploy-a: derivirati iz `GCP_PROJECT`:
-```typescript
-environment: process.env.GCP_PROJECT === 'rab-booking-248fc' ? 'production' : 'development'
-```
+`lib/core/services/security_events_service.dart:356` zove `httpsCallable('sendSuspiciousActivityAlert')`. **Backend funkcija ne postoji** — `functions/src/securityEmail.ts` obrisan u commitu `4cb5a391`. Svaka suspicious-login detekcija triggera `functions/not-found` u logu. Ili obnoviti backend, ili ukloniti Flutter caller. Vidi audit/11-cloudfunctions-inventory.md §5.
 
 ## v2 triggers, dva v1 importa zaostala
 

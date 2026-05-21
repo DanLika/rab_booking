@@ -1,4 +1,5 @@
 // Development entry point
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/config/environment.dart';
@@ -24,6 +25,20 @@ void main() async {
     if (!e.toString().contains('duplicate-app')) {
       rethrow;
     }
+  }
+
+  // Safety: crash early in debug if Firebase is wired to the wrong project.
+  // Prevents the iOS "swapped plist + wrong --target" silent contamination
+  // class documented in audit/15.
+  if (kDebugMode) {
+    const expectedProjectId = 'bookbed-dev';
+    final actualProjectId = Firebase.app().options.projectId;
+    assert(
+      actualProjectId == expectedProjectId,
+      'DEV entry point connected to wrong Firebase project: '
+      '$actualProjectId (expected $expectedProjectId). '
+      'Check ios/Runner/GoogleService-Info.plist and --target flag.',
+    );
   }
 
   // Connect to emulators in development

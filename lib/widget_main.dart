@@ -56,6 +56,22 @@ Future<void> _initializeFirebaseSafely() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+
+      // Safety: crash early in debug if our init landed on the wrong project.
+      // Only fires when we did the init ourselves (needsInit=true). If another
+      // entry point already initialized Firebase, that entry owns the assert.
+      if (kDebugMode) {
+        const expectedProjectId = 'rab-booking-248fc';
+        final actualProjectId = Firebase.app().options.projectId;
+        assert(
+          actualProjectId == expectedProjectId,
+          'PROD widget entry point connected to wrong Firebase project: '
+          '$actualProjectId (expected $expectedProjectId). '
+          'Did you mean to run lib/widget_main_dev.dart or '
+          'lib/widget_main_staging.dart? '
+          'Or is ios/Runner/GoogleService-Info.plist swapped to a dev variant?',
+        );
+      }
     }
   } catch (e) {
     // Ignore duplicate-app errors

@@ -401,6 +401,22 @@ Future<void> _initializeInBackground() async {
           options: DefaultFirebaseOptions.currentPlatform,
         );
         LoggingService.log('Firebase.initializeApp completed', tag: 'INIT');
+
+        // Safety: crash early in debug if our init landed on the wrong project.
+        // Only fires when we did the init ourselves (needsInit=true). When
+        // called via main_dev/staging/prod.dart, Firebase is already
+        // initialized so we skip — those entries own the assert.
+        if (kDebugMode) {
+          const expectedProjectId = 'rab-booking-248fc';
+          final actualProjectId = Firebase.app().options.projectId;
+          assert(
+            actualProjectId == expectedProjectId,
+            'PROD owner entry point connected to wrong Firebase project: '
+            '$actualProjectId (expected $expectedProjectId). '
+            'Did you mean to run lib/main_dev.dart or lib/main_staging.dart? '
+            'Or is ios/Runner/GoogleService-Info.plist swapped to a dev variant?',
+          );
+        }
       } else {
         LoggingService.log(
           'Firebase already initialized, skipping',

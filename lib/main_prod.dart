@@ -1,4 +1,5 @@
 // Production entry point
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/config/environment.dart';
@@ -22,6 +23,17 @@ void main() async {
     if (!e.toString().contains('duplicate-app')) {
       rethrow;
     }
+  }
+
+  // Safety: crash early in debug if Firebase is wired to the wrong project.
+  if (kDebugMode) {
+    const expectedProjectId = 'rab-booking-248fc';
+    final actualProjectId = Firebase.app().options.projectId;
+    assert(
+      actualProjectId == expectedProjectId,
+      'PROD entry point connected to wrong Firebase project: '
+      '$actualProjectId (expected $expectedProjectId).',
+    );
   }
 
   app.runMainApp();

@@ -12,17 +12,18 @@ import 'core/utils/web_utils.dart'; // For hideNativeSplash
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
-import 'firebase_options_dev.dart'; // Import DEV options
+import 'firebase_options_staging.dart'; // Import STAGING options
 
-// Sentry not used in DEV to avoid noise
+// Sentry not used in STAGING to avoid noise during pre-prod validation
 // const String _sentryDsn = ...
 
-/// WIDGET DEVELOPMENT ENTRY POINT
+/// WIDGET STAGING ENTRY POINT
 ///
-/// Uses [DevFirebaseOptions] to connect to bookbed-dev project.
+/// Uses [StagingFirebaseOptions] to connect to bookbed-staging project.
+/// Mirrors `widget_main_dev.dart` swapping dev → staging options.
 
-/// Safari-compatible Firebase initialization for DEV
-Future<void> _initializeFirebaseSafelyDev() async {
+/// Safari-compatible Firebase initialization for STAGING
+Future<void> _initializeFirebaseSafelyStaging() async {
   try {
     bool needsInit = true;
     try {
@@ -32,7 +33,9 @@ Future<void> _initializeFirebaseSafelyDev() async {
     }
 
     if (needsInit) {
-      await Firebase.initializeApp(options: DevFirebaseOptions.currentPlatform);
+      await Firebase.initializeApp(
+        options: StagingFirebaseOptions.currentPlatform,
+      );
     }
   } catch (e) {
     if (!e.toString().contains('duplicate-app')) {
@@ -40,13 +43,15 @@ Future<void> _initializeFirebaseSafelyDev() async {
     }
   }
 
-  // Safety: crash early in debug if Firebase is wired to the wrong project.
+  // Safety: in debug builds, refuse to boot if the runtime Firebase project
+  // doesn't match this entry point's declared target. Prevents the iOS
+  // "swapped plist + wrong --target" silent contamination class (audit/15).
   if (kDebugMode) {
-    const expectedProjectId = 'bookbed-dev';
+    const expectedProjectId = 'bookbed-staging';
     final actualProjectId = Firebase.app().options.projectId;
     assert(
       actualProjectId == expectedProjectId,
-      'DEV widget entry point connected to wrong Firebase project: '
+      'STAGING entry point connected to wrong Firebase project: '
       '$actualProjectId (expected $expectedProjectId). '
       'Check ios/Runner/GoogleService-Info.plist and --target flag.',
     );
@@ -58,11 +63,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // CRITICAL: Disable Google Fonts runtime fetching to prevent crashes when offline
-  // When false, the package uses system fonts as fallback instead of attempting network download
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  // Initialize Firebase with DEV options (Safari fix)
-  await _initializeFirebaseSafelyDev();
+  await _initializeFirebaseSafelyStaging();
 
   SharedPreferences? prefs;
   try {
@@ -73,7 +76,6 @@ void main() async {
 
   await initializeDateFormatting();
 
-  // Run app without Sentry for dev
   runApp(
     ProviderScope(
       overrides: prefs != null
@@ -108,9 +110,6 @@ class _BookingWidgetAppState extends ConsumerState<BookingWidgetApp> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Precache logo assets for loaders (prevents white square during load)
-    // logo-light.png = purple logo for light theme
-    // logo-dark.png = white logo for dark theme
     precacheImage(const AssetImage('assets/images/logo-light.png'), context);
     precacheImage(const AssetImage('assets/images/logo-dark.png'), context);
   }
@@ -137,7 +136,7 @@ class _BookingWidgetAppState extends ConsumerState<BookingWidgetApp> {
     );
 
     return MaterialApp.router(
-      title: 'BookBed Widget (DEV)',
+      title: 'BookBed Widget (Staging)',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeModeEnum,

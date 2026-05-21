@@ -9,6 +9,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/router_widget.dart';
+import 'core/utils/sentry_env.dart';
 import 'core/utils/web_utils.dart'; // For hideNativeSplash
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
@@ -112,7 +113,7 @@ void main() async {
       (options) {
         options.dsn = _sentryDsn;
         options.tracesSampleRate = 0.2;
-        options.environment = 'production';
+        options.environment = detectSentryEnvironment();
         // Tag as widget to distinguish from owner dashboard
         // Filter non-critical errors before sending
         options.beforeSend = (event, hint) {

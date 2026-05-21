@@ -20,6 +20,7 @@ import 'core/providers/theme_provider.dart';
 import 'core/providers/version_check_provider.dart';
 import 'core/services/logging_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/sentry_env.dart';
 import 'core/utils/web_utils.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
@@ -496,7 +497,7 @@ Future<void> _initSentry() async {
     await SentryFlutter.init((options) {
       options.dsn = EnvironmentConfig.sentryDsn;
       options.tracesSampleRate = 0.2;
-      options.environment = 'production';
+      options.environment = detectSentryEnvironment();
 
       // Filter non-critical errors before sending to Sentry
       options.beforeSend = (event, hint) {

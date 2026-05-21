@@ -77,7 +77,11 @@ export function initSentry(): void {
     });
 
     isInitialized = true;
-    logInfo("Sentry initialized for Cloud Functions");
+    logInfo("Sentry initialized for Cloud Functions", {
+      environment: detectEnvironment(),
+      gcpProject: process.env.GCP_PROJECT || null,
+      gcloudProject: process.env.GCLOUD_PROJECT || null,
+    });
   } catch (error) {
     logError("Failed to initialize Sentry", error);
   }

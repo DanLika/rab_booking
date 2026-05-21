@@ -37,6 +37,29 @@ export function initSentry(): void {
           app_type: "cloud_functions",
         },
       },
+      // Drop HttpsError events with client-fault codes — these are expected
+      // 4xx-equivalent responses, not server bugs. Otel auto-instrumentation
+      // captures every thrown HttpsError from callables; filter the noise.
+      beforeSend(event, hint) {
+        const err = hint?.originalException as
+          | {code?: string; httpErrorCode?: unknown} | undefined;
+        const clientFaultCodes = new Set([
+          "invalid-argument",
+          "unauthenticated",
+          "permission-denied",
+          "not-found",
+          "already-exists",
+          "failed-precondition",
+          "out-of-range",
+          "resource-exhausted",
+          "cancelled",
+        ]);
+        if (err && err.httpErrorCode !== undefined && typeof err.code === "string" &&
+            clientFaultCodes.has(err.code)) {
+          return null;
+        }
+        return event;
+      },
     });
 
     isInitialized = true;

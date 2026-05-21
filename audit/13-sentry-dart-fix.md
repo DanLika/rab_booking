@@ -206,7 +206,49 @@ Earlier in this session `git branch --show-current` flipped from `main` to `hotf
 
 ---
 
+## Prod deploy (2026-05-21, after user authorization)
+
+### Builds
+
+| Target | Entry point | main.dart.js | Compile time |
+|---|---|---|---|
+| Owner dashboard | `lib/main_prod.dart` | 7.0 MB | 88.9s |
+| Widget | `lib/widget_main.dart` | 3.7 MB | 46.4s |
+
+### Deploy
+
+```
+firebase deploy --only hosting:owner,hosting:widget --project rab-booking-248fc
+✔  hosting[bookbed-owner]: release complete
+✔  hosting[bookbed-widget]: release complete
+```
+
+Hosting URLs:
+- https://bookbed-owner.web.app (alias: app.bookbed.io)
+- https://bookbed-widget.web.app (alias: view.bookbed.io)
+
+`admin` target NOT redeployed — `lib/admin_main_production.dart` does not initialize Sentry, so the fix has no effect there.
+
+### Static verify of prod bundles
+
+| Bundle | Size | last-modified | `bookbed-dev` | `bookbed-staging` | `rab-booking-248fc` |
+|---|---|---|---|---|---|
+| `https://app.bookbed.io/main.dart.js` | 7.3 MB transferred | Thu, 21 May 2026 18:50:32 GMT | 2 | 2 | 5 |
+| `https://view.bookbed.io/main.dart.js` | 3.9 MB transferred | Thu, 21 May 2026 18:50:32 GMT | 1 | 1 | 4 |
+
+All three project ID literals plus the `unknown` fallback are present in both deployed bundles. `last-modified` matches deploy time → fresh artifacts served from CDN.
+
+### Runtime impact
+
+From the moment the deploy released, Sentry events emitted by `lib/main.dart`'s `_initSentry()` carry `environment = detectSentryEnvironment()` instead of the hardcoded `'production'`. On the prod project the function evaluates to `'production'` (same as before, but via runtime detection now). On dev (if/when the widget deploy script is fixed to use `widget_main_dev.dart`'s sibling for sentry-on case) and staging it would evaluate to `'development'` / `'staging'` respectively.
+
+The owner-dashboard side fix is structurally complete. The widget side is logically correct but masked at runtime by the pre-existing `scripts/deploy_dev.sh` / `scripts/deploy_staging.sh` bug (those build `widget_main.dart` which imports prod `firebase_options.dart` regardless of deploy target). Tracking that in a separate ticket.
+
+---
+
 ## Commit refs
 
-- `c8d0bf8f` — sentry helper + entry-point edits + seed script (this PR)
+- `c8d0bf8f` — sentry helper + entry-point edits + seed script
+- `4c64c73a` — audit/12 + audit/13 docs (this file)
+- `0357f80d` — merge commit on `main` (`--no-ff`)
 - `4b56f8fb` — yesterday's CF-side Sentry env fix (`audit/11-sentry-env-fix.md`)

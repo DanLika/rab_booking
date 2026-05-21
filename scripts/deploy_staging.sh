@@ -7,7 +7,7 @@ firebase use staging
 
 # Build web apps
 echo "📦 Building widget..."
-flutter build web --release --target lib/widget_main.dart -o build/web_widget
+flutter build web --release --target lib/widget_main_staging.dart -o build/web_widget
 
 echo "📦 Building owner dashboard..."
 flutter build web --release --target lib/main_staging.dart -o build/web_owner

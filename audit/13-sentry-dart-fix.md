@@ -231,18 +231,34 @@ Hosting URLs:
 
 ### Static verify of prod bundles
 
+Initial weak check (project ID counts):
+
 | Bundle | Size | last-modified | `bookbed-dev` | `bookbed-staging` | `rab-booking-248fc` |
 |---|---|---|---|---|---|
 | `https://app.bookbed.io/main.dart.js` | 7.3 MB transferred | Thu, 21 May 2026 18:50:32 GMT | 2 | 2 | 5 |
 | `https://view.bookbed.io/main.dart.js` | 3.9 MB transferred | Thu, 21 May 2026 18:50:32 GMT | 1 | 1 | 4 |
 
-All three project ID literals plus the `unknown` fallback are present in both deployed bundles. `last-modified` matches deploy time → fresh artifacts served from CDN.
+The above only proves project ID strings are *present* in the bundle — but `firebase_options*.dart` and `environment.dart`'s `firebaseProjectId` getter also contain these literals, so the count alone doesn't prove `detectSentryEnvironment` shipped.
 
-### Runtime impact
+**Tighter verify:** for each occurrence of `bookbed-dev` in the deployed bundle, scan a ±1500-char window for **all four** return labels (`'development'`, `'staging'`, `'production'`, `'unknown'`). If the helper were unreachable from `main()`, Dart's tree-shaker would drop the entire function and its labels. Co-occurrence of all four in the same window = the helper's compiled body is in the bundle and reachable.
 
-From the moment the deploy released, Sentry events emitted by `lib/main.dart`'s `_initSentry()` carry `environment = detectSentryEnvironment()` instead of the hardcoded `'production'`. On the prod project the function evaluates to `'production'` (same as before, but via runtime detection now). On dev (if/when the widget deploy script is fixed to use `widget_main_dev.dart`'s sibling for sentry-on case) and staging it would evaluate to `'development'` / `'staging'` respectively.
+| Bundle | `bookbed-dev` occurrences | Windows containing all 4 labels |
+|---|---|---|
+| `https://app.bookbed.io/main.dart.js` | 2 | **1** ✓ |
+| `https://view.bookbed.io/main.dart.js` | 1 | **1** ✓ |
 
-The owner-dashboard side fix is structurally complete. The widget side is logically correct but masked at runtime by the pre-existing `scripts/deploy_dev.sh` / `scripts/deploy_staging.sh` bug (those build `widget_main.dart` which imports prod `firebase_options.dart` regardless of deploy target). Tracking that in a separate ticket.
+Both bundles ✓. Helper function survived tree-shake, meaning it's referenced from a reachable call site (the modified `_initSentry()` and widget `SentryFlutter.init` callbacks).
+
+### Observable runtime impact
+
+Caveat: on the **prod owner dashboard** and **prod widget**, this fix changes Sentry's `environment` tag from a hardcoded `'production'` literal to a function call that *returns* `'production'`. Same observable value. So prod events look identical before and after — there is no behavioral diff to observe on prod. The fix's value is realized only on staging (and on dev if Sentry is ever wired there) where the runtime evaluation now diverges from `'production'`.
+
+Audit-only honesty note: the prod deploy is therefore best characterized as "structurally correct, but invisible on prod by design". The owner-dashboard staging deploy is the only place a behavioral diff would surface, and that diff is structurally unobservable from outside the app (see "Runtime verification" section above).
+
+### Out-of-scope follow-ups discovered during deploy
+
+- `scripts/deploy_dev.sh` and `scripts/deploy_staging.sh` both build `lib/widget_main.dart` which imports the prod `firebase_options.dart`. The dev/staging widget at `bookbed-widget-dev.web.app` / `bookbed-widget-staging.web.app` therefore connects to the **production** Firebase project. The Sentry helper introduced here will correctly tag those widget events as `production` (because the runtime project ID IS prod) — accurate for what the widget actually talks to, but masks the deeper bug that dev/staging widgets shouldn't be hitting prod data at all. Track in a separate ticket.
+- `lib/admin_main_production.dart` does not initialize Sentry; `admin` target intentionally not redeployed for this fix.
 
 ---
 

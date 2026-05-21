@@ -16,6 +16,22 @@ const SENTRY_DSN =
 let isInitialized = false;
 
 /**
+ * Detect the Sentry environment tag from runtime env vars.
+ *
+ * Cloud Functions Gen 2 does not reliably populate GCP_PROJECT; GCLOUD_PROJECT
+ * is the documented fallback. Returning explicit per-project labels prevents
+ * dev/staging errors from polluting the production Sentry dashboard.
+ */
+function detectEnvironment(): string {
+  if (process.env.FUNCTIONS_EMULATOR === "true") return "local";
+  const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
+  if (projectId === "bookbed-dev") return "development";
+  if (projectId === "bookbed-staging") return "staging";
+  if (projectId === "rab-booking-248fc") return "production";
+  return "unknown";
+}
+
+/**
  * Initialize Sentry for Cloud Functions
  * Call this at the top of index.ts
  */
@@ -27,9 +43,7 @@ export function initSentry(): void {
   try {
     Sentry.init({
       dsn: SENTRY_DSN,
-      environment: process.env.FUNCTIONS_EMULATOR === "true"
-        ? "local"
-        : (process.env.GCP_PROJECT === "rab-booking-248fc" ? "production" : "development"),
+      environment: detectEnvironment(),
       tracesSampleRate: 0.1, // 10% of transactions for performance monitoring
       // Tag all events as coming from cloud functions
       initialScope: {

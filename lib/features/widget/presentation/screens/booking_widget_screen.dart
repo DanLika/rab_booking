@@ -55,6 +55,7 @@ import '../widgets/email_verification_dialog.dart';
 import '../../data/services/email_verification_service.dart';
 import '../widgets/common/rotate_device_overlay.dart';
 import '../widgets/zoom_control_buttons.dart';
+import '../widgets/powered_by_badge.dart';
 // HYBRID LOADING: loading_screen.dart import removed - UI shows immediately
 import '../widgets/booking/payment/payment_option_widget.dart';
 import '../widgets/booking/guest_form/guest_count_picker.dart';
@@ -1872,7 +1873,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                       top: 12,
                                       bottom: 4,
                                     ),
-                                    child: _PoweredByBadge(
+                                    child: PoweredByBadge(
                                       text: WidgetTranslations.of(
                                         context,
                                         ref,
@@ -4121,47 +4122,5 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
       rethrow;
     }
-  }
-}
-
-/// Small "Powered by BookBed" link with hover effect.
-class _PoweredByBadge extends StatefulWidget {
-  final String text;
-  final Color color;
-
-  const _PoweredByBadge({required this.text, required this.color});
-
-  @override
-  State<_PoweredByBadge> createState() => _PoweredByBadgeState();
-}
-
-class _PoweredByBadgeState extends State<_PoweredByBadge> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final effectiveColor = _isHovered
-        ? widget.color
-        : widget.color.withValues(alpha: 0.85);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: () => launchUrl(
-          Uri.parse('https://bookbed.io'),
-          mode: LaunchMode.externalApplication,
-        ),
-        child: Text(
-          widget.text,
-          style: TextStyle(
-            fontSize: 11,
-            color: effectiveColor,
-            decoration: TextDecoration.underline,
-            decorationColor: effectiveColor,
-          ),
-        ),
-      ),
-    );
   }
 }

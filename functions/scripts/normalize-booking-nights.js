@@ -85,18 +85,17 @@ async function main() {
   console.log(`Mode: ${args.dryRun ? "DRY RUN (no writes)" : "FORCE (will write)"}`);
   console.log("");
 
-  const ELIGIBLE_STATUSES = [
+  // Filtered client-side so we don't depend on a `bookings.status`
+  // collection-group index existing on every project.
+  const ELIGIBLE_STATUSES = new Set([
     "confirmed",
     "pending_payment",
     "awaiting_owner_decision",
-  ];
+  ]);
 
-  const snap = await db
-    .collectionGroup("bookings")
-    .where("status", "in", ELIGIBLE_STATUSES)
-    .get();
+  const snap = await db.collectionGroup("bookings").get();
 
-  console.log(`Found ${snap.size} candidate booking(s).`);
+  console.log(`Found ${snap.size} total booking doc(s); filtering by status…`);
 
   let scanned = 0;
   let driftingCheckIn = 0;
@@ -106,8 +105,9 @@ async function main() {
   const writes = [];
 
   for (const doc of snap.docs) {
-    scanned++;
     const data = doc.data();
+    if (!ELIGIBLE_STATUSES.has(data.status)) continue;
+    scanned++;
     const checkIn = toDate(data.check_in);
     const checkOut = toDate(data.check_out);
 

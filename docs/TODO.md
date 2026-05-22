@@ -150,42 +150,45 @@ The same JS-error-type appears on the login form submit, but the underlying caus
 2. Investigate `keyboard_dismiss_fix_web.dart` interaction with autofill events.
 3. Workaround in production: direct JS `firebase_auth.signInWithEmailAndPassword` call (smoke test used this).
 
-## 🔐 TODO: T11c — Drop `unit_id+status` clause from bookings rule (CF landed via SF-023; widget bookings-stream migration pending)
+## ✅ DONE: T11c — Drop `unit_id+status` clause from bookings rule
 
-**Prioritet:** HIGH (largest remaining public-read surface on `bookings`)
-**Status:** ⚠️ **PARTIAL — Step 1 done.** `getUnitAvailability` CF deployed on dev (SF-023, 2026-05-22). Steps 2–4 (widget bookings-stream swap + clause drop) still pending.
+**Prioritet:** HIGH (was largest remaining public-read surface on `bookings`)
+**Status:** ✅ **CLOSED 2026-05-22** via PR #446 (branch `fix/t11c-proper-bookings-migration`, commits `ab6bdb3d` + `64b14bf0`). Dev deploy pending PR review.
 **Izvor:** `audit/03-backend.md` §3.4 flag #1, `audit/06-bookings-hotfix-partial.md`, `audit/06-availability-cf-design.md`, `audit/17-sf023-sf025-rules-fix.md`
 
-### Background
+### Outcome
 
-**T11-hotfix-partial** (branch `fix/bookings-hotfix-partial`, commit `9f3d86b4`, **merged to `main` 2026-05-18** via `04e742df`, **deployed to `bookbed-dev` only** — prod untouched, awaiting Wave 0 prod cutover) closed 2 of 3 public-read clauses on the `bookings` rule:
+Last anonymous read surface on the `bookings` collection-group is closed. Widget calendar + booking-submit gate now route through the `getUnitAvailability` Cloud Function. `firestore.rules` clause 1 (`unit_id`+`status` public read) removed from all 3 surfaces (subcollection, CG, deprecated top-level).
 
-- ❌ `stripe_session_id` field-presence — REMOVED. Replaced by callable `getBookingByStripeSession(sessionId)`.
-- ❌ `booking_reference` field-presence — REMOVED. Already had `verifyBookingAccess` as alternative.
-- ✅ **`unit_id` + `status` field-presence — KEPT**. Widget calendar depends on it for availability rendering.
+### Sequence — final state
 
-Clause 1 still makes every booking doc publicly readable to any Firebase API key holder. Closing it is **T11c**.
+1. ✅ **`getUnitAvailability` CF** (SF-023, 2026-05-22, merge `d481bf11`). `functions/src/availability.ts`, region `europe-west1`. Returns `AvailabilityWindow[]` with `source` discriminator covering bookings + manual blocks + ical.
+2. ✅ **Widget bookings snapshot stream migrated.** `firebase_booking_calendar_repository.dart` — 4 sites collapsed into single `_streamBlockedEvents` that demultiplexes CF windows by source. `availability_checker._checkBookings` replaced with `_fetchAvailabilityWindows` + per-source overlap helpers. Bookings + iCal now share one CF round-trip.
+3. ⏳ **Cut-over to prod** — pending. Sequence (after PR #446 merges):
+   - Deploy `getUnitAvailability` CF to `rab-booking-248fc`.
+   - Build + deploy the widget bundle to prod hosting.
+   - Deploy `firestore.rules` to prod **last** (so the live widget never makes a now-blocked direct read).
+   - Run smoke verify (anon CG `runQuery` on `bookings` with `unit_id`+`status` filter must return 403).
+4. ✅ **Rules-unit-test guard flipped.** `functions/test/firestore_rules/bookings.test.ts` — 2 "STILL ALLOWS" / "ALLOWED" assertions now `assertFails`. Test suite renamed to `bookings rule (T11c closed)`. 24/24 pass.
 
-### Sequence — current state
+### Trade-offs accepted
 
-1. ✅ **Ship `getUnitAvailability` CF** (SF-023, 2026-05-22, merge `d481bf11`). Done — `functions/src/availability.ts`, region `europe-west1`. Returns `AvailabilityWindow[]` with `source` discriminator covering all three legs (bookings + manual blocks + ical). Widget today consumes only `source=='ical_external'`; the `booking` subset is populated server-side but unused.
-2. ⏳ **Migrate widget bookings snapshot stream.** Today `firebase_booking_calendar_repository.dart` still uses `collectionGroup('bookings').where('unit_id', '==', ...).where('status', whereIn: [...]).snapshots()` at 4 sites. Each must be replaced by reading the `windows.where(source == AvailabilityWindowSource.booking)` projection from the existing helper. Same for `availability_checker._checkBookings` (the booking-submit gate's bookings leg).
-3. ⏳ **Cut-over sequence**: confirm dev parity → deploy `getUnitAvailability` CF + the migrated widget bundle to prod → only AFTER widget bundle is live can `firestore.rules` clause 1 be removed.
-4. ⏳ **Update rules-unit-test guard**: flip the assertion in `functions/test/firestore_rules/bookings.test.ts::"widget calendar (unit_id + status) clause STILL ALLOWS reads"` — after clause 1 is gone, the case must DENY (and a CF-mediated test should replace it).
+- **Realtime → 30s polling** for widget bookings. Same cadence already used for iCal blocks after SF-023. Acceptable for an anonymous booking-flow surface.
+- **Pending/confirmed visual distinction lost** in widget calendar. CF strips `status` for privacy; synthesized `BookingModel.status = confirmed`. Privacy win for anonymous viewers.
 
-### Production deploy of T11-hotfix-partial + SF-023
+### Production deploy of T11-hotfix-partial + SF-023 + T11c
 
-Currently dev-only. Before prod cutover:
+Currently all three are dev-only. Combined prod cutover checklist:
 
 - Deploy `getBookingByStripeSession` CF to `rab-booking-248fc`.
-- Deploy `getUnitAvailability` CF to `rab-booking-248fc` (currently dev-only — SF-023).
-- Build + deploy the widget bundle to prod hosting (must include both the SF-023 ical-stream migration already in main AND the upcoming bookings-stream migration).
-- Deploy `firestore.rules` + `storage.rules` to prod **last** (so the live widget never makes a now-blocked direct read).
+- Deploy `getUnitAvailability` CF to `rab-booking-248fc`.
+- Build + deploy the widget bundle to prod hosting (must include both the SF-023 ical-stream migration AND the T11c bookings-stream migration).
+- Deploy `firestore.rules` + `storage.rules` to prod **last**.
 - Run the manual smoke checklists in `audit/06-bookings-hotfix-partial.md` §6.3 + `audit/17-sf023-sf025-rules-fix.md` § Smoke verify on the prod widget origin.
 
 ### Cross-link
 
-`docs/SECURITY_FIXES.md` line 1350 ("T11c progress update 2026-05-22") restates the 4 steps above in 6-step audit-narrative form (adds explicit "add unit test coverage first" prereq + "update bookings.test.ts to flip the regression-guard assertion" sub-step). Same scope, different framing.
+`docs/SECURITY_FIXES.md` SF-019 → "T11c CLOSED 2026-05-22" subsection. `CLAUDE.md` NIKADA NE MIJENJAJ row for bookings clause 1 flipped to ✅ CLOSED.
 
 ---
 

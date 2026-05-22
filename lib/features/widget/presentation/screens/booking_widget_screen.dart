@@ -71,6 +71,7 @@ import '../widgets/booking/booking_pill_bar.dart';
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../l10n/widget_translations.dart';
+import '../helpers/booking_widget_url_helpers.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
@@ -94,58 +95,6 @@ class BookingWidgetScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
-  // ============================================
-  // URL SANITIZATION & VALIDATION HELPERS
-  // ============================================
-  /// Sanitize ID from URL - removes any path segments (e.g., /calendar suffix)
-  /// This prevents Firestore "invalid document reference" errors
-  static String? _sanitizeId(String? id) {
-    if (id == null || id.isEmpty) return id;
-    final slashIndex = id.indexOf('/');
-    if (slashIndex > 0) {
-      return id.substring(0, slashIndex);
-    }
-    return id;
-  }
-
-  /// Validate booking reference format (defense-in-depth)
-  /// Format: BK-{12_ALPHANUMERIC_CHARS} e.g., BK-A3F7E2D1B9C4
-  static bool _isValidBookingReference(String? ref) {
-    if (ref == null || ref.isEmpty) return false;
-    // Regex: BK- followed by 12 alphanumeric characters (case-insensitive)
-    return RegExp(r'^BK-[A-Za-z0-9]{12}$').hasMatch(ref);
-  }
-
-  /// Validate Firestore document ID format (defense-in-depth)
-  /// Firestore auto-generated IDs are 20 alphanumeric characters
-  static bool _isValidFirestoreId(String? id) {
-    if (id == null || id.isEmpty) return false;
-    // Firestore IDs: 20 alphanumeric characters
-    return RegExp(r'^[A-Za-z0-9]{20}$').hasMatch(id);
-  }
-
-  /// Validate Stripe session ID format (defense-in-depth)
-  /// Format: cs_test_xxx or cs_live_xxx (alphanumeric + underscores)
-  static bool _isValidStripeSessionId(String? sessionId) {
-    if (sessionId == null || sessionId.isEmpty) return false;
-    // Stripe session IDs: cs_ prefix followed by test/live and alphanumeric chars
-    return RegExp(r'^cs_(test|live)_[A-Za-z0-9]+$').hasMatch(sessionId);
-  }
-
-  /// Safely convert error to string, handling null and edge cases
-  /// Prevents "Null check operator used on a null value" errors
-  static String _safeErrorToString(dynamic error) {
-    if (error == null) {
-      return 'Unknown error';
-    }
-    try {
-      return error.toString();
-    } catch (e) {
-      // If toString() itself throws, return a safe fallback
-      return 'Error: Unable to display error details';
-    }
-  }
-
   // ============================================
   // UNIT & PROPERTY DATA
   // ============================================
@@ -308,8 +257,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _unitId = '';
     } else {
       // Query params URL: direct IDs from URL
-      _propertyId = _sanitizeId(uri.queryParameters['property']);
-      _unitId = _sanitizeId(uri.queryParameters['unit']) ?? '';
+      _propertyId = sanitizeId(uri.queryParameters['property']);
+      _unitId = sanitizeId(uri.queryParameters['unit']) ?? '';
     }
 
     // Bug #53: Add listeners to text controllers for auto-save (debounced)
@@ -336,9 +285,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
     // Defense-in-depth: Validate URL parameter formats before use
     // Invalid formats are treated as missing parameters (fail-safe)
-    final isValidConfirmation = _isValidBookingReference(confirmationRef);
-    final isValidBookingId = _isValidFirestoreId(bookingId);
-    final isValidSessionId = _isValidStripeSessionId(stripeSessionId);
+    final isValidConfirmation = isValidBookingReference(confirmationRef);
+    final isValidBookingId = isValidFirestoreId(bookingId);
+    final isValidSessionId = isValidStripeSessionId(stripeSessionId);
 
     // Check if this is a Stripe return (NEW FLOW - booking created by webhook)
     // URL has: stripe_status=success&session_id=cs_xxx but NO bookingId
@@ -1172,7 +1121,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           message: WidgetTranslations.of(
             context,
             ref,
-          ).errorLoadingBooking(_safeErrorToString(e)),
+          ).errorLoadingBooking(safeErrorToString(e)),
           duration: const Duration(seconds: 5),
         );
 
@@ -3560,7 +3509,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           message: WidgetTranslations.of(
             context,
             ref,
-          ).errorCreatingBooking(_safeErrorToString(e)),
+          ).errorCreatingBooking(safeErrorToString(e)),
         );
       }
     } finally {
@@ -3927,7 +3876,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           message: WidgetTranslations.of(
             context,
             ref,
-          ).errorLaunchingStripe(_safeErrorToString(e)),
+          ).errorLaunchingStripe(safeErrorToString(e)),
         );
       }
     }
@@ -4100,7 +4049,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           message: WidgetTranslations.of(
             context,
             ref,
-          ).errorLoadingBooking(_safeErrorToString(e)),
+          ).errorLoadingBooking(safeErrorToString(e)),
           duration: const Duration(seconds: 5),
         );
       }

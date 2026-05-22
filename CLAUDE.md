@@ -12,6 +12,7 @@
 - [TODO.md](./docs/TODO.md) - Planirani zadaci (Website Docs, Admin Controls, Security Fixes)
 - [audit/11-cloudfunctions-inventory.md](./audit/11-cloudfunctions-inventory.md) - CF inventory (dev/prod), orphans, P0/P1/P2 cleanup (2026-05-21)
 - [audit/11-sentry-env-fix.md](./audit/11-sentry-env-fix.md) - Sentry env-tag fix + Gen 2 `GCLOUD_PROJECT` finding (2026-05-21)
+- [audit/17-sf023-sf025-rules-fix.md](./audit/17-sf023-sf025-rules-fix.md) - SF-023 ical_events lockdown + SF-025 storage rules + booking_services cleanup, dev-deployed (2026-05-22)
 
 ---
 
@@ -28,7 +29,7 @@
 | `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |
 | Navigator.push za confirmation | NE vraćaj state-based navigaciju |
 | Timeline Calendar fixed dimensions (`timeline_dimensions.dart`) | FIXED 50/42/100/60px za SVE uređaje — NE vraćaj responsive breakpoints |
-| `bookings` read rule — `unit_id+status` clause 1 (`firestore.rules` x3) | INTENTIONALLY public until T11c lands `getUnitAvailability` CF. NE skidaj clause 1 bez prvog deploya CF-a + zamijene `collectionGroup('bookings').where('unit_id', ...)` poziva u widgetu. Drugi 2 clause-a (`stripe_session_id`/`booking_reference`) su zatvoreni u T11-hotfix-partial — vidi `audit/06-bookings-hotfix-partial.md`. |
+| `bookings` read rule — `unit_id+status` clause 1 (`firestore.rules` x3) | INTENTIONALLY public until T11c proper lands. `getUnitAvailability` CF JE deployan (SF-023, 2026-05-22, `functions/src/availability.ts`, eu-west1) — widget zasad konzumira samo `source=='ical_external'` subset. NE skidaj clause 1 bez prvog migrirati widget-side `collectionGroup('bookings').where('unit_id', ...)` snapshot stream-ova na CF poziv. Drugi 2 clause-a (`stripe_session_id`/`booking_reference`) su zatvoreni u T11-hotfix-partial — vidi `audit/06-bookings-hotfix-partial.md` + `audit/17-sf023-sf025-rules-fix.md`. |
 
 ---
 

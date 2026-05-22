@@ -25,6 +25,8 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 17. [SF-017: Password Visibility Toggle Tooltips](#sf-017-password-visibility-toggle-tooltips)
 18. [SF-018: Common Password Blacklist](#sf-018-common-password-blacklist)
 19. [SF-019: Bookings Rule Public-Read Partial Close (HIGH)](#sf-019-bookings-rule-public-read-partial-close-high)
+20. [SF-023: ical_events Public-Read Lockdown + getUnitAvailability CF (HIGH)](#sf-023-ical_events-public-read-lockdown--getunitavailability-cf-high)
+21. [SF-025: storage.rules ical-exports Public-Read Lockdown (MEDIUM)](#sf-025-storagerules-ical-exports-public-read-lockdown-medium)
 20. [SF-020: Wave 0 iOS Firebase Project Contamination + Hardening (HIGH)](#sf-020-wave-0-ios-firebase-project-contamination--hardening-high)
 21. [SF-021: widget_settings Secret Exposure — widget_secrets Split (CRITICAL)](#sf-021-widget_settings-secret-exposure--widget_secrets-split-critical)
 22. [Neriješeni bugovi (Jules audit)](#-neriješeni-bugovi-jules-audit)
@@ -1345,6 +1347,39 @@ Manualni UI smoke (na `https://bookbed-widget-dev.web.app`, dev only za sada —
 - Audit T11c surface deferral: vidi `docs/TODO.md` (T11c — Drop `unit_id+status` clause from bookings rule) i `audit/06-availability-cf-design.md` za migracioni plan.
 - Memory note: "Multi-agent git branch race" — tijekom ovog hotfixa drugi paralelni agent je flipovao HEAD branch dva puta (vidi memory/multi-agent-git-race.md). Hotfix branch commits ostali su intakt na `fix/bookings-hotfix-partial`.
 
+### T11c progress update 2026-05-22
+
+CF half landed via SF-023 sibling work:
+
+- `functions/src/availability.ts` — `getUnitAvailability` callable deployed on `bookbed-dev`. CF already returns booking-source windows in addition to ical/manual_block windows; data path for T11c is ready.
+- Widget `ical_events` reads migrated to CF (4 sites in `firebase_booking_calendar_repository.dart` + `availability_checker.dart`).
+
+**Widget `bookings` reads NOT yet migrated** — 5 anonymous-context sites still issue direct `collectionGroup('bookings').where('unit_id', '==', …).where('status', 'in', …)`:
+
+| File:Line | Method | Type |
+|---|---|---|
+| `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:107` | year-view stream | `.snapshots()` realtime |
+| `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:245` | month-view stream | `.snapshots()` realtime |
+| `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:386` | range-view stream | `.snapshots()` realtime |
+| `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart:496` | per-unit stream | `.snapshots()` realtime |
+| `lib/features/widget/data/helpers/availability_checker.dart:257` | `_checkBookings()` | `.get()` one-shot — booking-submit gate |
+
+Until these are migrated, the `unit_id+status` clause in `firestore.rules` **must stay open** — dropping it 403s the widget calendar and breaks the anonymous booking-submit conflict check. CLAUDE.md "NIKADA NE MIJENJAJ" table reflects this; also calls out that `firebase_booking_calendar_repository.dart` (989 lines, no unit tests) is do-not-touch without first adding test coverage.
+
+**Migration plan (T11c proper, separate PR)**:
+1. Add unit test coverage for the 4 calendar repo streams (covering blocked-date rendering, no-PII shape).
+2. Switch the 4 streams to consume `windows.where(source == 'booking')` from `getUnitAvailability` (rebuild as polling stream with the CF's `cacheHint`-second interval, since the CF response replaces `.snapshots()` realtime).
+3. Switch `availability_checker._checkBookings` to call `getUnitAvailability` and check overlap against returned windows.
+4. Drop `unit_id+status` clause from all 3 rule sites (subcollection + CG + deprecated top-level).
+5. Update `bookings.test.ts` to flip the regression-guard test ("widget calendar (unit_id + status) clause STILL ALLOWS reads — kept until T11c") to its negation.
+6. Deploy in this order on each env: rules **last** (after CF + widget bundle), so the live widget never sees `permission-denied` before its new code path is up.
+
+UX implication of step 2: the public widget calendar loses `.snapshots()` realtime updates and falls back to ~30 s polling (CF `cacheHint`). Acceptable for an anonymous booking-flow surface but a regression vs. current behavior; should be confirmed with product before T11c proper lands.
+
+### Sibling audit (independent of T11c)
+
+`audit/18-booking-count-audit.md` — booking night/guest count source-of-truth audit, documentation only. Finds two derivation algorithms in use (Dart floor vs TS ceil); both agree today but DST-straddling bookings can off-by-one. Recommends normalizing Timestamps at write time in `dateValidation.ts` STEP 6 (tracked as SF-026 candidate). No code changes in this PR.
+
 ---
 
 ## SF-020: Wave 0 iOS Firebase Project Contamination + Hardening (HIGH)
@@ -1648,6 +1683,117 @@ Suspicious-login detection still writes to `security_events` collection on every
 
 ---
 
+## SF-023: ical_events Public-Read Lockdown + getUnitAvailability CF (HIGH)
+
+**Datum**: 2026-05-22
+**Prioritet**: 🔴 High (anonymous CG enumeration of guest names + dates)
+**Status**: ✅ Riješeno — branch `fix/icalpii-family-rules-and-cf`, merge `d481bf11`; deployed to `bookbed-dev` only — prod cutover pending
+**Zahvaćeni fajlovi**:
+
+- `firestore.rules` — subcollection + CG locked, deprecated top-level rule removed
+- `functions/src/availability.ts` (novi callable `getUnitAvailability`, region `europe-west1`)
+- `functions/src/index.ts`
+- `lib/features/widget/data/repositories/firebase_availability_repository.dart` (novi Dart wrapper)
+- `lib/features/widget/data/models/availability_window.dart` (novi model)
+- `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart` (4 ical-stream sites swapped)
+- `lib/features/widget/data/helpers/availability_checker.dart` (booking-submit gate)
+- 9 interface / provider / widget / test files threaded with `propertyId`
+- `functions/test/firestore_rules/ical_events.test.ts` (13 novi rules-test cases)
+
+**Otkrio**: audit `audit/16-chrome-regression-full.md` §F5
+
+### Problem
+
+`firestore.rules` `properties/{p}/units/{u}/ical_events/{e}` + collection-group `{path=**}/ical_events/{e}` su oba imali `allow read: if true`. Bilo koji anonimni client s Firebase API ključem (extractable iz widget bundle-a) mogao je upaliti CG query i pohati `guest_name`, `start_date`/`end_date`, `external_id`, `description` za svaku jedinicu na platformi.
+
+Drugi anti-pattern: `allow create/update/delete: if isPropertyOwner(propertyId)` na klijentu — ali `icalSync.ts` UVIJEK piše preko Admin SDK-a (bypass rules), tako da je client-write surface bio nepotreban open-write.
+
+Treći problem: DEPRECATED top-level `/ical_events/{e}` (no longer written by any code path) imao je open read.
+
+### Rješenje
+
+**Subcollection + CG read locked to property-owner; svi client writes denied; deprecated top-level rule obrisan.**
+
+`functions/src/availability.ts` (novi callable `getUnitAvailability`): Admin SDK queries paralelno na `bookings` + `daily_prices` + `ical_events`, vraća `AvailabilityWindow[]` sa `source` discriminator (`booking | manual_block | ical_external`) + opcionalni `platform` (Airbnb/Booking.com za iCal). PII strip: nikad ne propušta `guest_name`/`guest_email`/`total_price`/payment polja. Rate limit 30/min po (`unitId`+IP-hash), fail-closed. Range capped na 366 dana.
+
+`firebase_availability_repository.dart` (Dart): callable wrapper exposes `fetchAvailability` (one-shot, za booking-submit gate) i `streamAvailability` (polling 30s, retry 10s, yields empty list on `FirebaseFunctionsException` — fail-open na UI sloju da calendar paint nikad ne crashne).
+
+`firebase_booking_calendar_repository.dart`: 4 `collection('ical_events').snapshots()` callsite-a zamijenjeno privatnim `_streamIcalBlocks(...)` helperom koji wraps CF stream-om i projicira nazad u legacy `Map<String, dynamic>` oblik. `_buildCalendarMap` + `_buildYearCalendarMap` ostali NETAKNUTI (CLAUDE.md `NIKADA NE MIJENJAJ` zabranjuje touch tih 600+ linija; PR scope strogo limited na izvor podataka).
+
+`availability_checker.dart` (`_checkIcalEvents`): zamijenjen `collectionGroup('ical_events')` query sa pozivom `_availabilityRepo.fetchAvailability(...)` + filter `source == ical_external`.
+
+### Što JE i NIJE pokriveno
+
+| Surface | Pre-fix | Post-fix |
+|---|---|---|
+| Anonymous CG read of `ical_events` | ✅ allow (PII enum) | ❌ deny (rules) |
+| Owner CG read by `property_id` filter | ✅ allow | ✅ allow (rules-gated by owner_id lookup) |
+| Foreign authed read | ✅ allow | ❌ deny |
+| Owner CLIENT write | ✅ allow | ❌ deny (CF Admin SDK je jedini writer) |
+| Widget calendar paint | direkt Firestore read | preko `getUnitAvailability` CF |
+| Widget booking-submit availability gate | direkt Firestore read | preko `getUnitAvailability` CF |
+| Bookings `unit_id+status` clause 1 | ✅ allow (public) | ✅ allow (public) — **INTENTIONALLY KEPT, T11c proper** |
+
+### Testiranje
+
+Automatizirani rules-unit-test harness (`functions/test/firestore_rules/ical_events.test.ts`, 13/13 zelene + `bookings.test.ts` 11/11 ostaje zelen). Manualni UI smoke matrix u `audit/17-sf023-sf025-rules-fix.md` § Smoke verify.
+
+### Moguće nuspojave
+
+- **Realtime → polling**: widget calendar nekoć dobivao iCal blokove preko `.snapshots()` (Firestore push); sada polluje CF svakih 30s. Real-time osvjeđavanje iCal-blokova ima do 30s zaostatak. Prihvatljivo — guest gleda date picker, ne live feed. Ako date flipne unutar 30s, `atomicBooking` server-side re-validacija ipak će spriječiti overbooking.
+- **iCal-test-suite runtime failure**: `test/features/widget/data/helpers/availability_checker_test.dart` testovi koji exercise `_checkIcalEvents` (sa `FakeFirebaseFirestore`-seeded `ical_events` collection-om) sada runtime-failaju (`FirebaseAvailabilityRepository` constructor stvarno zove `FirebaseFunctions.instanceFor` koji nije init-an u test env-u). Compile-OK (propertyId dodan), runtime treba `FakeFirebaseAvailabilityRepository` mock-injectable za booking-flow tests. Out-of-scope za ovaj PR.
+- **booking_services cleanup**: rule + CG index (`firestore.indexes.json` lines 697-710) za `booking_services` su obrisani u istom PR-u (audit/16 §4 potvrdio nula readers/writers).
+- **Prod nije migriran.** Sve gore se odnosi samo na `bookbed-dev`. Prod cutover sequence: deploy CF na prod → deploy widget bundle na prod hosting → deploy rules na prod (rules ide ZADNJE da live widget ne dobije `permission-denied` prije nego što novi CF + bundle stignu).
+
+### Povezani bugovi
+
+- **T11c proper**: ostavlja se za sljedeći PR. `getUnitAvailability` CF već vraća `source: 'booking'` windows (server-side query bookings), ali widget koristi samo `ical_external` subset za sada. Slijedeći korak je migrirati widget-side bookings stream isto na CF + skinuti clause 1 iz `firestore.rules`.
+- **booking_services orphan cleanup**: rule + CG index obrisani u istom commit-u; potvrđeno audit/16 §4.
+
+---
+
+## SF-025: storage.rules ical-exports Public-Read Lockdown (MEDIUM)
+
+**Datum**: 2026-05-22
+**Prioritet**: 🟡 Medium (path-guess enumeration leaks guest names from .ics SUMMARY)
+**Status**: ✅ Riješeno — branch `fix/icalpii-family-rules-and-cf`, merge `d481bf11`; deployed to `bookbed-dev` only — prod cutover pending
+**Zahvaćeni fajlovi**:
+
+- `storage.rules` — `ical-exports/{p}/{u}/{...}` read tightened + 5 MiB write cap
+
+**Otkrio**: audit `audit/16-chrome-regression-full.md` §F7
+
+### Problem
+
+`storage.rules` za `/ical-exports/{propertyId}/{unitId}/{allPaths=**}` je imao `allow read: if true`. Storage path je deterministički (`ical-exports/<propertyId>/<unitId>/calendar.ics`), a Firestore `properties/*` + `units/*` su public-readable, što znači:
+
+1. Napadač pokupi `(propertyId, unitId)` parove iz public-read Firestore collection-a.
+2. GET `https://firebasestorage.googleapis.com/v0/b/<bucket>/o/ical-exports%2F<p>%2F<u>%2Fcalendar.ics?alt=media` bez download tokena.
+3. `.ics` file ima `SUMMARY:Booking: <guest_name>` po VEVENT (`lib/core/services/ical_generator.dart` line 104) — full guest-name enumeration cross-property.
+
+Token-bearing URL-ovi (returns iz `ref.getDownloadURL()` u `ical_export_service.dart`) bypass-aju rules po dizajnu, tako da deterministički path se mogao GETat bez tokena samo zato što je rule allow read = true.
+
+### Rješenje
+
+Read tightened na authed property-owner (Firestore lookup); 5 MiB write cap dodan; postojeća owner-only write logika zadržana. Path-guess attack — anonimni `GET /v0/b/.../o/ical-exports%2F.../calendar.ics?alt=media` bez tokena — sada vraća 401. Owner-shared download-token URL-ovi (subscription URL-ovi koje vlasnik dijeli s Booking.com/Airbnb/itd.) i dalje rade jer Storage download-tokens bypass-aju rules.
+
+Busiest-unit `.ics` je ≤ 200 KB u praksi (jedan VEVENT po booking-u, ~250 bytes), 5 MiB je order-of-magnitude bezbedna granica protiv patološkog abuse-a.
+
+### Testiranje
+
+Storage rules nemaju lokalni syntax-test harness u repu — deploy je validator. `firebase deploy --only storage --project bookbed-dev` je prošao bez greški (vidi `audit/17-sf023-sf025-rules-fix.md` § Dev deploy log).
+
+### Moguće nuspojave
+
+- **Subscribed external calendars NE bi smjeli puknuti** jer download tokens bypass-aju rules. Ako se ipak primjeti da je vanjska subscription pukla nakon deploy-a, znači da je client koristio tokenless URL (bug u owner-side coden ili manual URL share bez tokena). Mitigacija: re-share-ati tokenized URL iz dashboard-a.
+- **Vlasnik koji nije ulogiran ne može više direktno preuzeti svoj kalendar.** Ali to nije use-case — preuzima se iz dashboard-a gdje je već logiran.
+
+### Povezani bugovi
+
+- **SF-023** (`ical_events` Firestore rules) bundle-an u isti PR — komplementaran zatvor PII leak-a kroz dva različita surface-a (Firestore CG + Storage path-guess).
+
+---
+
 ## Template za buduće ispravke
 
 ```markdown
@@ -1879,7 +2025,7 @@ try {
 3. **Većina prijedloga je nepotrebna ili rizična** - bolje preskočiti nego riskirati bug
 4. **Jedina korisna promjena:** SF-018 Password blacklist (cherry-picked)
 
-### Implementirane sigurnosne ispravke (SF-001 do SF-018):
+### Implementirane sigurnosne ispravke (SF-001 do SF-025):
 
 - SF-001: Owner ID Validation ✅
 - SF-002: SSRF Prevention ✅
@@ -1899,6 +2045,9 @@ try {
 - SF-016: AnimatedGradientFAB Optimization ✅
 - SF-017: Password Visibility Tooltips ✅
 - SF-018: Common Password Blacklist ✅
+- SF-019: Bookings Rule Public-Read Partial Close ✅ (dev only; T11c clause 1 deferred)
+- SF-023: ical_events Public-Read Lockdown + getUnitAvailability CF ✅ (dev only; prod pending)
+- SF-025: storage.rules ical-exports Public-Read Lockdown ✅ (dev only; prod pending)
 
 
 ---

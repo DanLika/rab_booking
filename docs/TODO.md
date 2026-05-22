@@ -83,11 +83,11 @@ The same JS-error-type appears on the login form submit, but the underlying caus
 2. Investigate `keyboard_dismiss_fix_web.dart` interaction with autofill events.
 3. Workaround in production: direct JS `firebase_auth.signInWithEmailAndPassword` call (smoke test used this).
 
-## 🔐 TODO: T11c — Drop `unit_id+status` clause from bookings rule (deferred from T11-hotfix-partial)
+## 🔐 TODO: T11c — Drop `unit_id+status` clause from bookings rule (CF landed via SF-023; widget bookings-stream migration pending)
 
 **Prioritet:** HIGH (largest remaining public-read surface on `bookings`)
-**Status:** **DEFERRED** — clause 1 intentionally kept until availability CF ships
-**Izvor:** `audit/03-backend.md` §3.4 flag #1, `audit/06-bookings-hotfix-partial.md`, `audit/06-availability-cf-design.md`
+**Status:** ⚠️ **PARTIAL — Step 1 done.** `getUnitAvailability` CF deployed on dev (SF-023, 2026-05-22). Steps 2–4 (widget bookings-stream swap + clause drop) still pending.
+**Izvor:** `audit/03-backend.md` §3.4 flag #1, `audit/06-bookings-hotfix-partial.md`, `audit/06-availability-cf-design.md`, `audit/17-sf023-sf025-rules-fix.md`
 
 ### Background
 
@@ -99,20 +99,22 @@ The same JS-error-type appears on the login form submit, but the underlying caus
 
 Clause 1 still makes every booking doc publicly readable to any Firebase API key holder. Closing it is **T11c**.
 
-### Sequence (in order — out-of-order will break the widget calendar)
+### Sequence — current state
 
-1. Ship `getUnitAvailability(unitId, dateRangeStart, dateRangeEnd)` Cloud Function (Admin SDK, returns sparse blocked-date array — zero PII).
-2. Replace widget calendar's `collectionGroup('bookings').where('unit_id', '==', ...)` queries (in `firebase_booking_calendar_repository.dart` + `realtime_booking_calendar_provider.dart`) with the new CF.
-3. Cut over deployment: deploy CF → deploy widget → only then drop clause 1.
-4. Update the rules-unit-test guard `widget calendar (unit_id + status) clause STILL ALLOWS reads` in `functions/test/firestore_rules/bookings.test.ts` — flip the assertion or replace with a CF-mediated test.
+1. ✅ **Ship `getUnitAvailability` CF** (SF-023, 2026-05-22, merge `d481bf11`). Done — `functions/src/availability.ts`, region `europe-west1`. Returns `AvailabilityWindow[]` with `source` discriminator covering all three legs (bookings + manual blocks + ical). Widget today consumes only `source=='ical_external'`; the `booking` subset is populated server-side but unused.
+2. ⏳ **Migrate widget bookings snapshot stream.** Today `firebase_booking_calendar_repository.dart` still uses `collectionGroup('bookings').where('unit_id', '==', ...).where('status', whereIn: [...]).snapshots()` at 4 sites. Each must be replaced by reading the `windows.where(source == AvailabilityWindowSource.booking)` projection from the existing helper. Same for `availability_checker._checkBookings` (the booking-submit gate's bookings leg).
+3. ⏳ **Cut-over sequence**: confirm dev parity → deploy `getUnitAvailability` CF + the migrated widget bundle to prod → only AFTER widget bundle is live can `firestore.rules` clause 1 be removed.
+4. ⏳ **Update rules-unit-test guard**: flip the assertion in `functions/test/firestore_rules/bookings.test.ts::"widget calendar (unit_id + status) clause STILL ALLOWS reads"` — after clause 1 is gone, the case must DENY (and a CF-mediated test should replace it).
 
-### Production deploy of T11-hotfix-partial
+### Production deploy of T11-hotfix-partial + SF-023
 
 Currently dev-only. Before prod cutover:
+
 - Deploy `getBookingByStripeSession` CF to `rab-booking-248fc`.
-- Build + deploy the widget bundle to prod hosting.
-- Deploy `firestore.rules` to prod **last** (so the live widget never makes a now-blocked direct read).
-- Run the manual smoke checklist (§6.3 of `audit/06-bookings-hotfix-partial.md`) on the prod widget origin.
+- Deploy `getUnitAvailability` CF to `rab-booking-248fc` (currently dev-only — SF-023).
+- Build + deploy the widget bundle to prod hosting (must include both the SF-023 ical-stream migration already in main AND the upcoming bookings-stream migration).
+- Deploy `firestore.rules` + `storage.rules` to prod **last** (so the live widget never makes a now-blocked direct read).
+- Run the manual smoke checklists in `audit/06-bookings-hotfix-partial.md` §6.3 + `audit/17-sf023-sf025-rules-fix.md` § Smoke verify on the prod widget origin.
 
 ---
 

@@ -63,6 +63,19 @@ firebase deploy --only firestore:indexes
 
 When combining range (`>=`) and equality/whereIn filters, equality fields must come FIRST in the index.
 
+## Dead indexes pruned (changelog 6.74, 2026-05-22)
+
+2 collection-group indexes removed from `firestore.indexes.json` after grep-verified zero `collectionGroup('<name>')` refs in `lib/` and `functions/src/`:
+
+| Removed | Scope | Reason |
+|---|---|---|
+| `booking_services{booking_id + created_at}` | `COLLECTION_GROUP` | Collection name has zero refs ANYWHERE in repo. Likely never implemented. |
+| `securityEvents{userId + timestamp}` | `COLLECTION_GROUP` | Only used as `users/{uid}/securityEvents` subcollection (4 sites in `security_events_service.dart`); CG path never queried. |
+
+Server-side orphans remain on `bookbed-dev` until force-deleted (`firebase deploy --only firestore:indexes --force --project bookbed-dev`). Harmless — not regenerated.
+
+**Before pruning more**: run `grep -rn "collectionGroup(" lib/ functions/src/ --include="*.dart" --include="*.ts"` and verify the candidate name yields zero hits. Sub-collection usage via `.collection('<name>')` does NOT count — only `collectionGroup(...)` consumes a CG index.
+
 ## Drift prod ↔ `firestore.indexes.json` (audit 2026-05-18)
 
 Prod (`rab-booking-248fc`) has console-created CG single-field exemptions that are **NOT** mirrored in this repo's `firestore.indexes.json`. Fresh-project deploys (e.g. `bookbed-dev`) will hit `FAILED_PRECONDITION` for:

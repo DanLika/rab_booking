@@ -43,6 +43,27 @@ Providers with `keepAlive: true` MUST watch auth state (`ref.watch(enhancedAuthP
 
 **Example**: Owner A logs out, Owner B logs in → sees Owner A's data if provider uses `FirebaseAuth.instance.currentUser` instead of `ref.watch(enhancedAuthProvider)`.
 
+## Cold-boot auth-race guard for Firestore-reading providers
+
+Providers that issue Firestore reads on app launch (deep-link cold-boot path) must wait for `enhancedAuthProvider.isLoading` to clear, otherwise the read fires before Firebase Auth restores the session — rules reject, Pigeon logs a `FirebaseFirestoreHostApi.documentReferenceGet` stacktrace. Pattern (mirrors `propertyByIdProvider` in `lib/features/owner_dashboard/presentation/providers/owner_properties_provider.dart:52-67`):
+
+```dart
+@riverpod
+Future<Foo?> fooById(Ref ref, String id) async {
+  var authState = ref.watch(enhancedAuthProvider);
+  if (authState.isLoading) {
+    authState = await ref
+        .read(enhancedAuthProvider.notifier)
+        .stream
+        .firstWhere((s) => !s.isLoading);
+  }
+  if (authState.firebaseUser == null) return null; // router redirect handles unauth
+  // …Firestore read here
+}
+```
+
+Use `ref.watch` (not `ref.read`) for the initial state — covers both this guard AND the cache-security rule above. The provider holds in `AsyncLoading` during the wait, so `.when(loading: …)` consumers keep showing their loader instead of flashing an error/empty state.
+
 ## Navigation Pattern
 
 Always use `context.canPop()` check with GoRouter fallback instead of raw `Navigator.pop()`:

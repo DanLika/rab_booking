@@ -2,7 +2,23 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-22 | **Version**: 6.77
+**Last Updated**: 2026-05-22 | **Version**: 6.80
+
+---
+
+**Changelog 6.80**: SF-026 — booking night count UTC midnight Zagreb-civil-day normalization (2026-05-22):
+
+- **SF-026 landed** (branch `fix/sf-026-booking-count-dst`, commits `5f747740` core + `0a6a6570` merge + `dc554396` migration index fix + `ff39fa8d` smoke script). Closes the audit/18 finding (Option B per recommendation).
+- **Server STEP 6 normalization** — `functions/src/utils/dateValidation.ts` now wraps `check_in`/`check_out` Timestamps via new `normalizeToZagrebCivilDayUTC()` helper before persist. Civil day extracted via `Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Zagreb'})` → UTC midnight of that day. Preserves "day the guest selected" through Zagreb display (naive `getUTCDate()` extraction would have shifted Zagreb-originated bookings backward 1 day — caught by advisor pre-commit).
+- **Standardized derivation** — TS `verifyBookingAccess` + `getBookingByStripeSession` migrated off inline `Math.ceil(/86_400_000)` to canonical `calculateBookingNights()`. Dart sites: email service uses `booking.numberOfNights`; widget + form-state use `DateNormalizer.nightsBetween()` (UTC-normalized floor). With normalized inputs, floor and ceil yield same N — no more DST off-by-one.
+- **Backfill script** — `functions/scripts/normalize-booking-nights.js`, dry-run default, `--force` opt-in. Scans `collectionGroup('bookings')` filtered client-side (no Firestore index required) for `confirmed | pending_payment | awaiting_owner_decision`, rewrites Timestamps where they differ from normalized.
+- **Smoke script** — `functions/scripts/smoke-sf026-dev.js` confirms the bug pattern on bookbed-dev's seed booking: `check_in 2026-06-17T15:00:00Z` / `check_out 2026-06-20T11:00:00Z` → Dart floor=2 vs TS ceil=3 (off-by-one). Status=cancelled, out of migration scope, but proves audit/18 diagnosis on live data.
+- **Tests** — `functions/test/dateValidation.test.ts` 13/13 green: Zagreb summer/winter midnight ulaz, DST spring-forward (2026-03-29) → 4 nights, DST fall-back (2026-10-25) → 2 nights, long booking across both transitions → 240 nights, single-night, idempotency, validation guards.
+- **Deploy** — `bookbed-dev` deployed (background task `bzx1w2bql` exit 0). Prerequisite: deleted 2 pre-existing orphan CFs blocking non-interactive mode (`comebackReminder(europe-west1)`, `sendOwnerEmail(us-central1)`; both per audit/11 inventory). Prod cutover + `--force` migration pending operator approval.
+- **Behavior change (filed, not fixed)** — same-Zagreb-civil-day check-in + check-out (different clock times within one day) now throws "< 1 night" in `calculateBookingNights()` whereas pre-fix it returned 1 via `Math.ceil(0.x)`. Widget picker constrains to whole dates so unreachable today; admin/script paths could trip it later.
+- **Verification** — `cd functions && npm run build` 0 errors; `flutter analyze` 0 issues; 13/13 SF-026 tests + 161/165 functions suite (4 pre-existing `stripeConnect` failures unrelated); 1079/1100 flutter tests (21 pre-existing test-debt failures per commit `55981882`, unrelated).
+- **Multi-agent race** — 2+ branch swaps during session (`refactor/booking-widget-phase1`, `fix/t11c-proper-bookings-migration`). Recovered via cherry-pick + explicit-staging. Race-debris and another agent's iOS plist swap preserved in stash + working tree.
+- **Docs** — `docs/SECURITY_FIXES.md` SF-026 entry added; `docs/TODO.md` SF-026 row flipped to DONE.
 
 ---
 

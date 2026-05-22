@@ -387,7 +387,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
 
                   // Footer
                   Text(
-                    '© 2024 BookBed Inc. All rights reserved.',
+                    '© ${DateTime.now().year} BookBed Inc. All rights reserved.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(
                         context,

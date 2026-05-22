@@ -25,6 +25,31 @@ void main() {
         expect(result, isNot(contains('<b>')));
       });
 
+      test('removes HTML tags with newlines (multi-line)', () {
+        final input = 'Hello <b\nclass="test">World</b>';
+        final result = InputSanitizer.sanitizeText(input);
+        expect(result, 'Hello World');
+      });
+
+      test('removes HTML tags with multiple spaces', () {
+        final input = 'Hello <  b  >World<  /b  >';
+        final result = InputSanitizer.sanitizeText(input);
+        expect(result, 'Hello World');
+      });
+
+      test('handles tags with > inside attributes (current regex behavior)', () {
+        // The current regex r'<[^>]*>' stops at the first >
+        final input = 'Hello <img src="bad>"> World';
+        final result = InputSanitizer.sanitizeText(input);
+        expect(result, 'Hello "> World');
+      });
+
+      test('handles unclosed HTML tags gracefully', () {
+        final input = 'Hello <b World';
+        final result = InputSanitizer.sanitizeText(input);
+        expect(result, 'Hello <b World');
+      });
+
       test('removes SQL keywords', () {
         final input = 'Name: John DROP TABLE users;';
         final result = InputSanitizer.sanitizeText(input);
@@ -376,6 +401,68 @@ void main() {
         final result = InputSanitizer.containsDangerousContent(input);
         // This test documents whether your implementation handles encoded attacks
         expect(result, isNotNull); // Just verify it doesn't crash
+      });
+    });
+
+    group('limitLength', () {
+      test('returns original string when shorter than max length', () {
+        final input = 'short';
+        final result = InputSanitizer.limitLength(input, 10);
+        expect(result, 'short');
+      });
+
+      test('returns original string when exactly max length', () {
+        final input = 'exact len!';
+        final result = InputSanitizer.limitLength(input, 10);
+        expect(result, 'exact len!');
+      });
+
+      test('truncates and adds ellipsis by default', () {
+        final input = 'this is a long string';
+        final result = InputSanitizer.limitLength(input, 10);
+        expect(result, 'this is a ...');
+      });
+
+      test('truncates without ellipsis when addEllipsis is false', () {
+        final input = 'this is a long string';
+        final result = InputSanitizer.limitLength(input, 10, addEllipsis: false);
+        expect(result, 'this is a ');
+      });
+
+      test('handles empty string', () {
+        final result = InputSanitizer.limitLength('', 5);
+        expect(result, '');
+      });
+    });
+
+    group('escapeForDisplay', () {
+      test('escapes ampersand', () {
+        final result = InputSanitizer.escapeForDisplay('Me & You');
+        expect(result, 'Me &amp; You');
+      });
+
+      test('escapes less than and greater than', () {
+        final result = InputSanitizer.escapeForDisplay('1 < 2 > 0');
+        expect(result, '1 &lt; 2 &gt; 0');
+      });
+
+      test('escapes quotes', () {
+        final result = InputSanitizer.escapeForDisplay('"Hello" \'World\'');
+        expect(result, '&quot;Hello&quot; &#x27;World&#x27;');
+      });
+
+      test('handles complex HTML string', () {
+        final input = '<script>alert("XSS & \'test\'")</script>';
+        final result = InputSanitizer.escapeForDisplay(input);
+        expect(
+          result,
+          '&lt;script&gt;alert(&quot;XSS &amp; &#x27;test&#x27;&quot;)&lt;/script&gt;',
+        );
+      });
+
+      test('returns original string if no special characters exist', () {
+        final result = InputSanitizer.escapeForDisplay('Safe string 123');
+        expect(result, 'Safe string 123');
       });
     });
   });

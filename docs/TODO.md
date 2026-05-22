@@ -17,7 +17,19 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ### P1 — source-state cleanup
 
-4. **Decide Airbnb / Booking.com OAuth fate.** Source on dev only (`airbnbApi.ts`, `bookingComApi.ts`), 4 months stale, Flutter UI still calls `initiateAirbnbOAuth` / `initiateBookingComOAuth`. Either ship (deploy + complete) or cut (delete source + UI + undeploy from dev). Cross-reference `audit/06-platform-connections-check.md` if applicable.
+4. **Undeploy Airbnb / Booking.com OAuth orphans from `bookbed-dev`.** **Partially done.** Source + Flutter callers killed 2026-05-18 (`c3465034 feat(kill)`); PROD CFs deleted 2026-05-21 (CHANGELOG 6.71). **Gap discovered 2026-05-22 (audit/16 session):** CHANGELOG 6.71 claimed "Dev had already pruned these" but `firebase functions:list --project bookbed-dev` still shows 4 orphan CFs live:
+   - `initiateAirbnbOAuth` (us-central1, callable)
+   - `handleAirbnbOAuthCallback` (us-central1, https)
+   - `initiateBookingComOAuth` (us-central1, callable)
+   - `handleBookingComOAuthCallback` (us-central1, https)
+
+   No Flutter caller, no source. Smoke probe confirms they respond OK_bad_request (`invalid-argument`) to empty calls — i.e. they're alive but useless. Cleanup commands:
+   ```bash
+   for fn in initiateAirbnbOAuth handleAirbnbOAuthCallback initiateBookingComOAuth handleBookingComOAuthCallback; do
+     firebase functions:delete "$fn" --project bookbed-dev --force --region us-central1
+   done
+   ```
+   Cross-reference `audit/06-platform-connections-check.md`, `audit/11-cloudfunctions-inventory.md` §3.3, CHANGELOG 6.71. Run when ready; closes TODO P1.4.
 
 ### P2 — hygiene
 

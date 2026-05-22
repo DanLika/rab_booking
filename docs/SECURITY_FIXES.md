@@ -1378,7 +1378,9 @@ UX implication of step 2: the public widget calendar loses `.snapshots()` realti
 
 ### T11c CLOSED 2026-05-22
 
-**Status**: ✅ Riješeno (T11c proper — branch `fix/t11c-proper-bookings-migration`, commit `ab6bdb3d`); deployed to `bookbed-dev` pending — prod cutover separate.
+**Status**: ✅ Code merged to `main` (PR #446, merge commit `3b810b2d`, T11c core commit `ab6bdb3d`). ⚠️ Dev deploy partial — see "Dev deploy 2026-05-22 (partial)" subsection below. Prod cutover separate.
+
+**Deployed to bookbed-dev**: 2026-05-22 (`firestore.rules` + `getUnitAvailability` CF only — widget bundle redeploy outstanding).
 
 5 widget anonymous-context sites migrated to `getUnitAvailability` callable, then `firestore.rules` clause 1 (`unit_id`+`status` public read) removed from all 3 surfaces (subcollection + CG + deprecated top-level). The last anonymous read surface on `bookings` is now closed.
 
@@ -1392,6 +1394,39 @@ UX implication of step 2: the public widget calendar loses `.snapshots()` realti
 UX trade-off: realtime `.snapshots()` for bookings sacrificed; widget now polls every 30 s via `FirebaseAvailabilityRepository._defaultPollInterval`. Same polling cadence that was already in place for iCal blocks after SF-023.
 
 CLAUDE.md "NIKADA NE MIJENJAJ" row for `bookings` clause 1 superseded by this fix — the table entry should be removed or annotated as resolved. The `firebase_booking_calendar_repository.dart` row stays (file still has no unit tests; T11c only made the touched flows simpler, not safer to broadly refactor).
+
+### Dev deploy 2026-05-22 (partial)
+
+`firebase deploy --only firestore:rules,functions:getUnitAvailability --project bookbed-dev` — **success**. Smoke verification mixed:
+
+| Check | Result |
+|---|---|
+| Anonymous `collectionGroup('bookings')` `runQuery` with `unit_id`+`status` filter | ✅ **403 PERMISSION_DENIED** (clause 1 closed across all 3 rule surfaces) |
+| `getUnitAvailability` callable (`europe-west1`) — `{propertyId: SEED_property_dev_01, unitId: SEED_unit_dev_01, startDate: 2026-06-01, endDate: 2026-06-30}` | ❌ **500 INTERNAL** — `FAILED_PRECONDITION: The query requires an index` |
+
+**Two follow-ups required before T11c can be called done in `bookbed-dev`:**
+
+1. **Missing `daily_prices` COLLECTION-scope composite index** (`available` ASC + `date` ASC). The CF's subcollection query (`functions/src/availability.ts:156-166`) needs this; Firestore planner enforces the index requirement on query shape regardless of doc count (current dev seed has 0 `daily_prices` docs but planner still rejects). Pre-existing infra gap — not introduced by T11c; surfaced because smoke now exercises the full `getUnitAvailability` codepath end-to-end (SF-023's earlier smoke likely never hit a non-empty path). Add to `firestore.indexes.json`:
+   ```json
+   {
+     "collectionGroup": "daily_prices",
+     "queryScope": "COLLECTION",
+     "fields": [
+       {"fieldPath": "available", "order": "ASCENDING"},
+       {"fieldPath": "date", "order": "ASCENDING"}
+     ]
+   }
+   ```
+   Then `firebase deploy --only firestore:indexes --project bookbed-dev`. Same index will need to land on prod before the prod cutover sequence.
+
+2. **Widget bundle on `bookbed-widget-dev.web.app` is stale** (last-modified 2026-05-18 — pre-SF-023, pre-T11c). Today's dev rules deploy tightened reads ahead of the widget bundle redeploy — order violated relative to the TODO.md cutover sequence (widget bundle → rules-deploy-last). Any live consumer of `bookbed-widget-dev.web.app` will now hit 403 on its direct `collectionGroup('bookings')` reads. Rebuild + deploy the dev widget bundle to restore parity:
+   ```bash
+   flutter build web --target lib/widget_main_dev.dart --release
+   firebase deploy --only hosting:widget --project bookbed-dev
+   ```
+   The dev URL may have been dormant — check `firebase hosting:channel:list --project bookbed-dev` before assuming impact. Prod cutover sequence remains correct (widget bundle before rules); the violation is dev-only.
+
+Final origin/main SHA after this deploy: `3b810b2d` (PR #446 merge) + this commit. Visual widget smoke skipped — bundle staleness made the test as written incapable of validating T11c.
 
 ### Sibling audit (independent of T11c)
 

@@ -1,0 +1,121 @@
+name: Firestore Rules Drift Check
+
+# Detect drift between the deployed firestore.rules on bookbed-dev / prod
+# and the version committed to this repo's firestore.rules.
+#
+# Background: deploys go through `firebase deploy --only firestore:rules`
+# from local shells, not via CI. Nothing today guarantees repo == deployed.
+# audit/16-cf-smoke-and-rules.md P3 followup; SF-019/SF-021/SF-022 all touch
+# firestore.rules and a silent drift would mask their security guarantees.
+#
+# Prereqs (operator must complete before this workflow can pass):
+#   1. Create a service account in each Firebase project with at least:
+#        roles/firebaserules.viewer
+#      Plus `firebaserules.googleapis.com` API enabled on the project.
+#   2. Generate a JSON key for each SA and store as repository secrets:
+#        FIREBASE_RULES_SA_JSON_DEV   (bookbed-dev)
+#        FIREBASE_RULES_SA_JSON_PROD  (rab-booking-248fc)
+#   3. (Optional) Same for staging: FIREBASE_RULES_SA_JSON_STAGING.
+#
+# Until secrets exist, the workflow runs but reports each project as
+# "skipped (no credential)" — non-blocking, so adding it doesn't break PRs.
+
+on:
+  schedule:
+    # Daily at 06:15 UTC. Picks up overnight rule pushes from local shells.
+    - cron: "15 6 * * *"
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "firestore.rules"
+      - ".github/workflows/firestore-rules-drift.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Diff deployed rules vs repo
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: dev
+            project_id: bookbed-dev
+            secret_name: FIREBASE_RULES_SA_JSON_DEV
+          - env: staging
+            project_id: bookbed-staging
+            secret_name: FIREBASE_RULES_SA_JSON_STAGING
+          - env: prod
+            project_id: rab-booking-248fc
+            secret_name: FIREBASE_RULES_SA_JSON_PROD
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Resolve SA credential
+        id: cred
+        env:
+          SA_JSON: ${{ secrets[matrix.secret_name] }}
+        run: |
+          if [ -z "${SA_JSON:-}" ]; then
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::No ${{ matrix.secret_name }} secret configured. Skipping ${{ matrix.project_id }} drift check."
+          else
+            echo "skipped=false" >> "$GITHUB_OUTPUT"
+            printf '%s' "$SA_JSON" > "$RUNNER_TEMP/sa.json"
+            chmod 600 "$RUNNER_TEMP/sa.json"
+          fi
+
+      - name: Auth to gcloud
+        if: steps.cred.outputs.skipped == 'false'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets[matrix.secret_name] }}
+
+      - name: Fetch deployed ruleset
+        if: steps.cred.outputs.skipped == 'false'
+        id: fetch
+        env:
+          PROJECT_ID: ${{ matrix.project_id }}
+        run: |
+          set -euo pipefail
+          TOKEN="$(gcloud auth print-access-token)"
+          # Step 1: resolve the active ruleset name from the cloud.firestore release.
+          RELEASE_JSON="$(curl -fsS \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "x-goog-user-project: ${PROJECT_ID}" \
+            "https://firebaserules.googleapis.com/v1/projects/${PROJECT_ID}/releases/cloud.firestore")"
+          RULESET_NAME="$(echo "$RELEASE_JSON" | jq -r '.rulesetName')"
+          if [ -z "$RULESET_NAME" ] || [ "$RULESET_NAME" = "null" ]; then
+            echo "::error::Could not resolve active ruleset for ${PROJECT_ID}"
+            echo "$RELEASE_JSON"
+            exit 1
+          fi
+          # Step 2: fetch the ruleset content.
+          RULESET_JSON="$(curl -fsS \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "x-goog-user-project: ${PROJECT_ID}" \
+            "https://firebaserules.googleapis.com/v1/${RULESET_NAME}")"
+          echo "$RULESET_JSON" | jq -r '.source.files[0].content' > "$RUNNER_TEMP/deployed.rules"
+          echo "deployed_file=$RUNNER_TEMP/deployed.rules" >> "$GITHUB_OUTPUT"
+
+      - name: Diff against repo firestore.rules
+        if: steps.cred.outputs.skipped == 'false'
+        env:
+          DEPLOYED: ${{ steps.fetch.outputs.deployed_file }}
+          PROJECT_ID: ${{ matrix.project_id }}
+        run: |
+          set -uo pipefail
+          if diff -u "$DEPLOYED" firestore.rules > "$RUNNER_TEMP/drift.diff"; then
+            echo "✅ ${PROJECT_ID}: deployed rules match repo (no drift)."
+          else
+            echo "❌ ${PROJECT_ID}: drift detected between deployed rules and repo firestore.rules."
+            echo
+            echo "::group::Diff (deployed → repo)"
+            cat "$RUNNER_TEMP/drift.diff"
+            echo "::endgroup::"
+            exit 1
+          fi

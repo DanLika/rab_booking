@@ -72,6 +72,7 @@ import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../l10n/widget_translations.dart';
 import '../helpers/booking_widget_url_helpers.dart';
+import '../helpers/booking_widget_url_intent.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
@@ -274,75 +275,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Setup iframe scroll capture to prevent parent page scrolling
     setupIframeScrollCapture();
 
-    // Check for booking confirmation parameters (all payment types)
-    // NOTE: Email is NOT in URL - booking is fetched by bookingId
-    final confirmationRef = uri.queryParameters['confirmation'];
-    final bookingId = uri.queryParameters['bookingId'];
-    final paymentType = uri.queryParameters['payment'];
-    final stripeStatus = uri.queryParameters['stripe_status'];
-    final stripeSessionId = uri.queryParameters['session_id'];
-    final bookingStatus = uri.queryParameters['booking_status'];
+    final intent = parseInitialUrlIntent(uri);
 
-    // Defense-in-depth: Validate URL parameter formats before use
-    // Invalid formats are treated as missing parameters (fail-safe)
-    final isValidConfirmation = isValidBookingReference(confirmationRef);
-    final isValidBookingId = isValidFirestoreId(bookingId);
-    final isValidSessionId = isValidStripeSessionId(stripeSessionId);
-
-    // Check if this is a Stripe return (NEW FLOW - booking created by webhook)
-    // URL has: stripe_status=success&session_id=cs_xxx but NO bookingId
-    // We need to poll for booking using session_id
-    final isStripeReturn = stripeStatus == 'success' && isValidSessionId;
-
-    // Legacy Stripe return (old flow - booking created before checkout)
-    final hasLegacyStripeParams =
-        isValidConfirmation &&
-        isValidBookingId &&
-        (paymentType == 'stripe' || stripeStatus == 'success');
-
-    // Check if this is a direct booking return (same tab - Pay on Arrival, Bank Transfer)
-    final isDirectBookingReturn =
-        bookingStatus == 'success' && isValidConfirmation && isValidBookingId;
-
-    // Validate unit and property immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // NEW: Stripe return with session_id (webhook creates booking)
-      // This is the new flow where booking doesn't exist at checkout time
-      if (isStripeReturn && !hasLegacyStripeParams) {
-        // Clear any cached form data first (prevents conflict with booked dates)
-        await _clearFormData();
-
-        // Safe to use ! - isStripeReturn guarantees isValidSessionId which requires non-null
-        await _handleStripeReturnWithSessionId(stripeSessionId!);
-        return; // Don't continue with normal initialization
+      switch (intent) {
+        case StripeReturnSession(:final sessionId):
+          await _clearFormData();
+          await _handleStripeReturnWithSessionId(sessionId);
+          return;
+        case LegacyStripeReturn(:final confirmationRef, :final bookingId):
+          await _clearFormData();
+          await _showConfirmationFromUrl(confirmationRef, bookingId);
+          return;
+        case DirectBookingReturn(
+          :final confirmationRef,
+          :final bookingId,
+          :final paymentType,
+        ):
+          await _showConfirmationFromUrl(
+            confirmationRef,
+            bookingId,
+            paymentMethod: paymentType,
+            isDirectBooking: true,
+          );
+          return;
+        case FreshLoad():
+          await _validateUnitAndProperty();
+          await _loadFormData();
       }
-
-      // Legacy Stripe return (old flow with bookingId in URL)
-      if (hasLegacyStripeParams) {
-        await _clearFormData();
-
-        // Safe to use ! - hasLegacyStripeParams guarantees isValidConfirmation & isValidBookingId
-        await _showConfirmationFromUrl(confirmationRef!, bookingId!);
-        return; // Don't continue with normal initialization
-      }
-
-      // If this is a direct booking return (same tab), show confirmation
-      if (isDirectBookingReturn) {
-        // Safe to use ! - isDirectBookingReturn guarantees isValidConfirmation & isValidBookingId
-        await _showConfirmationFromUrl(
-          confirmationRef!,
-          bookingId!,
-          paymentMethod: paymentType,
-          isDirectBooking: true,
-        );
-        return; // Don't continue with normal initialization
-      }
-
-      // Normal initialization for fresh page load
-      await _validateUnitAndProperty();
-
-      // Bug #53: Load saved form data if page was refreshed
-      await _loadFormData();
     });
   }
 

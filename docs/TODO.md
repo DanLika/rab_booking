@@ -4,6 +4,73 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ---
 
+## 🚨 TODO: Wave 3 deferred UI fixes (2026-05-22)
+
+**Prioritet:** P2 (mobile UX papercuts; no regression introduced)
+**Izvor:** `audit/19-wave3-cleanup.md` § Deferred + originally referenced (missing) `audit/07-chrome-smoke-test.md`
+
+The 2026-05-22 Wave 3 responsive-cleanup session shipped 2 of 4 fixes (price row Flexible + admin footer year — CHANGELOG 6.75). 3 items deferred because the source audit doc `audit/07-chrome-smoke-test.md` is missing from the repo, so the bug descriptions + screenshots can't be cross-checked.
+
+### Blocking prerequisite
+
+**0. Recover or rebuild `audit/07-chrome-smoke-test.md`.** The follow-up `audit/08-null-tostring-fix.md` references it at lines 5, 23, 778 but the source itself is absent. Without primary screenshots/stack traces, the 3 items below are guesswork. Rebuild via a fresh Chrome smoke test on `bookbed-dev` widget + owner + admin, captured at 320/375/768/1440px breakpoints.
+
+### Items
+
+**1. Login CanvasKit text-input sync gap.** `lib/features/auth/presentation/screens/enhanced_login_screen.dart` + `lib/features/auth/presentation/widgets/premium_input_field.dart`. Claimed defect: text typed into email/password fields doesn't sync to `TextEditingController`, so `_handleLogin` reads empty fields. Known workaround in `memory/flutter-web-input-bypass.md`: bypass via direct `firebase_auth.signInWithEmailAndPassword` call. Code audit shows no obvious defect — controllers exist, listeners attached, `_handleLogin` snapshots into locals before async, `PremiumInputField` has `autocorrect:false`/`enableSuggestions:false`/`textCapitalization:none`. **Need browser console capture + screen recording** to triage.
+
+**2. Owner mobile heading truncation.** Claimed: section headers on `/owner/overview` render as "Nedav…", "Rezer…", "Fi…" on iPhone X (375px) instead of "Nedavne", "Rezervacije", "Finansije". Code audit located no truncating widget — `RecentActivityWidget` already uses `AutoSizeText`/`minFontSize:14`, `_buildChartHeader` uses `Expanded`. Possible candidate: `CommonAppBar` title (not yet inspected) or the drawer items at narrow open widths. **Need screenshot at 375px Croatian locale (`?lang=hr`)** to pinpoint the offending widget.
+
+**3. Admin "Em…" placeholder.** Claimed: a placeholder reads "Em…" instead of its full string. Low-confidence candidates: `admin_login_screen.dart:263-264` (`labelText:'Email Address'`, `hintText:'admin@bookbed.io'`) or `users_list_screen.dart:190` (`hintText:'Search users by name or email...'`) — the latter is the more plausible match if rendered in a narrow filter chip. **Need screenshot of the offending screen** to identify whether this is a `TextField.hint` (widen constraint), a `Text` ellipsis (drop `maxLines:1`), or a chip label (shorten copy).
+
+### Done-when
+
+- `audit/07-chrome-smoke-test.md` (or equivalent successor) committed with screenshots at 320/375/768/1440px.
+- Each item above has either (a) a verified code fix landed via PR + closed against the rebuilt audit doc, or (b) a one-line "cannot reproduce" note attached to the audit item if the bug no longer surfaces on the current `main`.
+- Follow-up bullets from `audit/19-wave3-cleanup.md` § "Out-of-scope follow-ups" actioned: `golden_test` for `PriceRowWidget` at 280/320/400px, plus a `grep -rn "mainAxisAlignment: MainAxisAlignment.spaceBetween" lib/features/widget/` sweep for sibling Row patterns missing `Flexible`.
+
+---
+
+## 🧹 TODO: Cleanup-session deferred execution (2026-05-22)
+
+**Prioritet:** P2 hygiene
+**Izvor:** `audit/18-stash-classification-2026-05-22.md` + `audit/18-dependabot-triage-2026-05-22.md`
+**Why deferred:** mid-session multi-agent race (stash count 18 → 29, sibling stash storm, `.git/index.lock` contention) made destructive ops unsafe. Run when only one agent is active.
+
+### Stash drops (29 stashes inventoried by SHA)
+
+Full classification per stash in `audit/18-stash-classification-2026-05-22.md`. Recommended batches:
+
+1. **DROP — race-debris from today** (10 stashes, SHAs `8526c348`, `b17e488e`, `d19775fb`, `c892e55a`, `7b1354c8`, `9621a95c`, `2d03f9b2`, `7863fbc1`, `883d897c`, `ece20c62`). Content is duplicated by what landed in `main` or other surviving stashes.
+2. **INVESTIGATE before dropping** (4 stashes, `82818399`, `8aa2fd0f`, `b5bdf26b`, `4d989205`). Includes uncommitted prod code (`admin_login_screen.dart`, `price_row_widget.dart`) and substantial WIP (421 insertions). Verify scope is committed elsewhere first.
+3. **VERIFY branch state** (9 stashes from `fix/error-boundary-and-chat-ux`, `fix/null-tostring-hardening`, `test/wave0-integration`, `fix/widget-silent-catches`). If branch landed in main, drop; else preserve.
+4. **ANCIENT mvp/saas-booking-system stashes** (5 stashes: `faaedfff`, `457890b8`, `4151b352` (10585 lines), `d0e71b62`, `ea47ce17`). Audit doc has per-SHA verdict.
+5. **KEEP**: my own `wip-security-fixes-doc-cleanup-session-2026-05-22` (`895abb60`, 333 lines on `fix/widget-price-row-and-admin-footer-year`).
+
+Helper to drop by SHA (defeats index shift):
+```bash
+drop_by_sha() {
+  local sha="$1"
+  local ref=$(git stash list --format='%gd %H' | awk -v s="$sha" '$2==s {print $1; exit}')
+  [ -n "$ref" ] && git stash drop "$ref" || echo "Stash $sha not found (already dropped?)"
+}
+```
+
+### Dependabot triage (27 open branches)
+
+Full classification per branch in `audit/18-dependabot-triage-2026-05-22.md`.
+
+1. **REJECT — major bumps on locked/critical libs** (4 PRs): `pub/flutter_secure_storage-10.0.0`, `pub/package_info_plus-9.0.0`, `npm/functions/eslint-10.0.0`, `npm/functions/stripe-20.3.1`. Close + delete branches.
+2. **INVESTIGATE — read diff per branch** (10 PRs): github_actions majors (download-artifact-8, upload-artifact-7, codecov-action-6), `pub/sentry_flutter-9.13.0`, `npm/functions/sentry/node-10.39.0`, `npm/functions/node-ical-0.25.2`, `npm/functions/firebase-*`, group updates (`pub/multi-*`, `npm/functions/multi-*`), `pub/flutter_launcher_icons-0.14.4`, `npm/functions/protobufjs-7.6.0`.
+3. **AUTO-MERGE in small batches with CI watch** (12 PRs, transitive lockfile patches): ajv-6.15.0, brace-expansion-2.1.0, fast-xml-parser-4.5.6, flatted-3.4.2, handlebars-4.7.9, lodash-4.18.1, minimatch-3.1.5, minimatch-9.0.9, node-forge-1.4.0, path-to-regexp-0.1.13, picomatch-4.0.4, protobufjs/utf8-1.1.1.
+
+### Branch + history hygiene
+
+- Delete local cleanup branch: `git branch -d chore/cleanup-stash-dependabot-test-debt-2026-05-22`.
+- Optional: squash duplicate cherry-pick (`cf1546a0` ↔ `70c91f8e`) via interactive rebase + force-push to `main`. Idempotent so leaving as cosmetic noise is also acceptable.
+
+---
+
 ## 🚨 TODO: Cloud Functions audit follow-ups (2026-05-21)
 
 **Prioritet:** Mixed (P0 prod bugs, P1 cleanup, P2 hygiene, P3 long-term)
@@ -115,6 +182,46 @@ Currently dev-only. Before prod cutover:
 - Build + deploy the widget bundle to prod hosting (must include both the SF-023 ical-stream migration already in main AND the upcoming bookings-stream migration).
 - Deploy `firestore.rules` + `storage.rules` to prod **last** (so the live widget never makes a now-blocked direct read).
 - Run the manual smoke checklists in `audit/06-bookings-hotfix-partial.md` §6.3 + `audit/17-sf023-sf025-rules-fix.md` § Smoke verify on the prod widget origin.
+
+### Cross-link
+
+`docs/SECURITY_FIXES.md` line 1350 ("T11c progress update 2026-05-22") restates the 4 steps above in 6-step audit-narrative form (adds explicit "add unit test coverage first" prereq + "update bookings.test.ts to flip the regression-guard assertion" sub-step). Same scope, different framing.
+
+---
+
+## 🔢 TODO: SF-026 — booking night/guest count Timestamp normalization
+
+**Prioritet:** MEDIUM (no production drift observed yet, but DST-straddling bookings produce off-by-one between owner email + guest email + dashboard surfaces).
+**Status:** 📋 **Documented, not implemented.** Audit only — code change deferred to a small focused PR.
+**Izvor:** `audit/18-booking-count-audit.md` (2026-05-22, doc-only audit, 170 lines)
+
+### Background
+
+Booking docs persist only `check_in`/`check_out` Firestore Timestamps + `guest_count` — `nights` is never stored. Twelve derivation sites compute it from those Timestamps: 6 Dart (`.difference().inDays`, floor) + 6 TS (`Math.ceil(/86_400_000)`, ceil). When Timestamps are exact UTC midnight both agree at N. When they aren't (e.g. DST-straddling bookings, where the local-time difference is `24h × (N-1) + 23h`), Dart truncates to N-1 and TS ceils to N — owner email shows "4 nights", guest email shows "5 nights" for the same booking.
+
+Empirically safe today because the widget date picker emits whole-date ISO strings parsed at local midnight, and both check-in and check-out carry the same offset → the Timestamp delta cancels to exact N × 86_400_000 ms. The two algorithms agree by coincidence, not by contract. A future code path that fills `check_in`/`check_out` from a non-picker source (admin manual entry, iCal import, Stripe metadata round-trip) breaks the invariant.
+
+### Recommended fix — Option B (smallest correct change)
+
+In `functions/src/utils/dateValidation.ts` STEP 6, persist the `checkInMidnight` / `checkOutMidnight` UTC-normalized variants (already computed in STEP 5 for past-date validation) instead of the raw client `Date`:
+
+```diff
+- const checkInDate  = admin.firestore.Timestamp.fromDate(checkInDateObj);
+- const checkOutDate = admin.firestore.Timestamp.fromDate(checkOutDateObj);
++ const checkInDate  = admin.firestore.Timestamp.fromDate(checkInMidnight);
++ const checkOutDate = admin.firestore.Timestamp.fromDate(checkOutMidnight);
+```
+
+Both algorithms now produce N for every input. No schema migration, no backfill, no read-site changes.
+
+### Promoted to Option A if/when
+
+- Audit needs an immutable "billed for N nights" field — store `nights: number` on the booking doc (`functions/src/atomicBooking.ts:1080-1121`) and migrate read sites.
+- Partial-day stays (early check-in / late check-out) become a pricing feature — Timestamp time-component becomes meaningful again, normalization no longer safe.
+
+### Test
+
+Add a DST regression test: create a booking spanning the spring-forward boundary (e.g. `2026-03-28` → `2026-04-01` for `Europe/Zagreb`, which crosses CEST start on 2026-03-29 03:00) and assert all 9 read sites return the same integer. Lives next to the existing `dateValidation.test.ts` (or its equivalent).
 
 ---
 

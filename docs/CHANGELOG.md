@@ -2,7 +2,50 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-22 | **Version**: 6.74
+**Last Updated**: 2026-05-22 | **Version**: 6.77
+
+---
+
+**Changelog 6.77**: T11c progress note + booking count audit + audit gitignore whitelist (2026-05-22):
+
+- **T11c progress documented** (`docs/SECURITY_FIXES.md` line 1350, new "T11c progress update 2026-05-22" subsection under SF-019): captures the split status of T11c after SF-023 landed the `getUnitAvailability` CF half. Lists the 5 anonymous-context widget sites that still issue direct `collectionGroup('bookings').where('unit_id', '==', …).where('status', 'in', …)` and therefore block clause-1 removal — 4 streams in `firebase_booking_calendar_repository.dart:107/245/386/496` (`.snapshots()` realtime) + 1 one-shot in `availability_checker.dart:257` (booking-submit gate). Documents the 6-step migration plan + the realtime → ~30s polling UX regression that ships with it. Closes the doc gap that made T11c look ready to land when it wasn't (CF deployed but widget reads not migrated).
+- **Booking night/guest count source-of-truth audit** (`audit/18-booking-count-audit.md`, 170 lines, doc-only): maps every persisted vs derived field on the booking doc and the 12 derivation sites (6 Dart `.difference().inDays` floor + 6 TS `Math.ceil(/86_400_000)` ceil). Booking schema persists `check_in`/`check_out` Timestamps + `guest_count` only — no `nights`, no adults/children split. Floor vs ceil agree today because timestamps come from a date picker (midnight-aligned), but DST-straddling bookings produce off-by-one disagreement (Dart `.inDays` truncates 23h day to N-1, TS `Math.ceil` rounds to N). Recommends Option B as minimum fix: in `functions/src/utils/dateValidation.ts` STEP 6, persist the existing `checkInMidnight` UTC-normalized variant (already computed for past-date validation) instead of the raw client Date. Tracked as SF-026 candidate in `docs/TODO.md`.
+- **`.gitignore` audit/**/*.md whitelist** (commit `70c91f8e`): `*.md` rule on line 73 was implicitly blocking new files under `audit/`; the existing whitelist covered `README.md`, `CLAUDE.md`, `SECURITY.md`, `.claude/**/*.md`, `docs/**/*.md`, `assets/kb/*.md`, but not `audit/**/*.md`. Required `git add -f audit/18-booking-count-audit.md` for this PR. Added `!audit/**/*.md` (with comment) so future audit files no longer trip the same gotcha.
+- **Multi-agent race — stash absorption pattern observed**: terminals A, B, and C all active. My first staged commit was absorbed into terminal A's commit `a1276a8a` (`docs: cross-reference SF-023+SF-025 + audit/17`) because their commit fired against the shared index after my `git add` but before my `git commit`. Net result intact (both audit/18 and the T11c progress section are inside `a1276a8a`); commit message understates scope. Different failure mode than the branch-swap pattern documented in `memory/multi-agent-git-race.md` — here HEAD stayed on `main` but a parallel agent's `git commit` consumed both their staged files AND mine. Memory file updated with the new lesson.
+- **Verification skipped** (doc-only): no `functions/`, `firestore.rules`, or `lib/` changes → `npm run build` / `npm run test:rules` / `flutter analyze` / `flutter test` not run. Pre-commit `dart format` passed on the gitignore commit (642 files, 0 changed).
+- **Deploy**: none. T11c proper deferred to follow-up PR (5 widget sites + clause drop + rules-test flip). SF-026 (Timestamp normalization) deferred to its own PR. No rules deploy, no CF deploy.
+- **Commits**: `a1276a8a` (combined-with-terminal-A: cross-reference SF-023+SF-025 + audit/17 + T11c progress + audit/18) and `70c91f8e` (gitignore audit whitelist) on `main`. Pushed `b4eccec1..70c91f8e` to `origin/main`.
+
+---
+
+**Changelog 6.76**: Cleanup tasks — test debt + dependabot/stash triage docs + build-runner rule (2026-05-22):
+
+- **Test debt — `availability_checker_test.dart` iCal callable mock**: post-SF-023, `_checkIcalEvents` routes through the `getUnitAvailability` callable via `FirebaseAvailabilityRepository`, so the old direct `fakeFirestore.collection('ical_events')` seed pattern no longer wired up. New `_FakeAvailabilityRepository implements IAvailabilityRepository` lives inline in the test file; iCal-specific tests now drive canned `AvailabilityWindow[]` directly. 40/40 tests pass.
+- **New interface — `IAvailabilityRepository`** (`lib/features/widget/domain/services/i_availability_repository.dart`): minimal abstract with `fetchAvailability(...)`. `FirebaseAvailabilityRepository` now `implements` it (no behavior change). `AvailabilityChecker` field + constructor param re-typed to the interface so tests can inject a fake without booting Firebase. Calendar repository untouched (frozen per CLAUDE.md NIKADA NE MIJENJAJ).
+- **`.claude/rules/build-runner.md` new + CLAUDE.md row**: fresh-clone `--delete-conflicting-outputs` recipe, regen triggers, distinguishing pub-cache desync from build_runner errors. Scoped to `pubspec.yaml`, `build.yaml`, `analysis_options.yaml`, `**/*.g.dart`. Version bumped 7.2 → 7.3.
+- **Audit deliverables (execution deferred)**:
+  - `audit/18-stash-classification-2026-05-22.md` — all 29 git stashes inventoried by SHA, classified DROP/INVESTIGATE/KEEP. Drops deferred to a quiet window: stash count grew 18 → 21 → 29 mid-session as sibling agents stashed concurrently, making index-based `git stash drop stash@{N}` race-prone (advisor flag).
+  - `audit/18-dependabot-triage-2026-05-22.md` — 27 open dependabot branches classified against current `pubspec.yaml` + `functions/package.json` versions. Caught 4 MAJOR bumps the spec's mechanical "auto-merge patch+minor" would have merged: `eslint 8→10`, `stripe 19→20`, `package_info_plus 8→9`, `flutter_secure_storage 9→10`. Merges + PR closes deferred (CI watch impractical mid-race; destructive shared-state ops need user OK).
+- **Multi-agent race observed**: stash count 18 → 21 → 29 in minutes, `.git/index.lock` briefly held by sibling, working tree mutated 3x with different file sets, branch swapped main↔cleanup mid-session, origin received independent pushes during fetch. Recovery: snapshotted stash SHAs upfront, cherry-picked sibling's `70c91f8e` (audit/**/*.md gitignore whitelist) onto cleanup branch to un-ignore audit deliverables, verified branch right before commit.
+- **Verification**: `dart analyze` on the 4 touched files → no issues. `flutter test test/features/widget/data/helpers/availability_checker_test.dart` → 40/40 green. Pre-commit `dart format` clean (642 files, 0 changed).
+- **Commits**: `55981882 chore: cleanup tasks…` on `chore/cleanup-stash-dependabot-test-debt-2026-05-22`, merged to `main` as `b6cd8f4a` and pushed to origin (`70c91f8e..b6cd8f4a`).
+- **Known noise**: history contains both `70c91f8e` (sibling whitelist commit) and `cf1546a0` (cleanup-branch cherry-pick of the same diff). Idempotent — the +2 lines applied once; the duplicate is cosmetic in `git log` only. Squashable via interactive rebase + force-push if desired (force-push to `main` warned per CLAUDE.md).
+
+---
+
+**Changelog 6.75**: Widget price-row overflow + admin footer year (2026-05-22):
+
+- **PriceRowWidget overflow fix** (`lib/features/widget/presentation/widgets/booking/price_row_widget.dart:43-91`): the row used `Row(mainAxisAlignment: spaceBetween, children: [Text(label), Text(amount)])` with no `Flexible`/`Expanded` wrapping on either side, so at ≤320px widths Croatian labels (e.g. `"Smještaj (5 noći)"`) + total amount visually clipped the right edge — the price `"€120.00"` rendered as `"€12"`. Wrapped label in `Flexible(child: Text(..., maxLines: 2, overflow: TextOverflow.ellipsis))` and amount in `Flexible(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerRight, child: Text(...)))`. Label gives way first (ellipsis); amount scales down before clipping. Affects every `PriceRowWidget` caller — `PriceBreakdownWidget` (room price, extra guest fees, pet fees, additional services, total) which surfaces inside `CompactPillSummary` (mobile pill) and `PillBarContent._buildWideScreenLayout` (desktop split-pane).
+- **Admin footer year dynamic** (`lib/features/admin/presentation/screens/admin_login_screen.dart:390`): `'© 2024 BookBed Inc. All rights reserved.'` → `'© ${DateTime.now().year} BookBed Inc. All rights reserved.'`. Copyright now self-updates each calendar year.
+- **Deferred** (audit doc `audit/07-chrome-smoke-test.md` is missing from the repo, so the source descriptions and screenshots cannot be cross-checked):
+  - Task 1 — Login CanvasKit text input sync gap (`enhanced_login_screen.dart`). `PremiumInputField` already has `autocorrect:false`, `enableSuggestions:false`; `_handleLogin` snapshots controllers into locals before async. No defect visible in code without primary repro.
+  - Task 3 — Owner dashboard mobile heading truncation ("Nedav…", "Rezer…", "Fi…"). `RecentActivityWidget` already uses `AutoSizeText`/`minFontSize:14`; `_buildChartHeader` uses `Expanded`. No truncating widget located.
+  - Task 4 partial — Admin "Em…" placeholder. Only `labelText:'Email Address'` and `hintText:'admin@bookbed.io'` candidates; neither obviously truncates without screenshots.
+  - All three carried over to `docs/TODO.md`.
+- **Verification**: `flutter analyze` on changed files → 0 issues. Pre-commit hook ran `dart format` → 641 files clean (0 changed).
+- **Multi-agent git race encountered**: mid-task another agent twice swapped branch out from under me (`fix/widget-price-row-and-admin-footer-year` → `main` → `audit/booking-count-audit`), reverting working-tree edits once. Recovered by re-applying edits then stashing race-debris (other agents' `CLAUDE.md`, `.claude/rules/auth.md`, `.claude/rules/firestore.md`, `docs/CHANGELOG.md`, `docs/SECURITY_FIXES.md`). Sibling-agent leftovers preserved as `stash@{0}` and `stash@{1}` for their owners. Per `memory/multi-agent-git-race.md`: verified `git branch --show-current` immediately before `git add` and `git commit`.
+- **Commits**: `bd329688 fix(ui): widget price row overflow + admin footer year` on `fix/widget-price-row-and-admin-footer-year`, merged to `main` as `a6374c35`. No origin push, no deploy.
+- **Audit**: `audit/19-wave3-cleanup.md` (new).
 
 ---
 

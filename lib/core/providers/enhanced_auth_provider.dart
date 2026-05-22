@@ -81,6 +81,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
   final RateLimitService _rateLimit;
   final SecurityEventsService _security;
   final IpGeolocationService _geolocation;
+  final FirebaseFunctions? _functions;
   StreamSubscription<User?>? _authSubscription;
   String? _loadingUserId; // Prevents concurrent profile loads for same user
   Completer<void>?
@@ -92,8 +93,9 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     this._firestore,
     this._rateLimit,
     this._security,
-    this._geolocation,
-  ) : super(const EnhancedAuthState()) {
+    this._geolocation, [
+    this._functions,
+  ]) : super(const EnhancedAuthState()) {
     // Listen to auth state changes
     _authSubscription = _auth.authStateChanges().listen((User? user) {
       LoggingService.log(
@@ -545,7 +547,7 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
       // 1. Cloud Rate Limit Future (wrapped to handle errors internally)
       final cloudRateLimitFuture = (() async {
         try {
-          final functions = FirebaseFunctions.instanceFor(
+          final functions = _functions ?? FirebaseFunctions.instanceFor(
             region: 'europe-west1',
           );
           final callable = functions.httpsCallable('checkLoginRateLimit');

@@ -86,6 +86,49 @@ void main() {
     });
   });
 
+  group('NameValidator', () {
+    test('returns error for null', () {
+      expect(NameValidator.validate(null), isNotNull);
+    });
+
+    test('returns error for empty', () {
+      expect(NameValidator.validate(''), isNotNull);
+    });
+
+    test('returns error for whitespace only', () {
+      expect(NameValidator.validate('   '), isNotNull);
+    });
+
+    test('returns error for single word', () {
+      expect(NameValidator.validate('John'), isNotNull);
+    });
+
+    test('returns null for valid full name', () {
+      expect(NameValidator.validate('John Doe'), isNull);
+    });
+
+    test('allows apostrophes', () {
+      expect(NameValidator.validate("John O'Brien"), isNull);
+    });
+
+    test('allows hyphens', () {
+      expect(NameValidator.validate('Jean-Claude Van Damme'), isNull);
+    });
+
+    test('allows Unicode characters', () {
+      expect(NameValidator.validate('Jürgen Müller'), isNull);
+      expect(NameValidator.validate('Željko Šćepan'), isNull);
+    });
+
+    test('rejects numbers', () {
+      expect(NameValidator.validate('John Doe2'), isNotNull);
+    });
+
+    test('rejects special characters', () {
+      expect(NameValidator.validate('John@ Doe'), isNotNull);
+    });
+  });
+
   group('EmailValidator', () {
     test('returns error for null', () {
       expect(EmailValidator.validate(null), isNotNull);
@@ -206,6 +249,77 @@ void main() {
     test('allows normal punctuation', () {
       expect(NotesValidator.validate('Hello! How are you?'), isNull);
       expect(NotesValidator.validate('Room #3, floor 2.'), isNull);
+    });
+  });
+
+  group('PhoneNumberFormatter', () {
+    test('formats empty input', () {
+      final formatter = PhoneNumberFormatter('+385'); // HR code
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        const TextEditingValue(text: ''),
+      );
+      expect(result.text, isEmpty);
+      expect(result.selection.baseOffset, 0);
+    });
+
+    test('removes non-digits', () {
+      final formatter = PhoneNumberFormatter('+385');
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        const TextEditingValue(text: 'a1b2c3!@#'),
+      );
+      expect(result.text, '12 3'); // 123 formatted for group sizes [2, 3, 3, 3] etc.
+    });
+
+    test('formats Croatian number correctly', () {
+      final formatter = PhoneNumberFormatter('+385');
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        const TextEditingValue(text: '912345678'),
+      );
+      expect(result.text, '91 234 5678'); // 2, 3, 4 sizes
+    });
+
+    test('limits to max length', () {
+      final formatter = PhoneNumberFormatter('+385');
+      // Croatian max length is 9 digits
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        const TextEditingValue(text: '123456789012345678'),
+      );
+      expect(result.text.replaceAll(' ', '').length, 9);
+    });
+
+    test('formats US number correctly', () {
+      final formatter = PhoneNumberFormatter('+1');
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        const TextEditingValue(text: '2025551234'),
+      );
+      // US sizes: [3, 3, 4] -> 202 555 1234
+      expect(result.text, '202 555 1234');
+    });
+
+    test('handles cursor position correctly', () {
+      final formatter = PhoneNumberFormatter('+1');
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        const TextEditingValue(text: '20255'),
+      );
+      expect(result.text, '202 55');
+      expect(result.selection.baseOffset, 6);
+    });
+
+    test('adds remaining digits correctly', () {
+      // +39 (Italy) has maxLength 10, but uses europe3_3_3 which is [3, 3, 3] sum 9
+      // So 10th digit should trigger the remaining digits branch!
+      final formatter = PhoneNumberFormatter('+39');
+      final result = formatter.formatEditUpdate(
+        const TextEditingValue(),
+        const TextEditingValue(text: '1234567890'),
+      );
+      expect(result.text, '123 456 789 0');
     });
   });
 }

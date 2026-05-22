@@ -4,7 +4,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/data/helpers/availability_checker.dart';
+import 'package:bookbed/features/widget/data/models/availability_window.dart';
 import 'package:bookbed/features/widget/domain/constants/widget_constants.dart';
+import 'package:bookbed/features/widget/domain/services/i_availability_repository.dart';
+
+/// In-memory fake for [IAvailabilityRepository].
+///
+/// Production calls `getUnitAvailability` Cloud Function (SF-023) which
+/// requires Firebase init. Tests inject this fake to skip that — set
+/// [windows] per test to drive `_checkIcalEvents` behavior in the checker.
+class _FakeAvailabilityRepository implements IAvailabilityRepository {
+  List<AvailabilityWindow> windows = const [];
+
+  @override
+  Future<List<AvailabilityWindow>> fetchAvailability({
+    required String propertyId,
+    required String unitId,
+    required DateTime start,
+    required DateTime end,
+  }) async => windows;
+}
 
 void main() {
   group('AvailabilityCheckResult', () {
@@ -120,11 +139,16 @@ void main() {
 
   group('AvailabilityChecker', () {
     late FakeFirebaseFirestore fakeFirestore;
+    late _FakeAvailabilityRepository fakeRepo;
     late AvailabilityChecker checker;
 
     setUp(() {
       fakeFirestore = FakeFirebaseFirestore();
-      checker = AvailabilityChecker(fakeFirestore);
+      fakeRepo = _FakeAvailabilityRepository();
+      checker = AvailabilityChecker(
+        fakeFirestore,
+        availabilityRepository: fakeRepo,
+      );
     });
 
     group('check - no conflicts', () {
@@ -463,13 +487,19 @@ void main() {
     });
 
     group('check - iCal conflicts', () {
+      // SF-023: iCal events are fetched server-side via the
+      // getUnitAvailability CF. Tests drive the [IAvailabilityRepository]
+      // fake directly with [AvailabilityWindow]s instead of seeding the old
+      // collectionGroup('ical_events') path.
       test('detects conflict with iCal event', () async {
-        await fakeFirestore.collection('ical_events').add({
-          'unit_id': 'unit123',
-          'start_date': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'end_date': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'source': 'Booking.com',
-        });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.icalExternal,
+            platform: 'Booking.com',
+          ),
+        ];
 
         final result = await checker.check(
           propertyId: 'prop123',
@@ -484,12 +514,14 @@ void main() {
       });
 
       test('allows same-day turnover for iCal events', () async {
-        await fakeFirestore.collection('ical_events').add({
-          'unit_id': 'unit123',
-          'start_date': Timestamp.fromDate(DateTime(2024, 1, 10)),
-          'end_date': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'source': 'Airbnb',
-        });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 10),
+            end: DateTime(2024, 1, 15),
+            source: AvailabilityWindowSource.icalExternal,
+            platform: 'Airbnb',
+          ),
+        ];
 
         final result = await checker.check(
           propertyId: 'prop123',
@@ -501,31 +533,15 @@ void main() {
         expect(result.isAvailable, isTrue);
       });
 
-      test('ignores iCal events for different unit', () async {
-        await fakeFirestore.collection('ical_events').add({
-          'unit_id': 'other_unit',
-          'start_date': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'end_date': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'source': 'Booking.com',
-        });
-
-        final result = await checker.check(
-          propertyId: 'prop123',
-          unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 15),
-          checkOut: DateTime(2024, 1, 20),
-        );
-
-        expect(result.isAvailable, isTrue);
-      });
-
-      test('uses default source when source is missing', () async {
-        await fakeFirestore.collection('ical_events').add({
-          'unit_id': 'unit123',
-          'start_date': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'end_date': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          // No source field
-        });
+      test('uses default source when platform is missing', () async {
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.icalExternal,
+            // No platform field — CF emits null for unmapped sources
+          ),
+        ];
 
         final result = await checker.check(
           propertyId: 'prop123',
@@ -536,6 +552,28 @@ void main() {
 
         expect(result.isAvailable, isFalse);
         expect(result.icalSource, 'iCal');
+      });
+
+      test('ignores non-icalExternal windows', () async {
+        // The CF may emit booking/manualBlock windows too — _checkIcalEvents
+        // must filter to icalExternal so it doesn't double-report bookings
+        // that _checkBookings already covers.
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
+
+        final result = await checker.check(
+          propertyId: 'prop123',
+          unitId: 'unit123',
+          checkIn: DateTime(2024, 1, 17),
+          checkOut: DateTime(2024, 1, 22),
+        );
+
+        expect(result.isAvailable, isTrue);
       });
     });
 
@@ -650,7 +688,7 @@ void main() {
 
     group('check - priority order', () {
       test('returns booking conflict before iCal conflict', () async {
-        // Add both booking and iCal conflict
+        // Booking via fakeFirestore, iCal via fake repo
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
           'status': 'confirmed',
@@ -665,12 +703,14 @@ void main() {
           'created_at': Timestamp.now(),
         });
 
-        await fakeFirestore.collection('ical_events').add({
-          'unit_id': 'unit123',
-          'start_date': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'end_date': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'source': 'Booking.com',
-        });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.icalExternal,
+            platform: 'Booking.com',
+          ),
+        ];
 
         final result = await checker.check(
           propertyId: 'prop123',
@@ -684,13 +724,15 @@ void main() {
       });
 
       test('returns iCal conflict before blocked date conflict', () async {
-        // Add both iCal and blocked date conflict
-        await fakeFirestore.collection('ical_events').add({
-          'unit_id': 'unit123',
-          'start_date': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'end_date': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'source': 'Airbnb',
-        });
+        // Both iCal (via fake repo) and blocked date (via fakeFirestore)
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.icalExternal,
+            platform: 'Airbnb',
+          ),
+        ];
 
         await fakeFirestore.collection('daily_prices').add({
           'unit_id': 'unit123',

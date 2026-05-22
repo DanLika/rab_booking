@@ -74,6 +74,7 @@ import '../l10n/widget_translations.dart';
 import '../helpers/booking_widget_url_helpers.dart';
 import '../helpers/booking_widget_url_intent.dart';
 import '../helpers/iframe_height_reporter.dart';
+import '../helpers/zoom_control_state.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
@@ -204,11 +205,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // ============================================
   // ZOOM SCALE (for zoom control buttons)
   // ============================================
-  double _zoomScale = 1.0;
-  final TransformationController _transformationController =
-      TransformationController();
-  // Key to get InteractiveViewer size for centered zoom
-  final _interactiveViewerKey = GlobalKey();
+  final _zoom = ZoomControlState();
 
   @override
   void initState() {
@@ -1424,6 +1421,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _paymentCompletionTimeout = null;
 
     _heightReporter.dispose();
+    _zoom.dispose();
 
     super.dispose();
   }
@@ -1773,43 +1771,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                   // Listener captures scroll wheel events for desktop pan support
                                   Listener(
                                     onPointerSignal: (event) {
-                                      // Handle scroll wheel for desktop pan (only when zoomed)
-                                      if (event is PointerScrollEvent &&
-                                          _zoomScale > 1.0) {
-                                        // Get current transformation
-                                        final matrix = _transformationController
-                                            .value
-                                            .clone();
-                                        // Apply scroll delta as pan (inverted for natural scroll direction)
-                                        // Scroll down/right = move view down/right
-                                        matrix.setEntry(
-                                          0,
-                                          3,
-                                          matrix.entry(0, 3) -
-                                              event.scrollDelta.dx,
-                                        );
-                                        matrix.setEntry(
-                                          1,
-                                          3,
-                                          matrix.entry(1, 3) -
-                                              event.scrollDelta.dy,
-                                        );
-                                        _transformationController.value =
-                                            matrix;
+                                      if (event is PointerScrollEvent) {
+                                        _zoom.panByScroll(event.scrollDelta);
                                       }
                                     },
                                     child: InteractiveViewer(
-                                      key: _interactiveViewerKey,
+                                      key: _zoom.interactiveViewerKey,
                                       transformationController:
-                                          _transformationController,
+                                          _zoom.controller,
                                       boundaryMargin: const EdgeInsets.all(
                                         double.infinity,
                                       ),
                                       minScale: 1.0,
                                       maxScale: 3.0,
-                                      panEnabled:
-                                          _zoomScale >
-                                          1.0, // Pan only when zoomed
+                                      panEnabled: _zoom
+                                          .isZoomed, // Pan only when zoomed
                                       scaleEnabled:
                                           false, // Disable pinch - use buttons only
                                       child: LazyCalendarContainer(
@@ -1962,40 +1938,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 // Zoom control buttons (Web only)
                 if (kIsWeb)
                   ZoomControlButtons(
-                    currentScale: _zoomScale,
+                    currentScale: _zoom.scale,
                     onScaleChanged: (newScale) {
                       if (mounted) {
                         setState(() {
-                          _zoomScale = newScale;
-                          // Get InteractiveViewer size for centered zoom
-                          final renderBox =
-                              _interactiveViewerKey.currentContext
-                                      ?.findRenderObject()
-                                  as RenderBox?;
-                          if (renderBox != null) {
-                            final size = renderBox.size;
-                            // Calculate translation to keep zoom centered
-                            // Formula: translate = (1 - scale) * center / 2
-                            final dx = (1 - newScale) * size.width / 2;
-                            final dy = (1 - newScale) * size.height / 2;
-                            // Build transformation matrix for centered zoom:
-                            // 1. Scale uniformly
-                            // 2. Translate to keep center fixed
-                            final matrix = Matrix4.identity();
-                            matrix.setEntry(0, 0, newScale); // Scale X
-                            matrix.setEntry(1, 1, newScale); // Scale Y
-                            matrix.setEntry(0, 3, dx); // Translate X
-                            matrix.setEntry(1, 3, dy); // Translate Y
-                            _transformationController.value = matrix;
-                          } else {
-                            // Fallback to origin zoom if size not available
-                            _transformationController.value =
-                                Matrix4.diagonal3Values(
-                                  newScale,
-                                  newScale,
-                                  1.0,
-                                );
-                          }
+                          _zoom.applyCenteredZoom(newScale);
                         });
                       }
                     },

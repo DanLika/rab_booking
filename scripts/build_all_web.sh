@@ -27,7 +27,7 @@ NC='\033[0m' # No Color
 
 # Build Owner Dashboard
 echo -e "${YELLOW}1. Building Owner Dashboard...${NC}"
-$FLUTTER build web --release --target lib/main.dart -o build/web_owner
+$FLUTTER build web --release --target lib/main.dart --dart-define=SENTRY_DSN="$SENTRY_DSN" -o build/web_owner
 echo -e "${GREEN}   Owner build complete${NC}"
 # Owner keeps app.bookbed.io (default)
 echo "  Meta tags: app.bookbed.io (default)"
@@ -35,7 +35,7 @@ echo ""
 
 # Build Widget
 echo -e "${YELLOW}2. Building Booking Widget...${NC}"
-$FLUTTER build web --release --target lib/widget_main.dart -o build/web_widget
+$FLUTTER build web --release --target lib/widget_main.dart --dart-define=SENTRY_DSN="$SENTRY_DSN" -o build/web_widget
 echo -e "${GREEN}   Widget build complete${NC}"
 update_meta_tags "build/web_widget" "view.bookbed.io" \
     "BookBed - Online Booking Widget" \
@@ -44,7 +44,7 @@ echo ""
 
 # Build Admin Dashboard
 echo -e "${YELLOW}3. Building Admin Dashboard...${NC}"
-$FLUTTER build web --release --target lib/admin_main.dart -o build/web_admin
+$FLUTTER build web --release --target lib/admin_main.dart --dart-define=SENTRY_DSN="$SENTRY_DSN" -o build/web_admin
 echo -e "${GREEN}   Admin build complete${NC}"
 echo ""
 

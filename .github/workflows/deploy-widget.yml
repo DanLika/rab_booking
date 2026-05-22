@@ -35,10 +35,12 @@ jobs:
       - name: Build Flutter web widget
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
           flutter build web \
             --release \
             --target lib/widget_main.dart \
+            --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
             -o build/web_widget \
             --source-maps \
             --base-href /

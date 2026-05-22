@@ -15,10 +15,7 @@ import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options.dart';
-
-// Sentry DSN for widget error tracking (same project as owner dashboard)
-const String _sentryDsn =
-    'https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144';
+import 'core/config/environment.dart';
 
 /// Widget-only entry point for embeddable booking widget
 ///
@@ -124,10 +121,11 @@ void main() async {
       : <Override>[];
 
   // Initialize Sentry for error tracking (production only)
-  if (kReleaseMode && _sentryDsn.isNotEmpty) {
+  final sentryDsn = EnvironmentConfig.sentryDsn;
+  if (kReleaseMode && sentryDsn != null && sentryDsn.isNotEmpty) {
     await SentryFlutter.init(
       (options) {
-        options.dsn = _sentryDsn;
+        options.dsn = sentryDsn;
         options.tracesSampleRate = 0.2;
         options.environment = detectSentryEnvironment();
         // Tag as widget to distinguish from owner dashboard

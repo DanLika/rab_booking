@@ -14,10 +14,10 @@ firebase use production
 
 # Build web apps
 echo "📦 Building widget..."
-flutter build web --release --target lib/widget_main.dart -o build/web_widget
+flutter build web --release --target lib/widget_main.dart --dart-define=SENTRY_DSN="$SENTRY_DSN" -o build/web_widget
 
 echo "📦 Building owner dashboard..."
-flutter build web --release --target lib/main_prod.dart -o build/web_owner
+flutter build web --release --target lib/main_prod.dart --dart-define=SENTRY_DSN="$SENTRY_DSN" -o build/web_owner
 
 # Update OG meta tags for all targets
 echo "🏷️  Updating OG tags for all domains..."

@@ -136,6 +136,20 @@ distributionUrl=gradle-8.11.1-all.zip  // Gradle
 **Problem**: `firebase_storage` plugin ne kompajlira Kotlin kod prije Java koda u debug modu.
 **Workaround**: Koristi `--release` flag za Android uređaje.
 
+### Android AAB Build (Play Store) — koristi `tool/build_aab.sh`
+
+`flutter build appbundle` direktno PUCA jer Flutter 3.38.5 generira `GeneratedPluginRegistrant.java` koji importuje `flutter_native_splash` runtime klasu koju paket više ne ships (paket je dev-only CLI). `flutter build apk` ne pogađa tu putanju, samo `bundleRelease`.
+
+**Fix** (committed 2026-05-22): wrapper script `tool/build_aab.sh` patcha `.flutter-plugins-dependencies` da postavi `native_build: false` za `flutter_native_splash` prije nego pokrene `flutter build appbundle`.
+
+```bash
+# Lokalno (Play Store upload)
+tool/build_aab.sh                    # release + lib/main.dart
+tool/build_aab.sh --release --target lib/widget_main.dart
+```
+
+**CI**: `.github/workflows/ci.yml` `build-android` job (Job 3) je ENABLED i koristi `./tool/build_aab.sh --release`. NE vraćaj na direktni `flutter build appbundle` — pukne. Reference: `audit/16-android-regression-full.md` Appendix B, `memory/aab-build-blocker.md`.
+
 ### Pokretanje
 
 ```bash
@@ -165,9 +179,10 @@ export 'web_utils_stub.dart'
 flutter clean
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
-flutter build apk --release  # Android
+flutter build apk --release          # Android APK (debug/sideload)
+tool/build_aab.sh --release          # Android AAB (Play Store) — NE direktan `flutter build appbundle`
 flutter build ios --release --no-codesign  # iOS
-flutter build web --release  # Web
+flutter build web --release          # Web
 ```
 
 ### NE RADITI

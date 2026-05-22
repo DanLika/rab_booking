@@ -90,6 +90,8 @@ dart format .
 
 **Za AI agente (Jules, Sentinel, Bolt):** UVIJEK pokreni `dart format .` prije kreiranja commita. CI workflow provjerava formatiranje i odbija neformatirani kod.
 
+**CI build-android job** (`.github/workflows/ci.yml` Job 3): koristi `./tool/build_aab.sh --release` wrapper — NE `flutter build appbundle` direktno (pukne na flutter_native_splash registry bug). Vidi `.claude/rules/hosting-build.md` § "Android AAB Build" + `audit/16-android-regression-full.md` Appendix B.
+
 ---
 
 ## TOOLING GOTCHA: `flutter analyze` phantom errors
@@ -123,10 +125,11 @@ Ovi fajlovi se učitavaju SAMO kad radiš na matchujućim fajlovima:
 | `fcm-pwa.md` | `lib/core/services/fcm_service*`, `web/firebase-messaging-sw.js`, `functions/src/fcmService.ts`, `lib/**/pwa/**` | Push notifikacije, PWA install, service worker |
 | `auth.md` | `lib/features/auth/**`, `lib/**/enhanced_auth_provider*`, `functions/src/auth*`, `functions/src/emailVerification*` | Apple/Google Sign-In, email verifikacija, Remember Me, provider cache security |
 | `ios-development.md` | `ios/**`, `lib/main*.dart`, `lib/widget_main*.dart` | GoogleService-Info.plist swap procedure, `--target` requirement, Dart-level project ID asserts (Wave 0 contamination prevention) |
+| `android-development.md` | `android/**`, `lib/main*.dart`, `lib/widget_main*.dart`, `tool/build_aab.sh` | google-services.json swap procedure, debug-build `--release` requirement, AAB blocker fix (`tool/build_aab.sh`), 16KB page-size compliance, deep-link warm/cold coverage |
 
 ---
 
-**Last Updated**: 2026-05-18 | **Version**: 7.1
+**Last Updated**: 2026-05-22 | **Version**: 7.2
 
 # context-mode — MANDATORY routing rules
 

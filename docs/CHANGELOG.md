@@ -2,7 +2,19 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-22 | **Version**: 6.73
+**Last Updated**: 2026-05-22 | **Version**: 6.74
+
+---
+
+**Changelog 6.74**: Cold-boot auth-race guard + dead CG index prune (2026-05-22):
+
+- **Auth-race guard** (`lib/features/owner_dashboard/presentation/providers/owner_properties_provider.dart:52-67`): `propertyById` now awaits `enhancedAuthProvider.isLoading` before issuing the Firestore read. Previously, cold-boot deep links (e.g. `bookbed://owner/property/<id>`) fired the read before Firebase Auth had restored the session; Firestore rules then rejected the unauth read and Pigeon surfaced a noisy `FirebaseFirestoreHostApi.documentReferenceGet` stacktrace in logcat. The provider now holds in `AsyncLoading` until auth settles, so `PropertyEditLoader` (`lib/core/config/router_owner.dart:784`) keeps showing `UniversalLoader` instead of flashing. `ref.watch(enhancedAuthProvider)` (not `ref.read`) also satisfies the provider-cache-security rule in `.claude/rules/auth.md`. Scope deliberately limited to `propertyByIdProvider`; `unitByIdAcrossPropertiesProvider` left untouched — same shape but not flagged in audit/16-android.
+- **2 dead CG indexes pruned** (`firestore.indexes.json`): removed `booking_services{booking_id+created_at}` (`COLLECTION_GROUP`) — zero `booking_services` refs anywhere in `lib/` / `functions/src/`; and `securityEvents{userId+timestamp}` (`COLLECTION_GROUP`) — collection used only as `users/{uid}/securityEvents` subcollection, never via `collectionGroup()`. 66 → 64 indexes. Firebase deploy reports "2 indexes defined in project not in file" — server-side orphans, harmless, not regenerated on subsequent deploys; `--force` deletion not in scope.
+- **Verification**: `flutter analyze owner_properties_provider.dart` → 0 issues. `cd functions && npm run test:rules` → 28/28 green (2 suites). Pre-commit `dart format` clean (639 files, 0 changed).
+- **Deploy**: indexes deployed to `bookbed-dev` only via `firebase deploy --only firestore:indexes --project bookbed-dev`. Prod untouched. No `git push`.
+- **Multi-agent race encountered**: mid-task another agent repeatedly swapped working branch (`hotfix/widget-secrets-exfil`, `fix/t11c-proper-and-booking-count-audit`); fix-commit recovered via `git stash` + branch checkout + pop. Sibling-agent leftovers preserved in `git stash list`.
+- **Docs**: `.claude/rules/auth.md` (new "Cold-boot auth-race guard" section with canonical pattern), `.claude/rules/firestore.md` (new "Dead indexes pruned" section logging the removals + verification command).
+- **Commit**: `84163b6c` on `fix/auth-race-and-indexes-cleanup`, merged to `main` as `7cb0bac2`. Docs landed via `docs/auth-race-update` separately.
 
 ---
 

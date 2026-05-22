@@ -16,9 +16,6 @@ import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options_dev.dart'; // Import DEV options
 
-// Sentry not used in DEV to avoid noise
-// const String _sentryDsn = ...
-
 /// WIDGET DEVELOPMENT ENTRY POINT
 ///
 /// Uses [DevFirebaseOptions] to connect to bookbed-dev project.

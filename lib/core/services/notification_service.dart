@@ -29,7 +29,10 @@ import '../exceptions/app_exceptions.dart';
 /// });
 /// ```
 class NotificationService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+
+  NotificationService({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Get notifications collection reference for a user
   /// NEW STRUCTURE: users/{userId}/notifications
@@ -238,22 +241,28 @@ class NotificationService {
             ? i + batchLimit
             : notificationIds.length;
 
-        for (var j = i; j < end; j++) {
-          if (ownerId != null) {
+        if (ownerId != null) {
+          for (var j = i; j < end; j++) {
             // NEW STRUCTURE: Use subcollection path
             batch.delete(
               _notificationsCollection(ownerId).doc(notificationIds[j]),
             );
-          } else {
-            // Fallback: Find via collection group
+          }
+        } else {
+          // Fallback: Find via collection group
+          // Use whereIn which supports up to 30 items per query
+          final batchIds = notificationIds.sublist(i, end);
+          for (var k = 0; k < batchIds.length; k += 30) {
+            final chunkEnd = (k + 30 < batchIds.length) ? k + 30 : batchIds.length;
+            final chunkIds = batchIds.sublist(k, chunkEnd);
+
             final query = await _firestore
                 .collectionGroup('notifications')
-                .where(FieldPath.documentId, isEqualTo: notificationIds[j])
-                .limit(1)
+                .where(FieldPath.documentId, whereIn: chunkIds)
                 .get();
 
-            if (query.docs.isNotEmpty) {
-              batch.delete(query.docs.first.reference);
+            for (final doc in query.docs) {
+              batch.delete(doc.reference);
             }
           }
         }

@@ -286,7 +286,7 @@ class EmailNotificationService {
     final dateFormat = DateFormat('dd.MM.yyyy');
     final checkInDate = dateFormat.format(booking.checkIn);
     final checkOutDate = dateFormat.format(booking.checkOut);
-    final nights = booking.checkOut.difference(booking.checkIn).inDays;
+    final nights = booking.numberOfNights;
 
     return '''
 <!DOCTYPE html>
@@ -521,7 +521,7 @@ class EmailNotificationService {
     final dateFormat = DateFormat('dd.MM.yyyy');
     final checkInDate = dateFormat.format(booking.checkIn);
     final checkOutDate = dateFormat.format(booking.checkOut);
-    final nights = booking.checkOut.difference(booking.checkIn).inDays;
+    final nights = booking.numberOfNights;
     final now = DateFormat('dd.MM.yyyy HH:mm').format(DateTime.now());
 
     final paymentMethodLabel = paymentMethod == 'bank_transfer'
@@ -702,7 +702,7 @@ class EmailNotificationService {
     final dateFormat = DateFormat('dd.MM.yyyy');
     final checkInDate = dateFormat.format(booking.checkIn);
     final checkOutDate = dateFormat.format(booking.checkOut);
-    final nights = booking.checkOut.difference(booking.checkIn).inDays;
+    final nights = booking.numberOfNights;
     final now = DateFormat('dd.MM.yyyy HH:mm').format(DateTime.now());
 
     return '''

@@ -3,7 +3,8 @@ import {db} from "./firebase";
 import {logInfo, logError, logWarn} from "./logger";
 import {verifyAccessToken} from "./bookingAccessToken";
 import {setUser} from "./sentry";
-import {safeToDate} from "./utils/dateValidation";
+import {safeToDate, calculateBookingNights} from "./utils/dateValidation";
+import {admin} from "./firebase";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
 
@@ -160,11 +161,13 @@ export const verifyBookingAccess = onCall(async (request) => {
       }
     }
 
-    // Calculate nights
+    // Calculate nights — SF-026: use canonical helper so result matches
+    // the count derived on every other surface (Dart client + email + iCal).
     const checkIn = safeToDate(booking.check_in, "check_in");
     const checkOut = safeToDate(booking.check_out, "check_out");
-    const nights = Math.ceil(
-      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+    const nights = calculateBookingNights(
+      admin.firestore.Timestamp.fromDate(checkIn),
+      admin.firestore.Timestamp.fromDate(checkOut)
     );
 
     // Return sanitized booking details

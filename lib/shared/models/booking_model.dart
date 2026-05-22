@@ -133,7 +133,14 @@ class BookingModel with _$BookingModel {
   factory BookingModel.fromJson(Map<String, dynamic> json) =>
       _$BookingModelFromJson(json);
 
-  /// Calculate number of nights
+  /// Calculate number of nights.
+  ///
+  /// SF-026: server normalizes `check_in` / `check_out` Timestamps to UTC
+  /// midnight of the Zagreb civil day at write time, so `.difference().inDays`
+  /// (floor) and `Math.ceil((co - ci) / 86_400_000)` (server TS) yield the
+  /// same integer N. Pre-fix bookings may still have non-midnight Timestamps;
+  /// running the SF-026 backfill migration aligns them. Until then this
+  /// getter is best-effort consistent with the server count.
   int get numberOfNights {
     return checkOut.difference(checkIn).inDays;
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../presentation/widgets/country_code_dropdown.dart';
 import '../presentation/providers/booking_price_provider.dart';
+import '../utils/date_normalizer.dart';
 
 /// Centralized state management for the booking widget form.
 ///
@@ -186,11 +187,13 @@ class BookingFormState {
   /// Calculate number of nights from selected dates
   ///
   /// Returns 0 if dates are not selected.
+  /// SF-026: DateNormalizer.nightsBetween normalizes to UTC midnight before
+  /// diff so DST boundaries don't off-by-one.
   int get nights {
     final checkInDate = checkIn;
     final checkOutDate = checkOut;
     if (checkInDate == null || checkOutDate == null) return 0;
-    return checkOutDate.difference(checkInDate).inDays;
+    return DateNormalizer.nightsBetween(checkInDate, checkOutDate);
   }
 
   /// Check if dates are selected

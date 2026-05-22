@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import '../../shared/models/user_model.dart';
 import 'logging_service.dart';
 
@@ -185,14 +184,6 @@ class SecurityEventsService {
             'previousLocations': previousLocations.toList(),
           },
         );
-
-        // Send email notification (Phase 3 security feature)
-        await _sendSuspiciousActivityEmail(
-          userId,
-          deviceId,
-          location,
-          isNewDevice ? 'new_device' : 'new_location',
-        );
       }
     } catch (e) {
       unawaited(
@@ -321,57 +312,6 @@ class SecurityEventsService {
     } catch (e) {
       unawaited(LoggingService.logError('Failed to get devices', e));
       return [];
-    }
-  }
-
-  /// Send suspicious activity email notification (Phase 3 security feature)
-  Future<void> _sendSuspiciousActivityEmail(
-    String userId,
-    String? deviceId,
-    String? location,
-    String reason,
-  ) async {
-    try {
-      // Get user document to retrieve email and name
-      final userDoc = await _firestore.collection('users').doc(userId).get();
-
-      if (!userDoc.exists) {
-        LoggingService.logWarning(
-          'User not found for suspicious activity email: $userId',
-        );
-        return;
-      }
-
-      final userData = userDoc.data() as Map<String, dynamic>;
-      final userEmail = userData['email'] as String?;
-      final userName = userData['name'] as String? ?? 'User';
-
-      if (userEmail == null || userEmail.isEmpty) {
-        LoggingService.logWarning('No email found for user: $userId');
-        return;
-      }
-
-      // Call Cloud Function to send email
-      final functions = FirebaseFunctions.instance;
-      final callable = functions.httpsCallable('sendSuspiciousActivityAlert');
-
-      await callable.call({
-        'userEmail': userEmail,
-        'userName': userName,
-        'deviceId': deviceId,
-        'location': location,
-        'reason': reason,
-      });
-
-      LoggingService.log(
-        'Suspicious activity email sent to $userEmail',
-        tag: 'SECURITY',
-      );
-    } catch (e) {
-      // Don't throw - email failure should not break security logging
-      unawaited(
-        LoggingService.logError('Failed to send suspicious activity email', e),
-      );
     }
   }
 }

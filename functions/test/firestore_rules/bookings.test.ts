@@ -158,4 +158,39 @@ describe("bookings rule (T11-hotfix-partial)", () => {
     const ctx = testEnv.authenticatedContext(FOREIGN_UID);
     await assertFails(ctx.firestore().doc(BOOKING_PATH).get());
   });
+
+  // ---- audit/16-cf-smoke-and-rules: extended clause-1 shape coverage ----
+
+  test("clause 1 — unit_id + status BOTH present → unauth ALLOWED (T11c-pending widget path)", async () => {
+    // Mirrors existing 'widget calendar' positive case but explicitly named for
+    // audit/16 to make the clause-1 surface area auditable.
+    const ctx = testEnv.unauthenticatedContext();
+    await assertSucceeds(ctx.firestore().doc(BOOKING_PATH).get());
+  });
+
+  test("clause 1 — only unit_id present (status missing) → unauth DENIED", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx: RulesTestContext) => {
+      await ctx.firestore().doc(BOOKING_PATH).set({
+        owner_id: OWNER_UID,
+        property_id: PROPERTY_ID,
+        unit_id: UNIT_ID,
+        // status intentionally omitted
+      });
+    });
+    const ctx = testEnv.unauthenticatedContext();
+    await assertFails(ctx.firestore().doc(BOOKING_PATH).get());
+  });
+
+  test("clause 1 — only status present (unit_id missing) → unauth DENIED", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx: RulesTestContext) => {
+      await ctx.firestore().doc(BOOKING_PATH).set({
+        owner_id: OWNER_UID,
+        property_id: PROPERTY_ID,
+        status: "confirmed",
+        // unit_id intentionally omitted
+      });
+    });
+    const ctx = testEnv.unauthenticatedContext();
+    await assertFails(ctx.firestore().doc(BOOKING_PATH).get());
+  });
 });

@@ -2,7 +2,22 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-21 | **Version**: 6.72
+**Last Updated**: 2026-05-22 | **Version**: 6.73
+
+---
+
+**Changelog 6.73**: CF error-class hygiene + dead callsite removal + audit/16 (2026-05-22):
+
+- **6 catch-promote-internal sites fixed** (`functions/src/emailVerification.ts:464`, `stripeSubscription.ts:148`, `icalSync.ts:273`, `stripeConnect.ts:95, 179, 235`): added `if (error instanceof HttpsError) throw error;` guard at the top of each catch block. Prevents the handler's own client-fault HttpsErrors (`invalid-argument`, `not-found`, `failed-precondition`) from being unconditionally rewrapped as `internal`. Primary site `checkEmailVerificationStatus` previously returned HTTP 500 + `INTERNAL` for missing-email input; post-deploy returns HTTP 400 + `INVALID_ARGUMENT`. Five sibling sites in stripeSubscription/icalSync/stripeConnect had the same shape, all fixed. Secondary effect: Sentry noise drop, since `beforeSend` (v6.71) only filters client-fault HttpsErrors, not the over-promoted `internal` ones.
+- **Dead Flutter callsite removed** (`lib/core/services/security_events_service.dart`): `_sendSuspiciousActivityEmail` method + `cloud_functions` import deleted. The backing CF `securityEmail.ts` was removed in commit `4cb5a391`; every new-device or new-location login was triggering `functions/not-found` in the Flutter client. Suspicious-login detection still writes to `security_events` Firestore collection unchanged — the audit trail is preserved.
+- **3 new rules tests** (`functions/test/firestore_rules/bookings.test.ts`): clause-1 (`unit_id + status`) shape boundary — positive (both fields → unauth ALLOWED, T11c-pending widget path), `unit_id` alone (unauth DENIED), `status` alone (unauth DENIED). `npm run test:rules` 11/11 green.
+- **Audit added**: `audit/16-cf-smoke-and-rules.md` — full 38-CF HTTP smoke matrix (callable + request endpoints, region-aware URLs, body-inspection verdict), rules-suite extension, perf baseline for 10 hot CFs. Live deployed-rules diff blocked on IAM (no `serviceUsageConsumer` on `bookbed-dev`); flagged as P3 followup.
+- **Anti-pattern sweep**: 16 candidate `HttpsError("internal", …)` sites triaged across 12 files; 10 already had the guard or were no-anti-pattern (bare throws, no inner HttpsError in try). 6 TRUE POSITIVES fixed (above).
+- **Co-existing in-flight (not part of this changelog)**: `functions/src/logger.ts` has uncommitted local modifications adding a centralized `CLIENT_FAULT_HTTPS_CODES` allowlist + `logError` downgrade to `WARN` for client-fault HttpsErrors. Complementary defense-in-depth at the logging layer; not authored by 6.73, untouched.
+- **Verification**: `cd functions && npm run build` clean; `cd functions && npm run test:rules` 11/11; `flutter analyze` 0 new issues (1 pre-existing `marionette_flutter` dev import).
+- **TODO.md**: P0.3 (dead callsite) marked done. P0.1 + P0.2 (prod deploys of `getBookingByStripeSession` + `sendOwnerEmail`) still pending — require explicit deploy authorization.
+- **Security log**: `docs/SECURITY_FIXES.md` — added SF-022 entry covering both the catch-promote fix and dead callsite removal.
+- **NOT shipped**: code on `main` working tree, NO commit, NO deploy. Awaiting user review.
 
 ---
 

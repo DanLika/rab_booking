@@ -92,6 +92,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
       onboardingUrl: accountLink.url,
     };
   } catch (error: any) {
+    if (error instanceof HttpsError) throw error;
     logError("Error creating Stripe Connect account", error);
     throw new HttpsError(
       "internal",
@@ -176,6 +177,7 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
       },
     };
   } catch (error: any) {
+    if (error instanceof HttpsError) throw error;
     logError("Error getting Stripe account status", error);
     throw new HttpsError(
       "internal",
@@ -232,6 +234,7 @@ export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey]}, asyn
       message: "Stripe integracija uklonjena. Vaš Stripe račun ostaje aktivan.",
     };
   } catch (error: any) {
+    if (error instanceof HttpsError) throw error;
     logError("Error disconnecting Stripe account", error);
     throw new HttpsError(
       "internal",

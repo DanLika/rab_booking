@@ -143,6 +143,7 @@ export const createCustomerPortalSession = onCall({secrets: [stripeSecretKey]}, 
 
     return {url: session.url};
   } catch (error: any) {
+    if (error instanceof HttpsError) throw error;
     logError("Error creating portal session", error);
     throw new HttpsError("internal", "Failed to create portal session.");
   }

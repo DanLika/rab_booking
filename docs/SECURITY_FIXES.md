@@ -1550,6 +1550,104 @@ Harden `sendOwnerEmail` (Zod, guest-vs-owner caller checks, per-owner rate limit
 
 ---
 
+## SF-022: CF Error-Class Hygiene — Catch-Promote-Internal + Dead Callsite (P2)
+
+**Datum**: 2026-05-22
+**Prioritet**: 🟡 Medium (reliability + Sentry/metrics pollution, no auth bypass, no data exposure)
+**Status**: ✅ Riješeno — code on `main`, not deployed
+**Otkrio**: `audit/16-cf-smoke-and-rules.md` (CF smoke + rules security regression)
+**Zahvaćeni fajlovi**:
+- `functions/src/emailVerification.ts` (catch guard at line 464)
+- `functions/src/stripeSubscription.ts` (catch guard at line 148)
+- `functions/src/icalSync.ts` (catch guard at line 273)
+- `functions/src/stripeConnect.ts` (catch guards at lines 95, 179, 235 — 3 callables)
+- `lib/core/services/security_events_service.dart` (removed dead `_sendSuspiciousActivityEmail` method + `cloud_functions` import)
+- `functions/test/firestore_rules/bookings.test.ts` (3 new clause-1 shape coverage tests)
+- `docs/TODO.md` (marked TODO P0.3 done)
+
+### Problem
+
+Two related reliability issues surfaced during the audit/16 CF smoke loop.
+
+**(1) Catch-promote-internal anti-pattern** — 6 Cloud Function callables had outer `try/catch` blocks that unconditionally rewrapped every caught error as `HttpsError("internal", …)`. The handlers themselves correctly threw client-fault HttpsErrors (`invalid-argument`, `not-found`, `failed-precondition`) **inside** the `try`, but the catch caught them and promoted them to server faults. Direct consequences:
+
+- Caller sees HTTP 500 + `INTERNAL` for what is logically a 400/404/412 (per Firebase callable conventions, the HTTP code follows `HttpsError.httpErrorCode`).
+- CF metrics dashboards (`firebase functions:log`, Cloud Logging) count every malformed call as a server error.
+- **Sentry pollution**: per `.claude/rules/cloud-functions.md`, `sentry.ts` `beforeSend` filter (since v6.71) drops client-fault HttpsError codes but **forwards** `internal` — so each malformed call hits Sentry as a genuine error event.
+
+Smoke probe of the primary site:
+```
+POST /checkEmailVerificationStatus -d '{"data":{}}'
+→ HTTP 500
+→ {"error":{"message":"Failed to check verification status: Email is required","status":"INTERNAL"}}
+```
+
+The intended `HttpsError("invalid-argument", "Email is required")` thrown at line 416 of `emailVerification.ts` was being caught by the bare `catch (error: any)` at line 463 and rewrapped.
+
+**(2) Dead Cloud Function callsite** — `security_events_service.dart:356` called `httpsCallable('sendSuspiciousActivityAlert')`, but the backing CF (`functions/src/securityEmail.ts`) was deleted in commit `4cb5a391`. Every suspicious-login detection (new device or new location) triggered an unhandled `functions/not-found` error path inside the Flutter client, polluting client error telemetry. Caught upstream so users never saw a crash, but the noise hid real signal. Already flagged in `audit/11-cloudfunctions-inventory.md` §5 and `docs/TODO.md` P0.3.
+
+### Rješenje
+
+**(1) Catch guard.** Identical 1-line guard added at the top of each affected catch block:
+
+```typescript
+} catch (error: any) {
+  if (error instanceof HttpsError) throw error;  // ← added
+  logError(...);
+  throw new HttpsError("internal", ...);
+}
+```
+
+Sweep methodology: `grep -rn 'HttpsError("internal"' functions/src/` + multi-line variants. 16 candidate sites in 12 files. Per-site triage (HttpsError thrown **inside** same try-block → catch promotes to internal = TRUE POSITIVE):
+
+| File:Line | Verdict | Action |
+|---|---|---|
+| `emailVerification.ts:466` | TRUE POS | **fixed** |
+| `stripeSubscription.ts:147` | TRUE POS (failed-precondition at line 134) | **fixed** |
+| `icalSync.ts:275` | TRUE POS (not-found at line 241) | **fixed** |
+| `stripeConnect.ts:96` | TRUE POS (not-found at line 45) | **fixed** |
+| `stripeConnect.ts:180` | TRUE POS (not-found at line 123) | **fixed** |
+| `stripeConnect.ts:236` | TRUE POS (not-found+failed-precondition lines 207/213) | **fixed** |
+| 10 other sites | FALSE POS | already guarded or no inner HttpsError in try-body |
+
+**(2) Dead callsite removal.** Decision: don't restore `securityEmail.ts` — the audit trail in the `security_events` Firestore collection (written via `logEvent()` immediately before the dead-CF call) is sufficient for security investigation. The user-facing email notification was a Phase-3 enhancement that was never finished. Removed:
+
+- The `_sendSuspiciousActivityEmail(userId, deviceId, location, reason)` call at line 190.
+- The entire `_sendSuspiciousActivityEmail` private method body (lines 327-376).
+- The now-orphaned `import 'package:cloud_functions/cloud_functions.dart'`.
+
+Suspicious-login detection still writes to `security_events` collection on every new-device or new-location event — `logEvent(type: SecurityEventType.suspicious, …)` is unchanged.
+
+**(3) Rules suite extension.** Added 3 new test cases at `functions/test/firestore_rules/bookings.test.ts` covering the clause-1 (`unit_id + status`) shape boundary — confirms unauth read is allowed only when **both** fields are present on the doc (T11c-pending widget calendar path). Locks the partial-field surface that the existing 8 tests didn't isolate.
+
+### Testiranje
+
+- `cd functions && npm run build` — 0 errors (tsc).
+- `cd functions && npm run test:rules` — 11/11 green (8 pre-existing + 3 new clause-1 cases).
+- `flutter analyze lib/core/services/security_events_service.dart` — 0 issues.
+- `flutter analyze` (full) — 1 pre-existing issue (`marionette_flutter` dev-only import in `main_dev.dart`); 0 new issues from this fix.
+- Live smoke re-test of `checkEmailVerificationStatus` requires deploy; not done in this fix. Expected post-deploy behavior:
+  ```
+  POST /checkEmailVerificationStatus -d '{"data":{}}'
+  → HTTP 400
+  → {"error":{"message":"Email is required","status":"INVALID_ARGUMENT"}}
+  ```
+
+### Moguće nuspojave
+
+- **No behavior change for happy-path callers.** Affected CFs already returned the same response on success; only error paths change error class.
+- **CF metrics will look different post-deploy.** A previously-noisy "500 INTERNAL" rate on these 6 functions should drop to near-zero; the 400/404/412 rate rises by the same amount. Anyone monitoring CF dashboards should re-baseline.
+- **Sentry error volume drops.** Per the `beforeSend` filter, client-fault HttpsErrors are now correctly dropped at ingest. Pre-fix, every malformed call to the 6 affected CFs was generating a Sentry event. Expect noticeable noise reduction.
+- **No Phase-3 suspicious-login email** for users. If product wants this back, restore `functions/src/securityEmail.ts` from commit `4cb5a391^` (parent of the deletion commit) and re-add the Flutter call.
+
+### Povezani audits / followups
+
+- **Primary source**: `audit/16-cf-smoke-and-rules.md` (this session, 2026-05-22).
+- **Co-existing in-flight (not part of SF-022)**: an uncommitted local modification at `functions/src/logger.ts` adds a centralized `CLIENT_FAULT_HTTPS_CODES` allowlist that downgrades client-fault HttpsErrors to `WARN` in Cloud Logging — defense-in-depth at the logging layer. Not authored by this fix, left untouched, flagged in `audit/16` §"Co-existing in-flight fix". On the 6 sites SF-022 fixed, the guard short-circuits `logError` so the logger.ts WIP is redundant for those paths; it remains useful for sites where the guard isn't present.
+- **Out of scope** (audit/16 P3, still pending): drift-detection CI for deployed firestore rules vs repo; `createBookingAtomic` p95 cold-init monitoring; native SDK error-shape wrapping (Firestore/Stripe errors with string `code` fields being wrapped as `internal` is a separate concern from this HttpsError-promotion bug).
+
+---
+
 ## Template za buduće ispravke
 
 ```markdown

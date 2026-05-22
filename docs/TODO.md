@@ -13,7 +13,7 @@ Extracted from CLAUDE.md — inactive planning items.
 
 1. **Deploy `getBookingByStripeSession` to prod** (`rab-booking-248fc`). Source on `main` + dev; widget booking-confirmation Flutter path calls it on prod and currently 404s. _(Same item as Wave 0 cutover §1 below — kept in both places intentionally.)_
 2. **Deploy `sendOwnerEmail` to prod**. Recent hotfix on `hotfix/widget-secrets-exfil` (commit `49af1625`) is dev-only; production owners do not currently receive widget inquiry emails.
-3. **Fix dead Flutter callsite `sendSuspiciousActivityAlert`** (`lib/core/services/security_events_service.dart:356`). Backend `securityEmail.ts` deleted in commit `4cb5a391`; every suspicious-login attempt logs an unhandled cloud-functions error. Either restore the backend or remove the caller.
+3. ~~**Fix dead Flutter callsite `sendSuspiciousActivityAlert`** (`lib/core/services/security_events_service.dart:356`). Backend `securityEmail.ts` deleted in commit `4cb5a391`; every suspicious-login attempt logs an unhandled cloud-functions error. Either restore the backend or remove the caller.~~ **DONE 2026-05-22** — caller removed (decision: don't restore the backend, the `security_events` Firestore log is sufficient for the audit trail). `_sendSuspiciousActivityEmail` method + `cloud_functions` import deleted from `security_events_service.dart`. Suspicious-login detection still writes to the `security_events` collection unchanged. `flutter analyze` clean for this file.
 
 ### P1 — source-state cleanup
 

@@ -461,6 +461,7 @@ export const checkEmailVerificationStatus = onCall(
         sessionId: data.sessionId || null, // Include for session tracking
       };
     } catch (error: any) {
+      if (error instanceof HttpsError) throw error;
       logError("Error checking verification status", error);
       throw new HttpsError(
         "internal",

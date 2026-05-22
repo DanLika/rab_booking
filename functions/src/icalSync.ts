@@ -270,6 +270,7 @@ export const syncIcalFeedNow = onCall(async (request) => {
       bookingsCreated: bookingsCreated,
     };
   } catch (error) {
+    if (error instanceof HttpsError) throw error;
     logError("[iCal Sync] Error in manual sync", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     throw new HttpsError("internal", "Sync failed: " + errorMessage);

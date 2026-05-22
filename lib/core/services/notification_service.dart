@@ -139,16 +139,21 @@ class NotificationService {
           });
         }
       } else {
-        // Fallback: Find each notification via collection group
-        for (final id in notificationIds) {
+        // Fallback: Find each notification via collection group using whereIn
+        // Firestore whereIn supports up to 30 items
+        for (var i = 0; i < notificationIds.length; i += 30) {
+          final end = (i + 30 < notificationIds.length)
+              ? i + 30
+              : notificationIds.length;
+          final chunk = notificationIds.sublist(i, end);
+
           final query = await _firestore
               .collectionGroup('notifications')
-              .where(FieldPath.documentId, isEqualTo: id)
-              .limit(1)
+              .where(FieldPath.documentId, whereIn: chunk)
               .get();
 
-          if (query.docs.isNotEmpty) {
-            batch.update(query.docs.first.reference, {'isRead': true});
+          for (final doc in query.docs) {
+            batch.update(doc.reference, {'isRead': true});
           }
         }
       }

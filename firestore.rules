@@ -152,19 +152,22 @@ service cloud.firestore {
         allow create, update, delete: if isPropertyOwner(propertyId);
 
         // Bookings subcollection
-        // SECURITY FIX: Same rules as collection group (see below for full documentation)
-        // - Owner: Read their own bookings (by owner_id)
-        // - Widget: Read availability (by unit_id + status)  — INTENTIONAL until T11c
-        // - Stripe poll + Guest view: now routed through verifyBookingAccess CF (T11-hotfix-partial)
+        // SECURITY: T11c CLOSED (2026-05-22) — clause 1 (`unit_id`+`status`)
+        // removed alongside the widget migration to the `getUnitAvailability`
+        // callable. Anonymous reads of booking docs are now fully denied.
+        //
+        // ALLOWED READERS:
+        // - Property owner via `isPropertyOwner(propertyId)` (dashboard)
+        // - Doc-owner via `owner_id == auth.uid` (legacy check, defense-in-depth)
+        // - Admin via collection-group rule (see below)
+        // - Stripe poll + Guest view: routed through verifyBookingAccess /
+        //   getBookingByStripeSession callables (T11-hotfix-partial, T11c).
         match /bookings/{bookingId} {
           allow read: if
             // Property owner can read ALL bookings in their property's units
             isPropertyOwner(propertyId) ||
             // Owner can read their own bookings (legacy check)
-            (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
-            // INTENTIONAL: unit_id+status clause kept here until T11c (after getUnitAvailability CF rollout).
-            // See audit/06-availability-cf-design.md for migration timeline.
-            ('unit_id' in resource.data && 'status' in resource.data);
+            (isAuthenticated() && resource.data.owner_id == request.auth.uid);
           // SECURITY: Write access requires property ownership AND owner_id integrity
           // This ensures an owner cannot create a booking with a fake owner_id
           allow create: if isPropertyOwner(propertyId) && request.resource.data.owner_id == request.auth.uid;
@@ -239,23 +242,24 @@ service cloud.firestore {
     }
 
     // Collection group: bookings
-    // Used by: Owner dashboard, Guest bookings, Widget calendar, Stripe polling
+    // Used by: Owner dashboard, Admin dashboard, Guest bookings (via CF),
+    // Widget calendar (via CF), Stripe polling (via CF).
     //
-    // SECURITY: Multi-layered access control
-    // Primary defense: owner_id check ensures users can only read their own bookings
-    // Secondary: Specific query patterns for public/guest access (widget, stripe, booking view)
+    // SECURITY: T11c CLOSED (2026-05-22) — clause 1 (`unit_id`+`status`)
+    // removed alongside widget migration to `getUnitAvailability` callable.
+    // Anonymous CG reads are now fully denied. Owner-side analytics queries
+    // (which already filter by unit_id+status but run authenticated) still
+    // succeed because each matched doc satisfies the `owner_id == auth.uid`
+    // clause: an owner's units only contain bookings owned by that owner.
     //
     // ALLOWED ACCESS:
-    // 1. Owner: Read their own bookings (by owner_id == auth.uid)
+    // 1. Admin: Full access for admin dashboard
+    // 2. Owner: Read their own bookings (by owner_id == auth.uid)
     //    - Works with ANY query pattern (unit_id filters, date ranges, etc.)
     //    - Realtime subscriptions, analytics, dashboard - all allowed
-    // 2. Widget: Read availability ONLY (by unit_id + status) - public calendar
-    // 3. Stripe: Poll payment status (by stripe_session_id)
-    // 4. Guest: View own booking (by booking_reference)
-    //
-    // SECURITY NOTE: The owner_id check is the PRIMARY security boundary.
-    // Even if attacker knows competitor's unit_ids and queries by them,
-    // the rule will only return documents where owner_id == attacker's uid (none).
+    // 3. Stripe poll: getBookingByStripeSession callable (T11-hotfix-partial)
+    // 4. Guest view: verifyBookingAccess callable (T11-hotfix-partial)
+    // 5. Widget calendar: getUnitAvailability callable (T11c, 2026-05-22)
     match /{path=**}/bookings/{bookingId} {
       allow read: if
         // ADMIN: Full access for admin dashboard
@@ -263,13 +267,9 @@ service cloud.firestore {
         // PRIMARY SECURITY: Owner can read ONLY their own bookings
         // This works for ALL query patterns: realtime subscriptions, analytics, etc.
         // Even if query filters by unit_id/check_in, only owner's bookings are returned
-        (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
-        // INTENTIONAL: unit_id+status clause kept here until T11c (after getUnitAvailability CF rollout).
-        // See audit/06-availability-cf-design.md for migration timeline.
-        // Requires collection group index: unit_id ASC, status ASC
-        ('unit_id' in resource.data && 'status' in resource.data);
+        (isAuthenticated() && resource.data.owner_id == request.auth.uid);
       // T11-hotfix-partial (2026-05-18): stripe_session_id + booking_reference public-read clauses removed.
-      // Stripe polling + guest view now routed through verifyBookingAccess callable.
+      // T11c (2026-05-22): unit_id + status public-read clause removed.
       // Writes go through specific subcollection path above
     }
 
@@ -319,11 +319,9 @@ service cloud.firestore {
     // Same security rules as subcollection for consistency
     match /bookings/{bookingId} {
       allow read: if
-        (isAuthenticated() && resource.data.owner_id == request.auth.uid) ||
-        // INTENTIONAL: unit_id+status clause kept here until T11c (after getUnitAvailability CF rollout).
-        // See audit/06-availability-cf-design.md for migration timeline.
-        ('unit_id' in resource.data && 'status' in resource.data);
+        (isAuthenticated() && resource.data.owner_id == request.auth.uid);
       // T11-hotfix-partial (2026-05-18): stripe_session_id + booking_reference public-read clauses removed.
+      // T11c (2026-05-22): unit_id + status public-read clause removed.
       allow create: if canCreateAsOwner();
       allow update, delete: if isResourceOwner();
     }

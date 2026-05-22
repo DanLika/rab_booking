@@ -1,11 +1,17 @@
 /**
- * Firestore Rules Tests — Bookings (T11-hotfix-partial)
+ * Firestore Rules Tests — Bookings (T11c CLOSED, 2026-05-22)
  *
- * Verifies the booking-read security boundary after the public-read clauses on
- * `stripe_session_id` and `booking_reference` were removed from
- * `firestore.rules`. Clause 1 (unit_id + status) is INTENTIONALLY kept and is
- * still expected to allow the widget calendar availability queries until the
- * T11c availability CF rollout (see audit/06-availability-cf-design.md).
+ * Verifies the booking-read security boundary after T11c — the
+ * unit_id+status public-read clause is now REMOVED. Widget calendar reads
+ * route through the `getUnitAvailability` Cloud Function instead. Anonymous
+ * direct reads of booking docs must now FAIL regardless of which "lookup"
+ * field the caller supplies.
+ *
+ * History:
+ *   - T11-hotfix-partial (2026-05-18, commit 9f3d86b4):
+ *       stripe_session_id + booking_reference public clauses removed.
+ *   - T11c (2026-05-22, this file):
+ *       unit_id + status public clause removed → last anonymous surface closed.
  */
 
 import * as fs from "fs";
@@ -82,7 +88,7 @@ beforeEach(async () => {
   });
 });
 
-describe("bookings rule (T11-hotfix-partial)", () => {
+describe("bookings rule (T11c closed)", () => {
   test("unauthenticated reader is DENIED on subcollection booking when clause 1 missing", async () => {
     // Remove the unit_id+status clause-1 enabling fields to isolate this case.
     await testEnv.withSecurityRulesDisabled(async (ctx: RulesTestContext) => {
@@ -124,13 +130,12 @@ describe("bookings rule (T11-hotfix-partial)", () => {
     await assertSucceeds(ctx.firestore().doc(BOOKING_PATH).get());
   });
 
-  test("widget calendar (unit_id + status) clause STILL ALLOWS reads — kept until T11c", async () => {
-    // INTENTIONAL: Until T11c (getUnitAvailability CF rollout) the widget needs
-    // to read booking documents to render the calendar overlay. This test is
-    // the regression guard that ensures the migration sequencing isn't broken
-    // by an accidental rule tightening.
+  test("widget calendar (unit_id + status) clause DENIED — T11c closed", async () => {
+    // T11c (2026-05-22): the unit_id+status public-read clause was removed
+    // after the widget migrated to the `getUnitAvailability` callable. This
+    // is the regression guard that the clause does not silently come back.
     const ctx = testEnv.unauthenticatedContext();
-    await assertSucceeds(ctx.firestore().doc(BOOKING_PATH).get());
+    await assertFails(ctx.firestore().doc(BOOKING_PATH).get());
   });
 
   test("authenticated stranger reading by stripe_session_id alone is DENIED (clause removed)", async () => {
@@ -161,11 +166,12 @@ describe("bookings rule (T11-hotfix-partial)", () => {
 
   // ---- audit/16-cf-smoke-and-rules: extended clause-1 shape coverage ----
 
-  test("clause 1 — unit_id + status BOTH present → unauth ALLOWED (T11c-pending widget path)", async () => {
-    // Mirrors existing 'widget calendar' positive case but explicitly named for
-    // audit/16 to make the clause-1 surface area auditable.
+  test("clause 1 — unit_id + status BOTH present → unauth DENIED (T11c closed)", async () => {
+    // T11c (2026-05-22): clause 1 removed. Even when both unit_id + status
+    // are present, anonymous callers MUST be denied. The widget reads
+    // availability via the getUnitAvailability callable now, not direct CG.
     const ctx = testEnv.unauthenticatedContext();
-    await assertSucceeds(ctx.firestore().doc(BOOKING_PATH).get());
+    await assertFails(ctx.firestore().doc(BOOKING_PATH).get());
   });
 
   test("clause 1 — only unit_id present (status missing) → unauth DENIED", async () => {

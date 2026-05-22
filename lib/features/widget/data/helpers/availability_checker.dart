@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/timestamp_converter.dart';
-import '../../../../shared/models/booking_model.dart';
 import '../../domain/constants/widget_constants.dart';
 import '../../domain/services/i_availability_checker.dart';
 import '../../domain/services/i_availability_repository.dart';
@@ -167,9 +166,9 @@ class AvailabilityChecker implements IAvailabilityChecker {
   final FirebaseFirestore _firestore;
   final IAvailabilityRepository _availabilityRepo;
 
-  // Collection names (bookings + daily_prices still read directly — only
-  // ical_events was locked down by SF-023 and routes through the CF).
-  static const _bookingsCollection = 'bookings';
+  // Collection names (daily_prices still read directly — bookings + ical
+  // now route through `getUnitAvailability` CF after SF-023 + T11c rule
+  // tightening; see `_fetchAvailabilityWindows`).
   static const _dailyPricesCollection = 'daily_prices';
 
   AvailabilityChecker(
@@ -192,18 +191,24 @@ class AvailabilityChecker implements IAvailabilityChecker {
     final normalizedCheckIn = DateNormalizer.normalize(checkIn);
     final normalizedCheckOut = DateNormalizer.normalize(checkOut);
 
-    // Check bookings first (most common conflict)
-    var result = await _checkBookings(
+    // T11c (2026-05-22): bookings + iCal now BOTH come from the same CF call.
+    // Single fetch dedups the network round-trip.
+    final cfWindows = await _fetchAvailabilityWindows(
+      propertyId: propertyId,
       unitId: unitId,
+      checkIn: normalizedCheckIn,
+      checkOut: normalizedCheckOut,
+    );
+
+    var result = _checkBookingsAgainstWindows(
+      windows: cfWindows,
       checkIn: normalizedCheckIn,
       checkOut: normalizedCheckOut,
     );
     if (!result.isAvailable) return result;
 
-    // Check iCal events (external calendar sync) — SF-023: routes through CF
-    result = await _checkIcalEvents(
-      propertyId: propertyId,
-      unitId: unitId,
+    result = _checkIcalAgainstWindows(
+      windows: cfWindows,
       checkIn: normalizedCheckIn,
       checkOut: normalizedCheckOut,
     );
@@ -245,97 +250,90 @@ class AvailabilityChecker implements IAvailabilityChecker {
     return result.isAvailable;
   }
 
-  /// Check for conflicts with regular bookings.
-  Future<AvailabilityCheckResult> _checkBookings({
-    required String unitId,
-    required DateTime checkIn,
-    required DateTime checkOut,
-  }) async {
-    try {
-      // Using client-side filtering to avoid Firestore composite index requirement
-      // NEW STRUCTURE: Use collection group query for subcollection
-      final snapshot = await _firestore
-          .collectionGroup(_bookingsCollection)
-          .where('unit_id', isEqualTo: unitId)
-          .where('status', whereIn: ActiveBookingStatuses.values)
-          .get()
-          .withBookingFetchTimeout('checkBookings');
-
-      for (final doc in snapshot.docs) {
-        try {
-          final booking = BookingModel.fromJson({...doc.data(), 'id': doc.id});
-
-          final bookingCheckIn = DateNormalizer.normalize(booking.checkIn);
-          final bookingCheckOut = DateNormalizer.normalize(booking.checkOut);
-
-          if (_hasDateOverlap(
-            start1: bookingCheckIn,
-            end1: bookingCheckOut,
-            start2: checkIn,
-            end2: checkOut,
-          )) {
-            return AvailabilityCheckResult.bookingConflict(booking.id);
-          }
-        } catch (e) {
-          unawaited(
-            LoggingService.logError('Error parsing booking document', e),
-          );
-        }
-      }
-
-      return const AvailabilityCheckResult.available();
-    } catch (e) {
-      unawaited(LoggingService.logError('Error fetching bookings', e));
-      return AvailabilityCheckResult.error(ConflictType.booking);
-    }
-  }
-
-  /// Check for conflicts with iCal events (Booking.com, Airbnb, etc.).
+  /// One-shot CF fetch covering bookings + iCal in a single round-trip.
   ///
-  /// SF-023: anonymous `collectionGroup('ical_events')` reads are denied at
-  /// the Firestore rule layer. The booking-submit gate routes through the
-  /// `getUnitAvailability` callable instead — the CF runs the equivalent
-  /// query server-side via Admin SDK and strips PII. The widget receives
-  /// only `start`/`end`/`platform` per ical block.
-  Future<AvailabilityCheckResult> _checkIcalEvents({
+  /// T11c (2026-05-22): the prior `collectionGroup('bookings').where('unit_id'
+  /// + status)` direct read was removed alongside firestore.rules clause 1.
+  /// All availability now flows through the `getUnitAvailability` callable
+  /// (`functions/src/availability.ts`). On CF failure we return an empty
+  /// window list and let the per-source helpers report an
+  /// `AvailabilityCheckResult.error(...)` to fail closed.
+  Future<List<AvailabilityWindow>> _fetchAvailabilityWindows({
     required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
   }) async {
     try {
-      final windows = await _availabilityRepo.fetchAvailability(
+      return await _availabilityRepo.fetchAvailability(
         propertyId: propertyId,
         unitId: unitId,
         start: checkIn,
         end: checkOut,
       );
-
-      for (final window in windows) {
-        if (window.source != AvailabilityWindowSource.icalExternal) continue;
-        final eventStart = DateNormalizer.normalize(window.start);
-        final eventEnd = DateNormalizer.normalize(window.end);
-        if (_hasDateOverlap(
-          start1: eventStart,
-          end1: eventEnd,
-          start2: checkIn,
-          end2: checkOut,
-        )) {
-          return AvailabilityCheckResult.icalConflict(
-            // No doc id is exposed by the CF (PII-stripped). Use a stable
-            // synthetic identifier derived from the window so the UI can
-            // distinguish multiple conflicts in logs.
-            '${eventStart.toIso8601String()}_${window.platform ?? "ical"}',
-            window.platform ?? 'iCal',
-          );
-        }
-      }
-
-      return const AvailabilityCheckResult.available();
     } catch (e) {
-      unawaited(LoggingService.logError('Error fetching iCal events', e));
-      return AvailabilityCheckResult.error(ConflictType.icalEvent);
+      unawaited(
+        LoggingService.logError('Error fetching availability windows', e),
+      );
+      return const <AvailabilityWindow>[];
     }
+  }
+
+  /// Detect overlap with `booking`-source windows from the CF.
+  ///
+  /// Booking windows arrive with PII stripped — the doc id is replaced by a
+  /// stable synthetic identifier derived from the start timestamp (mirrors
+  /// the iCal-conflict shape) so UI logs can still differentiate conflicts.
+  AvailabilityCheckResult _checkBookingsAgainstWindows({
+    required List<AvailabilityWindow> windows,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  }) {
+    for (final window in windows) {
+      if (window.source != AvailabilityWindowSource.booking) continue;
+      final bookingCheckIn = DateNormalizer.normalize(window.start);
+      final bookingCheckOut = DateNormalizer.normalize(window.end);
+      if (_hasDateOverlap(
+        start1: bookingCheckIn,
+        end1: bookingCheckOut,
+        start2: checkIn,
+        end2: checkOut,
+      )) {
+        return AvailabilityCheckResult.bookingConflict(
+          'cf-booking-${bookingCheckIn.toIso8601String()}',
+        );
+      }
+    }
+    return const AvailabilityCheckResult.available();
+  }
+
+  /// Detect overlap with `ical_external`-source windows from the CF.
+  ///
+  /// SF-023 (2026-05-22): anonymous `collectionGroup('ical_events')` reads
+  /// are denied at the rule layer. iCal blocks arrive PII-stripped via the
+  /// `getUnitAvailability` callable.
+  AvailabilityCheckResult _checkIcalAgainstWindows({
+    required List<AvailabilityWindow> windows,
+    required DateTime checkIn,
+    required DateTime checkOut,
+  }) {
+    for (final window in windows) {
+      if (window.source != AvailabilityWindowSource.icalExternal) continue;
+      final eventStart = DateNormalizer.normalize(window.start);
+      final eventEnd = DateNormalizer.normalize(window.end);
+      if (_hasDateOverlap(
+        start1: eventStart,
+        end1: eventEnd,
+        start2: checkIn,
+        end2: checkOut,
+      )) {
+        return AvailabilityCheckResult.icalConflict(
+          '${eventStart.toIso8601String()}_${window.platform ?? "ical"}',
+          window.platform ?? 'iCal',
+        );
+      }
+    }
+    return const AvailabilityCheckResult.available();
   }
 
   /// Check for conflicts with blocked dates (daily_prices with available: false).

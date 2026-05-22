@@ -27,6 +27,7 @@ void main() {
     group('checkAvailability', () {
       test('returns true when no bookings exist', () async {
         final isAvailable = await repository.checkAvailability(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 15),
           checkOut: DateTime(testYear, 1, 20),
@@ -49,6 +50,7 @@ void main() {
         });
 
         final isAvailable = await repository.checkAvailability(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 17),
           checkOut: DateTime(testYear, 1, 22),
@@ -72,6 +74,7 @@ void main() {
 
         // Check-in on Jan 15 (same day as previous check-out)
         final isAvailable = await repository.checkAvailability(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 15),
           checkOut: DateTime(testYear, 1, 20),
@@ -94,6 +97,7 @@ void main() {
         });
 
         final isAvailable = await repository.checkAvailability(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 17),
           checkOut: DateTime(testYear, 1, 22),
@@ -113,6 +117,7 @@ void main() {
         });
 
         final isAvailable = await repository.checkAvailability(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 17),
           checkOut: DateTime(testYear, 1, 22),
@@ -131,6 +136,7 @@ void main() {
         });
 
         final isAvailable = await repository.checkAvailability(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 15),
           checkOut: DateTime(testYear, 1, 20),
@@ -143,6 +149,7 @@ void main() {
     group('checkAvailabilityDetailed', () {
       test('returns available result when no conflicts', () async {
         final result = await repository.checkAvailabilityDetailed(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 15),
           checkOut: DateTime(testYear, 1, 20),
@@ -165,6 +172,7 @@ void main() {
         });
 
         final result = await repository.checkAvailabilityDetailed(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 17),
           checkOut: DateTime(testYear, 1, 22),
@@ -178,6 +186,7 @@ void main() {
     group('calculateBookingPrice', () {
       test('calculates price using base price when no daily prices', () async {
         final price = await repository.calculateBookingPrice(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 15),
           checkOut: DateTime(testYear, 1, 18),
@@ -190,6 +199,7 @@ void main() {
 
       test('applies weekend price for weekend nights', () async {
         final price = await repository.calculateBookingPrice(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 15), // Friday (Jan 15, 2027)
           checkOut: DateTime(testYear, 1, 18), // Monday (Jan 18, 2027)
@@ -209,6 +219,7 @@ void main() {
     group('calculateBookingPriceDetailed', () {
       test('returns detailed breakdown', () async {
         final result = await repository.calculateBookingPriceDetailed(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(testYear, 1, 15),
           checkOut: DateTime(testYear, 1, 18),

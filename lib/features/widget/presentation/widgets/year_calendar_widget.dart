@@ -866,6 +866,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
       // Check availability using backend
       final isAvailable = await ref.read(
         checkDateAvailabilityProvider(
+          propertyId: widget.propertyId,
           unitId: widget.unitId,
           checkIn: start,
           checkOut: end,

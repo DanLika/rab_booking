@@ -74,7 +74,11 @@ abstract class IBookingCalendarRepository {
   ///
   /// Returns true if all dates in the range are available,
   /// false if any date is blocked or already booked.
+  ///
+  /// [propertyId] is required so the iCal-check leg can call the
+  /// `getUnitAvailability` CF (SF-023 lockdown).
   Future<bool> checkAvailability({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
@@ -87,8 +91,12 @@ abstract class IBookingCalendarRepository {
   /// 2. Weekend base price - for days in [weekendDays]
   /// 3. Base price - fallback for all other days
   ///
+  /// [propertyId] is required so the embedded availability check can call
+  /// the `getUnitAvailability` CF.
+  ///
   /// Throws [DatesNotAvailableException] if dates are not available.
   Future<double> calculateBookingPrice({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,

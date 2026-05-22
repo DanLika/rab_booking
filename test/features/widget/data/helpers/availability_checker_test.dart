@@ -130,6 +130,7 @@ void main() {
     group('check - no conflicts', () {
       test('returns available when no bookings exist', () async {
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -155,6 +156,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -179,6 +181,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 10),
           checkOut: DateTime(2024, 1, 15),
@@ -203,6 +206,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 20),
           checkOut: DateTime(2024, 1, 25),
@@ -231,6 +235,7 @@ void main() {
 
         // New booking: Jan 15-20 (checkIn = existing checkOut)
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -257,6 +262,7 @@ void main() {
 
         // New booking: Jan 10-15 (checkOut = existing checkIn)
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 10),
           checkOut: DateTime(2024, 1, 15),
@@ -284,6 +290,7 @@ void main() {
 
         // New booking within existing booking dates
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 12),
           checkOut: DateTime(2024, 1, 18),
@@ -310,6 +317,7 @@ void main() {
 
         // New booking overlaps at start
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 10),
           checkOut: DateTime(2024, 1, 17),
@@ -336,6 +344,7 @@ void main() {
 
         // New booking overlaps at end
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 13),
           checkOut: DateTime(2024, 1, 20),
@@ -362,6 +371,7 @@ void main() {
 
         // New booking encompasses existing booking
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 10),
           checkOut: DateTime(2024, 1, 20),
@@ -387,6 +397,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -411,6 +422,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -435,6 +447,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -459,6 +472,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 17),
           checkOut: DateTime(2024, 1, 22),
@@ -478,6 +492,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -495,6 +510,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -512,6 +528,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 17),
           checkOut: DateTime(2024, 1, 22),
@@ -531,6 +548,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -549,6 +567,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -567,6 +586,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -584,6 +604,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -600,6 +621,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -616,6 +638,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -650,6 +673,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 17),
           checkOut: DateTime(2024, 1, 22),
@@ -675,6 +699,7 @@ void main() {
         });
 
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 17),
           checkOut: DateTime(2024, 1, 22),
@@ -703,6 +728,7 @@ void main() {
 
         // Dates with time components should be normalized
         final result = await checker.check(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 17, 14, 30, 0),
           checkOut: DateTime(2024, 1, 22, 10, 0, 0),
@@ -716,6 +742,7 @@ void main() {
     group('isAvailable', () {
       test('returns true when available', () async {
         final isAvail = await checker.isAvailable(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 20),
@@ -740,6 +767,7 @@ void main() {
         });
 
         final isAvail = await checker.isAvailable(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 17),
           checkOut: DateTime(2024, 1, 22),

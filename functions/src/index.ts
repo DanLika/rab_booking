@@ -44,6 +44,9 @@ export * from "./verifyBookingAccess";
 // Export Stripe-session booking lookup (replaces public stripe_session_id read clause)
 export * from "./getBookingByStripeSession";
 
+// Export unit availability lookup (SF-023 — replaces public ical_events read clause)
+export * from "./availability";
+
 // Export email verification functions (OTP for guest bookings)
 export * from "./emailVerification";
 

@@ -5,7 +5,8 @@ import '../../data/helpers/availability_checker.dart';
 ///
 /// Implementations check for booking conflicts across multiple sources:
 /// - Regular bookings (pending, confirmed, in_progress)
-/// - iCal events (Booking.com, Airbnb, etc.)
+/// - iCal events (Booking.com, Airbnb, etc.) — fetched server-side via the
+///   `getUnitAvailability` CF (SF-023)
 /// - Blocked dates (daily_prices with available: false)
 ///
 /// This abstraction enables:
@@ -15,9 +16,13 @@ import '../../data/helpers/availability_checker.dart';
 abstract class IAvailabilityChecker {
   /// Check if date range is available for booking.
   ///
+  /// [propertyId] is required so the iCal-check leg can call the
+  /// `getUnitAvailability` CF — the CF needs the parent property to scope
+  /// its server-side queries.
+  ///
   /// Returns [AvailabilityCheckResult] with detailed conflict information.
-  /// This is the main method that provides full conflict details.
   Future<AvailabilityCheckResult> check({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
@@ -28,6 +33,7 @@ abstract class IAvailabilityChecker {
   /// Returns true if available, false if any conflict exists.
   /// Internally calls [check] and returns [AvailabilityCheckResult.isAvailable].
   Future<bool> isAvailable({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,

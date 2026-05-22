@@ -9,6 +9,8 @@ import '../../../../shared/models/booking_model.dart';
 import '../../domain/constants/widget_constants.dart';
 import '../../domain/services/i_availability_checker.dart';
 import '../../utils/date_normalizer.dart';
+import '../models/availability_window.dart';
+import '../repositories/firebase_availability_repository.dart';
 
 /// Type of availability conflict.
 enum ConflictType {
@@ -162,13 +164,18 @@ class AvailabilityCheckResult {
 /// ```
 class AvailabilityChecker implements IAvailabilityChecker {
   final FirebaseFirestore _firestore;
+  final FirebaseAvailabilityRepository _availabilityRepo;
 
-  // Collection names
+  // Collection names (bookings + daily_prices still read directly — only
+  // ical_events was locked down by SF-023 and routes through the CF).
   static const _bookingsCollection = 'bookings';
-  static const _icalEventsCollection = 'ical_events';
   static const _dailyPricesCollection = 'daily_prices';
 
-  AvailabilityChecker(this._firestore);
+  AvailabilityChecker(
+    this._firestore, {
+    FirebaseAvailabilityRepository? availabilityRepository,
+  }) : _availabilityRepo =
+           availabilityRepository ?? FirebaseAvailabilityRepository();
 
   /// Check if date range is available for booking.
   ///
@@ -176,6 +183,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
   /// Use [AvailabilityCheckResult.errorCode] for localized error messages.
   @override
   Future<AvailabilityCheckResult> check({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
@@ -191,8 +199,9 @@ class AvailabilityChecker implements IAvailabilityChecker {
     );
     if (!result.isAvailable) return result;
 
-    // Check iCal events (external calendar sync)
+    // Check iCal events (external calendar sync) — SF-023: routes through CF
     result = await _checkIcalEvents(
+      propertyId: propertyId,
       unitId: unitId,
       checkIn: normalizedCheckIn,
       checkOut: normalizedCheckOut,
@@ -221,11 +230,13 @@ class AvailabilityChecker implements IAvailabilityChecker {
   /// Simple boolean check for backward compatibility.
   @override
   Future<bool> isAvailable({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
   }) async {
     final result = await check(
+      propertyId: propertyId,
       unitId: unitId,
       checkIn: checkIn,
       checkOut: checkOut,
@@ -279,55 +290,42 @@ class AvailabilityChecker implements IAvailabilityChecker {
   }
 
   /// Check for conflicts with iCal events (Booking.com, Airbnb, etc.).
+  ///
+  /// SF-023: anonymous `collectionGroup('ical_events')` reads are denied at
+  /// the Firestore rule layer. The booking-submit gate routes through the
+  /// `getUnitAvailability` callable instead — the CF runs the equivalent
+  /// query server-side via Admin SDK and strips PII. The widget receives
+  /// only `start`/`end`/`platform` per ical block.
   Future<AvailabilityCheckResult> _checkIcalEvents({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
   }) async {
     try {
-      // Using client-side filtering to avoid Firestore index requirement
-      // NEW STRUCTURE: Use collection group query for subcollection
-      final snapshot = await _firestore
-          .collectionGroup(_icalEventsCollection)
-          .where('unit_id', isEqualTo: unitId)
-          .get()
-          .withShortTimeout('checkIcalEvents');
+      final windows = await _availabilityRepo.fetchAvailability(
+        propertyId: propertyId,
+        unitId: unitId,
+        start: checkIn,
+        end: checkOut,
+      );
 
-      // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
-      const converter = NullableTimestampConverter();
-
-      for (final doc in snapshot.docs) {
-        try {
-          final data = doc.data();
-          // Use converter instead of direct cast for web compatibility
-          final eventStartRaw = converter.fromJson(data['start_date']);
-          final eventEndRaw = converter.fromJson(data['end_date']);
-          final eventStart = eventStartRaw != null
-              ? DateNormalizer.normalize(eventStartRaw)
-              : null;
-          final eventEnd = eventEndRaw != null
-              ? DateNormalizer.normalize(eventEndRaw)
-              : null;
-
-          if (eventStart == null || eventEnd == null) continue;
-
-          // Skip confirmed echoes — they don't block availability
-          final status = data['status'] as String?;
-          if (status == 'confirmed_echo') continue;
-
-          final source = data['source'] as String? ?? 'iCal';
-
-          if (_hasDateOverlap(
-            start1: eventStart,
-            end1: eventEnd,
-            start2: checkIn,
-            end2: checkOut,
-          )) {
-            return AvailabilityCheckResult.icalConflict(doc.id, source);
-          }
-        } catch (e) {
-          unawaited(
-            LoggingService.logError('Error parsing iCal event document', e),
+      for (final window in windows) {
+        if (window.source != AvailabilityWindowSource.icalExternal) continue;
+        final eventStart = DateNormalizer.normalize(window.start);
+        final eventEnd = DateNormalizer.normalize(window.end);
+        if (_hasDateOverlap(
+          start1: eventStart,
+          end1: eventEnd,
+          start2: checkIn,
+          end2: checkOut,
+        )) {
+          return AvailabilityCheckResult.icalConflict(
+            // No doc id is exposed by the CF (PII-stripped). Use a stable
+            // synthetic identifier derived from the window so the UI can
+            // distinguish multiple conflicts in logs.
+            '${eventStart.toIso8601String()}_${window.platform ?? "ical"}',
+            window.platform ?? 'iCal',
           );
         }
       }

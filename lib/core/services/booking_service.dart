@@ -350,7 +350,30 @@ class BookingService {
         .get();
     if (legacyDoc.exists) return legacyDoc;
 
-    // Search through collection group
+    // Fast path: Search by booking_reference (indexed)
+    // The reference is 'BK-' + the first 12 characters of the document ID in uppercase
+    if (bookingId.length >= 12) {
+      final shortId = bookingId.substring(0, 12).toUpperCase();
+      final targetRef = 'BK-$shortId';
+
+      final query = await _firestore
+          .collectionGroup('bookings')
+          .where('booking_reference', isEqualTo: targetRef)
+          .get();
+
+      for (final doc in query.docs) {
+        if (doc.id == bookingId) {
+          return doc;
+        }
+      }
+    }
+
+    // Fallback: Search through collection group (least efficient)
+    // Used only for very old legacy bookings without a booking_reference
+    LoggingService.logWarning(
+      '[BookingService] Falling back to slow collectionGroup scan for booking: $bookingId',
+    );
+
     final snapshot = await _firestore.collectionGroup('bookings').get();
     for (final doc in snapshot.docs) {
       if (doc.id == bookingId) {

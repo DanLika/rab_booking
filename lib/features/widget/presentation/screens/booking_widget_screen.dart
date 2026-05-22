@@ -422,29 +422,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   void _initTabCommunication() {
     if (!kIsWeb) return; // Only on web platform
 
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:312',
-        'message': 'Tab communication init - entry',
-        'data': {
-          'isInIframe': isInIframe,
-          'hasExistingSubscription': _tabMessageSubscription != null,
-          'hasExistingService': _tabCommunicationService != null,
-        },
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'B',
-      };
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
-
     try {
       // LOW: Cancel any existing subscription to prevent memory leak
       // (safety measure in case this method is called multiple times)
@@ -460,30 +437,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _tabMessageSubscription = _tabCommunicationService!.messageStream.listen(
         _handleTabMessage,
       );
-
-      // #region agent log
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_widget_screen.dart:327',
-          'message': 'Tab communication init - listeners setup',
-          'data': {
-            'hasSubscription': _tabMessageSubscription != null,
-            'isInIframe': isInIframe,
-            'willSetupPostMessage': isInIframe,
-            'willSetupPaymentBridge': isInIframe && kIsWeb,
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'B',
-        };
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_${logData['hypothesisId']}',
-        );
-      } catch (_) {}
-      // #endregion
 
       // If in iframe, also listen for postMessage from popup windows
       if (isInIframe) {
@@ -527,31 +480,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             final sessionId = result['sessionId'] as String?;
             final status = result['status'] as String?;
 
-            // #region agent log
-            try {
-              final logData = {
-                'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                'location': 'booking_widget_screen.dart:359',
-                'message': 'PaymentBridge message received',
-                'data': {
-                  'sessionId': sessionId,
-                  'status': status,
-                  'hasTimeout': _paymentCompletionTimeout != null,
-                  '_isProcessing': _isProcessing,
-                },
-                'sessionId': 'debug-session',
-                'runId': 'run1',
-                'hypothesisId': 'B',
-              };
-              // Debug logging via enhanced LoggingService (will be visible in browser console)
-              LoggingService.log(
-                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                tag: 'DEBUG_${logData['hypothesisId']}',
-              );
-            } catch (_) {}
-            // #endregion
-
             if (sessionId != null && status == 'success') {
               LoggingService.log(
                 '[PaymentBridge] Payment complete received, sessionId: $sessionId',
@@ -560,53 +488,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
               // CRITICAL: Cancel timeout since we received the message
               if (_paymentCompletionTimeout != null) {
-                // #region agent log
-                try {
-                  final logData = {
-                    'id':
-                        'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                    'location': 'booking_widget_screen.dart:369',
-                    'message': 'PaymentBridge - timeout cancel BEFORE',
-                    'data': {
-                      'hasTimeout': _paymentCompletionTimeout != null,
-                      '_isProcessing': _isProcessing,
-                    },
-                    'sessionId': 'debug-session',
-                    'runId': 'run1',
-                    'hypothesisId': 'B',
-                  };
-                  // Debug logging via enhanced LoggingService (will be visible in browser console)
-                  LoggingService.log(
-                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                    tag: 'DEBUG_${logData['hypothesisId']}',
-                  );
-                } catch (_) {}
-                // #endregion
-
                 _paymentCompletionTimeout!.cancel();
                 _paymentCompletionTimeout = null;
-
-                // #region agent log
-                try {
-                  final logData = {
-                    'id':
-                        'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                    'location': 'booking_widget_screen.dart:372',
-                    'message': 'PaymentBridge - timeout cancel AFTER',
-                    'data': {'hasTimeout': _paymentCompletionTimeout != null},
-                    'sessionId': 'debug-session',
-                    'runId': 'run1',
-                    'hypothesisId': 'B',
-                  };
-                  // Debug logging via enhanced LoggingService (will be visible in browser console)
-                  LoggingService.log(
-                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                    tag: 'DEBUG_${logData['hypothesisId']}',
-                  );
-                } catch (_) {}
-                // #endregion
 
                 LoggingService.log(
                   '[PaymentBridge] Payment completion timeout cancelled (message received)',
@@ -617,57 +500,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               // Handle payment completion by polling for booking
               // This is called when payment completes in popup and sends message to iframe
               if (mounted) {
-                // #region agent log
-                try {
-                  final logData = {
-                    'id':
-                        'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                    'location': 'booking_widget_screen.dart:377',
-                    'message': 'PaymentBridge - state reset BEFORE',
-                    'data': {
-                      '_isProcessing': _isProcessing,
-                      'isMounted': mounted,
-                    },
-                    'sessionId': 'debug-session',
-                    'runId': 'run1',
-                    'hypothesisId': 'C',
-                  };
-                  // Debug logging via enhanced LoggingService (will be visible in browser console)
-                  LoggingService.log(
-                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                    tag: 'DEBUG_${logData['hypothesisId']}',
-                  );
-                } catch (_) {}
-                // #endregion
-
                 // Reset processing state FIRST (before any async operations)
                 if (mounted) {
                   setState(() {
                     _isProcessing = false;
                   });
                 }
-
-                // #region agent log
-                try {
-                  final logData = {
-                    'id':
-                        'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                    'location': 'booking_widget_screen.dart:382',
-                    'message': 'PaymentBridge - state reset AFTER',
-                    'data': {'_isProcessing': _isProcessing},
-                    'sessionId': 'debug-session',
-                    'runId': 'run1',
-                    'hypothesisId': 'C',
-                  };
-                  // Debug logging via enhanced LoggingService (will be visible in browser console)
-                  LoggingService.log(
-                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                    tag: 'DEBUG_${logData['hypothesisId']}',
-                  );
-                } catch (_) {}
-                // #endregion
 
                 LoggingService.log(
                   '[PaymentBridge] Loading state reset (message received)',
@@ -896,32 +734,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// This handles the case when popup is blocked and Stripe opens in new tab
   /// NOTE: Email is NOT required - booking is fetched by bookingId
   Future<void> _handlePaymentCompleteFromOtherTab(TabMessage message) async {
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:516',
-        'message': 'CrossTab message received - entry',
-        'data': {
-          'bookingId': message.bookingId,
-          'bookingRef': message.bookingRef,
-          'hasTimeout': _paymentCompletionTimeout != null,
-          '_isProcessing': _isProcessing,
-          'isMounted': mounted,
-        },
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'B',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
-
     final bookingId = message.bookingId;
     final bookingRef = message.bookingRef;
     final sessionId = message.sessionId;
@@ -1141,32 +953,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// If payment completion message doesn't arrive within timeout period,
   /// reset loading state to prevent infinite loading
   void _startPaymentCompletionTimeout() {
-    // #region agent log
-    if (kIsWeb) {
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_widget_screen.dart:717',
-          'message': 'Timeout start - entry',
-          'data': {
-            'hasExistingTimeout': _paymentCompletionTimeout != null,
-            'isMounted': mounted,
-            '_isProcessing': _isProcessing,
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'A',
-        };
-        // Debug logging via enhanced LoggingService (will be visible in browser console)
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_${logData['hypothesisId']}',
-        );
-      } catch (_) {}
-    }
-    // #endregion
-
     // Cancel any existing timeout
     _paymentCompletionTimeout?.cancel();
 
@@ -1178,25 +964,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Set timeout to 30 seconds
     // This gives enough time for webhook to process and message to arrive
     _paymentCompletionTimeout = Timer(const Duration(seconds: 30), () {
-      // #region agent log
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_widget_screen.dart:728',
-          'message': 'Timeout fired',
-          'data': {'isMounted': mounted, '_isProcessing': _isProcessing},
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'A',
-        };
-        // Debug logging via enhanced LoggingService (will be visible in browser console)
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_${logData['hypothesisId']}',
-        );
-      } catch (_) {}
-      // #endregion
       if (!mounted) {
         LoggingService.log(
           '[PaymentTimeout] Widget disposed, timeout cancelled',
@@ -1212,29 +979,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // Reset processing state to prevent infinite loading
       if (mounted) {
-        // #region agent log
-        try {
-          final logData = {
-            'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-            'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-            'location': 'booking_widget_screen.dart:740',
-            'message': 'Timeout - state reset BEFORE',
-            'data': {
-              '_isProcessing': _isProcessing,
-              '_showGuestForm': _showGuestForm,
-            },
-            'sessionId': 'debug-session',
-            'runId': 'run1',
-            'hypothesisId': 'A',
-          };
-          // Debug logging via enhanced LoggingService (will be visible in browser console)
-          LoggingService.log(
-            '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-            tag: 'DEBUG_${logData['hypothesisId']}',
-          );
-        } catch (_) {}
-        // #endregion
-
         if (mounted) {
           setState(() {
             _isProcessing = false;
@@ -1242,29 +986,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           });
         }
         _resetFormState();
-
-        // #region agent log
-        try {
-          final logData = {
-            'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-            'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-            'location': 'booking_widget_screen.dart:747',
-            'message': 'Timeout - state reset AFTER',
-            'data': {
-              '_isProcessing': _isProcessing,
-              '_showGuestForm': _showGuestForm,
-            },
-            'sessionId': 'debug-session',
-            'runId': 'run1',
-            'hypothesisId': 'A',
-          };
-          // Debug logging via enhanced LoggingService (will be visible in browser console)
-          LoggingService.log(
-            '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-            tag: 'DEBUG_${logData['hypothesisId']}',
-          );
-        } catch (_) {}
-        // #endregion
 
         LoggingService.log(
           '[PaymentTimeout] Loading state reset due to timeout',
@@ -1274,26 +995,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       _paymentCompletionTimeout = null;
     });
-
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:751',
-        'message': 'Timeout start - exit',
-        'data': {'timeoutCreated': _paymentCompletionTimeout != null},
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'A',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
   }
 
   /// Handle Stripe return when booking is created by webhook (NEW FLOW)
@@ -1892,52 +1593,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
 
     // Cancel payment completion timeout
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:1214',
-        'message': 'Dispose - cleanup entry',
-        'data': {
-          'hasTimeout': _paymentCompletionTimeout != null,
-          '_isProcessing': _isProcessing,
-          '_isDisposed': _isDisposed,
-        },
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'E',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
 
     _paymentCompletionTimeout?.cancel();
     _paymentCompletionTimeout = null;
-
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:1217',
-        'message': 'Dispose - cleanup exit',
-        'data': {'hasTimeout': _paymentCompletionTimeout != null},
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'E',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
 
     super.dispose();
   }
@@ -3794,32 +3452,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Client-side checks are unsafe due to TOCTOU (Time-of-check-to-time-of-use)
       final submitBookingUseCase = ref.read(submitBookingUseCaseProvider);
 
-      // #region agent log
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_widget_screen.dart:2777',
-          'message': 'Booking submission - price calculation',
-          'data': {
-            'currentCalculationTotalPrice': calculation.totalPrice,
-            'lockedCalculationTotalPrice': _lockedPriceCalculation?.totalPrice,
-            'finalCalculationTotalPrice': finalCalculation.totalPrice,
-            'priceLockResult': priceLockResult?.toString(),
-            'checkIn': _checkIn?.toIso8601String(),
-            'checkOut': _checkOut?.toIso8601String(),
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'PRICE',
-        };
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_PRICE',
-        );
-      } catch (_) {}
-      // #endregion
-
       // Breadcrumb: fee breakdown at submission time
       LoggingService.addBreadcrumb(
         'Booking submission with fees',
@@ -4200,60 +3832,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 tag: 'STRIPE',
               );
 
-              // #region agent log
-              try {
-                final logData = {
-                  'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                  'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                  'location': 'booking_widget_screen.dart:2660',
-                  'message': 'Timeout start decision - popup scenario',
-                  'data': {
-                    'popupResult': popupResult,
-                    'isInIframe': isInIframe,
-                    '_isProcessing': _isProcessing,
-                    'willStartTimeout': true,
-                  },
-                  'sessionId': 'debug-session',
-                  'runId': 'run1',
-                  'hypothesisId': 'A',
-                };
-                // Debug logging via enhanced LoggingService (will be visible in browser console)
-                LoggingService.log(
-                  '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                  tag: 'DEBUG_${logData['hypothesisId']}',
-                );
-              } catch (_) {}
-              // #endregion
-
               _startPaymentCompletionTimeout();
             }
           } else if (popupResult == 'redirect') {
-            // #region agent log
-            try {
-              final logData = {
-                'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                'location': 'booking_widget_screen.dart:2662',
-                'message': 'Timeout start decision - redirect scenario',
-                'data': {
-                  'popupResult': popupResult,
-                  'isInIframe': isInIframe,
-                  '_isProcessing': _isProcessing,
-                  'willStartTimeout': false,
-                  'reason':
-                      'Redirect - page navigates away, timeout not needed',
-                },
-                'sessionId': 'debug-session',
-                'runId': 'run1',
-                'hypothesisId': 'A',
-              };
-              // Debug logging via enhanced LoggingService (will be visible in browser console)
-              LoggingService.log(
-                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                tag: 'DEBUG_${logData['hypothesisId']}',
-              );
-            } catch (_) {}
-            // #endregion
             // Iframe + mobile: redirect top-level window (not iframe)
             // NOTE: In redirect scenario, we reset _isProcessing immediately because
             // the page will navigate away. Timeout is not needed here.

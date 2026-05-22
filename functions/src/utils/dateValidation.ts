@@ -193,12 +193,47 @@ export function validateAndConvertBookingDates(
   }
 
   // ========================================================================
-  // STEP 6: CONVERT TO FIRESTORE TIMESTAMPS
+  // STEP 6: NORMALIZE + CONVERT TO FIRESTORE TIMESTAMPS (SF-026)
   // ========================================================================
-  const checkInDate = admin.firestore.Timestamp.fromDate(checkInDateObj);
-  const checkOutDate = admin.firestore.Timestamp.fromDate(checkOutDateObj);
+  // Persist Timestamps at UTC midnight of the Zagreb-civil-day they represent.
+  // Why: (1) cross-language nights count must agree — `.difference().inDays`
+  //   (Dart, floor) vs `Math.ceil(/86_400_000)` (TS, ceil) disagree when input
+  //   has non-zero time component, especially across DST. UTC-midnight inputs
+  //   make both return identical integer N.
+  // Why Zagreb-civil-day (not UTC-day): widget sends ISO `YYYY-MM-DDT00:00+02:00`
+  //   for Croatian clients, which parses to UTC `prevDay 22:00Z`. A naive
+  //   `getUTCDate()`-based normalization would shift display backward by 1 day
+  //   for every Zagreb-originated booking. Extracting the Zagreb civil day
+  //   first preserves "which day did the guest book?" semantics.
+  // Assumption: properties are in `Europe/Zagreb` (consistent with email
+  //   templates per CLAUDE.md Critical Learning #1). Property-TZ field is a
+  //   future extension if multi-region hosting becomes a product requirement.
+  const checkInNormalized = normalizeToZagrebCivilDayUTC(checkInDateObj);
+  const checkOutNormalized = normalizeToZagrebCivilDayUTC(checkOutDateObj);
+
+  const checkInDate = admin.firestore.Timestamp.fromDate(checkInNormalized);
+  const checkOutDate = admin.firestore.Timestamp.fromDate(checkOutNormalized);
 
   return {checkInDate, checkOutDate};
+}
+
+/**
+ * Normalize an arbitrary Date to UTC midnight of the Zagreb civil day it falls
+ * on, so persisted booking Timestamps yield the same integer nights count
+ * regardless of derivation algorithm (`.difference().inDays` vs `Math.ceil`)
+ * and preserve "day the guest selected" through Zagreb-TZ display.
+ *
+ * Exported for the SF-026 backfill migration script.
+ */
+export function normalizeToZagrebCivilDayUTC(date: Date): Date {
+  const ymd = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Zagreb",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+  const [yStr, mStr, dStr] = ymd.split("-");
+  return new Date(Date.UTC(Number(yStr), Number(mStr) - 1, Number(dStr)));
 }
 
 /**

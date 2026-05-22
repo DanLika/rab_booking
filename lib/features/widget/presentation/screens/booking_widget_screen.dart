@@ -15,6 +15,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import '../../../../core/services/tab_communication_service.dart';
 import '../../services/form_persistence_service.dart';
 import '../../state/booking_form_state.dart';
+import '../../utils/date_normalizer.dart';
 import '../widgets/lazy_calendar_container.dart';
 import '../widgets/additional_services_widget.dart';
 import '../widgets/tax_legal_disclaimer_widget.dart';
@@ -2576,7 +2577,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Defensive check: ensure dates are valid before calculating difference
         double servicesTotal = 0.0;
         if (checkOut.isAfter(checkIn)) {
-          final nights = checkOut.difference(checkIn).inDays;
+          // SF-026: DateNormalizer normalizes to UTC midnight before diff,
+          // so DST-straddling dates yield the same integer as the server.
+          final nights = DateNormalizer.nightsBetween(checkIn, checkOut);
 
           // If servicesAsync has data, calculate total synchronously
           // Otherwise, servicesTotal remains 0.0 (default)
@@ -2743,7 +2746,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             checkIn: checkIn,
             checkOut: checkOut,
             nights: checkOut.isAfter(checkIn)
-                ? checkOut.difference(checkIn).inDays
+                ? DateNormalizer.nightsBetween(checkIn, checkOut)
                 : 1, // Fallback to 1 night if dates are invalid
             formattedRoomPrice: calculation.formatRoomPrice(currency),
             additionalServicesTotal: calculation.additionalServicesTotal,
@@ -2826,7 +2829,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       // Defensive check: ensure dates are valid before calculating difference
                       try {
                         final nights = checkOut.isAfter(checkIn)
-                            ? checkOut.difference(checkIn).inDays
+                            ? DateNormalizer.nightsBetween(checkIn, checkOut)
                             : 1; // Fallback to 1 night if dates are invalid
                         return Column(
                           children: [
@@ -3420,7 +3423,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final checkIn = _checkIn;
     final checkOut = _checkOut;
     if (checkIn != null && checkOut != null) {
-      final nights = checkOut.difference(checkIn).inDays;
+      final nights = DateNormalizer.nightsBetween(checkIn, checkOut);
       nightsText = tr.nightsTextFormat(nights);
     }
 
@@ -3984,7 +3987,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           petFees: _lockedPriceCalculation?.petFees,
           additionalServicesTotal:
               _lockedPriceCalculation?.additionalServicesTotal,
-          nights: booking.checkOut.difference(booking.checkIn).inDays,
+          nights: booking.numberOfNights,
           guests: booking.guestCount,
           propertyName: _unit?.name ?? 'Property',
           unitName: _unit?.name,

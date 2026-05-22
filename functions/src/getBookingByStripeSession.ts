@@ -2,7 +2,8 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {db} from "./firebase";
 import {logInfo, logError, logWarn} from "./logger";
 import {setUser} from "./sentry";
-import {safeToDate} from "./utils/dateValidation";
+import {safeToDate, calculateBookingNights} from "./utils/dateValidation";
+import {admin} from "./firebase";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
 
@@ -85,10 +86,12 @@ export const getBookingByStripeSession = onCall(async (request) => {
     const property = propertyDoc?.data();
     const unit = unitDoc?.data();
 
+    // SF-026: canonical nights helper — see verifyBookingAccess.ts for rationale.
     const checkIn = safeToDate(booking.check_in, "check_in");
     const checkOut = safeToDate(booking.check_out, "check_out");
-    const nights = Math.ceil(
-      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+    const nights = calculateBookingNights(
+      admin.firestore.Timestamp.fromDate(checkIn),
+      admin.firestore.Timestamp.fromDate(checkOut)
     );
 
     const bookingDetails = {

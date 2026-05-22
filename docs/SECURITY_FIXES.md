@@ -1845,6 +1845,87 @@ Storage rules nemaju lokalni syntax-test harness u repu — deploy je validator.
 
 ---
 
+## SF-026: Booking Nights Count Cross-Surface Drift — DST Off-by-One (MEDIUM)
+
+**Datum**: 2026-05-22
+**Prioritet**: 🟡 Medium (DST-straddling bookings can disagree on N nights between Dart client and TS server)
+**Status**: ✅ Riješeno — branch `fix/sf-026-booking-count-dst`; deployed to `bookbed-dev` only — prod cutover pending; backfill migration documented below, NOT yet run with `--force`.
+
+**Zahvaćeni fajlovi**:
+
+- `functions/src/utils/dateValidation.ts` — STEP 6 sada normalizira `check_in`/`check_out` na UTC midnight Zagreb-civil-day prije `Timestamp.fromDate`; nova exportna `normalizeToZagrebCivilDayUTC()` helper za migration script
+- `functions/src/verifyBookingAccess.ts`, `functions/src/getBookingByStripeSession.ts` — inline `Math.ceil(/86_400_000)` zamijenjen pozivom `calculateBookingNights()` (kanonski TS helper)
+- `lib/shared/models/booking_model.dart` — docstring uz `numberOfNights` getter; logika nepromijenjena (normalizirani timestampovi čine `.difference().inDays` deterministički ekvivalentnim server `Math.ceil`-u)
+- `lib/core/services/email_notification_service.dart` — 3 inline `.difference().inDays` poziva sada koriste `booking.numberOfNights`
+- `lib/features/widget/presentation/screens/booking_widget_screen.dart` — 4 form-state derivacije migrirane na `DateNormalizer.nightsBetween()` (UTC-normalized floor); 1 `BookingModel` derivacija na `booking.numberOfNights`
+- `lib/features/widget/state/booking_form_state.dart` — `nights` getter koristi `DateNormalizer.nightsBetween()`
+- `functions/scripts/normalize-booking-nights.js` — jednokratni backfill script (dry-run by default, `--force` opt-in)
+- `functions/test/dateValidation.test.ts` — 13 testova: normalizacija, DST spring-forward (Zagreb 2026-03-29), DST fall-back (Zagreb 2026-10-25), long booking across both transitions, single-night, validation guard
+
+**Otkrio**: `audit/18-booking-count-audit.md` (sibling audit follow-up issue #10 iz `audit/07-chrome-smoke-test.md`)
+
+### Problem
+
+Persisted booking schema čuva `check_in` + `check_out` kao Firestore Timestamps, ali `nights` se nikada ne pohranjuje — svaki čitalac (Dart client + TS server + iCal export + email templates) derivira broj noćenja iznova. Dart koristi `checkOut.difference(checkIn).inDays` (floor); TS koristi `Math.ceil((co - ci) / 86_400_000)` (ceil). Kad oba timestamp-a padaju na isti UTC moment (npr. oba 22:00Z prošlog dana), oba algoritma vraćaju isti N. Ali kad booking pređe Zagreb DST granicu, `.inDays` daje N-1 (truncates 23h-day), `Math.ceil` daje N — owner email i guest email za isti booking pokazuju različit broj noćenja.
+
+### Rješenje (Option B per audit)
+
+**STEP 6 normalizacija pri pisanju:**
+
+```ts
+const checkInNormalized = normalizeToZagrebCivilDayUTC(checkInDateObj);
+const checkOutNormalized = normalizeToZagrebCivilDayUTC(checkOutDateObj);
+const checkInDate = admin.firestore.Timestamp.fromDate(checkInNormalized);
+const checkOutDate = admin.firestore.Timestamp.fromDate(checkOutNormalized);
+```
+
+`normalizeToZagrebCivilDayUTC()` koristi `Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Zagreb'})` da izvuče civil-day NAME u Zagreb TZ, pa konstruira UTC midnight istog dana. Ovaj pristup preservira display (Zagreb-civil-day `2026-06-01` → UTC `2026-06-01T00:00Z` → display u Zagreb-u: 02:00 1. juni → "1. juni" ✓), za razliku od naivnog `getUTCDate()` extraction-a koji bi shiftao Zagreb-originated bookinge unazad za 1 dan.
+
+Naknadno, `.difference().inDays` i `Math.ceil(/86_400_000)` daju **identičan integer N** za sve nove bookinge — i DST-straddling i obične.
+
+**Standardizacija derivacije:**
+- TS: `verifyBookingAccess`, `getBookingByStripeSession` sad zovu `calculateBookingNights()` (kanonski helper).
+- Dart: widget i form-state migrirani na `DateNormalizer.nightsBetween()` (UTC normalizes prije diff); email service koristi `booking.numberOfNights` getter.
+
+### Postojeći bookinzi (backfill)
+
+Pre-fix bookinzi mogu i dalje imati non-midnight Timestamps. Script `functions/scripts/normalize-booking-nights.js`:
+
+```bash
+# Dry-run (default — no writes):
+GOOGLE_CLOUD_PROJECT=bookbed-dev node functions/scripts/normalize-booking-nights.js
+
+# Apply (operator action required):
+GOOGLE_CLOUD_PROJECT=bookbed-dev node functions/scripts/normalize-booking-nights.js --force
+```
+
+- Skenira `collectionGroup('bookings').where('status', 'in', [confirmed, pending_payment, awaiting_owner_decision])`
+- Recomputes UTC-midnight-Zagreb-civil-day za oba timestampa
+- Piše back samo ako se vrijednost promijeni
+- Batch 400; safe za stotinjak bookinga
+
+**NE pokretati `--force` bez explicit user approval.** Dry-run output treba review-ovati prije aktivnog upisa.
+
+### Tests
+
+`functions/test/dateValidation.test.ts` (13/13 green):
+- Zagreb summer/winter midnight ulaz → UTC midnight istog civil-day
+- DST spring-forward 2026-03-28 → 2026-04-01 → **4 nights** (floor i ceil oba)
+- DST fall-back 2026-10-24 → 2026-10-26 → **2 nights** (floor i ceil oba)
+- Single-night, long-booking-across-both-DST (240 days), idempotency, validation guards
+
+### Moguće nuspojave
+
+- Display: nove rezervacije pokazuju Zagreb-civil-day (očekivano). Postojeće rezervacije nepromijenjene dok migration ne pokrene.
+- Hard fail ako prethodni bookinzi imaju malformed dates — script preskoči (logs `skippedMissingDate`).
+
+### Deploy
+
+- `bookbed-dev`: `firebase deploy --only functions --project bookbed-dev`
+- `bookbed-prod`: pending cutover
+
+---
+
 ## ODBIJENI PRIJEDLOZI (Jules Audit)
 
 Sljedeći prijedlozi iz Jules AI audita su analizirani i odbijeni zbog visokog rizika ili nepotrebnosti:

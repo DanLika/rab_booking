@@ -132,3 +132,28 @@ git diff main..origin/"$BRANCH" -- pubspec.yaml
 - `audit/11-cloudfunctions-inventory.md` — CF cleanup tracking
 - `audit/11-sentry-env-fix.md` — recent sentry env-tag fix
 - `memory/multi-agent-git-race.md`
+
+---
+
+## Addendum 2026-05-22 — Execution decisions (4 MAJOR bumps)
+
+User reviewed per-package and decided:
+
+| PR | Package | Bump | Decision | Action |
+|---|---|---|---|---|
+| #270 | `stripe` | 19.1.0 → 20.3.1 | REJECT | Closed + remote branch deleted |
+| #271 | `eslint` | 8.57.1 → 10.0.0 | REJECT | Closed + remote branch deleted |
+| #240 | `flutter_secure_storage` | 9.2.4 → 10.0.0 | REJECT | Closed + remote branch deleted |
+| #242 | `package_info_plus` | 8.3.1 → 9.0.0 | POSTPONE | PR open; revisit ≤ 2 weeks (by 2026-06-05) |
+
+### Rationale
+
+- **#270 stripe**: Payment-critical (NIKADA NE MIJENJAJ class — `CLAUDE.md`). 3 call sites: `functions/src/stripe.ts`, `functions/src/guestCancelBooking.ts`, `functions/src/stripePayment.ts`. v20 SDK has breaking type + API changes; cannot land in a dependabot merge. Revisit must include full checkout + webhook + Connect regression.
+- **#271 eslint**: Project uses legacy `functions/.eslintrc.js` with `eslint-config-google` + `@typescript-eslint`. ESLint v9 **removed legacy config format entirely** (flat `eslint.config.js` required); `eslint-config-google` is unmaintained and has no v9+ port. Bump is a config-system rewrite, not a lint-rules bump. Defer to a dedicated migration task.
+- **#240 flutter_secure_storage**: Auth-critical. 1 call site (`lib/core/services/secure_storage_service.dart`) — but v10 has native Android KeyStore behavior changes + iOS Keychain option changes. Auth regression scope (Remember Me, login persistence, FCM token re-issue, Apple/Google Sign-In on iOS + Android) too wide for a dependabot merge.
+- **#242 package_info_plus**: 1 call site (`lib/core/services/version_check_service.dart`); low surface area. Postponed (not rejected) pending the next dev-build verification window — memory pin "no major without dev verify" requires explicit smoke test.
+
+### Revisit triggers
+
+- **#242 package_info_plus**: Re-evaluate at next dev-build window. If no window by **2026-06-05**, escalate to close (will re-open via new dependabot ping later).
+- **#270 / #271 / #240**: Closed; reopen via new dependabot ping after upstream changelog stabilizes or as part of a dedicated migration PR (Stripe payments maintenance / ESLint flat-config / secure_storage auth regression).

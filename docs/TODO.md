@@ -192,39 +192,36 @@ Currently all three are dev-only. Combined prod cutover checklist:
 
 ---
 
-## 🔢 TODO: SF-026 — booking night/guest count Timestamp normalization
+## ✅ DONE: SF-026 — booking night/guest count Timestamp normalization (2026-05-22)
 
-**Prioritet:** MEDIUM (no production drift observed yet, but DST-straddling bookings produce off-by-one between owner email + guest email + dashboard surfaces).
-**Status:** 📋 **Documented, not implemented.** Audit only — code change deferred to a small focused PR.
-**Izvor:** `audit/18-booking-count-audit.md` (2026-05-22, doc-only audit, 170 lines)
+**Branch:** `fix/sf-026-booking-count-dst`
+**Commits on `main`:** `5f747740` (core), `0a6a6570` (merge), `dc554396` (migration index fix), `ff39fa8d` (smoke script).
+**Audit:** `audit/18-booking-count-audit.md` → `docs/SECURITY_FIXES.md` SF-026 entry.
+**Deploy:** `bookbed-dev` deployed 2026-05-22. Prod cutover pending operator.
 
-### Background
+### What landed (Option B)
 
-Booking docs persist only `check_in`/`check_out` Firestore Timestamps + `guest_count` — `nights` is never stored. Twelve derivation sites compute it from those Timestamps: 6 Dart (`.difference().inDays`, floor) + 6 TS (`Math.ceil(/86_400_000)`, ceil). When Timestamps are exact UTC midnight both agree at N. When they aren't (e.g. DST-straddling bookings, where the local-time difference is `24h × (N-1) + 23h`), Dart truncates to N-1 and TS ceils to N — owner email shows "4 nights", guest email shows "5 nights" for the same booking.
+- **STEP 6 normalization** (`functions/src/utils/dateValidation.ts`): new `normalizeToZagrebCivilDayUTC()` helper extracts civil day via `Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Zagreb'})` then stores Timestamps at UTC midnight of that civil day. Preserves display (a Zagreb client picking June 1 still sees "June 1" everywhere) while making `.difference().inDays` (Dart floor) and `Math.ceil(/86_400_000)` (TS ceil) return the same integer N. Naive `getUTCDate()` extraction would have shifted Zagreb-originated bookings backwards 1 day — caught by advisor mid-implementation.
+- **Standardized derivation**: TS `verifyBookingAccess` + `getBookingByStripeSession` now call canonical `calculateBookingNights()`; Dart email service uses `booking.numberOfNights`; widget + form-state use `DateNormalizer.nightsBetween()`.
+- **Backfill script** (`functions/scripts/normalize-booking-nights.js`): dry-run default, `--force` opt-in. Scans `collectionGroup('bookings')` filtered client-side (no Firestore index dep) for `confirmed | pending_payment | awaiting_owner_decision`, rewrites Timestamps where they differ from normalized.
+- **Smoke script** (`functions/scripts/smoke-sf026-dev.js`): read-only sanity check — observed expected drift on bookbed-dev's seed booking (status=cancelled, out of migration scope, floor=2 vs ceil=3).
+- **Tests** (`functions/test/dateValidation.test.ts`, 13/13 green): DST spring-forward (Zagreb 2026-03-29) → 4 nights; DST fall-back (2026-10-25) → 2 nights; long booking across both transitions → 240 nights; idempotency; validation guards.
 
-Empirically safe today because the widget date picker emits whole-date ISO strings parsed at local midnight, and both check-in and check-out carry the same offset → the Timestamp delta cancels to exact N × 86_400_000 ms. The two algorithms agree by coincidence, not by contract. A future code path that fills `check_in`/`check_out` from a non-picker source (admin manual entry, iCal import, Stripe metadata round-trip) breaks the invariant.
+### Outstanding (operator)
 
-### Recommended fix — Option B (smallest correct change)
+1. `firebase deploy --only functions --project bookbed-prod` — same Cloud Function update on prod.
+2. `GOOGLE_CLOUD_PROJECT=bookbed-prod node functions/scripts/normalize-booking-nights.js` — prod dry-run to count drift.
+3. After review, `--force` migration on prod.
+4. (Optional) `--force` migration on dev — only 1 cancelled booking on dev today, status not eligible, so nothing to do.
 
-In `functions/src/utils/dateValidation.ts` STEP 6, persist the `checkInMidnight` / `checkOutMidnight` UTC-normalized variants (already computed in STEP 5 for past-date validation) instead of the raw client `Date`:
+### Open behavior change (filed, not fixed)
 
-```diff
-- const checkInDate  = admin.firestore.Timestamp.fromDate(checkInDateObj);
-- const checkOutDate = admin.firestore.Timestamp.fromDate(checkOutDateObj);
-+ const checkInDate  = admin.firestore.Timestamp.fromDate(checkInMidnight);
-+ const checkOutDate = admin.firestore.Timestamp.fromDate(checkOutMidnight);
-```
+Same-Zagreb-civil-day check-in + check-out (different clock times within one day) now throws "< 1 night" in `calculateBookingNights()` whereas pre-fix it returned 1 via `Math.ceil(0.x)`. Widget picker constrains to whole dates so unreachable today; admin/script paths could trip it later. Out of scope for this PR.
 
-Both algorithms now produce N for every input. No schema migration, no backfill, no read-site changes.
+### Promote to Option A only if
 
-### Promoted to Option A if/when
-
-- Audit needs an immutable "billed for N nights" field — store `nights: number` on the booking doc (`functions/src/atomicBooking.ts:1080-1121`) and migrate read sites.
+- Audit needs an immutable "billed for N nights" field — store `nights: number` on the booking doc and migrate read sites.
 - Partial-day stays (early check-in / late check-out) become a pricing feature — Timestamp time-component becomes meaningful again, normalization no longer safe.
-
-### Test
-
-Add a DST regression test: create a booking spanning the spring-forward boundary (e.g. `2026-03-28` → `2026-04-01` for `Europe/Zagreb`, which crosses CEST start on 2026-03-29 03:00) and assert all 9 read sites return the same integer. Lives next to the existing `dateValidation.test.ts` (or its equivalent).
 
 ---
 

@@ -191,10 +191,15 @@ service cloud.firestore {
         allow create, update, delete: if isPropertyOwner(propertyId);
       }
 
-      // iCal events subcollection
+      // iCal events subcollection — SF-023 LOCKED 2026-05-22
+      // Public widget reads now route through the `getUnitAvailability`
+      // callable (functions/src/availability.ts) which serves PII-stripped
+      // windows server-side via Admin SDK. Owner reads remain allowed for
+      // the dashboard's per-property iCal management screens. All client
+      // writes denied — Cloud Functions (icalSync.ts) write via Admin SDK.
       match /ical_events/{eventId} {
-        allow read: if true; // Widget needs to read events for availability
-        allow create, update, delete: if isPropertyOwner(propertyId);
+        allow read: if isPropertyOwner(propertyId);
+        allow write: if false;
       }
 
       // iCal feeds subcollection (feed configurations)
@@ -275,11 +280,16 @@ service cloud.firestore {
       // Writes go through specific subcollection path above
     }
 
-    // Collection group: ical_events
-    // Used by: Availability checker (widget needs to check external calendar blocks)
+    // Collection group: ical_events — SF-023 LOCKED 2026-05-22
+    // Anonymous CG reads removed. Owner-side dashboard queries (which use
+    // collectionGroup('ical_events').where('property_id', '==', ...)) gate
+    // on the property's owner_id. Widget never hits this rule — it routes
+    // through the `getUnitAvailability` callable.
     match /{path=**}/ical_events/{eventId} {
-      allow read: if true;
-      // Writes go through specific subcollection path above
+      allow read: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow write: if false;
     }
 
     // Collection group: ical_feeds
@@ -325,16 +335,13 @@ service cloud.firestore {
       allow update, delete: if isResourceOwner();
     }
 
-    // DEPRECATED: Top-level ical_events
-    match /ical_events/{eventId} {
-      allow read: if true;
-      allow create: if isAuthenticated() &&
-        ('property_id' in request.resource.data) &&
-        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
-      allow update, delete: if isAuthenticated() &&
-        ('property_id' in resource.data) &&
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
-    }
+    // SF-023 (2026-05-22): the DEPRECATED top-level `/ical_events/{eventId}`
+    // rule was removed in the same PR that locked the subcollection +
+    // collection-group paths. No code path writes to the top-level collection
+    // (icalSync.ts targets `properties/{p}/ical_events/{id}`), so the rule
+    // is unreachable today; leaving an open `read: if true` after locking
+    // the other two surfaces would be a footgun if a future drift writes
+    // there. Removed entirely.
 
     // ========================================================================
     // OTHER COLLECTIONS
@@ -367,13 +374,11 @@ service cloud.firestore {
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }
 
-    // Booking services - junction table for booking ↔ additional_services
-    // Only Cloud Functions create these (during booking creation)
-    match /booking_services/{bookingServiceId} {
-      allow read: if true; // Widget needs to read for price calculation
-      allow create: if false; // Only Cloud Functions via Admin SDK
-      allow update, delete: if isResourceOwner();
-    }
+    // SF-023 follow-up (2026-05-22): the `/booking_services/*` collection
+    // is unused — `audit/16-chrome-regression-full.md` § 4 confirmed zero
+    // readers/writers across functions/src/** and lib/**. The rule (which
+    // had `read: if true`, a leaking surface on an empty collection) was
+    // removed alongside the orphan CG index in firestore.indexes.json.
 
     // ========================================================================
     // LOCKED COLLECTIONS - Only Cloud Functions via Admin SDK

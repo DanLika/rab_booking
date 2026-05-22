@@ -16,6 +16,10 @@ import '../repositories/i_booking_calendar_repository.dart' show WeekendDays;
 abstract class IPriceCalculator {
   /// Calculate total price for a booking with availability check.
   ///
+  /// [propertyId] is required when [checkAvailability] is true (the embedded
+  /// availability check calls `getUnitAvailability` CF which needs the
+  /// parent property). Pass `null` only when [checkAvailability] is false.
+  ///
   /// Throws [DatesNotAvailableException] if dates are not available
   /// and [checkAvailability] is true.
   ///
@@ -24,6 +28,7 @@ abstract class IPriceCalculator {
   ///
   /// Returns [PriceCalculationResult] with total price and breakdown.
   Future<PriceCalculationResult> calculate({
+    String? propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,

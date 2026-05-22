@@ -88,8 +88,12 @@ class BookingPriceCalculator implements IPriceCalculator {
   /// Calculate total price for a booking with availability check.
   ///
   /// Throws [DatesNotAvailableException] if dates are not available.
+  /// Throws [ArgumentError] if [checkAvailability] is true but [propertyId]
+  /// is null — the iCal-check leg of the availability gate calls the
+  /// `getUnitAvailability` CF which requires the parent property.
   @override
   Future<PriceCalculationResult> calculate({
+    String? propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
@@ -115,7 +119,13 @@ class BookingPriceCalculator implements IPriceCalculator {
 
       // Bug #73 Fix: Check availability BEFORE calculating price
       if (checkAvailability && _availabilityChecker != null) {
+        if (propertyId == null) {
+          throw ArgumentError(
+            'propertyId is required when checkAvailability is true',
+          );
+        }
         final availabilityResult = await _availabilityChecker.check(
+          propertyId: propertyId,
           unitId: unitId,
           checkIn: normalizedCheckIn,
           checkOut: normalizedCheckOut,

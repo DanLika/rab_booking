@@ -252,15 +252,34 @@ Future<BookingPriceCalculation?> bookingPrice(
     weekendDays = unit?.weekendDays;
   }
 
-  // Calculate room price from daily prices with weekend pricing support
-  final roomPrice = await repository.calculateBookingPrice(
-    unitId: unitId,
-    checkIn: checkIn,
-    checkOut: checkOut,
-    basePrice: basePrice,
-    weekendBasePrice: weekendBasePrice,
-    weekendDays: weekendDays,
-  );
+  // Calculate room price from daily prices with weekend pricing support.
+  // SF-023: calculateBookingPrice now requires propertyId for the iCal
+  // availability leg. The widget should always supply it; if it doesn't
+  // (legacy fallback path), fall back to the daily-price repo which
+  // doesn't run availability — atomicBooking.ts still re-validates on
+  // the server before any booking is committed.
+  final double roomPrice;
+  if (propertyId != null) {
+    roomPrice = await repository.calculateBookingPrice(
+      propertyId: propertyId,
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+      basePrice: basePrice,
+      weekendBasePrice: weekendBasePrice,
+      weekendDays: weekendDays,
+    );
+  } else {
+    final dailyRepo = ref.watch(dailyPriceRepositoryProvider);
+    roomPrice = await dailyRepo.calculateBookingPrice(
+      unitId: unitId,
+      checkIn: checkIn,
+      checkOut: checkOut,
+      fallbackPrice: basePrice,
+      weekendBasePrice: weekendBasePrice,
+      weekendDays: weekendDays,
+    );
+  }
 
   // Bug Fix: Use DateNormalizer for consistent night calculation across timezones
   final nights = DateNormalizer.nightsBetween(checkIn, checkOut);

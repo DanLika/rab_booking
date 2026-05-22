@@ -11,7 +11,9 @@ import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/utils/timestamp_converter.dart';
 import '../helpers/availability_checker.dart';
 import '../helpers/booking_price_calculator.dart';
+import '../models/availability_window.dart';
 import '../../utils/date_key_generator.dart';
+import 'firebase_availability_repository.dart';
 
 /// Firebase repository for booking calendar with realtime updates and prices.
 ///
@@ -25,6 +27,7 @@ import '../../utils/date_key_generator.dart';
 /// Calendar building remains inline (optimized with Bug #71 fixes).
 class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   final FirebaseFirestore _firestore;
+  final FirebaseAvailabilityRepository _availabilityRepo;
 
   /// Helper for availability checking (lazy initialized).
   late final AvailabilityChecker _availabilityChecker;
@@ -32,12 +35,57 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   /// Helper for price calculation (lazy initialized).
   late final BookingPriceCalculator _priceCalculator;
 
-  FirebaseBookingCalendarRepository(this._firestore) {
-    _availabilityChecker = AvailabilityChecker(_firestore);
+  FirebaseBookingCalendarRepository(
+    this._firestore, {
+    FirebaseAvailabilityRepository? availabilityRepository,
+  }) : _availabilityRepo =
+           availabilityRepository ?? FirebaseAvailabilityRepository() {
+    _availabilityChecker = AvailabilityChecker(
+      _firestore,
+      availabilityRepository: _availabilityRepo,
+    );
     _priceCalculator = BookingPriceCalculator(
       firestore: _firestore,
       availabilityChecker: _availabilityChecker,
     );
+  }
+
+  /// Stream iCal blocks via the `getUnitAvailability` CF (SF-023).
+  ///
+  /// Replaces the prior `collectionGroup('ical_events')` `.snapshots()` —
+  /// the rule was tightened to deny anonymous reads. The CF runs the
+  /// equivalent server-side query and strips PII (guest_name, etc.).
+  ///
+  /// Emits `List<Map<String, dynamic>>` shaped identically to the legacy
+  /// parsed events so `_buildCalendarMap` / `_buildYearCalendarMap` stay
+  /// untouched (this repo is FROZEN per CLAUDE.md `NIKADA NE MIJENJAJ` —
+  /// scope kept to the ical-source swap only).
+  Stream<List<Map<String, dynamic>>> _streamIcalBlocks({
+    required String propertyId,
+    required String unitId,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return _availabilityRepo
+        .streamAvailability(
+          propertyId: propertyId,
+          unitId: unitId,
+          start: start,
+          end: end,
+        )
+        .map(
+          (windows) => windows
+              .where((w) => w.source == AvailabilityWindowSource.icalExternal)
+              .map(
+                (w) => <String, dynamic>{
+                  'start_date': w.start,
+                  'end_date': w.end,
+                  'source': w.platform ?? 'ical',
+                  'guest_name': 'External Booking',
+                },
+              )
+              .toList(growable: false),
+        );
   }
 
   /// Get year-view calendar data with realtime updates and prices
@@ -73,16 +121,14 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
-    // Note: Using client-side filtering to avoid Firestore index requirement for inequality filter
-    // PERF-002: Add limit to prevent excessive reads
-    final icalEventsStream = _firestore
-        .collection('properties')
-        .doc(propertyId)
-        .collection('ical_events')
-        .where('unit_id', isEqualTo: unitId)
-        .limit(500) // Max 500 iCal events per year view
-        .snapshots();
+    // Stream iCal blocks via the getUnitAvailability CF (SF-023).
+    // Replaces the prior public-read `collection('ical_events').snapshots()`.
+    final icalEventsStream = _streamIcalBlocks(
+      propertyId: propertyId,
+      unitId: unitId,
+      start: startDate,
+      end: endDate,
+    );
 
     // Stream widget settings to get minNights
     // FIXED: Use correct subcollection path: properties/{propertyId}/widget_settings/{unitId}
@@ -99,12 +145,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       pricesStream,
       icalEventsStream,
       widgetSettingsStream,
-      (
-        bookingsSnapshot,
-        pricesSnapshot,
-        icalEventsSnapshot,
-        widgetSettingsSnapshot,
-      ) {
+      (bookingsSnapshot, pricesSnapshot, icalEvents, widgetSettingsSnapshot) {
         // Parse bookings
         // ��️ SECURITY FIX SF-014: Use secure parser to prevent PII exposure
         final bookings = bookingsSnapshot.docs
@@ -119,39 +160,9 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             .cast<BookingModel>()
             .toList();
 
-        // Parse iCal events as "blocked" dates
-        // Client-side filtering: include events that overlap with the date range
-        // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
-        const icalConverter = NullableTimestampConverter();
-        final icalEvents = icalEventsSnapshot.docs
-            .map((doc) {
-              try {
-                final data = doc.data();
-                final startDate = icalConverter.fromJson(data['start_date']);
-                final endDate = icalConverter.fromJson(data['end_date']);
-                if (startDate == null || endDate == null) return null;
-                // Skip confirmed echoes — they don't block dates
-                if (data['status'] == 'confirmed_echo') return null;
-                return {
-                  'id': doc.id,
-                  'start_date': startDate,
-                  'end_date': endDate,
-                  'source': data['source'] ?? 'ical',
-                  'guest_name': data['guest_name'] ?? 'External Booking',
-                };
-              } catch (e) {
-                LoggingService.logError('Error parsing iCal event', e);
-                return null;
-              }
-            })
-            .where(
-              (event) =>
-                  event != null &&
-                  event['end_date'].isAfter(startDate) &&
-                  event['start_date'].isBefore(endDate),
-            )
-            .cast<Map<String, dynamic>>()
-            .toList();
+        // iCal blocks already projected to {start_date, end_date, source,
+        // guest_name} by _streamIcalBlocks; server already filtered by date
+        // range and excluded confirmed_echo. No further parsing needed.
 
         // Parse prices
         final Map<String, DailyPriceModel> priceMap = {};
@@ -248,16 +259,14 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
-    // NOTE: Removed start_date filter to avoid index issues - filter in code instead
-    // PERF-002: Add limit to prevent excessive reads
-    final icalEventsStream = _firestore
-        .collection('properties')
-        .doc(propertyId)
-        .collection('ical_events')
-        .where('unit_id', isEqualTo: unitId)
-        .limit(100) // Max 100 iCal events per month is a safe upper bound
-        .snapshots();
+    // Stream iCal blocks via the getUnitAvailability CF (SF-023).
+    // Replaces the prior public-read `collection('ical_events').snapshots()`.
+    final icalEventsStream = _streamIcalBlocks(
+      propertyId: propertyId,
+      unitId: unitId,
+      start: startDate,
+      end: endDate,
+    );
 
     // Stream widget settings to get minNights
     // FIXED: Use correct subcollection path: properties/{propertyId}/widget_settings/{unitId}
@@ -274,12 +283,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       pricesStream,
       icalEventsStream,
       widgetSettingsStream,
-      (
-        bookingsSnapshot,
-        pricesSnapshot,
-        icalEventsSnapshot,
-        widgetSettingsSnapshot,
-      ) {
+      (bookingsSnapshot, pricesSnapshot, icalEvents, widgetSettingsSnapshot) {
         // Parse bookings
         // ��️ SECURITY FIX SF-014: Use secure parser to prevent PII exposure
         final bookings = bookingsSnapshot.docs
@@ -294,39 +298,8 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
             .cast<BookingModel>()
             .toList();
 
-        // Parse iCal events as "blocked" dates
-        // Client-side filtering: include events that overlap with the date range
-        // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
-        const icalConverter = NullableTimestampConverter();
-        final icalEvents = icalEventsSnapshot.docs
-            .map((doc) {
-              try {
-                final data = doc.data();
-                final startDate = icalConverter.fromJson(data['start_date']);
-                final endDate = icalConverter.fromJson(data['end_date']);
-                if (startDate == null || endDate == null) return null;
-                // Skip confirmed echoes — they don't block dates
-                if (data['status'] == 'confirmed_echo') return null;
-                return {
-                  'id': doc.id,
-                  'start_date': startDate,
-                  'end_date': endDate,
-                  'source': data['source'] ?? 'ical',
-                  'guest_name': data['guest_name'] ?? 'External Booking',
-                };
-              } catch (e) {
-                LoggingService.logError('Error parsing iCal event', e);
-                return null;
-              }
-            })
-            .where(
-              (event) =>
-                  event != null &&
-                  event['end_date'].isAfter(startDate) &&
-                  event['start_date'].isBefore(endDate),
-            )
-            .cast<Map<String, dynamic>>()
-            .toList();
+        // iCal blocks already projected by _streamIcalBlocks; server-side
+        // overlap filter applied — no further parsing needed.
 
         // Parse prices
         final Map<String, DailyPriceModel> priceMap = {};
@@ -426,19 +399,19 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
-    final icalEventsStream = _firestore
-        .collection('properties')
-        .doc(propertyId)
-        .collection('ical_events')
-        .where('unit_id', isEqualTo: unitId)
-        .snapshots();
+    // Stream iCal blocks via the getUnitAvailability CF (SF-023).
+    final icalEventsStream = _streamIcalBlocks(
+      propertyId: propertyId,
+      unitId: unitId,
+      start: startDate,
+      end: endDate,
+    );
 
     // Combine only 3 streams (instead of 4)
     return Rx.combineLatest3(bookingsStream, pricesStream, icalEventsStream, (
       bookingsSnapshot,
       pricesSnapshot,
-      icalEventsSnapshot,
+      icalEvents,
     ) {
       // Parse bookings
       // ��️ SECURITY FIX SF-014: Use secure parser to prevent PII exposure
@@ -452,36 +425,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           .cast<BookingModel>()
           .toList();
 
-      // Parse iCal events
-      // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
-      const icalConverter = NullableTimestampConverter();
-      final icalEvents = icalEventsSnapshot.docs
-          .map((doc) {
-            try {
-              final data = doc.data();
-              final startDate = icalConverter.fromJson(data['start_date']);
-              final endDate = icalConverter.fromJson(data['end_date']);
-              if (startDate == null || endDate == null) return null;
-              return {
-                'id': doc.id,
-                'start_date': startDate,
-                'end_date': endDate,
-                'source': data['source'] ?? 'ical',
-                'guest_name': data['guest_name'] ?? 'External Booking',
-              };
-            } catch (e) {
-              LoggingService.logError('Error parsing iCal event', e);
-              return null;
-            }
-          })
-          .where(
-            (event) =>
-                event != null &&
-                event['end_date'].isAfter(startDate) &&
-                event['start_date'].isBefore(endDate),
-          )
-          .cast<Map<String, dynamic>>()
-          .toList();
+      // iCal blocks already projected + overlap-filtered server-side.
 
       // Parse prices
       final Map<String, DailyPriceModel> priceMap = {};
@@ -565,21 +509,19 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal events (NEW STRUCTURE: property-level subcollection with unit_id filter)
-    // NOTE: Removed start_date filter to avoid index issues - filter in code instead
-    // This matches the year calendar pattern and avoids potential composite index issues
-    final icalEventsStream = _firestore
-        .collection('properties')
-        .doc(propertyId)
-        .collection('ical_events')
-        .where('unit_id', isEqualTo: unitId)
-        .snapshots();
+    // Stream iCal blocks via the getUnitAvailability CF (SF-023).
+    final icalEventsStream = _streamIcalBlocks(
+      propertyId: propertyId,
+      unitId: unitId,
+      start: startDate,
+      end: endDate,
+    );
 
     // Combine only 3 streams (instead of 4)
     return Rx.combineLatest3(bookingsStream, pricesStream, icalEventsStream, (
       bookingsSnapshot,
       pricesSnapshot,
-      icalEventsSnapshot,
+      icalEvents,
     ) {
       // Parse bookings
       // ��️ SECURITY FIX SF-014: Use secure parser to prevent PII exposure
@@ -593,36 +535,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           .cast<BookingModel>()
           .toList();
 
-      // Parse iCal events
-      // WEB COMPATIBILITY: Use converter to handle both Timestamp and String dates
-      const icalConverter = NullableTimestampConverter();
-      final icalEvents = icalEventsSnapshot.docs
-          .map((doc) {
-            try {
-              final data = doc.data();
-              final startDate = icalConverter.fromJson(data['start_date']);
-              final endDate = icalConverter.fromJson(data['end_date']);
-              if (startDate == null || endDate == null) return null;
-              return {
-                'id': doc.id,
-                'start_date': startDate,
-                'end_date': endDate,
-                'source': data['source'] ?? 'ical',
-                'guest_name': data['guest_name'] ?? 'External Booking',
-              };
-            } catch (e) {
-              LoggingService.logError('Error parsing iCal event', e);
-              return null;
-            }
-          })
-          .where(
-            (event) =>
-                event != null &&
-                event['end_date'].isAfter(startDate) &&
-                event['start_date'].isBefore(endDate),
-          )
-          .cast<Map<String, dynamic>>()
-          .toList();
+      // iCal blocks already projected + overlap-filtered server-side.
 
       // Parse prices
       final Map<String, DailyPriceModel> priceMap = {};
@@ -1305,11 +1218,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   /// Delegates to [AvailabilityChecker] for the actual logic.
   @override
   Future<bool> checkAvailability({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
   }) {
     return _availabilityChecker.isAvailable(
+      propertyId: propertyId,
       unitId: unitId,
       checkIn: checkIn,
       checkOut: checkOut,
@@ -1333,11 +1248,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   ///
   /// Returns [AvailabilityCheckResult] with conflict information if not available.
   Future<AvailabilityCheckResult> checkAvailabilityDetailed({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
   }) {
     return _availabilityChecker.check(
+      propertyId: propertyId,
       unitId: unitId,
       checkIn: checkIn,
       checkOut: checkOut,
@@ -1356,6 +1273,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   /// Throws [DatesNotAvailableException] if dates are not available.
   @override
   Future<double> calculateBookingPrice({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
@@ -1364,6 +1282,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     List<int>? weekendDays,
   }) async {
     final result = await _priceCalculator.calculate(
+      propertyId: propertyId,
       unitId: unitId,
       checkIn: checkIn,
       checkOut: checkOut,
@@ -1378,6 +1297,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
   ///
   /// Returns [PriceCalculationResult] with per-night breakdown.
   Future<PriceCalculationResult> calculateBookingPriceDetailed({
+    required String propertyId,
     required String unitId,
     required DateTime checkIn,
     required DateTime checkOut,
@@ -1386,6 +1306,7 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     List<int>? weekendDays,
   }) {
     return _priceCalculator.calculate(
+      propertyId: propertyId,
       unitId: unitId,
       checkIn: checkIn,
       checkOut: checkOut,

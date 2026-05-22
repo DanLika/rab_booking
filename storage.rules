@@ -29,15 +29,34 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
-    // iCal exports (public read for calendar subscriptions, authenticated write)
-    // Path: ical-exports/{propertyId}/{unitId}/...
+    // iCal exports — SF-025 LOCKED 2026-05-22
+    // Path: ical-exports/{propertyId}/{unitId}/calendar.ics
+    //
+    // Pre-fix: `allow read: if true` + a deterministic path (propertyId +
+    // unitId, both harvestable from public-read Firestore properties + units
+    // collections) let any anonymous caller GET the .ics file directly,
+    // bypassing the Storage download-token. The .ics SUMMARY field is
+    // `Booking: <guest_name>` (ical_generator.dart) — full guest-name
+    // enumeration across every property.
+    //
+    // Now: rule-mediated reads require auth + property ownership. Owner-held
+    // tokenized URLs (returned by `getDownloadURL()`, used by external
+    // calendar subscribers like Booking.com / Airbnb) keep working because
+    // download tokens bypass rules by design.
+    //
+    // Path-guess attack now denied: anonymous GETs of
+    // `/v0/b/.../o/ical-exports%2F.../calendar.ics?alt=media` (no token)
+    // return 401 instead of leaking guest names.
+    //
+    // 5 MiB cap on writes — a calendar.ics for the busiest unit is < 200 KB
+    // (one VEVENT per booking, ~250 bytes). 5 MiB is an order-of-magnitude
+    // safety bound that still cuts off pathological abuse.
     match /ical-exports/{propertyId}/{unitId}/{allPaths=**} {
-      // Anyone can read (for public calendar subscriptions)
-      allow read: if true;
-      // SEC-001: Write allowed ONLY by property owner (IDOR fix)
-      // Validates request UID against the property's owner_id in Firestore
-      allow write: if request.auth != null &&
+      allow read: if request.auth != null &&
         get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
+      allow write: if request.auth != null
+        && get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid
+        && request.resource.size < 5 * 1024 * 1024;
     }
 
     // Public assets (logos, default images, etc.)

@@ -782,6 +782,7 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
       // Check availability using backend (works across all months)
       final isAvailable = await ref.read(
         checkDateAvailabilityProvider(
+          propertyId: widget.propertyId,
           unitId: widget.unitId,
           checkIn: start,
           checkOut: end,

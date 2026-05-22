@@ -115,15 +115,20 @@ Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
 }
 
 /// Check date availability
+///
+/// [propertyId] is required so the iCal-check leg can call the
+/// `getUnitAvailability` CF (SF-023 lockdown).
 @riverpod
 Future<bool> checkDateAvailability(
   Ref ref, {
+  required String propertyId,
   required String unitId,
   required DateTime checkIn,
   required DateTime checkOut,
 }) {
   final repository = ref.watch(bookingCalendarRepositoryProvider);
   return repository.checkAvailability(
+    propertyId: propertyId,
     unitId: unitId,
     checkIn: checkIn,
     checkOut: checkOut,

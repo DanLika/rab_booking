@@ -3593,9 +3593,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             'freshBase=$freshBasePrice, currentAvg=$currentAvgPrice, diff=$priceDiff',
           );
 
-          // Recalculate with fresh data using the repository
+          // Recalculate with fresh data using the repository.
+          // Safe to force-unwrap: the surrounding try-block already
+          // dereferenced `_propertyId!` at fetchUnitByIdFresh above (line
+          // 3569), which would have thrown if it were null. The control
+          // flow can't reach here with a null propertyId.
           final repository = ref.read(bookingCalendarRepositoryProvider);
           final freshRoomPrice = await repository.calculateBookingPrice(
+            propertyId: _propertyId!,
             unitId: _unitId,
             checkIn: _checkIn!,
             checkOut: _checkOut!,

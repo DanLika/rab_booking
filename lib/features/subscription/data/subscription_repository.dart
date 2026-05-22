@@ -1,11 +1,29 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Repository for handling subscription-related data and operations
 class SubscriptionRepository {
+  final FirebaseFirestore _firestore;
   final FirebaseFunctions _functions;
 
-  SubscriptionRepository(this._functions);
+  SubscriptionRepository({
+    FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _functions = functions ?? FirebaseFunctions.instance;
+
+  /// Check if the user has an active subscription
+  Future<bool> hasActiveSubscription(String userId) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      final data = doc.data();
+      if (data == null) return false;
+      return data['accountStatus'] == 'active' || data['accountStatus'] == 'trial';
+    } catch (e) {
+      throw Exception('Failed to get subscription status: $e');
+    }
+  }
 
   /// Create a Stripe Checkout Session for subscription
   ///
@@ -53,5 +71,8 @@ class SubscriptionRepository {
 
 /// Provider for SubscriptionRepository
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
-  return SubscriptionRepository(FirebaseFunctions.instance);
+  return SubscriptionRepository(
+    firestore: FirebaseFirestore.instance,
+    functions: FirebaseFunctions.instance,
+  );
 });

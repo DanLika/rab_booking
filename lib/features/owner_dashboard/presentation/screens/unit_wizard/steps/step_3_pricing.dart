@@ -231,6 +231,9 @@ class _Step3PricingState extends ConsumerState<Step3Pricing>
                                       children: [
                                         // Price per night
                                         TextFormField(
+                                          key: const ValueKey(
+                                            'wizard_step3_price',
+                                          ),
                                           controller: _priceController,
                                           decoration: InputDecorationHelper.buildDecoration(
                                             labelText: l10n

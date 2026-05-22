@@ -257,6 +257,9 @@ class _Step1BasicInfoState extends ConsumerState<Step1BasicInfo>
                                       children: [
                                         // Unit Name
                                         TextFormField(
+                                          key: const ValueKey(
+                                            'wizard_step1_name',
+                                          ),
                                           controller: _nameController,
                                           decoration:
                                               InputDecorationHelper.buildDecoration(

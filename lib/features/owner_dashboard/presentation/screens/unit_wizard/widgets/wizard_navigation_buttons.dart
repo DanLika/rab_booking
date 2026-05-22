@@ -64,6 +64,7 @@ class WizardNavigationButtons extends StatelessWidget {
                     tooltip: l10n.unitWizardBack,
                   )
                 : OutlinedButton.icon(
+                    key: const ValueKey('wizard_back'),
                     onPressed: onBack,
                     icon: const Icon(Icons.arrow_back, size: 18),
                     label: Text(l10n.unitWizardBack),
@@ -102,6 +103,7 @@ class WizardNavigationButtons extends StatelessWidget {
           // Next/Continue button - shorter label on very small screens or landscape
           isVerySmall && nextLabel == l10n.unitWizardContinueToReview
               ? FilledButton.icon(
+                  key: const ValueKey('wizard_next'),
                   onPressed: nextEnabled && !isLoading ? onNext : null,
                   icon: isLoading
                       ? const SizedBox(
@@ -128,6 +130,7 @@ class WizardNavigationButtons extends StatelessWidget {
                   ),
                 )
               : FilledButton.icon(
+                  key: const ValueKey('wizard_next'),
                   onPressed: nextEnabled && !isLoading ? onNext : null,
                   icon: isLoading
                       ? const SizedBox(

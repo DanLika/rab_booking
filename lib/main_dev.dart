@@ -2,13 +2,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+// Marionette is a dev_dependency: imported here for kDebugMode-only init,
+// tree-shaken out of release builds. Lint expects production deps for imports.
+// ignore: depend_on_referenced_packages
+import 'package:marionette_flutter/marionette_flutter.dart';
 import 'core/config/environment.dart';
 import 'firebase_options_dev.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'main.dart' as app;
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  if (kDebugMode) {
+    MarionetteBinding.ensureInitialized();
+  } else {
+    WidgetsFlutterBinding.ensureInitialized();
+  }
   GoogleFonts.config.allowRuntimeFetching = false;
 
   // Set environment

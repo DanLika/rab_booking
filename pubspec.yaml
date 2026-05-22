@@ -126,6 +126,10 @@ dev_dependencies:
   # (Flutter bug: dev_dependencies included in GeneratedPluginRegistrant.java)
   golden_toolkit: ^0.15.0
 
+  # Marionette MCP — Flutter VM service extensions for AI-driven sim testing.
+  # Debug-only; main_dev.dart inits MarionetteBinding behind kDebugMode.
+  marionette_flutter: ^0.5.0
+
   # Sentry source maps upload (for better error tracking)
   sentry_dart_plugin: ^3.2.1
 

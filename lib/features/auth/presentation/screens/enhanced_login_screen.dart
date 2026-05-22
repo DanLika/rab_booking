@@ -467,6 +467,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                                         );
                                       },
                                       child: GradientAuthButton(
+                                        key: const ValueKey('login_submit'),
                                         text: l10n.login,
                                         onPressed: _handleLogin,
                                         isLoading: _isLoading,
@@ -553,6 +554,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
   Widget _buildEmailField(AppLocalizations l10n) {
     return PremiumInputField(
+      key: const ValueKey('login_email'),
       controller: _emailController,
       labelText: l10n.email,
       prefixIcon: Icons.email_outlined,
@@ -570,6 +572,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
   Widget _buildPasswordField(ThemeData theme, AppLocalizations l10n) {
     return PremiumInputField(
+      key: const ValueKey('login_password'),
       controller: _passwordController,
       labelText: l10n.password,
       prefixIcon: Icons.lock_outline,

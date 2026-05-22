@@ -323,6 +323,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                                         : (isCompact ? 20 : 24),
                                   ),
                                   GradientAuthButton(
+                                    key: const ValueKey('register_submit'),
                                     text: l10n.authCreateAccount,
                                     onPressed: _canAttemptSubmit
                                         ? _handleRegister
@@ -416,6 +417,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     return Column(
       children: [
         PremiumInputField(
+          key: const ValueKey('register_name'),
           controller: _fullNameController,
           labelText: l10n.authFullName,
           prefixIcon: Icons.person_outline,
@@ -436,6 +438,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         ),
         fieldSpacing,
         PremiumInputField(
+          key: const ValueKey('register_email'),
           controller: _emailController,
           labelText: l10n.email,
           prefixIcon: Icons.email_outlined,
@@ -449,6 +452,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         ),
         fieldSpacing,
         PremiumInputField(
+          key: const ValueKey('register_phone'),
           controller: _phoneController,
           labelText: l10n.authPhone,
           prefixIcon: Icons.phone_outlined,
@@ -457,6 +461,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         ),
         fieldSpacing,
         PremiumInputField(
+          key: const ValueKey('register_password'),
           controller: _passwordController,
           labelText: l10n.password,
           prefixIcon: Icons.lock_outline,
@@ -480,6 +485,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         ),
         fieldSpacing,
         PremiumInputField(
+          key: const ValueKey('register_confirm'),
           controller: _confirmPasswordController,
           labelText: l10n.authConfirmPassword,
           prefixIcon: Icons.lock_outline,
@@ -529,6 +535,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             MaterialPageRoute(builder: (_) => const TermsConditionsScreen()),
           ),
           theme: theme,
+          checkboxKey: const ValueKey('register_tos_checkbox'),
         ),
         const SizedBox(height: 6),
         _buildLegalCheckbox(
@@ -543,6 +550,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
           ),
           theme: theme,
+          checkboxKey: const ValueKey('register_privacy_checkbox'),
         ),
         const SizedBox(height: 6),
         _buildCheckboxRow(
@@ -570,10 +578,12 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     required String prefixText,
     required VoidCallback onLinkTap,
     required ThemeData theme,
+    Key? checkboxKey,
   }) {
     return _buildCheckboxRow(
       value: value,
       onChanged: onChanged,
+      checkboxKey: checkboxKey,
       child: RichText(
         text: TextSpan(
           style: TextStyle(
@@ -606,6 +616,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     required ValueChanged<bool?> onChanged,
     required Widget child,
     required ThemeData theme,
+    Key? checkboxKey,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,6 +625,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           height: 22,
           width: 22,
           child: Checkbox(
+            key: checkboxKey,
             value: value,
             onChanged: onChanged,
             shape: RoundedRectangleBorder(

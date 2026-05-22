@@ -134,6 +134,67 @@ describe("widget_settings write rejects secret fields (Phase A4)", () => {
   });
 });
 
+describe("widget_settings write rejects ical cache fields (SF-024)", () => {
+  test("owner CANNOT update widget_settings.ical_cache_content", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(SETTINGS_PATH).update({
+        ical_cache_content: "BEGIN:VCALENDAR...END:VCALENDAR",
+      }),
+    );
+  });
+
+  test("owner CANNOT update widget_settings.ical_cache_etag", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(SETTINGS_PATH).update({
+        ical_cache_etag: "\"deadbeef\"",
+      }),
+    );
+  });
+
+  test("owner CAN update widget_settings.ical_cache_unit_name (non-secret marker)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertSucceeds(
+      ctx.firestore().doc(SETTINGS_PATH).update({
+        ical_cache_unit_name: "Apt 1",
+      }),
+    );
+  });
+});
+
+describe("widget_secrets accepts ical cache fields (SF-024)", () => {
+  test("owner CAN write ical_cache_content to widget_secrets", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertSucceeds(
+      ctx.firestore().doc(SECRETS_PATH).update({
+        ical_cache_content: "BEGIN:VCALENDAR...END:VCALENDAR",
+        ical_cache_etag: "\"deadbeef\"",
+      }),
+    );
+  });
+
+  test("property owner CAN read own widget_secrets.ical_cache_content", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx: RulesTestContext) => {
+      await ctx.firestore().doc(SECRETS_PATH).update({
+        ical_cache_content: "BEGIN:VCALENDAR...END:VCALENDAR",
+      });
+    });
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertSucceeds(ctx.firestore().doc(SECRETS_PATH).get());
+  });
+
+  test("foreign owner CANNOT read foreign widget_secrets.ical_cache_content", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx: RulesTestContext) => {
+      await ctx.firestore().doc(SECRETS_PATH).update({
+        ical_cache_content: "BEGIN:VCALENDAR...END:VCALENDAR",
+      });
+    });
+    const ctx = testEnv.authenticatedContext(FOREIGN_UID);
+    await assertFails(ctx.firestore().doc(SECRETS_PATH).get());
+  });
+});
+
 describe("widget_secrets direct path (Phase A4)", () => {
   test("unauthenticated client CANNOT read widget_secrets", async () => {
     const ctx = testEnv.unauthenticatedContext();

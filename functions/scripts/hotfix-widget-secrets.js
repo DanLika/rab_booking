@@ -11,15 +11,18 @@
  * For every properties/{propertyId}/widget_settings/{unitId} doc:
  *   1. Read `email_config.resend_api_key` (if present).
  *   2. Read `ical_export_token` (if present).
- *   3. Generate a fresh iCal token (32 random bytes hex).
- *   4. Compute sha256(token + pepper) using ICAL_TOKEN_PEPPER from env.
- *   5. Look up the new Resend key for this owner from the CSV provided by A1.
- *   6. Write properties/{propertyId}/widget_secrets/{unitId} with:
+ *   3. Read `ical_cache_content` + `ical_cache_etag` (if present) — SF-024.
+ *   4. Generate a fresh iCal token (32 random bytes hex).
+ *   5. Compute sha256(token + pepper) using ICAL_TOKEN_PEPPER from env.
+ *   6. Look up the new Resend key for this owner from the CSV provided by A1.
+ *   7. Write properties/{propertyId}/widget_secrets/{unitId} with:
  *        - resend_api_key (new value)
  *        - ical_export_token_hash (peppered hash)
  *        - ical_export_token_plaintext (TRANSITIONAL — cleaned up in A6)
+ *        - ical_cache_content + ical_cache_etag + ical_cache_updated_at (SF-024)
  *        - rotated_at
- *   7. Strip widget_settings.email_config.resend_api_key + widget_settings.ical_export_token.
+ *   8. Strip from widget_settings: email_config.resend_api_key, ical_export_token,
+ *      ical_cache_content, ical_cache_etag (SF-024).
  *
  * Idempotency:
  *   Re-running is safe: if widget_secrets/{unitId} already has rotated_at within
@@ -172,6 +175,10 @@ async function main() {
       const emailConfig = settings.email_config || {};
       const existingResendKey = emailConfig.resend_api_key || null;
       const existingIcalToken = settings.ical_export_token || null;
+      // SF-024: iCal cache content leaks bookings/guest PII when widget_settings
+      // is publicly readable. Move both blob + etag into widget_secrets too.
+      const existingIcalCacheContent = settings.ical_cache_content || null;
+      const existingIcalCacheEtag = settings.ical_cache_etag || null;
 
       const secretsRef = propertyDoc.ref.collection('widget_secrets').doc(unitId);
 
@@ -217,17 +224,31 @@ async function main() {
         if (newResendKey) {
           secretsPayload.resend_api_key = newResendKey;
         }
+        // SF-024: carry over the existing cache so the first request after
+        // migration doesn't have to regenerate. ical_cache_updated_at stamps the
+        // moment we relocated, not the original generation time.
+        if (existingIcalCacheContent) {
+          secretsPayload.ical_cache_content = existingIcalCacheContent;
+          secretsPayload.ical_cache_updated_at = admin.firestore.FieldValue.serverTimestamp();
+        }
+        if (existingIcalCacheEtag) {
+          secretsPayload.ical_cache_etag = existingIcalCacheEtag;
+        }
 
         const settingsUpdate = {
           ical_export_token: admin.firestore.FieldValue.delete(),
           'email_config.resend_api_key': admin.firestore.FieldValue.delete(),
+          // SF-024: strip cache fields from the publicly readable doc.
+          ical_cache_content: admin.firestore.FieldValue.delete(),
+          ical_cache_etag: admin.firestore.FieldValue.delete(),
         };
 
         if (dryRun) {
           logLine(
             `DRY-RUN property=${propertyId} unit=${unitId} owner=${ownerId} ` +
               `old_key_present=${!!existingResendKey} old_token_present=${!!existingIcalToken} ` +
-              `new_key_provided=${!!newResendKey}`,
+              `new_key_provided=${!!newResendKey} ` +
+              `cache_content_present=${!!existingIcalCacheContent} cache_etag_present=${!!existingIcalCacheEtag}`,
           );
         } else {
           await secretsRef.set(secretsPayload, {merge: true});
@@ -235,7 +256,8 @@ async function main() {
           logLine(
             `MIGRATED property=${propertyId} unit=${unitId} owner=${ownerId} ` +
               `old_key_present=${!!existingResendKey} old_token_present=${!!existingIcalToken} ` +
-              `new_key_provided=${!!newResendKey}`,
+              `new_key_provided=${!!newResendKey} ` +
+              `cache_content_present=${!!existingIcalCacheContent} cache_etag_present=${!!existingIcalCacheEtag}`,
           );
         }
         migrated += 1;

@@ -1378,9 +1378,9 @@ UX implication of step 2: the public widget calendar loses `.snapshots()` realti
 
 ### T11c CLOSED 2026-05-22
 
-**Status**: ✅ Code merged to `main` (PR #446, merge commit `3b810b2d`, T11c core commit `ab6bdb3d`). ⚠️ Dev deploy partial — see "Dev deploy 2026-05-22 (partial)" subsection below. Prod cutover separate.
+**Status**: ✅ Code merged to `main` (PR #446, merge commit `3b810b2d`, T11c core commit `ab6bdb3d`). ✅ Dev deploy complete — see "Dev deploy 2026-05-22" subsection below. Prod cutover separate.
 
-**Deployed to bookbed-dev**: 2026-05-22 (`firestore.rules` + `getUnitAvailability` CF only — widget bundle redeploy outstanding).
+**Deployed to bookbed-dev**: 2026-05-22 — `firestore.rules` + `getUnitAvailability` CF + widget bundle + `daily_prices` COLLECTION composite index (`available + date`, commit `a1fe3633`).
 
 5 widget anonymous-context sites migrated to `getUnitAvailability` callable, then `firestore.rules` clause 1 (`unit_id`+`status` public read) removed from all 3 surfaces (subcollection + CG + deprecated top-level). The last anonymous read surface on `bookings` is now closed.
 
@@ -1395,38 +1395,31 @@ UX trade-off: realtime `.snapshots()` for bookings sacrificed; widget now polls 
 
 CLAUDE.md "NIKADA NE MIJENJAJ" row for `bookings` clause 1 superseded by this fix — the table entry should be removed or annotated as resolved. The `firebase_booking_calendar_repository.dart` row stays (file still has no unit tests; T11c only made the touched flows simpler, not safer to broadly refactor).
 
-### Dev deploy 2026-05-22 (partial)
+### Dev deploy 2026-05-22
 
-`firebase deploy --only firestore:rules,functions:getUnitAvailability --project bookbed-dev` — **success**. Smoke verification mixed:
+Three deploys + one infra fix landed sequentially across the dev cutover. Final smoke ✅.
+
+**Deploys**:
+
+1. `firebase deploy --only firestore:rules,functions:getUnitAvailability --project bookbed-dev` (initial). Rules clause 1 removed; CF updated. Anon CG bookings → 403 immediately ✅. CF returned 500 due to missing `daily_prices` index — flagged for follow-up.
+2. `flutter build web --release --target lib/widget_main_dev.dart` + `firebase deploy --only hosting:widget --project bookbed-dev`. Bundle on `bookbed-widget-dev.web.app` now contains the T11c-migrated `firebase_booking_calendar_repository.dart` + `availability_checker.dart` (last-modified 2026-05-22 17:37 GMT, served SHA `98d40d2c…`). Pre-rebuild bundle was 2026-05-18 (pre-SF-023, pre-T11c). Cutover-order violation was dev-only; prod plan unchanged (widget bundle still ships before rules).
+3. `firestore.indexes.json` + `firebase deploy --only firestore:indexes --project bookbed-dev`. New `daily_prices` COLLECTION-scope composite (`available` ASC + `date` ASC) added (commit `a1fe3633`). Existing daily_prices indexes only covered `unit_id + ...` paths; CG indexes don't help subcollection queries (per `.claude/rules/firestore.md`). Index built `READY` after ~80 s. Note: Firestore needs an additional ~30 s propagation after `READY` before queries actually use a new composite — first CF call post-`READY` still 500'd with "index currently building". Worth knowing for prod cutover timing.
+
+**Final smoke (post all three deploys)**:
 
 | Check | Result |
 |---|---|
-| Anonymous `collectionGroup('bookings')` `runQuery` with `unit_id`+`status` filter | ✅ **403 PERMISSION_DENIED** (clause 1 closed across all 3 rule surfaces) |
-| `getUnitAvailability` callable (`europe-west1`) — `{propertyId: SEED_property_dev_01, unitId: SEED_unit_dev_01, startDate: 2026-06-01, endDate: 2026-06-30}` | ❌ **500 INTERNAL** — `FAILED_PRECONDITION: The query requires an index` |
+| Anon `collectionGroup('bookings')` `runQuery` with `unit_id`+`status` filter | ✅ **403 PERMISSION_DENIED** (clause 1 closed across subcollection + CG + deprecated top-level) |
+| `getUnitAvailability` (europe-west1) — `{propertyId: SEED_property_dev_01, unitId: SEED_unit_dev_01, 2026-06-01..2026-06-30}` | ✅ **200** — `{result: {unitId: SEED_unit_dev_01, windows: [], generatedAt: …, cacheHint: 30}}` (empty `windows` because dev seed has 0 bookings/iCal/daily_prices for that unit) |
+| `bookbed-widget-dev.web.app/` HTTP HEAD | ✅ **200**, `last-modified: 2026-05-22 17:37:07 GMT`, `bookbed-overlay.js` deployed (per `web/bookbed-overlay.js` → `build/web_widget/` copy step from changelog 6.65) |
 
-**Two follow-ups required before T11c can be called done in `bookbed-dev`:**
+Visual widget smoke needs a real browser; preconditions all met. Test URL: `https://bookbed-widget-dev.web.app/?property=SEED_property_dev_01&unit=SEED_unit_dev_01`.
 
-1. **Missing `daily_prices` COLLECTION-scope composite index** (`available` ASC + `date` ASC). The CF's subcollection query (`functions/src/availability.ts:156-166`) needs this; Firestore planner enforces the index requirement on query shape regardless of doc count (current dev seed has 0 `daily_prices` docs but planner still rejects). Pre-existing infra gap — not introduced by T11c; surfaced because smoke now exercises the full `getUnitAvailability` codepath end-to-end (SF-023's earlier smoke likely never hit a non-empty path). Add to `firestore.indexes.json`:
-   ```json
-   {
-     "collectionGroup": "daily_prices",
-     "queryScope": "COLLECTION",
-     "fields": [
-       {"fieldPath": "available", "order": "ASCENDING"},
-       {"fieldPath": "date", "order": "ASCENDING"}
-     ]
-   }
-   ```
-   Then `firebase deploy --only firestore:indexes --project bookbed-dev`. Same index will need to land on prod before the prod cutover sequence.
-
-2. **Widget bundle on `bookbed-widget-dev.web.app` is stale** (last-modified 2026-05-18 — pre-SF-023, pre-T11c). Today's dev rules deploy tightened reads ahead of the widget bundle redeploy — order violated relative to the TODO.md cutover sequence (widget bundle → rules-deploy-last). Any live consumer of `bookbed-widget-dev.web.app` will now hit 403 on its direct `collectionGroup('bookings')` reads. Rebuild + deploy the dev widget bundle to restore parity:
-   ```bash
-   flutter build web --target lib/widget_main_dev.dart --release
-   firebase deploy --only hosting:widget --project bookbed-dev
-   ```
-   The dev URL may have been dormant — check `firebase hosting:channel:list --project bookbed-dev` before assuming impact. Prod cutover sequence remains correct (widget bundle before rules); the violation is dev-only.
-
-Final origin/main SHA after this deploy: `3b810b2d` (PR #446 merge) + this commit. Visual widget smoke skipped — bundle staleness made the test as written incapable of validating T11c.
+**Prod cutover prerequisites** (when ready):
+- Deploy `getUnitAvailability` CF to `rab-booking-248fc` (europe-west1).
+- Add same `daily_prices` COLLECTION composite to prod via `firebase deploy --only firestore:indexes --project rab-booking-248fc`. Wait for `READY` + an extra ~30 s propagation buffer before the rules deploy.
+- Build + deploy widget bundle to prod hosting (`hosting:widget` target on `rab-booking-248fc`).
+- Deploy `firestore.rules` to prod **last** so the live widget never makes a now-blocked direct read.
 
 ### Sibling audit (independent of T11c)
 

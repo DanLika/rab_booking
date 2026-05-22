@@ -86,6 +86,8 @@ firebase-service-account-key.json
 # Whitelist AI knowledge base assets
 !assets/kb/
 !assets/kb/*.md
+# Whitelist audit directory .md files (security/architecture audit notes)
+!audit/**/*.md
 *.sql
 *.stackdump
 build_output.txt

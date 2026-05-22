@@ -29,7 +29,7 @@
 | `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |
 | Navigator.push za confirmation | NE vraćaj state-based navigaciju |
 | Timeline Calendar fixed dimensions (`timeline_dimensions.dart`) | FIXED 50/42/100/60px za SVE uređaje — NE vraćaj responsive breakpoints |
-| `bookings` read rule — `unit_id+status` clause 1 (`firestore.rules` x3) | INTENTIONALLY public until T11c proper lands. `getUnitAvailability` CF JE deployan (SF-023, 2026-05-22, `functions/src/availability.ts`, eu-west1) — widget zasad konzumira samo `source=='ical_external'` subset. NE skidaj clause 1 bez prvog migrirati widget-side `collectionGroup('bookings').where('unit_id', ...)` snapshot stream-ova na CF poziv. Drugi 2 clause-a (`stripe_session_id`/`booking_reference`) su zatvoreni u T11-hotfix-partial — vidi `audit/06-bookings-hotfix-partial.md` + `audit/17-sf023-sf025-rules-fix.md`. |
+| `bookings` read rule — `unit_id+status` clause 1 | ✅ T11c CLOSED 2026-05-22 (`fix/t11c-proper-bookings-migration`, commit `ab6bdb3d`). All 3 rule surfaces (subcollection + CG + deprecated top-level) tightened. Widget calendar + booking-submit gate route through `getUnitAvailability` callable (`functions/src/availability.ts`, eu-west1). Realtime `.snapshots()` for bookings sacrificed → 30 s polling via `FirebaseAvailabilityRepository._defaultPollInterval`. Privacy-driven: pending/confirmed visual distinction in widget no longer exists (synthesized `BookingModel.status = confirmed`). See `docs/SECURITY_FIXES.md` SF-019 → T11c CLOSED section + `audit/06-availability-cf-design.md`. |
 
 ---
 

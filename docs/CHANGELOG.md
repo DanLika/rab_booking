@@ -22,6 +22,23 @@ All version history from v4.6 to v6.67.
 
 ---
 
+**Changelog 6.79**: T11c proper CLOSED — bookings clause 1 locked + widget CF migration (2026-05-22):
+
+- **T11c proper landed** (PR #446, branch `fix/t11c-proper-bookings-migration`, commits `ab6bdb3d` + `64b14bf0`). Closes SF-019 → T11c. Last anonymous read surface on the `bookings` collection-group is now closed.
+- **Widget migration** — 5 anonymous-context sites migrated from `collectionGroup('bookings').snapshots()` to the `getUnitAvailability` callable:
+  - `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart` — 4 streams (lines 107, 245, 386, 496) collapsed into single `_streamBlockedEvents` that demultiplexes CF windows by `source` (booking + ical_external + manual_block). Bookings synthesized into minimal `BookingModel(status: confirmed)` — privacy-driven loss of pending/confirmed visual distinction in widget calendar (accepted trade-off).
+  - `lib/features/widget/data/helpers/availability_checker.dart` — `_checkBookings()` direct CG query replaced with `_fetchAvailabilityWindows()` + per-source overlap helpers. Bookings + iCal now share one CF round-trip.
+- **Rules tightening** — clause 1 (`unit_id`+`status` public read) removed from all 3 surfaces (`firestore.rules`): subcollection `properties/{p}/units/{u}/bookings/{id}`, collection-group `{path=**}/bookings/{id}`, and deprecated top-level `/bookings/{id}`.
+- **Tests** — 24/24 rules tests pass. 2 "STILL ALLOWS" / "ALLOWED" assertions in `functions/test/firestore_rules/bookings.test.ts` flipped to `assertFails` as clause-1 regression guards. Test suite description renamed from `bookings rule (T11-hotfix-partial)` to `bookings rule (T11c closed)`.
+- **UX trade-off** — realtime `.snapshots()` for bookings sacrificed; widget now polls every 30 s via `FirebaseAvailabilityRepository._defaultPollInterval` (same cadence already in place for iCal blocks after SF-023).
+- **CLAUDE.md NIKADA NE MIJENJAJ** — bookings clause-1 row flipped from "INTENTIONALLY public until T11c proper lands" to "✅ T11c CLOSED 2026-05-22" with pointer to `ab6bdb3d`. The `firebase_booking_calendar_repository.dart` row stays (file still has no unit tests; T11c only made the touched flows simpler, not safer to broadly refactor).
+- **Verification** — `flutter analyze` 0 issues; `cd functions && npm run build` 0 errors; `cd functions && npm run test:rules` 24/24 pass.
+- **Multi-agent race** — 4+ branch swaps during session per `memory/multi-agent-git-race.md`. Recovered via chained stash/checkout/pop/commit with abort safety. Both T11c commits (code + docs) intact on the branch.
+- **Deploy** — pending PR #446 review. Dev rollout via `firebase deploy --only firestore:rules,functions:getUnitAvailability --project bookbed-dev`. Prod cutover separate. No push to origin/main yet.
+- **Note** — claims version 6.79 (not 6.78) because PR #447 (Phase 1 widget refactor) already claims 6.78. Whichever PR merges second will resolve sequencing in the merge.
+
+---
+
 **Changelog 6.77**: T11c progress note + booking count audit + audit gitignore whitelist (2026-05-22):
 
 - **T11c progress documented** (`docs/SECURITY_FIXES.md` line 1350, new "T11c progress update 2026-05-22" subsection under SF-019): captures the split status of T11c after SF-023 landed the `getUnitAvailability` CF half. Lists the 5 anonymous-context widget sites that still issue direct `collectionGroup('bookings').where('unit_id', '==', …).where('status', 'in', …)` and therefore block clause-1 removal — 4 streams in `firebase_booking_calendar_repository.dart:107/245/386/496` (`.snapshots()` realtime) + 1 one-shot in `availability_checker.dart:257` (booking-submit gate). Documents the 6-step migration plan + the realtime → ~30s polling UX regression that ships with it. Closes the doc gap that made T11c look ready to land when it wasn't (CF deployed but widget reads not migrated).

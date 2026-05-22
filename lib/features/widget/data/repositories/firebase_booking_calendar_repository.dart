@@ -8,7 +8,6 @@ import '../../domain/repositories/i_booking_calendar_repository.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/constants/enums.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
-import '../../../../core/utils/timestamp_converter.dart';
 import '../helpers/availability_checker.dart';
 import '../helpers/booking_price_calculator.dart';
 import '../models/availability_window.dart';
@@ -50,17 +49,29 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     );
   }
 
-  /// Stream iCal blocks via the `getUnitAvailability` CF (SF-023).
+  /// Stream blocked-event windows via the `getUnitAvailability` CF (SF-023 +
+  /// T11c). Replaces the prior public-read `collectionGroup('bookings')` AND
+  /// `collectionGroup('ical_events')` `.snapshots()` — both rules were
+  /// tightened to deny anonymous reads. The CF runs the equivalent
+  /// server-side queries via Admin SDK and strips PII.
   ///
-  /// Replaces the prior `collectionGroup('ical_events')` `.snapshots()` —
-  /// the rule was tightened to deny anonymous reads. The CF runs the
-  /// equivalent server-side query and strips PII (guest_name, etc.).
+  /// Emits a record `(bookings, icalEvents)` so the existing
+  /// `_buildCalendarMap` / `_buildYearCalendarMap` consumers (which still
+  /// expect a `List<BookingModel>` for gap-blocking and a
+  /// `List<Map<String,dynamic>>` for iCal projections) stay structurally
+  /// untouched.
   ///
-  /// Emits `List<Map<String, dynamic>>` shaped identically to the legacy
-  /// parsed events so `_buildCalendarMap` / `_buildYearCalendarMap` stay
-  /// untouched (this repo is FROZEN per CLAUDE.md `NIKADA NE MIJENJAJ` —
-  /// scope kept to the ical-source swap only).
-  Stream<List<Map<String, dynamic>>> _streamIcalBlocks({
+  /// Booking windows are synthesized into `BookingModel` with
+  /// `status: BookingStatus.confirmed` — the CF intentionally strips
+  /// `status` for privacy, so the widget can no longer differentiate
+  /// pending vs confirmed (T11c accepted trade-off, see
+  /// `audit/06-availability-cf-design.md`).
+  ///
+  /// `manual_block` windows are intentionally dropped here; the existing
+  /// `daily_prices` subcollection stream still serves the `available:false`
+  /// blocking surface (and carries the per-day price the calendar needs).
+  Stream<({List<BookingModel> bookings, List<Map<String, dynamic>> icalEvents})>
+  _streamBlockedEvents({
     required String propertyId,
     required String unitId,
     required DateTime start,
@@ -73,19 +84,46 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
           start: start,
           end: end,
         )
-        .map(
-          (windows) => windows
-              .where((w) => w.source == AvailabilityWindowSource.icalExternal)
-              .map(
-                (w) => <String, dynamic>{
+        .map((windows) {
+          final bookings = <BookingModel>[];
+          final icalEvents = <Map<String, dynamic>>[];
+          for (final w in windows) {
+            switch (w.source) {
+              case AvailabilityWindowSource.booking:
+                bookings.add(_synthesizeBookingFromWindow(w, unitId));
+              case AvailabilityWindowSource.icalExternal:
+                icalEvents.add(<String, dynamic>{
                   'start_date': w.start,
                   'end_date': w.end,
                   'source': w.platform ?? 'ical',
                   'guest_name': 'External Booking',
-                },
-              )
-              .toList(growable: false),
-        );
+                });
+              case AvailabilityWindowSource.manualBlock:
+                // daily_prices stream already covers manual blocks.
+                break;
+            }
+          }
+          return (bookings: bookings, icalEvents: icalEvents);
+        });
+  }
+
+  /// Build a minimal `BookingModel` from a CF-supplied availability window.
+  /// PII intentionally absent — `guest_*`, `total_price`, payment fields
+  /// never leave the Cloud Function (`functions/src/availability.ts`).
+  BookingModel _synthesizeBookingFromWindow(
+    AvailabilityWindow window,
+    String unitId,
+  ) {
+    final syntheticId =
+        'cf-${window.start.toIso8601String()}-${window.end.toIso8601String()}';
+    return BookingModel(
+      id: syntheticId,
+      unitId: unitId,
+      checkIn: window.start,
+      checkOut: window.end,
+      status: BookingStatus.confirmed,
+      createdAt: window.start,
+    );
   }
 
   /// Get year-view calendar data with realtime updates and prices
@@ -99,16 +137,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final startDate = DateTime.utc(year);
     final endDate = DateTime.utc(year, 12, 31, 23, 59, 59);
 
-    // Stream bookings (NEW STRUCTURE: collection group query)
-    // Note: Using client-side filtering to avoid Firestore limitation of
-    // whereIn + inequality filters requiring composite index
-    // PERF-002: Add limit to prevent excessive reads on units with many bookings
-    final bookingsStream = _firestore
-        .collectionGroup('bookings')
-        .where('unit_id', isEqualTo: unitId)
-        .where('status', whereIn: ['pending', 'confirmed'])
-        .limit(500) // Max 500 bookings per year view
-        .snapshots();
+    // T11c (2026-05-22): bookings + iCal blocks now BOTH come from the
+    // `getUnitAvailability` CF — the public `collectionGroup('bookings')`
+    // `.snapshots()` was removed alongside the rule-tightening that closed
+    // clause 1. The CF polls every 30s (see FirebaseAvailabilityRepository
+    // `_defaultPollInterval`); realtime `.snapshots()` is intentionally
+    // sacrificed for the security boundary.
+    final blockedEventsStream = _streamBlockedEvents(
+      propertyId: propertyId,
+      unitId: unitId,
+      start: startDate,
+      end: endDate,
+    );
 
     // Stream prices (NEW STRUCTURE: subcollection path)
     final pricesStream = _firestore
@@ -121,15 +161,6 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal blocks via the getUnitAvailability CF (SF-023).
-    // Replaces the prior public-read `collection('ical_events').snapshots()`.
-    final icalEventsStream = _streamIcalBlocks(
-      propertyId: propertyId,
-      unitId: unitId,
-      start: startDate,
-      end: endDate,
-    );
-
     // Stream widget settings to get minNights
     // FIXED: Use correct subcollection path: properties/{propertyId}/widget_settings/{unitId}
     final widgetSettingsStream = _firestore
@@ -139,30 +170,23 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .doc(unitId)
         .snapshots();
 
-    // Combine all four streams
-    return Rx.combineLatest4(
-      bookingsStream,
+    // Combine all three streams (bookings + iCal now fused into one CF stream)
+    return Rx.combineLatest3(
+      blockedEventsStream,
       pricesStream,
-      icalEventsStream,
       widgetSettingsStream,
-      (bookingsSnapshot, pricesSnapshot, icalEvents, widgetSettingsSnapshot) {
-        // Parse bookings
-        // ��️ SECURITY FIX SF-014: Use secure parser to prevent PII exposure
-        final bookings = bookingsSnapshot.docs
-            .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
+      (blockedEvents, pricesSnapshot, widgetSettingsSnapshot) {
+        // Synthesized bookings carry only start/end/status=confirmed (PII
+        // stripped server-side). SF-014 PII-exposure surface is closed at
+        // the CF layer now — no in-process secure parser needed.
+        final bookings = blockedEvents.bookings
             .where(
-              (booking) =>
-                  booking != null &&
-                  !_normalizeToUtcMidnight(
-                    booking.checkOut,
-                  ).isBefore(startDate),
+              (booking) => !_normalizeToUtcMidnight(
+                booking.checkOut,
+              ).isBefore(startDate),
             )
-            .cast<BookingModel>()
             .toList();
-
-        // iCal blocks already projected to {start_date, end_date, source,
-        // guest_name} by _streamIcalBlocks; server already filtered by date
-        // range and excluded confirmed_echo. No further parsing needed.
+        final icalEvents = blockedEvents.icalEvents;
 
         // Parse prices
         final Map<String, DailyPriceModel> priceMap = {};
@@ -237,16 +261,14 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final startDate = DateTime.utc(year, month);
     final endDate = DateTime.utc(year, month + 1, 0, 23, 59, 59);
 
-    // Stream bookings (NEW STRUCTURE: collection group query)
-    // Note: Using client-side filtering to avoid Firestore limitation of
-    // whereIn + inequality filters requiring composite index
-    // PERF-002: Add limit to prevent excessive reads on units with many bookings
-    final bookingsStream = _firestore
-        .collectionGroup('bookings')
-        .where('unit_id', isEqualTo: unitId)
-        .where('status', whereIn: ['pending', 'confirmed'])
-        .limit(100) // Max 100 bookings per month view is a safe upper bound
-        .snapshots();
+    // T11c (2026-05-22): single CF stream now feeds both bookings AND iCal
+    // events. See _streamBlockedEvents docstring for the trade-off rationale.
+    final blockedEventsStream = _streamBlockedEvents(
+      propertyId: propertyId,
+      unitId: unitId,
+      start: startDate,
+      end: endDate,
+    );
 
     // Stream prices (NEW STRUCTURE: subcollection path)
     final pricesStream = _firestore
@@ -259,15 +281,6 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal blocks via the getUnitAvailability CF (SF-023).
-    // Replaces the prior public-read `collection('ical_events').snapshots()`.
-    final icalEventsStream = _streamIcalBlocks(
-      propertyId: propertyId,
-      unitId: unitId,
-      start: startDate,
-      end: endDate,
-    );
-
     // Stream widget settings to get minNights
     // FIXED: Use correct subcollection path: properties/{propertyId}/widget_settings/{unitId}
     final widgetSettingsStream = _firestore
@@ -277,29 +290,20 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .doc(unitId)
         .snapshots();
 
-    // Combine all four streams
-    return Rx.combineLatest4(
-      bookingsStream,
+    // Combine all three streams (bookings + iCal fused at CF layer)
+    return Rx.combineLatest3(
+      blockedEventsStream,
       pricesStream,
-      icalEventsStream,
       widgetSettingsStream,
-      (bookingsSnapshot, pricesSnapshot, icalEvents, widgetSettingsSnapshot) {
-        // Parse bookings
-        // ��️ SECURITY FIX SF-014: Use secure parser to prevent PII exposure
-        final bookings = bookingsSnapshot.docs
-            .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
+      (blockedEvents, pricesSnapshot, widgetSettingsSnapshot) {
+        final bookings = blockedEvents.bookings
             .where(
-              (booking) =>
-                  booking != null &&
-                  !_normalizeToUtcMidnight(
-                    booking.checkOut,
-                  ).isBefore(startDate),
+              (booking) => !_normalizeToUtcMidnight(
+                booking.checkOut,
+              ).isBefore(startDate),
             )
-            .cast<BookingModel>()
             .toList();
-
-        // iCal blocks already projected by _streamIcalBlocks; server-side
-        // overlap filter applied — no further parsing needed.
+        final icalEvents = blockedEvents.icalEvents;
 
         // Parse prices
         final Map<String, DailyPriceModel> priceMap = {};
@@ -381,12 +385,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final startDate = DateTime.utc(year);
     final endDate = DateTime.utc(year, 12, 31, 23, 59, 59);
 
-    // Stream bookings (NEW STRUCTURE: collection group query)
-    final bookingsStream = _firestore
-        .collectionGroup('bookings')
-        .where('unit_id', isEqualTo: unitId)
-        .where('status', whereIn: ['pending', 'confirmed'])
-        .snapshots();
+    // T11c (2026-05-22): bookings + iCal fused into single CF stream.
+    final blockedEventsStream = _streamBlockedEvents(
+      propertyId: propertyId,
+      unitId: unitId,
+      start: startDate,
+      end: endDate,
+    );
 
     // Stream prices (NEW STRUCTURE: subcollection path)
     final pricesStream = _firestore
@@ -399,33 +404,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal blocks via the getUnitAvailability CF (SF-023).
-    final icalEventsStream = _streamIcalBlocks(
-      propertyId: propertyId,
-      unitId: unitId,
-      start: startDate,
-      end: endDate,
-    );
-
-    // Combine only 3 streams (instead of 4)
-    return Rx.combineLatest3(bookingsStream, pricesStream, icalEventsStream, (
-      bookingsSnapshot,
+    // Combine 2 streams (T11c fused bookings+iCal; settings come from caller)
+    return Rx.combineLatest2(blockedEventsStream, pricesStream, (
+      blockedEvents,
       pricesSnapshot,
-      icalEvents,
     ) {
-      // Parse bookings
-      // ��️ SECURITY FIX SF-014: Use secure parser to prevent PII exposure
-      final bookings = bookingsSnapshot.docs
-          .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
+      final bookings = blockedEvents.bookings
           .where(
             (booking) =>
-                booking != null &&
                 !_normalizeToUtcMidnight(booking.checkOut).isBefore(startDate),
           )
-          .cast<BookingModel>()
           .toList();
-
-      // iCal blocks already projected + overlap-filtered server-side.
+      final icalEvents = blockedEvents.icalEvents;
 
       // Parse prices
       final Map<String, DailyPriceModel> priceMap = {};
@@ -490,13 +480,13 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
     final startDate = DateTime.utc(year, month);
     final endDate = DateTime.utc(year, month + 1, 0, 23, 59, 59);
 
-    // Stream bookings (COLLECTION GROUP query - same as year calendar)
-    // Uses collection group to work with Firestore rules that require unit_id + status fields
-    final bookingsStream = _firestore
-        .collectionGroup('bookings')
-        .where('unit_id', isEqualTo: unitId)
-        .where('status', whereIn: ['pending', 'confirmed'])
-        .snapshots();
+    // T11c (2026-05-22): bookings + iCal fused into single CF stream.
+    final blockedEventsStream = _streamBlockedEvents(
+      propertyId: propertyId,
+      unitId: unitId,
+      start: startDate,
+      end: endDate,
+    );
 
     // Stream prices (NEW STRUCTURE: subcollection path)
     final pricesStream = _firestore
@@ -509,33 +499,18 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
         .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .snapshots();
 
-    // Stream iCal blocks via the getUnitAvailability CF (SF-023).
-    final icalEventsStream = _streamIcalBlocks(
-      propertyId: propertyId,
-      unitId: unitId,
-      start: startDate,
-      end: endDate,
-    );
-
-    // Combine only 3 streams (instead of 4)
-    return Rx.combineLatest3(bookingsStream, pricesStream, icalEventsStream, (
-      bookingsSnapshot,
+    // Combine 2 streams (T11c fused bookings+iCal; settings come from caller)
+    return Rx.combineLatest2(blockedEventsStream, pricesStream, (
+      blockedEvents,
       pricesSnapshot,
-      icalEvents,
     ) {
-      // Parse bookings
-      // ��️ SECURITY FIX SF-014: Use secure parser to prevent PII exposure
-      final bookings = bookingsSnapshot.docs
-          .map((doc) => _mapDocumentToBooking(doc, unitId: unitId))
+      final bookings = blockedEvents.bookings
           .where(
             (booking) =>
-                booking != null &&
                 !_normalizeToUtcMidnight(booking.checkOut).isBefore(startDate),
           )
-          .cast<BookingModel>()
           .toList();
-
-      // iCal blocks already projected + overlap-filtered server-side.
+      final icalEvents = blockedEvents.icalEvents;
 
       // Parse prices
       final Map<String, DailyPriceModel> priceMap = {};
@@ -1314,49 +1289,5 @@ class FirebaseBookingCalendarRepository implements IBookingCalendarRepository {
       weekendBasePrice: weekendBasePrice,
       weekendDays: weekendDays,
     );
-  }
-
-  /// 🛡️ SECURITY FIX SF-014: Helper to securely parse a booking document.
-  ///
-  /// Extracts only the fields necessary for calendar display to prevent
-  /// Information Exposure vulnerabilities. PII fields (guest name, email,
-  /// phone, notes) are NOT extracted.
-  ///
-  /// Returns `null` if parsing fails.
-  BookingModel? _mapDocumentToBooking(
-    QueryDocumentSnapshot doc, {
-    required String unitId,
-  }) {
-    try {
-      final data = doc.data() as Map<String, dynamic>;
-
-      // Parse status with safe default
-      final statusString = data['status'] as String?;
-      final status = BookingStatus.values.firstWhere(
-        (e) => e.name == statusString,
-        orElse: () => BookingStatus.confirmed,
-      );
-
-      // FIX: Use TimestampConverter to handle both Timestamp and ISO String formats
-      // This is needed because some code paths save dates as ISO strings (e.g., inline edit)
-      // while others save as Firestore Timestamps (e.g., Cloud Functions)
-      const converter = TimestampConverter();
-      const nullableConverter = NullableTimestampConverter();
-
-      // Extract ONLY non-PII fields needed for calendar display
-      return BookingModel(
-        id: doc.id,
-        unitId: unitId, // From query param, not document (safer)
-        checkIn: converter.fromJson(data['check_in']),
-        checkOut: converter.fromJson(data['check_out']),
-        status: status,
-        createdAt:
-            nullableConverter.fromJson(data['created_at']) ??
-            DateTime.now().toUtc(),
-      );
-    } catch (e) {
-      LoggingService.logError('Error parsing booking document ${doc.id}', e);
-      return null;
-    }
   }
 }

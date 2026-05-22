@@ -13,7 +13,7 @@ service firebase.storage {
       allow write: if request.auth != null 
         && request.auth.uid == userId
         && request.resource.size < 10 * 1024 * 1024  // 10MB max
-        && request.resource.contentType.matches('image/.*');  // Images only
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');  // Specific image types only
     }
 
     // Property images (public read for widget display)
@@ -26,7 +26,7 @@ service firebase.storage {
       allow write: if request.auth != null
         && get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid
         && request.resource.size < 10 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
     }
 
     // iCal exports (public read for calendar subscriptions, authenticated write)

@@ -192,13 +192,24 @@ class AvailabilityChecker implements IAvailabilityChecker {
     final normalizedCheckOut = DateNormalizer.normalize(checkOut);
 
     // T11c (2026-05-22): bookings + iCal now BOTH come from the same CF call.
-    // Single fetch dedups the network round-trip.
-    final cfWindows = await _fetchAvailabilityWindows(
-      propertyId: propertyId,
-      unitId: unitId,
-      checkIn: normalizedCheckIn,
-      checkOut: normalizedCheckOut,
-    );
+    // Single fetch dedups the network round-trip. CF failure short-circuits
+    // to fail-CLOSED (mirrors pre-T11c `_checkBookings` error semantics) so
+    // the widget never submits over a potentially-blocked window when the
+    // availability service is unreachable.
+    late final List<AvailabilityWindow> cfWindows;
+    try {
+      cfWindows = await _availabilityRepo.fetchAvailability(
+        propertyId: propertyId,
+        unitId: unitId,
+        start: normalizedCheckIn,
+        end: normalizedCheckOut,
+      );
+    } catch (e) {
+      unawaited(
+        LoggingService.logError('Error fetching availability windows', e),
+      );
+      return AvailabilityCheckResult.error(ConflictType.booking);
+    }
 
     var result = _checkBookingsAgainstWindows(
       windows: cfWindows,
@@ -248,35 +259,6 @@ class AvailabilityChecker implements IAvailabilityChecker {
       checkOut: checkOut,
     );
     return result.isAvailable;
-  }
-
-  /// One-shot CF fetch covering bookings + iCal in a single round-trip.
-  ///
-  /// T11c (2026-05-22): the prior `collectionGroup('bookings').where('unit_id'
-  /// + status)` direct read was removed alongside firestore.rules clause 1.
-  /// All availability now flows through the `getUnitAvailability` callable
-  /// (`functions/src/availability.ts`). On CF failure we return an empty
-  /// window list and let the per-source helpers report an
-  /// `AvailabilityCheckResult.error(...)` to fail closed.
-  Future<List<AvailabilityWindow>> _fetchAvailabilityWindows({
-    required String propertyId,
-    required String unitId,
-    required DateTime checkIn,
-    required DateTime checkOut,
-  }) async {
-    try {
-      return await _availabilityRepo.fetchAvailability(
-        propertyId: propertyId,
-        unitId: unitId,
-        start: checkIn,
-        end: checkOut,
-      );
-    } catch (e) {
-      unawaited(
-        LoggingService.logError('Error fetching availability windows', e),
-      );
-      return const <AvailabilityWindow>[];
-    }
   }
 
   /// Detect overlap with `booking`-source windows from the CF.

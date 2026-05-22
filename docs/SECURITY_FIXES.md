@@ -1376,6 +1376,23 @@ Until these are migrated, the `unit_id+status` clause in `firestore.rules` **mus
 
 UX implication of step 2: the public widget calendar loses `.snapshots()` realtime updates and falls back to ~30 s polling (CF `cacheHint`). Acceptable for an anonymous booking-flow surface but a regression vs. current behavior; should be confirmed with product before T11c proper lands.
 
+### T11c CLOSED 2026-05-22
+
+**Status**: ✅ Riješeno (T11c proper — branch `fix/t11c-proper-bookings-migration`, commit `ab6bdb3d`); deployed to `bookbed-dev` pending — prod cutover separate.
+
+5 widget anonymous-context sites migrated to `getUnitAvailability` callable, then `firestore.rules` clause 1 (`unit_id`+`status` public read) removed from all 3 surfaces (subcollection + CG + deprecated top-level). The last anonymous read surface on `bookings` is now closed.
+
+| File | Migration |
+|---|---|
+| `lib/features/widget/data/repositories/firebase_booking_calendar_repository.dart` | 4 `collectionGroup('bookings').snapshots()` streams collapsed into single `_streamBlockedEvents` that demultiplexes CF windows by `source`. Booking windows synthesized into minimal `BookingModel(status: confirmed)` — privacy-driven loss of pending/confirmed visual distinction in widget calendar (T11c accepted trade-off). |
+| `lib/features/widget/data/helpers/availability_checker.dart` | `_checkBookings()` direct CG query replaced with `_fetchAvailabilityWindows()` + per-source overlap helpers. Bookings + iCal now share one CF round-trip. |
+| `firestore.rules` | Clause 1 removed from `properties/{p}/units/{u}/bookings/{id}`, `{path=**}/bookings/{id}` (CG), and top-level `/bookings/{id}`. |
+| `functions/test/firestore_rules/bookings.test.ts` | 2 "STILL ALLOWS" / "ALLOWED" assertions flipped to `assertFails` — clause-1 regression guards. |
+
+UX trade-off: realtime `.snapshots()` for bookings sacrificed; widget now polls every 30 s via `FirebaseAvailabilityRepository._defaultPollInterval`. Same polling cadence that was already in place for iCal blocks after SF-023.
+
+CLAUDE.md "NIKADA NE MIJENJAJ" row for `bookings` clause 1 superseded by this fix — the table entry should be removed or annotated as resolved. The `firebase_booking_calendar_repository.dart` row stays (file still has no unit tests; T11c only made the touched flows simpler, not safer to broadly refactor).
+
 ### Sibling audit (independent of T11c)
 
 `audit/18-booking-count-audit.md` — booking night/guest count source-of-truth audit, documentation only. Finds two derivation algorithms in use (Dart floor vs TS ceil); both agree today but DST-straddling bookings can off-by-one. Recommends normalizing Timestamps at write time in `dateValidation.ts` STEP 6 (tracked as SF-026 candidate). No code changes in this PR.

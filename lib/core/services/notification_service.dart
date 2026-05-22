@@ -122,6 +122,7 @@ class NotificationService {
   }
 
   /// Mark multiple notifications as read
+  /// Note: Handles Firestore batch limit of 500 operations
   Future<void> markMultipleAsRead(
     List<String> notificationIds, {
     String? ownerId,
@@ -129,31 +130,43 @@ class NotificationService {
     if (notificationIds.isEmpty) return;
 
     try {
-      final batch = _firestore.batch();
+      // Firestore batch limit is 500 operations
+      const batchLimit = 500;
 
-      if (ownerId != null) {
-        // NEW STRUCTURE: Use subcollection path directly
-        for (final id in notificationIds) {
-          batch.update(_notificationsCollection(ownerId).doc(id), {
-            'isRead': true,
-          });
-        }
-      } else {
-        // Fallback: Find each notification via collection group
-        for (final id in notificationIds) {
-          final query = await _firestore
-              .collectionGroup('notifications')
-              .where(FieldPath.documentId, isEqualTo: id)
-              .limit(1)
-              .get();
+      for (var i = 0; i < notificationIds.length; i += batchLimit) {
+        final batch = _firestore.batch();
+        final end = (i + batchLimit < notificationIds.length)
+            ? i + batchLimit
+            : notificationIds.length;
 
-          if (query.docs.isNotEmpty) {
-            batch.update(query.docs.first.reference, {'isRead': true});
+        final chunk = notificationIds.sublist(i, end);
+
+        if (ownerId != null) {
+          // NEW STRUCTURE: Use subcollection path directly
+          for (final id in chunk) {
+            batch.update(_notificationsCollection(ownerId).doc(id), {
+              'isRead': true,
+            });
+          }
+        } else {
+          // Fallback: Find each notification via collection group using whereIn
+          for (var k = 0; k < chunk.length; k += 30) {
+            final subChunkEnd = (k + 30 < chunk.length) ? k + 30 : chunk.length;
+            final subChunk = chunk.sublist(k, subChunkEnd);
+
+            final query = await _firestore
+                .collectionGroup('notifications')
+                .where(FieldPath.documentId, whereIn: subChunk)
+                .get();
+
+            for (final doc in query.docs) {
+              batch.update(doc.reference, {'isRead': true});
+            }
           }
         }
-      }
 
-      await batch.commit();
+        await batch.commit();
+      }
     } catch (e) {
       throw NotificationException.updateFailed(e);
     }
@@ -238,22 +251,26 @@ class NotificationService {
             ? i + batchLimit
             : notificationIds.length;
 
-        for (var j = i; j < end; j++) {
-          if (ownerId != null) {
-            // NEW STRUCTURE: Use subcollection path
-            batch.delete(
-              _notificationsCollection(ownerId).doc(notificationIds[j]),
-            );
-          } else {
-            // Fallback: Find via collection group
+        final chunk = notificationIds.sublist(i, end);
+
+        if (ownerId != null) {
+          // NEW STRUCTURE: Use subcollection path
+          for (final id in chunk) {
+            batch.delete(_notificationsCollection(ownerId).doc(id));
+          }
+        } else {
+          // Fallback: Find via collection group using whereIn (up to 30 values)
+          for (var k = 0; k < chunk.length; k += 30) {
+            final subChunkEnd = (k + 30 < chunk.length) ? k + 30 : chunk.length;
+            final subChunk = chunk.sublist(k, subChunkEnd);
+
             final query = await _firestore
                 .collectionGroup('notifications')
-                .where(FieldPath.documentId, isEqualTo: notificationIds[j])
-                .limit(1)
+                .where(FieldPath.documentId, whereIn: subChunk)
                 .get();
 
-            if (query.docs.isNotEmpty) {
-              batch.delete(query.docs.first.reference);
+            for (final doc in query.docs) {
+              batch.delete(doc.reference);
             }
           }
         }

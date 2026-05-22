@@ -44,29 +44,44 @@ class PriceRowWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
+    // Label gives way first (ellipsis); amount is FittedBox-scaled so the
+    // full price (e.g. "€120.00") never visually clips at narrow widths.
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isBold
-                ? TypographyTokens.fontSizeM
-                : TypographyTokens.fontSizeS,
-            color: color ?? colors.textSecondary,
-            fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
-            fontFamily: TypographyTokens.primaryFont,
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: isBold
+                  ? TypographyTokens.fontSizeM
+                  : TypographyTokens.fontSizeS,
+              color: color ?? colors.textSecondary,
+              fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+              fontFamily: TypographyTokens.primaryFont,
+            ),
           ),
         ),
-        Text(
-          amount,
-          style: TextStyle(
-            fontSize: isBold
-                ? TypographyTokens.fontSizeL
-                : TypographyTokens.fontSizeS,
-            color: color ?? colors.textPrimary,
-            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
-            fontFamily: TypographyTokens.primaryFont,
+        const SizedBox(width: 8),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              amount,
+              maxLines: 1,
+              softWrap: false,
+              style: TextStyle(
+                fontSize: isBold
+                    ? TypographyTokens.fontSizeL
+                    : TypographyTokens.fontSizeS,
+                color: color ?? colors.textPrimary,
+                fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+                fontFamily: TypographyTokens.primaryFont,
+              ),
+            ),
           ),
         ),
       ],

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../shared/models/property_model.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
@@ -40,8 +41,27 @@ Future<int> ownerPropertiesCount(Ref ref) async {
 }
 
 /// Get property by ID
+///
+/// Auth-race guard: cold-boot deep links (e.g. `bookbed://owner/property/<id>`)
+/// can fire this provider before Firebase Auth has restored its session.
+/// Firestore rules then reject the unauth read and Pigeon surfaces a noisy
+/// stacktrace. Hold the provider in `AsyncLoading` until auth settles so
+/// PropertyEditLoader keeps showing its UniversalLoader instead of flashing.
+/// `ref.watch(enhancedAuthProvider)` also satisfies the provider cache
+/// security rule in `.claude/rules/auth.md`.
 @riverpod
 Future<PropertyModel?> propertyById(Ref ref, String propertyId) async {
+  var authState = ref.watch(enhancedAuthProvider);
+  if (authState.isLoading) {
+    authState = await ref
+        .read(enhancedAuthProvider.notifier)
+        .stream
+        .firstWhere((s) => !s.isLoading);
+  }
+  if (authState.firebaseUser == null) {
+    return null;
+  }
+
   final repository = ref.watch(ownerPropertiesRepositoryProvider);
   return await repository.getPropertyById(propertyId);
 }

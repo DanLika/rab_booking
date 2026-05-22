@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../../../core/services/logging_service.dart';
+import '../../domain/services/i_availability_repository.dart';
 import '../models/availability_window.dart';
 
 /// Wrapper around the `getUnitAvailability` callable Cloud Function.
@@ -15,7 +16,7 @@ import '../models/availability_window.dart';
 /// The CF is deployed to `europe-west1`. Per `.claude/rules/cloud-functions.md`
 /// callers MUST use `FirebaseFunctions.instanceFor(region: 'europe-west1')` —
 /// the default instance hits `us-central1` and would return `not-found`.
-class FirebaseAvailabilityRepository {
+class FirebaseAvailabilityRepository implements IAvailabilityRepository {
   FirebaseAvailabilityRepository({FirebaseFunctions? functions})
     : _functions = functions ?? FirebaseFunctions.instanceFor(region: _region);
 
@@ -32,6 +33,7 @@ class FirebaseAvailabilityRepository {
   );
 
   /// One-shot fetch — used by [AvailabilityChecker] at booking submit time.
+  @override
   Future<List<AvailabilityWindow>> fetchAvailability({
     required String propertyId,
     required String unitId,

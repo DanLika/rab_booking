@@ -8,6 +8,7 @@ import '../../../../core/utils/timestamp_converter.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../domain/constants/widget_constants.dart';
 import '../../domain/services/i_availability_checker.dart';
+import '../../domain/services/i_availability_repository.dart';
 import '../../utils/date_normalizer.dart';
 import '../models/availability_window.dart';
 import '../repositories/firebase_availability_repository.dart';
@@ -164,7 +165,7 @@ class AvailabilityCheckResult {
 /// ```
 class AvailabilityChecker implements IAvailabilityChecker {
   final FirebaseFirestore _firestore;
-  final FirebaseAvailabilityRepository _availabilityRepo;
+  final IAvailabilityRepository _availabilityRepo;
 
   // Collection names (bookings + daily_prices still read directly — only
   // ical_events was locked down by SF-023 and routes through the CF).
@@ -173,7 +174,7 @@ class AvailabilityChecker implements IAvailabilityChecker {
 
   AvailabilityChecker(
     this._firestore, {
-    FirebaseAvailabilityRepository? availabilityRepository,
+    IAvailabilityRepository? availabilityRepository,
   }) : _availabilityRepo =
            availabilityRepository ?? FirebaseAvailabilityRepository();
 

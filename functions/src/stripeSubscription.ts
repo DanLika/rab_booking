@@ -1,9 +1,14 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {defineString} from "firebase-functions/params";
 import {getStripeClient, stripeSecretKey} from "./stripe";
+
 import {db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import {checkRateLimit} from "./utils/rateLimit";
 import * as admin from "firebase-admin";
+
+const stripePriceMonthlyId = defineString("STRIPE_PRICE_MONTHLY_ID");
+const stripePriceYearlyId = defineString("STRIPE_PRICE_YEARLY_ID");
 
 /**
  * Cloud Function: Create Subscription Checkout Session
@@ -40,11 +45,14 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
     throw new HttpsError("invalid-argument", "Missing priceId or returnUrl.");
   }
 
-  // PLACEHOLDER PRICE VALIDATION
-  // TODO: Replace with actual Stripe Price IDs from config/env
-  // For now, we accept any string but in production we should whitelist allowed Price IDs
-  // const ALLOWED_PRICES = ["price_monthly_pro", "price_yearly_pro"];
-  // if (!ALLOWED_PRICES.includes(priceId)) { ... }
+  // PRICE VALIDATION
+  const ALLOWED_PRICES = [
+    stripePriceMonthlyId.value(),
+    stripePriceYearlyId.value(),
+  ];
+  if (!ALLOWED_PRICES.includes(priceId)) {
+    throw new HttpsError("invalid-argument", "Invalid priceId provided.");
+  }
 
   try {
     const stripe = getStripeClient();

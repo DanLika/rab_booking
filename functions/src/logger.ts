@@ -7,7 +7,30 @@
  */
 
 import * as functions from "firebase-functions";
-import {captureException, captureMessage, addBreadcrumb} from "./sentry";
+import {HttpsError} from "firebase-functions/v2/https";
+import {captureException, addBreadcrumb} from "./sentry";
+
+// HttpsError codes that represent client-side faults (4xx-equivalent).
+// These are expected user-facing rejections, NOT server bugs. Mirror of the
+// `beforeSend` filter in sentry.ts so Cloud Logging severity stays in sync
+// with Sentry. Server-fault codes (internal, unknown, data-loss, unavailable,
+// deadline-exceeded, aborted) still log at ERROR + ship to Sentry.
+const CLIENT_FAULT_HTTPS_CODES = new Set([
+  "invalid-argument",
+  "unauthenticated",
+  "permission-denied",
+  "not-found",
+  "already-exists",
+  "failed-precondition",
+  "out-of-range",
+  "resource-exhausted",
+  "cancelled",
+]);
+
+function isClientFaultHttpsError(error: unknown): boolean {
+  if (!(error instanceof HttpsError)) return false;
+  return CLIENT_FAULT_HTTPS_CODES.has(error.code);
+}
 
 /**
  * Log levels
@@ -64,9 +87,13 @@ export class Logger {
 
   /**
    * Log an error message
-   * Also sends to Sentry for error tracking
+   * Sends to Sentry only when a real Error / exception is passed. Calls
+   * without an exception (`logError(msg)` or `logError(msg, null, data)`)
+   * are logged at ERROR level locally but NOT shipped to Sentry — a bare
+   * string lacks a stack trace and produces low-signal alerts. Pass an
+   * Error or call `captureMessage` directly if Sentry visibility is needed.
    * @param message - The message to log
-   * @param error - Optional error object
+   * @param error - Optional error object (required for Sentry capture)
    * @param data - Optional additional structured data
    */
   static error(message: string, error?: Error | unknown, data?: Record<string, any>): void {
@@ -79,6 +106,9 @@ export class Logger {
           stack: error.stack,
           name: error.name,
         };
+        if (error instanceof HttpsError) {
+          logData.error.code = error.code;
+        }
       } else if (error && typeof error === "object") {
         // Handle non-Error objects (e.g., API responses, plain objects)
         try {
@@ -91,18 +121,29 @@ export class Logger {
       }
     }
 
+    // Client-fault HttpsError = expected user-facing rejection.
+    // Downgrade to WARN in Cloud Logging and skip Sentry. Matches Sentry's
+    // beforeSend filter so noise is suppressed at both sinks.
+    if (isClientFaultHttpsError(error)) {
+      if (Object.keys(logData).length > 0) {
+        functions.logger.warn(message, logData);
+      } else {
+        functions.logger.warn(message);
+      }
+      return;
+    }
+
     if (Object.keys(logData).length > 0) {
       functions.logger.error(message, logData);
     } else {
       functions.logger.error(message);
     }
 
-    // Send to Sentry for error tracking (fire-and-forget)
+    // Send to Sentry only when a real exception is available. Bare-string
+    // captureMessage events have no stack trace and were the dominant Sentry
+    // noise source (client validation calls with `logError(msg, null, ...)`).
     if (error) {
       captureException(error, {message, ...data});
-    } else {
-      // If no error object, send as message
-      captureMessage(message, "error", data);
     }
   }
 

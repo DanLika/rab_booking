@@ -8,6 +8,36 @@ import {setUser, captureMessage} from "./sentry";
 import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
 
 /**
+ * Detect transient third-party fetch failures we should NOT alert on.
+ * iCal feeds fail intermittently (provider 503s, network blips, DNS hiccups);
+ * the next 15-min cron tick retries automatically. Persistent failures show
+ * up in the feed doc's `status: "error"` + `last_error` fields and via the
+ * `errorCount` summary in the scheduled-sync logSuccess line — operators
+ * monitor those, not per-tick Sentry alerts.
+ */
+const TRANSIENT_NET_CODES = new Set([
+  "ECONNRESET",
+  "ETIMEDOUT",
+  "ENOTFOUND",
+  "ENETUNREACH",
+  "EAI_AGAIN",
+  "ECONNREFUSED",
+  "EHOSTUNREACH",
+]);
+
+function isTransientFetchError(error: unknown): boolean {
+  if (!error) return false;
+  const code = (error as {code?: unknown}).code;
+  if (typeof code === "string" && TRANSIENT_NET_CODES.has(code)) return true;
+  const message = error instanceof Error ? error.message : String(error);
+  // HTTP 5xx from upstream (formatted by fetchIcalData)
+  if (/^HTTP 5\d\d:/.test(message)) return true;
+  // Generic socket timeouts that don't carry a .code
+  if (/^Request timeout/i.test(message)) return true;
+  return false;
+}
+
+/**
  * SECURITY: Validate iCal URL to prevent SSRF attacks
  * Only allows public HTTP/HTTPS URLs to known booking platforms
  */
@@ -172,11 +202,22 @@ export const scheduledIcalSync = onSchedule(
           });
         } catch (error) {
           errorCount++;
-          logError("[Scheduled iCal Sync] Failed to sync feed", error, {
-            feedId,
-            propertyId,
-            platform: feedData.platform,
-          });
+          // syncSingleFeed already logged the failure (WARN for transient,
+          // ERROR for actionable). Avoid double-capturing in Sentry by
+          // logging the outer-loop context at the same severity tier.
+          if (isTransientFetchError(error)) {
+            logWarn("[Scheduled iCal Sync] Feed sync skipped (transient)", {
+              feedId,
+              propertyId,
+              platform: feedData.platform,
+            });
+          } else {
+            logError("[Scheduled iCal Sync] Failed to sync feed", error, {
+              feedId,
+              propertyId,
+              platform: feedData.platform,
+            });
+          }
           // Continue with next feed even if one fails
         }
 
@@ -358,7 +399,17 @@ async function syncSingleFeed(
 
     return result.insertedCount; // Return number of bookings created
   } catch (error) {
-    logError("[iCal Sync] Error syncing feed", error, {feedId});
+    // Transient upstream failures (5xx, network, DNS) are not actionable for
+    // us — log as WARN, skip Sentry. The feed doc's `status: "error"` carries
+    // the persistent signal for the UI.
+    if (isTransientFetchError(error)) {
+      logWarn("[iCal Sync] Transient upstream failure", {
+        feedId,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    } else {
+      logError("[iCal Sync] Error syncing feed", error, {feedId});
+    }
 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 

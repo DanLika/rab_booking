@@ -195,21 +195,37 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         'guest_email': widget.booking.guestEmail,
       });
 
-      if (mounted) {
-        final tr = WidgetTranslations.of(context, ref);
-        SnackBarHelper.showSuccess(
+      if (!mounted) return;
+      final tr = WidgetTranslations.of(context, ref);
+      final data = result.data;
+
+      // Server returns {success: false, reason, message} for expected business
+      // rejections (e.g. property has guest cancellation disabled) instead of
+      // throwing an HttpsError. Surface as error snackbar, no Sentry noise.
+      if (data is Map && data['success'] == false) {
+        setState(() => _isCancelling = false);
+        SnackBarHelper.showError(
           context: context,
-          message: result.data['message'] ?? tr.bookingCancelledSuccessfully,
+          message:
+              data['message']?.toString() ??
+              tr.failedToCancelBooking('cancellation_disabled'),
           duration: const Duration(seconds: 5),
         );
-
-        // Update local state to reflect cancellation
-        // This immediately updates UI without needing to refetch from Firestore
-        setState(() {
-          _currentStatus = 'cancelled';
-          _isCancelling = false;
-        });
+        return;
       }
+
+      SnackBarHelper.showSuccess(
+        context: context,
+        message: data['message'] ?? tr.bookingCancelledSuccessfully,
+        duration: const Duration(seconds: 5),
+      );
+
+      // Update local state to reflect cancellation
+      // This immediately updates UI without needing to refetch from Firestore
+      setState(() {
+        _currentStatus = 'cancelled';
+        _isCancelling = false;
+      });
     } catch (e) {
       if (mounted) {
         final tr = WidgetTranslations.of(context, ref);

@@ -65,10 +65,8 @@ export const verifyBookingAccess = onCall(async (request) => {
       logWarn("[VerifyBookingAccess] Booking not found", {
         bookingReference,
       });
-      throw new HttpsError(
-        "not-found",
-        "Booking not found. Please check your booking reference."
-      );
+      // Use same reason as email-mismatch to prevent booking-ref enumeration.
+      return {success: false, reason: "invalid_credentials"};
     }
 
     const bookingDoc = bookingsSnapshot.docs[0];
@@ -81,10 +79,7 @@ export const verifyBookingAccess = onCall(async (request) => {
         bookingReference,
         attemptedEmail: email.substring(0, 3) + "***",
       });
-      throw new HttpsError(
-        "permission-denied",
-        "Email does not match booking records."
-      );
+      return {success: false, reason: "invalid_credentials"};
     }
 
     // If access token provided, verify it
@@ -106,10 +101,7 @@ export const verifyBookingAccess = onCall(async (request) => {
           logWarn("[VerifyBookingAccess] Invalid access token", {
             bookingReference,
           });
-          throw new HttpsError(
-            "permission-denied",
-            "Invalid or expired access link. Please try manual lookup."
-          );
+          return {success: false, reason: "invalid_token"};
         }
 
         // Check token expiration
@@ -122,10 +114,7 @@ export const verifyBookingAccess = onCall(async (request) => {
               bookingReference,
               expiresAt: expiresAt.toISOString(),
             });
-            throw new HttpsError(
-              "permission-denied",
-              "Access link has expired. Please use manual lookup."
-            );
+            return {success: false, reason: "expired_token"};
           }
         }
       }

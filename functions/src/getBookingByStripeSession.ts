@@ -62,7 +62,9 @@ export const getBookingByStripeSession = onCall(async (request) => {
       logInfo("[getBookingByStripeSession] No booking yet for session", {
         sessionIdPrefix: sessionId.substring(0, 10),
       });
-      throw new HttpsError("not-found", "Booking not yet available.");
+      // Polling pattern: webhook race is expected, not an error.
+      // Caller polls until success=true. See booking_lookup_provider.dart.
+      return {success: false, pending: true};
     }
 
     const bookingDoc = snapshot.docs[0];

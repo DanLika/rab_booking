@@ -1,6 +1,19 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "./firebase";
-import {logInfo, logError, logSuccess} from "./logger";
+import {logInfo, logError, logSuccess, logWarn} from "./logger";
+
+/**
+ * Sentinel thrown inside the Firestore transaction to abort it cleanly when
+ * the property has guest cancellation disabled. Caught by the outer handler
+ * and converted to a structured `{success: false, reason}` response instead
+ * of an HttpsError — keeps expected business rejections out of Sentry.
+ */
+class GuestCancellationDisabledError extends Error {
+  constructor() {
+    super("Guest cancellation disabled");
+    this.name = "GuestCancellationDisabledError";
+  }
+}
 import {sendBookingCancellationEmail} from "./emailService";
 import {fetchPropertyAndUnitDetails} from "./utils/bookingHelpers";
 import {sendGuestCancellationPushNotification} from "./fcmService";
@@ -178,11 +191,10 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
       // Step 2: Validate cancellation policy (atomic validation)
       // Check if guest cancellation is allowed
       if (!widgetSettings.allow_guest_cancellation) {
-        throw new HttpsError(
-          "permission-denied",
-          "Guest cancellation is not allowed for this property. " +
-          "Please contact the property owner."
-        );
+        // Sentinel — caught by outer handler, converted to structured response.
+        // Avoid HttpsError here so Sentry doesn't capture an expected business
+        // rejection as an unhandled error.
+        throw new GuestCancellationDisabledError();
       }
 
       // Check cancellation deadline
@@ -426,6 +438,21 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
       cancelledAt: new Date().toISOString(),
     };
   } catch (error) {
+    // Expected business rejection — return structured response (not an error).
+    if (error instanceof GuestCancellationDisabledError) {
+      logWarn("Guest cancellation rejected by property policy", {
+        bookingId,
+        bookingReference,
+        guestEmail,
+      });
+      return {
+        success: false,
+        reason: "guest_cancel_disabled",
+        message: "Guest cancellation is not allowed for this property. " +
+          "Please contact the property owner.",
+      };
+    }
+
     // Log full error details for debugging (server-side only)
     logError("Error cancelling booking", error, {
       bookingId,

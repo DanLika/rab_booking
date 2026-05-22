@@ -44,35 +44,50 @@ class BookingLookupService {
         if (accessToken != null) 'accessToken': accessToken,
       });
 
-      // Parse the response
-      final response = BookingLookupResponse.fromJson(result.data);
+      final data = result.data;
+      final success = data['success'] == true;
 
-      if (!response.success) {
-        throw BookingException.lookupFailed('Booking verification failed');
+      if (!success) {
+        // Server now returns structured `reason` for expected rejections
+        // instead of throwing HttpsError. Map reason → user-facing message.
+        final reason = data['reason'] as String? ?? 'unknown';
+        switch (reason) {
+          case 'invalid_credentials':
+            throw BookingException(
+              'Booking reference or email is incorrect.',
+              code: 'booking/permission-denied',
+            );
+          case 'invalid_token':
+          case 'expired_token':
+            throw BookingException(
+              'Access link is invalid or has expired. '
+              'Please try manual lookup.',
+              code: 'booking/permission-denied',
+            );
+          default:
+            throw BookingException.lookupFailed('Booking verification failed');
+        }
       }
 
-      return response.booking;
+      return BookingLookupResponse.fromJson(data).booking;
     } on FirebaseFunctionsException catch (e) {
-      // Handle specific Firebase Functions errors
+      // Only structural / abuse errors still arrive as HttpsError.
       switch (e.code) {
-        case 'not-found':
-          throw BookingException(
-            'Booking not found. Please check your booking reference.',
-            code: 'booking/not-found',
-          );
-        case 'permission-denied':
-          throw BookingException(
-            'Email does not match booking records or link has expired.',
-            code: 'booking/permission-denied',
-          );
         case 'invalid-argument':
           throw BookingException(
             'Booking reference and email are required.',
             code: 'booking/invalid-argument',
           );
+        case 'resource-exhausted':
+          throw BookingException(
+            'Too many attempts. Please try again in an hour.',
+            code: 'booking/rate-limited',
+          );
         default:
           throw BookingException.lookupFailed(e.message);
       }
+    } on BookingException {
+      rethrow;
     } catch (e, stackTrace) {
       // Log the original error before wrapping it
       await LoggingService.logError(
@@ -103,16 +118,14 @@ class BookingLookupService {
       final result = await callable.call<Map<String, dynamic>>({
         'sessionId': sessionId,
       });
-      final response = BookingLookupResponse.fromJson(result.data);
-      if (!response.success) {
+      final data = result.data;
+      // Server returns {success: false, pending: true} when the webhook
+      // hasn't created the booking yet — caller polls again.
+      if (data['success'] != true) {
         return null;
       }
-      return response.booking;
+      return BookingLookupResponse.fromJson(data).booking;
     } on FirebaseFunctionsException catch (e) {
-      if (e.code == 'not-found') {
-        // Webhook hasn't created the booking yet — caller retries.
-        return null;
-      }
       if (e.code == 'invalid-argument') {
         throw BookingException(
           'Invalid Stripe session.',

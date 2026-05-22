@@ -4,6 +4,62 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ---
 
+## 🧩 TODO: Booking widget refactor — Phases 2-5 (2026-05-22)
+
+**Prioritet:** P2 (tech debt; no user-visible change)
+**Izvor:** `audit/12-booking-widget-refactor-plan.md` + execution of Phase 0+1 on branch `refactor/booking-widget-phase1` (CHANGELOG 6.78)
+**Status:** Phase 0+1 executed; Phases 2-5 deferred.
+
+### Pre-merge of Phase 0+1 PR
+
+- [ ] **Manual smoke matrix (mandatory per execution plan §Verification)** — cannot run from automated session:
+  - Web (Chrome): fresh load, Stripe return with `?session_id=`, legacy `?bookingId=`, iframe parent, form persistence, reset flow, zoom controls, rotate overlay
+  - iOS dev (per `.claude/rules/ios-development.md`): fresh load, Stripe return, iframe parent, form persistence
+- [ ] **Regression checks**: no double-rebuild from `notifyListeners`, no `ChangeNotifier` retention across navigation, `localStorage` form-persistence schema byte-identical pre/post
+- [ ] **`PoweredByBadge` URL audit (Q7 from audit/12 §8)**: literal `https://bookbed.io` preserved verbatim — decide if it should route through `EnvironmentConfig.marketingHost` per `.claude/rules/widget.md` § "Hardcoded `bookbed.io` exceptions" (currently NOT in the exception list)
+
+### Phase 2 — leaf composers (~8 h, LOW/MEDIUM risk)
+
+Source: `audit/12-booking-widget-refactor-plan.md` §4 + §6.
+- [ ] `presentation/widgets/booking_widget_error_screen.dart` — extract inline 38-LOC error Scaffold from `build()`
+- [ ] `presentation/widgets/booking_widget_overlays.dart` — extract `RotateDeviceOverlay` + backdrop + zoom button positioning (Stack children helper)
+- [ ] `presentation/widgets/price_change_confirmation_dialog.dart` — extract inline AlertDialog from `_handleConfirmBooking` (returns `Future<bool?>`)
+- [ ] `presentation/widgets/payment_delayed_dialog.dart` — extract `_showPaymentDelayedDialog` + `_buildInstructionItem`
+- [ ] `state/booking_validation_orchestrator.dart` — extract `_validateUnitAndProperty` + `_retryValidation` + `_setDefaultPaymentMethod` (~230 LOC; async return-struct, no widget-state coupling)
+
+### Phase 3 — form / payment composers (~12 h, MEDIUM risk)
+
+- [ ] `presentation/widgets/guest_info_form_section.dart` — composer; reads/writes `BookingFormState` (now `ChangeNotifier`); takes `onConfirmPressed`/`onVerifyEmailPressed` callbacks
+- [ ] `presentation/widgets/payment_method_section.dart` — composer; takes `onPaymentMethodChanged`/`onConfirmPressed`
+- [ ] `presentation/widgets/floating_pill_bar.dart` — replaces `_buildFloatingDraggablePillBar` (358 LOC); 4 builder closures bound to extracted composers
+- [ ] `presentation/widgets/booking_widget_calendar_section.dart` — Listener + InteractiveViewer + LazyCalendarContainer (uses `ZoomControlState` from Phase 1)
+- **Smoke**: full booking flow on web + iOS dev for all 3 modes (`bookingInstant`, `bookingPending`, `calendarOnly`) and all 3 payment methods
+
+### Phase 4 — submit-pipeline domain services (~14 h, MEDIUM risk)
+
+- [ ] `domain/services/pre_submit_price_revalidator.dart` — fresh price recomputation + anomaly detection (NaN, >€10k); returns `PriceRevalidationResult`
+- [ ] `domain/services/booking_submit_orchestrator.dart` — builds `SubmitBookingParams`, dispatches `BookingSubmissionStripe`/`BookingSubmissionCreated`, surfaces typed result
+- [ ] `domain/services/stripe_return_handler.dart` — webhook poll loop (15× 2s for session) + legacy fetch-by-id 20s pending poll
+- [ ] Reduce `_handleConfirmBooking` (495 LOC) to a thin sequencer
+- **Smoke**: race-condition path (`BookingConflictException`), fresh-price mismatch dialog ≥€0.50 delta, Stripe return via session id + legacy bookingId
+
+### Phase 5 — payment messaging + Stripe launcher (~18 h, BLOCKING risk — long pole)
+
+- [ ] `domain/services/stripe_payment_launcher.dart` — popup pre-open, 4 popup-result branches (popup/redirect/blocked/unexpected)
+- [ ] `state/booking_payment_messaging_controller.dart` — consolidates BroadcastChannel + iframe postMessage + PaymentBridge JS interop behind a single `Stream<PaymentEvent>`
+- [ ] Reduce screen to pure orchestrator (≤300 LOC target)
+- **Smoke**: cross-browser matrix (Chrome desktop, Chrome iOS, Safari iOS, Safari macOS, iframe + standalone for each), 30s timeout edge cases, popup-blocked path, mobile redirect path, PaymentBridge fallback path
+- **Audit/12 §8 Q3 reconfirmation needed**: which of 3 messaging surfaces are redundant on which browser/iframe combinations — risk of regressing Safari iOS or popup-blocked without browser-matrix evidence
+
+### Done-when (whole refactor)
+
+- Screen `booking_widget_screen.dart` ≤300 LOC orchestrator
+- No `setState` for form-state mutations in screen (composers `ListenableBuilder` on `BookingFormState`)
+- All 4 Phase-4 domain services unit-tested
+- Browser-matrix screenshot evidence checked into `audit/screenshots/` for Phase 5 messaging consolidation
+
+---
+
 ## 🚨 TODO: Wave 3 deferred UI fixes (2026-05-22)
 
 **Prioritet:** P2 (mobile UX papercuts; no regression introduced)

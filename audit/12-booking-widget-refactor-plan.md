@@ -1,8 +1,34 @@
 # Booking Widget Refactor Plan (4808 → modular)
 
-Status: READ-ONLY AUDIT — no code changes proposed for this PR.
+Status: **Phase 0+1 EXECUTED** on branch `refactor/booking-widget-phase1` (2026-05-22, CHANGELOG 6.78). Phases 2-5 deferred — tracked in `docs/TODO.md` § "Booking widget refactor — Phases 2-5".
 Date: 2026-05-22
-Target: `lib/features/widget/presentation/screens/booking_widget_screen.dart` (4808 LOC)
+Target: `lib/features/widget/presentation/screens/booking_widget_screen.dart` (4811 → **4126 LOC**, –685)
+
+## Execution log (Phase 0+1)
+
+| Decision (this plan §8) | Resolved as |
+|---|---|
+| Q1 agent-log instrumentation status | **DELETED** wholesale (debug session closed) — Phase 0 commit `08973bc9`, –419 LOC |
+| Q2 BookingFormState approach | **Promoted to `ChangeNotifier`** (minimum churn) — commit `a3acc3f7` |
+| Q9 `helpers/formatters.dart` | **Dropped from plan** — no formatters to extract |
+
+Phase 1 commits on `refactor/booking-widget-phase1` (8 commits total incl. this audit doc):
+- `074c2652` audit doc (this file)
+- `08973bc9` Phase 0 — delete 18 agent-log regions
+- `eaabf7ce` extract `booking_widget_url_helpers.dart` + 34-case test
+- `84a1d906` extract `booking_widget_url_intent.dart` + 16-case test
+- `a3acc3f7` promote `BookingFormState` to `ChangeNotifier` + 23-case test + `toPersistedFormData`/`applyFromPersisted` factories
+- `2243a6e7` extract `IframeHeightReporter`
+- `3ac4af3b` extract `ZoomControlState` (also fixes pre-existing `_transformationController` dispose leak)
+- `4b01e033` extract `PoweredByBadge` to its own file
+
+Net delta: 11 files changed, 1802 insertions, 843 deletions. Screen –685 LOC. 73 new test cases. `flutter analyze` clean. Test parity vs main: identical 21 pre-existing failures, zero new regressions.
+
+Phases 2-5 (composers, validation orchestrator, submit pipeline, payment messaging consolidation) deferred — see `docs/TODO.md`.
+
+---
+
+Original audit below (kept verbatim for reference).
 
 Source-of-truth scan: full file read in 4 passes (0–800, 800–1600, 1600–2400, 2400–3200, 3200–4000, 4000–4808). LOC counts below are exact at audit time.
 

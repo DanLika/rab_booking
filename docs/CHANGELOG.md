@@ -39,6 +39,28 @@ All version history from v4.6 to v6.67.
 
 ---
 
+**Changelog 6.78**: Booking widget refactor Phase 0+1 — agent-log cleanup + pure-helper extraction (2026-05-22):
+
+- **Audit doc**: `audit/12-booking-widget-refactor-plan.md` (339 lines) catalogues `booking_widget_screen.dart` (4811 LOC god-screen), proposes 21-unit split across 5 phases with risk per extraction, sibling-overlap check, 10 open decisions. Section-8 questions 1-3 resolved this PR (agent-log: delete; BookingFormState: ChangeNotifier; tests: service-layer only).
+- **Phase 0 — agent-log instrumentation removed** (`08973bc9`): 18 `// #region agent log … // #endregion` blocks deleted (–419 LOC). Debug session closed; per `.claude/rules/widget.md` the silent-guard rule applies to messaging callbacks (postMessage / BroadcastChannel / PaymentBridge) and those remain intact.
+- **Phase 1 extractions (5 new helpers)**:
+  - `presentation/helpers/booking_widget_url_helpers.dart` — 5 static defense-in-depth validators (`sanitizeId`, `isValidBookingReference`, `isValidFirestoreId`, `isValidStripeSessionId`, `safeErrorToString`). Public functions; 9 screen call sites rewritten. **34-case unit test**.
+  - `presentation/helpers/booking_widget_url_intent.dart` — sealed `BookingUrlIntent { FreshLoad, StripeReturnSession, LegacyStripeReturn, DirectBookingReturn }` + `parseInitialUrlIntent(Uri)`. Replaces 64 lines of inline URL inspection in `initState` with a single switch. Priority preserved: legacy > stripe-session > direct > fresh. **16-case unit test**.
+  - `presentation/helpers/iframe_height_reporter.dart` — encapsulates `_contentKey` + `_lastSentHeight` + post-frame `sendIframeHeight`. Disposed flag pattern bails after teardown.
+  - `presentation/helpers/zoom_control_state.dart` — owns `TransformationController` + viewer key + scale + centered-zoom matrix math + scroll-wheel pan. Side-effect fix: now disposes the controller (pre-existing leak in screen).
+  - `presentation/widgets/powered_by_badge.dart` — file-private `_PoweredByBadge` promoted to public `PoweredByBadge`. Hardcoded `https://bookbed.io` preserved (audit Q7 punted to follow-up).
+- **`BookingFormState` promoted to `ChangeNotifier`** (`a3acc3f7`): every mutable field becomes a private backing field + getter + value-equality-guarded setter that fires `notifyListeners()`. `dispose()` chains `super.dispose()`. `resetState()` writes to private fields and notifies exactly once. New factory methods `toPersistedFormData({unitId, propertyId})` + `applyFromPersisted(PersistedFormData)` collapse 57 LOC of (de)serialization in the screen. **23-case unit test**.
+- **`booking_widget_screen.dart` LOC**: 4811 → 4126 (–685, –14%). 22 delegating getters/setters from prior Dec-2025 refactor (`bdd16fa0`) untouched — composers in follow-up phases will replace them.
+- **Tests added (73 cases across 3 files)**: pure-function tests only per execution plan; no widget tests. CI gate (`flutter test --coverage` in `.github/workflows/ci.yml`) covers them automatically.
+- **Multi-agent race observed**: branch `refactor/booking-widget-phase1` hijacked once by parallel agent who used it for SF-026 migration work and cherry-picked to main. Recovered via surgery: `git branch -D` polluted ref + `git branch -f` restore of `fix/t11c-proper-bookings-migration` + cherry-pick of audit-doc commit onto fresh refactor branch from current main. Branch swapped under foot ~6 times mid-edit; defensive `[ "$(git branch --show-current)" = "..." ] || exit 1` guard before every `git add` + `git commit` prevented stray landings.
+- **Verification**: repo-wide `dart format --set-exit-if-changed .` clean (650 files). Repo-wide `flutter analyze --no-fatal-infos` clean (0 issues). Test parity vs `main` (via `git worktree add /tmp/bookbed-main-snapshot main`): main = `+640 -21` after build_runner, refactor branch = `+713 -21`; **same 21 pre-existing failures** (`daily_price_model.freezed.dart`-class), pass-count delta exactly = 73 new test cases I added. **No new regressions.**
+- **Mandatory smoke deferred** (per execution plan §Verification): 8 web flows + 4 iOS-dev flows must run before PR open / merge. Cannot be run from automated session — flagged for follow-up.
+- **Deploy**: none. Refactor only; no production surface changed.
+- **Commits**: `074c2652` (audit doc), `08973bc9` (Phase 0 agent-log delete), `eaabf7ce` (URL helpers), `84a1d906` (URL intent), `a3acc3f7` (BookingFormState ChangeNotifier), `2243a6e7` (IframeHeightReporter), `3ac4af3b` (ZoomControlState), `4b01e033` (PoweredByBadge). Branch `refactor/booking-widget-phase1` — NOT pushed.
+- **Follow-ups queued in `docs/TODO.md`**: Phase 2-5 of audit/12 — leaf composers (error screen, overlays, dialogs), state notifiers (validation, payment messaging — BLOCKING risk), Stripe pipeline domain services.
+
+---
+
 **Changelog 6.77**: T11c progress note + booking count audit + audit gitignore whitelist (2026-05-22):
 
 - **T11c progress documented** (`docs/SECURITY_FIXES.md` line 1350, new "T11c progress update 2026-05-22" subsection under SF-019): captures the split status of T11c after SF-023 landed the `getUnitAvailability` CF half. Lists the 5 anonymous-context widget sites that still issue direct `collectionGroup('bookings').where('unit_id', '==', …).where('status', 'in', …)` and therefore block clause-1 removal — 4 streams in `firebase_booking_calendar_repository.dart:107/245/386/496` (`.snapshots()` realtime) + 1 one-shot in `availability_checker.dart:257` (booking-submit gate). Documents the 6-step migration plan + the realtime → ~30s polling UX regression that ships with it. Closes the doc gap that made T11c look ready to land when it wasn't (CF deployed but widget reads not migrated).

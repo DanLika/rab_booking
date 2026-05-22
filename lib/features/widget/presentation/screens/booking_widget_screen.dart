@@ -1342,28 +1342,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   // Bug #53: Form data persistence - delegates to FormPersistenceService
 
-  /// Build PersistedFormData from current state
-  PersistedFormData _buildPersistedFormData() {
-    return PersistedFormData(
-      unitId: _unitId,
-      propertyId: _propertyId,
-      checkIn: _checkIn,
-      checkOut: _checkOut,
-      firstName: _firstNameController.text,
-      lastName: _lastNameController.text,
-      email: _emailController.text,
-      phone: _phoneController.text,
-      countryCode: _selectedCountry.dialCode,
-      adults: _adults,
-      children: _children,
-      notes: _notesController.text,
-      paymentMethod: _selectedPaymentMethod,
-      pillBarDismissed: _pillBarDismissed,
-      hasInteractedWithBookingFlow: _hasInteractedWithBookingFlow,
-      timestamp: DateTime.now().toUtc(),
-    );
-  }
-
   /// Debounced save - prevents race conditions when user types quickly
   /// Called by text controller listeners
   void _saveFormDataDebounced() {
@@ -1381,7 +1359,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     if (_isDisposed) return;
     await FormPersistenceService.saveFormData(
       _unitId,
-      _buildPersistedFormData(),
+      _formState.toPersistedFormData(unitId: _unitId, propertyId: _propertyId),
     );
   }
 
@@ -1389,49 +1367,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Future<void> _loadFormData() async {
     final formData = await FormPersistenceService.loadFormData(_unitId);
     if (formData == null) return;
+    if (!mounted) return;
 
-    // Restore form data
-    if (mounted) {
-      setState(() {
-        _checkIn = formData.checkIn;
-        _checkOut = formData.checkOut;
-        _firstNameController.text = formData.firstName;
-        _lastNameController.text = formData.lastName;
-        _emailController.text = formData.email;
-        _phoneController.text = formData.phone;
-        _selectedCountry = formData.country;
-        _adults = formData.adults;
-        _children = formData.children;
-        _notesController.text = formData.notes;
-        _selectedPaymentMethod = formData.paymentMethod;
-        _pillBarDismissed = formData.pillBarDismissed;
-        _hasInteractedWithBookingFlow = formData.hasInteractedWithBookingFlow;
-        // Bug Fix: Don't auto-show guest form from cache
-        // User should explicitly select dates or click to open booking flow
+    setState(() {
+      _formState.applyFromPersisted(formData);
 
-        // Bug Fix: Clamp restored guest count to maxGuests
-        // Saved form data may have higher guest count if:
-        // 1. User previously booked a property with higher capacity
-        // 2. Owner changed the capacity setting since last visit
-        final maxG = _unit?.maxGuests ?? 0;
-        if (maxG > 0) {
-          final totalGuests = _adults + _children;
-          if (totalGuests > maxG) {
-            // Prioritize adults, reduce children first
-            _children = 0;
-            _adults = maxG.clamp(1, maxG);
-          }
+      // Bug Fix: Don't auto-show guest form from cache.
+      // User should explicitly select dates or click to open booking flow.
+
+      // Bug Fix: Clamp restored guest count to maxGuests.
+      // Saved form data may have higher guest count if:
+      //   1. User previously booked a property with higher capacity
+      //   2. Owner changed the capacity setting since last visit
+      final maxG = _unit?.maxGuests ?? 0;
+      if (maxG > 0) {
+        final totalGuests = _adults + _children;
+        if (totalGuests > maxG) {
+          _children = 0;
+          _adults = maxG.clamp(1, maxG);
         }
-        // Reset pets if the unit doesn't allow them
-        if (_unit != null && !_unit!.allowsPets) {
-          _pets = 0;
-        }
-      });
+      }
+      if (_unit != null && !_unit!.allowsPets) {
+        _pets = 0;
+      }
+    });
 
-      // Validate restored payment method - it may be invalid if widget mode changed
-      // (e.g., user had pay_on_arrival selected but owner changed to bookingInstant)
-      _setDefaultPaymentMethod();
-    }
+    // Validate restored payment method — may be invalid if widget mode changed
+    // (e.g. user had pay_on_arrival selected but owner switched to bookingInstant).
+    _setDefaultPaymentMethod();
   }
 
   /// Clear saved form data from localStorage

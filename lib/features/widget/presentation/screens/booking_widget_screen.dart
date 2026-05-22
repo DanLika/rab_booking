@@ -73,6 +73,7 @@ import '../../../../core/exceptions/app_exceptions.dart';
 import '../l10n/widget_translations.dart';
 import '../helpers/booking_widget_url_helpers.dart';
 import '../helpers/booking_widget_url_intent.dart';
+import '../helpers/iframe_height_reporter.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
@@ -198,10 +199,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // ============================================
   // IFRAME HEIGHT AUTO-RESIZE
   // ============================================
-  // Key to measure content height for iframe embedding
-  final _contentKey = GlobalKey();
-  // Track last sent height to avoid redundant postMessages
-  double _lastSentHeight = 0;
+  final _heightReporter = IframeHeightReporter();
 
   // ============================================
   // ZOOM SCALE (for zoom control buttons)
@@ -564,50 +562,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   // REMOVED: _monitorStripePopup - no longer needed since Stripe redirects in same tab
   // (consistent with other payment methods: Bank Transfer, Pay on Arrival, etc.)
-
-  /// Send iframe height to parent window for auto-resize
-  /// Only sends if height changed significantly (>10px) to avoid spam
-  void _sendIframeHeight() {
-    if (!kIsWeb) return;
-
-    // Schedule measurement after frame is rendered
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      try {
-        final renderBox =
-            _contentKey.currentContext?.findRenderObject() as RenderBox?;
-        if (renderBox == null || !renderBox.hasSize) return;
-
-        // Defensive check: ensure size is valid and finite
-        final size = renderBox.size;
-        if (!size.height.isFinite ||
-            !size.width.isFinite ||
-            size.height <= 0 ||
-            size.width <= 0) {
-          return;
-        }
-
-        final height = size.height;
-
-        // Add padding for visual breathing room
-        final totalHeight = height + 32;
-
-        // Ensure totalHeight is valid before sending
-        if (!totalHeight.isFinite || totalHeight <= 0) return;
-
-        // Only send if height changed significantly (avoid spam)
-        if ((totalHeight - _lastSentHeight).abs() > 10) {
-          _lastSentHeight = totalHeight;
-          sendIframeHeight(totalHeight);
-        }
-      } catch (e) {
-        // Ignore errors if RenderBox is disposed or context is invalid
-        // This can happen if widget is disposed while callback is pending
-        return;
-      }
-    });
-  }
 
   /// Handle messages received from other browser tabs
   /// When payment completes in Tab B, this tab (Tab A) receives the notification
@@ -1469,6 +1423,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     _paymentCompletionTimeout?.cancel();
     _paymentCompletionTimeout = null;
 
+    _heightReporter.dispose();
+
     super.dispose();
   }
 
@@ -1598,7 +1554,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     // Send iframe height to parent for auto-resize (web only, in iframe only)
-    _sendIframeHeight();
+    _heightReporter.send();
 
     return Scaffold(
       // In iframe: false (host site handles keyboard resize)
@@ -1709,8 +1665,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                 vertical: verticalPadding,
                               ),
                               child: Column(
-                                key:
-                                    _contentKey, // For iframe height measurement
+                                key: _heightReporter
+                                    .contentKey, // For iframe height measurement
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   // Custom title header (if configured)

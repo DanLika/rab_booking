@@ -9,30 +9,39 @@ discovered while verifying PR-A coverage. Bundle of 4 items + 1 correction.
 
 ---
 
-## 0. Finding #5 correction — `nights` field NOT auto-resolved for widget path
+## 0. audit/26 #5 — `nights` field write — CLOSED ✅
 
-`audit/26` §6 claimed: "Finding #5 auto-resolves if PR-A lands: `createBookingAtomic` /
-`updateBookingAtomic` compute nights via `calculateBookingNights(...)` server-side after
-SF-026 normalization." This is **only half true**.
+`audit/26` §6 originally claimed: "Finding #5 auto-resolves if PR-A lands". That claim
+was **only half true** initially (PR-A `b63423e2` covered owner paths but missed the guest
+widget path). audit/27 §5 + §12 surfaced the gap empirically. A 1-line follow-up fold landed
+in commit **`e9a45c31`** on `fix/audit-26-pra-owner-direct-write` (PR #456). All three CF
+write paths now persist `nights`:
 
-**Verified via `grep -n "nights" functions/src/atomicBooking.ts`:**
-
-| CF | Computes? | Persists? | Status |
+| CF | Computes? | Persists? | Verified |
 |---|---|---|---|
-| `createBookingAtomic` (widget, atomicBooking.ts:776 + 1081) | ✅ line 776 `const bookingNights = calculateBookingNights(...)` | ❌ NOT in `bookingData` object (lines 1081-1122) | **MISSING — needs separate dop commit** |
-| `createOwnerBookingAtomic` (PR-A, atomicBooking.ts:1748 + 1789) | ✅ line 1748 | ✅ line 1789 in bookingData | **verified** |
-| `updateBookingAtomic` (PR-A, atomicBooking.ts:1970 + 1984) | ✅ line 1970 | ✅ line 1984 (on date change) | **verified** |
+| `createBookingAtomic` (widget, atomicBooking.ts:777 + 1091) | ✅ line 777 `const bookingNights = calculateBookingNights(...)` | ✅ line 1091 in `bookingData` (commit `e9a45c31`) | ✅ |
+| `createOwnerBookingAtomic` (PR-A, atomicBooking.ts:1748 + 1789) | ✅ line 1748 | ✅ line 1789 in `bookingData` | ✅ |
+| `updateBookingAtomic` (PR-A, atomicBooking.ts:1970 + 1984) | ✅ line 1970 | ✅ line 1984 (on date change) | ✅ |
 
-**Implication:** widget bookings (the guest flow — 99% of write volume) still land with
-`nights` absent. `BookingModel.fromJson` falls back to `_checkOut.difference(_checkIn).inDays`
-(line ~120 of `booking_model.dart`) so it's display-only soft data loss — but the absence
-masks SF-026 normalization parity. If a tooling integration starts reading `nights`
-directly (analytics, reporting) and assumes consistency between Dart/TS, the gap reappears.
+**Status:** audit/26 #5 fully closed. SF-026 normalize migration target population trends to
+zero for new bookings created via these three callables.
 
-**Fix:** add `nights: bookingNights,` to the `bookingData` object in `atomicBooking.ts` near
-line 1090. Same for `stripePayment.ts` placeholder write (Stripe path also lands without
-`nights`). Trivial — 2 lines. **Roll into A.4 commit** if cache invalidation lands first;
-otherwise standalone XS PR.
+**Residual scope:**
+- **Stripe placeholder write** (`stripePayment.ts createStripeCheckoutSession` placeholder
+  doc — separate code path from `createBookingAtomic`). NOT covered by `e9a45c31`. Same
+  trivial fix shape; if a Stripe-path booking lands without `nights`, file a tiny follow-up.
+  Not gating audit/28 closure.
+- **Existing K=4 prod drifters** documented in `audit/22` §"PROD --force backfill" still
+  require the one-time `--execute` run per the cutover plan. Independent of this fix.
+
+**Verification log:**
+- `e9a45c31` diff: single insertion at line 1091: `nights: bookingNights, // closes audit/26 #5 for guest path`
+- Test results post-fold (Terminal D, 2026-05-23):
+  - `flutter analyze` — 0 issues
+  - `flutter test` — 1070 pass / 30 fail (baseline unchanged, all pre-existing widget-test failures)
+  - `functions: npm run build` — 0 errors
+  - `functions: npm test` — 182/186 pass (4 stripeConnect failures pre-exist)
+  - `functions: npm run test:rules` — 24/24 pass
 
 ---
 

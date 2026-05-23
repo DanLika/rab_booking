@@ -8,11 +8,15 @@
 - [CLAUDE_MCP_TOOLS.md](./docs/cloud-mcp-tools/CLAUDE_MCP_TOOLS.md) - MCP serveri, slash commands
 - [EMAIL_SYSTEM.md](./docs/features/email-templates/EMAIL_SYSTEM.md) - Email template-i, payment rok, reminders
 - [SECURITY_FIXES.md](./docs/SECURITY_FIXES.md) - Sigurnosne ispravke (SF-001, SF-002, ...)
-- [CHANGELOG.md](./docs/CHANGELOG.md) - Svi changelogi v4.6–v6.65
+- [CHANGELOG.md](./docs/CHANGELOG.md) - Svi changelogi v4.6–v6.85
 - [TODO.md](./docs/TODO.md) - Planirani zadaci (Website Docs, Admin Controls, Security Fixes)
 - [audit/11-cloudfunctions-inventory.md](./audit/11-cloudfunctions-inventory.md) - CF inventory (dev/prod), orphans, P0/P1/P2 cleanup (2026-05-21)
 - [audit/11-sentry-env-fix.md](./audit/11-sentry-env-fix.md) - Sentry env-tag fix + Gen 2 `GCLOUD_PROJECT` finding (2026-05-21)
 - [audit/17-sf023-sf025-rules-fix.md](./audit/17-sf023-sf025-rules-fix.md) - SF-023 ical_events lockdown + SF-025 storage rules + booking_services cleanup, dev-deployed (2026-05-22)
+- [audit/18-booking-count-audit.md](./audit/18-booking-count-audit.md) - Booking-count surface audit (2026-05-22)
+- [audit/19-wave3-cleanup.md](./audit/19-wave3-cleanup.md) - Wave 3 cleanup task tracking (2026-05-22)
+- [audit/20-error-boundary-narrowing.md](./audit/20-error-boundary-narrowing.md) - ErrorBoundary catches VM-extension exceptions — narrowing proposal (2026-05-23)
+- [audit/21-sprint-summary-2026-05-22-23.md](./audit/21-sprint-summary-2026-05-22-23.md) - Sprint close-out: PRs #447/#448/#449, mobile smoke, fail-CLOSED verification matrix (2026-05-23)
 
 ---
 
@@ -131,7 +135,7 @@ Ovi fajlovi se učitavaju SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-05-22 | **Version**: 7.3
+**Last Updated**: 2026-05-23 | **Version**: 7.4
 
 # context-mode — MANDATORY routing rules
 

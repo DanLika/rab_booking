@@ -112,7 +112,7 @@ Single-IconButton match didn't open drawer; coordinate tap worked. Likely Marion
 ## Observations not bugs
 
 - **Debug build worked on Android** (Flutter 3.38.5, `assembleDebug` 37.9s) despite `.claude/rules/hosting-build.md` `--release` rule. Worth re-verifying whether the rule still guards a real Kotlin/Java compile issue or if it's outdated. **Queued P3.**
-- **CF region drift** — `getUnitIcalFeed` in `icalExport.ts` is deployed `us-central1` while docstring claims `europe-west1`. +120ms RTT per EU iCal poll. **Queued P3.**
+- **CF region drift** — `getUnitIcalFeed` (`icalExport.ts`) is deployed to `us-central1` (default — no `region:` in `onRequest` opts). Already inventoried in `audit/11-cloudfunctions-inventory.md` P3 (hot-path EU latency cost +120ms RTT). Misleading neighbour: `availability.ts:25-26` header mentions `icalSync.ts` / `scheduledPushNotifications.ts` as EU-west1 collectionGroup consumers — `icalSync.ts` *is* (scheduled), but the public-feed `getUnitIcalFeed` sits in `us-central1`. **Queued P3.**
 - **Fail-OPEN class on `getUnitAvailability(unknown_unitId)`** — returns `200 OK / windows: []` instead of `not-found`. Defensible (booking write is gated separately by `widget_settings` lookup), but CF should at minimum `logWarn` unknown unit so abuse is detectable. **Queued P2.**
 
 ---

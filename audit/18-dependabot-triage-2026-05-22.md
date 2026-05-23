@@ -157,3 +157,46 @@ User reviewed per-package and decided:
 
 - **#242 package_info_plus**: Re-evaluate at next dev-build window. If no window by **2026-06-05**, escalate to close (will re-open via new dependabot ping later).
 - **#270 / #271 / #240**: Closed; reopen via new dependabot ping after upstream changelog stabilizes or as part of a dedicated migration PR (Stripe payments maintenance / ESLint flat-config / secure_storage auth regression).
+
+---
+
+## Addendum 2026-05-23 — Transitive batch execution (12 PRs)
+
+12 transitive utility bumps from AUTO-MERGE list resolved during `/effort max` cleanup session.
+
+### Merged (11) — squash + delete-branch
+
+Each batch validated locally (`flutter analyze` = 0, `npm run build` = 0) before next batch.
+
+| PR | Package | Bump | Batch | Commit on main |
+|---|---|---|---|---|
+| #412 | `@protobufjs/utf8` | 1.1.0 → 1.1.1 | 1 | `d44d862a` |
+| #415 | `brace-expansion` | 1.1.12 → 2.1.0 | 1 | `51e44966` |
+| #416 | `minimatch` | 3.1.2 → 9.0.9 | 1 | `2f9291ef` |
+| #414 | `picomatch` | 2.3.1 → 4.0.4 | 2 | `a3554231` |
+| #369 | `ajv` | 6.12.6 → 6.15.0 | 3 | `42621796` |
+| #327 | `fast-xml-parser` | 4.5.3 → 4.5.6 | 3 | `aa81eab6` |
+| #328 | `lodash` | 4.17.23 → 4.18.1 | 3 | `fe547ae1` |
+| #309 | `flatted` | 3.3.3 → 3.4.2 | 4 | `867a071e` |
+| #314 | `handlebars` | 4.7.8 → 4.7.9 | 4 | `aaa21df0` |
+| #316 | `node-forge` | 1.3.3 → 1.4.0 | 4 | `57e7b244` |
+| #319 | `path-to-regexp` | 0.1.12 → 0.1.13 | 5 | `81421bfc` |
+
+### Closed (1) — superseded
+
+| PR | Package | Bump | Reason |
+|---|---|---|---|
+| #281 | `minimatch` | 3.1.2 → 3.1.5 | Superseded by #416 (already at 9.0.9). Remote branch deleted. |
+
+### CI observations
+
+- **Pre-existing failure on main**: `Run Tests` / `Test Cloud Functions` / `Validate Firestore Rules` jobs were already failing on main since `ac225b3d` (2026-05-22 16:49Z), unrelated to these merges. All 11 PRs had SUCCESS on those jobs at PR time.
+- **Build Web Widget orphan**: Workflow is SKIPPED on main but appears as FAILURE on dependabot PRs. Treated as orphan (real test jobs were green). Merged anyway.
+- **Mergeable computation lag**: After main churn, GitHub returned `UNKNOWN UNKNOWN` mergeable state for ~20s before recomputing — wait then re-check.
+- **Multi-agent race observed**: Local branch flipped mid-session by sibling agent (`refactor/booking-widget-phase1`); recovered via `git checkout main`. Two new stashes appeared during execution. Per `memory/multi-agent-git-race.md`.
+
+### Remaining open dependabot PRs (post-batch)
+
+After this execution, the queue is:
+- **INVESTIGATE** (untouched, still need manual diff review): #320 codecov-action, #285/#286 download/upload-artifact, #274 sentry_flutter, #272 @sentry/node, #273 node-ical, #413 firebase group, #275 pub multi, #276 multi npm, #238 flutter_launcher_icons, #417 protobufjs
+- **POSTPONE** (date-gated): #242 package_info_plus (revisit ≤ 2026-06-05)

@@ -2,7 +2,18 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-23 | **Version**: 6.82
+**Last Updated**: 2026-05-23 | **Version**: 6.83
+
+---
+
+**Changelog 6.83**: Repo hygiene — 29-stash drop + Dependabot transitive batch merge (11) + branch cleanup (12) (2026-05-22 evening):
+
+- **Stashes 32 → 3** in this session (sibling agent then dropped the remaining 3 per CHANGELOG 6.81 — final state 0). Descending-index drop sequence (highest first) preserves stable numbering across each `git stash drop`. Class A merged-work race debris (17) + Class B Wave 0 debris (9) + Class E ancient-mvp obsolete (3) → all dropped this session. Class C (T11c sibling `1eb3b205`) + Class D (jules-audit `4151b352`, diagonal-gradients `d0e71b62`) preserved here; later dropped by sibling per 6.81 operator decision. Full classification in `audit/18-stash-classification-2026-05-22.md` Addendum 2026-05-23.
+- **Dependabot transitives — 11 squash-merged, 1 closed**: PRs #309 flatted, #314 handlebars, #316 node-forge, #319 path-to-regexp, #327 fast-xml-parser, #328 lodash, #369 ajv, #412 @protobufjs/utf8, #414 picomatch, #415 brace-expansion, #416 minimatch (3.1.2 → 9.0.9 major-skip-safe via lockfile-only transitive). Each batch validated locally before next: `flutter analyze`=0, `npm run build`=0. #281 minimatch 3.1.5 closed as superseded by #416, remote branch deleted. Per `audit/18-dependabot-triage-2026-05-22.md` Addendum 2026-05-23.
+- **Branches 14 → 2 non-main local**: deleted 12 merged-into-main (`fix/sf-026-booking-count-dst`, `docs/wave3-cleanup-fix-and-deferred`, `chore/cleanup-stash-dependabot-test-debt-2026-05-22`, `fix/icalpii-family-rules-and-cf`, `fix/auth-race-and-indexes-cleanup`, `chore/ci-enable-android-build`, `fix/ios-firebase-env-hardening`, `fix/sentry-dart-env-and-seed`, `fix/sentry-env-detection`, `chore/merge-trial-v2-winner`, `chore/kill-comeback-reminder`, `chore/kill-booking-airbnb-integration`). Preserved `refactor/booking-widget-phase1` (active sibling) + `hotfix/widget-secrets-exfil` (unmerged).
+- **Dev servers**: widget session on port 8766 preserved (active 6h+ runtime). Ports 5556/8080/8081/8082 already free.
+- **Multi-agent race observed**: working tree silently flipped from `main` to `refactor/booking-widget-phase1` mid-session during `git pull` (sibling checkout). Two new stashes appeared during execution (`smoke-447-temp-78094` + WIP-on-main). Recovered via `git checkout main`. Per `memory/multi-agent-git-race.md`.
+- **Pre-existing CI failure on main, not caused by this work**: `Run Tests` / `Test Cloud Functions` / `Validate Firestore Rules` red since `ac225b3d` (2026-05-22 16:49Z, env/billing wall — same root cause flagged in 6.81). All 11 merged dependabot PRs had SUCCESS on those jobs at PR time. User ack'd "Continue — env CI issue".
 
 ---
 

@@ -31,43 +31,33 @@ The 2026-05-22 Wave 3 responsive-cleanup session shipped 2 of 4 fixes (price row
 
 ---
 
-## 🧹 TODO: Cleanup-session deferred execution (2026-05-22)
+## ✅ DONE: Cleanup-session execution (resolved 2026-05-23)
 
-**Prioritet:** P2 hygiene
+**Prioritet:** P2 hygiene → resolved
 **Izvor:** `audit/18-stash-classification-2026-05-22.md` + `audit/18-dependabot-triage-2026-05-22.md`
-**Why deferred:** mid-session multi-agent race (stash count 18 → 29, sibling stash storm, `.git/index.lock` contention) made destructive ops unsafe. Run when only one agent is active.
 
-### Stash drops (29 stashes inventoried by SHA)
+### Stash drops — 29/32 resolved
 
-Full classification per stash in `audit/18-stash-classification-2026-05-22.md`. Recommended batches:
+- **Dropped 29** (Class A race debris merged + Class B Wave 0 debris + Class E ancient obsolete) via descending-index drop.
+- **Kept 3**: T11c sibling debris (`1eb3b205`), jules-audit (`4151b352`, owner review), diagonal-gradients mvp (`d0e71b62`, in-flight design work).
+- See `audit/18-stash-classification-2026-05-22.md` Addendum 2026-05-23.
 
-1. **DROP — race-debris from today** (10 stashes, SHAs `8526c348`, `b17e488e`, `d19775fb`, `c892e55a`, `7b1354c8`, `9621a95c`, `2d03f9b2`, `7863fbc1`, `883d897c`, `ece20c62`). Content is duplicated by what landed in `main` or other surviving stashes.
-2. **INVESTIGATE before dropping** (4 stashes, `82818399`, `8aa2fd0f`, `b5bdf26b`, `4d989205`). Includes uncommitted prod code (`admin_login_screen.dart`, `price_row_widget.dart`) and substantial WIP (421 insertions). Verify scope is committed elsewhere first.
-3. **VERIFY branch state** (9 stashes from `fix/error-boundary-and-chat-ux`, `fix/null-tostring-hardening`, `test/wave0-integration`, `fix/widget-silent-catches`). If branch landed in main, drop; else preserve.
-4. **ANCIENT mvp/saas-booking-system stashes** (5 stashes: `faaedfff`, `457890b8`, `4151b352` (10585 lines), `d0e71b62`, `ea47ce17`). Audit doc has per-SHA verdict.
-5. **KEEP**: my own `wip-security-fixes-doc-cleanup-session-2026-05-22` (`895abb60`, 333 lines on `fix/widget-price-row-and-admin-footer-year`).
+### Dependabot triage — 16/27 resolved
 
-Helper to drop by SHA (defeats index shift):
-```bash
-drop_by_sha() {
-  local sha="$1"
-  local ref=$(git stash list --format='%gd %H' | awk -v s="$sha" '$2==s {print $1; exit}')
-  [ -n "$ref" ] && git stash drop "$ref" || echo "Stash $sha not found (already dropped?)"
-}
-```
-
-### Dependabot triage (27 open branches)
-
-Full classification per branch in `audit/18-dependabot-triage-2026-05-22.md`.
-
-1. **REJECT — major bumps on locked/critical libs** (4 PRs): `pub/flutter_secure_storage-10.0.0`, `pub/package_info_plus-9.0.0`, `npm/functions/eslint-10.0.0`, `npm/functions/stripe-20.3.1`. Close + delete branches.
-2. **INVESTIGATE — read diff per branch** (10 PRs): github_actions majors (download-artifact-8, upload-artifact-7, codecov-action-6), `pub/sentry_flutter-9.13.0`, `npm/functions/sentry/node-10.39.0`, `npm/functions/node-ical-0.25.2`, `npm/functions/firebase-*`, group updates (`pub/multi-*`, `npm/functions/multi-*`), `pub/flutter_launcher_icons-0.14.4`, `npm/functions/protobufjs-7.6.0`.
-3. **AUTO-MERGE in small batches with CI watch** (12 PRs, transitive lockfile patches): ajv-6.15.0, brace-expansion-2.1.0, fast-xml-parser-4.5.6, flatted-3.4.2, handlebars-4.7.9, lodash-4.18.1, minimatch-3.1.5, minimatch-9.0.9, node-forge-1.4.0, path-to-regexp-0.1.13, picomatch-4.0.4, protobufjs/utf8-1.1.1.
+- **Merged 11 transitives**: PRs #309, #314, #316, #319, #327, #328, #369, #412, #414, #415, #416. Each batch validated locally (`flutter analyze`=0, `npm run build`=0).
+- **Closed 1 superseded**: #281 minimatch 3.1.5 (covered by #416 at 9.0.9). Remote branch deleted.
+- **Rejected 4 MAJOR** (yesterday): #270 stripe, #271 eslint, #240 flutter_secure_storage closed; #242 package_info_plus postponed.
+- **Remaining 11** in INVESTIGATE pile: sentry_flutter, @sentry/node, node-ical, firebase group, multi-group bumps, github_actions majors, flutter_launcher_icons, protobufjs minor. Revisit in dedicated migration windows. See `audit/18-dependabot-triage-2026-05-22.md` Addendum 2026-05-23.
 
 ### Branch + history hygiene
 
-- Delete local cleanup branch: `git branch -d chore/cleanup-stash-dependabot-test-debt-2026-05-22`.
-- Optional: squash duplicate cherry-pick (`cf1546a0` ↔ `70c91f8e`) via interactive rebase + force-push to `main`. Idempotent so leaving as cosmetic noise is also acceptable.
+- **Deleted 12 merged branches**: `fix/sf-026-booking-count-dst`, `docs/wave3-cleanup-fix-and-deferred`, `chore/cleanup-stash-dependabot-test-debt-2026-05-22`, `fix/icalpii-family-rules-and-cf`, `fix/auth-race-and-indexes-cleanup`, `chore/ci-enable-android-build`, `fix/ios-firebase-env-hardening`, `fix/sentry-dart-env-and-seed`, `fix/sentry-env-detection`, `chore/merge-trial-v2-winner`, `chore/kill-comeback-reminder`, `chore/kill-booking-airbnb-integration`.
+- **Preserved**: `refactor/booking-widget-phase1` (active sibling), `hotfix/widget-secrets-exfil` (unmerged). Local non-main branch count: 14 → 2.
+- Duplicate cherry-pick squash (`cf1546a0` ↔ `70c91f8e`): left as cosmetic noise (idempotent).
+
+### Side-effect — CI on main still red
+
+`Run Tests` / `Test Cloud Functions` / `Validate Firestore Rules` jobs failing on every commit since `ac225b3d` (2026-05-22 16:49Z). Pre-existing env/billing wall — **not caused** by any cleanup-session merge (all PRs were SUCCESS on those jobs at PR time). Tracked separately; user ack'd "Continue — env CI issue" during session.
 
 ---
 

@@ -84,3 +84,49 @@ drop_by_sha() {
 
 - `memory/multi-agent-git-race.md` — race conditions during parallel agent work
 - Pre-wave1-kill safety tag at `31c47c78` per `memory/wave1-branch-hygiene-2026-05-18.md`
+
+---
+
+## Addendum 2026-05-23 — Execution (29 dropped, 3 kept)
+
+`/effort max` repo-hygiene session resolved 29 of the 32 stashes inventoried above. Drops were applied descending by index (highest first) to keep numbering stable for each successive `git stash drop`.
+
+### Dropped — Class A (race debris, merged work) — 17 stashes
+
+`bf7603fa` `8526c348` `b17e488e` `d19775fb` `c892e55a` `7b1354c8` `9621a95c` `82818399` `2d03f9b2` `7863fbc1` `895abb60` `4d989205` `883d897c` `8aa2fd0f` `b5bdf26b` `ece20c62` `d6758a4e`
+
+Source branches now in main: `fix/sf-026-booking-count-dst`, `hotfix/widget-secrets-exfil`, `fix/auth-race-and-indexes-cleanup`, `fix/widget-price-row-and-admin-footer-year`, `audit/booking-count-audit`. Doc fragments duplicated content already landed via SF-024/025/026 + T11c commits.
+
+### Dropped — Class B (Wave 0 race debris) — 9 stashes
+
+`3aeb5a49` `8ec45891` `1433babc` `1b98d039` `91c5b69c` `33adc86f` `2f67d10f` `e881ec3c` `1c444d25`
+
+Source branches: `fix/error-boundary-and-chat-ux`, `fix/null-tostring-hardening`, `test/wave0-integration`, `fix/widget-silent-catches`. Wave 0 promoted per `memory/wave0-promote-2026-05-18.md`; T8 silent-catches explicitly rescued by T10.
+
+### Dropped — Class E (old obsolete, mvp/saas-booking-system + ancient main) — 3 stashes
+
+`faaedfff` `457890b8` `ea47ce17`
+
+iCal RFC 5545 (5L, 4mo), logo binary swap (4mo), iOS xcscheme + macOS Flutter config (7mo, on dead mvp branch).
+
+### Kept — 3 stashes (per user-confirmed scope)
+
+| SHA | Label | Class | Reason |
+|---|---|---|---|
+| `1eb3b205` | `other-agent-wip-availability_checker-blocking-refactor-switch-1779463606` | C | T11c sibling-agent debris; T11c branch still alive at session start |
+| `4151b352` | jules audit prompts WIP (60 files, 10585L, 4mo) | D | Owner review needed before destroying |
+| `d0e71b62` | diagonal gradients, toolbar layout, validation fixes (6 files, 439L, 6mo) | D | Matches your in-flight design work (per `~/.claude/CLAUDE.md` diagonal-gradient notes) |
+
+### Post-execution drift
+
+Sibling agents added 2 new stashes during the session (`smoke-447-temp-78094` + `WIP on main: 2f9291ef`), pushing the resting count to 5 by session-end. These are not from this cleanup and are owned by parallel agents.
+
+### Drop sequence (executed)
+
+```bash
+TARGETS="31 28 27 26 25 24 23 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1"
+for i in $TARGETS; do
+  git stash drop "stash@{$i}"
+done
+# 29/29 succeeded; 3 stashes remained (preserved per class C+D)
+```

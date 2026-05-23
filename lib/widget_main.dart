@@ -9,6 +9,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/router_widget.dart';
+import 'core/error_handling/error_filter.dart';
 import 'core/utils/sentry_env.dart';
 import 'core/utils/web_utils.dart'; // For hideNativeSplash
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
@@ -134,6 +135,16 @@ void main() async {
         // Filter non-critical errors before sending
         options.beforeSend = (event, hint) {
           final exception = event.throwable;
+
+          // Audit/20 §8 — drop infrastructure / test-harness noise (VM service
+          // extension dispatch, dart:developer, Marionette matcher failures)
+          // entirely. Mirrors the surface filter applied at ErrorBoundary +
+          // GlobalErrorHandler so Sentry can't be flooded via the zone-error
+          // bypass route.
+          if (!isUserFacingException(throwable: exception)) {
+            return null;
+          }
+
           final exceptionString = exception?.toString().toLowerCase() ?? '';
           final message = event.message?.formatted.toLowerCase() ?? '';
 

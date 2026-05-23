@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bookbed/core/error_handling/error_boundary.dart';
+import 'package:bookbed/core/error_handling/error_filter.dart';
 
 /// Audit/20 — ErrorBoundary catch narrowing.
 ///
@@ -102,6 +102,64 @@ void main() {
 
     test('accepts null stack', () {
       expect(isUserFacingAsyncError(StateError('boom'), null), isTrue);
+    });
+  });
+
+  group('isUserFacingException (Sentry beforeSend path)', () {
+    test('rejects throwable with Element-matching message', () {
+      expect(
+        isUserFacingException(
+          throwable: Exception(
+            'Element matching {text: Natrag na prijavu} not found',
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('rejects throwable with VM service extension message', () {
+      expect(
+        isUserFacingException(
+          throwable: Exception('VM service extension foo failed'),
+        ),
+        isFalse,
+      );
+    });
+
+    test('rejects when stackString matches blocked frame', () {
+      expect(
+        isUserFacingException(
+          throwable: StateError('zone-bypass'),
+          stackString:
+              '#0 _Service.handleRequest (dart:vm_service/extension.dart:42)\n',
+        ),
+        isFalse,
+      );
+    });
+
+    test('rejects when messageString carries blocked pattern', () {
+      expect(
+        isUserFacingException(
+          throwable: StateError('uppercase err'),
+          messageString: 'Exception: Element matching {key: missing} not found',
+        ),
+        isFalse,
+      );
+    });
+
+    test('accepts ordinary throwable + user-space stack', () {
+      expect(
+        isUserFacingException(
+          throwable: Exception('Network unreachable'),
+          stackString:
+              '#0 Repo.fetch (package:bookbed/features/x/repo.dart:42)\n',
+        ),
+        isTrue,
+      );
+    });
+
+    test('accepts null throwable + null stack', () {
+      expect(isUserFacingException(), isTrue);
     });
   });
 }

@@ -4,74 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/gradient_extensions.dart';
 import '../config/router_owner.dart' show rootNavigatorKey;
-
-/// Safely convert exception to string, handling null and edge cases
-/// Prevents "Null check operator used on a null value" errors
-String _safeExceptionToString(dynamic exception) {
-  if (exception == null) {
-    return 'Unknown error';
-  }
-  try {
-    return exception.toString();
-  } catch (e) {
-    // If toString() itself throws, return a safe fallback
-    return 'Error: Unable to display error details';
-  }
-}
-
-/// Stack-frame patterns that indicate infrastructure / debug-bridge / test
-/// harness origin — never user-triggered. Audit/20 §2.
-const List<String> _blockedFramePatterns = <String>[
-  'dart:developer',
-  'dart:vm_service',
-  'marionette_extension',
-  'registerExtension',
-];
-
-bool _stackMatchesBlockedFrame(String stackString) {
-  for (final pattern in _blockedFramePatterns) {
-    if (stackString.contains(pattern)) return true;
-  }
-  return false;
-}
-
-bool _messageMatchesBlockedException(String msg) {
-  if (msg.startsWith('Exception: Element matching {')) return true;
-  if (msg.contains('VM service extension')) return true;
-  return false;
-}
-
-/// Returns true for errors that should surface the boundary UI to the user.
-/// Returns false for infrastructure / test-harness noise (VM service extension
-/// dispatch, dart:developer, Marionette matcher failures, framework `silent`
-/// errors) that should propagate to debugPrint/Sentry only.
-///
-/// See `audit/20-error-boundary-narrowing.md`.
-@visibleForTesting
-bool isUserFacingFlutterError(FlutterErrorDetails details) {
-  // Framework convention: `silent == true` means "do not surface to user".
-  if (details.silent) return false;
-
-  final stackString = details.stack?.toString() ?? '';
-  if (_stackMatchesBlockedFrame(stackString)) return false;
-
-  final msg = _safeExceptionToString(details.exception);
-  if (_messageMatchesBlockedException(msg)) return false;
-
-  return true;
-}
-
-/// `PlatformDispatcher.onError` variant — same filter, raw `(error, stack)`
-/// shape. Audit/20 §8 — Sentry/Crashlytics sink also filters.
-@visibleForTesting
-bool isUserFacingAsyncError(Object error, StackTrace? stack) {
-  final stackString = stack?.toString() ?? '';
-  if (_stackMatchesBlockedFrame(stackString)) return false;
-  if (_messageMatchesBlockedException(_safeExceptionToString(error))) {
-    return false;
-  }
-  return true;
-}
+import 'error_filter.dart';
 
 /// Error Boundary Widget - Catches errors in widget tree and shows fallback UI
 ///
@@ -253,7 +186,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
                           ),
                         ),
                         child: Text(
-                          _safeExceptionToString(widget.errorDetails.exception),
+                          safeExceptionToString(widget.errorDetails.exception),
                           style: TextStyle(
                             fontSize: 11,
                             fontFamily: 'monospace',
@@ -418,7 +351,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint('GoRouter failed: ${_safeExceptionToString(e)}');
+      debugPrint('GoRouter failed: ${safeExceptionToString(e)}');
     }
 
     // Fallback: global navigator key
@@ -429,7 +362,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint('Global navigator failed: ${_safeExceptionToString(e)}');
+      debugPrint('Global navigator failed: ${safeExceptionToString(e)}');
     }
 
     debugPrint('All navigation methods failed');
@@ -445,7 +378,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint('GoRouter pop failed: ${_safeExceptionToString(e)}');
+      debugPrint('GoRouter pop failed: ${safeExceptionToString(e)}');
     }
 
     // Fallback: global navigator key
@@ -456,7 +389,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint('Global navigator pop failed: ${_safeExceptionToString(e)}');
+      debugPrint('Global navigator pop failed: ${safeExceptionToString(e)}');
     }
 
     // Can't go back, go home instead

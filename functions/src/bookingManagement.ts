@@ -61,6 +61,42 @@ function trackEmailFailure(
   });
 }
 
+// ==========================================
+// iCAL EXPORT CACHE INVALIDATION
+// ==========================================
+
+/**
+ * Flush iCal feed cache on properties/{propertyId}/widget_settings/{unitId}.
+ * Non-fatal: NOT_FOUND on units without widget_settings is expected.
+ *
+ * @param {string} propertyId - Parent property document ID
+ * @param {string} unitId - Unit document ID (= widget_settings doc ID)
+ * @return {Promise<void>}
+ */
+async function invalidateIcalCache(
+  propertyId: string,
+  unitId: string
+): Promise<void> {
+  try {
+    await db
+      .collection("properties").doc(propertyId)
+      .collection("widget_settings").doc(unitId)
+      .update({
+        ical_cache_content: admin.firestore.FieldValue.delete(),
+        ical_cache_generated_at: admin.firestore.FieldValue.delete(),
+        ical_cache_etag: admin.firestore.FieldValue.delete(),
+        ical_cache_unit_name: admin.firestore.FieldValue.delete(),
+      });
+    logInfo("[iCal Cache] Invalidated", {propertyId, unitId});
+  } catch (e) {
+    logWarn("[iCal Cache] Invalidation skipped or failed", {
+      propertyId,
+      unitId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+}
+
 /**
  * Cloud Function: Auto-cancel expired pending bookings
  *
@@ -169,6 +205,11 @@ export const onBookingCreated = onDocumentCreated(
 
     if (!booking) return;
 
+    // Flush iCal export cache for this unit so external calendars see the
+    // new booking on next pull instead of waiting up to 5 min for TTL expiry.
+    // Fires for ALL payment methods (Stripe-confirmed and pending alike).
+    await invalidateIcalCache(event.params.propertyId, event.params.unitId);
+
     const requiresApproval = booking.require_owner_approval === true;
     const nonePayment = booking.payment_method === "none";
     const bankTransfer = booking.payment_method === "bank_transfer";
@@ -273,6 +314,12 @@ export const onBookingStatusChange = onDocumentUpdated(
         from: before.status,
         to: after.status,
       });
+
+      // Flush iCal export cache so cancellations/rejections drop out of the
+      // feed promptly (5 min lag otherwise). Gated by status flip to avoid
+      // unnecessary writes on this trigger's own self-updates (access_token,
+      // emails_sent.*, booking_reference auto-heal) which preserve status.
+      await invalidateIcalCache(event.params.propertyId, event.params.unitId);
 
       // If booking was approved (pending -> confirmed with approved_at timestamp)
       if (before.status === "pending" && after.status === "confirmed" && after.approved_at) {

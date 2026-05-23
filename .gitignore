@@ -99,3 +99,6 @@ android/build/
 
 # Cloud Functions compiled output
 functions/lib/
+
+# Node v25 JIT compile cache (regenerated on each run)
+node-compile-cache/

@@ -22,6 +22,22 @@
  *      /properties/SEED_test_owner_property_01/bookings/SEED_test_owner_booking_01
  *                                                                      (only with --with-booking)
  *
+ * 3. E2E fixture extensions (audit/26 §7) — unblock DD (Stripe) + EE (iCal) flows:
+ *
+ *    --with-stripe-test-acct  Mock Stripe Connect fields on test-owner user + property.
+ *                             MOCK ONLY — does not exercise real Stripe Test mode payments.
+ *                             When combined with --with-widget-settings, also wires
+ *                             `widget_settings.stripe_config.{enabled,stripe_account_id}`
+ *                             so the widget UI surfaces the Stripe payment option.
+ *
+ *    --with-widget-settings   `properties/{pid}/widget_settings/{uid}` doc with
+ *                             `ical_export_enabled=true` + 32-hex `ical_export_token`,
+ *                             plus minimum production-shape fields. Unblocks EE iCal flow
+ *                             (`getUnitIcalFeed` no longer 404s).
+ *
+ *    --everything             Shortcut for: --with-booking --with-stripe-test-acct
+ *                             --with-widget-settings. Implies --test-owner.
+ *
  * Auth: uses Application Default Credentials. Run
  *   gcloud auth application-default login
  * once if not set up.
@@ -31,18 +47,57 @@
  *   node scripts/seed-bookbed-dev.js --with-booking               # + Wave 0 booking
  *   node scripts/seed-bookbed-dev.js --test-owner                 # also seed test-owner data
  *   node scripts/seed-bookbed-dev.js --test-owner --with-booking  # both + bookings
+ *   node scripts/seed-bookbed-dev.js --test-owner --with-stripe-test-acct
+ *   node scripts/seed-bookbed-dev.js --test-owner --with-widget-settings
+ *   node scripts/seed-bookbed-dev.js --test-owner --everything    # all test-owner fixtures
+ *   node scripts/seed-bookbed-dev.js --help                       # show this help
  *   node scripts/seed-bookbed-dev.js --project=bookbed-staging    # alt project (default bookbed-dev)
  *
  * Safe to re-run — uses set({merge: true}) on existing doc IDs.
+ *
+ * DD flow caveat: --with-stripe-test-acct writes a synthetic `acct_TEST_E2E_DD`
+ * Connect ID. Real Stripe Test-mode charges require a live test acct via the
+ * Stripe Dashboard. The fixture is presence-only — sufficient for UI surfacing
+ * + DB-layer assertions, NOT for end-to-end payment intent processing.
  */
 
 const path = require('path');
 
 const args = process.argv.slice(2);
-const withBooking = args.includes('--with-booking');
-const seedTestOwnerFlag = args.includes('--test-owner');
+
+if (args.includes('--help') || args.includes('-h')) {
+  // Re-print the header comment block for `--help`.
+  const fs = require('fs');
+  const self = fs.readFileSync(__filename, 'utf8');
+  const headerMatch = self.match(/^#![^\n]*\n\/\*\*([\s\S]*?)\*\//);
+  if (headerMatch) {
+    const cleaned = headerMatch[1]
+      .split('\n')
+      .map((l) => l.replace(/^\s*\*\s?/, ''))
+      .join('\n');
+    console.log(cleaned.trim());
+  } else {
+    console.log('See header in scripts/seed-bookbed-dev.js for usage.');
+  }
+  process.exit(0);
+}
+
+const everything = args.includes('--everything');
+const withBooking = args.includes('--with-booking') || everything;
+// --everything implies --test-owner since all extended fixtures target test-owner IDs.
+const seedTestOwnerFlag = args.includes('--test-owner') || everything;
+const withStripeTestAcct = args.includes('--with-stripe-test-acct') || everything;
+const withWidgetSettings = args.includes('--with-widget-settings') || everything;
 const projectArg = args.find((a) => a.startsWith('--project='));
 const projectId = projectArg ? projectArg.split('=')[1] : 'bookbed-dev';
+
+if ((withStripeTestAcct || withWidgetSettings) && !seedTestOwnerFlag) {
+  console.error(
+    'Error: --with-stripe-test-acct and --with-widget-settings target the test-owner\n' +
+    'fixtures (SEED_test_owner_*). Pass --test-owner (or use --everything).',
+  );
+  process.exit(1);
+}
 
 if (projectId === 'rab-booking-248fc') {
   console.error('Refusing to seed PROD (rab-booking-248fc). This script is dev-only.');
@@ -245,8 +300,116 @@ async function seedTestOwner() {
   }
 }
 
+// --with-stripe-test-acct mock Stripe Connect account ID. NOT a real Stripe
+// account — DD payment flow against this fixture requires either Stripe
+// Test-mode setup OR a widget feature flag to mock payment processing.
+const STRIPE_TEST_ACCT_ID = 'acct_TEST_E2E_DD';
+
+async function seedStripeTestAcct() {
+  console.log(`Seeding mock Stripe Connect fields (acct=${STRIPE_TEST_ACCT_ID})`);
+
+  const userRef = db.doc(`users/${TEST_OWNER_UID}`);
+  const existing = await userRef.get();
+  if (existing.exists && existing.data().stripe_account_id === STRIPE_TEST_ACCT_ID) {
+    console.log('  ⏭  users.stripe_account_id already set to mock id — skipping user write');
+  } else {
+    await userRef.set(
+      {
+        stripe_account_id: STRIPE_TEST_ACCT_ID,
+        // Mirror fields named per task spec audit/26 §7. NOT read by production
+        // code today (Stripe Connect status is fetched live from Stripe API in
+        // stripeConnect.ts/stripePayment.ts), but reserved for future caching
+        // and for fixture-presence assertions in E2E tests.
+        stripe_charges_enabled: true,
+        stripe_payouts_enabled: true,
+        stripe_details_submitted: true,
+        stripe_connected_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
+      },
+      {merge: true},
+    );
+    console.log(`  ✓ users/${TEST_OWNER_UID}.stripe_*`);
+  }
+
+  const propertyRef = db.doc(`properties/${TEST_OWNER_PROPERTY_ID}`);
+  const propSnap = await propertyRef.get();
+  if (propSnap.exists && propSnap.data().stripe_payments_enabled === true) {
+    console.log('  ⏭  properties.stripe_payments_enabled already true — skipping property write');
+  } else {
+    await propertyRef.set(
+      {
+        stripe_payments_enabled: true,
+        updated_at: FieldValue.serverTimestamp(),
+      },
+      {merge: true},
+    );
+    console.log(`  ✓ properties/${TEST_OWNER_PROPERTY_ID}.stripe_payments_enabled`);
+  }
+}
+
+async function seedWidgetSettings() {
+  console.log(`Seeding widget_settings for ${TEST_OWNER_PROPERTY_ID}/${TEST_OWNER_UNIT_ID}`);
+
+  const settingsRef = db.doc(
+    `properties/${TEST_OWNER_PROPERTY_ID}/widget_settings/${TEST_OWNER_UNIT_ID}`,
+  );
+  const existing = await settingsRef.get();
+  const existingData = existing.exists ? existing.data() : {};
+
+  // Preserve existing token if already seeded (idempotent — keeps iCal URLs stable).
+  const icalToken = existingData.ical_export_token || randomToken();
+
+  // Combined-flag enhancement: when --with-stripe-test-acct also present, wire
+  // stripe_config so the widget UI surfaces the Stripe payment option. Without
+  // this, the user/property mock Stripe fields don't reach the widget render path.
+  const stripeConfig = withStripeTestAcct
+    ? {
+        enabled: true,
+        deposit_percentage: 20,
+        stripe_account_id: STRIPE_TEST_ACCT_ID,
+      }
+    : existingData.stripe_config || null;
+
+  const payload = {
+    property_id: TEST_OWNER_PROPERTY_ID,
+    owner_id: TEST_OWNER_UID,
+    widget_mode: existingData.widget_mode || 'booking_instant',
+    ical_export_enabled: true,
+    ical_export_token: icalToken,
+    // currency/language not currently read by WidgetSettings.fromFirestore;
+    // included per audit/26 §7 spec for forward-compat + intent documentation.
+    currency: 'EUR',
+    language: 'hr',
+    min_nights: existingData.min_nights || 1,
+    min_days_advance: existingData.min_days_advance || 0,
+    max_days_advance: existingData.max_days_advance || 365,
+    weekend_days: existingData.weekend_days || [5, 6],
+    allow_pay_on_arrival: existingData.allow_pay_on_arrival ?? false,
+    allow_guest_cancellation: existingData.allow_guest_cancellation ?? true,
+    cancellation_deadline_hours: existingData.cancellation_deadline_hours || 48,
+    created_at: existingData.created_at || FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
+  };
+
+  if (stripeConfig) {
+    payload.stripe_config = stripeConfig;
+  }
+
+  await settingsRef.set(payload, {merge: true});
+  console.log(
+    `  ✓ widget_settings/${TEST_OWNER_UNIT_ID} ` +
+      `(ical_export_enabled=true, token=${icalToken.slice(0, 8)}...` +
+      (withStripeTestAcct ? `, stripe_config.enabled=true` : '') +
+      `)`,
+  );
+}
+
 async function seed() {
-  console.log(`Seeding project=${projectId} (withBooking=${withBooking}, testOwner=${seedTestOwnerFlag})`);
+  console.log(
+    `Seeding project=${projectId} ` +
+      `(withBooking=${withBooking}, testOwner=${seedTestOwnerFlag}, ` +
+      `stripeTestAcct=${withStripeTestAcct}, widgetSettings=${withWidgetSettings})`,
+  );
 
   const propertyRef = db.doc(`properties/${PROPERTY_ID}`);
   await propertyRef.set(
@@ -318,6 +481,14 @@ async function seed() {
 
   if (seedTestOwnerFlag) {
     await seedTestOwner();
+  }
+
+  if (withStripeTestAcct) {
+    await seedStripeTestAcct();
+  }
+
+  if (withWidgetSettings) {
+    await seedWidgetSettings();
   }
 
   console.log('Done.');

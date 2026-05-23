@@ -1,21 +1,72 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:bookbed/features/widget/data/helpers/availability_checker.dart';
+import 'package:bookbed/features/widget/data/models/availability_window.dart';
+import 'package:bookbed/features/widget/data/repositories/firebase_availability_repository.dart';
 import 'package:bookbed/features/widget/data/repositories/firebase_booking_calendar_repository.dart';
 import 'package:bookbed/features/widget/domain/models/calendar_date_status.dart';
 
 // Using 2027 dates (future) to avoid pastReservation status
 const testYear = 2027;
 
+/// Mocktail double for [FirebaseFunctions] so the subclassed fake repository
+/// below can pass it through `super(functions: ...)` without triggering
+/// `FirebaseFunctions.instanceFor(...)` (which requires Firebase init).
+class _MockFirebaseFunctions extends Mock implements FirebaseFunctions {}
+
+/// In-memory fake for [FirebaseAvailabilityRepository] (T11c migration).
+///
+/// `FirebaseBookingCalendarRepository` takes the concrete repository (not an
+/// interface), so we subclass and route around both call paths:
+///
+/// * `fetchAvailability` — one-shot, used by [AvailabilityChecker.check].
+/// * `streamAvailability` — polled, fed into `Rx.combineLatest3` inside
+///   `watchCalendarData` / `watchYearCalendarData`. Yields once and
+///   completes (sufficient for `.first` consumers in tests).
+///
+/// Tests mutate [windows] to drive `_streamBlockedEvents` output. The
+/// `FirebaseFunctions` super dep is mocktail-stubbed and never invoked.
+class _FakeAvailabilityRepository extends FirebaseAvailabilityRepository {
+  _FakeAvailabilityRepository() : super(functions: _MockFirebaseFunctions());
+
+  List<AvailabilityWindow> windows = const [];
+
+  @override
+  Future<List<AvailabilityWindow>> fetchAvailability({
+    required String propertyId,
+    required String unitId,
+    required DateTime start,
+    required DateTime end,
+  }) async => windows;
+
+  @override
+  Stream<List<AvailabilityWindow>> streamAvailability({
+    required String propertyId,
+    required String unitId,
+    required DateTime start,
+    required DateTime end,
+    Duration pollInterval = const Duration(seconds: 30),
+  }) async* {
+    yield windows;
+  }
+}
+
 void main() {
   group('FirebaseBookingCalendarRepository', () {
     late FakeFirebaseFirestore fakeFirestore;
+    late _FakeAvailabilityRepository fakeRepo;
     late FirebaseBookingCalendarRepository repository;
 
     setUp(() {
       fakeFirestore = FakeFirebaseFirestore();
-      repository = FirebaseBookingCalendarRepository(fakeFirestore);
+      fakeRepo = _FakeAvailabilityRepository();
+      repository = FirebaseBookingCalendarRepository(
+        fakeFirestore,
+        availabilityRepository: fakeRepo,
+      );
     });
 
     group('constructor', () {
@@ -37,7 +88,8 @@ void main() {
       });
 
       test('returns false when booking exists', () async {
-        // Add conflicting booking
+        // Add conflicting booking (kept as intent documentation — T11c moved
+        // the read path to the CF mocked via [_FakeAvailabilityRepository]).
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
           'check_in': Timestamp.fromDate(DateTime(testYear, 1, 15)),
@@ -48,6 +100,13 @@ void main() {
           'total_price': 500.0,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(testYear, 1, 15),
+            end: DateTime(testYear, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final isAvailable = await repository.checkAvailability(
           propertyId: 'prop123',
@@ -107,7 +166,8 @@ void main() {
       });
 
       test('detects iCal event conflicts', () async {
-        // Add iCal event
+        // Add iCal event (kept as intent documentation — SF-023 moved the
+        // read path to the CF mocked via [_FakeAvailabilityRepository]).
         await fakeFirestore.collection('ical_events').add({
           'unit_id': 'unit123',
           'start_date': Timestamp.fromDate(DateTime(testYear, 1, 15)),
@@ -115,6 +175,14 @@ void main() {
           'source': 'Booking.com',
           'guest_name': 'External Guest',
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(testYear, 1, 15),
+            end: DateTime(testYear, 1, 20),
+            source: AvailabilityWindowSource.icalExternal,
+            platform: 'Booking.com',
+          ),
+        ];
 
         final isAvailable = await repository.checkAvailability(
           propertyId: 'prop123',
@@ -170,6 +238,13 @@ void main() {
           'total_price': 500.0,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(testYear, 1, 15),
+            end: DateTime(testYear, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final result = await repository.checkAvailabilityDetailed(
           propertyId: 'prop123',
@@ -235,7 +310,9 @@ void main() {
 
     group('watchCalendarData', () {
       test('emits calendar data for month', () async {
-        // Add a booking
+        // Add a booking (kept as intent documentation — T11c moved the
+        // stream read path through `_streamBlockedEvents` via the CF
+        // mocked by [_FakeAvailabilityRepository]).
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
           'check_in': Timestamp.fromDate(DateTime(testYear, 1, 10)),
@@ -246,6 +323,13 @@ void main() {
           'total_price': 500.0,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(testYear, 1, 10),
+            end: DateTime(testYear, 1, 15),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final stream = repository.watchCalendarData(
           propertyId: 'property123',
@@ -268,32 +352,49 @@ void main() {
         expect(jan20?.status, DateStatus.available);
       });
 
-      test('marks pending bookings with isPendingBooking flag', () async {
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'check_in': Timestamp.fromDate(DateTime(testYear, 1, 10)),
-          'check_out': Timestamp.fromDate(DateTime(testYear, 1, 15)),
-          'status': 'pending',
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@example.com',
-          'total_price': 500.0,
-          'created_at': Timestamp.now(),
-        });
+      test(
+        'T11c trade-off — pending/confirmed are NOT differentiated in widget',
+        () async {
+          // T11c accepted trade-off: the `getUnitAvailability` CF strips
+          // `status` from emitted windows for privacy, and
+          // `_synthesizeBookingFromWindow` materializes every window as
+          // `status: BookingStatus.confirmed`. The widget calendar can no
+          // longer show the pending-vs-confirmed visual distinction.
+          // See audit/06-availability-cf-design.md.
+          await fakeFirestore.collection('bookings').add({
+            'unit_id': 'unit123',
+            'check_in': Timestamp.fromDate(DateTime(testYear, 1, 10)),
+            'check_out': Timestamp.fromDate(DateTime(testYear, 1, 15)),
+            'status': 'pending',
+            'guest_name': 'Test Guest',
+            'guest_email': 'test@example.com',
+            'total_price': 500.0,
+            'created_at': Timestamp.now(),
+          });
+          // CF emits a single booking-source window with no status info.
+          fakeRepo.windows = [
+            AvailabilityWindow(
+              start: DateTime(testYear, 1, 10),
+              end: DateTime(testYear, 1, 15),
+              source: AvailabilityWindowSource.booking,
+            ),
+          ];
 
-        final stream = repository.watchCalendarData(
-          propertyId: 'property123',
-          unitId: 'unit123',
-          year: testYear,
-          month: 1,
-        );
+          final stream = repository.watchCalendarData(
+            propertyId: 'property123',
+            unitId: 'unit123',
+            year: testYear,
+            month: 1,
+          );
 
-        final calendarData = await stream.first;
+          final calendarData = await stream.first;
 
-        // Check that Jan 12 is booked with isPendingBooking flag
-        final jan12 = calendarData[DateTime.utc(testYear, 1, 12)];
-        expect(jan12?.status, DateStatus.booked);
-        expect(jan12?.isPendingBooking, true);
-      });
+          final jan12 = calendarData[DateTime.utc(testYear, 1, 12)];
+          expect(jan12?.status, DateStatus.booked);
+          // Post-T11c: synthesized status is always `confirmed`, never `pending`.
+          expect(jan12?.isPendingBooking, false);
+        },
+      );
 
       test('marks check-in and check-out days correctly', () async {
         await fakeFirestore.collection('bookings').add({
@@ -306,6 +407,13 @@ void main() {
           'total_price': 500.0,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(testYear, 1, 10),
+            end: DateTime(testYear, 1, 15),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final stream = repository.watchCalendarData(
           propertyId: 'property123',
@@ -343,6 +451,13 @@ void main() {
           'total_price': 500.0,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(testYear, 6, 10),
+            end: DateTime(testYear, 6, 15),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final stream = repository.watchYearCalendarData(
           propertyId: 'property123',
@@ -395,6 +510,18 @@ void main() {
           'total_price': 500.0,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(testYear, 1, 10),
+            end: DateTime(testYear, 1, 15),
+            source: AvailabilityWindowSource.booking,
+          ),
+          AvailabilityWindow(
+            start: DateTime(testYear, 1, 17),
+            end: DateTime(testYear, 1, 22),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final stream = repository.watchCalendarData(
           propertyId: 'property123',

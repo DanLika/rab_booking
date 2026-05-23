@@ -161,11 +161,15 @@ describe("Stripe Connect Functions", () => {
     });
 
     it("should throw an error if the owner document is not found", async () => {
+      // SF-022 (commit 319f7d0f): the catch block now re-throws own HttpsErrors
+      // instead of wrapping them as `internal`. The owner-not-found case
+      // surfaces as `not-found / "Owner not found"` — the original throw at
+      // functions/src/stripeConnect.ts:45.
       mockDb.collection().doc().get.mockResolvedValue({ exists: false });
 
       const wrapped = wrap(createStripeConnectAccount);
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("internal", "Failed to create Stripe account.")
+        new HttpsError("not-found", "Owner not found")
       );
     });
   });
@@ -235,11 +239,13 @@ describe("Stripe Connect Functions", () => {
     });
 
     it("should throw an error if the owner document is not found", async () => {
+      // SF-022: owner-not-found surfaces as `not-found / "Owner not found"`
+      // (functions/src/stripeConnect.ts:124).
       mockDb.collection().doc().get.mockResolvedValue({ exists: false });
 
       const wrapped = wrap(getStripeAccountStatus);
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("internal", "Failed to get account status.")
+        new HttpsError("not-found", "Owner not found")
       );
     });
   });
@@ -270,7 +276,9 @@ describe("Stripe Connect Functions", () => {
     });
 
     it("should throw an error if no Stripe account is connected", async () => {
-      // Arrange
+      // SF-022: the missing-Stripe-account case surfaces as
+      // `failed-precondition / "No Stripe account connected"`
+      // (functions/src/stripeConnect.ts:215).
       const ownerDocWithoutStripe = {
         exists: true,
         data: () => ({}), // No stripe_account_id
@@ -281,7 +289,7 @@ describe("Stripe Connect Functions", () => {
 
       // Act & Assert
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("internal", "Failed to disconnect account.")
+        new HttpsError("failed-precondition", "No Stripe account connected")
       );
     });
 
@@ -293,10 +301,12 @@ describe("Stripe Connect Functions", () => {
     });
 
     it("should throw an error if the owner document is not found", async () => {
+      // SF-022: owner-not-found surfaces as `not-found / "Owner not found"`
+      // (functions/src/stripeConnect.ts:209).
       mockDb.collection().doc().get.mockResolvedValue({ exists: false });
       const wrapped = wrap(disconnectStripeAccount);
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("internal", "Failed to disconnect account.")
+        new HttpsError("not-found", "Owner not found")
       );
     });
   });

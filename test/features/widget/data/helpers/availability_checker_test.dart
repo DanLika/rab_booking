@@ -10,11 +10,14 @@ import 'package:bookbed/features/widget/domain/services/i_availability_repositor
 
 /// In-memory fake for [IAvailabilityRepository].
 ///
-/// Production calls `getUnitAvailability` Cloud Function (SF-023) which
+/// Production calls `getUnitAvailability` Cloud Function (SF-023 / T11c) which
 /// requires Firebase init. Tests inject this fake to skip that — set
-/// [windows] per test to drive `_checkIcalEvents` behavior in the checker.
+/// [windows] per test to drive booking + iCal overlap detection in the
+/// checker. Set [throwOnFetch] to simulate a CF failure and assert that the
+/// checker fails CLOSED (returns `isAvailable: false`).
 class _FakeAvailabilityRepository implements IAvailabilityRepository {
   List<AvailabilityWindow> windows = const [];
+  bool throwOnFetch = false;
 
   @override
   Future<List<AvailabilityWindow>> fetchAvailability({
@@ -22,7 +25,12 @@ class _FakeAvailabilityRepository implements IAvailabilityRepository {
     required String unitId,
     required DateTime start,
     required DateTime end,
-  }) async => windows;
+  }) async {
+    if (throwOnFetch) {
+      throw Exception('mock CF failure');
+    }
+    return windows;
+  }
 }
 
 void main() {
@@ -297,6 +305,12 @@ void main() {
     });
 
     group('check - booking conflicts', () {
+      // T11c (2026-05-22): bookings now arrive PII-stripped via the
+      // getUnitAvailability CF. Tests drive `_checkBookingsAgainstWindows`
+      // by seeding [fakeRepo.windows] instead of relying on
+      // `collectionGroup('bookings')`. The `fakeFirestore.collection('bookings')`
+      // writes are kept as intent documentation of the booking shape the CF
+      // would surface server-side.
       test('detects full overlap', () async {
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
@@ -311,6 +325,13 @@ void main() {
           'guests': 2,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 10),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // New booking within existing booking dates
         final result = await checker.check(
@@ -338,6 +359,13 @@ void main() {
           'guests': 2,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // New booking overlaps at start
         final result = await checker.check(
@@ -365,6 +393,13 @@ void main() {
           'guests': 2,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 10),
+            end: DateTime(2024, 1, 15),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // New booking overlaps at end
         final result = await checker.check(
@@ -392,6 +427,13 @@ void main() {
           'guests': 2,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 13),
+            end: DateTime(2024, 1, 17),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // New booking encompasses existing booking
         final result = await checker.check(
@@ -456,6 +498,10 @@ void main() {
       });
 
       test('detects conflict with pending booking', () async {
+        // T11c: CF intentionally strips `status` from emitted windows for
+        // privacy. The widget sees a single `booking`-source window
+        // regardless of pending vs confirmed — accepted trade-off documented
+        // in `audit/06-availability-cf-design.md`.
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
           'status': 'pending',
@@ -469,6 +515,13 @@ void main() {
           'guests': 2,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final result = await checker.check(
           propertyId: 'prop123',
@@ -554,27 +607,35 @@ void main() {
         expect(result.icalSource, 'iCal');
       });
 
-      test('ignores non-icalExternal windows', () async {
-        // The CF may emit booking/manualBlock windows too — _checkIcalEvents
-        // must filter to icalExternal so it doesn't double-report bookings
-        // that _checkBookings already covers.
-        fakeRepo.windows = [
-          AvailabilityWindow(
-            start: DateTime(2024, 1, 15),
-            end: DateTime(2024, 1, 20),
-            source: AvailabilityWindowSource.booking,
-          ),
-        ];
+      test(
+        'booking-source window is detected as booking conflict not iCal',
+        () async {
+          // T11c: the CF emits a mixed window list. `_checkBookingsAgainstWindows`
+          // runs FIRST so a `booking`-source window short-circuits the chain
+          // with `ConflictType.booking`; `_checkIcalAgainstWindows` only sees
+          // icalExternal-source windows after that. This test guards that
+          // ordering — flipping it would mean booking-source windows are
+          // silently treated as iCal (a regression on conflict type and the
+          // localized error message the UI renders).
+          fakeRepo.windows = [
+            AvailabilityWindow(
+              start: DateTime(2024, 1, 15),
+              end: DateTime(2024, 1, 20),
+              source: AvailabilityWindowSource.booking,
+            ),
+          ];
 
-        final result = await checker.check(
-          propertyId: 'prop123',
-          unitId: 'unit123',
-          checkIn: DateTime(2024, 1, 17),
-          checkOut: DateTime(2024, 1, 22),
-        );
+          final result = await checker.check(
+            propertyId: 'prop123',
+            unitId: 'unit123',
+            checkIn: DateTime(2024, 1, 17),
+            checkOut: DateTime(2024, 1, 22),
+          );
 
-        expect(result.isAvailable, isTrue);
-      });
+          expect(result.isAvailable, isFalse);
+          expect(result.conflictType, ConflictType.booking);
+        },
+      );
     });
 
     group('check - blocked dates', () {
@@ -688,7 +749,9 @@ void main() {
 
     group('check - priority order', () {
       test('returns booking conflict before iCal conflict', () async {
-        // Booking via fakeFirestore, iCal via fake repo
+        // Booking + iCal both delivered via the CF (single windows list);
+        // `_checkBookingsAgainstWindows` runs before `_checkIcalAgainstWindows`,
+        // so the booking conflict wins.
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
           'status': 'confirmed',
@@ -704,6 +767,11 @@ void main() {
         });
 
         fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
           AvailabilityWindow(
             start: DateTime(2024, 1, 15),
             end: DateTime(2024, 1, 20),
@@ -767,6 +835,13 @@ void main() {
           'guests': 2,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // Dates with time components should be normalized
         final result = await checker.check(
@@ -807,6 +882,13 @@ void main() {
           'guests': 2,
           'created_at': Timestamp.now(),
         });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final isAvail = await checker.isAvailable(
           propertyId: 'prop123',
@@ -816,6 +898,28 @@ void main() {
         );
 
         expect(isAvail, isFalse);
+      });
+    });
+
+    group('check - fail-CLOSED on CF failure', () {
+      // T11c (commit 99ac6124, "fail-closed restore"): if
+      // `fetchAvailability` throws (CF outage, network, rate limit), the
+      // checker MUST surface `AvailabilityCheckResult.error(booking)` so the
+      // widget rejects the submit. Pre-restore the wrapper silently treated
+      // exceptions as empty windows → fail-OPEN. Regression guard.
+      test('returns isAvailable=false when CF fetch throws', () async {
+        fakeRepo.throwOnFetch = true;
+
+        final result = await checker.check(
+          propertyId: 'prop123',
+          unitId: 'unit123',
+          checkIn: DateTime(2024, 1, 15),
+          checkOut: DateTime(2024, 1, 20),
+        );
+
+        expect(result.isAvailable, isFalse);
+        expect(result.conflictType, ConflictType.booking);
+        expect(result.errorCode, AvailabilityErrorCode.checkError);
       });
     });
   });

@@ -6,6 +6,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/core/exceptions/app_exceptions.dart';
 import 'package:bookbed/features/widget/data/helpers/availability_checker.dart';
 import 'package:bookbed/features/widget/data/helpers/booking_price_calculator.dart';
+import 'package:bookbed/features/widget/data/models/availability_window.dart';
+import 'package:bookbed/features/widget/domain/services/i_availability_repository.dart';
+
+/// In-memory fake for [IAvailabilityRepository] (T11c).
+///
+/// Default `AvailabilityChecker(fakeFirestore)` constructs a real
+/// `FirebaseAvailabilityRepository` which calls `FirebaseFunctions.instanceFor`
+/// at construction — blowing up in unit tests with no Firebase init. Tests
+/// that instantiate a checker MUST inject this fake to skip Firebase boot.
+class _FakeAvailabilityRepository implements IAvailabilityRepository {
+  List<AvailabilityWindow> windows = const [];
+
+  @override
+  Future<List<AvailabilityWindow>> fetchAvailability({
+    required String propertyId,
+    required String unitId,
+    required DateTime start,
+    required DateTime end,
+  }) async => windows;
+}
 
 void main() {
   group('PriceCalculationResult', () {
@@ -231,7 +251,8 @@ void main() {
 
     group('calculate - availability check', () {
       test('throws DatesNotAvailableException when not available', () async {
-        // Add conflicting booking
+        // Add conflicting booking (kept as intent documentation — T11c moved
+        // the actual read path to the CF mocked via [_FakeAvailabilityRepository]).
         await fakeFirestore.collection('bookings').add({
           'unit_id': 'unit123',
           'status': 'confirmed',
@@ -246,13 +267,25 @@ void main() {
           'created_at': Timestamp.now(),
         });
 
+        final fakeRepo = _FakeAvailabilityRepository()
+          ..windows = [
+            AvailabilityWindow(
+              start: DateTime(2024, 1, 15),
+              end: DateTime(2024, 1, 20),
+              source: AvailabilityWindowSource.booking,
+            ),
+          ];
         final calculatorWithChecker = BookingPriceCalculator(
           firestore: fakeFirestore,
-          availabilityChecker: AvailabilityChecker(fakeFirestore),
+          availabilityChecker: AvailabilityChecker(
+            fakeFirestore,
+            availabilityRepository: fakeRepo,
+          ),
         );
 
         expect(
           () => calculatorWithChecker.calculate(
+            propertyId: 'prop123',
             unitId: 'unit123',
             checkIn: DateTime(2024, 1, 17),
             checkOut: DateTime(2024, 1, 22),
@@ -264,12 +297,17 @@ void main() {
       });
 
       test('calculates price when available', () async {
+        final fakeRepo = _FakeAvailabilityRepository();
         final calculatorWithChecker = BookingPriceCalculator(
           firestore: fakeFirestore,
-          availabilityChecker: AvailabilityChecker(fakeFirestore),
+          availabilityChecker: AvailabilityChecker(
+            fakeFirestore,
+            availabilityRepository: fakeRepo,
+          ),
         );
 
         final result = await calculatorWithChecker.calculate(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 18),
@@ -299,9 +337,13 @@ void main() {
             'created_at': Timestamp.now(),
           });
 
+          final fakeRepo = _FakeAvailabilityRepository();
           final calculatorWithChecker = BookingPriceCalculator(
             firestore: fakeFirestore,
-            availabilityChecker: AvailabilityChecker(fakeFirestore),
+            availabilityChecker: AvailabilityChecker(
+              fakeFirestore,
+              availabilityRepository: fakeRepo,
+            ),
           );
 
           // Should NOT throw because availability check is disabled
@@ -370,9 +412,13 @@ void main() {
           'created_at': Timestamp.now(),
         });
 
+        final fakeRepo = _FakeAvailabilityRepository();
         final calculatorWithChecker = BookingPriceCalculator(
           firestore: fakeFirestore,
-          availabilityChecker: AvailabilityChecker(fakeFirestore),
+          availabilityChecker: AvailabilityChecker(
+            fakeFirestore,
+            availabilityRepository: fakeRepo,
+          ),
         );
 
         final result = await calculatorWithChecker

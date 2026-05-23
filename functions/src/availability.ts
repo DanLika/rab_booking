@@ -171,6 +171,21 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
           .get(),
       ]);
 
+      if (bookingsSnap.empty && pricesSnap.empty && icalSnap.empty) {
+        const propertyDoc = await db.collection("properties").doc(propertyId).get();
+        if (!propertyDoc.exists) {
+          if (checkRateLimit(`avail_unknown_warn:${ipKey}`, 1, 3600)) {
+            logWarn("[GetUnitAvailability] Unknown property/unit lookup", {
+              propertyId,
+              unitId,
+              ipHash: hashIp(getClientIp(request)),
+              timestamp: new Date().toISOString(),
+              userAgent: (request.rawRequest?.headers?.["user-agent"] as string)?.slice(0, 120) ?? "n/a",
+            });
+          }
+        }
+      }
+
       const windows: AvailabilityWindow[] = [];
 
       for (const doc of bookingsSnap.docs) {

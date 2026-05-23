@@ -214,6 +214,17 @@ export function validateAndConvertBookingDates(
   const checkInDate = admin.firestore.Timestamp.fromDate(checkInNormalized);
   const checkOutDate = admin.firestore.Timestamp.fromDate(checkOutNormalized);
 
+  // Post-normalization: reject same-civil-day after Zagreb-TZ snap.
+  // Pre-normalization order check (line 163) only catches raw checkOut <= checkIn;
+  // it lets through cases where 2 timestamps fall on the same Zagreb civil day
+  // (e.g. 08:00 + 20:00 same date), which normalize to identical midnights.
+  if (checkInDate.toMillis() === checkOutDate.toMillis()) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Stay must be at least 1 night. Please select different check-in and check-out dates."
+    );
+  }
+
   return {checkInDate, checkOutDate};
 }
 

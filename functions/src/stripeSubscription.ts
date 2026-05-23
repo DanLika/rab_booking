@@ -40,11 +40,21 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
     throw new HttpsError("invalid-argument", "Missing priceId or returnUrl.");
   }
 
-  // PLACEHOLDER PRICE VALIDATION
-  // TODO: Replace with actual Stripe Price IDs from config/env
-  // For now, we accept any string but in production we should whitelist allowed Price IDs
-  // const ALLOWED_PRICES = ["price_monthly_pro", "price_yearly_pro"];
-  // if (!ALLOWED_PRICES.includes(priceId)) { ... }
+  // Price-ID allowlist — blocks abuse of arbitrary Stripe Prices on the account
+  // (e.g. €0.01 test prices, archived tiers, wrong currency). Env is set per-env;
+  // empty list = deny-all (fail-CLOSED) to surface misconfiguration on deploy.
+  const ALLOWED = (process.env.ALLOWED_SUBSCRIPTION_PRICE_IDS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!ALLOWED.includes(priceId)) {
+    logError("[createSubscriptionCheckoutSession] priceId not in allowlist", null, {
+      userId: request.auth.uid,
+      priceIdPrefix: String(priceId).substring(0, 12),
+      allowlistSize: ALLOWED.length,
+    });
+    throw new HttpsError("invalid-argument", "Price not allowed.");
+  }
 
   try {
     const stripe = getStripeClient();

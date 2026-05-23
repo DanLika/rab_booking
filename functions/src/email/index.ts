@@ -49,36 +49,10 @@ export {
   type GuestCancellationParams,
 } from "./templates/guest-cancellation";
 
-export {
-  sendOwnerCancellationEmailV2,
-  generateOwnerCancellationEmailV2,
-  type OwnerCancellationParamsV2,
-} from "./templates/owner-cancellation";
-
-export {
-  sendRefundNotificationEmailV2,
-  generateRefundNotificationEmailV2,
-  type RefundNotificationParams,
-} from "./templates/refund-notification";
-
-// Reminders
-export {
-  sendCheckInReminderEmailV2,
-  generateCheckInReminderEmailV2,
-  type CheckInReminderParams,
-} from "./templates/check-in-reminder";
-
-export {
-  sendCheckOutReminderEmailV2,
-  generateCheckOutReminderEmailV2,
-  type CheckOutReminderParams,
-} from "./templates/check-out-reminder";
-
-export {
-  sendPaymentReminderEmailV2,
-  generatePaymentReminderEmailV2,
-  type PaymentReminderParams,
-} from "./templates/payment-reminder";
+// Dormant-5 removed (audit/28 §3, hotfix/role-escalation-deploy-unblock):
+// owner-cancellation, refund-notification, check-in-reminder,
+// check-out-reminder, payment-reminder had no active CF caller.
+// Reminders use FCM push path (scheduledPushNotifications.ts).
 
 // Owner Notifications
 export {

@@ -9,20 +9,16 @@
  * ✅ sendBookingApprovedEmail - Migrated to V2 template (Refined Premium)
  * ✅ sendOwnerNotificationEmail - Migrated to V2 template (Refined Premium)
  * ✅ sendGuestCancellationEmail - Migrated to V2 template (Refined Premium)
- * ✅ sendOwnerCancellationNotificationEmail - Migrated to V2 template (Refined Premium)
- * ✅ sendRefundNotificationEmail - Migrated to V2 template (Refined Premium)
  * ✅ sendCustomGuestEmail - Migrated to V2 template (Refined Premium)
- * ✅ sendPaymentReminderEmail - Migrated to V2 template (Refined Premium)
- * ✅ sendCheckInReminderEmail - Migrated to V2 template (Refined Premium)
- * ✅ sendCheckOutReminderEmail - Migrated to V2 template (Refined Premium)
  * ✅ sendPendingBookingRequestEmail - Migrated to V2 template (Refined Premium)
  * ✅ sendEmailVerificationCode - Migrated to V2 template (Refined Premium)
  * ✅ sendPendingBookingOwnerNotification - Migrated to V2 template (Refined Premium)
  * ✅ sendBookingRejectedEmail - Migrated to V2 template (Refined Premium)
  *
- * ALL EMAIL FUNCTIONS FULLY MIGRATED! 🎉
- *
- * TODO: Suspicious Activity Email (deferred for future implementation)
+ * REMOVED (dormant — no CF caller, per audit/28 §3):
+ *   sendOwnerCancellationNotificationEmail, sendRefundNotificationEmail,
+ *   sendPaymentReminderEmail, sendCheckInReminderEmail, sendCheckOutReminderEmail.
+ *   Reminders fire via FCM push only (scheduledPushNotifications.ts).
  */
 
 import {Resend} from "resend";
@@ -31,16 +27,14 @@ import {logError, logSuccess} from "./logger";
 import {sanitizeText} from "./utils/inputSanitization";
 
 // Import new email templates (V2 - OPCIJA A: Refined Premium)
+// Dormant-5 (owner-cancellation, refund-notification, payment-reminder,
+// check-in-reminder, check-out-reminder) removed — no active CF caller.
+// Reminders use FCM path (scheduledPushNotifications.ts).
 import {
   sendBookingConfirmationEmailV2,
   sendPendingBookingRequestEmailV2,
   sendBookingApprovedEmailV2,
   sendGuestCancellationEmailV2,
-  sendRefundNotificationEmailV2,
-  sendPaymentReminderEmailV2,
-  sendCheckInReminderEmailV2,
-  sendCheckOutReminderEmailV2,
-  sendOwnerCancellationEmailV2,
   sendOwnerNotificationEmailV2,
   sendCustomGuestEmailV2,
   sendTrialExpiringSoonEmailV2,
@@ -49,12 +43,7 @@ import {
   type PendingBookingRequestParams,
   type BookingApprovedParams,
   type GuestCancellationParams,
-  type OwnerCancellationParamsV2,
-  type RefundNotificationParams,
   type OwnerNotificationParamsV2,
-  type PaymentReminderParams,
-  type CheckInReminderParams,
-  type CheckOutReminderParams,
   type CustomGuestEmailParamsV2,
   sendEmailVerificationEmailV2,
   type EmailVerificationParams,
@@ -640,109 +629,6 @@ export async function sendGuestCancellationEmail(
 export const sendBookingCancellationEmail = sendGuestCancellationEmail;
 
 /**
- * Send owner cancellation notification email
- *
- * MIGRATED: Now uses V2 template (Refined Premium)
- */
-export async function sendOwnerCancellationNotificationEmail(
-  ownerEmail: string,
-  bookingReference: string,
-  guestName: string,
-  guestEmail: string,
-  propertyName: string,
-  unitName: string | undefined,
-  checkIn: Date,
-  checkOut: Date,
-  totalAmount: number
-): Promise<void> {
-  // Input validation
-  validateEmail(ownerEmail, "ownerEmail");
-  validateRequiredString(bookingReference, "bookingReference");
-  validateRequiredString(guestName, "guestName");
-  validateEmail(guestEmail, "guestEmail");
-  validateRequiredString(propertyName, "propertyName");
-  validateDate(checkIn, "checkIn");
-  validateDate(checkOut, "checkOut");
-  validateAmount(totalAmount, "totalAmount");
-
-  try {
-    // Build params for V2 template
-    const params: OwnerCancellationParamsV2 = {
-      ownerEmail,
-      bookingReference,
-      guestName,
-      guestEmail,
-      propertyName,
-      unitName,
-      checkIn,
-      checkOut,
-      totalAmount,
-    };
-
-    // Send email using V2 template (Refined Premium)
-    await sendOwnerCancellationEmailV2(
-      getResendClient(),
-      params,
-      FROM_EMAIL(),
-      FROM_NAME()
-    );
-
-    logSuccess("Owner cancellation notification sent (V2 - Refined Premium)", {email: ownerEmail});
-  } catch (error) {
-    logError("Error sending owner cancellation notification", error);
-    throw error;
-  }
-}
-
-/**
- * Send refund notification email
- *
- * MIGRATED: Now uses modern email template
- */
-export async function sendRefundNotificationEmail(
-  guestEmail: string,
-  guestName: string,
-  bookingReference: string,
-  refundAmount: number,
-  reason?: string,
-  propertyId?: string
-): Promise<void> {
-  // Input validation
-  validateEmail(guestEmail, "guestEmail");
-  validateRequiredString(guestName, "guestName");
-  validateRequiredString(bookingReference, "bookingReference");
-  validateAmount(refundAmount, "refundAmount");
-
-  try {
-    // Fetch property data ONCE (contactEmail + subdomain)
-    const propertyData = await fetchPropertyData(propertyId, "refund_notification");
-
-    // Build params for new template
-    const params: RefundNotificationParams = {
-      guestEmail,
-      guestName,
-      bookingReference,
-      refundAmount,
-      reason,
-      contactEmail: propertyData.contactEmail,
-    };
-
-    // Send email using V2 template (OPCIJA A: Refined Premium)
-    await sendRefundNotificationEmailV2(
-      getResendClient(),
-      params,
-      FROM_EMAIL(),
-      FROM_NAME()
-    );
-
-    logSuccess("Refund notification email sent (V2 - Refined Premium)", {email: guestEmail});
-  } catch (error) {
-    logError("Error sending refund notification email", error);
-    throw error;
-  }
-}
-
-/**
  * Send custom email to guest
  *
  * MIGRATED: Now uses V2 template (Refined Premium)
@@ -790,185 +676,6 @@ export async function sendCustomGuestEmail(
 
 // Backward compatibility alias
 export const sendCustomEmailToGuest = sendCustomGuestEmail;
-
-/**
- * Send payment reminder email
- *
- * MIGRATED: Now uses modern email template
- */
-export async function sendPaymentReminderEmail(
-  guestEmail: string,
-  guestName: string,
-  bookingReference: string,
-  propertyName: string,
-  unitName: string | undefined,
-  checkIn: Date,
-  depositAmount: number,
-  accessToken?: string,
-  propertyId?: string
-): Promise<void> {
-  // Input validation
-  validateEmail(guestEmail, "guestEmail");
-  validateRequiredString(guestName, "guestName");
-  validateRequiredString(bookingReference, "bookingReference");
-  validateDate(checkIn, "checkIn");
-  validateAmount(depositAmount, "depositAmount");
-
-  try {
-    // Fetch property data ONCE (contactEmail + subdomain)
-    const propertyData = await fetchPropertyData(propertyId, "payment_reminder");
-
-    // Generate view booking URL if accessToken provided (uses pre-fetched data)
-    const viewBookingUrl = accessToken ? generateViewBookingUrl(
-      bookingReference,
-      guestEmail,
-      accessToken,
-      propertyData
-    ) : undefined;
-
-    // Build params for new template
-    const params: PaymentReminderParams = {
-      guestEmail,
-      guestName,
-      bookingReference,
-      propertyName,
-      unitName,
-      checkIn,
-      depositAmount,
-      viewBookingUrl,
-      contactEmail: propertyData.contactEmail,
-    };
-
-    // Send email using V2 template (OPCIJA A: Refined Premium)
-    await sendPaymentReminderEmailV2(
-      getResendClient(),
-      params,
-      FROM_EMAIL(),
-      FROM_NAME()
-    );
-
-    logSuccess("Payment reminder email sent (V2 - Refined Premium)", {email: guestEmail});
-  } catch (error) {
-    logError("Error sending payment reminder email", error);
-    throw error;
-  }
-}
-
-/**
- * Send check-in reminder email
- *
- * MIGRATED: Now uses modern email template
- */
-export async function sendCheckInReminderEmail(
-  guestEmail: string,
-  guestName: string,
-  bookingReference: string,
-  propertyName: string,
-  unitName: string | undefined,
-  checkIn: Date,
-  checkInTime?: string,
-  address?: string,
-  accessToken?: string,
-  propertyId?: string
-): Promise<void> {
-  // Input validation
-  validateEmail(guestEmail, "guestEmail");
-  validateRequiredString(guestName, "guestName");
-  validateRequiredString(bookingReference, "bookingReference");
-  validateDate(checkIn, "checkIn");
-
-  try {
-    // Fetch property data ONCE (contactEmail + subdomain)
-    const propertyData = await fetchPropertyData(propertyId, "checkin_reminder");
-
-    // Generate view booking URL if accessToken provided (uses pre-fetched data)
-    const viewBookingUrl = accessToken ? generateViewBookingUrl(
-      bookingReference,
-      guestEmail,
-      accessToken,
-      propertyData
-    ) : undefined;
-
-    // Build params for new template
-    const params: CheckInReminderParams = {
-      guestEmail,
-      guestName,
-      bookingReference,
-      propertyName,
-      unitName,
-      checkIn,
-      checkInTime,
-      address,
-      viewBookingUrl,
-      contactEmail: propertyData.contactEmail,
-    };
-
-    // Send email using V2 template (OPCIJA A: Refined Premium)
-    await sendCheckInReminderEmailV2(
-      getResendClient(),
-      params,
-      FROM_EMAIL(),
-      FROM_NAME()
-    );
-
-    logSuccess("Check-in reminder email sent (V2 - Refined Premium)", {email: guestEmail});
-  } catch (error) {
-    logError("Error sending check-in reminder email", error);
-    throw error;
-  }
-}
-
-/**
- * Send check-out reminder email
- *
- * MIGRATED: Now uses modern email template
- */
-export async function sendCheckOutReminderEmail(
-  guestEmail: string,
-  guestName: string,
-  bookingReference: string,
-  propertyName: string,
-  unitName: string | undefined,
-  checkOut: Date,
-  checkOutTime?: string,
-  propertyId?: string
-): Promise<void> {
-  // Input validation
-  validateEmail(guestEmail, "guestEmail");
-  validateRequiredString(guestName, "guestName");
-  validateRequiredString(bookingReference, "bookingReference");
-  validateDate(checkOut, "checkOut");
-
-  try {
-    // Fetch property data ONCE (contactEmail + subdomain)
-    const propertyData = await fetchPropertyData(propertyId, "checkout_reminder");
-
-    // Build params for new template
-    const params: CheckOutReminderParams = {
-      guestEmail,
-      guestName,
-      bookingReference,
-      propertyName,
-      unitName,
-      checkOut,
-      checkOutTime,
-      contactEmail: propertyData.contactEmail,
-    };
-
-    // Send email using V2 template (OPCIJA A: Refined Premium)
-    await sendCheckOutReminderEmailV2(
-      getResendClient(),
-      params,
-      FROM_EMAIL(),
-      FROM_NAME()
-    );
-
-    logSuccess("Check-out reminder email sent (V2 - Refined Premium)", {email: guestEmail});
-  } catch (error) {
-    logError("Error sending check-out reminder email", error);
-    throw error;
-  }
-}
 
 // ==========================================
 // ADDITIONAL EMAIL FUNCTIONS

@@ -90,6 +90,9 @@ function setCacheHeaders(
  * - Any RFC 5545 compatible calendar app
  */
 export const getUnitIcalFeed = onRequest(async (request, response) => {
+  // Prevent token-in-URL leak via Referer header (defense-in-depth — calendar UAs
+  // strip Referer anyway; this protects if feed URL is opened in a browser).
+  response.set("Referrer-Policy", "no-referrer");
   // Set CORS headers
   response.set("Access-Control-Allow-Origin", "*");
   response.set("Access-Control-Allow-Methods", "GET");

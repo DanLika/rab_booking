@@ -2,7 +2,18 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-23 | **Version**: 6.87
+**Last Updated**: 2026-05-23 | **Version**: 6.88
+
+---
+
+**Changelog 6.88**: Tier 4 Resend + Sentry baseline — audit/28 static + handoff (2026-05-23):
+
+- **audit/28 landed** (commit `8e6b0f41`) — Tier 4 Resend email delivery + Sentry baseline. Static analysis pass + creds-gated dynamic verification scripts. **4 net-new findings (LOW)**: (A1) SPF on `bookbed.io` does not include `_spf.resend.com` — Resend mail passes DMARC via DKIM-only alignment + `p=none` policy, so this is a deliverability optimization not a correctness bug; 5-min DNS edit improves inbox placement. (A2) **5 V2 templates DORMANT** — `owner-cancellation`, `refund-notification`, `check-in-reminder`, `check-out-reminder`, `payment-reminder` have full code but no deployed CF caller; reminders moved to push path via `scheduledPushNotifications.ts`; cancel/refund missing as product feature. (A3) `audit/26` claim "21 v2 templates" mismatches actual 18 unique `sendXxxEmailV2` exports — likely off by aliases (`sendBookingCancellationEmail` = `sendGuestCancellationEmail` etc.); reframed softly. (A4) Sender domain is `bookings@bookbed.io`, not `book-bed.com` (terminology drift in task scope text only).
+- **Mid-session wrapper-migration overlap** — commits `643403d6` + `3db8e76e` on `chore/migrate-email-templates-through-wrapper` (not yet merged to main) routed all 18 V2 templates through `sendEmailWithValidation` + added CRLF/recipient guards. `audit/28` §2.1 documents that the templates STILL discard the wrapper's returned message id (template exports remain `Promise<void>`), so `provider_id` reaches `emails_sent.*` writes from 0/18 templates today. PR-B remaining scope shrinks: 18 template signature edits + 15 `emailService.ts` wrapper edits + 3 `emails_sent.*` write sites + 1 interface field.
+- **Three creds-gated scripts dropped** (`scripts/trigger-6-spot-check.js`, `scripts/resend-verify-spot-check.js`, `scripts/sentry-baseline.js`). Schema verified against `atomicBooking.ts:100-119` (camelCase fields) + `bookingManagement.ts:278/362` (`approved_at`/`rejection_reason` email-send guards). All three refuse prod (`rab-booking-248fc` or prod-looking Sentry org slugs). ADC-authenticated, idempotent. Handoff commands documented in audit/28 §8.
+- **Branch race recurrence** (3rd this session class) — branch silently swapped from `main` to `chore/migrate-email-templates-through-wrapper` after `git status` confirmed clean main at session start. Caught at the final `git status --short` pre-commit (showed `chore/migrate-...` branch). Recovery: `git reset HEAD` to unstage → `git checkout main` (working-tree mods carry across cleanly because untracked + CLAUDE.md edit has identical surrounding context) → re-stage + commit on main with inline `[ "$(git branch --show-current)" = "main" ]` guard. No reflog rescue needed.
+- **Memory entries added**: `dormant-5-email-templates.md`, `spf-gap-bookbed-io.md`. MEMORY.md index updated.
+- **CLAUDE.md index updated** — added audit/28 entry. Previous tail `audit/26` is now `audit/28` (audit/27 slot taken by parallel-session `27-bb-e2e-cc-reject.md` that left an untracked file in working tree; renamed mine to audit/28 to resolve the collision). Version bumped 7.4 → 7.5.
 
 ---
 

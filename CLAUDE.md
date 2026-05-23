@@ -141,7 +141,7 @@ Ovi fajlovi se učitavaju SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-05-23 | **Version**: 7.4
+**Last Updated**: 2026-05-23 | **Version**: 7.5
 
 # context-mode — MANDATORY routing rules
 

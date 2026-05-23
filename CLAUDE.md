@@ -17,6 +17,9 @@
 - [audit/19-wave3-cleanup.md](./audit/19-wave3-cleanup.md) - Wave 3 cleanup task tracking (2026-05-22)
 - [audit/20-error-boundary-narrowing.md](./audit/20-error-boundary-narrowing.md) - ErrorBoundary catches VM-extension exceptions — narrowing proposal (2026-05-23)
 - [audit/21-sprint-summary-2026-05-22-23.md](./audit/21-sprint-summary-2026-05-22-23.md) - Sprint close-out: PRs #447/#448/#449, mobile smoke, fail-CLOSED verification matrix (2026-05-23)
+- [audit/22-prod-cutover-plan.md](./audit/22-prod-cutover-plan.md) - PROD cutover plan T11c + SF-023..026; canonical CF→widget→rules order; §8 open Qs Q1/Q5/Q6 user-input gated (2026-05-23)
+- [audit/23-misc-follow-ups.md](./audit/23-misc-follow-ups.md) - Tier 2D consolidated investigation: 4 deferred items doc-only (2026-05-23)
+- [audit/24-p3-backlog-investigations.md](./audit/24-p3-backlog-investigations.md) - P3 backlog from audit/21: getUnitIcalFeed region + getUnitAvailability logWarn + --release rule (2026-05-23)
 
 ---
 

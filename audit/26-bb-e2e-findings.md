@@ -14,7 +14,7 @@
 | #4 | Owner direct-write bypass (skips atomicBooking overlap + SF-026) | **HIGH** | 5 UI write paths | own PR-A (CF + repository refactor) |
 | #4-corollary | `emails_sent.*` idempotency reads never SET 3 of 6 keys | MEDIUM | confirmation + bank_transfer + pending_request | fold into PR-A |
 | #4-meta | 2 booking repositories coexist (one FROZEN per CLAUDE.md) | LOW (architectural) | repo dedup | defer, separate refactor sprint |
-| #1 | `provider_id` never captured from Resend send result | MEDIUM | 21 templates + 3 booking events | own PR-B (Option B) |
+| #1 | `provider_id` never captured from Resend send result | MEDIUM | 18 v2 templates (audit/28 §0.1 recount — earlier "21" likely included 2 aliases `sendBookingCancellationEmail`/`sendCustomEmailToGuest` + 1 inlined Stripe path) + 3 booking events | own PR-B (Option B) |
 | #5 | `nights` field not written on direct write | LOW UX | display only | auto-resolves with #4 fix |
 
 **Hot summary:** Owner-side workflows have a serious overlap-bypass class (BB Phase 2 confirmed direct-write lands cleanly). PROD cutover (audit/22) tightens UNAUTHENTICATED reads — different surface, ships safely. Post-cutover follow-up: PR-A (HIGH) + PR-B (MEDIUM) in parallel.
@@ -279,7 +279,7 @@ E2E test runs surfaced two seed-data gaps in `scripts/seed-bookbed-dev.js`:
 | Gap | Symptom | Effort |
 |---|---|---|
 | Stripe Connect test account not seeded | DD (Stripe E2E) flow blocked — no `connect_account_id` on seed owner | XS — add Stripe test-mode `acct_*` seed for `SEED_test_owner` |
-| `widget_settings/SEED_test_owner_unit_01` doc not seeded | EE (iCal E2E) flow blocked — `getUnitIcalFeed` 404s | XS — add minimal widget_settings seed |
+| `properties/SEED_test_owner_property_01/widget_settings/SEED_test_owner_unit_01` doc not seeded (nested subcollection, NOT top-level — verified `icalExport.ts:142`) | EE (iCal E2E) flow blocked — `getUnitIcalFeed` 404s | XS — add minimal widget_settings seed |
 | Cleanup CG sweep on `bookings.source` needs Firestore index exemption | minor — manual cleanup of test bookings hits CG-query cost | XS — add single-field exemption on `bookings.source` (`firestore.indexes.json`) |
 
 Bundle into a micro-PR (XS) or fold into next seed-script enhancement. Not on critical path for PR-A/PR-B.

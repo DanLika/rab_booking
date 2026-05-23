@@ -400,5 +400,5 @@ A and C touch the same file (`booking_widget_screen.dart`). B and D touch `funct
 
 ## Status (updated 2026-05-23)
 
-- **PR-1 (A + C) — SHIPPED.** PR #450 `fix/widget-counter-persist-badge-host`, commit `8c13e46d`. Includes the A.1 pets-persistence sub-fix (PersistedFormData gains `pets` field; restore path clamps to `maxPets` and respects `allowsPets`).
+- **PR-1 (A + C) — OPEN (pending merge).** PR #450 `fix/widget-counter-persist-badge-host`, commit `8c13e46d`. Status verified `gh pr view 450` 2026-05-23: `state=OPEN, mergedAt=null`. Includes the A.1 pets-persistence sub-fix (PersistedFormData gains `pets` field; restore path clamps to `maxPets` and respects `allowsPets`).
 - **PR-2 (B + D) — PRESCRIPTION CHANGED by Terminal FF census** (CHANGELOG 6.86): `collectionGroup('bookings').where('status','==','in_progress')` returns **0 docs** on both `bookbed-dev` AND `rab-booking-248fc`. Deprecated top-level `/bookings/{id}` also empty. **Item B demotes to P3** (code-hygiene only — no migration risk, no observed surface). PR-2 reduces to **Item D solo** (same-day validator, P2/XS).

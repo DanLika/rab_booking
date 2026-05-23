@@ -18,7 +18,7 @@
 | Owner app — Android | owner-facing | Flutter native (`main_dev.dart`) | `bookbed-dev` | n/a | emulator/device + `flutter run --release --target lib/main_dev.dart`; google-services swap per `.claude/rules/android-development.md`; debug-build bug → `--release` mandatory |
 | Owner app — Web (desktop) | owner-facing | Flutter Web (`main_dev.dart`) | `bookbed-dev` | hosting target `owner` → `bookbed-owner-dev.web.app` | Chrome (desktop layout ≥1200px) |
 | Cloud Functions — interactive | backend callables | TypeScript v2 `onCall` | `bookbed-dev` | `europe-west1` (`getUnitAvailability`, `scheduledIcalSync`) + `us-central1` (most others — see `audit/11-cloudfunctions-inventory.md`) | `curl` with Firebase ID token; recipe `memory/smoke-blocked-date-recipe.md` |
-| iCal public endpoint | external sync | TS `onRequest` (`icalExport.ts`) | `bookbed-dev` | `us-central1` (region drift documented `audit/24` §1) | `curl https://us-central1-bookbed-dev.cloudfunctions.net/icalExport/...` |
+| iCal public endpoint | external sync | TS `onRequest` (`icalExport.ts`) | `bookbed-dev` | `us-central1` (region drift documented `audit/24` §1) | `curl https://us-central1-bookbed-dev.cloudfunctions.net/getUnitIcalFeed/...` |
 | Stripe webhook | payment side effect | TS `onRequest` (`stripePayment.ts:878 handleStripeWebhook`) | `bookbed-dev` | `us-central1` | Stripe CLI `stripe listen --forward-to ...` (test-mode key); observe `event.type` switch (lines 917–1387) |
 | Resend email | guest/owner notification side effect | API send via `emailService.ts` | n/a | global | **NO webhook handler in repo** — verify via Resend dashboard observation (`grep -rln 'resend.*webhook'` returns empty); bounce/delivery state polled visually |
 | FCM push | owner mobile notification side effect | TS `fcmService.ts` send-to-token | `bookbed-dev` | `us-central1` | mobile app foregrounded + observe notification banner |
@@ -115,7 +115,7 @@ Every flow is documented with: **Trigger** → **Steps (numbered)** → **Observ
 **Trigger:** External platform (Airbnb, Booking.com, Google Calendar) polls the BookBed-published feed URL on its own cadence (Google: 12–24 h; Apple: 15 min–6 h; Outlook: 1–3 h — per `audit/24` §1).
 
 **Steps:**
-1. Owner copies feed URL from `IcalExportListScreen` (`lib/.../ical/ical_export_list_screen.dart`). Format: `https://us-central1-bookbed-dev.cloudfunctions.net/icalExport/{propertyId}/{unitId}/{token}` (region drift documented `audit/24` §1).
+1. Owner copies feed URL from `IcalExportListScreen` (`lib/.../ical/ical_export_list_screen.dart`). Format: `https://us-central1-bookbed-dev.cloudfunctions.net/getUnitIcalFeed/{propertyId}/{unitId}/{token}` (region drift documented `audit/24` §1).
 2. Optional: `?exclude=airbnb|booking` filter (hub-and-spoke). `_sanitizeSource()` in Dart MUST match `sanitizeSource()` in `icalExport.ts` (critical learning #10 in `memory/MEMORY.md`). Mismatch → external platform receives no events even though feed exists.
 3. External platform fetches URL → `icalExport.ts` validates token via `verifyExportToken()`, looks up bookings `status ∈ {confirmed, in_progress}` ∪ blocked dates + imported iCal events from OTHER platforms (`?exclude=` filter). Returns `text/calendar` body. Caches via `ETag` + `Cache-Control: max-age=300`.
 4. DoS bounds: `MAX_BOOKINGS=500`, `MAX_ICAL_EVENTS=500`, `MAX_BLOCKED_DAYS=1000`, `PAST_DAYS=90`, `FUTURE_DAYS=365`.

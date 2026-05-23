@@ -1088,6 +1088,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
         guest_phone: finalGuestPhone,
         check_in: checkInDate,
         check_out: checkOutDate,
+        nights: bookingNights, // closes audit/26 #5 for guest path
         guest_count: numericGuestCount, // Use validated numeric value
         pet_count: numericPetCount, // Number of pets
         total_price: finalTotalPrice, // Use server-validated price (may differ from client)

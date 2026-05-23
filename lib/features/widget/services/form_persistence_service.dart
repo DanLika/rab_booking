@@ -23,6 +23,7 @@ class PersistedFormData {
   final String countryCode;
   final int adults;
   final int children;
+  final int pets;
   final String notes;
   final String paymentMethod;
   final bool pillBarDismissed;
@@ -41,6 +42,7 @@ class PersistedFormData {
     required this.countryCode,
     required this.adults,
     required this.children,
+    this.pets = 0,
     required this.notes,
     required this.paymentMethod,
     required this.pillBarDismissed,
@@ -61,6 +63,7 @@ class PersistedFormData {
     'countryCode': countryCode,
     'adults': adults,
     'children': children,
+    'pets': pets,
     'notes': notes,
     'paymentMethod': paymentMethod,
     'pillBarDismissed': pillBarDismissed,
@@ -95,6 +98,7 @@ class PersistedFormData {
       countryCode: safeCastString(json['countryCode']) ?? '+385',
       adults: safeCastInt(json['adults']) ?? 2,
       children: safeCastInt(json['children']) ?? 0,
+      pets: safeCastInt(json['pets']) ?? 0,
       notes: safeCastString(json['notes']) ?? '',
       paymentMethod: safeCastString(json['paymentMethod']) ?? 'stripe',
       pillBarDismissed: safeCastBool(json['pillBarDismissed']) ?? false,

@@ -334,6 +334,7 @@ class BookingFormState extends ChangeNotifier {
       countryCode: _selectedCountry.dialCode,
       adults: _adults,
       children: _children,
+      pets: _pets,
       notes: notesController.text,
       paymentMethod: _selectedPaymentMethod,
       pillBarDismissed: _pillBarDismissed,
@@ -360,6 +361,7 @@ class BookingFormState extends ChangeNotifier {
     _selectedCountry = data.country;
     _adults = data.adults;
     _children = data.children;
+    _pets = data.pets;
     notesController.text = data.notes;
     _selectedPaymentMethod = data.paymentMethod;
     _pillBarDismissed = data.pillBarDismissed;

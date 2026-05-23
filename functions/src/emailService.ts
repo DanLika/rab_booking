@@ -457,7 +457,7 @@ export async function sendBookingApprovedEmail(
   totalAmount?: number,
   depositAmount?: number,
   propertyId?: string
-): Promise<void> {
+): Promise<string | undefined> {
   // Input validation
   validateEmail(guestEmail, "guestEmail");
   validateRequiredString(guestName, "guestName");
@@ -494,8 +494,7 @@ export async function sendBookingApprovedEmail(
       contactEmail: propertyData.contactEmail || ownerEmail,
     };
 
-    // Send email using V2 template (OPCIJA A: Refined Premium)
-    await sendBookingApprovedEmailV2(
+    const providerId = await sendBookingApprovedEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL(),
@@ -504,6 +503,7 @@ export async function sendBookingApprovedEmail(
     );
 
     logSuccess("Booking approved email sent (V2 - Refined Premium)", {email: guestEmail});
+    return providerId;
   } catch (error) {
     logError("Error sending booking approved email", error);
     throw error;
@@ -593,7 +593,7 @@ export async function sendGuestCancellationEmail(
   propertyId?: string,
   cancellationReason?: string,
   cancelledByOwner?: boolean
-): Promise<void> {
+): Promise<string | undefined> {
   // Input validation
   validateEmail(guestEmail, "guestEmail");
   validateRequiredString(guestName, "guestName");
@@ -621,8 +621,7 @@ export async function sendGuestCancellationEmail(
       contactEmail: propertyData.contactEmail,
     };
 
-    // Send email using V2 template (OPCIJA A: Refined Premium)
-    await sendGuestCancellationEmailV2(
+    const providerId = await sendGuestCancellationEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL(),
@@ -630,6 +629,7 @@ export async function sendGuestCancellationEmail(
     );
 
     logSuccess("Guest cancellation email sent (V2 - Refined Premium)", {email: guestEmail});
+    return providerId;
   } catch (error) {
     logError("Error sending guest cancellation email", error);
     throw error;
@@ -1097,7 +1097,7 @@ export async function sendBookingRejectedEmail(
   propertyName: string,
   reason?: string,
   ownerEmail?: string
-): Promise<void> {
+): Promise<string | undefined> {
   // Input validation
   validateEmail(guestEmail, "guestEmail");
   validateRequiredString(guestName, "guestName");
@@ -1115,8 +1115,7 @@ export async function sendBookingRejectedEmail(
       reason,
     };
 
-    // Send email using V2 template (OPCIJA A: Refined Premium)
-    await sendBookingRejectedEmailV2(
+    const providerId = await sendBookingRejectedEmailV2(
       getResendClient(),
       params,
       FROM_EMAIL(),
@@ -1125,6 +1124,7 @@ export async function sendBookingRejectedEmail(
     );
 
     logSuccess("Booking rejected email sent (V2 - Refined Premium)", {email: guestEmail});
+    return providerId;
   } catch (error) {
     logError("Error sending booking rejected email", error);
     throw error;

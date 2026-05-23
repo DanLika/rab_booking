@@ -9,6 +9,9 @@ export interface EmailSent {
   sent_at: admin.firestore.Timestamp;
   email: string;
   booking_id?: string;
+  // Resend message id captured from API response. null when SDK
+  // returned success but no id (silent-drop signal). See audit/26 PR-B.
+  provider_id?: string | null;
 }
 
 /**

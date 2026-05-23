@@ -33,15 +33,15 @@ interface RetryConfig {
  * @param emailType - Type of email (for logging)
  * @param recipient - Email recipient (for logging)
  * @param config - Retry configuration
- * @return Promise<void>
+ * @return Promise<T> — value returned by emailFunc on success (provider_id)
  * @throws Error if all retries fail
  */
-export async function sendEmailWithRetry(
-  emailFunc: () => Promise<void>,
+export async function sendEmailWithRetry<T = void>(
+  emailFunc: () => Promise<T>,
   emailType: string,
   recipient: string,
   config: RetryConfig = {}
-): Promise<void> {
+): Promise<T> {
   const {
     maxRetries = 3,
     initialDelay = 1000,
@@ -58,7 +58,7 @@ export async function sendEmailWithRetry(
         emailType,
       });
 
-      await emailFunc();
+      const result = await emailFunc();
 
       // Success!
       if (attempt > 0) {
@@ -72,7 +72,7 @@ export async function sendEmailWithRetry(
         );
       }
 
-      return; // Success - exit function
+      return result;
     } catch (error) {
       lastError = error;
 

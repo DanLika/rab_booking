@@ -315,9 +315,9 @@ export const onBookingStatusChange = onDocumentUpdated(
           });
 
           // Send booking approved email to guest with retry
-          await sendEmailWithRetry(
-            async () => {
-              await sendBookingApprovedEmail(
+          const providerId = await sendEmailWithRetry(
+            () =>
+              sendBookingApprovedEmail(
                 after.guest_email || "",
                 after.guest_name || "Guest",
                 after.booking_reference || "",
@@ -329,8 +329,7 @@ export const onBookingStatusChange = onDocumentUpdated(
                 after.total_price,
                 after.deposit_amount || after.advance_amount,
                 after.property_id // For subdomain URL generation
-              );
-            },
+              ),
             "Booking Approved",
             after.guest_email || ""
           );
@@ -343,6 +342,7 @@ export const onBookingStatusChange = onDocumentUpdated(
               sent_at: admin.firestore.FieldValue.serverTimestamp(),
               email: after.guest_email,
               booking_id: event.params.bookingId,
+              provider_id: providerId ?? null,
             },
           });
         } catch (emailError) {
@@ -383,16 +383,15 @@ export const onBookingStatusChange = onDocumentUpdated(
           const propertyData = propertyDoc.data();
 
           // Send booking rejected email to guest with retry
-          await sendEmailWithRetry(
-            async () => {
-              await sendBookingRejectedEmail(
+          const providerId = await sendEmailWithRetry(
+            () =>
+              sendBookingRejectedEmail(
                 after.guest_email || "",
                 after.guest_name || "Guest",
                 after.booking_reference || "",
                 propertyData?.name || "Property",
                 after.rejection_reason
-              );
-            },
+              ),
             "Booking Rejected",
             after.guest_email || ""
           );
@@ -405,6 +404,7 @@ export const onBookingStatusChange = onDocumentUpdated(
               sent_at: admin.firestore.FieldValue.serverTimestamp(),
               email: after.guest_email,
               booking_id: event.params.bookingId,
+              provider_id: providerId ?? null,
             },
           });
         } catch (emailError) {
@@ -471,9 +471,9 @@ export const onBookingStatusChange = onDocumentUpdated(
             const cancellationReason = booking.cancellation_reason as string | undefined;
             const cancelledByOwner = !!cancellationReason;
 
-            await sendEmailWithRetry(
-              async () => {
-                await sendBookingCancellationEmail(
+            const providerId = await sendEmailWithRetry(
+              () =>
+                sendBookingCancellationEmail(
                   booking.guest_email,
                   booking.guest_name,
                   booking.booking_reference || `ERR-${event.params.bookingId}`,
@@ -485,8 +485,7 @@ export const onBookingStatusChange = onDocumentUpdated(
                   booking.property_id,
                   cancellationReason,
                   cancelledByOwner
-                );
-              },
+                ),
               "Booking Cancellation",
               booking.guest_email || ""
             );
@@ -498,6 +497,7 @@ export const onBookingStatusChange = onDocumentUpdated(
                 sent_at: admin.firestore.FieldValue.serverTimestamp(),
                 email: after.guest_email,
                 booking_id: event.params.bookingId,
+                provider_id: providerId ?? null,
               },
             });
           } catch (emailError) {

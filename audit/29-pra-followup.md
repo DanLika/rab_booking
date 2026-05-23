@@ -1,4 +1,7 @@
-# audit/28 — PR-A follow-up (post audit/26)
+# audit/29 — PR-A follow-up (post audit/26)
+
+> **Renamed from `audit/28-pra-followup.md` 2026-05-23** — `audit/28-tier4-resend-sentry-baseline`
+> landed in parallel and claimed the 28 slot first (changelog 6.88, commit `8e6b0f41`).
 
 **Date:** 2026-05-23
 **Scope:** Items deferred from audit/26 PR-A (commit `b63423e2`, PR #456) plus one finding correction
@@ -26,11 +29,17 @@ write paths now persist `nights`:
 **Status:** audit/26 #5 fully closed. SF-026 normalize migration target population trends to
 zero for new bookings created via these three callables.
 
-**Residual scope:**
-- **Stripe placeholder write** (`stripePayment.ts createStripeCheckoutSession` placeholder
-  doc — separate code path from `createBookingAtomic`). NOT covered by `e9a45c31`. Same
-  trivial fix shape; if a Stripe-path booking lands without `nights`, file a tiny follow-up.
-  Not gating audit/28 closure.
+**Residual scope — VERIFIED open via `grep -n 'nights\|placeholderData' functions/src/stripePayment.ts`:**
+- **Stripe placeholder write** (`stripePayment.ts createStripeCheckoutSession`, `placeholderData`
+  literal at line 671-708, written via `transaction.set` line 712-721) — **NO `nights` field**.
+  Same gap as the widget `createBookingAtomic` had before `e9a45c31`. Trivial 1-line dop:
+  add `nights: bookingNights,` between `check_out` (line 680) and `guest_count` (line 681).
+  `bookingNights` already computed earlier in the same function (line ~429). Tracked here as
+  **audit/29 follow-up A.5** — XS, ship standalone or fold into Tier 4 stripe pass.
+  Not gating audit/29 closure.
+- **Stripe finalize updates** (`stripePayment.ts:957` + `:1243`) are status-only `.update()`
+  calls that don't write `nights`; not a regression because the placeholder doc already
+  carried (or will carry, post A.5) the field.
 - **Existing K=4 prod drifters** documented in `audit/22` §"PROD --force backfill" still
   require the one-time `--execute` run per the cutover plan. Independent of this fix.
 
@@ -199,7 +208,8 @@ is null?" branch can be deleted).
 | 2 | A.4 deploy | Standalone, can ship parallel with A.2 |
 | 3 | A.3 deploy + rules-test | Locks the CF-only path; ships with TIER 3 cutover |
 | 4 | PropertyId cleanup | Quality-of-life after the hot path stabilizes |
-| 5 | Finding #5 widget `nights` dop | Roll into A.4 commit OR standalone XS |
+| 5 | A.5 Stripe placeholder `nights` dop | XS standalone OR fold into Tier 4 Stripe pass |
+| — | Finding #5 widget `nights` dop | ✅ CLOSED via PR #456 commit `e9a45c31` |
 
 **TIER 3 PROD cutover (audit/22 §6) blocked on A.3.** A.2 must precede A.3 by 2-3 days
 of dev observation. Plan accordingly.
@@ -224,4 +234,4 @@ of dev observation. Plan accordingly.
 
 ---
 
-**End audit/28**
+**End audit/29**

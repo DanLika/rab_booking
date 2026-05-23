@@ -7,6 +7,7 @@
  */
 
 import {Resend} from "resend";
+import {sendEmailWithValidation} from "../utils/send-with-validation";
 import {generateEmailHtml} from "./base";
 import {getInfoIcon} from "../utils/svg-icons";
 import {
@@ -96,27 +97,15 @@ export async function sendEmailVerificationEmailV2(
 ): Promise<void> {
   const html = generateEmailVerificationEmailV2(params);
   const subject = "Verifikacijski kod";
-
-  // IMPORTANT: Check the result object - Resend can return success with error inside
-  const result = await resendClient.emails.send({
+  const emailId = await sendEmailWithValidation(resendClient, {
     from: `${fromName} <${fromEmail}>`,
     to: params.email,
     subject: subject,
     html: html,
   });
 
-  // Resend SDK returns { data, error } - check for error
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const typedResult = result as any;
-  if (typedResult.error) {
-    throw new Error(
-      `Resend API error: ${typedResult.error.message || JSON.stringify(typedResult.error)}`
-    );
-  }
-
-  // Log successful send with Resend email ID for debugging
-  if (typedResult.data?.id) {
+  if (emailId) {
     // eslint-disable-next-line no-console
-    console.log(`[EmailVerification] Resend email sent, ID: ${typedResult.data.id}`);
+    console.log(`[EmailVerification] Resend email sent, ID: ${emailId}`);
   }
 }

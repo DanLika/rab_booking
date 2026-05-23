@@ -8,6 +8,7 @@
  */
 
 import {Resend} from "resend";
+import {sendEmailWithValidation} from "../utils/send-with-validation";
 import {generateEmailHtml} from "./base";
 import {
   generateHeader,
@@ -103,21 +104,10 @@ export async function sendTrialExpiredEmailV2(
 ): Promise<void> {
   const html = generateTrialExpiredEmailV2(params);
   const subject = "Vaš BookBed probni period je istekao - Nadogradite račun";
-
-  // IMPORTANT: Check the result object
-  const result = await resendClient.emails.send({
+  await sendEmailWithValidation(resendClient, {
     from: `${fromName} <${fromEmail}>`,
     to: params.email,
     subject: subject,
     html: html,
   });
-
-  // Resend SDK returns { data, error } - check for error
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const typedResult = result as any;
-  if (typedResult.error) {
-    const errorMsg = typedResult.error.message ||
-      JSON.stringify(typedResult.error);
-    throw new Error(`Resend API error: ${errorMsg}`);
-  }
 }

@@ -7,6 +7,7 @@
  */
 
 import {Resend} from "resend";
+import {sendEmailWithValidation} from "../utils/send-with-validation";
 import {generateEmailHtml} from "./base";
 import {getSuccessIcon} from "../utils/svg-icons";
 import {
@@ -163,22 +164,11 @@ export async function sendBookingConfirmationEmailV2(
 ): Promise<void> {
   const html = generateBookingConfirmationEmailV2(params);
   const subject = `Potvrda rezervacije - ${escapeHtml(params.bookingReference)}`;
-
-  // IMPORTANT: Check the result object - Resend can return success with error inside
-  const result = await resendClient.emails.send({
+  await sendEmailWithValidation(resendClient, {
     from: `${fromName} <${fromEmail}>`,
     to: params.guestEmail,
     replyTo: ownerEmail || fromEmail,
     subject: subject,
     html: html,
   });
-
-  // Resend SDK returns { data, error } - check for error
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const typedResult = result as any;
-  if (typedResult.error) {
-    throw new Error(
-      `Resend API error: ${typedResult.error.message || JSON.stringify(typedResult.error)}`
-    );
-  }
 }

@@ -150,10 +150,45 @@ The same JS-error-type appears on the login form submit, but the underlying caus
 2. Investigate `keyboard_dismiss_fix_web.dart` interaction with autofill events.
 3. Workaround in production: direct JS `firebase_auth.signInWithEmailAndPassword` call (smoke test used this).
 
+## 🟡 TODO: Guest counter (adults / children / pets) doesn't persist to form cache (2026-05-23)
+
+**Prioritet:** P3 (UX papercut — counters reset to defaults on refresh while name/email/phone restore correctly)
+**Izvor:** PR #447 smoke verification (CHANGELOG 6.81), `booking_widget_screen.dart:2765-2782`
+**Status:** Pre-existing on `main` — `git diff main..HEAD` over the region is empty as of 2026-05-23. NOT introduced by PR #447's Phase 0+1 refactor.
+
+**Defect:** The `onAdultsChanged` / `onChildrenChanged` / `onPetsChanged` callbacks passed to `GuestCountPicker` only call `setState(() => _adults = value)` etc. They never trigger `_saveFormData()` — unlike the text controllers, which register `_saveFormDataDebounced` listeners (lines 262-266). As a result:
+
+- The user picks Adults=3 in the form.
+- They refresh the page (or navigate away + back).
+- `FormPersistenceService.loadFormData` restores name/email/phone/dates/notes correctly.
+- Adults silently resets to whatever was last saved (most commonly the default `1`), because no save fired when the counter incremented.
+
+Verified during PR #447 smoke flow: pre-reload localStorage `adults: 1`, post-reload `adults: 1`, while the in-memory `_adults` was `2` just before reload.
+
+### Fix (one-line per handler)
+
+```dart
+onAdultsChanged: (value) {
+  if (mounted) {
+    setState(() => _adults = value);
+    _saveFormDataDebounced();  // add
+  }
+},
+// same for onChildrenChanged + onPetsChanged
+```
+
+Use `_saveFormDataDebounced` (the existing 500 ms debouncer at line 1299) rather than `_saveFormData()` directly — counters typically click rapidly during selection, no need for one disk write per tap.
+
+### Done-when
+
+- All 3 handlers call the debounced save.
+- Manual smoke: pick Adults=3 → refresh → form reopens with Adults=3.
+- New unit test for `BookingFormState.adults` setter triggers a `notifyListeners` (already true post-PR #447 ChangeNotifier promotion) — but the screen-level handler is what currently swallows the save, so the test target is the handler wiring, not the model.
+
 ## ✅ DONE: T11c — Drop `unit_id+status` clause from bookings rule
 
 **Prioritet:** HIGH (was largest remaining public-read surface on `bookings`)
-**Status:** ✅ **CLOSED 2026-05-22** via PR #446 (branch `fix/t11c-proper-bookings-migration`, commits `ab6bdb3d` + `64b14bf0`). Dev deploy pending PR review.
+**Status:** ✅ **CLOSED 2026-05-22** via PR #446 (branch `fix/t11c-proper-bookings-migration`, merge commit `3b810b2d`). ✅ Dev cutover complete 2026-05-22 (rules + CF + widget bundle + `daily_prices` COLLECTION composite index `available + date`, commit `a1fe3633`). Final smoke green: anon CG bookings → 403, `getUnitAvailability` → 200 with `windows[]`. Prod cutover pending.
 **Izvor:** `audit/03-backend.md` §3.4 flag #1, `audit/06-bookings-hotfix-partial.md`, `audit/06-availability-cf-design.md`, `audit/17-sf023-sf025-rules-fix.md`
 
 ### Outcome
@@ -164,11 +199,12 @@ Last anonymous read surface on the `bookings` collection-group is closed. Widget
 
 1. ✅ **`getUnitAvailability` CF** (SF-023, 2026-05-22, merge `d481bf11`). `functions/src/availability.ts`, region `europe-west1`. Returns `AvailabilityWindow[]` with `source` discriminator covering bookings + manual blocks + ical.
 2. ✅ **Widget bookings snapshot stream migrated.** `firebase_booking_calendar_repository.dart` — 4 sites collapsed into single `_streamBlockedEvents` that demultiplexes CF windows by source. `availability_checker._checkBookings` replaced with `_fetchAvailabilityWindows` + per-source overlap helpers. Bookings + iCal now share one CF round-trip.
-3. ⏳ **Cut-over to prod** — pending. Sequence (after PR #446 merges):
-   - Deploy `getUnitAvailability` CF to `rab-booking-248fc`.
+3. ⏳ **Cut-over to prod** — pending. Sequence:
+   - Deploy `getUnitAvailability` CF to `rab-booking-248fc` (region `europe-west1`).
+   - Deploy `daily_prices` COLLECTION composite index (`available + date`) via `firebase deploy --only firestore:indexes --project rab-booking-248fc`. Wait `READY` **+ ~30 s propagation buffer** before the rules deploy (Firestore needs the gap after `READY` before queries actually use a new composite — first CF call still 500s "index currently building" without it; observed in dev cutover).
    - Build + deploy the widget bundle to prod hosting.
    - Deploy `firestore.rules` to prod **last** (so the live widget never makes a now-blocked direct read).
-   - Run smoke verify (anon CG `runQuery` on `bookings` with `unit_id`+`status` filter must return 403).
+   - Run smoke verify (anon CG `runQuery` on `bookings` with `unit_id`+`status` filter must return 403; `getUnitAvailability` must return 200 with `windows[]`).
 4. ✅ **Rules-unit-test guard flipped.** `functions/test/firestore_rules/bookings.test.ts` — 2 "STILL ALLOWS" / "ALLOWED" assertions now `assertFails`. Test suite renamed to `bookings rule (T11c closed)`. 24/24 pass.
 
 ### Trade-offs accepted
@@ -181,7 +217,8 @@ Last anonymous read surface on the `bookings` collection-group is closed. Widget
 Currently all three are dev-only. Combined prod cutover checklist:
 
 - Deploy `getBookingByStripeSession` CF to `rab-booking-248fc`.
-- Deploy `getUnitAvailability` CF to `rab-booking-248fc`.
+- Deploy `getUnitAvailability` CF to `rab-booking-248fc` (region `europe-west1`).
+- Deploy `daily_prices` COLLECTION composite (`available + date`) to prod via `firebase deploy --only firestore:indexes --project rab-booking-248fc`. Wait `READY` **+ ~30 s propagation buffer** before the rules deploy.
 - Build + deploy the widget bundle to prod hosting (must include both the SF-023 ical-stream migration AND the T11c bookings-stream migration).
 - Deploy `firestore.rules` + `storage.rules` to prod **last**.
 - Run the manual smoke checklists in `audit/06-bookings-hotfix-partial.md` §6.3 + `audit/17-sf023-sf025-rules-fix.md` § Smoke verify on the prod widget origin.

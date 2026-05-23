@@ -2,7 +2,35 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-22 | **Version**: 6.80
+**Last Updated**: 2026-05-23 | **Version**: 6.82
+
+---
+
+**Changelog 6.82**: T11c dev cutover finalized — `daily_prices` index + widget bundle redeploy (2026-05-22):
+
+- **PR #446 merged** (`3b810b2d`, `--merge` not `--squash` to preserve the 4-commit chain). CHANGELOG conflict 6.79 vs 6.80 resolved by keeping both entries with 6.80 first (newer).
+- **Dev deploy 1 — rules + CF** (`firestore.rules` + `getUnitAvailability` to `bookbed-dev`). Initial smoke split: anon CG `bookings` `runQuery` → **403 PERMISSION_DENIED** ✅; `getUnitAvailability` (europe-west1) → **500 INTERNAL** ❌ with `FAILED_PRECONDITION: query requires an index` for `daily_prices` (`available + date`). Pre-existing infra gap, NOT a T11c regression — surfaced because smoke now exercises the full CF codepath end-to-end (SF-023 smoke never hit a non-empty plan).
+- **Dev deploy 2 — widget bundle.** Bundle on `bookbed-widget-dev.web.app` was 2026-05-18 (pre-SF-023, pre-T11c). Rebuilt via `flutter build web --release --target lib/widget_main_dev.dart` + `firebase deploy --only hosting:widget --project bookbed-dev`. Served SHA `98d40d2c…` confirmed matching local `flutter_bootstrap.js`. `web/bookbed-overlay.js` copied to `build/web_widget/` per the changelog 6.65 deploy step.
+- **Dev deploy 3 — index fix** (commit `a1fe3633`). Added `daily_prices` COLLECTION composite (`available` ASC + `date` ASC) to `firestore.indexes.json`. CG indexes don't help subcollection queries (per `.claude/rules/firestore.md`); CF query at `functions/src/availability.ts:156-166` uses subcollection path so needs COLLECTION-scope coverage. Index built `READY` after ~80 s; CF still 500'd "index currently building" for ~30 s after `READY` state — **propagation buffer recorded in `docs/TODO.md` prod cutover steps**. Final retry: HTTP 200 with `{result: {unitId: SEED_unit_dev_01, windows: [], cacheHint: 30}}`.
+- **Docs** — `docs/SECURITY_FIXES.md` SF-019 "Dev deploy 2026-05-22" subsection rewritten from "(partial)" to complete (commit `d3875e6e`); `docs/TODO.md` T11c status line + prod cutover checklists updated with the `daily_prices` index step + propagation buffer; this CHANGELOG entry.
+- **PR #447 status (separate)** — Phase 1 widget refactor: 0 reviews, mergeable UNKNOWN, CI failed at GH billing wall (`The job was not started because recent account payments have failed`) — not a logic failure. Smoke + rebase done by sibling agent per entry 6.81. Merge gated on Actions billing resolution.
+- **Multi-agent race** — one branch swap mid-session (`main` → `refactor/booking-widget-phase1` between `git add` and `git commit`); first SECURITY_FIXES.md commit landed on wrong branch with empty diff. Recovered via re-edit + atomic `[ $(branch) = main ]` chain on stage/commit/push.
+
+---
+
+**Changelog 6.81**: PR #447 smoke verification + rebase + session-end cleanup (2026-05-23):
+
+- **PR #447 smoke** — Flow A (form persistence round-trip) + Flow B (zoom controls + rotate overlay) verified end-to-end via Chrome DevTools Protocol against `bookbed-dev`. Comment posted: `https://github.com/DanLika/rab_booking/pull/447#issuecomment-4521868516`. Calendar rendering required PR 447 to be rebased onto current `main` (it predated the T11c availability migration + the `daily_prices` index fix `a1fe3633`).
+- **Rebase + force-push** — rebased `refactor/booking-widget-phase1` onto `main` in an isolated worktree (`smoke/pr447-rebased` @ `a4d7f09b`). 9/9 commits applied cleanly; only conflict was `docs/CHANGELOG.md` (6.78 vs 6.79+6.80 entries), resolved by keeping all three. Force-pushed `cb5cf7f6...a4d7f09b` onto `refactor/booking-widget-phase1` with `--force-with-lease`.
+- **CI gate stuck** — re-triggered CI run `26307066384` blocked at scheduler with "The job was not started because recent account payments have failed or your spending limit needs to be increased." All 3 unit/CF/rules jobs hit the billing wall in 2s; build jobs skipped. Per the merge gate (CI green) the merge is on hold until Actions billing is resolved.
+- **Side finding (pre-existing on main, NOT a PR 447 regression)** — `onAdultsChanged` / `onChildrenChanged` / `onPetsChanged` handlers in `booking_widget_screen.dart:2765-2782` only call `setState`, never `_saveFormData()` — unlike the text controllers which register `_saveFormDataDebounced` listeners (lines 262-266). `git diff main..HEAD` over that region is empty → identical on `main`. Guest counter changes silently drop from the persistence cache. Filed in `docs/TODO.md` for follow-up.
+- **CDP smoke methodology** — full UI-driven A1–A12 (calendar tap May 29 → month-nav → tap June 1 → "Reserve" → fill `<input>` via `Input.dispatchMouseEvent` focus + `Input.insertText`, no JS-side `.value=` shortcut → reload → verify restore). All 15 payload fields byte-identical pre/post reload; only `timestamp` re-stamped (by-design 24 h cache-freshness marker per `PersistedFormData.isExpired`).
+- **gitignore: node-compile-cache** (commit `0f6cf77f`) — added `node-compile-cache/` (Node v25 JIT artifacts, 580 files in `v25.1.0-arm64-392347a2-501/`). Was polluting IDE "changes" counter with 581 entries (580 cache files + the lockfile metadata diff). Lockfile metadata diff (peer-flag additions only — no version/integrity/package changes) reverted.
+- **Stash cleanup** — 4 stale stashes dropped per operator decision: SF-019 docs WIP `98624432`, T11c availability_checker WIP `1eb3b205`, Jules audit prompts `4151b352`, diagonal-gradient mvp WIP `d0e71b62`. Recoverable for ~90 days via `git fsck --unreachable` + `git stash apply <sha>`.
+- **Worktree cleanup** — `/tmp/pr447-wt` removed; `smoke/pr447-rebased` branch ref preserved as safety net at `a4d7f09b` (drops after PR 447 merges). Cursor IDE worktrees in `~/.cursor/worktrees/` untouched.
+- **Branch sync** — local `refactor/booking-widget-phase1` reset to `origin/refactor/booking-widget-phase1` via `git update-ref` (was at pre-rebase tip `cb5cf7f6`, now matches origin `a4d7f09b`). `hotfix/widget-secrets-exfil` left as-is at [ahead 2] per operator (active work, unpushed).
+- **Memory** — `memory/flutter-web-input-bypass.md` updated with raw-CDP driving recipe (`Input.insertText` after focus-click), the **READ-direction** sync gap (DOM `input.value` reads `""` even when field is visually populated — CanvasKit renders to canvas, DOM input is focus-proxy only; **always verify form state via screenshot**), and shared_preferences_web localStorage double-encoding format.
+- **Multi-agent race observed** — main working tree silently flipped from `refactor/booking-widget-phase1` back to `main` twice during the smoke session despite no checkout from this agent. `git worktree list` showed 5 active Cursor worktrees + my temp worktree. Defensive `[ "$(git branch --show-current)" = "main" ] || exit 1` guard before every `git commit` + `git push` prevented stray landings.
 
 ---
 

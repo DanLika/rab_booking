@@ -44,7 +44,7 @@ All items must be ✅ before §3 begins. Defer any unchecked.
 
 - [ ] **All 3 active PRs merged on `main`**: #449 (`chore/seed-test-owner-mode`) → #448 (`chore/test-debt-cleanup-audit-19`) → #447 (`refactor/booking-widget-phase1`). Merge order per `audit/21`. Blocker: GitHub Actions billing fix (Settings → Billing). Verify with `git log --oneline -20` shows all three merge commits on `main` before deploy starts.
 - [ ] **`daily_prices` COLLECTION composite index present on `main`** (`available` ASC + `date` ASC). Confirmed in `firestore.indexes.json` (commit `a1fe3633`). Deploy this **before** rules deploy and **before** widget bundle so `getUnitAvailability` doesn't 500 on first prod call.
-- [ ] **Widget bundle rebuilt + deployed to `bookbed-widget.web.app`** (PROD hosting target on `rab-booking-248fc`). Build: `flutter build web --release --target lib/widget_main.dart` then `firebase deploy --only hosting:widget --project rab-booking-248fc`. **Verify the deployed bundle is the post-T11c build**: HTTP HEAD `bookbed-widget.web.app/` returns `last-modified` ≥ 2026-05-22 17:37 GMT (dev parity). Open §8 Q2.
+- [ ] **Widget bundle rebuilt + deployed to `bookbed-widget.web.app`** (PROD hosting target on `rab-booking-248fc`). Build: `flutter build web --release --target lib/widget_main.dart` then `firebase deploy --only hosting:widget --project rab-booking-248fc`. **Verify the deployed bundle is the post-T11c build**: HTTP HEAD `bookbed-widget.web.app/` returns `last-modified` ≥ 2026-05-22 17:37 GMT (dev parity). **Q2 resolved 2026-05-23** (`audit/24`): current PROD bundle `last-modified: Thu, 21 May 2026 18:50:32 GMT` (etag `153608da33...` on `flutter_bootstrap.js`) — confirmed **pre-T11c**, rebuild + redeploy in §3.3 is required.
 - [ ] **`normalize-booking-nights.js` DRY-RUN against `rab-booking-248fc`**:
   ```bash
   GOOGLE_CLOUD_PROJECT=rab-booking-248fc node functions/scripts/normalize-booking-nights.js
@@ -68,13 +68,42 @@ All items must be ✅ before §3 begins. Defer any unchecked.
   - Save full dry-run stdout to `audit/migrations/2026-MM-DD-prod-sf026-normalize-DRYRUN.log`.
   - K should be the count of pre-fix DST-straddling bookings; many production bookings will already have midnight-Zagreb-civil-day timestamps and show no drift. If K = 0, the migration script execution in step 3.5 becomes a no-op (still run it for the audit-log artifact).
   - **NB**: script flag is `--force`, NOT `--execute` (script accepts only `--dry-run` (default) and `--force`).
-- [ ] **Backup current PROD rules + storage rules**:
+- [ ] **Backup current PROD rules + storage rules** via Firebase Rules REST API (Q3 resolved 2026-05-23 — `audit/24`: `firebase` CLI has no `:rules:get` subcommand; REST is the working method):
   ```bash
   mkdir -p audit/migrations
-  firebase firestore:rules:get --project rab-booking-248fc > audit/migrations/2026-MM-DD-prod-firestore-rules-pre-T11c.snapshot
-  firebase storage:rules:get --project rab-booking-248fc > audit/migrations/2026-MM-DD-prod-storage-rules-pre-T11c.snapshot
+  PROJECT=rab-booking-248fc
+  TOKEN=$(gcloud auth print-access-token)
+
+  # 1. Resolve the live ruleset name from the cloud.firestore release
+  RULESET=$(curl -s \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "X-Goog-User-Project: $PROJECT" \
+    "https://firebaserules.googleapis.com/v1/projects/$PROJECT/releases/cloud.firestore" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['rulesetName'])")
+
+  # 2. Fetch the rules source and save snapshot
+  curl -s \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "X-Goog-User-Project: $PROJECT" \
+    "https://firebaserules.googleapis.com/v1/$RULESET" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['source']['files'][0]['content'])" \
+    > audit/migrations/2026-MM-DD-prod-firestore-rules-pre-T11c.snapshot
+
+  # 3. Storage rules — same flow, replace `cloud.firestore` with `cloud.storage/<bucket>`
+  BUCKET="rab-booking-248fc.appspot.com"   # confirm exact bucket name in Firebase Console
+  RULESET_STORAGE=$(curl -s \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "X-Goog-User-Project: $PROJECT" \
+    "https://firebaserules.googleapis.com/v1/projects/$PROJECT/releases/firebase.storage%2F$BUCKET" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['rulesetName'])")
+  curl -s \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "X-Goog-User-Project: $PROJECT" \
+    "https://firebaserules.googleapis.com/v1/$RULESET_STORAGE" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin)['source']['files'][0]['content'])" \
+    > audit/migrations/2026-MM-DD-prod-storage-rules-pre-T11c.snapshot
   ```
-  Commit these snapshots to `main` BEFORE any deploy. Open §8 Q3 — exact `firebase` CLI subcommand names (the CLI exposes `firebase deploy` and `firebase functions:list` but `:rules:get` is not a standard built-in — operator must confirm by GCP Console download or by checking the live `cloud.firestore.googleapis.com/projects/.../databases/(default)/rulesets` API). Worst case: rules snapshot lives in this commit's `firestore.rules` (pre-T11c PROD == pre-merge of #446 — checkout that ref to capture).
+  Commit these snapshots to `main` BEFORE any deploy. Notes: (1) `X-Goog-User-Project: $PROJECT` is required — without it the API errors `403 SERVICE_DISABLED` even though the token is valid; (2) verified 2026-05-23 against `bookbed-dev` — returned full rules source (rulesetName `projects/bookbed-dev/rulesets/e319e00c-2d8b-4324-8e97-4cd5a7590c3c`, updateTime `2026-05-22T17:16:47Z`); (3) belt+suspenders alternative: tag the `main` commit immediately before §3.4 (`git tag pre-T11c-prod-rules <SHA>`) — the rules in repo IS what gets deployed, so the snapshot can also be recovered from git.
 - [ ] **Sentry env detection verified PROD-tagged** for both widget and main app — per `audit/12` §2, `lib/core/utils/sentry_env.dart` derives env from `Firebase.app().options.projectId`. Smoke a deployed-widget error against `bookbed-widget.web.app` and confirm the Sentry event lands with `environment: production` (not `development`). Already validated for the dev path on `bookbed-widget-dev.web.app`.
 - [ ] **iOS plist + Android google-services.json verified PROD**:
   ```bash
@@ -292,9 +321,9 @@ Per CLAUDE.md sign-off rule: **"No PROD deploy without explicit per-deploy user 
 
 **Q1.** Confirm preferred deploy date + maintenance window. Suggestion: 02:00–04:00 CET on a midweek night (Tue/Wed/Thu) outside school-holiday peaks. Lowest booking volume per dashboard. Does this match what you see in BookBed analytics?
 
-**Q2.** Confirm widget bundle on `bookbed-widget.web.app` is currently the **pre-T11c** build (i.e., needs rebuild + redeploy in step 3.3 — not already shipped as part of some prior session). Check via `curl -sI 'https://bookbed-widget.web.app/' | grep last-modified` — expected value should be older than 2026-05-22 (i.e., older than the T11c dev deploy).
+**Q2.** ~~Confirm widget bundle on `bookbed-widget.web.app` is currently the **pre-T11c** build…~~ **RESOLVED 2026-05-23** (`audit/24`). Probed `bookbed-widget.web.app/` + `bookbed-widget.web.app/flutter_bootstrap.js`: both return `last-modified: Thu, 21 May 2026 18:50:32 GMT`. T11c merged 2026-05-22 (`ab6bdb3d`), so PROD is **pre-T11c** and §3.3 rebuild + redeploy IS required. Bootstrap ETags also differ between PROD (`153608da33...`) and DEV (`e71fa54a52...`) — corroborates different bundles.
 
-**Q3.** What is the correct `firebase` CLI subcommand for fetching the deployed rules ruleset (for the pre-deploy snapshot)? The plan currently writes `firebase firestore:rules:get` which is not a standard built-in. Acceptable alternatives: (a) capture pre-deploy `firestore.rules` from git by tagging the `main` commit immediately before §3.4 (`git tag pre-T11c-prod-rules <SHA>`) — this works because what's in repo IS what will be deployed; (b) fetch via GCP Console download → save as snapshot. Which path do you prefer?
+**Q3.** ~~What is the correct `firebase` CLI subcommand for fetching the deployed rules ruleset…~~ **RESOLVED 2026-05-23** (`audit/24`). Firebase CLI exposes no `:rules:get` subcommand (verified against `firebase --help` for both top-level and `firebase firestore` namespaces; only deploy-side `firebase deploy --only firestore:rules` exists). **Working method**: Firebase Rules REST API (`firebaserules.googleapis.com/v1`) with `Authorization: Bearer $(gcloud auth print-access-token)` + `X-Goog-User-Project: <project-id>`. Two-call flow: (1) `GET /v1/projects/<project>/releases/cloud.firestore` returns `rulesetName`; (2) `GET /v1/<rulesetName>` returns full source content. Without `X-Goog-User-Project` header the API errors `403 SERVICE_DISABLED`. Full commands now embedded in §2 pre-flight "Backup current PROD rules" item. Belt+suspenders option (b) remains valid: tag `main` immediately before §3.4 and recover rules from git.
 
 **Q4.** Has SF-026's migration script been tested against any prod-shape data in dev (e.g., copying a few real PROD booking docs to dev, running dry-run, verifying expected drift output)? If not, the §3.6 prod `--force` run is the first real-data validation — acceptable since the operation is idempotent and recoverable manually, but worth knowing.
 

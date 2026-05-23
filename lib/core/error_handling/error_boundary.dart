@@ -19,6 +19,60 @@ String _safeExceptionToString(dynamic exception) {
   }
 }
 
+/// Stack-frame patterns that indicate infrastructure / debug-bridge / test
+/// harness origin — never user-triggered. Audit/20 §2.
+const List<String> _blockedFramePatterns = <String>[
+  'dart:developer',
+  'dart:vm_service',
+  'marionette_extension',
+  'registerExtension',
+];
+
+bool _stackMatchesBlockedFrame(String stackString) {
+  for (final pattern in _blockedFramePatterns) {
+    if (stackString.contains(pattern)) return true;
+  }
+  return false;
+}
+
+bool _messageMatchesBlockedException(String msg) {
+  if (msg.startsWith('Exception: Element matching {')) return true;
+  if (msg.contains('VM service extension')) return true;
+  return false;
+}
+
+/// Returns true for errors that should surface the boundary UI to the user.
+/// Returns false for infrastructure / test-harness noise (VM service extension
+/// dispatch, dart:developer, Marionette matcher failures, framework `silent`
+/// errors) that should propagate to debugPrint/Sentry only.
+///
+/// See `audit/20-error-boundary-narrowing.md`.
+@visibleForTesting
+bool isUserFacingFlutterError(FlutterErrorDetails details) {
+  // Framework convention: `silent == true` means "do not surface to user".
+  if (details.silent) return false;
+
+  final stackString = details.stack?.toString() ?? '';
+  if (_stackMatchesBlockedFrame(stackString)) return false;
+
+  final msg = _safeExceptionToString(details.exception);
+  if (_messageMatchesBlockedException(msg)) return false;
+
+  return true;
+}
+
+/// `PlatformDispatcher.onError` variant — same filter, raw `(error, stack)`
+/// shape. Audit/20 §8 — Sentry/Crashlytics sink also filters.
+@visibleForTesting
+bool isUserFacingAsyncError(Object error, StackTrace? stack) {
+  final stackString = stack?.toString() ?? '';
+  if (_stackMatchesBlockedFrame(stackString)) return false;
+  if (_messageMatchesBlockedException(_safeExceptionToString(error))) {
+    return false;
+  }
+  return true;
+}
+
 /// Error Boundary Widget - Catches errors in widget tree and shows fallback UI
 ///
 /// Usage:
@@ -75,8 +129,13 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
 
     // Override error handler for this boundary's scope
     FlutterError.onError = (FlutterErrorDetails details) {
-      // Call original handler first
+      // Call original handler first (Sentry/Crashlytics path is unaffected).
       _originalOnError?.call(details);
+
+      // Filter: ignore non-user-facing infrastructure noise (VM service
+      // extension dispatch, dart:developer, Marionette test-harness matcher
+      // failures, framework-`silent` errors). See audit/20.
+      if (!isUserFacingFlutterError(details)) return;
 
       // Capture error in this boundary
       // Use addPostFrameCallback to avoid setState during build
@@ -422,11 +481,17 @@ class GlobalErrorHandler {
     // Catch Flutter framework errors
     FlutterError.onError = (FlutterErrorDetails details) {
       FlutterError.presentError(details);
+      // Drop infrastructure / test-harness noise from the production logging
+      // pipeline (mirrors ErrorBoundary's surface filter — audit/20 §8).
+      if (!isUserFacingFlutterError(details)) return;
       _logError(details.exception, details.stack);
     };
 
     // Catch async errors
     PlatformDispatcher.instance.onError = (error, stack) {
+      // Apply the same filter at the async sink so VM-extension dispatch
+      // exceptions and matcher-not-found errors don't flood Crashlytics/Sentry.
+      if (!isUserFacingAsyncError(error, stack)) return true;
       _logError(error, stack);
       return true; // Mark as handled
     };

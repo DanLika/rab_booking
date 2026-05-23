@@ -1,9 +1,13 @@
 # Audit 20 — ErrorBoundary catch too broad — narrow filter to user-relevant exceptions
 
 **Date**: 2026-05-23
-**Branch**: not yet created — queue as separate PR after `#447` / `#448` / `#449` merge
+**Branch**: `fix/audit-20-error-boundary`
 **Scope**: `lib/core/error_handling/error_boundary.dart` — narrow the `FlutterError.onError` replacement inside `_setupErrorListener()` to ignore non-user-facing exceptions (VM service extension dispatch, `dart:developer` noise) so they don't surface as the user-visible "Oops! Something went wrong" screen.
-**Status**: Skeleton only. Doc-first. No code change in this audit.
+**Status**: ✅ IMPLEMENTED 2026-05-23. Filter applied at both surfaces:
+- UI surface (`_setupErrorListener` line 77-94 → calls top-level `isUserFacingFlutterError`)
+- Sentry / Crashlytics sink (`GlobalErrorHandler.initialize` → calls `isUserFacingFlutterError` + `isUserFacingAsyncError` for the async sink)
+
+Tests: `test/core/error_handling/error_boundary_test.dart` — 10 cases (silent flag, blocked stack frames, blocked exception messages, accepted user-space errors). Public `ErrorBoundary` widget API unchanged. CI: `flutter analyze` clean, 10/10 tests green.
 
 ---
 

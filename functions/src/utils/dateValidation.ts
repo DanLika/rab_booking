@@ -237,6 +237,96 @@ export function normalizeToZagrebCivilDayUTC(date: Date): Date {
 }
 
 /**
+ * Owner-side variant of `validateAndConvertBookingDates`.
+ *
+ * Reuses parsing + order validation + SF-026 Zagreb-civil-day normalization,
+ * but SKIPS the "check-in not in past" guard so that owners may record
+ * historical bookings (manual entry of past stays for the books).
+ *
+ * Why a sibling instead of `allowPast: boolean` flag on the original:
+ * the guest/widget path must NEVER accept past dates — keeping the helpers
+ * separate eliminates the risk of a stray `allowPast: true` slipping into a
+ * widget-facing CF.
+ */
+export function validateOwnerBookingDates(
+  checkIn: string | number | Date | null | undefined,
+  checkOut: string | number | Date | null | undefined
+): {
+  checkInDate: admin.firestore.Timestamp;
+  checkOutDate: admin.firestore.Timestamp;
+} {
+  if (!checkIn) {
+    throw new HttpsError("invalid-argument", "Check-in date is required");
+  }
+  if (!checkOut) {
+    throw new HttpsError("invalid-argument", "Check-out date is required");
+  }
+
+  let checkInDateObj: Date;
+  let checkOutDateObj: Date;
+
+  try {
+    if (typeof checkIn === "string" || typeof checkIn === "number") {
+      checkInDateObj = new Date(checkIn);
+    } else if (checkIn instanceof Date) {
+      checkInDateObj = checkIn;
+    } else {
+      throw new HttpsError(
+        "invalid-argument",
+        `Invalid check-in date type: ${typeof checkIn}`
+      );
+    }
+
+    if (typeof checkOut === "string" || typeof checkOut === "number") {
+      checkOutDateObj = new Date(checkOut);
+    } else if (checkOut instanceof Date) {
+      checkOutDateObj = checkOut;
+    } else {
+      throw new HttpsError(
+        "invalid-argument",
+        `Invalid check-out date type: ${typeof checkOut}`
+      );
+    }
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError(
+      "invalid-argument",
+      `Failed to parse dates: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
+  }
+
+  if (isNaN(checkInDateObj.getTime())) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Invalid check-in date: "${String(checkIn)}". Please provide a valid date.`
+    );
+  }
+  if (isNaN(checkOutDateObj.getTime())) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Invalid check-out date: "${String(checkOut)}". Please provide a valid date.`
+    );
+  }
+
+  if (checkOutDateObj <= checkInDateObj) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Check-out date must be after check-in date"
+    );
+  }
+
+  // Past-date guard intentionally omitted. Normalize to Zagreb-civil-day UTC
+  // for consistent SF-026 nights count across Dart/TS.
+  const checkInNormalized = normalizeToZagrebCivilDayUTC(checkInDateObj);
+  const checkOutNormalized = normalizeToZagrebCivilDayUTC(checkOutDateObj);
+
+  return {
+    checkInDate: admin.firestore.Timestamp.fromDate(checkInNormalized),
+    checkOutDate: admin.firestore.Timestamp.fromDate(checkOutNormalized),
+  };
+}
+
+/**
  * Calculate number of nights in a booking
  *
  * @param checkIn - Check-in Firestore Timestamp

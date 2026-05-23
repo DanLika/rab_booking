@@ -24,6 +24,7 @@ jest.mock("../src/firebase", () => {
 
 import {
   validateAndConvertBookingDates,
+  validateOwnerBookingDates,
   calculateBookingNights,
   normalizeToZagrebCivilDayUTC,
 } from "../src/utils/dateValidation";
@@ -199,5 +200,53 @@ describe("calculateBookingNights", () => {
         ts(new Date("2026-06-04T00:00:00Z"))
       )
     ).toThrow(/< 1 night/);
+  });
+});
+
+describe("validateOwnerBookingDates — owner-side variant", () => {
+  it("Accepts past check-in (owner recording historical stay)", () => {
+    // 30 days ago — would fail the widget validator.
+    const past = new Date();
+    past.setUTCDate(past.getUTCDate() - 30);
+    const pastPlus5 = new Date(past);
+    pastPlus5.setUTCDate(pastPlus5.getUTCDate() + 5);
+
+    const result = validateOwnerBookingDates(
+      past.toISOString(),
+      pastPlus5.toISOString()
+    );
+    expect(result.checkInDate).toBeDefined();
+    expect(result.checkOutDate).toBeDefined();
+  });
+
+  it("Normalizes to Zagreb civil day (parity with widget validator)", () => {
+    // Picker emits 2026-06-01T00:00:00+02:00 → UTC midnight 2026-06-01.
+    const result = validateOwnerBookingDates(
+      "2026-06-01T00:00:00+02:00",
+      "2026-06-04T00:00:00+02:00"
+    );
+    expect(result.checkInDate.toDate().toISOString()).toBe("2026-06-01T00:00:00.000Z");
+    expect(result.checkOutDate.toDate().toISOString()).toBe("2026-06-04T00:00:00.000Z");
+  });
+
+  it("Rejects check-out <= check-in", () => {
+    expect(() =>
+      validateOwnerBookingDates(
+        "2026-06-02T00:00:00+02:00",
+        "2026-06-02T00:00:00+02:00"
+      )
+    ).toThrow(/Check-out date must be after check-in date/);
+  });
+
+  it("Rejects missing check-in", () => {
+    expect(() =>
+      validateOwnerBookingDates(undefined, "2026-06-02T00:00:00+02:00")
+    ).toThrow(/Check-in date is required/);
+  });
+
+  it("Rejects unparseable dates", () => {
+    expect(() =>
+      validateOwnerBookingDates("not-a-date", "also-not-a-date")
+    ).toThrow();
   });
 });

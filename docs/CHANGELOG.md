@@ -2,7 +2,17 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-23 | **Version**: 6.86
+**Last Updated**: 2026-05-23 | **Version**: 6.87
+
+---
+
+**Changelog 6.87**: audit/23 PR-1 shipped + B demoted to P3 post-census (2026-05-23):
+
+- **PR #450 opened** (`fix/widget-counter-persist-badge-host`, commit `8c13e46d`) — audit/23 items A + C shipped together (same file `booking_widget_screen.dart`). **A:** `onAdultsChanged` / `onChildrenChanged` / `onPetsChanged` now call `_saveFormData()` after setState, mirroring the date picker (`:2398`) + pill bar (`:2788/:2799`) pattern. Counter selection survives iframe refresh instead of falling back to defaults (`adults:2, children:0, pets:0`). **A.1 sub-fix:** `PersistedFormData` gains a `pets` field (constructor + `toJson` + `fromJson` with `?? 0` default); restore path clamps to `_unit.maxPets` and respects `allowsPets` (mirrors the existing `maxGuests` clamp). **C:** `_PoweredByBadge` URL routes through `EnvironmentConfig.marketingHost` per the T13 host-literal centralization convention (`audit/08`, `.claude/rules/widget.md`). No runtime change today (`marketingHost === 'bookbed.io'` across all envs) — consistency-only. Net diff: 16 ins / 2 del across 2 files. `flutter analyze` 0 issues. Dart format hook green.
+- **Item B demoted P1 → P3** — Terminal FF census (CHANGELOG 6.86) returned **0 `in_progress` bookings** on both `bookbed-dev` (1 total, status `cancelled`) AND `rab-booking-248fc` (58 total: 29 `completed`, 19 `cancelled`, 10 `confirmed`). Deprecated top-level `/bookings/{id}` empty on both. No observed surface for the parity drift across `availability.ts:153` / `atomicBooking.ts:742` / `stripePayment.ts:604` — code-hygiene fix only, no migration risk. `audit/23` status footer updated to reflect. PR-2 reduces to Item D solo (`calculateBookingNights` same-civil-day validator, P2/XS).
+- **Branch race recurrence (new recovery pattern)** — `git add` succeeded on `fix/widget-counter-persist-badge-host`; parallel terminal then swapped HEAD back to `main` (3 new commits arrived: audit/22 Q2/Q3/Q4 resolutions + audit/25 + audit/26). My chained guard `[ "$(git branch --show-current)" = "fix/..." ] || exit 1` aborted commit cleanly. **Recovery:** `git reset HEAD <files>` to unstage from main → `git checkout fix/...` (working-tree mods follow, since they were unstaged) → restage + commit with same guard inline. No reflog rescue needed because changes never reached commit on the wrong branch. New nuance added to `memory/multi-agent-git-race.md` 2026-05-23 §3.
+- **audit/23 status footer updated** — PR-1 marked SHIPPED, B demotion noted, PR-2 scope reduced.
+- **CLAUDE.md index updated** — added audit/25 (E2E test catalog) + audit/26 (BB E2E findings: owner direct-write bypass + `provider_id` gap). Previous tail `audit/24` is now `audit/26`.
 
 ---
 

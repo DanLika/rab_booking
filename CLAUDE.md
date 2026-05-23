@@ -8,7 +8,7 @@
 - [CLAUDE_MCP_TOOLS.md](./docs/cloud-mcp-tools/CLAUDE_MCP_TOOLS.md) - MCP serveri, slash commands
 - [EMAIL_SYSTEM.md](./docs/features/email-templates/EMAIL_SYSTEM.md) - Email template-i, payment rok, reminders
 - [SECURITY_FIXES.md](./docs/SECURITY_FIXES.md) - Sigurnosne ispravke (SF-001, SF-002, ...)
-- [CHANGELOG.md](./docs/CHANGELOG.md) - Svi changelogi v4.6–v6.85
+- [CHANGELOG.md](./docs/CHANGELOG.md) - Svi changelogi v4.6–v6.87
 - [TODO.md](./docs/TODO.md) - Planirani zadaci (Website Docs, Admin Controls, Security Fixes)
 - [audit/11-cloudfunctions-inventory.md](./audit/11-cloudfunctions-inventory.md) - CF inventory (dev/prod), orphans, P0/P1/P2 cleanup (2026-05-21)
 - [audit/11-sentry-env-fix.md](./audit/11-sentry-env-fix.md) - Sentry env-tag fix + Gen 2 `GCLOUD_PROJECT` finding (2026-05-21)
@@ -20,6 +20,8 @@
 - [audit/22-prod-cutover-plan.md](./audit/22-prod-cutover-plan.md) - PROD cutover plan T11c + SF-023..026; canonical CF→widget→rules order; §8 open Qs Q1/Q5/Q6 user-input gated (2026-05-23)
 - [audit/23-misc-follow-ups.md](./audit/23-misc-follow-ups.md) - Tier 2D consolidated investigation: 4 deferred items doc-only (2026-05-23)
 - [audit/24-p3-backlog-investigations.md](./audit/24-p3-backlog-investigations.md) - P3 backlog from audit/21: getUnitIcalFeed region + getUnitAvailability logWarn + --release rule (2026-05-23)
+- [audit/25-e2e-test-catalog.md](./audit/25-e2e-test-catalog.md) - Comprehensive E2E test catalog: surfaces under test, gaps, runbook (2026-05-23)
+- [audit/26-bb-e2e-findings.md](./audit/26-bb-e2e-findings.md) - BB E2E findings consolidation: owner direct-write bypass + `provider_id` gap (2026-05-23)
 
 ---
 

@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/router_widget.dart';
 import 'core/utils/web_utils.dart'; // For hideNativeSplash
+import 'features/widget/presentation/providers/language_provider.dart';
 import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
@@ -136,12 +138,28 @@ class _BookingWidgetAppState extends ConsumerState<BookingWidgetApp> {
       brightness: Brightness.dark,
     );
 
+    // See widget_main.dart for rationale (audit/32 N1).
+    final languageCode = ref.watch(languageProvider);
+    final appLocale = Locale(languageCode);
+
     return MaterialApp.router(
       title: 'BookBed Widget (DEV)',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeModeEnum,
       routerConfig: router,
+      locale: appLocale,
+      supportedLocales: const [
+        Locale('hr'),
+        Locale('en'),
+        Locale('de'),
+        Locale('it'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
     );
   }
 

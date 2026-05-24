@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:bookbed/features/widget/presentation/l10n/widget_translations.dart';
 import 'package:bookbed/features/widget/presentation/widgets/booking/pill_bar_content.dart';
 import 'package:bookbed/features/widget/presentation/widgets/booking/compact_pill_summary.dart';
@@ -7,6 +8,12 @@ import 'package:bookbed/features/widget/presentation/widgets/booking/compact_pil
 WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('hr');
 
 void main() {
+  // audit/32 N1: CompactPillSummary now passes an explicit locale to
+  // DateFormat. Production initializes symbols in main(); mirror that here.
+  setUpAll(() async {
+    await initializeDateFormatting();
+  });
+
   group('PillBarContent', () {
     final testCheckIn = DateTime(2025, 1, 15);
     final testCheckOut = DateTime(2025, 1, 18);

@@ -1,9 +1,10 @@
 # Audit 37 — Admin Dashboard Smoke (TIER 4)
 
 **Date:** 2026-05-24
-**Target:** https://bookbed-admin.web.app
+**Target:** https://bookbed-admin.web.app (**PROD** — `rab-booking-248fc`)
+**DEV equivalent:** https://bookbed-admin-dev.web.app (`bookbed-dev`) — see §6 Path C
 **Branch:** doc/audit-37-admin-smoke (from main @ 79b4aea2)
-**Outcome:** **BLOCKED — gap report.** Smoke aborted at #E1 (cannot authenticate). No exploit attempted. No state mutated.
+**Outcome:** **BLOCKED — gap report.** Smoke aborted at #E1 (cannot authenticate). No exploit attempted. No state mutated. **Resume against DEV URL** after admin claim provisioning.
 
 ---
 
@@ -89,7 +90,7 @@ Indicates clean Flutter web boot (no Sentry-noisy plugin errors on `/login`). Ca
 
 ## 6. To resume smoke — Duško action required
 
-Choose one path; **A** is cleanest:
+**Verdict after Path C precheck:** smoke MUST move off the prod URL. Use **Path C** below. Paths A and B are retained for reference but supersede with Path C.
 
 ### Path A (recommended) — dedicated admin smoke account on `bookbed-dev`
 ```bash
@@ -112,8 +113,42 @@ Set `isAdmin` claim on existing `bookbed-test@bookbed.io` UID `GILVItIVP5R8WXfnM
 
 Trade-off: pollutes the vanilla-owner contract `memory/test-account.md` is built around — short window of "elevated" state could mask owner-flow regressions if both smokes run in parallel.
 
-### Path C — point admin dashboard at `bookbed-dev` test admin only
-Confirm `bookbed-admin.web.app` deploy points at `bookbed-dev` Firestore (not prod). The hosting target name doesn't disambiguate. Per CHANGELOG 6.31 `firebase.json` admin target was added — needs a `cat firebase.json` check to confirm which `--project` it deploys against. If prod, treat smoke as prod-touching and harden the account hygiene further.
+### Path C — point smoke at `bookbed-admin-dev.web.app` instead (RECOMMENDED — supersedes A/B)
+**Post-precheck finding:** `.firebaserc` confirms:
+- `bookbed-admin.web.app` → target `admin` under `rab-booking-248fc` (**PROD**)
+- `bookbed-admin-dev.web.app` → target `admin` under `bookbed-dev` (**DEV**)
+- `bookbed-admin-staging.web.app` → target `admin` under `bookbed-staging` (**STAGING**)
+
+This audit was scoped against the PROD dashboard URL. **Smoke should run against `bookbed-admin-dev.web.app`**, not prod. Re-pointing the target collapses Path A/B/C into a single action:
+
+```bash
+# 1. Verify dev admin site exists in Firebase Console (per hosting-build.md, site IDs must pre-exist)
+firebase hosting:sites:list --project bookbed-dev
+
+# 2. If admin dev site not yet built/deployed:
+flutter build web --release --target lib/admin_main.dart -o build/web_admin
+firebase deploy --only hosting:admin --project bookbed-dev
+
+# 3. Provision dev admin smoke account (firebase-admin SDK + bookbed-dev ADC):
+const admin = require('firebase-admin');
+admin.initializeApp({projectId: 'bookbed-dev'});
+const u = await admin.auth().createUser({
+  email: 'bookbed-smoke-admin@bookbed.io',
+  password: '<strong-random>',
+  emailVerified: true,
+  displayName: 'Smoke Admin'
+});
+await admin.auth().setCustomUserClaims(u.uid, {isAdmin: true});
+
+# 4. Save creds to memory/admin-smoke-account.md
+# 5. Re-run audit/37 against https://bookbed-admin-dev.web.app
+```
+
+**Why prod-pointing smoke is a non-starter:**
+- Any auth/login mutates `rab-booking-248fc` auth users.
+- Any list/detail screen exposes real owner PII.
+- Any accidental click on Grant/Revoke flips a real customer's `lifetime_license_*` fields + writes to `security_events`.
+- Even read-only smoke leaves Sentry breadcrumbs tagged `environment=production`.
 
 ---
 
@@ -138,11 +173,13 @@ Confirm `bookbed-admin.web.app` deploy points at `bookbed-dev` Firestore (not pr
 
 ## 9. Recommendation
 
-1. **Provision admin smoke account on `bookbed-dev`** (Path A) — adds <5 min of setup, removes the gating blocker for all future admin smoke runs.
-2. Re-run audit/37 after provisioning — should complete #E1–#E6 in ~10 min.
-3. **Update login footer copyright year** to 2026 (cosmetic, batchable with next admin deploy).
-4. **Confirm `firebase.json` admin target Firebase project** — record in `.claude/rules/admin.md` so future audits don't ambiguate which env the admin dashboard reads/writes.
-5. After PR #462 merge, re-audit #E2 to verify Firestore-role escape is closed at the rules layer.
+1. **Move smoke target to `bookbed-admin-dev.web.app` (Path C).** PROD admin dashboard MUST NOT be a smoke surface. Re-runs of audit/37 should explicitly state DEV URL.
+2. **Verify `bookbed-admin-dev` site is built + deployed** before provisioning — `firebase hosting:sites:list --project bookbed-dev` then deploy if missing. CHANGELOG 6.31 added the hosting target but did not document a DEV deploy.
+3. **Provision dev admin smoke account** (Path C step 3) and save to `memory/admin-smoke-account.md`.
+4. Re-run audit/37 against DEV URL — should complete #E1–#E6 in ~10 min.
+5. **Update login footer copyright year** to 2026 (cosmetic, batchable with next admin deploy).
+6. After PR #462 merge, re-audit #E2 to verify Firestore-role escape is closed at the rules layer.
+7. **Document admin-dashboard env mapping in `.claude/rules/admin.md`** (currently absent — `.claude/rules/hosting-build.md` documents the table but admin-specific safety rules should live in admin scope).
 
 ---
 

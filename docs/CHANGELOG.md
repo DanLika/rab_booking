@@ -2,7 +2,17 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-24 | **Version**: 6.89
+**Last Updated**: 2026-05-24 | **Version**: 6.90
+
+---
+
+**Changelog 6.90**: CLAUDE.md index backfill + audit/28 supersede note — Terminal F doc-refresh recovery (2026-05-24):
+
+- **CLAUDE.md index — audit/27 line added** (audit/27 doc landed in commit `dffaa0e3` 2026-05-23 but index entry was missed). Bundle deferred from 6.89 per its bullet "CLAUDE.md index update bundled separately to avoid colliding with concurrent agent's audit/27 entry + audit/28 A2 supersede annotation". Slot 27 → audit/27-bb-e2e-cc-reject.md.
+- **audit/28 §3.4 added — Option A landed via PR #462** — dormant-5 deletion (5 templates + 5 emailService.ts wrappers + 5 email/index.ts exports) is in `hotfix/role-escalation-deploy-unblock` (Terminal G atomic multi-fix). Verified `gh pr diff 462 --name-only`: all 5 dormant template files present. Terminal F's draft branch `chore/delete-dormant-5-email-templates` (commit `0e49f254`, never pushed) dropped via `git branch -D`. PR-B scope shrinks 18 → 13 templates. tsc + Jest verification (161/4, 4 pre-existing-on-main in `stripeConnect.test.ts`) preserved in `memory/dormant-5-email-templates.md`.
+- **audit/28 §1 exec summary annotated** — A2 row now shows "resolved via PR #462" with §3.4 ref.
+- **Multi-agent race §5/§6 — working-tree race** (uncommitted edit loss) — distinct from the §1-§4 commit-time class. Race fires BEFORE `git add` is reached, during plain edit-then-think pause; another agent's `git checkout` discards uncommitted working-tree edits. Triple-guard pattern protects commits but NOT plain edits. **Mitigation: `/tmp/bb-<task>` worktree-by-default for multi-agent sessions.** Doc recovery this commit used `git worktree add -b docs-refresh-tmp /tmp/bb-docs origin/main` — isolated from OG repo's working tree; zero risk to other agents' WIP. Pattern memorialized as §5/§6 in `memory/multi-agent-git-race.md`.
+- **Memory updated** — `memory/dormant-5-email-templates.md` "Delete-safety verified" section retained (memory dir is outside repo, race-immune). `memory/multi-agent-git-race.md` §5/§6 entry added with worktree mitigation pattern.
 
 ---
 

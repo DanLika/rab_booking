@@ -25,7 +25,7 @@
 | Surface | Status (this session) | Severity |
 |---|---|---|
 | 18-template `provider_id` matrix | ✅ Static: 18/18 templates still drop the id (despite mid-session `643403d6` wrapper migration — see §2.1) | per-audit/26: MEDIUM |
-| 5 DORMANT templates (no active CF caller) | 🆕 **NEW FINDING** — see §3 | LOW (dead code OR feature gap) |
+| 5 DORMANT templates (no active CF caller) | 🆕 **NEW FINDING** — see §3 — **resolved via PR #462** (Option A landed 2026-05-24, §3.4) | LOW (dead code OR feature gap) |
 | SPF gap — `bookbed.io` SPF excludes `_spf.resend.com` | 🆕 **NEW FINDING** — see §5.1 | LOW (deliverability optimization) |
 | `bookbed.io` DKIM + DMARC | ✅ DKIM present, DMARC `p=none` (monitoring) — §5 | — |
 | Resend dev delivery spot-check (6 templates) | ⏳ scripts ready, pending RESEND_API_KEY — §8 | — |
@@ -135,12 +135,18 @@ The wrappers exist at `functions/src/emailService.ts:647/702/799/862/926` but ha
 
 ### 3.3 Recommendation
 
-Two options to consider in a follow-up:
+Two options were considered:
 
 - **Option A — confirm intentional + delete dead code.** Delete 5 template files + 5 wrappers in `emailService.ts` + 5 V2 exports in `email/index.ts`. ~1–2h work, narrow PR. Scope down PR-B to 13 templates.
 - **Option B — wire missing CFs.** If product wants email parity with push (e.g., guests who opted out of push still get reminders), add CF calls inside `scheduledPushNotifications.{checkInTomorrowReminder,checkOutTodayReminder,pendingPaymentReminder}` + add cancellation/refund email send into `bookingManagement.onBookingStatusChange` and `stripePayment.handleStripeWebhook` (refund path).
 
-**Either decision requires product input.** This audit only flags the gap.
+### 3.4 Resolution — Option A landed via PR #462 (2026-05-24)
+
+PR #462 (`hotfix/role-escalation-deploy-unblock`, Terminal G — multi-fix atomic hotfix) bundles the dormant-5 deletion among other security fixes. Verified via `gh pr diff 462 --name-only`: all 5 template files (`owner-cancellation.ts`, `refund-notification.ts`, `check-in-reminder.ts`, `check-out-reminder.ts`, `payment-reminder.ts`) are in the diff.
+
+Terminal F's draft branch `chore/delete-dormant-5-email-templates` (commit `0e49f254`, never pushed) was made redundant and dropped 2026-05-24 (`git branch -D`). The tsc + Jest verification from the dropped branch (161/4 Jest, 4 failures pre-existing-on-main in `stripeConnect.test.ts`, no regression) is documented in `memory/dormant-5-email-templates.md`. Reflog retains `0e49f254` for 90 days if PR #462 has issues.
+
+PR-B scope shrinks: 18 → 13 templates touched in the eventual `provider_id` capture migration (audit/26 §5.7).
 
 ---
 

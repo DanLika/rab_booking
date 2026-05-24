@@ -163,9 +163,12 @@ describe("Stripe Connect Functions", () => {
     it("should throw an error if the owner document is not found", async () => {
       mockDb.collection().doc().get.mockResolvedValue({ exists: false });
 
+      // Post audit/16 SF-022 error-class hygiene (commit 319f7d0f):
+      // owner-missing rethrows the specific "not-found / Owner not found"
+      // sentinel rather than being wrapped in a generic "internal" error.
       const wrapped = wrap(createStripeConnectAccount);
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("internal", "Failed to create Stripe account.")
+        new HttpsError("not-found", "Owner not found")
       );
     });
   });
@@ -237,9 +240,10 @@ describe("Stripe Connect Functions", () => {
     it("should throw an error if the owner document is not found", async () => {
       mockDb.collection().doc().get.mockResolvedValue({ exists: false });
 
+      // audit/16 SF-022: owner-missing surfaces "not-found" cleanly.
       const wrapped = wrap(getStripeAccountStatus);
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("internal", "Failed to get account status.")
+        new HttpsError("not-found", "Owner not found")
       );
     });
   });
@@ -279,9 +283,10 @@ describe("Stripe Connect Functions", () => {
 
       const wrapped = wrap(disconnectStripeAccount);
 
-      // Act & Assert
+      // audit/16 SF-022: "no account to disconnect" surfaces as
+      // failed-precondition, not a generic internal wrap.
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("internal", "Failed to disconnect account.")
+        new HttpsError("failed-precondition", "No Stripe account connected")
       );
     });
 
@@ -295,8 +300,9 @@ describe("Stripe Connect Functions", () => {
     it("should throw an error if the owner document is not found", async () => {
       mockDb.collection().doc().get.mockResolvedValue({ exists: false });
       const wrapped = wrap(disconnectStripeAccount);
+      // audit/16 SF-022: owner-missing surfaces "not-found" cleanly.
       await expect(wrapped(validRequest)).rejects.toThrow(
-        new HttpsError("internal", "Failed to disconnect account.")
+        new HttpsError("not-found", "Owner not found")
       );
     });
   });

@@ -1,11 +1,27 @@
 // ignore_for_file: avoid_redundant_argument_values, prefer_const_constructors
 // Note: Explicit default values kept in tests for documentation clarity
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/core/exceptions/app_exceptions.dart';
 import 'package:bookbed/features/widget/data/helpers/availability_checker.dart';
 import 'package:bookbed/features/widget/data/helpers/booking_price_calculator.dart';
+import 'package:bookbed/features/widget/data/models/availability_window.dart';
+import 'package:bookbed/features/widget/domain/services/i_availability_repository.dart';
+
+/// In-memory fake for [IAvailabilityRepository] — see equivalent in
+/// `availability_checker_test.dart`. Lets the price calculator's
+/// `AvailabilityChecker` skip the live `getUnitAvailability` CF call.
+class _FakeAvailabilityRepository implements IAvailabilityRepository {
+  List<AvailabilityWindow> windows = const [];
+
+  @override
+  Future<List<AvailabilityWindow>> fetchAvailability({
+    required String propertyId,
+    required String unitId,
+    required DateTime start,
+    required DateTime end,
+  }) async => windows;
+}
 
 void main() {
   group('PriceCalculationResult', () {
@@ -231,28 +247,27 @@ void main() {
 
     group('calculate - availability check', () {
       test('throws DatesNotAvailableException when not available', () async {
-        // Add conflicting booking
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        // T11c: conflict comes from CF window list, not firestore bookings.
+        final fakeRepo = _FakeAvailabilityRepository()
+          ..windows = [
+            AvailabilityWindow(
+              start: DateTime(2024, 1, 15),
+              end: DateTime(2024, 1, 20),
+              source: AvailabilityWindowSource.booking,
+            ),
+          ];
 
         final calculatorWithChecker = BookingPriceCalculator(
           firestore: fakeFirestore,
-          availabilityChecker: AvailabilityChecker(fakeFirestore),
+          availabilityChecker: AvailabilityChecker(
+            fakeFirestore,
+            availabilityRepository: fakeRepo,
+          ),
         );
 
         expect(
           () => calculatorWithChecker.calculate(
+            propertyId: 'prop123',
             unitId: 'unit123',
             checkIn: DateTime(2024, 1, 17),
             checkOut: DateTime(2024, 1, 22),
@@ -264,12 +279,17 @@ void main() {
       });
 
       test('calculates price when available', () async {
+        final fakeRepo = _FakeAvailabilityRepository();
         final calculatorWithChecker = BookingPriceCalculator(
           firestore: fakeFirestore,
-          availabilityChecker: AvailabilityChecker(fakeFirestore),
+          availabilityChecker: AvailabilityChecker(
+            fakeFirestore,
+            availabilityRepository: fakeRepo,
+          ),
         );
 
         final result = await calculatorWithChecker.calculate(
+          propertyId: 'prop123',
           unitId: 'unit123',
           checkIn: DateTime(2024, 1, 15),
           checkOut: DateTime(2024, 1, 18),
@@ -284,24 +304,22 @@ void main() {
       test(
         'skips availability check when checkAvailability is false',
         () async {
-          // Add conflicting booking
-          await fakeFirestore.collection('bookings').add({
-            'unit_id': 'unit123',
-            'status': 'confirmed',
-            'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-            'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-            'guest_name': 'Test Guest',
-            'guest_email': 'test@test.com',
-            'property_id': 'prop123',
-            'total_price': 500.0,
-            'nights': 5,
-            'guests': 2,
-            'created_at': Timestamp.now(),
-          });
+          // Conflict in CF list is irrelevant because the check is disabled.
+          final fakeRepo = _FakeAvailabilityRepository()
+            ..windows = [
+              AvailabilityWindow(
+                start: DateTime(2024, 1, 15),
+                end: DateTime(2024, 1, 20),
+                source: AvailabilityWindowSource.booking,
+              ),
+            ];
 
           final calculatorWithChecker = BookingPriceCalculator(
             firestore: fakeFirestore,
-            availabilityChecker: AvailabilityChecker(fakeFirestore),
+            availabilityChecker: AvailabilityChecker(
+              fakeFirestore,
+              availabilityRepository: fakeRepo,
+            ),
           );
 
           // Should NOT throw because availability check is disabled
@@ -319,20 +337,7 @@ void main() {
       );
 
       test('skips check when no availabilityChecker provided', () async {
-        // Add conflicting booking
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        // Conflict data is ignored — no checker to enforce it.
 
         // Calculator without availability checker
         final calcNoChecker = BookingPriceCalculator(
@@ -355,24 +360,22 @@ void main() {
 
     group('calculateWithoutAvailabilityCheck', () {
       test('calculates price without checking availability', () async {
-        // Add conflicting booking
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        // Conflict in CF list is irrelevant — this entry point skips check.
+        final fakeRepo = _FakeAvailabilityRepository()
+          ..windows = [
+            AvailabilityWindow(
+              start: DateTime(2024, 1, 15),
+              end: DateTime(2024, 1, 20),
+              source: AvailabilityWindowSource.booking,
+            ),
+          ];
 
         final calculatorWithChecker = BookingPriceCalculator(
           firestore: fakeFirestore,
-          availabilityChecker: AvailabilityChecker(fakeFirestore),
+          availabilityChecker: AvailabilityChecker(
+            fakeFirestore,
+            availabilityRepository: fakeRepo,
+          ),
         );
 
         final result = await calculatorWithChecker

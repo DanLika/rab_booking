@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:bookbed/features/widget/presentation/l10n/widget_translations.dart';
 import 'package:bookbed/features/widget/presentation/widgets/booking/compact_pill_summary.dart';
 
 WidgetTranslations get testTranslations => WidgetTranslations.forLanguage('en');
 
 void main() {
+  // audit/32 N1: _DateRangeSection now passes an explicit locale to
+  // DateFormat, which requires the locale's symbols to be loaded. Production
+  // entries call this in main(); tests must mirror it.
+  setUpAll(() async {
+    await initializeDateFormatting();
+  });
+
   group('CompactPillSummary', () {
     final testCheckIn = DateTime(2024, 1, 15);
     final testCheckOut = DateTime(2024, 1, 18);

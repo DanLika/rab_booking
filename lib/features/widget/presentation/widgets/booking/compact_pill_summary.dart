@@ -177,16 +177,17 @@ class _DateRangeSection extends StatelessWidget {
     required this.colors,
   });
 
-  static final _dateFormat = DateFormat('MMM dd, yyyy');
-
-  /// Safely format date with fallback to simple format if DateFormat fails
-  ///
-  /// Returns formatted date string using DateFormat, or falls back to
-  /// simple format (YYYY-MM-DD) if formatting fails.
-  ///
-  /// Bug #39 Fix: Normalizes date and converts to local time if in UTC
-  /// to ensure consistent date display regardless of timezone.
+  // audit/32 N1: locale must be passed at DateFormat construction time —
+  // DateFormat captures locale once and ignores subsequent Intl.defaultLocale
+  // changes, so a static formatter would lock the date-range pill to system
+  // default (en_US) regardless of ?lang=. Construct per call with the active
+  // widget locale.
   String _formatDate(DateTime date) {
+    final formatter = DateFormat(
+      'MMM dd, yyyy',
+      translations.locale.languageCode,
+    );
+
     try {
       // Bug #39 Fix: Normalize date first (remove time components)
       final normalized = DateNormalizer.normalize(date);
@@ -196,7 +197,7 @@ class _DateRangeSection extends StatelessWidget {
       // the date is in local timezone to avoid timezone conversion issues
       final localDate = normalized.isUtc ? normalized.toLocal() : normalized;
 
-      return _dateFormat.format(localDate);
+      return formatter.format(localDate);
     } catch (e) {
       // Fallback to simple format if DateFormat.format() fails
       // This prevents app crashes from invalid DateTime or formatting errors

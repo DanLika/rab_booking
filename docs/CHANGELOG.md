@@ -857,8 +857,9 @@ All version history from v4.6 to v6.67.
   - **Fix**: Added `_showResendPasswordDialog()` that prompts for password before resending
   - Extracted `_startCooldown()` helper method for code reuse
 - **Initial Cooldown on Email Verification Screen**:
-  - Added 30-second initial cooldown when screen opens
+  - Added 60-second initial cooldown when screen opens (matches Firebase Auth `sendEmailVerification()` internal rate-limit window)
   - Prevents Firebase rate limit errors when user immediately clicks resend after registration
+  - **Correction 2026-05-24 (audit/35 F-Auth-D2)**: prior text in this entry said "30-second"; the actual shipped value has always been 60 s (`email_verification_screen.dart` `_startInitialCooldown`/`_startCooldown`). Doc fixed; behavior unchanged.
 - **RenderFlex Overflow Fix** (`logout_tile.dart`, `premium_list_tile.dart`):
   - Added `maxLines: 1` and `overflow: TextOverflow.ellipsis` to title and subtitle Text widgets
   - Fixes overflow on iOS simulator with long text

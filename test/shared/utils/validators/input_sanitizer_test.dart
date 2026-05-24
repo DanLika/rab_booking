@@ -188,11 +188,13 @@ void main() {
         expect(result, isNot(contains('<b>')));
       });
 
-      test('removes script tags but preserves letters', () {
+      test('removes script tags but preserves letters/digits', () {
         final input = 'John<script>alert(1)</script>Doe';
         final result = InputSanitizer.sanitizeName(input);
-        // Tags removed, but 'alert' letters remain (they're valid Unicode letters)
-        expect(result, 'JohnalertDoe');
+        // Tags removed; letters AND digits inside script body survive
+        // (XSS protection is `_htmlTagPattern` + `containsDangerousContent`,
+        // not the char-class allow-list — see audit/35 F-Auth-D1).
+        expect(result, 'Johnalert1Doe');
         expect(result, isNot(contains('<script>')));
       });
 
@@ -235,6 +237,21 @@ void main() {
 
       test('preserves Croatian characters', () {
         final input = 'Marko Perić-Zelić';
+        final result = InputSanitizer.sanitizeName(input);
+        expect(result, input);
+      });
+
+      test('preserves digits in name (audit/35 F-Auth-D1)', () {
+        // Trailing/embedded digits must survive sanitization
+        // ("BB Smoke C1" was being stored as "BB Smoke C")
+        final input = 'BB Smoke C1';
+        final result = InputSanitizer.sanitizeName(input);
+        expect(result, 'BB Smoke C1');
+      });
+
+      test('preserves Unicode digits across scripts', () {
+        // Arabic-Indic digits and Devanagari digits are valid \p{N}
+        final input = 'User ١٢٣';
         final result = InputSanitizer.sanitizeName(input);
         expect(result, input);
       });

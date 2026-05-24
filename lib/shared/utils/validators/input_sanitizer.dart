@@ -104,7 +104,7 @@ class InputSanitizer {
   ///
   /// - Removes HTML tags
   /// - Removes control characters
-  /// - Preserves Unicode letters, spaces, apostrophes, hyphens
+  /// - Preserves Unicode letters and digits, spaces, apostrophes, hyphens
   /// - Normalizes whitespace
   ///
   /// Returns sanitized name or null if invalid
@@ -121,10 +121,10 @@ class InputSanitizer {
     // Remove control characters
     sanitized = sanitized.replaceAll(_controlCharPattern, '');
 
-    // Allow only Unicode letters, spaces, apostrophes, hyphens
-    // Remove any other characters
+    // Allow only Unicode letters/digits, spaces, apostrophes, hyphens
+    // Remove any other characters (injection chars: < > ; / \ " = ( ) { } & $ etc.)
     sanitized = sanitized.replaceAll(
-      RegExp(r"[^\p{L}\s'\-]", unicode: true),
+      RegExp(r"[^\p{L}\p{N}\s'\-]", unicode: true),
       '',
     );
 

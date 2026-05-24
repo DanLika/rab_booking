@@ -61,3 +61,28 @@ paths:
 - Korisnik plaća: `totalPrice = roomPrice + servicesTotal`
 - Owner dobija: `totalPrice - stripeFee` (npr. 170€ → 167.73€)
 - `servicesTotal` parametar se UVIJEK šalje sa klijenta na server za validaciju
+
+---
+
+## Subscription Flow (`stripeSubscription.ts`) — platform billing
+
+Odvojen od guest booking checkout iznad. Ovaj flow je BookBed platform → owner (subscription tier).
+
+### Price ID allowlist — `ALLOWED_SUBSCRIPTION_PRICE_IDS`
+
+Post-PR #462: `createSubscriptionCheckoutSession` provjerava client-supplied `priceId` protiv allowlist učitanog iz `process.env.ALLOWED_SUBSCRIPTION_PRICE_IDS` (comma-separated). **Prazno = deny-all (fail-CLOSED).** `HttpsError "Price not allowed."` ako nije u listi.
+
+Per-env setup:
+- `functions/.env.bookbed-dev` — test mode `price_*` ID-evi (Stripe Test Dashboard)
+- `functions/.env.rab-booking-248fc` — live mode `price_*` ID-evi (Stripe Live Dashboard)
+- `functions/.env` — NEMA value (komentirano, prazno bi mask-alo per-env)
+
+⚠ **NE reuse test ID-eva u prod env ili obrnuto** — Stripe test/live su odvojeni računi; cross-use vraća `No such price`.
+
+Operator helper: `tool/setup-pr462-env.sh` (interactive wizard, valida `price_*` format, detektira test/live overlap).
+
+Detalji: `audit/38-pr462-env-prereq.md`.
+
+### Region drift caveat
+
+`stripeSubscription.ts` ne deklariše `region` → koristi firebase-functions v2 default `us-central1`. Ostali BookBed CF-ovi su `europe-west1`. Region drift je P3 follow-up (`audit/24`), trenutno nije blocker.

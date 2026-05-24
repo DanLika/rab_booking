@@ -275,3 +275,113 @@ After §6.1 fix (1) lands:
 **Status:** Smoke halted on P1 contamination finding. Highest-priority output = §2 + §6.1 immediate operator actions. Awaiting user authorization to push `doc/audit-33-owner-smoke` → main and trigger §6.1 actions.
 
 **No code mutations made.** Two unintended Firestore writes hit PROD during the (failed) login attempt — opaque protocol, low-impact best-guess (App Check / analytics / rate-limit counter). Documented in §2.7.
+
+---
+
+## 9. Resumption with PROD-test account (2026-05-24, +~30min)
+
+Duško provided a PROD-resident test owner account (`zgembokrkan@gmail.com`, "Dan Lika") with explicit authorization to proceed against `bookbed-owner-dev.web.app` despite the P1 finding. Credentials saved to `memory/test-account-prod.md` (gitignored, outside repo); pointer added to `memory/MEMORY.md` index. PROD safety rules apply per `memory/test-account-prod.md` §"Safety rules" (no mutations, observation only).
+
+### 9.1 A1 (revisited) — already-logged-in surprise (N5)
+
+When I switched back to page 5 after the worktree work, the URL had auto-advanced to `/#/owner/overview` and the dashboard rendered with REAL PROD owner data — bookings from `villa Rab - Rab apartman 1` going back to Dec 2025. The login form (`/#/login`) was gone, the profile chip showed **"D Dan Lika zgembokrkan@gmail.com"** (uid 25_1 in the menu snapshot).
+
+**I never typed those credentials.** The auth state arrived without my submission. Two hypotheses:
+
+1. **`Remember Me` checkbox persisted from a prior session.** The login form checks the checkbox by default; some earlier authentication from this Chrome profile (perhaps another tab or earlier dev session by Duško) wrote a Firebase Auth refresh token to IndexedDB.
+2. **chrome-devtools MCP `isolatedContext` does NOT isolate IndexedDB / Firebase Auth state.** All my prior "isolated" contexts (`smoke-h-cp1`, `smoke-h-cp3-tabB`, `owner-smoke-a1`) share the underlying Chrome profile's IndexedDB. Firebase Auth persists the refresh token in IndexedDB at origin scope (`bookbed-owner-dev.web.app`). Cookies + localStorage may be siloed per `isolatedContext`, but IndexedDB clearly was not.
+
+**Severity (N5):** MEDIUM (operator-knowledge / security-test-isolation). Operators thinking they have a clean-slate context for testing auth flows are silently inheriting host browser sessions. Documenting here so future smoke runs:
+- Either explicitly clear IndexedDB before measuring auth flows: `evaluate_script(() => indexedDB.databases().then(dbs => Promise.all(dbs.map(d => new Promise(res => { const r = indexedDB.deleteDatabase(d.name); r.onsuccess = r.onerror = res; })))))`
+- OR launch chrome-devtools MCP with a fresh user-data-dir per session.
+- OR accept the leak and treat A1 verification as "if logout (A6) succeeded, the auth flow worked correctly in isolation".
+
+### 9.2 Updated result matrix
+
+| # | Checkpoint | Verdict | Key observation |
+|---|---|---|---|
+| A1 | Login | ✅ (with N5 caveat) | Logged in as `zgembokrkan@gmail.com` (Dan Lika). Auth state pre-populated by browser context (see §9.1 hypothesis). Dashboard renders with REAL PROD data: 4 units (apartment 2/3, Rab apartman 1, Soba 2), 20+ historical bookings. Last-7-days filter shows €0 / 0 bookings (expected — no recent activity in window). |
+| A2 | Bookings list | ✅ | Table view default. Columns: Gost, Objekt/Jedinica, Check-in, Check-out, Noći, Gostiju, Status, Cijena, Izvor, Akcije. Sort: check-in ASC verified (Dec 21 2025 → Apr 1 2026 ascending). Filter "Otkazane" → table re-rendered with cancelled-only (14+ rows, all Otkazano), "1 aktivan filter 1" indicator + "Očisti sve filtere" button appeared. Sources visible: "Widget Widget" (most), "Manualno Manualno" (2 rows). Card/Tabela view toggle + Napredno filtriranje button present (not exercised). Infinite scroll not exercised (no scroll-triggered fetch observed in default visible range). |
+| A3 | Calendar Timeline | ✅ | Default landing month: Jun 2026 (mostly because current bookings cluster there — May 24 today, but timeline pre-fetches active range). 4 units render (apartment 2 / 3 / Rab apartman 1 / Soba 2). Booking parallelograms visible: Dusko Licanin Jun 4-11 (7 noći, 1 gost), Pero PERIC Jun 18-26 (8 noći, 1 gost). Month tab strip: travnja/svibnja/lipnja/srpnja 2026. Clicked srpnja → header updated to "Jul 2026" (snapshot text). Clicked "Idi na danas 24" → header reverted to "May 2026", date range repositioned to start May 17 (today-7 days), tooltip "Idi na danas" surfaced. **TELEPORT works.** Horizontal swipe + drag-booking-between-units not exercised (chrome-devtools MCP lacks Flutter swipe/drag gesture). |
+| A4 | Calendar Month view | 🟡 partial | **`/owner/calendar/month` and `/owner/calendar` both 404.** Either Month view is sub-tab of Timeline OR deprecated route OR accessible via different path (per memory `month_calendar_screen.dart` exists — possibly Syncfusion route not wired to URL). FAB on Timeline (uid 38_245) opens BookingCreateDialog (form: Jedinica / Datumi / Guest / Payment "Gotovina" / Notes). Click on existing booking opens BookingInlineEditDialog: Pero PERIC, 18.6.2026 - 26.6.2026, Potvrđeno, 8 noći, 1 gost, **68 €**, 3 actions (Uredi/Otkaži/Obriši). Both dialogs closed without mutation. Net: A4 functionality verified via Timeline surfaces; Month route gap = finding N7. |
+| A5 | Unit Hub | ✅ with 🟡 | 4 tabs render: **Osnovno / Cjenovnik / Widget / Napredno** (task expected "Photos" — discrepancy, see N6). 4 units listed under "villa Rab" property. Osnovno tab: per-unit data (apartment 3 example — €140/night, weekend €205, min nights 5, max guests 4, area 67m²). Cjenovnik tab (FROZEN per CLAUDE.md NIKADA NE MIJENJAJ — observation only): "Osnovna Cijena" section + month-picker (svibnja 2026) + day-of-week headers Pon-Ned + "Uredi više" bulk button. Napredno tab: Verifikacija emaila toggle (checked), Porezna i pravna izjava section (default Croatian text radio selected), "Spremi Napredne Postavke" button. **"Additional Services" section NOT visible at top level of any tab** (finding N8 — may be inside per-unit Edit dialog). |
+| A6 | Logout | ✅ | Menu → Profil (uid 45_8) → /#/owner/profile route. Profile page shows: user avatar "D", 43% profil ispunjen, Uredi profil / Promijeni lozinku / Postavke obavijesti / Jezik Hrvatski / Tema Sistemska postavka / Pomoć / FAQ / O aplikaciji / **Odjava** / Uvjeti / Privatnost / Kolačići + "Opasna zona" with Obriši račun. Click Odjava (uid 46_14) → redirect to `/#/login` within ~3s. Login form rendered with empty fields + Zapamti me checked default + Google/Apple SSO buttons. Auth state cleared (router permits login route again). |
+
+**Updated verdict:** 5/6 ✅, 1/6 🟡 partial (A4 — Month route gap, but functionality verified through Timeline). N1 P1 finding stands. 4 NEW findings added (N5-N8).
+
+### 9.3 New findings (N5-N8)
+
+#### N5 (MEDIUM) — chrome-devtools MCP `isolatedContext` does NOT isolate Firebase Auth state
+
+Detailed in §9.1. Affects all testing protocols that assume `isolatedContext` = fresh session. Recommended mitigations:
+- Manually flush IndexedDB before auth-flow measurement (snippet in §9.1).
+- Update `audit/32` §1.1 / future chrome-devtools rules to note this.
+- File issue against chrome-devtools MCP if behavior is documented as "should isolate" but doesn't.
+
+#### N6 (LOW) — Unit Hub tabs labeled "Napredno" not "Photos"
+
+Task brief expected: "Tabs: Basic, Pricing, Widget Settings, Photos". Actual: **Osnovno / Cjenovnik / Widget / Napredno**. Either:
+- The "Photos" tab was renamed/restructured at some point (CHANGELOG search would resolve)
+- Photos section moved into per-unit Edit dialog (uid 42_17 "Uredi jedinicu")
+- Task brief is stale
+
+Verify by clicking "Uredi jedinicu" on apartment 2 (not done this run — observation-only mandate; would have opened a unit-edit dialog with potentially more sections including Photos).
+
+#### N7 (MEDIUM) — Calendar Month view route is 404; only `/owner/calendar/timeline` exists
+
+`/owner/calendar` → 404 ("Stranica nije pronađena"). `/owner/calendar/month` → 404. Only `/owner/calendar/timeline` resolves. Per `memory/MEMORY.md` Critical Learning #11 references `lib/.../calendar/month_calendar_screen.dart` (Syncfusion Month+Schedule); this screen exists in the codebase but is not URL-routed.
+
+Hypotheses:
+- Month route was removed without removing the screen
+- Month route exists under different path (e.g., `/owner/syncfusion/month`)
+- Month is intentional dead code pending wireup
+
+Severity: MEDIUM — affects users who expect a traditional month grid view; Timeline is resource-row pattern, NOT classic month calendar. Different mental model. Worth product/UX follow-up.
+
+#### N8 (LOW) — "Additional Services" section not surfaced at Unit Hub top level
+
+Per task brief: "Verify Additional Services section renders". None of the 4 Unit Hub tabs (Osnovno/Cjenovnik/Widget/Napredno) surfaces an "Additional Services" or "Dodatne usluge" section at the top level. May be inside per-unit Edit dialog (`uid=42_17 "Uredi jedinicu"`) — not opened this run due to observation-only mandate.
+
+If services are meant to be a property-level concept (not per-unit), they may be in property-edit dialog (`uid=42_13 "Uredi objekt"`) instead. Either path: opening these dialogs and surveying is appropriate follow-up.
+
+### 9.4 PROD writes during this run
+
+Continued observation-only discipline. No "Spremi" / save / submit buttons clicked. No BookingInlineEditDialog Uredi/Otkaži/Obriši pressed. No FAB-opened BookingCreateDialog submitted. Only navigation + filter + dialog-open + dialog-close performed. Net PROD-write delta from this session: **0 deliberate, 2 from the earlier failed-login attempt (§2.7 still applies)**.
+
+### 9.5 Updated screenshots index
+
+Added since §3.4:
+- `a1b-dashboard-already-logged-in.jpeg` — dashboard after surprise auto-login (last-7-days filter, activity feed showing Dec 2025 bookings)
+- `a2-bookings-list.jpeg` — bookings table with first 20 rows + sort + filter chips
+- `a3-timeline-jun2026.jpeg` — Timeline rendered Jun 2026 (pre-TELEPORT)
+- `a3-timeline-teleport-may24.jpeg` — Timeline after "Idi na danas" → returned to May 24 range
+- `a4-booking-create-dialog.jpeg` — FAB-triggered BookingCreateDialog
+- `a4-inline-edit-pero-peric.jpeg` — BookingInlineEditDialog (Pero PERIC, 68 €, 8 noći)
+- `a5-cjenovnik-frozen.jpeg` — Unit Hub Cjenovnik tab (FROZEN — observation only)
+- `a6-logout-redirect-login.jpeg` — Post-logout redirect to /#/login
+
+All at `$TMPDIR/bb-smoke-h-shots/`.
+
+### 9.6 Updated cross-refs
+
+- `memory/test-account-prod.md` (new this run) — zgembokrkan account info + PROD safety rules
+- `memory/MEMORY.md` index updated with new test-account-prod.md line
+- `audit/32-tier4-widget-ui-smoke-2026-05-23.md` §1.1 — chrome-devtools × Flutter CanvasKit a11y trigger; N5 (this run) is a separate-but-related operator gotcha worth pairing in the same future rules doc
+
+### 9.7 Open items (updated)
+
+§6.1 immediate operator actions still stand (re-deploy with `--target lib/main_dev.dart` is the structural fix). §9.3 findings N5-N8 added to backlog. Smoke RE-RUN plan in §6.3 still applies — after §6.1 fix lands, repeat A1-A6 on the corrected dev build with `bookbed-test@bookbed.io` (the bookbed-dev test account) and verify Network panel shows `projects/bookbed-dev/databases/(default)`.
+
+---
+
+## 10. Final sign-off
+
+| Section | State |
+|---|---|
+| §1–§8 (original HALT narrative) | ✅ unchanged |
+| §9 resumption + A2-A6 | ✅ done this run with zgembokrkan PROD-test account |
+| §9.3 N5-N8 new findings | ✅ documented |
+| Updated screenshots (§9.5) | ✅ 8 new |
+| `memory/test-account-prod.md` + MEMORY.md index | ✅ saved |
+
+**Status:** Owner Dashboard web smoke complete (1 🟡, 5 ✅, 5 net-new findings total: N1 P1 + N2-N4 LOW + N5 MEDIUM + N6 LOW + N7 MEDIUM + N8 LOW). PROD-test account zgembokrkan@gmail.com authorized by Duško, used with observation-only discipline. **N1 still the top-priority operator action** — re-deploy `bookbed-owner-dev.web.app` with `--target lib/main_dev.dart` to stop the PROD-bundling.

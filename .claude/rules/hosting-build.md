@@ -43,13 +43,29 @@ paths:
 
 Site IDs za `-dev` i `-staging` MORAJU postojati u Firebase Console prije deploy-a (target mapping ne kreira ih).
 
-Dart entrypoints po env: `lib/main.dart` (prod), `lib/main_dev.dart`, `lib/main_staging.dart` + matching `firebase_options{,_dev,_staging}.dart`. Admin nema dev entrypoint (samo prod + staging).
+Dart entrypoints po env:
+
+| Surface | DEV | STAGING | PROD |
+|---|---|---|---|
+| Owner dashboard | `lib/owner_main_dev.dart` | `lib/main_staging.dart` | `lib/main_prod.dart` |
+| Booking widget | `lib/widget_main_dev.dart` | `lib/widget_main_staging.dart` | `lib/widget_main.dart` |
+| Admin dashboard | **MISSING** (TODO: create `lib/admin_main_dev.dart`) | `lib/admin_main_staging.dart` | `lib/admin_main_production.dart` |
+
+`firebase_options{,_dev,_staging}.dart` — auto-applied by entry point's `Firebase.initializeApp(options: ...)`. Each non-PROD entry point also calls `EnvironmentConfig.setEnvironment(Environment.X)` AND asserts the runtime project ID matches the expected env in `kDebugMode` (defense-in-depth against the contamination class documented in `audit/14` + `audit/15` + `audit/33`).
+
+**⚠️ NIKADA NE BUILDAJ `--target lib/main.dart` ZA DEV/STAGING DEPLOY.** `lib/main.dart` uses PROD `DefaultFirebaseOptions` directly via its standalone `main()` (line 77+), bypassing all env asserts. It exposes `runMainApp()` for env-specific entry points to call after init — `lib/main_prod.dart`, `lib/owner_main_dev.dart`, `lib/main_staging.dart` are the canonical entries. Building `--target lib/main.dart` for dev/staging hosting silently bakes PROD options into the bundle.
 
 ### Footgun: hardcoded prod project ID
 `lib/features/owner_dashboard/presentation/screens/ical/ical_export_list_screen.dart:211` hardkodira `const projectId = 'rab-booking-248fc'`. Dev build-ovi će generirati iCal export URL-ove koji pokazuju na PROD Cloud Functions. Zamijeniti s `EnvironmentConfig.firebaseProjectId` prije dev deploy-a.
 
 ### Footgun: GitHub Actions workflow
-`.github/workflows/deploy-widget.yml:57` hardkodira `projectId: rab-booking-248fc`. Workflow trenutno radi samo na prod.
+`.github/workflows/deploy-widget.yml:57` hardkodira `projectId: rab-booking-248fc`. Workflow trenutno radi samo na prod. Equivalent owner + admin dev/staging deploy workflows do NOT exist — all non-prod deploys are manual.
+
+### Footgun (resolved 2026-05-24, audit/33): dev hosting served PROD-options build
+`bookbed-owner-dev.web.app` was deployed with `--target lib/main.dart` (PROD options bundled). Firestore writes landed in `rab-booking-248fc` (PROD) instead of `bookbed-dev`. Fix: redeploy via `tool/deploy-dev.sh owner` (uses `--target lib/owner_main_dev.dart`). Verify post-redeploy: open `bookbed-owner-dev.web.app` → DevTools Network → Firestore requests should target `projects/bookbed-dev/databases/(default)`. Same risk class for `bookbed-admin-dev.web.app` (admin lacks dev entry point — TODO above).
+
+### Footgun: owner dashboard has no env-overlay env var system
+All per-env behavior is baked at build time. There's no way to ship one bundle that switches env via URL/cookie. Always rebuild on env change.
 
 ## Functions env layering po projektu
 
@@ -59,22 +75,69 @@ Trenutno postoji samo `.env.rab-booking-248fc`. Za `bookbed-dev` deploy: kreirat
 
 ## Build commands
 
-```bash
-# Owner dashboard
-flutter build web --release --target lib/main.dart -o build/web_owner
+**Prefer `tool/deploy-dev.sh` over manual builds for dev** — wraps the right `--target` + `--project` per surface and refuses to deploy with PROD options to dev hosting.
 
-# Booking widget
+### PROD builds (manual or via deploy-widget.yml CI)
+
+```bash
+# Owner dashboard — PROD entry point, NOT lib/main.dart
+flutter build web --release --target lib/main_prod.dart -o build/web_owner
+
+# Booking widget — PROD
 flutter build web --release --target lib/widget_main.dart -o build/web_widget
 
-# Admin dashboard
-flutter build web --release --target lib/admin_main.dart -o build/web_admin
+# Admin dashboard — PROD (the only env admin currently has)
+flutter build web --release --target lib/admin_main_production.dart -o build/web_admin
 
-# Deploy all
-firebase deploy --only hosting
+# Deploy all PROD targets
+firebase use production && firebase deploy --only hosting
 
 # Deploy admin only
-firebase deploy --only hosting:admin
+firebase use production && firebase deploy --only hosting:admin
 ```
+
+### DEV builds (use `tool/deploy-dev.sh` wrapper instead)
+
+```bash
+# Owner dashboard — DEV (uses bookbed-dev Firebase project)
+tool/deploy-dev.sh owner
+
+# Equivalent manual incantation:
+flutter build web --release --target lib/owner_main_dev.dart -o build/web_owner
+firebase deploy --only hosting:owner --project bookbed-dev
+
+# Booking widget — DEV
+tool/deploy-dev.sh widget
+# == flutter build web --release --target lib/widget_main_dev.dart -o build/web_widget
+#  + firebase deploy --only hosting:widget --project bookbed-dev
+
+# Admin dashboard — DEV NOT YET AVAILABLE (no admin_main_dev.dart — see TODO above)
+```
+
+### STAGING builds
+
+```bash
+# Owner dashboard — STAGING
+flutter build web --release --target lib/main_staging.dart -o build/web_owner
+firebase deploy --only hosting:owner --project bookbed-staging
+
+# Booking widget — STAGING
+flutter build web --release --target lib/widget_main_staging.dart -o build/web_widget
+firebase deploy --only hosting:widget --project bookbed-staging
+
+# Admin dashboard — STAGING
+flutter build web --release --target lib/admin_main_staging.dart -o build/web_admin
+firebase deploy --only hosting:admin --project bookbed-staging
+```
+
+### Post-deploy verification
+
+After any non-PROD hosting deploy, open the URL → DevTools Network → confirm the first Firestore request targets the expected project:
+- DEV → `projects/bookbed-dev/databases/(default)`
+- STAGING → `projects/bookbed-staging/databases/(default)`
+- PROD → `projects/rab-booking-248fc/databases/(default)`
+
+If wrong, you bundled the wrong entry point — redeploy with correct `--target`.
 
 ## Klijent subdomene
 

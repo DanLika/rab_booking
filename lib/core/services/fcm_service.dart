@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import '../config/environment.dart';
 import '../services/logging_service.dart';
 
 /// FCM Push Notification Service
@@ -15,10 +16,11 @@ import '../services/logging_service.dart';
 /// Web Push: Requires VAPID key from Firebase Console
 /// (Project Settings → Cloud Messaging → Web Push certificates)
 class FcmService {
-  // VAPID key for web push notifications
-  // From Firebase Console: Project Settings → Cloud Messaging → Web Push certificates
-  static const String _vapidKey =
-      'BJ34pleaflOU2jRZNOSkKt1K_-DXsepYhUlCwSrmQfX8HrlTqr5d2HTH6UODaZiwkvideADX_yTcCpLOTNwkIzM';
+  // VAPID public key for web push, resolved per env from EnvironmentConfig.
+  // Empty string on DEV/STAGING until operator pastes the corresponding key
+  // (Firebase Console → Cloud Messaging → Web Push certificates). See
+  // EnvironmentConfig.vapidKey + audit/33 §11.4.
+  String get _vapidKey => EnvironmentConfig.vapidKey;
   static final FcmService _instance = FcmService._internal();
   factory FcmService() => _instance;
   FcmService._internal();
@@ -54,8 +56,11 @@ class FcmService {
     if (_initialized) return;
 
     // Check if VAPID key is configured for web
-    if (kIsWeb && _vapidKey == 'YOUR_VAPID_KEY_HERE') {
-      debugPrint('[FCM] Web push: VAPID key not configured');
+    if (kIsWeb && (_vapidKey.isEmpty || _vapidKey == 'YOUR_VAPID_KEY_HERE')) {
+      debugPrint(
+        '[FCM] Web push: VAPID key not configured for '
+        '${EnvironmentConfig.firebaseProjectId}',
+      );
       return;
     }
 

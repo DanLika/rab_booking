@@ -19,7 +19,9 @@ paths:
 | `web/firebase-messaging-sw.js` | Service Worker za background notifications |
 | `functions/src/fcmService.ts` | Cloud Functions - šalje push notifikacije |
 
-**VAPID Key**: Hardcoded u `fcm_service.dart` (linija 18-19)
+**VAPID Key**: Per-env getter `EnvironmentConfig.vapidKey` (since audit/33 §11.4 / 2026-05-24). PROD slot populated; DEV + STAGING are empty placeholders awaiting operator paste from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates. `FcmService.initialize()` returns early on web when the slot is empty (silent disable) — so DEV/STAGING ship without FCM until the VAPID is filled in. `fcm_service.dart:_vapidKey` is now an instance getter, not a `static const`.
+
+**Service Worker env-switching** (since audit/33 §11.4): `web/firebase-messaging-sw.js` selects its Firebase config from a 3-env map keyed on `self.location.hostname` (DEV ↔ `*-dev.web.app` + `localhost`, STAGING ↔ `staging.*.bookbed.io` + `*-staging.web.app`, PROD ↔ `app.bookbed.io` + `view.bookbed.io` + `*.view.bookbed.io` + `bookbed-admin.web.app`). Default = PROD with a `console.warn`. The hostnames listed there MUST stay in sync with `lib/core/config/environment.dart` (`dashboardHost` / `widgetHost`) and `lib/firebase_options{,_dev,_staging}.dart` web blocks. **Three `nosemgrep` suppressions** mark the public Firebase web `apiKey` values inside the config map (Firebase web apiKey is a public client identifier — see header comment in the file).
 
 ## Token Storage
 

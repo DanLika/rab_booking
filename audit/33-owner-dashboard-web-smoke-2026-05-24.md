@@ -461,3 +461,79 @@ After PR #466 merged + `tool/deploy-dev.sh owner` re-deploy, captured runtime HA
 | `bookbed-owner-dev.web.app` | not run | ✅ HAR clean (this §) | ✅ PASSED |
 | `bookbed-widget-dev.web.app` | pending | `audit/32` partial (CF only) | ⏳ PENDING — capture HAR after `tool/deploy-dev.sh widget` re-run |
 | `bookbed-admin-dev.web.app` | pending | n/a | ⏳ BLOCKED on PR #467 merge → `tool/deploy-dev.sh admin` |
+
+### 11.4 HAR follow-up findings (PR #468 candidate, 2026-05-24)
+
+The same owner-DEV HAR that confirmed §11.3 contamination-clean also surfaced 3 non-contamination issues. Tracker:
+
+| # | Sev | Finding | Status |
+|---|---|---|---|
+| H1 | P0 | `sendPasswordResetEmail` CF returns 500 INTERNAL ("Password reset temporarily unavailable") on DEV after ~4 s | **Operator action required** — see §11.4.1 |
+| H2 | P1 | FCM register returns 401 UNAUTHENTICATED on `bookbed-dev` origin — PWA push broken | **Code fix landed** — see §11.4.2 |
+| H3 | P3 | `accounts:lookup` polled every 3 s (16 hits in 39 s) during email verification | **Deferred (by-design UX)** — see §11.4.3 |
+
+#### 11.4.1 H1 — Password reset 500 INTERNAL (operator action only)
+
+Catch block at `functions/src/passwordReset.ts:172-183` maps three Firebase Admin failures (`auth/unauthorized-continue-uri`, `INTERNAL ASSERT FAILED`, `Unable to create the email action link`) to the user-facing "Password reset is temporarily unavailable" message. All three trip when `auth.generatePasswordResetLink()` is called with a `continueUrl` whose host is not in the project's Authorized Domains list.
+
+**Root cause:** `functions/.env.bookbed-dev` does not exist (per `.claude/rules/hosting-build.md` §"Functions env layering"). Without it, `PASSWORD_RESET_REDIRECT_URL` falls back to the `.env` default → `https://app.bookbed.io/forgot-password` (PROD host). Calling `generatePasswordResetLink({url: 'https://app.bookbed.io/...'})` against the `bookbed-dev` project rejects because `app.bookbed.io` is not in bookbed-dev's Auth Authorized Domains.
+
+**No code fix possible** — accepting unauthorized continue URIs would defeat the Firebase Auth security model. Operator action:
+
+```bash
+# 1. Create functions/.env.bookbed-dev with the DEV-specific overrides:
+cat > functions/.env.bookbed-dev <<'EOF'
+FROM_EMAIL=noreply@bookbed.io
+FROM_NAME=BookBed (Dev)
+WEB_APP_URL=https://bookbed-owner-dev.web.app
+PASSWORD_RESET_REDIRECT_URL=https://bookbed-owner-dev.web.app/forgot-password
+WIDGET_URL=https://bookbed-widget-dev.web.app
+BOOKING_DOMAIN=bookbed-widget-dev.web.app
+EOF
+
+# 2. Confirm bookbed-owner-dev.web.app is in bookbed-dev Authorized Domains
+#    Firebase Console → bookbed-dev → Authentication → Settings → Authorized domains
+#    (Firebase Hosting *.web.app domains are auto-authorized — verify still present.)
+
+# 3. Redeploy the function so it picks up the new env file:
+cd functions && firebase deploy --only functions:sendPasswordResetEmail --project bookbed-dev
+```
+
+Staging needs the same treatment with `functions/.env.bookbed-staging` (no staging env file exists either).
+
+#### 11.4.2 H2 — FCM register 401 UNAUTHENTICATED (code fix landed)
+
+`POST https://fcmregistrations.googleapis.com/v1/projects/bookbed-dev/registrations` returned `401 UNAUTHENTICATED: Request is missing required authentication credential. Expected OAuth 2 access token, login cookie or other valid authentication credential.` 2 of 3 attempts in the HAR window failed.
+
+**Root cause:** `web/firebase-messaging-sw.js` hardcoded `projectId: 'rab-booking-248fc'` + matching `apiKey` / `authDomain` / `storageBucket`. Same contamination class as F-OwnerDashboard-001 (§2), but on the service-worker file rather than the Flutter bundle. On `bookbed-owner-dev.web.app`, the SW initialized Firebase against PROD project credentials. When `firebase.messaging().getToken()` triggered FCM registration, the request's origin (`bookbed-dev` hosting) did not match the project context (PROD per the SW init), and the FCM API rejected.
+
+Same SW also hardcoded `clientUrl.hostname === 'app.bookbed.io'` in the notification-click `clients.matchAll()` loop — DEV/STAGING windows would never be matched, breaking notification-click focus on non-PROD environments.
+
+**Fix (this PR):**
+- `web/firebase-messaging-sw.js` — added per-env `FIREBASE_CONFIGS` (production/staging/development); `pickEnvByHostname(self.location.hostname)` selects at SW startup. Fallback = production (preserves legacy behavior when host is unknown — logs a warning). `notificationclick` handler now matches `clientUrl.hostname === self.location.hostname` instead of hardcoded `app.bookbed.io`.
+- `lib/core/config/environment.dart` — added `vapidKey` getter (PROD = current value, DEV/STAGING = empty placeholders pending operator paste from Firebase Console → Cloud Messaging → Web Push certificates).
+- `lib/core/services/fcm_service.dart` — `_vapidKey` is now an instance getter sourced from `EnvironmentConfig.vapidKey`. The early-return guard at the top of `initialize()` now treats empty string as "not configured" (alongside the legacy `YOUR_VAPID_KEY_HERE` sentinel), preventing a `getToken(vapidKey: '')` failure on DEV before operator paste.
+
+**Operator action (post-merge, before FCM works on DEV/STAGING):** Generate or copy the DEV + STAGING VAPID public keys from Firebase Console → Project Settings → Cloud Messaging → Web Push certificates and paste into the two TODO slots in `lib/core/config/environment.dart` (`Environment.development` + `Environment.staging`). Without this, FCM is silently disabled on DEV/STAGING (current behavior is silent breakage with 401 — strict improvement).
+
+Semgrep flagged the three Firebase web `apiKey` values inside the SW as "Generic API Key". Suppressed with `nosemgrep` per-line + a header comment pointing at the Firebase docs: web `apiKey` is a public client identifier, not a secret (access control is enforced by Auth + Security Rules, not the apiKey). The values mirror `lib/firebase_options{,_dev,_staging}.dart` and are already shipped publicly in every web bundle.
+
+#### 11.4.3 H3 — `accounts:lookup` 3 s polling (deferred, by-design UX)
+
+`lib/features/auth/presentation/screens/email_verification_screen.dart:35` polls `_checkVerificationStatus()` every 3 s via `Timer.periodic`. That helper calls `User.reload()` + `getIdToken(true)` (per `lib/core/providers/enhanced_auth_provider.dart:1195-1201`), each of which triggers an `accounts:lookup` against Firebase Identity Toolkit. Sit on the screen 40 s without clicking the verification link → 16 hits. Industry-normal cadence (Stripe, GitHub do similar) but not free at scale.
+
+**Not fixing now.** Optional future tuning if quota or latency telemetry flags it:
+- Bump interval to 5–10 s
+- Exponential backoff: 3 → 5 → 10 → 30 s cap
+- Stop polling after N attempts (~5 min); require "Provjeri ponovo" button thereafter
+- Pause polling when `document.visibilitychange` says the tab is hidden
+
+Added to backlog. No code change in this PR.
+
+### 11.5 PR ledger (updated)
+
+| PR | Branch | Scope | Status |
+|---|---|---|---|
+| #466 | `fix/audit-33-deploy-contamination` | Owner + widget DEV entry points + tool/deploy-dev.sh (2 surfaces) | ✅ Merged 2026-05-24 (`ae1b18f3`) |
+| #467 | `fix/audit-33-admin-dev` | Admin DEV entry point + tool/deploy-dev.sh admin case + hosting-build.md TODO close | Open, awaiting merge |
+| #468* | `fix/audit-33-har-followups` | H2 SW env-switched config + env-aware VAPID + H1/H3 documented | Open, awaiting merge (\*PR# TBD on push) |

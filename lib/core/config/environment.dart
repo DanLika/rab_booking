@@ -108,4 +108,22 @@ class EnvironmentConfig {
         return 'warning';
     }
   }
+
+  /// VAPID public key for Firebase Cloud Messaging web push.
+  /// Each Firebase project mints its own VAPID key pair under
+  /// Firebase Console → Project Settings → Cloud Messaging → Web Push certificates.
+  /// Empty string = "not configured" → FcmService.initialize() returns early on web
+  /// rather than calling `getToken(vapidKey: '')` (which would fail with INVALID_ARGUMENT).
+  /// Operator: paste each env's public key here. PROD value is committed; DEV/STAGING
+  /// pending Firebase Console copy. Tracking: audit/33 §11.4.
+  static String get vapidKey {
+    switch (_current) {
+      case Environment.production:
+        return 'BJ34pleaflOU2jRZNOSkKt1K_-DXsepYhUlCwSrmQfX8HrlTqr5d2HTH6UODaZiwkvideADX_yTcCpLOTNwkIzM';
+      case Environment.staging:
+        return ''; // TODO: paste bookbed-staging VAPID key from Firebase Console
+      case Environment.development:
+        return ''; // TODO: paste bookbed-dev VAPID key from Firebase Console
+    }
+  }
 }

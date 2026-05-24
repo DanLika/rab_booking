@@ -168,7 +168,7 @@ await firebase_auth.confirmPasswordReset(auth, oobCode, 'BookBedReset2026!');
 
 ## §4 — Findings
 
-### F-Auth-D1 — DisplayName digit stripping (NEW)
+### F-Auth-D1 — DisplayName digit stripping (NEW) — ✅ RESOLVED PR #470
 
 **Severity**: MED (data integrity / UX)
 **Reproduction**:
@@ -182,15 +182,25 @@ await firebase_auth.confirmPasswordReset(auth, oobCode, 'BookBedReset2026!');
 
 **Source to investigate**: registration form validator/sanitizer in `lib/features/auth/presentation/screens/register_screen.dart` (or equivalent). Look for digit-rejecting regex on the name field's `onChange` / `validator`.
 
+**Root cause (2026-05-24 follow-up):** Lives in `lib/shared/utils/validators/input_sanitizer.dart` `InputSanitizer.sanitizeName()` (called from `enhanced_register_screen.dart:135-137` between form-submit and provider call). Allow-list regex was `[^\p{L}\s'\-]` — `\p{L}` matches Unicode letters but NOT digits, so any digit was stripped repo-wide for both owner name and widget guest name (`submit_booking_use_case.dart:117`).
+
+**Fix shipped:** PR #470 (`fix/audit-35-displayname-cooldown`, commit `bad97caa`) — regex extended to `[^\p{L}\p{N}\s'\-]`. `\p{N}` covers ASCII digits + Arabic-Indic + Devanagari etc. Defence-in-depth unchanged: `_htmlTagPattern` strips HTML, `_controlCharPattern` strips control chars, injection chars (`< > ; / \ " = ( ) { } & $`) still removed by allow-list, `containsDangerousContent()` still flags XSS/SQLi. Tests 52/52 green incl. 2 new regression cases (`preserves digits in name`, `preserves Unicode digits across scripts`) + 1 stale assertion updated (`'John<script>alert(1)</script>Doe'` now yields `'Johnalert1Doe'` not `'JohnalertDoe'`).
+
+**Post-deploy verify:** register `Test User2` on `bookbed-owner-dev.web.app` → Firestore `users/{uid}.full_name` == `Test User2` + `firebase.auth().currentUser.displayName` == `Test User2` + Mailinator email body greets `Hello Test User2,`.
+
 ---
 
-### F-Auth-D2 — Cooldown UI / CHANGELOG mismatch (NEW)
+### F-Auth-D2 — Cooldown UI / CHANGELOG mismatch (NEW) — ✅ RESOLVED PR #470 (doc-only)
 
 **Severity**: LOW (doc drift)
 - CHANGELOG 6.44 documents resend cooldown as **30s**
 - Actual UI counts down from **60s**
 
 Either implementation drifted or docs are stale. Source check `_resendCooldownSeconds` or similar constant.
+
+**Source verdict (2026-05-24 follow-up):** UI is canonical and always was 60 s. `email_verification_screen.dart` `_startInitialCooldown` (line 48) and `_startCooldown` (line 290) both `_resendCooldown = 60;`. Matches Firebase Auth `sendEmailVerification()` internal rate-limit window (~60 s) — picking 30 s would have produced consistent rate-limit errors. **Conclusion:** CHANGELOG entry 6.44 was wrong since 2026-02 ship date; behaviour unchanged.
+
+**Fix shipped:** PR #470 — `docs/CHANGELOG.md` entry 6.44 corrected to "60-second" with explicit audit/35 footnote. No code change.
 
 ---
 
@@ -310,8 +320,8 @@ Per user direction (pre-flight Q2): **no admin-SDK auto-delete**. Manual cleanup
 
 ## §8 — Follow-ups (for backlog)
 
-1. **F-Auth-D1**: investigate name-input sanitizer; fix or document the digit-strip pattern (priority MED, owner-facing UX bug)
-2. **F-Auth-D2**: reconcile CHANGELOG 6.44 (30s) vs actual 60s cooldown — source fix or doc update
+1. ~~**F-Auth-D1**: investigate name-input sanitizer; fix or document the digit-strip pattern (priority MED, owner-facing UX bug)~~ — ✅ **DONE PR #470** (`bad97caa`): `InputSanitizer.sanitizeName` regex `\p{L}\s'\-` → `\p{L}\p{N}\s'\-`. See §4 F-Auth-D1.
+2. ~~**F-Auth-D2**: reconcile CHANGELOG 6.44 (30s) vs actual 60s cooldown — source fix or doc update~~ — ✅ **DONE PR #470** (`bad97caa`): UI 60s canonical; CHANGELOG 6.44 corrected. See §4 F-Auth-D2.
 3. **F-Auth-D3**: attach `X-RateLimit-*` headers to `checkRegistrationRateLimit` + `sendPasswordResetEmail` responses; surface remaining quota to client
 4. **§5.2 re-run**: capture Gmail `Authentication-Results:` block for `bookings@bookbed.io` (and incidentally for `noreply@firebaseapp.com`) → close audit/28 §5.3
 5. **F-Auth-D5**: profile `accounts:lookup` polling rate; consolidate auth-state listeners if multiple Riverpod providers fan out

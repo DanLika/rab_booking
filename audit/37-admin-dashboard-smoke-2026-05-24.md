@@ -67,6 +67,43 @@ All deferred pending admin claim provisioning.
 
 ---
 
+## 4b. DEV admin reachability probe (post-precheck)
+
+After the Path C precheck revealed PROD targeting, ran a follow-up probe:
+
+```bash
+$ firebase hosting:sites:list --project bookbed-dev
+bookbed-admin-dev    https://bookbed-admin-dev.web.app
+bookbed-dev          https://bookbed-dev.web.app
+bookbed-owner-dev    https://bookbed-owner-dev.web.app
+bookbed-widget-dev   https://bookbed-widget-dev.web.app
+```
+
+DEV admin site **exists** at `https://bookbed-admin-dev.web.app`. Navigated, captured UI:
+
+| Compared to current source (HEAD 79b4aea2) | DEV deployed | Source |
+|---|---|---|
+| Login title | `BookBed Admin` | `Welcome Back` (since `4b15153e`, 2026-01-26) |
+| Primary button | `Login` | `Sign In` |
+| Subtitle "Please sign in to access the admin portal." | absent | present |
+| Footer "© <year> BookBed Inc." | absent | dynamic `DateTime.now().year` (since `bd329688`, 2026-05-22) |
+| Background gradient | flat gray | lavender→peach diagonal |
+| Splash safety timeout | fired (15s) | n/a (boot time issue) |
+
+**Verdict:** DEV admin deploy is **stale** (pre-Jan-26 rebrand). Even after admin claim provisioning, the smoke would validate an outdated UI — CHANGELOG 6.31 theme + AppBar-toggle-removal claims cannot be verified until DEV admin is redeployed from current `main`.
+
+PROD admin similarly stale: showed dynamic-aware UI but with `© 2024` footer text — i.e. PROD build predates `bd329688` (2026-05-22). PROD is between Jan-26 (Welcome Back present) and pre-May-22 (footer year not yet dynamic) — somewhere in that ~4-month window.
+
+### Implication for audit cadence
+
+CI does NOT auto-deploy admin hosting (per `.claude/rules/hosting-build.md` deploy commands — admin only deploys when explicitly invoked). Any audit that compares UI against CHANGELOG-claimed admin changes MUST first verify the deploy is fresh:
+
+```bash
+# Quick freshness check before drawing smoke conclusions
+git log -1 --format=%cd --date=short -- lib/features/admin/presentation/screens/admin_login_screen.dart
+# Compare against deployed UI rendered strings (footer year, button label, header).
+```
+
 ## 5. Security observations (no exploit attempted)
 
 ### 5.1 audit/30 finding — still in scope pre-#462
@@ -78,9 +115,9 @@ Confirmed via static read of admin CFs:
 
 **Did NOT attempt** to write `users/{uid}.role = "admin"` to escalate from a vanilla account. Per request: observation-only.
 
-### 5.2 Login footer copyright year stale
+### 5.2 Login footer copyright year stale — NOT a code bug
 
-`© 2024 BookBed Inc.` — should be 2026. Cosmetic, but a visible inconsistency for an admin tool.
+`© 2024 BookBed Inc.` on PROD. Source is `'© ${DateTime.now().year} BookBed Inc. All rights reserved.'` (admin_login_screen.dart:390) — was hardcoded "© 2024" until commit `bd329688` (2026-05-22). PROD shows stale text because PROD admin has not been redeployed since the fix. Code-side: no action needed. Deploy-side: PROD admin redeploy will surface 2026 automatically.
 
 ### 5.3 No console messages on login page
 
@@ -163,23 +200,30 @@ await admin.auth().setCustomUserClaims(u.uid, {isAdmin: true});
 
 | Coverage area | Pre-audit | Post-audit |
 | --- | --- | --- |
-| Admin dashboard reachability | unverified | ✅ live, login renders |
-| Theme regression vs CHANGELOG 6.31 | unverified | partial (login-page subset only) |
+| Admin dashboard reachability (PROD) | unverified | ✅ live, login renders |
+| Admin dashboard reachability (DEV) | unverified | ✅ live, login renders, **stale build (pre-Jan-2026)** |
+| Theme regression vs CHANGELOG 6.31 | unverified | partial (PROD-login subset only; DEV cannot validate until redeploy) |
 | Admin-protected surfaces (Users, User-detail, Dashboard, Drawer, Logout) | unverified | **still unverified** |
-| audit/30 isAdminFromFirestore() risk | known pre-#462 | unchanged (no exploit attempted) |
-| Test-admin account hygiene | no account | **gap formalized** — Path A/B/C above |
+| audit/30 isAdminFromFirestore() risk | known pre-#462 | unchanged (no exploit attempted); now documented in `.claude/rules/admin.md` |
+| Test-admin account hygiene | no account | **gap formalized** — Path C in §6 + `memory/admin-smoke-account.md` provisioning pattern |
+| Admin env mapping documentation | only in `.claude/rules/hosting-build.md` | ✅ added to `.claude/rules/admin.md` with PROD/DEV/STAGING table + deploy commands + stale-build hazard |
+| Stale-deploy hazard for admin | unsurfaced | ✅ formalized in §4b + admin.md |
 
 ---
 
 ## 9. Recommendation
 
-1. **Move smoke target to `bookbed-admin-dev.web.app` (Path C).** PROD admin dashboard MUST NOT be a smoke surface. Re-runs of audit/37 should explicitly state DEV URL.
-2. **Verify `bookbed-admin-dev` site is built + deployed** before provisioning — `firebase hosting:sites:list --project bookbed-dev` then deploy if missing. CHANGELOG 6.31 added the hosting target but did not document a DEV deploy.
-3. **Provision dev admin smoke account** (Path C step 3) and save to `memory/admin-smoke-account.md`.
-4. Re-run audit/37 against DEV URL — should complete #E1–#E6 in ~10 min.
-5. **Update login footer copyright year** to 2026 (cosmetic, batchable with next admin deploy).
+1. **Move smoke target to `bookbed-admin-dev.web.app` (Path C).** PROD admin dashboard MUST NOT be a smoke surface. Re-runs of audit/37 should explicitly state DEV URL. ✅ §4b confirmed DEV site is provisioned.
+2. **Redeploy DEV admin from current `main`** BEFORE provisioning + smoke. §4b probe shows DEV deploy is pre-Jan-2026 (lacks Welcome Back rebrand, lacks dynamic footer). Without redeploy, smoke would validate stale UI and miss CHANGELOG 6.31 + 6.39 surface changes.
+   ```bash
+   flutter build web --release --target lib/admin_main.dart -o build/web_admin
+   firebase deploy --only hosting:admin --project bookbed-dev
+   ```
+3. **Redeploy PROD admin** at the next opportunity to surface the dynamic copyright year fix from `bd329688` (and any other admin/* commits since the last prod admin deploy).
+4. **Provision dev admin smoke account** (Path C step 3) and save to `memory/admin-smoke-account.md`.
+5. Re-run audit/37 against DEV URL — should complete #E1–#E6 in ~10 min once steps 2–4 done.
 6. After PR #462 merge, re-audit #E2 to verify Firestore-role escape is closed at the rules layer.
-7. **Document admin-dashboard env mapping in `.claude/rules/admin.md`** (currently absent — `.claude/rules/hosting-build.md` documents the table but admin-specific safety rules should live in admin scope).
+7. **Add admin redeploy to CI hook for `lib/features/admin/**`, `lib/admin_main*.dart`, `functions/src/admin/**` changes** — currently admin hosting is deploy-on-demand only (per `.claude/rules/hosting-build.md`). Optional, but eliminates the stale-build hazard formalized in §4b. ✅ `.claude/rules/admin.md` now documents the hazard inline; CI automation is the longer-term fix.
 
 ---
 

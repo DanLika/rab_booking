@@ -23,6 +23,7 @@
 - [audit/25-e2e-test-catalog.md](./audit/25-e2e-test-catalog.md) - Comprehensive E2E test catalog: surfaces under test, gaps, runbook (2026-05-23)
 - [audit/26-bb-e2e-findings.md](./audit/26-bb-e2e-findings.md) - BB E2E findings consolidation: owner direct-write bypass + `provider_id` gap (2026-05-23)
 - [audit/28-tier4-resend-sentry-baseline.md](./audit/28-tier4-resend-sentry-baseline.md) - Tier 4 Resend + Sentry baseline: 18-template provider_id matrix (static), SPF gap (A1), DORMANT-5 finding (A2), trigger/verify/sentry scripts, fail-CLOSED recipe (2026-05-23)
+- [audit/30-ical-cache-invalidation.md](./audit/30-ical-cache-invalidation.md) - iCal export cache invalidation (PR #461): helper extracted, 4 call sites, date-edit gate, atomicBooking pre-flush, icalSync deferred (2026-05-24)
 
 ---
 
@@ -141,7 +142,7 @@ Ovi fajlovi se učitavaju SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-05-23 | **Version**: 7.5
+**Last Updated**: 2026-05-24 | **Version**: 7.6
 
 # context-mode — MANDATORY routing rules
 

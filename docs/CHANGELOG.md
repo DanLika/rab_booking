@@ -2,7 +2,19 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-23 | **Version**: 6.88
+**Last Updated**: 2026-05-24 | **Version**: 6.89
+
+---
+
+**Changelog 6.89**: iCal export cache invalidation — PR #461 (2026-05-24):
+
+- **PR #461 opened** (`fix/ical-cache-invalidation`, commits `b71fa0e8` + `6a00abbf`) — resolves `widget_settings.ical_cache_*` 5-min TTL stale-feed problem. `icalExport.ts:318-324` wrote 4 cache fields with no flush trigger; owner pulling feed URL within 5 min after a booking change saw stale data. Helper `invalidateIcalCache(propertyId, unitId)` at `functions/src/utils/icalCache.ts` deletes all 4 cache fields with `FieldValue.delete()`. Non-fatal: NOT_FOUND swallowed for units without `widget_settings`; any other error logged as `logWarn` and ignored — next feed read regenerates regardless.
+- **4 call sites wired** — `atomicBooking.createBookingAtomic` (synchronous pre-return flush, closes async-trigger lag window before client polls); `onBookingCreated` (every fire, covers Stripe-instant early-return path); `onBookingStatusChange` extended gate fires on `before.status !== after.status` OR `toMillisOrZero(check_in/check_out)` diff (covers owner calendar drag-edits that preserve status). `autoCancelExpiredBookings` schedule cascades via `onBookingStatusChange`. Self-retriggers (`access_token`, `emails_sent.*`, `booking_reference` auto-heal) preserve both status + dates so no write storm.
+- **Deferred — `icalSync.ts` external-import path** — `syncSingleFeed` writes `ical_events` docs that appear in feed but no invalidation. Concurrent agent has uncommitted `audit/31` SSRF + log-leak edits on the same file; folding mine = staging confusion. **Low value in isolation:** the only consumer affected is another aggregator polling the BookBed export, and per Critical Learning #7 most aggregators also poll ≥15 min so 5-min lag is invisible. Follow-up ~5 lines after `insertNewEventsWithEchoDetection` at `:386-388`, lands post-audit/31.
+- **Multi-agent race recurrence (4th this session class)** — branch silently swapped TWICE during PR #461 work: once during `utils/icalCache.ts` Write (landed on main as untracked, moved to `/tmp` + restored on fix branch), once recovered via `[ "$(git branch --show-current)" = "fix/..." ] || exit 1` guard. New nuance: **file-Write tools race the same way `git add` does** — destination branch can swap between read-current-state and write-new-content. `memory/multi-agent-git-race.md` pattern reinforced.
+- **Verification** — `npx tsc --noEmit` clean across 3 changed files; `npx eslint` 0 new violations (pre-existing 166 errors all legacy); `npx jest test/bookingManagement.test.ts` 4/4 pass; dart format hook green both commits. Manual smoke deferred to post-merge dev deploy (curl feed URL within 30s of create/status-flip/date-edit).
+- **audit/30 added** ([`audit/30-ical-cache-invalidation.md`](../audit/30-ical-cache-invalidation.md)) — full rationale, coverage matrix, self-retrigger isolation analysis, deferred scope reasoning, race recovery notes. Slots 29 + 30 were free pre-write (29 originally taken by parallel-session security-audit file later renamed to 31).
+- **Memory updated** — `memory/ical-cache-no-invalidation.md` marked SHIPPED with PR #461 ref + coverage table + open-scope notes. CLAUDE.md index update bundled separately to avoid colliding with concurrent agent's audit/27 entry + audit/28 A2 supersede annotation.
 
 ---
 

@@ -4,20 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/gradient_extensions.dart';
 import '../config/router_owner.dart' show rootNavigatorKey;
-
-/// Safely convert exception to string, handling null and edge cases
-/// Prevents "Null check operator used on a null value" errors
-String _safeExceptionToString(dynamic exception) {
-  if (exception == null) {
-    return 'Unknown error';
-  }
-  try {
-    return exception.toString();
-  } catch (e) {
-    // If toString() itself throws, return a safe fallback
-    return 'Error: Unable to display error details';
-  }
-}
+import 'error_filter.dart';
 
 /// Error Boundary Widget - Catches errors in widget tree and shows fallback UI
 ///
@@ -75,8 +62,13 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
 
     // Override error handler for this boundary's scope
     FlutterError.onError = (FlutterErrorDetails details) {
-      // Call original handler first
+      // Call original handler first (Sentry/Crashlytics path is unaffected).
       _originalOnError?.call(details);
+
+      // Filter: ignore non-user-facing infrastructure noise (VM service
+      // extension dispatch, dart:developer, Marionette test-harness matcher
+      // failures, framework-`silent` errors). See audit/20.
+      if (!isUserFacingFlutterError(details)) return;
 
       // Capture error in this boundary
       // Use addPostFrameCallback to avoid setState during build
@@ -194,7 +186,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
                           ),
                         ),
                         child: Text(
-                          _safeExceptionToString(widget.errorDetails.exception),
+                          safeExceptionToString(widget.errorDetails.exception),
                           style: TextStyle(
                             fontSize: 11,
                             fontFamily: 'monospace',
@@ -359,7 +351,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint('GoRouter failed: ${_safeExceptionToString(e)}');
+      debugPrint('GoRouter failed: ${safeExceptionToString(e)}');
     }
 
     // Fallback: global navigator key
@@ -370,7 +362,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint('Global navigator failed: ${_safeExceptionToString(e)}');
+      debugPrint('Global navigator failed: ${safeExceptionToString(e)}');
     }
 
     debugPrint('All navigation methods failed');
@@ -386,7 +378,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint('GoRouter pop failed: ${_safeExceptionToString(e)}');
+      debugPrint('GoRouter pop failed: ${safeExceptionToString(e)}');
     }
 
     // Fallback: global navigator key
@@ -397,7 +389,7 @@ class _DefaultErrorWidgetState extends State<_DefaultErrorWidget> {
         return;
       }
     } catch (e) {
-      debugPrint('Global navigator pop failed: ${_safeExceptionToString(e)}');
+      debugPrint('Global navigator pop failed: ${safeExceptionToString(e)}');
     }
 
     // Can't go back, go home instead
@@ -422,11 +414,17 @@ class GlobalErrorHandler {
     // Catch Flutter framework errors
     FlutterError.onError = (FlutterErrorDetails details) {
       FlutterError.presentError(details);
+      // Drop infrastructure / test-harness noise from the production logging
+      // pipeline (mirrors ErrorBoundary's surface filter — audit/20 §8).
+      if (!isUserFacingFlutterError(details)) return;
       _logError(details.exception, details.stack);
     };
 
     // Catch async errors
     PlatformDispatcher.instance.onError = (error, stack) {
+      // Apply the same filter at the async sink so VM-extension dispatch
+      // exceptions and matcher-not-found errors don't flood Crashlytics/Sentry.
+      if (!isUserFacingAsyncError(error, stack)) return true;
       _logError(error, stack);
       return true; // Mark as handled
     };

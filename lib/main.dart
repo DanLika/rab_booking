@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/config/environment.dart';
 import 'core/config/router_owner.dart';
 import 'core/error_handling/error_boundary.dart';
+import 'core/error_handling/error_filter.dart';
 import 'core/providers/enhanced_auth_provider.dart';
 import 'core/providers/language_provider.dart';
 import 'core/providers/theme_provider.dart';
@@ -518,6 +519,16 @@ Future<void> _initSentry() async {
       // Filter non-critical errors before sending to Sentry
       options.beforeSend = (event, hint) {
         final exception = event.throwable;
+
+        // Audit/20 §8 — drop infrastructure / test-harness noise (VM service
+        // extension dispatch, dart:developer, Marionette matcher failures)
+        // entirely. Mirrors the surface filter applied at ErrorBoundary +
+        // GlobalErrorHandler so Sentry can't be flooded via the zone-error
+        // bypass route.
+        if (!isUserFacingException(throwable: exception)) {
+          return null;
+        }
+
         final exceptionString = exception?.toString().toLowerCase() ?? '';
         final message = event.message?.formatted.toLowerCase() ?? '';
 

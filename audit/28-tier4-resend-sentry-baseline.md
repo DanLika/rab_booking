@@ -215,6 +215,26 @@ This is a **deliverability optimization**, not a correctness bug. Mail still flo
 
 `p=none` is the standard ramp-up policy. Once SPF includes Resend and you've watched DMARC aggregate reports for 1-2 weeks with no legitimate-source failures, progress to `p=quarantine` → `p=reject`. Out-of-scope for this audit; flag for the email-deliverability backlog.
 
+### 5.3 Runtime DKIM/SPF verdict capture (partial, 2026-05-24)
+
+Runtime capture executed during audit/35 Tier 4 auth-flows smoke. **PARTIAL** — recipient-side verdict for one of two sender domains landed; the Gmail-rendered `Authentication-Results:` block for both senders is still pending.
+
+| Sender | Where seen | DKIM observed | SPF / DMARC verdict | Status |
+|---|---|---|---|---|
+| `bookings@bookbed.io` (Resend → AWS SES eu-west-1, IP 54.240.6.247) | Mailinator RAW tab (audit/35 §5.1) | TWO `DKIM-Signature` lines: `s=resend d=bookbed.io` + `s=<sel> d=amazonses.com`; both `c=relaxed/simple`, h-coverage incl `From`, `To`, `Subject`, `Date`, `Message-ID` | Mailinator does NOT add `Authentication-Results:` — receiver verdict not captured | ⚠ DKIM presence confirmed, receiver verdict pending |
+| `noreply@rab-booking-248fc.firebaseapp.com` (Firebase native, Google IP 209.85.221.198) | Mailinator inbox row + raw (audit/35 §3.4) | Not extracted in this smoke — Google-domain DKIM, expected `s=20230601 d=firebaseapp.com` or similar | Mailinator (same as above) | ⚠ pending |
+
+**Open gap (re-run recipe in audit/35 §5.2):**
+
+1. Register a fresh `zgembokrkan+bbauth<TS>@gmail.com` on `bookbed-owner-dev.web.app`
+2. **STOP — do NOT click the verify link**
+3. Open `mail.google.com` → email from `noreply@rab-booking-248fc.firebaseapp.com`
+4. ⋮ → "Show original" / "Prikaži izvornik"
+5. Copy `Authentication-Results: mx.google.com; spf=... dkim=... dmarc=...` block (multi-line until blank)
+6. Then trigger a password reset on the same account for the second sender (`bookings@bookbed.io`) and repeat the inbox-open step
+
+After capture, append a §5.4 with the verdict line verbatim and the DMARC alignment determination (need DKIM OR SPF aligned to pass DMARC; SPF gap §5.1 means DKIM-only alignment is the realistic path for `bookings@bookbed.io`).
+
 ---
 
 ## 6. Fail-CLOSED widget recipe (user-driven)

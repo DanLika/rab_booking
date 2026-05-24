@@ -2,7 +2,21 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-24 | **Version**: 6.91
+**Last Updated**: 2026-05-24 | **Version**: 6.92
+
+---
+
+**Changelog 6.92**: audit/39 — N4 root cause investigation (Flutter Engine keyboard converter) (2026-05-24):
+
+- **audit/39 written** (`audit/39-n4-flutter-keyboard-converter-2026-05-24.md`). Closes audit/33 §4.4 N4 (`Cannot read properties of null (reading 'toString')` on owner login page) as **SAFETY-CLAUSE NO-FIX**: trace is 100% Flutter Engine framework code, not BookBed.
+- **Reproduction**: load `https://bookbed-owner-dev.web.app/` in Chrome + hook `window.onerror` + dispatch synthetic keystroke via DevTools `Input.dispatchKeyEvent` (`chrome-devtools type_text` in this run). Crash fires during text-input handling; characters do NOT land in the focused field (CanvasKit input bridge crashes pre-forward), so fields stay at placeholder — error is observable only via console hook, no visible UI symptom.
+- **Stack trace**: leaf at `main.dart.js:63315:3` (`bax.$0`), full 10-frame call stack documented in audit/39 §4 (all `bav.*` / `bas`/`bat` keyup-keydown / `nv.bi` HashMap.forEach — pure Flutter Engine).
+- **Source line read** direct from deployed bundle (`main.dart.js:63310-63315`): `lookupTable[event.key]?[event.location]!` (dart2js emits `q.toString` for the `!` null-assertion). When `(event.key, event.location)` tuple's row has no entry at that location index, `q==null` and JS throws `TypeError: Cannot read properties of null (reading 'toString')`.
+- **Upstream**: pattern lives at `flutter/lib/web_ui/lib/src/engine/keyboard_binding.dart` + `key_map.g.dart` (`kWebToLogicalKey`). Real keyboards always set `event.location` correctly (0..3); synthetic inputs from DevTools automation / extensions / autofill heuristics / virtual keyboards can dispatch unusual values that miss the lookup. No upstream fix yet identified; audit/39 §8 ranks mitigations (do-nothing → upstream-watch → SDK upgrade → wrap-listener-last-resort).
+- **CHANGELOG 6.68 pattern does NOT apply.** That fix coerced `Uri(queryParameters: {nullable: x})` in widget `booking_view_screen.dart`. Memory `flutter-web-uri-null-tostring.md` already warned not to conflate login-submit crashes with the Uri pattern — substantiated. `grep -rn "queryParameters" lib/features/auth/` → 0 results.
+- **Bonus finding (audit/39 §9)** — service-worker stale-bundle long-tail on audit/33 N1: first probe of the (already-fixed) dev hosting returned `firebase_core.getApps()[0].options.projectId === "rab-booking-248fc"` (PROD); after explicit SW unregister + `caches.delete()` + `indexedDB.deleteDatabase()` + reload → `projectId === "bookbed-dev"`. Audit/33 deploy fix IS live, but past visitors keep writing to PROD until their SW updates. Doc-only follow-up recommended (audit/33 §6.1 note + `.claude/rules/hosting-build.md` SW-cache note).
+- **Trigger mismatch caveat**: audit/33 §4.4 claimed "initial load BEFORE login attempt" but captured no stack trace, only message text — that attribution is unverified to match this investigation's synthetic-input repro. Documented in audit/39 §2; do not assume full closure beyond what the stack trace shows.
+- **Deliverables**: 1 audit/39 doc-only file. Zero BookBed code change. Zero PR. Tasks 1+2+3+4 completed; task 5 ("apply fix + PR") deleted per safety clause.
 
 ---
 

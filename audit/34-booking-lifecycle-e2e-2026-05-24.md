@@ -3,7 +3,7 @@
 **Date:** 2026-05-24
 **Scope:** TIER 4 end-to-end test execution of the booking lifecycle on `bookbed-dev`. Guest widget submit → owner approve / reject → email triggers → availability + iCal verification. Combines BB (approve) and CC (reject) flows.
 **Mode:** Test execution on `bookbed-dev`. No code changes. No PROD touched. Cleanup verified before report.
-**Predecessors:** `audit/25-e2e-test-catalog.md` (flow inventory), `audit/26-bb-e2e-findings.md` (direct-write inventory + provider_id gap), `audit/27-bb-e2e-cc-reject.md` (CC reject lifecycle, audit/30 (iCal cache invalidation — PR #461 NOT YET MERGED, see §3.1).
+**Predecessors:** `audit/25-e2e-test-catalog.md` (flow inventory), `audit/26-bb-e2e-findings.md` (direct-write inventory + provider_id gap), `audit/27-bb-e2e-cc-reject.md` (CC reject lifecycle), `audit/30-ical-cache-invalidation.md` (PR #461 — NOT YET MERGED on main, see §3.1).
 **Driver:** `chrome-devtools` MCP browser automation (guest widget) + `firebase-admin` SDK with ADC (mutations + verification).
 **Configs verified PROD pre-run:** `ios/Runner/GoogleService-Info.plist` → `rab-booking-248fc` ✅; `android/app/google-services.json` → `rab-booking-248fc` ✅.
 
@@ -174,7 +174,7 @@ Both writes must be inside the success branch of `sendEmailWithRetry` to preserv
 |---|---|
 | Widget calendar (May) | Price scale changed mid-session: weekday base `€100` (8:00 UTC) → `€120` (8:20 UTC). Unrelated to test mutations (no unit-doc edits). Possibly a scheduled price adjustment or another concurrent agent's edit. Not blocking. |
 | Widget price-mismatch dialog (B2 only) | Server recomputed €330 → €370 on submit. Dialog shown, Continue clicked, server price won (`total_price: 370`). B5 had no mismatch (client 380 matched server 380). |
-| Widget form field chop | `fill_form` consistently chopped first 1-3 chars of each field on first submit. Reproducible across 3 distinct forms. Padding with `XX` prefix mitigated. See §4 for the password-specific variant which DOESN'T mitigate via padding because the password value-length matched intent but the chars were mangled. |
+| Widget form field chop | `fill_form` consistently chopped first 1-3 chars of each field on first submit. Reproducible across 3 distinct forms. Padding with `XX` prefix mitigated for the text fields (first/last/email/phone). See §4 for the owner-UI password input which behaved differently (16 dots displayed = correct length, but `Pogrešna lozinka` returned on 3 fill attempts despite REST `signInWithPassword` succeeding with the same string from the same browser context) — likely the same `fill`/`click` race-condition family as the widget chop, but NOT confidently diagnosed; the password variant is also not mitigated by padding because length-matching wasn't the symptom. |
 | Console error during B2 first submit | `Uncaught TypeError: Cannot read properties of null (reading 'toString')` 6x — matches `memory/flutter-web-uri-null-tostring.md` (dart2js Uri queryParameters null.toString). Did not block the submission once price dialog Continue was clicked. |
 | ErrorBoundary sticky bug | Did NOT trigger this run. Memory `wave0-test-findings.md` warns about it; this session was clean. |
 

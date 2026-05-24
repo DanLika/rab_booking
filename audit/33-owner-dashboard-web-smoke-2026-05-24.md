@@ -385,3 +385,42 @@ All at `$TMPDIR/bb-smoke-h-shots/`.
 | `memory/test-account-prod.md` + MEMORY.md index | ✅ saved |
 
 **Status:** Owner Dashboard web smoke complete (1 🟡, 5 ✅, 5 net-new findings total: N1 P1 + N2-N4 LOW + N5 MEDIUM + N6 LOW + N7 MEDIUM + N8 LOW). PROD-test account zgembokrkan@gmail.com authorized by Duško, used with observation-only discipline. **N1 still the top-priority operator action** — re-deploy `bookbed-owner-dev.web.app` with `--target lib/main_dev.dart` to stop the PROD-bundling.
+
+---
+
+## 11. Admin DEV follow-up (2026-05-24, +~3h)
+
+Base fix (owner + widget surfaces) shipped via merge `ae1b18f3` to `main` (PR #466). Admin surface gap surfaced during audit/37 prep — `bookbed-admin-dev.web.app` deploy would re-bundle PROD `firebase_options` without an admin DEV entry point. Closed in PR #467 (`fix/audit-33-admin-dev`, commit `2f7189e9`):
+
+- `lib/admin_main_dev.dart` (NEW) — mirrors `lib/owner_main_dev.dart` safety pattern: `EnvironmentConfig.setEnvironment(Environment.development)` + `kDebugMode` project-ID assert + DevFirebaseOptions + AdminApp root, locale `hr`, themeMode dark
+- `tool/deploy-dev.sh` — admin case wired alongside owner + widget (3 surfaces total); same build-time contamination guard
+- `.claude/rules/hosting-build.md` — admin DEV row in Dart entrypoints table no longer marked "MISSING (TODO)"; DEV builds block now lists admin entry; audit/33 resolved-footgun note + audit/37 cross-reference
+
+### 11.1 Post-merge operator runbook
+
+After PR #467 merges to `main`:
+
+```bash
+git pull origin main
+tool/deploy-dev.sh owner    # rebuild + deploy bookbed-owner-dev.web.app
+tool/deploy-dev.sh widget   # rebuild + deploy bookbed-widget-dev.web.app
+tool/deploy-dev.sh admin    # rebuild + deploy bookbed-admin-dev.web.app
+
+# Verify each surface no longer ships PROD firebase_options:
+for url in \
+  https://bookbed-owner-dev.web.app \
+  https://bookbed-widget-dev.web.app \
+  https://bookbed-admin-dev.web.app; do
+  echo "=== $url ==="
+  curl -s "$url/main.dart.js" | grep -oE "rab-booking-248fc|bookbed-dev" | sort -u
+done
+```
+
+Expected: each URL prints **only** `bookbed-dev`. Any `rab-booking-248fc` hit = deploy didn't take or build cache leak.
+
+### 11.2 PR ledger
+
+| PR | Branch | Scope | Status |
+|---|---|---|---|
+| #466 | `fix/audit-33-deploy-contamination` | Owner + widget DEV entry points + tool/deploy-dev.sh (2 surfaces) | ✅ Merged 2026-05-24 (`ae1b18f3`) |
+| #467 | `fix/audit-33-admin-dev` | Admin DEV entry point + tool/deploy-dev.sh admin case + hosting-build.md TODO close | Open, awaiting merge |

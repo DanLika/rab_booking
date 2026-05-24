@@ -139,6 +139,20 @@ After any non-PROD hosting deploy, open the URL → DevTools Network → confirm
 
 If wrong, you bundled the wrong entry point — redeploy with correct `--target`.
 
+**Service-worker stale-bundle gotcha (audit/39 §9, 2026-05-24):** if you are verifying a deploy from a browser that visited the URL BEFORE the deploy, you may still see the OLD bundle's `projectId` until the service worker updates. To force a clean check, run this in DevTools console before reloading:
+
+```js
+// Unregister SW, drop all caches, drop IndexedDB — then reload.
+(async () => {
+  for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+  for (const n of await caches.keys()) await caches.delete(n);
+  for (const d of await indexedDB.databases()) indexedDB.deleteDatabase(d.name);
+  location.reload();
+})();
+```
+
+The same long-tail affects any past visitor (developers, QA, automation that retained their browser profile). They will continue to hit the old bundle until their SW updates. `flutter_service_worker.js` cache-busts via `?v=<digest>` so a full reload picks up the new bundle on the next visit, but a hard refresh is the safe move after env-mistake redeploys.
+
 ## Klijent subdomene
 
 Dodaju se u Firebase Console → Hosting → Add custom domain:

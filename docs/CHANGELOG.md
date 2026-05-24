@@ -2,7 +2,40 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-24 | **Version**: 6.94
+**Last Updated**: 2026-05-24 | **Version**: 6.96
+
+---
+
+**Changelog 6.96**: audit/38 — PR #462 env prereq verification + operator helper script (2026-05-24):
+
+- **audit/38 written** (`audit/38-pr462-env-prereq.md`, ~9 KB with appendix). Verifies that PR #462's deny-all-on-empty allowlist consumer (`functions/src/stripeSubscription.ts:43-58`) will break post-merge CF deploy unless operator first sets `ALLOWED_SUBSCRIPTION_PRICE_IDS` per-env. State on `main` 2026-05-24:
+  - `functions/.env:13` → `ALLOWED_SUBSCRIPTION_PRICE_IDS=` (empty placeholder from 2026-05-21 widget-secrets-exfil setup; confirmed via `grep -n`).
+  - `functions/.env.bookbed-dev` → does NOT exist; no per-env override on dev.
+  - `functions/.env.rab-booking-248fc` → key absent; falls through to empty `.env`.
+  - **Prod CF env binding** confirms deployed state: `gcloud functions describe createSubscriptionCheckoutSession --project=rab-booking-248fc --region=us-central1 --format="value(serviceConfig.environmentVariables)"` returns `ALLOWED_SUBSCRIPTION_PRICE_IDS=` (empty value already in prod CF env from 2026-05-21 deploy). Pre-PR-#462 code accepted any priceId so empty did no harm; post-PR-#462 code rejects everything when empty → outage on first checkout.
+- **PR #462 description corrected** via `gh pr edit 462 --body-file`. Replaced false "should already be set on both" claim with verified 2026-05-24 state + audit/38 link + explicit operator BLOCKER. Strengthened Test plan checkbox: "**BLOCKER — Operator** Create Stripe Prices (test mode + live mode) → populate `.env.bookbed-dev` + `.env.rab-booking-248fc` + clear empty `.env` default."
+- **Memory updated** (`memory/widget-secrets-exfil-deploy-prereqs.md`) — appended 2026-05-24 verification section invalidating earlier "acceptable for dev where subscriptions aren't tested" stance. PR #462 turns the empty placeholder into an active outage on first checkout, regardless of whether dev tests subscriptions.
+- **Appendix audit on remaining 2 widget-secrets-exfil env items:**
+  - `RESEND_API_KEY` → ✅ ALREADY set on both. Dev: secret version 3 bound to `createBookingAtomic` (and 13 other CFs). Prod: secret version 2 bound. Verified via `gcloud functions describe createBookingAtomic --format="value(serviceConfig.secretEnvironmentVariables)"`. Not a PR #462 blocker.
+  - `ICAL_TOKEN_PEPPER` → consumer not yet on main (lives on unmerged `hotfix/widget-secrets-exfil`). Not a PR #462 blocker; will become a blocker when widget-secrets-exfil merges.
+- **`tool/setup-pr462-env.sh` (new, ~220 lines)** — operator helper script. Defensive bash 3+ (macOS compatible). Prompts for test+live Price IDs (comma-separated), validates `price_*` format via regex, detects cross-account contamination (test ID in live list → abort), creates `.env.bookbed-dev`, updates `.env.rab-booking-248fc` (idempotent — replaces existing `ALLOWED_*` line), comments out empty default in `.env`, writes `.bak` backups, prints next-step deploy + smoke + rollback commands. Bash syntax verified (`bash -n`).
+- **`.claude/rules/stripe.md` augmented** — new "Subscription Flow" section at bottom covers `ALLOWED_SUBSCRIPTION_PRICE_IDS` per-env setup, no-cross-mode warning, helper script reference, region drift caveat (us-central1 default vs europe-west1 norm — P3 `audit/24`).
+- **Extra finding (logged)** — prod `createSubscriptionCheckoutSession` runs in `us-central1`, not `europe-west1`, because `stripeSubscription.ts` does not declare a region (uses firebase-functions v2 default). Region drift, out of PR #462 scope. Cross-referenced in `audit/38` Appendix + `.claude/rules/stripe.md` Subscription Flow section.
+- **PR #462 gate verification** (worktree `/private/tmp/bb-hotfix-g`): `npm run build` → 0 errors. `npm run test:rules` → 30/30 (incl. 6 new role-field tests). `npm test` → 161/165 (4 failures all in `stripeConnect.test.ts`, pre-existing on main, message-string mismatches not regressions). `flutter analyze` → No issues found. Only env BLOCKER + Actions billing remain.
+- **Operator next step** — `tool/setup-pr462-env.sh` (after creating Stripe subscription products in test + live Dashboards). Subscription products NOT yet configured per operator report 2026-05-24.
+
+---
+
+**Changelog 6.95**: audit/34 §5 fix — `emails_sent.*` parity on booking create (PR #472) (2026-05-24):
+
+- **PR #472 opened** (`fix/audit-34-emails-sent-create-tracking`, base `main`, commit `3d74240d`). Closes audit/34 §5: `createBookingAtomic` sends 4 initial emails on the create path but wrote ZERO `emails_sent.*` keys. After this PR, all 4 keys (`pending_request`, `pending_owner_notification`, `confirmation`, `owner_notification`) are persisted on the booking doc with `{sent_at, email, booking_id, provider_id}`. `provider_id: null` for now — `sendEmailWithRetry` returns `Promise<void>` on main; PR-B (`fix/audit-26-prb-provider-id`, commit `2b951623`, audit/26 §5) will flip these to real Resend ids once it lands.
+- **Premise correction (logged in PR body + memory).** Original audit/34 §5 fix recipe assumed `onBookingCreated` trigger sends the emails. It does not — `bookingManagement.ts:209-218` explicitly delegates initial emails to `atomicBooking.ts` ("DO NOT send duplicate emails here"). Real send sites: `atomicBooking.ts:1248-1399` (4 `sendEmailWithRetry` wrappers). Fix moved to where the sends actually live; user confirmed via question prompt (atomicBooking.ts / `provider_id: null` / all 4 sites).
+- **Implementation**: new `persistEmailSent()` helper in `utils/bookingHelpers.ts` — read-checks injected `existing` snapshot (idempotency parity with canonical `onBookingStatusChange` pattern at `bookingManagement.ts:283`), swallows write errors (tracking failures must NOT break booking flow). One cached `bookingRef.get()` at top of email try-block, 4 `persistEmailSent()` calls after each `logSuccess`. `EmailSent` interface extended with optional `provider_id`; `BookingEmailTracking` gains `pending_owner_notification` + `owner_notification` keys.
+- **Tests**: 2 new in `atomicBooking.test.ts` covering all 4 keys with `provider_id: null` assertion (pending flow asserts `pending_request` + `pending_owner_notification`; auto-confirmed flow asserts `confirmation` + `owner_notification`). Existing happy-path mock chain extended by 1 `mockResolvedValueOnce({data:()=>({})})` slot for the new `bookingRef.get()`. Result: `npm run build` clean, `npm test` 163 pass + 4 pre-existing `stripeConnect` failures (unrelated, expected per brief), `npm run test:rules` 24/24.
+- **Diff stat**: 3 files, +221/-2 — `utils/bookingHelpers.ts` (+44), `atomicBooking.ts` (+51 — cached snapshot + 4 site writes), `test/atomicBooking.test.ts` (+128).
+- **Scope NOT covered**: Stripe-paid path (`stripePayment.ts:~1300`) emits `confirmation` + `owner_notification` from the webhook handler, NOT from the callable. Same observability gap, different trigger. Tracked separately. Also `provider_id` capture itself — see PR-B (audit/26 §5).
+- **Brief's "trigger retry idempotency" framing inapplicable**: callables don't auto-retry like Firestore triggers do. The read-before-write check is kept as (a) parity with the canonical status-change pattern, (b) double-submit guard, (c) defense-in-depth if a future change reroutes these sends through a real trigger. Documented in PR body.
+- **Memory**: `onbookingcreated-no-email-tracking.md` updated with premise correction + PR #472 reference; cross-link to audit/26 §5 PR-B.
 
 ---
 

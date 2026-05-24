@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:bookbed/features/widget/data/helpers/availability_checker.dart';
 import 'package:bookbed/features/widget/data/models/availability_window.dart';
 import 'package:bookbed/features/widget/data/repositories/firebase_availability_repository.dart';

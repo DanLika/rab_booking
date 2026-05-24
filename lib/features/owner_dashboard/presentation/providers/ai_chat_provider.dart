@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../../core/utils/prompt_safety.dart';
 import '../../data/repositories/ai_chat_repository.dart';
 import '../../domain/models/ai_chat.dart';
 
@@ -76,7 +77,7 @@ final _aiModelProvider = FutureProvider<GenerativeModel>((ref) async {
   LoggingService.logDebug('AiChat: Creating generative model');
   final model = ai.generativeModel(
     model: 'gemini-2.5-flash-lite',
-    systemInstruction: Content.system(kb),
+    systemInstruction: Content.system('$untrustedDataSystemInstruction\n\n$kb'),
   );
   LoggingService.logDebug('AiChat: Model created');
   return model;
@@ -379,7 +380,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         for (final msg in existingMessages) {
           if (msg == userMessage) continue;
           if (msg.isUser) {
-            history.add(Content.text(msg.content));
+            history.add(Content.text(fencedText(msg.content)));
           } else {
             history.add(Content('model', [TextPart(msg.content)]));
           }
@@ -390,7 +391,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       // Stream response
       LoggingService.logDebug('AiChat: sending message to Gemini');
       final responseStream = _chatSession!.sendMessageStream(
-        Content.text(text.trim()),
+        Content.text(fencedText(text.trim())),
       );
       final buffer = StringBuffer();
 

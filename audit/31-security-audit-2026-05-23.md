@@ -102,10 +102,11 @@ The Explore-agent flagged `sendEmailVerificationCode` as HIGH (no Firestore-back
 
 ## This PR will fix
 
-- HIGH-1 (icalSync SSRF redirect): in scope
-- MED-2 (resendGuestBookingEmail rate-limit): in scope
+- ✅ HIGH-1 (icalSync SSRF redirect + response-body echo): commit 1
+- ✅ MED-2 (resendGuestBookingEmail rate-limit IP-binding): commit 1
+- ✅ MED-4 (owner+admin baseline hosting headers): commit 2 — `X-Frame-Options: DENY` + `X-Content-Type-Options: nosniff` + `Referrer-Policy: strict-origin-when-cross-origin`. Widget target intentionally untouched (`ALLOWALL` for embed). CSP deferred (CanvasKit + Firebase origins need a scoped pass).
 
-Other findings will be **proposed via this audit doc** and require explicit user approval to land (firebase.json hosting headers + firestore.rules `loginAttempts` move are higher blast-radius than a one-shot security fix should carry).
+Other findings (MED-3 `loginAttempts` callable migration, LOW-5/LOW-6 throttle hardening) deferred — see finding bodies for context.
 
 ## See also
 

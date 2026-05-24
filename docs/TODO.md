@@ -60,6 +60,23 @@ Source: `audit/12-booking-widget-refactor-plan.md` §4 + §6.
 
 ---
 
+## 🚨 TODO: audit/35 auth-flows outstanding items (2026-05-24)
+
+**Prioritet:** mixed (MED + LOW + hygiene)
+**Izvor:** `audit/35-auth-flows-smoke-2026-05-24.md` (PR #466 branch `doc/audit-35-auth-smoke`); status board in `audit/35-followups.md`.
+
+PR #470 (commit `bad97caa`) closed **F-Auth-D1** (sanitizer digit-strip) and **F-Auth-D2** (CHANGELOG 6.44 cooldown drift). Remaining items:
+
+- **F-Auth-D3 (MED)** — attach `X-RateLimit-Remaining` + `Retry-After` to `checkRegistrationRateLimit` (eu-west1) + `sendPasswordResetEmail` (us-central1). Effort: S.
+- **F-Auth-D5 (LOW)** — consolidate `FirebaseAuth.authStateChanges()` listeners across Riverpod providers; `accounts:lookup` polling rate suspect. Effort: M.
+- **§3.5 (LOW)** — admin-SDK script to dump `security_events` subcollection (client-blind during smoke). Effort: XS.
+- **§5.2 (LOW, DEFERRED)** — capture Gmail `Authentication-Results:` header for `bookings@bookbed.io` + `noreply@firebaseapp.com`; closes audit/28 §5.3. Requires real `@gmail.com` recipient. Effort: XS.
+- **§6 (P2 hygiene)** — operator delete 2 PROD test UIDs from Firebase Console (project `rab-booking-248fc`). Effort: XS.
+
+See `audit/35-followups.md` for full action recipes per item.
+
+---
+
 ## 🚨 TODO: Wave 3 deferred UI fixes (2026-05-22)
 
 **Prioritet:** P2 (mobile UX papercuts; no regression introduced)

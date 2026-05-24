@@ -213,8 +213,9 @@ distributionUrl=gradle-8.11.1-all.zip  // Gradle
 
 ### Android Debug Build Bug
 
-**Problem**: `firebase_storage` plugin ne kompajlira Kotlin kod prije Java koda u debug modu.
-**Workaround**: Koristi `--release` flag za Android uređaje.
+Default to `--release` on Android for safety. Debug builds are known to fail on certain `firebase_storage` / Kotlin / AGP combinations (root cause: Kotlin-before-Java compile order). If `assembleDebug` works in your environment, you can use it — but treat any new build failure as "first try `--release`." Hot Reload is the trade-off.
+
+History: rule predates the AAB section and is grandfathered without a specific package-version trigger. Terminal E built `assembleDebug` cleanly in 37.9s on Flutter 3.38.5 / Kotlin 2.1.0 / AGP 8.9.1 / Pixel_8 emulator (2026-05-23) — one green build is not strong evidence the bug is gone. See `audit/24-p3-backlog-investigations.md` §3.
 
 ### Android AAB Build (Play Store) — koristi `tool/build_aab.sh`
 
@@ -239,7 +240,7 @@ flutter run -d chrome --web-port 8080
 # iOS Simulator (debug, sa hot reload)
 flutter run -d <iOS_DEVICE_ID>
 
-# Android (MORA biti release)
+# Android (default --release — see Android Debug Build Bug above)
 flutter run -d <ANDROID_DEVICE_ID> --release
 ```
 

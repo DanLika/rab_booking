@@ -8,6 +8,7 @@
  */
 
 import {Resend} from "resend";
+import {sendEmailWithValidation} from "../utils/send-with-validation";
 import {generateEmailHtml} from "./base";
 import {getWarningIcon} from "../utils/svg-icons";
 import {
@@ -154,24 +155,14 @@ export async function sendOwnerCancellationEmailV2(
   params: OwnerCancellationParamsV2,
   fromEmail: string,
   fromName: string
-): Promise<void> {
+): Promise<string | undefined> {
   const html = generateOwnerCancellationEmailV2(params);
   const subject = `Otkazivanje rezervacije - ${escapeHtml(params.bookingReference)}`;
 
-  // IMPORTANT: Check the result object - Resend can return success with error inside
-  const result = await resendClient.emails.send({
+  return sendEmailWithValidation(resendClient, {
     from: `${fromName} <${fromEmail}>`,
     to: params.ownerEmail,
     subject: subject,
     html: html,
   });
-
-  // Resend SDK returns { data, error } - check for error
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const typedResult = result as any;
-  if (typedResult.error) {
-    throw new Error(
-      `Resend API error: ${typedResult.error.message || JSON.stringify(typedResult.error)}`
-    );
-  }
 }

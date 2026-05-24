@@ -8,6 +8,7 @@
  */
 
 import {Resend} from "resend";
+import {sendEmailWithValidation} from "../utils/send-with-validation";
 import {generateEmailHtml} from "./base";
 import {getEmailIcon} from "../utils/svg-icons";
 import {
@@ -80,24 +81,14 @@ export async function sendCustomGuestEmailV2(
   params: CustomGuestEmailParamsV2,
   fromEmail: string,
   fromName: string
-): Promise<void> {
+): Promise<string | undefined> {
   const html = generateCustomGuestEmailV2(params);
 
-  // IMPORTANT: Check the result object - Resend can return success with error inside
-  const result = await resendClient.emails.send({
+  return sendEmailWithValidation(resendClient, {
     from: `${fromName} <${fromEmail}>`,
     to: params.guestEmail,
     replyTo: params.ownerEmail || fromEmail,
     subject: params.subject,
     html: html,
   });
-
-  // Resend SDK returns { data, error } - check for error
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const typedResult = result as any;
-  if (typedResult.error) {
-    throw new Error(
-      `Resend API error: ${typedResult.error.message || JSON.stringify(typedResult.error)}`
-    );
-  }
 }

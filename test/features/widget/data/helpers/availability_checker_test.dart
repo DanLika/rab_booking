@@ -298,19 +298,14 @@ void main() {
 
     group('check - booking conflicts', () {
       test('detects full overlap', () async {
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 10)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 10,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        // T11c: booking windows now arrive from the getUnitAvailability CF.
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 10),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // New booking within existing booking dates
         final result = await checker.check(
@@ -325,19 +320,13 @@ void main() {
       });
 
       test('detects partial overlap at start', () async {
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // New booking overlaps at start
         final result = await checker.check(
@@ -352,19 +341,13 @@ void main() {
       });
 
       test('detects partial overlap at end', () async {
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 10)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 10),
+            end: DateTime(2024, 1, 15),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // New booking overlaps at end
         final result = await checker.check(
@@ -379,19 +362,13 @@ void main() {
       });
 
       test('detects conflict with encompassing booking', () async {
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 13)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 17)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 4,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 13),
+            end: DateTime(2024, 1, 17),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // New booking encompasses existing booking
         final result = await checker.check(
@@ -456,19 +433,15 @@ void main() {
       });
 
       test('detects conflict with pending booking', () async {
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'pending',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        // T11c: CF emits both pending + confirmed as booking-source windows
+        // (PII stripped; status not distinguished at widget surface).
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final result = await checker.check(
           propertyId: 'prop123',
@@ -554,15 +527,17 @@ void main() {
         expect(result.icalSource, 'iCal');
       });
 
-      test('ignores non-icalExternal windows', () async {
-        // The CF may emit booking/manualBlock windows too — _checkIcalEvents
-        // must filter to icalExternal so it doesn't double-report bookings
-        // that _checkBookings already covers.
+      test('ignores manualBlock windows in iCal check', () async {
+        // T11c: CF emits booking/manualBlock/icalExternal windows. Both
+        // _checkBookings and _checkIcalEvents must skip manualBlock — those
+        // get resolved via the daily_prices direct query instead, so the
+        // CF window list should not double-report them as a booking/iCal
+        // conflict.
         fakeRepo.windows = [
           AvailabilityWindow(
             start: DateTime(2024, 1, 15),
             end: DateTime(2024, 1, 20),
-            source: AvailabilityWindowSource.booking,
+            source: AvailabilityWindowSource.manualBlock,
           ),
         ];
 
@@ -688,22 +663,15 @@ void main() {
 
     group('check - priority order', () {
       test('returns booking conflict before iCal conflict', () async {
-        // Booking via fakeFirestore, iCal via fake repo
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
-
+        // T11c: both booking + iCal arrive in the same CF window list.
+        // _checkBookingsAgainstWindows runs first so a booking-source entry
+        // wins priority over a co-located icalExternal entry.
         fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
           AvailabilityWindow(
             start: DateTime(2024, 1, 15),
             end: DateTime(2024, 1, 20),
@@ -754,19 +722,13 @@ void main() {
 
     group('check - date normalization', () {
       test('normalizes dates with time components', () async {
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         // Dates with time components should be normalized
         final result = await checker.check(
@@ -794,19 +756,13 @@ void main() {
       });
 
       test('returns false when not available', () async {
-        await fakeFirestore.collection('bookings').add({
-          'unit_id': 'unit123',
-          'status': 'confirmed',
-          'check_in': Timestamp.fromDate(DateTime(2024, 1, 15)),
-          'check_out': Timestamp.fromDate(DateTime(2024, 1, 20)),
-          'guest_name': 'Test Guest',
-          'guest_email': 'test@test.com',
-          'property_id': 'prop123',
-          'total_price': 500.0,
-          'nights': 5,
-          'guests': 2,
-          'created_at': Timestamp.now(),
-        });
+        fakeRepo.windows = [
+          AvailabilityWindow(
+            start: DateTime(2024, 1, 15),
+            end: DateTime(2024, 1, 20),
+            source: AvailabilityWindowSource.booking,
+          ),
+        ];
 
         final isAvail = await checker.isAvailable(
           propertyId: 'prop123',

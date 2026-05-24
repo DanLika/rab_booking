@@ -32,6 +32,10 @@ import {
 } from "./utils/depositCalculation";
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {sendEmailWithRetry} from "./utils/emailRetry";
+import {
+  persistEmailSent,
+  type BookingEmailTracking,
+} from "./utils/bookingHelpers";
 import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
@@ -1203,6 +1207,17 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
       // MEMORY OPTIMIZATION: Use unit name from transaction (not entire unit object)
       const unitName = result.unitName;
 
+      // audit/34 §5 — track initial emails on the create path via
+      // emails_sent.<key>. Booking ref + cached snapshot are computed once so
+      // each persistEmailSent() call below is a single update (no extra read).
+      const bookingRef = db
+        .collection("properties").doc(propertyId)
+        .collection("units").doc(unitId)
+        .collection("bookings").doc(result.bookingId);
+      const existingEmailsSent: BookingEmailTracking | undefined = (
+        await bookingRef.get()
+      ).data()?.emails_sent;
+
       if (requireOwnerApproval) {
         // Manual approval flow - send "Booking Request Received" email to guest
         // For bank transfer: include bank details so guest knows where to pay
@@ -1271,6 +1286,15 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
           }
         );
 
+        await persistEmailSent(
+          bookingRef,
+          "pending_request",
+          sanitizedGuestEmail,
+          result.bookingId,
+          null,
+          existingEmailsSent
+        );
+
         // Send "New Booking Needs Approval" email to owner
         const ownerDoc = await db.collection("users").doc(ownerId).get();
         const ownerData = ownerDoc.data();
@@ -1302,6 +1326,15 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
             {
               email: ownerData.email,
             }
+          );
+
+          await persistEmailSent(
+            bookingRef,
+            "pending_owner_notification",
+            ownerData.email,
+            result.bookingId,
+            null,
+            existingEmailsSent
           );
         }
 
@@ -1349,6 +1382,15 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
           {
             email: sanitizedGuestEmail,
           }
+        );
+
+        await persistEmailSent(
+          bookingRef,
+          "confirmation",
+          sanitizedGuestEmail,
+          result.bookingId,
+          null,
+          existingEmailsSent
         );
 
         // Send "New Booking Received" email to owner
@@ -1410,6 +1452,15 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
             {
               email: ownerData.email,
             }
+          );
+
+          await persistEmailSent(
+            bookingRef,
+            "owner_notification",
+            ownerData.email,
+            result.bookingId,
+            null,
+            existingEmailsSent
           );
         }
 

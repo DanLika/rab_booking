@@ -36,6 +36,8 @@ export interface BookingEmailTracking {
   confirmation?: EmailSent;
   bank_transfer_instructions?: EmailSent;
   pending_request?: EmailSent;
+  pending_owner_notification?: EmailSent;
+  owner_notification?: EmailSent;
 }
 
 /**
@@ -138,4 +140,45 @@ export async function fetchPropertyAndUnitDetails(
     unitName,
     unitData: fetchFullData ? unitData : undefined,
   };
+}
+
+/**
+ * Persist a single `emails_sent.<key>` entry on a booking doc after a
+ * successful send. Idempotent — caller passes the pre-read `existing` snapshot
+ * so we can skip the write if the key is already present.
+ *
+ * `providerId` is the Resend message id when threaded through
+ * `sendEmailWithValidation` (audit/26 §5 / PR-B); pass `null` (default) when
+ * the send chain returns `Promise<void>` and the id is dropped at the wrapper.
+ *
+ * Errors are swallowed (logged) — a tracking write failure must not break the
+ * booking flow itself.
+ */
+export async function persistEmailSent(
+  bookingRef: admin.firestore.DocumentReference,
+  key: keyof BookingEmailTracking,
+  email: string,
+  bookingId: string,
+  providerId: string | null = null,
+  existing?: BookingEmailTracking
+): Promise<void> {
+  if (existing?.[key]) {
+    return;
+  }
+  try {
+    await bookingRef.update({
+      [`emails_sent.${key}`]: {
+        sent_at: admin.firestore.FieldValue.serverTimestamp(),
+        email,
+        booking_id: bookingId,
+        provider_id: providerId,
+      },
+    });
+  } catch (err) {
+    logError(
+      `[persistEmailSent] Failed to write emails_sent.${key}`,
+      err,
+      {bookingId}
+    );
+  }
 }

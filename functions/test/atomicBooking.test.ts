@@ -171,8 +171,9 @@ describe("Atomic Booking Functions", () => {
         .mockResolvedValueOnce(mockWidgetSettingsDoc) // widgetSettingsDoc
         .mockResolvedValueOnce(mockUnitDoc)           // unitDocForFees
         .mockResolvedValueOnce(mockPropertyDoc)       // propertyDoc (for email)
-        .mockResolvedValueOnce(mockOwnerUserDoc)      // ownerDoc (for owner email)
-        .mockResolvedValueOnce({ exists: false });    // bank details
+        .mockResolvedValueOnce({ data: () => ({}) })  // bookingRef snapshot (audit/34 §5)
+        .mockResolvedValueOnce(mockOwnerUserDoc)      // ownerProfileDoc (bank details)
+        .mockResolvedValueOnce({ exists: false });    // ownerDoc (no email — owner branch skipped)
 
       mockDb.runTransaction.mockImplementation(async (callback: any) => {
         const transaction = {
@@ -239,6 +240,129 @@ describe("Atomic Booking Functions", () => {
 
       const wrapped = wrap(createBookingAtomic);
       await expect(wrapped({ data: validData })).rejects.toThrow();
+    });
+
+    // audit/34 §5 — emails_sent.* tracking on create path. Sends live in
+    // createBookingAtomic (NOT in onBookingCreated trigger); 4 keys total
+    // across pending + auto-confirmed branches. provider_id is `null` on main
+    // (sendEmailWithRetry returns Promise<void>); PR-B (audit/26 §5) will
+    // surface the real Resend id once landed.
+    it("audit/34 §5 — persists pending_request + pending_owner_notification on pending flow", async () => {
+      // Arrange
+      const mockDb = require("../src/firebase").db;
+      mockDb.collection().doc().get
+        .mockResolvedValueOnce(mockPropertyDoc)         // propertyDocForOwner
+        .mockResolvedValueOnce(mockWidgetSettingsDoc)   // widgetSettingsDoc
+        .mockResolvedValueOnce(mockUnitDoc)             // unitDocForFees
+        .mockResolvedValueOnce(mockPropertyDoc)         // propertyDoc (post-tx)
+        .mockResolvedValueOnce({ data: () => ({}) })    // bookingRef snapshot
+        .mockResolvedValueOnce({ exists: false })       // ownerProfileDoc (no bank details)
+        .mockResolvedValueOnce(mockOwnerUserDoc);       // ownerDoc (has email)
+
+      mockDb.runTransaction.mockImplementation(async (callback: any) => {
+        const transaction = {
+          get: jest.fn()
+            .mockResolvedValueOnce({ empty: true })
+            .mockResolvedValueOnce({ docs: [] })
+            .mockResolvedValueOnce({ exists: false })
+            .mockResolvedValueOnce(mockUnitDoc),
+          set: jest.fn(),
+        };
+        return await callback(transaction);
+      });
+
+      const wrapped = wrap(createBookingAtomic);
+
+      // Act — validData has requireOwnerApproval: true (pending flow)
+      await wrapped({ data: validData });
+
+      // Assert — guest pending_request key written
+      const pendingRequestCall = mockDb.update.mock.calls.find(
+        (args: any[]) =>
+          args[0] && "emails_sent.pending_request" in args[0]
+      );
+      expect(pendingRequestCall).toBeDefined();
+      expect(pendingRequestCall[0]["emails_sent.pending_request"]).toMatchObject({
+        email: "john@example.com",
+        booking_id: "mock-booking-id",
+        provider_id: null,
+      });
+      expect(
+        pendingRequestCall[0]["emails_sent.pending_request"].sent_at
+      ).toBeDefined();
+
+      // Assert — owner pending_owner_notification key written
+      const pendingOwnerCall = mockDb.update.mock.calls.find(
+        (args: any[]) =>
+          args[0] && "emails_sent.pending_owner_notification" in args[0]
+      );
+      expect(pendingOwnerCall).toBeDefined();
+      expect(
+        pendingOwnerCall[0]["emails_sent.pending_owner_notification"]
+      ).toMatchObject({
+        email: "owner@example.com",
+        booking_id: "mock-booking-id",
+        provider_id: null,
+      });
+    });
+
+    it("audit/34 §5 — persists confirmation + owner_notification on auto-confirmed flow", async () => {
+      // Arrange
+      const mockDb = require("../src/firebase").db;
+      mockDb.collection().doc().get
+        .mockResolvedValueOnce(mockPropertyDoc)         // propertyDocForOwner
+        .mockResolvedValueOnce(mockWidgetSettingsDoc)   // widgetSettingsDoc
+        .mockResolvedValueOnce(mockUnitDoc)             // unitDocForFees
+        .mockResolvedValueOnce(mockPropertyDoc)         // propertyDoc (post-tx)
+        .mockResolvedValueOnce({ data: () => ({}) })    // bookingRef snapshot
+        .mockResolvedValueOnce(mockOwnerUserDoc);       // ownerDoc
+
+      mockDb.runTransaction.mockImplementation(async (callback: any) => {
+        const transaction = {
+          get: jest.fn()
+            .mockResolvedValueOnce({ empty: true })
+            .mockResolvedValueOnce({ docs: [] })
+            .mockResolvedValueOnce({ exists: false })
+            .mockResolvedValueOnce(mockUnitDoc),
+          set: jest.fn(),
+        };
+        return await callback(transaction);
+      });
+
+      const autoConfirmedData = { ...validData, requireOwnerApproval: false };
+      const wrapped = wrap(createBookingAtomic);
+
+      // Act
+      await wrapped({ data: autoConfirmedData });
+
+      // Assert — guest confirmation key written
+      const confirmationCall = mockDb.update.mock.calls.find(
+        (args: any[]) =>
+          args[0] && "emails_sent.confirmation" in args[0]
+      );
+      expect(confirmationCall).toBeDefined();
+      expect(confirmationCall[0]["emails_sent.confirmation"]).toMatchObject({
+        email: "john@example.com",
+        booking_id: "mock-booking-id",
+        provider_id: null,
+      });
+      expect(
+        confirmationCall[0]["emails_sent.confirmation"].sent_at
+      ).toBeDefined();
+
+      // Assert — owner owner_notification key written
+      const ownerNotifCall = mockDb.update.mock.calls.find(
+        (args: any[]) =>
+          args[0] && "emails_sent.owner_notification" in args[0]
+      );
+      expect(ownerNotifCall).toBeDefined();
+      expect(
+        ownerNotifCall[0]["emails_sent.owner_notification"]
+      ).toMatchObject({
+        email: "owner@example.com",
+        booking_id: "mock-booking-id",
+        provider_id: null,
+      });
     });
   });
 

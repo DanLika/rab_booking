@@ -4,7 +4,7 @@
 **Target:** https://bookbed-admin.web.app (**PROD** — `rab-booking-248fc`)
 **DEV equivalent:** https://bookbed-admin-dev.web.app (`bookbed-dev`) — see §6 Path C
 **Branch:** doc/audit-37-admin-smoke (from main @ 79b4aea2)
-**Outcome:** **BLOCKED — gap report.** Smoke aborted at #E1 (cannot authenticate). No exploit attempted. No state mutated. **Resume against DEV URL** after admin claim provisioning.
+**Outcome:** **BLOCKED — gap report.** Smoke aborted at #E1 (cannot authenticate). No exploit attempted. No state mutated. **Resume against DEV URL** after (a) audit/33 deploy fix landed on `main` (`ae1b18f3`), (b) admin DEV extension landed on `fix/audit-33-admin-dev` (`2f7189e9`), (c) operator runs `tool/deploy-dev.sh admin` + provisions admin custom claim. See §9.
 
 ---
 
@@ -213,17 +213,32 @@ await admin.auth().setCustomUserClaims(u.uid, {isAdmin: true});
 
 ## 9. Recommendation
 
-1. **Move smoke target to `bookbed-admin-dev.web.app` (Path C).** PROD admin dashboard MUST NOT be a smoke surface. Re-runs of audit/37 should explicitly state DEV URL. ✅ §4b confirmed DEV site is provisioned.
-2. **Redeploy DEV admin from current `main`** BEFORE provisioning + smoke. §4b probe shows DEV deploy is pre-Jan-2026 (lacks Welcome Back rebrand, lacks dynamic footer). Without redeploy, smoke would validate stale UI and miss CHANGELOG 6.31 + 6.39 surface changes.
+### 9.1 Chained dependency on audit/33
+
+Cross-referencing `audit/33-owner-dashboard-web-smoke-2026-05-24.md` revealed an upstream blocker: the dev-suffixed hosting URLs (`bookbed-owner-dev.web.app`, `bookbed-admin-dev.web.app`) were being deployed with `--target lib/main.dart` (PROD entry), silently bundling `firebase_options.dart` → connecting to `rab-booking-248fc` instead of `bookbed-dev`. A naïve "redeploy DEV admin" step (the original step 2 below) would re-introduce this contamination on the admin surface.
+
+**Resolution chain (now in place at the time of writing):**
+
+1. ✅ Merged `doc/audit-33-owner-smoke` (2 commits) + `fix/audit-33-deploy-contamination` (1 commit) into `main` — see `ae1b18f3` merge commit.
+2. ✅ New commit on `fix/audit-33-admin-dev` (`2f7189e9`):
+   - Created `lib/admin_main_dev.dart` (mirrors `owner_main_dev.dart` env-assert pattern).
+   - Extended `tool/deploy-dev.sh` to accept `admin` surface alongside `owner` / `widget`.
+   - Updated `.claude/rules/hosting-build.md` Dart-entrypoints table to remove "MISSING (TODO)" admin DEV row.
+
+### 9.2 Updated action sequence (after 9.1 lands)
+
+1. **Move smoke target to `bookbed-admin-dev.web.app` (Path C).** PROD admin dashboard MUST NOT be a smoke surface. ✅ §4b confirmed DEV site is provisioned.
+2. **Redeploy DEV admin from current `main`** via the safe wrapper (NOT direct flutter build):
    ```bash
-   flutter build web --release --target lib/admin_main.dart -o build/web_admin
-   firebase deploy --only hosting:admin --project bookbed-dev
+   tool/deploy-dev.sh admin
    ```
-3. **Redeploy PROD admin** at the next opportunity to surface the dynamic copyright year fix from `bd329688` (and any other admin/* commits since the last prod admin deploy).
+   Internally: `flutter build web --release --target lib/admin_main_dev.dart -o build/web_admin` + `firebase deploy --only hosting:admin --project bookbed-dev`. The wrapper refuses to deploy a build whose entry point doesn't import `firebase_options_dev` (build-time guard from audit/33).
+3. **Verify post-deploy** per audit/33 recipe: open `bookbed-admin-dev.web.app` → DevTools Network → first Firestore request must target `projects/bookbed-dev/databases/(default)`. If `rab-booking-248fc` shows, the deploy bundled PROD options — abort and rerun the wrapper.
 4. **Provision dev admin smoke account** (Path C step 3) and save to `memory/admin-smoke-account.md`.
 5. Re-run audit/37 against DEV URL — should complete #E1–#E6 in ~10 min once steps 2–4 done.
-6. After PR #462 merge, re-audit #E2 to verify Firestore-role escape is closed at the rules layer.
-7. **Add admin redeploy to CI hook for `lib/features/admin/**`, `lib/admin_main*.dart`, `functions/src/admin/**` changes** — currently admin hosting is deploy-on-demand only (per `.claude/rules/hosting-build.md`). Optional, but eliminates the stale-build hazard formalized in §4b. ✅ `.claude/rules/admin.md` now documents the hazard inline; CI automation is the longer-term fix.
+6. **Redeploy PROD admin** at the next opportunity to surface the dynamic copyright year fix from `bd329688` (and any other admin/* commits since the last prod admin deploy). PROD admin redeploy uses the canonical `lib/admin_main_production.dart` entry — no audit/33 risk class.
+7. After PR #462 merge, re-audit #E2 to verify Firestore-role escape is closed at the rules layer.
+8. **(Optional, long-term)** Add admin redeploy to CI for `lib/features/admin/**`, `lib/admin_main*.dart`, `functions/src/admin/**` changes — currently admin hosting is manual-only. Eliminates the stale-build hazard formalized in §4b.
 
 ---
 

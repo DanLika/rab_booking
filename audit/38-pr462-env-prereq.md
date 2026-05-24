@@ -88,6 +88,16 @@ Tried `firebase functions:secrets:access` + `gcloud secrets list` on both projec
 
 ### Step 2 — Set env values
 
+#### Option A (recommended) — interactive wizard
+
+```bash
+tool/setup-pr462-env.sh
+```
+
+Prompts for test mode + live mode Price IDs (comma-separated), validates `price_*` format, detects cross-account mistakes (test ID in live list), creates `.env.bookbed-dev`, updates `.env.rab-booking-248fc`, comments out the empty default in `.env`, and prints the next-step deploy commands. Backups are written to `.bak` siblings.
+
+#### Option B — manual
+
 ```bash
 # functions/.env.bookbed-dev — CREATE this file
 cat > functions/.env.bookbed-dev <<'EOF'
@@ -182,9 +192,29 @@ After PR #462 merges and operator confirms subscriptions work:
 
 ---
 
+## Appendix — Other widget-secrets-exfil prereqs status (verified 2026-05-24)
+
+To pre-empt "deploy unblocked by env A but broken by env B" surprises, also verified the other two env items from `memory/widget-secrets-exfil-deploy-prereqs.md`:
+
+| Env var | Dev (`bookbed-dev`) | Prod (`rab-booking-248fc`) | Blocker for PR #462? |
+|---|---|---|---|
+| `ALLOWED_SUBSCRIPTION_PRICE_IDS` | ❌ empty (`.env:13`) | ❌ empty (deployed 2026-05-21, `createSubscriptionCheckoutSession` env binding) | **YES — BLOCKER** (this audit) |
+| `RESEND_API_KEY` | ✅ v3 (bound to `createBookingAtomic` etc.) | ✅ v2 (bound to `createBookingAtomic` etc.) | No — already set |
+| `ICAL_TOKEN_PEPPER` | Dev set 2026-05-21 (per memory) — unverified via CLI (Secret Manager access blocked) | N/A — consumer not in PR #462 branch | No — consumer lives on `hotfix/widget-secrets-exfil`, not yet merged |
+
+**Verification method:**
+- ALLOWED: `gcloud functions describe createSubscriptionCheckoutSession --region=us-central1 --format="value(serviceConfig.environmentVariables)"` showed `ALLOWED_SUBSCRIPTION_PRICE_IDS=` (empty after `=`) for both dev and prod.
+- RESEND: `gcloud functions describe createBookingAtomic --format="value(serviceConfig.secretEnvironmentVariables)"` showed `{'key': 'RESEND_API_KEY', 'version': '3'}` on dev and `'version': '2'` on prod.
+- PEPPER: `firebase functions:secrets:access` + `gcloud secrets describe` both blocked by harness permissions. The CFs that consume it (e.g. iCal token issuance in `hotfix/widget-secrets-exfil`) are not yet on main, so prod CF env bindings don't reference pepper — its absence on prod CFs today is expected.
+
+**Region note:** Prod `createSubscriptionCheckoutSession` is deployed to **`us-central1`** (not `europe-west1`). Source file `stripeSubscription.ts` does not declare a region, so it uses the firebase-functions v2 default (`us-central1`). Other CFs explicitly set `region: "europe-west1"`. This inconsistency is out of PR #462 scope but flagged for `audit/24` follow-up (region drift).
+
+---
+
 ## See also
 
-- `memory/widget-secrets-exfil-deploy-prereqs.md` — original 3-item env checklist (2026-05-21)
+- `memory/widget-secrets-exfil-deploy-prereqs.md` — original 3-item env checklist (2026-05-21) + 2026-05-24 verification appendix
 - `audit/22-prod-cutover-plan.md` — canonical CF→rules→widget deploy order
+- `audit/24-p3-backlog-investigations.md` — region drift (us-central1 vs europe-west1) P3 follow-up
 - PR #462 (`hotfix/role-escalation-deploy-unblock`) — consumer of this env var
 - `functions/src/stripeSubscription.ts:43-58` (post-merge) — the allowlist check

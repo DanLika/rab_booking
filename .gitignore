@@ -102,3 +102,9 @@ functions/lib/
 
 # Node v25 JIT compile cache (regenerated on each run)
 node-compile-cache/
+
+# Jest worker/transform cache (created in repo root by some test runs)
+jest_dx/
+
+# Local MCP server config (IDE-managed)
+.mcp.json

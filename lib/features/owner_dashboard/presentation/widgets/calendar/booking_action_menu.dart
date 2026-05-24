@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../l10n/app_localizations.dart';
@@ -10,7 +9,7 @@ import '../../../../../core/constants/enums.dart';
 import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/models/unit_model.dart';
-import '../../../../../shared/providers/repository_providers.dart';
+import '../../../data/services/owner_booking_callable_service.dart';
 import '../../providers/owner_calendar_provider.dart';
 import '../../providers/calendar_filters_provider.dart';
 
@@ -824,57 +823,20 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
       if (!context.mounted) return null;
       ErrorDisplayUtils.showLoadingSnackBar(context, l10n.bookingActionMoving);
 
-      // Check for conflicts in target unit
-      // IMPORTANT: Normalize dates to midnight for consistent turnover day detection
-      // Same-day turnover (checkOut == checkIn) is ALLOWED and should not be treated as conflict
-      final normalizedCheckIn = DateTime(
-        widget.booking.checkIn.year,
-        widget.booking.checkIn.month,
-        widget.booking.checkIn.day,
-      );
-      final normalizedCheckOut = DateTime(
-        widget.booking.checkOut.year,
-        widget.booking.checkOut.month,
-        widget.booking.checkOut.day,
-      );
-
-      final bookingRepo = ref.read(bookingRepositoryProvider);
-      // Note: areDatesAvailable returns TRUE if dates ARE available (no conflict)
-      final datesAvailable = await bookingRepo.areDatesAvailable(
-        unitId: targetUnit.id,
-        checkIn: normalizedCheckIn,
-        checkOut: normalizedCheckOut,
-        excludeBookingId: widget.booking.id,
-      );
-
-      if (!datesAvailable) {
-        // Conflict detected - show error
-        if (!context.mounted) return null;
-        ErrorDisplayUtils.showErrorSnackBar(
-          context,
-          'Cannot move booking: ${targetUnit.name} already has a booking during these dates',
-          userMessage: 'Cannot move: unit is already booked for these dates',
-        );
-        return null;
-      }
-
-      // Update booking with new unit, property AND owner
-      // CRITICAL: Must update unitId, propertyId, AND ownerId because:
-      // 1. Firestore path is: properties/{propertyId}/units/{unitId}/bookings/{id}
-      // 2. When moving between units, the booking is DELETE from old path + CREATE at new path
-      // 3. Security rule requires: request.resource.data.owner_id == request.auth.uid
-      // 4. Without correct propertyId/ownerId, the batch operation fails with permission-denied
-      // 5. Fallback to current user ID if unit has no ownerId (legacy units)
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-      final updatedBooking = widget.booking.copyWith(
-        unitId: targetUnit.id,
-        propertyId: targetUnit.propertyId,
-        ownerId: targetUnit.ownerId ?? currentUserId ?? widget.booking.ownerId,
-      );
-      // Pass original booking to avoid collectionGroup permission error
-      await bookingRepo.updateBooking(
-        updatedBooking,
-        originalBooking: widget.booking,
+      // audit/26 PR-A: route through updateBookingAtomic so the overlap check
+      // runs server-side inside a txn and target property ownership is
+      // re-validated (auth.uid == target.owner_id). Dates are inherited from
+      // the existing booking by the CF (no checkIn/checkOut sent here), so
+      // the server normalizes existing Timestamps via the pass-through path.
+      // Server writes owner_id from the target property doc — never trusts
+      // client-sent values.
+      final callableService = ref.read(ownerBookingCallableServiceProvider);
+      await callableService.updateBooking(
+        bookingId: widget.booking.id,
+        propertyId: widget.booking.propertyId,
+        unitId: widget.booking.unitId,
+        targetPropertyId: targetUnit.propertyId,
+        targetUnitId: targetUnit.id,
       );
 
       // Refresh calendar providers to update UI

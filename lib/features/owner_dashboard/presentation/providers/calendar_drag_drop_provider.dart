@@ -1,12 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../../../../shared/models/unit_model.dart';
-import '../../../../shared/repositories/booking_repository.dart';
-import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
+import '../../data/services/owner_booking_callable_service.dart';
 import '../../utils/booking_overlap_detector.dart';
 import 'owner_calendar_provider.dart';
 import 'calendar_filters_provider.dart';
@@ -39,8 +37,8 @@ class DragDropState {
 /// Provider for drag-and-drop state and operations
 final dragDropProvider = StateNotifierProvider<DragDropNotifier, DragDropState>(
   (ref) {
-    final bookingRepository = ref.watch(bookingRepositoryProvider);
-    return DragDropNotifier(bookingRepository, ref);
+    final callableService = ref.watch(ownerBookingCallableServiceProvider);
+    return DragDropNotifier(callableService, ref);
   },
 );
 
@@ -85,10 +83,10 @@ _NormalizedDates _normalizeBookingDates({
 
 /// Notifier for drag-and-drop operations
 class DragDropNotifier extends StateNotifier<DragDropState> {
-  final BookingRepository _bookingRepository;
+  final OwnerBookingCallableService _callableService;
   final Ref _ref;
 
-  DragDropNotifier(this._bookingRepository, this._ref)
+  DragDropNotifier(this._callableService, this._ref)
     : super(const DragDropState());
 
   /// Start dragging a booking
@@ -173,27 +171,19 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
         ErrorDisplayUtils.showLoadingSnackBar(context, 'Moving booking...');
       }
 
-      // Update booking in Firestore
-      // CRITICAL: Must update unitId, propertyId, AND ownerId because:
-      // 1. Firestore path is: properties/{propertyId}/units/{unitId}/bookings/{id}
-      // 2. When moving between units, the booking is DELETE from old path + CREATE at new path
-      // 3. Security rule requires: request.resource.data.owner_id == request.auth.uid
-      // 4. Without correct propertyId/ownerId, the batch operation fails with permission-denied
-      // 5. Fallback to current user ID if unit has no ownerId (legacy units)
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-      final updatedBooking = booking.copyWith(
-        unitId: targetUnit.id,
-        propertyId: targetUnit.propertyId,
-        ownerId: targetUnit.ownerId ?? currentUserId ?? booking.ownerId,
+      // audit/26 PR-A: route through updateBookingAtomic so the overlap check
+      // runs server-side inside a txn (the in-memory check above is a UX
+      // preview only). The CF re-validates that auth.uid owns BOTH the source
+      // booking AND the target property, and writes owner_id from the
+      // validated target property — never trusting client-sent values.
+      await _callableService.updateBooking(
+        bookingId: booking.id,
+        propertyId: booking.propertyId,
+        unitId: booking.unitId,
+        targetPropertyId: targetUnit.propertyId,
+        targetUnitId: targetUnit.id,
         checkIn: dates.newCheckIn,
         checkOut: dates.newCheckOut,
-        updatedAt: DateTime.now(),
-      );
-
-      // Pass original booking to avoid collectionGroup permission error
-      await _bookingRepository.updateBooking(
-        updatedBooking,
-        originalBooking: booking,
       );
 
       // Invalidate calendar providers to refresh UI
@@ -241,12 +231,30 @@ class DragDropNotifier extends StateNotifier<DragDropState> {
   }
 
   /// Undo booking move (restore to original position)
+  ///
+  /// The booking is currently at the "moved" location; we send the original
+  /// booking's IDs as the target so the CF moves it back. Server re-validates
+  /// ownership of both source (current location) and target (restore point).
   Future<void> _undoBookingMove(
     BookingModel originalBooking,
     BuildContext context,
   ) async {
+    final movedBooking = state.draggingBooking;
     try {
-      await _bookingRepository.updateBooking(originalBooking);
+      // Determine current location: if state still has the drag context use
+      // it; otherwise fall back to the original (no move happened).
+      final currentPropertyId =
+          movedBooking?.propertyId ?? originalBooking.propertyId;
+      final currentUnitId = movedBooking?.unitId ?? originalBooking.unitId;
+      await _callableService.updateBooking(
+        bookingId: originalBooking.id,
+        propertyId: currentPropertyId,
+        unitId: currentUnitId,
+        targetPropertyId: originalBooking.propertyId,
+        targetUnitId: originalBooking.unitId,
+        checkIn: originalBooking.checkIn,
+        checkOut: originalBooking.checkOut,
+      );
       _ref.invalidate(calendarBookingsProvider);
 
       if (context.mounted) {

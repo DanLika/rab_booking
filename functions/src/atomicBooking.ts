@@ -22,6 +22,7 @@ import {
 } from "./utils/inputSanitization";
 import {
   validateAndConvertBookingDates,
+  validateOwnerBookingDates,
   calculateBookingNights,
   calculateDaysInAdvance,
 } from "./utils/dateValidation";
@@ -1087,6 +1088,7 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
         guest_phone: finalGuestPhone,
         check_in: checkInDate,
         check_out: checkOutDate,
+        nights: bookingNights, // closes audit/26 #5 for guest path
         guest_count: numericGuestCount, // Use validated numeric value
         pet_count: numericPetCount, // Number of pets
         total_price: finalTotalPrice, // Use server-validated price (may differ from client)
@@ -1481,6 +1483,654 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
     throw new HttpsError(
       "internal",
       error.message || "Failed to create booking. Please try again."
+    );
+  }
+});
+
+// ============================================================================
+// OWNER-SIDE BOOKING CALLABLES — audit/26 PR-A
+// ============================================================================
+// These callables route 5 owner UI paths (manual booking create, edit, inline
+// edit, drag-and-drop move, move-to-unit) through a Firestore transaction so
+// concurrent owner writes can't bypass the overlap check the way bare client
+// `.add()` / `.update()` calls did. They ALSO apply SF-026 Zagreb-civil-day
+// normalization so owner bookings carry the same `nights` semantics as
+// widget bookings.
+//
+// Status-only flips and the FROZEN 989-line owner repo lifecycle methods are
+// intentionally OUT OF SCOPE — see audit/26 §2.2 lower-risk sibling table.
+// ============================================================================
+
+const OWNER_BOOKING_ALLOWED_PAYMENT_METHODS = [
+  "cash",
+  "card",
+  "bank_transfer",
+  "other",
+];
+const OWNER_BOOKING_ALLOWED_STATUSES = [
+  "pending",
+  "confirmed",
+  "completed",
+  "cancelled",
+];
+const OWNER_BOOKING_MAX_NOTES_LENGTH = 1000;
+const OWNER_BOOKING_MAX_GUEST_COUNT = 50;
+
+/**
+ * Validate that `auth.uid` owns the property at `propertyId`.
+ *
+ * Returns the validated owner_id (always === auth.uid) so the caller can
+ * write it into the booking document — never trust client-sent owner_id.
+ */
+async function assertPropertyOwnership(
+  propertyId: string,
+  authUid: string
+): Promise<string> {
+  const propertyDoc = await db.collection("properties").doc(propertyId).get();
+  if (!propertyDoc.exists) {
+    throw new HttpsError("not-found", "Property not found.");
+  }
+  const propertyOwnerId = propertyDoc.data()?.owner_id as string | undefined;
+  if (!propertyOwnerId) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Property configuration error. Please contact support."
+    );
+  }
+  if (propertyOwnerId !== authUid) {
+    throw new HttpsError(
+      "permission-denied",
+      "You are not the owner of this property."
+    );
+  }
+  return propertyOwnerId;
+}
+
+/**
+ * Query overlapping bookings in a unit's subcollection within a Firestore txn.
+ *
+ * Status filter `[pending, confirmed]` matches createBookingAtomic (line 742)
+ * and the Dart repo getOverlappingBookings (line 318). Completed and cancelled
+ * bookings don't block dates.
+ */
+async function getOverlappingBookingsInTxn(
+  transaction: admin.firestore.Transaction,
+  propertyId: string,
+  unitId: string,
+  checkInDate: admin.firestore.Timestamp,
+  checkOutDate: admin.firestore.Timestamp,
+  excludeBookingId: string | null
+): Promise<admin.firestore.QueryDocumentSnapshot[]> {
+  const query = db
+    .collection("properties")
+    .doc(propertyId)
+    .collection("units")
+    .doc(unitId)
+    .collection("bookings")
+    .where("status", "in", ["pending", "confirmed"])
+    .where("check_in", "<", checkOutDate)
+    .where("check_out", ">", checkInDate);
+  const snapshot = await transaction.get(query);
+  if (!excludeBookingId) return snapshot.docs;
+  return snapshot.docs.filter((doc) => doc.id !== excludeBookingId);
+}
+
+/**
+ * Cloud Function: createOwnerBookingAtomic
+ *
+ * Owner-authenticated manual booking creation with server-side overlap check
+ * inside a Firestore transaction. Closes audit/26 finding #4 worst offender
+ * (booking_create_dialog.dart bare `.add()`).
+ *
+ * Inputs (camelCase from client):
+ *   unitId, propertyId, checkIn, checkOut, guestName, guestEmail,
+ *   guestPhone?, guestCount, totalPrice, paymentMethod, status?, notes?,
+ *   allowOverlap?
+ *
+ * Server enforces:
+ *   - auth.uid === property.owner_id (target ownership)
+ *   - Numeric validation, sanitization, status enum, payment enum
+ *   - SF-026 date normalization via validateOwnerBookingDates
+ *   - Overlap check inside txn (skipped if allowOverlap === true, persisted
+ *     as `overlap_acknowledged: true` for audit trail)
+ *   - source = "admin", booking_reference = BK-<docId12>
+ */
+export const createOwnerBookingAtomic = onCall(async (request) => {
+  const authUid = request.auth?.uid;
+  if (!authUid) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+
+  setUser(authUid);
+
+  await enforceRateLimit(authUid, "create_owner_booking", {
+    maxCalls: 30,
+    windowMs: 60_000,
+    errorMessage:
+      "Too many booking attempts. Please wait a moment and try again.",
+  });
+
+  const data = request.data ?? {};
+  const {
+    unitId,
+    propertyId,
+    checkIn,
+    checkOut,
+    guestName,
+    guestEmail,
+    guestPhone,
+    guestCount,
+    totalPrice,
+    paymentMethod,
+    status: statusInput,
+    notes,
+    allowOverlap = false,
+  } = data;
+
+  const missingFields: string[] = [];
+  if (!unitId || typeof unitId !== "string") missingFields.push("unitId");
+  if (!propertyId || typeof propertyId !== "string") {
+    missingFields.push("propertyId");
+  }
+  if (!checkIn) missingFields.push("checkIn");
+  if (!checkOut) missingFields.push("checkOut");
+  if (!guestName || typeof guestName !== "string" || !guestName.trim()) {
+    missingFields.push("guestName");
+  }
+  if (!guestEmail || typeof guestEmail !== "string" || !guestEmail.trim()) {
+    missingFields.push("guestEmail");
+  }
+  if (guestCount === undefined || guestCount === null) {
+    missingFields.push("guestCount");
+  }
+  if (totalPrice === undefined || totalPrice === null) {
+    missingFields.push("totalPrice");
+  }
+  if (!paymentMethod || typeof paymentMethod !== "string") {
+    missingFields.push("paymentMethod");
+  }
+
+  if (missingFields.length > 0) {
+    logError("[CreateOwnerBooking] Missing required fields", null, {
+      missingFields,
+      authUid: authUid.substring(0, 8) + "...",
+    });
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid booking data. Please check all fields and try again."
+    );
+  }
+
+  const numericTotalPrice = Number(totalPrice);
+  const numericGuestCount = Number(guestCount);
+
+  if (!Number.isFinite(numericTotalPrice) || numericTotalPrice < 0) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid total price. Must be a positive number."
+    );
+  }
+  if (
+    !Number.isInteger(numericGuestCount) ||
+    numericGuestCount < 1 ||
+    numericGuestCount > OWNER_BOOKING_MAX_GUEST_COUNT
+  ) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Invalid guest count. Must be between 1 and ${OWNER_BOOKING_MAX_GUEST_COUNT}.`
+    );
+  }
+
+  if (!OWNER_BOOKING_ALLOWED_PAYMENT_METHODS.includes(paymentMethod)) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Invalid payment method: "${paymentMethod}". Must be one of: ${OWNER_BOOKING_ALLOWED_PAYMENT_METHODS.join(", ")}.`
+    );
+  }
+
+  const status =
+    typeof statusInput === "string" && statusInput.length > 0 ?
+      statusInput :
+      "confirmed";
+  if (!OWNER_BOOKING_ALLOWED_STATUSES.includes(status)) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Invalid status: "${status}". Must be one of: ${OWNER_BOOKING_ALLOWED_STATUSES.join(", ")}.`
+    );
+  }
+
+  const sanitizedGuestName = sanitizeText(guestName);
+  const sanitizedGuestEmail = sanitizeEmail(guestEmail);
+  const sanitizedGuestPhone = guestPhone ? sanitizePhone(guestPhone) : null;
+  const sanitizedNotes = notes ? sanitizeText(notes) : null;
+
+  if (!sanitizedGuestName || sanitizedGuestName.length < 2) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Guest name is required and must be at least 2 characters."
+    );
+  }
+  if (!sanitizedGuestEmail || !validateEmail(sanitizedGuestEmail)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid email address. Please provide a valid email."
+    );
+  }
+  if (sanitizedNotes && sanitizedNotes.length > OWNER_BOOKING_MAX_NOTES_LENGTH) {
+    throw new HttpsError(
+      "invalid-argument",
+      `Notes are too long. Maximum ${OWNER_BOOKING_MAX_NOTES_LENGTH} characters allowed.`
+    );
+  }
+  const finalGuestPhone =
+    sanitizedGuestPhone && sanitizedGuestPhone.length >= 7 ?
+      sanitizedGuestPhone :
+      null;
+
+  // Target ownership — server-validated, never trust client.
+  const ownerId = await assertPropertyOwnership(propertyId, authUid);
+
+  // Verify the unit exists under this property (avoids dangling subcollection
+  // writes and prevents owner crafting bookings under arbitrary unitIds).
+  const unitDoc = await db
+    .collection("properties")
+    .doc(propertyId)
+    .collection("units")
+    .doc(unitId)
+    .get();
+  if (!unitDoc.exists) {
+    throw new HttpsError("not-found", "Unit not found.");
+  }
+
+  const {checkInDate, checkOutDate} = validateOwnerBookingDates(
+    checkIn,
+    checkOut
+  );
+  const nights = calculateBookingNights(checkInDate, checkOutDate);
+
+  const bookingDocRef = db
+    .collection("properties")
+    .doc(propertyId)
+    .collection("units")
+    .doc(unitId)
+    .collection("bookings")
+    .doc();
+  const bookingId = bookingDocRef.id;
+  const bookingReference = generateBookingReference(bookingId);
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      if (allowOverlap !== true) {
+        const overlapping = await getOverlappingBookingsInTxn(
+          transaction,
+          propertyId,
+          unitId,
+          checkInDate,
+          checkOutDate,
+          null
+        );
+        if (overlapping.length > 0) {
+          throw new HttpsError(
+            "already-exists",
+            "Dates conflict with an existing booking. Select different dates or acknowledge the overlap."
+          );
+        }
+      }
+
+      const bookingData = {
+        unit_id: unitId,
+        property_id: propertyId,
+        owner_id: ownerId,
+        user_id: null,
+        guest_name: sanitizedGuestName,
+        guest_email: sanitizedGuestEmail,
+        guest_phone: finalGuestPhone,
+        check_in: checkInDate,
+        check_out: checkOutDate,
+        nights,
+        guest_count: numericGuestCount,
+        total_price: numericTotalPrice,
+        payment_method: paymentMethod,
+        payment_status: "pending",
+        status,
+        booking_reference: bookingReference,
+        source: "admin",
+        notes: sanitizedNotes,
+        overlap_acknowledged: allowOverlap === true ? true : false,
+        created_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      transaction.set(bookingDocRef, bookingData);
+    });
+
+    logSuccess("[CreateOwnerBooking] Booking created", {
+      bookingId,
+      bookingReference,
+      unitId,
+      propertyId,
+      ownerIdPrefix: ownerId.substring(0, 8) + "...",
+      overlapAcknowledged: allowOverlap === true,
+    });
+
+    return {
+      success: true,
+      bookingId,
+      bookingReference,
+      nights,
+    };
+  } catch (error: any) {
+    if (error instanceof HttpsError) throw error;
+    logError("[CreateOwnerBooking] Unexpected error", error, {
+      unitId,
+      propertyId,
+    });
+    throw new HttpsError(
+      "internal",
+      error?.message || "Failed to create booking. Please try again."
+    );
+  }
+});
+
+/**
+ * Cloud Function: updateBookingAtomic
+ *
+ * Owner-authenticated booking update with server-side overlap check inside
+ * a Firestore transaction. Handles three update shapes:
+ *
+ *   1. Same-unit field edits (dates / guestCount / totalPrice / notes /
+ *      status) — direct `transaction.update(currentRef, ...)`.
+ *   2. Cross-unit move with optional date change (drag-drop, move-to-unit)
+ *      — `transaction.delete(oldRef) + transaction.set(newRef, merged)`.
+ *   3. Status-only flip (no dates, no unit) — same as #1, no overlap check.
+ *
+ * Inputs (camelCase from client):
+ *   bookingId, propertyId (current), unitId (current),
+ *   targetPropertyId? targetUnitId? (cross-unit move),
+ *   checkIn? checkOut? guestCount? totalPrice? notes? status?,
+ *   allowOverlap?
+ *
+ * Server enforces:
+ *   - auth.uid === current booking's owner_id
+ *   - auth.uid === target property's owner_id (cross-unit)
+ *   - SF-026 date normalization (when dates change)
+ *   - Overlap check in target unit subcollection (excluding this booking),
+ *     skipped if allowOverlap === true
+ *   - Server-written owner_id always derived from validated property doc
+ */
+export const updateBookingAtomic = onCall(async (request) => {
+  const authUid = request.auth?.uid;
+  if (!authUid) {
+    throw new HttpsError("unauthenticated", "Authentication required.");
+  }
+
+  setUser(authUid);
+
+  await enforceRateLimit(authUid, "update_owner_booking", {
+    maxCalls: 60,
+    windowMs: 60_000,
+    errorMessage:
+      "Too many update attempts. Please wait a moment and try again.",
+  });
+
+  const data = request.data ?? {};
+  const {
+    bookingId,
+    propertyId,
+    unitId,
+    targetPropertyId,
+    targetUnitId,
+    checkIn,
+    checkOut,
+    guestCount,
+    totalPrice,
+    notes,
+    status: statusInput,
+    allowOverlap = false,
+  } = data;
+
+  if (!bookingId || typeof bookingId !== "string") {
+    throw new HttpsError("invalid-argument", "bookingId is required.");
+  }
+  if (!propertyId || typeof propertyId !== "string") {
+    throw new HttpsError("invalid-argument", "propertyId is required.");
+  }
+  if (!unitId || typeof unitId !== "string") {
+    throw new HttpsError("invalid-argument", "unitId is required.");
+  }
+
+  const currentRef = db
+    .collection("properties")
+    .doc(propertyId)
+    .collection("units")
+    .doc(unitId)
+    .collection("bookings")
+    .doc(bookingId);
+
+  const currentSnap = await currentRef.get();
+  if (!currentSnap.exists) {
+    throw new HttpsError(
+      "not-found",
+      "Booking no longer exists. It may have been deleted."
+    );
+  }
+  const currentData = currentSnap.data() ?? {};
+  if (currentData.owner_id !== authUid) {
+    throw new HttpsError(
+      "permission-denied",
+      "You are not the owner of this booking."
+    );
+  }
+
+  // Determine target unit/property. If client sent target IDs that match
+  // current, treat as same-unit edit.
+  const hasTargetUnit =
+    typeof targetUnitId === "string" && targetUnitId.length > 0;
+  const hasTargetProperty =
+    typeof targetPropertyId === "string" && targetPropertyId.length > 0;
+  const finalTargetUnitId = hasTargetUnit ? targetUnitId : unitId;
+  const finalTargetPropertyId = hasTargetProperty ?
+    targetPropertyId :
+    propertyId;
+  const isMove =
+    finalTargetUnitId !== unitId || finalTargetPropertyId !== propertyId;
+
+  // Cross-unit/property move — verify target ownership server-side.
+  let targetOwnerId = currentData.owner_id;
+  if (isMove) {
+    targetOwnerId = await assertPropertyOwnership(
+      finalTargetPropertyId,
+      authUid
+    );
+    const targetUnitDoc = await db
+      .collection("properties")
+      .doc(finalTargetPropertyId)
+      .collection("units")
+      .doc(finalTargetUnitId)
+      .get();
+    if (!targetUnitDoc.exists) {
+      throw new HttpsError("not-found", "Target unit not found.");
+    }
+  }
+
+  // Resolve new dates: provided → validate; absent → inherit current doc.
+  const datesProvided = checkIn !== undefined || checkOut !== undefined;
+  let checkInDate: admin.firestore.Timestamp;
+  let checkOutDate: admin.firestore.Timestamp;
+  let nights: number | undefined;
+  if (datesProvided) {
+    if (!checkIn || !checkOut) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Both checkIn and checkOut must be provided together."
+      );
+    }
+    const normalized = validateOwnerBookingDates(checkIn, checkOut);
+    checkInDate = normalized.checkInDate;
+    checkOutDate = normalized.checkOutDate;
+    nights = calculateBookingNights(checkInDate, checkOutDate);
+  } else {
+    checkInDate = currentData.check_in as admin.firestore.Timestamp;
+    checkOutDate = currentData.check_out as admin.firestore.Timestamp;
+  }
+
+  // Build same-unit update payload (only fields explicitly provided).
+  const updates: Record<string, unknown> = {
+    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+  };
+
+  if (datesProvided) {
+    updates.check_in = checkInDate;
+    updates.check_out = checkOutDate;
+    if (nights !== undefined) updates.nights = nights;
+  }
+
+  if (guestCount !== undefined) {
+    const numericGuestCount = Number(guestCount);
+    if (
+      !Number.isInteger(numericGuestCount) ||
+      numericGuestCount < 1 ||
+      numericGuestCount > OWNER_BOOKING_MAX_GUEST_COUNT
+    ) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Invalid guest count. Must be between 1 and ${OWNER_BOOKING_MAX_GUEST_COUNT}.`
+      );
+    }
+    updates.guest_count = numericGuestCount;
+  }
+
+  if (totalPrice !== undefined) {
+    const numericTotalPrice = Number(totalPrice);
+    if (!Number.isFinite(numericTotalPrice) || numericTotalPrice < 0) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Invalid total price. Must be a positive number."
+      );
+    }
+    updates.total_price = numericTotalPrice;
+  }
+
+  if (notes !== undefined) {
+    const sanitizedNotes = notes === null ? null : sanitizeText(String(notes));
+    if (
+      sanitizedNotes &&
+      sanitizedNotes.length > OWNER_BOOKING_MAX_NOTES_LENGTH
+    ) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Notes are too long. Maximum ${OWNER_BOOKING_MAX_NOTES_LENGTH} characters allowed.`
+      );
+    }
+    updates.notes = sanitizedNotes;
+  }
+
+  if (statusInput !== undefined) {
+    if (
+      typeof statusInput !== "string" ||
+      !OWNER_BOOKING_ALLOWED_STATUSES.includes(statusInput)
+    ) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Invalid status: "${statusInput}". Must be one of: ${OWNER_BOOKING_ALLOWED_STATUSES.join(", ")}.`
+      );
+    }
+    updates.status = statusInput;
+  }
+
+  if (isMove) {
+    updates.unit_id = finalTargetUnitId;
+    updates.property_id = finalTargetPropertyId;
+    updates.owner_id = targetOwnerId;
+  }
+
+  if (allowOverlap === true) {
+    updates.overlap_acknowledged = true;
+  }
+
+  const newRef = isMove ?
+    db
+      .collection("properties")
+      .doc(finalTargetPropertyId)
+      .collection("units")
+      .doc(finalTargetUnitId)
+      .collection("bookings")
+      .doc(bookingId) :
+    currentRef;
+
+  // Determine whether overlap check is needed: skipped if allowOverlap, AND
+  // skipped if neither dates nor unit changed (status-only / notes-only flip).
+  const needsOverlapCheck =
+    allowOverlap !== true && (datesProvided || isMove);
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      // Re-read current doc inside txn for consistency.
+      const innerSnap = await transaction.get(currentRef);
+      if (!innerSnap.exists) {
+        throw new HttpsError(
+          "not-found",
+          "Booking no longer exists. It may have been deleted."
+        );
+      }
+      const innerData = innerSnap.data() ?? {};
+      if (innerData.owner_id !== authUid) {
+        throw new HttpsError(
+          "permission-denied",
+          "You are not the owner of this booking."
+        );
+      }
+
+      if (needsOverlapCheck) {
+        const overlapping = await getOverlappingBookingsInTxn(
+          transaction,
+          finalTargetPropertyId,
+          finalTargetUnitId,
+          checkInDate,
+          checkOutDate,
+          bookingId
+        );
+        if (overlapping.length > 0) {
+          throw new HttpsError(
+            "already-exists",
+            "Dates conflict with an existing booking in the target unit. Select different dates or acknowledge the overlap."
+          );
+        }
+      }
+
+      if (isMove) {
+        // Merge current doc fields with updates so we don't drop unrelated
+        // fields (paid_amount, payment_intent_id, etc.) on relocation.
+        const mergedData = {
+          ...innerData,
+          ...updates,
+        };
+        transaction.delete(currentRef);
+        transaction.set(newRef, mergedData);
+      } else {
+        transaction.update(currentRef, updates);
+      }
+    });
+
+    logSuccess("[UpdateOwnerBooking] Booking updated", {
+      bookingId,
+      isMove,
+      datesChanged: datesProvided,
+      overlapAcknowledged: allowOverlap === true,
+      ownerIdPrefix: authUid.substring(0, 8) + "...",
+    });
+
+    return {success: true, bookingId};
+  } catch (error: any) {
+    if (error instanceof HttpsError) throw error;
+    logError("[UpdateOwnerBooking] Unexpected error", error, {
+      bookingId,
+      propertyId,
+      unitId,
+    });
+    throw new HttpsError(
+      "internal",
+      error?.message || "Failed to update booking. Please try again."
     );
   }
 });

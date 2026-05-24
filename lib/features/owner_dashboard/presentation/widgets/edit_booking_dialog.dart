@@ -1,5 +1,4 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +14,7 @@ import '../../../../core/utils/async_utils.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../data/services/owner_booking_callable_service.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_calendar_provider.dart';
 import '../../utils/booking_overlap_detector.dart';
@@ -687,41 +687,22 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
       // Check if check-out date changed (for token expiration update)
       final checkOutChanged = _checkOut != widget.booking.checkOut;
 
-      // FIXED BUG #2: Use transaction with existence check to prevent creating new document
-      // FIXED: FieldPath.documentId() does NOT work with collectionGroup() queries!
-      // Firestore expects full document path, not just ID when using collectionGroup.
-      // Solution: Use direct document path since we have propertyId and unitId
-      final firestore = ref.read(firestoreProvider);
-
-      // Build direct document reference using known path
-      // Structure: properties/{propertyId}/units/{unitId}/bookings/{bookingId}
-      final docRef = firestore
-          .collection('properties')
-          .doc(widget.booking.propertyId)
-          .collection('units')
-          .doc(widget.booking.unitId)
-          .collection('bookings')
-          .doc(widget.booking.id);
-
-      await firestore.runTransaction((transaction) async {
-        final docSnapshot = await transaction.get(docRef);
-
-        if (!docSnapshot.exists) {
-          throw Exception(
-            'Booking no longer exists. It may have been deleted.',
-          );
-        }
-
-        transaction.update(docRef, {
-          'check_in': Timestamp.fromDate(_checkIn),
-          'check_out': Timestamp.fromDate(_checkOut),
-          'guest_count': _guestCount,
-          'notes': _notesController.text.trim().isEmpty
-              ? null
-              : _notesController.text.trim(),
-          'updated_at': Timestamp.fromDate(DateTime.now()),
-        });
-      });
+      // audit/26 PR-A: route through updateBookingAtomic so the overlap check
+      // runs server-side inside a txn (the in-memory `BookingOverlapDetector`
+      // check above is a UX preview — it can be raced by a concurrent owner
+      // edit). Server also re-validates that auth.uid owns the booking.
+      final trimmedNotes = _notesController.text.trim();
+      final callableService = ref.read(ownerBookingCallableServiceProvider);
+      await callableService.updateBooking(
+        bookingId: widget.booking.id,
+        propertyId: widget.booking.propertyId,
+        unitId: widget.booking.unitId,
+        checkIn: _checkIn,
+        checkOut: _checkOut,
+        guestCount: _guestCount,
+        notes: trimmedNotes.isEmpty ? null : trimmedNotes,
+        clearNotes: trimmedNotes.isEmpty,
+      );
 
       // If check-out date changed, update token expiration
       if (checkOutChanged) {

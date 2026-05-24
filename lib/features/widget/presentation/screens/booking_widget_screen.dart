@@ -1339,8 +1339,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           _adults = maxG.clamp(1, maxG);
         }
       }
+      // Reset pets if the unit doesn't allow them, or clamp to maxPets
       if (_unit != null && !_unit!.allowsPets) {
         _pets = 0;
+      } else {
+        final maxP = _unit?.maxPets ?? 0;
+        if (maxP > 0 && _pets > maxP) {
+          _pets = maxP;
+        }
       }
     });
 
@@ -2766,17 +2772,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               if (mounted) {
                 setState(() => _adults = value);
               }
+              _saveFormData();
             },
             onChildrenChanged: (value) {
               if (mounted) {
                 setState(() => _children = value);
               }
+              _saveFormData();
             },
             onPetsChanged: _unit?.petFee != null
                 ? (value) {
                     if (mounted) {
                       setState(() => _pets = value);
                     }
+                    _saveFormData();
                   }
                 : null,
           ),

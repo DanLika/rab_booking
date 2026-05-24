@@ -49,7 +49,7 @@ Dart entrypoints po env:
 |---|---|---|---|
 | Owner dashboard | `lib/owner_main_dev.dart` | `lib/main_staging.dart` | `lib/main_prod.dart` |
 | Booking widget | `lib/widget_main_dev.dart` | `lib/widget_main_staging.dart` | `lib/widget_main.dart` |
-| Admin dashboard | **MISSING** (TODO: create `lib/admin_main_dev.dart`) | `lib/admin_main_staging.dart` | `lib/admin_main_production.dart` |
+| Admin dashboard | `lib/admin_main_dev.dart` | `lib/admin_main_staging.dart` | `lib/admin_main_production.dart` |
 
 `firebase_options{,_dev,_staging}.dart` — auto-applied by entry point's `Firebase.initializeApp(options: ...)`. Each non-PROD entry point also calls `EnvironmentConfig.setEnvironment(Environment.X)` AND asserts the runtime project ID matches the expected env in `kDebugMode` (defense-in-depth against the contamination class documented in `audit/14` + `audit/15` + `audit/33`).
 
@@ -61,8 +61,8 @@ Dart entrypoints po env:
 ### Footgun: GitHub Actions workflow
 `.github/workflows/deploy-widget.yml:57` hardkodira `projectId: rab-booking-248fc`. Workflow trenutno radi samo na prod. Equivalent owner + admin dev/staging deploy workflows do NOT exist — all non-prod deploys are manual.
 
-### Footgun (resolved 2026-05-24, audit/33): dev hosting served PROD-options build
-`bookbed-owner-dev.web.app` was deployed with `--target lib/main.dart` (PROD options bundled). Firestore writes landed in `rab-booking-248fc` (PROD) instead of `bookbed-dev`. Fix: redeploy via `tool/deploy-dev.sh owner` (uses `--target lib/owner_main_dev.dart`). Verify post-redeploy: open `bookbed-owner-dev.web.app` → DevTools Network → Firestore requests should target `projects/bookbed-dev/databases/(default)`. Same risk class for `bookbed-admin-dev.web.app` (admin lacks dev entry point — TODO above).
+### Footgun (resolved 2026-05-24, audit/33 + audit/37): dev hosting served PROD-options build
+`bookbed-owner-dev.web.app` was deployed with `--target lib/main.dart` (PROD options bundled). Firestore writes landed in `rab-booking-248fc` (PROD) instead of `bookbed-dev`. Fix: redeploy via `tool/deploy-dev.sh owner` (uses `--target lib/owner_main_dev.dart`). Verify post-redeploy: open `bookbed-owner-dev.web.app` → DevTools Network → Firestore requests should target `projects/bookbed-dev/databases/(default)`. Same wrapper now covers admin (`tool/deploy-dev.sh admin` → `lib/admin_main_dev.dart`) and widget.
 
 ### Footgun: owner dashboard has no env-overlay env var system
 All per-env behavior is baked at build time. There's no way to ship one bundle that switches env via URL/cookie. Always rebuild on env change.
@@ -111,7 +111,10 @@ tool/deploy-dev.sh widget
 # == flutter build web --release --target lib/widget_main_dev.dart -o build/web_widget
 #  + firebase deploy --only hosting:widget --project bookbed-dev
 
-# Admin dashboard — DEV NOT YET AVAILABLE (no admin_main_dev.dart — see TODO above)
+# Admin dashboard — DEV
+tool/deploy-dev.sh admin
+# == flutter build web --release --target lib/admin_main_dev.dart -o build/web_admin
+#  + firebase deploy --only hosting:admin --project bookbed-dev
 ```
 
 ### STAGING builds

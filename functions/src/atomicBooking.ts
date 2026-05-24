@@ -36,6 +36,7 @@ import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
 import {setUser, captureMessage} from "./sentry";
+import {invalidateIcalCache} from "./utils/icalCache";
 // NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
@@ -1429,6 +1430,12 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (
         emailError
       );
     }
+
+    // Synchronously flush the iCal feed cache before returning so a client
+    // that polls the feed URL immediately on success sees the new VEVENT.
+    // The onBookingCreated trigger flushes asynchronously and may not have
+    // fired yet by the time the caller acts on this response.
+    await invalidateIcalCache(propertyId, unitId);
 
     return {
       success: true,

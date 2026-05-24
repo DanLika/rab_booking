@@ -22,6 +22,7 @@ import {
   calculateTokenExpiration,
 } from "./bookingAccessToken";
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
+import {invalidateIcalCache} from "./utils/icalCache";
 
 // ==========================================
 // EMAIL ERROR TRACKING
@@ -59,6 +60,28 @@ function trackEmailFailure(
     component: "email",
     action: "send_failure",
   });
+}
+
+/**
+ * Convert a Firestore Timestamp-like value to milliseconds, or 0 on
+ * missing/invalid input. Used to compare check_in/check_out across a
+ * trigger's before/after snapshots without throwing on stale data.
+ *
+ * @param {unknown} t - Value that may be a Firestore Timestamp
+ * @return {number} ms epoch, or 0 if input lacks toMillis()
+ */
+function toMillisOrZero(t: unknown): number {
+  if (t && typeof t === "object" && "toMillis" in t) {
+    const fn = (t as {toMillis: () => number}).toMillis;
+    if (typeof fn === "function") {
+      try {
+        return fn.call(t);
+      } catch {
+        return 0;
+      }
+    }
+  }
+  return 0;
 }
 
 /**
@@ -169,6 +192,11 @@ export const onBookingCreated = onDocumentCreated(
 
     if (!booking) return;
 
+    // Flush iCal export cache for this unit so external calendars see the
+    // new booking on next pull instead of waiting up to 5 min for TTL expiry.
+    // Fires for ALL payment methods (Stripe-confirmed and pending alike).
+    await invalidateIcalCache(event.params.propertyId, event.params.unitId);
+
     const requiresApproval = booking.require_owner_approval === true;
     const nonePayment = booking.payment_method === "none";
     const bankTransfer = booking.payment_method === "bank_transfer";
@@ -266,8 +294,23 @@ export const onBookingStatusChange = onDocumentUpdated(
 
     if (!before || !after) return;
 
+    // Detect feed-affecting changes: status flip OR date edit. Either alters
+    // the iCal export so the cached feed must be flushed. The two are gated
+    // independently because date-only edits (owner drags a confirmed booking
+    // on the calendar) preserve status, and the status-change block below
+    // carries email/notification side effects that must NOT fire on a
+    // pure date move.
+    const statusChanged = before.status !== after.status;
+    const datesChanged =
+      toMillisOrZero(before.check_in) !== toMillisOrZero(after.check_in) ||
+      toMillisOrZero(before.check_out) !== toMillisOrZero(after.check_out);
+
+    if (statusChanged || datesChanged) {
+      await invalidateIcalCache(event.params.propertyId, event.params.unitId);
+    }
+
     // Check if status changed
-    if (before.status !== after.status) {
+    if (statusChanged) {
       logInfo("Booking status changed", {
         bookingId: event.params.bookingId,
         from: before.status,

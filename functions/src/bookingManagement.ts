@@ -22,6 +22,7 @@ import {
   calculateTokenExpiration,
 } from "./bookingAccessToken";
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
+import {invalidateIcalCache} from "./utils/icalCache";
 
 // ==========================================
 // EMAIL ERROR TRACKING
@@ -61,40 +62,26 @@ function trackEmailFailure(
   });
 }
 
-// ==========================================
-// iCAL EXPORT CACHE INVALIDATION
-// ==========================================
-
 /**
- * Flush iCal feed cache on properties/{propertyId}/widget_settings/{unitId}.
- * Non-fatal: NOT_FOUND on units without widget_settings is expected.
+ * Convert a Firestore Timestamp-like value to milliseconds, or 0 on
+ * missing/invalid input. Used to compare check_in/check_out across a
+ * trigger's before/after snapshots without throwing on stale data.
  *
- * @param {string} propertyId - Parent property document ID
- * @param {string} unitId - Unit document ID (= widget_settings doc ID)
- * @return {Promise<void>}
+ * @param {unknown} t - Value that may be a Firestore Timestamp
+ * @return {number} ms epoch, or 0 if input lacks toMillis()
  */
-async function invalidateIcalCache(
-  propertyId: string,
-  unitId: string
-): Promise<void> {
-  try {
-    await db
-      .collection("properties").doc(propertyId)
-      .collection("widget_settings").doc(unitId)
-      .update({
-        ical_cache_content: admin.firestore.FieldValue.delete(),
-        ical_cache_generated_at: admin.firestore.FieldValue.delete(),
-        ical_cache_etag: admin.firestore.FieldValue.delete(),
-        ical_cache_unit_name: admin.firestore.FieldValue.delete(),
-      });
-    logInfo("[iCal Cache] Invalidated", {propertyId, unitId});
-  } catch (e) {
-    logWarn("[iCal Cache] Invalidation skipped or failed", {
-      propertyId,
-      unitId,
-      error: e instanceof Error ? e.message : String(e),
-    });
+function toMillisOrZero(t: unknown): number {
+  if (t && typeof t === "object" && "toMillis" in t) {
+    const fn = (t as {toMillis: () => number}).toMillis;
+    if (typeof fn === "function") {
+      try {
+        return fn.call(t);
+      } catch {
+        return 0;
+      }
+    }
   }
+  return 0;
 }
 
 /**
@@ -307,19 +294,28 @@ export const onBookingStatusChange = onDocumentUpdated(
 
     if (!before || !after) return;
 
+    // Detect feed-affecting changes: status flip OR date edit. Either alters
+    // the iCal export so the cached feed must be flushed. The two are gated
+    // independently because date-only edits (owner drags a confirmed booking
+    // on the calendar) preserve status, and the status-change block below
+    // carries email/notification side effects that must NOT fire on a
+    // pure date move.
+    const statusChanged = before.status !== after.status;
+    const datesChanged =
+      toMillisOrZero(before.check_in) !== toMillisOrZero(after.check_in) ||
+      toMillisOrZero(before.check_out) !== toMillisOrZero(after.check_out);
+
+    if (statusChanged || datesChanged) {
+      await invalidateIcalCache(event.params.propertyId, event.params.unitId);
+    }
+
     // Check if status changed
-    if (before.status !== after.status) {
+    if (statusChanged) {
       logInfo("Booking status changed", {
         bookingId: event.params.bookingId,
         from: before.status,
         to: after.status,
       });
-
-      // Flush iCal export cache so cancellations/rejections drop out of the
-      // feed promptly (5 min lag otherwise). Gated by status flip to avoid
-      // unnecessary writes on this trigger's own self-updates (access_token,
-      // emails_sent.*, booking_reference auto-heal) which preserve status.
-      await invalidateIcalCache(event.params.propertyId, event.params.unitId);
 
       // If booking was approved (pending -> confirmed with approved_at timestamp)
       if (before.status === "pending" && after.status === "confirmed" && after.approved_at) {

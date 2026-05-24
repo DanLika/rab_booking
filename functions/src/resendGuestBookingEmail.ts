@@ -8,6 +8,7 @@ import {
 } from "./bookingAccessToken";
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getClientIp, hashIp} from "./utils/ipUtils";
 
 /**
  * Helper to convert Firestore Timestamp or Date to Date object
@@ -63,15 +64,27 @@ export const resendGuestBookingEmail = onCall(
     // Sanitize email
     const sanitizedEmail = guestEmail.trim().toLowerCase();
 
-    // Rate limit: 3 requests per booking reference per hour
-    // checkRateLimit returns true if allowed, false if rate limited
-    const rateLimitKey = `resend_guest_email:${bookingReference}`;
-    const isAllowed = checkRateLimit(rateLimitKey, 3, 3600); // 3600 seconds = 1 hour
+    // SECURITY (audit/31 MED-2): per-IP pre-check prevents a single IP from
+    // grinding the endpoint, and the per-(IP, bookingReference) key prevents
+    // a wrong-IP attacker from DoS-ing a legitimate guest's resend budget
+    // (the previous reference-only key allowed any IP to exhaust the 3/hr
+    // quota for a known booking ref).
+    const clientIp = getClientIp(request);
+    const ipHash = hashIp(clientIp);
 
-    if (!isAllowed) {
-      logWarn("[ResendGuestEmail] Rate limit exceeded", {
+    if (!checkRateLimit(`resend_guest_email_ip:${ipHash}`, 10, 3600)) {
+      logWarn("[ResendGuestEmail] IP rate limit exceeded", {ipHash});
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many resend attempts from your location. Please try again later."
+      );
+    }
+
+    const rateLimitKey = `resend_guest_email:${ipHash}:${bookingReference}`;
+    if (!checkRateLimit(rateLimitKey, 3, 3600)) {
+      logWarn("[ResendGuestEmail] Per-IP+booking rate limit exceeded", {
         bookingReference,
-        email: sanitizedEmail,
+        ipHash,
       });
       throw new HttpsError(
         "resource-exhausted",

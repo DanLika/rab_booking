@@ -354,8 +354,16 @@ async function syncSingleFeed(
     // Prevents accidental deletion of all events if the fetched data is empty/malformed
     // Every valid iCal file MUST contain "BEGIN:VCALENDAR" per RFC 5545
     if (!icalData || !icalData.includes("BEGIN:VCALENDAR")) {
-      throw new Error(`Fetched iCal data is empty or invalid for feed: ${feedId}. ` +
-        `Expected iCal format but received: ${icalData ? icalData.substring(0, 100) + "..." : "empty response"}`);
+      // SECURITY (audit/31 HIGH-1): do NOT echo response body in error —
+      // if an SSRF redirect ever lands on a credential-bearing endpoint
+      // (metadata server, internal API), echoing chars 0-100 leaks secrets
+      // into logs/Sentry. Report only size + a non-secret-bearing prefix
+      // class.
+      const sizeBytes = icalData ? icalData.length : 0;
+      throw new Error(
+        `Fetched iCal data is empty or invalid for feed: ${feedId} ` +
+        `(received ${sizeBytes} bytes, missing BEGIN:VCALENDAR header)`
+      );
     }
 
     // Parse iCal data
@@ -454,6 +462,18 @@ function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
           if (redirectUrl.startsWith("/")) {
             const urlObj = new URL(url);
             redirectUrl = `${urlObj.protocol}//${urlObj.host}${redirectUrl}`;
+          }
+
+          // SECURITY (audit/31 HIGH-1): re-validate redirect target to prevent
+          // SSRF via attacker-controlled 302 (e.g. http://169.254.169.254/...).
+          // Without this, the initial validateIcalUrl pass only gates the first
+          // URL — redirects bypass blocklist (localhost, RFC1918, GCP metadata).
+          const redirectValidation = validateIcalUrl(redirectUrl);
+          if (!redirectValidation.valid) {
+            reject(new Error(
+              `Redirect blocked by SSRF guard: ${redirectValidation.error}`
+            ));
+            return;
           }
 
           logInfo("[iCal Sync] Following redirect", {

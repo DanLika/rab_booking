@@ -228,6 +228,12 @@ State at audit-doc-write time: plist=PROD, sim shutdown, flutter killed, marione
 
 **Priority**: P2. Not user-facing in normal use; affects test-driver reliability and may mask real errors in dev.
 
+**Status**: ✅ RESOLVED by PR #455 (`fix/audit-20-error-boundary`, 2026-05-24). Filter (`lib/core/error_handling/error_filter.dart`) catches the iOS throw via **both** layers:
+- Message — `startsWith('Exception: Element matching {')` matches the `gesture_dispatcher.dart:35` throw shape directly.
+- Stack — VM-service-extension call chain contains `dart:developer` (dispatcher root) + `registerExtension` (file-path substring of `marionette_flutter/src/binding/register_extension_internal.dart`).
+
+`marionette_flutter` is pure Dart → identical throw site + stack frame paths on iOS/Android/web. No iOS-specific frame pattern needed. PR description updated with cross-reference.
+
 ---
 
 ### FINDING-iOS-02: Owner Rezervacije list empty despite drawer badge=1 (P2)

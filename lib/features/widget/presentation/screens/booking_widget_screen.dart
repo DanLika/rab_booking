@@ -55,6 +55,7 @@ import '../widgets/email_verification_dialog.dart';
 import '../../data/services/email_verification_service.dart';
 import '../widgets/common/rotate_device_overlay.dart';
 import '../widgets/zoom_control_buttons.dart';
+import '../widgets/powered_by_badge.dart';
 // HYBRID LOADING: loading_screen.dart import removed - UI shows immediately
 import '../widgets/booking/payment/payment_option_widget.dart';
 import '../widgets/booking/guest_form/guest_count_picker.dart';
@@ -71,6 +72,10 @@ import '../widgets/booking/booking_pill_bar.dart';
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../l10n/widget_translations.dart';
+import '../helpers/booking_widget_url_helpers.dart';
+import '../helpers/booking_widget_url_intent.dart';
+import '../helpers/iframe_height_reporter.dart';
+import '../helpers/zoom_control_state.dart';
 
 /// Main booking widget screen that shows responsive calendar
 /// Automatically switches between year/month/week views based on screen size
@@ -94,58 +99,6 @@ class BookingWidgetScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
-  // ============================================
-  // URL SANITIZATION & VALIDATION HELPERS
-  // ============================================
-  /// Sanitize ID from URL - removes any path segments (e.g., /calendar suffix)
-  /// This prevents Firestore "invalid document reference" errors
-  static String? _sanitizeId(String? id) {
-    if (id == null || id.isEmpty) return id;
-    final slashIndex = id.indexOf('/');
-    if (slashIndex > 0) {
-      return id.substring(0, slashIndex);
-    }
-    return id;
-  }
-
-  /// Validate booking reference format (defense-in-depth)
-  /// Format: BK-{12_ALPHANUMERIC_CHARS} e.g., BK-A3F7E2D1B9C4
-  static bool _isValidBookingReference(String? ref) {
-    if (ref == null || ref.isEmpty) return false;
-    // Regex: BK- followed by 12 alphanumeric characters (case-insensitive)
-    return RegExp(r'^BK-[A-Za-z0-9]{12}$').hasMatch(ref);
-  }
-
-  /// Validate Firestore document ID format (defense-in-depth)
-  /// Firestore auto-generated IDs are 20 alphanumeric characters
-  static bool _isValidFirestoreId(String? id) {
-    if (id == null || id.isEmpty) return false;
-    // Firestore IDs: 20 alphanumeric characters
-    return RegExp(r'^[A-Za-z0-9]{20}$').hasMatch(id);
-  }
-
-  /// Validate Stripe session ID format (defense-in-depth)
-  /// Format: cs_test_xxx or cs_live_xxx (alphanumeric + underscores)
-  static bool _isValidStripeSessionId(String? sessionId) {
-    if (sessionId == null || sessionId.isEmpty) return false;
-    // Stripe session IDs: cs_ prefix followed by test/live and alphanumeric chars
-    return RegExp(r'^cs_(test|live)_[A-Za-z0-9]+$').hasMatch(sessionId);
-  }
-
-  /// Safely convert error to string, handling null and edge cases
-  /// Prevents "Null check operator used on a null value" errors
-  static String _safeErrorToString(dynamic error) {
-    if (error == null) {
-      return 'Unknown error';
-    }
-    try {
-      return error.toString();
-    } catch (e) {
-      // If toString() itself throws, return a safe fallback
-      return 'Error: Unable to display error details';
-    }
-  }
-
   // ============================================
   // UNIT & PROPERTY DATA
   // ============================================
@@ -248,19 +201,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // ============================================
   // IFRAME HEIGHT AUTO-RESIZE
   // ============================================
-  // Key to measure content height for iframe embedding
-  final _contentKey = GlobalKey();
-  // Track last sent height to avoid redundant postMessages
-  double _lastSentHeight = 0;
+  final _heightReporter = IframeHeightReporter();
 
   // ============================================
   // ZOOM SCALE (for zoom control buttons)
   // ============================================
-  double _zoomScale = 1.0;
-  final TransformationController _transformationController =
-      TransformationController();
-  // Key to get InteractiveViewer size for centered zoom
-  final _interactiveViewerKey = GlobalKey();
+  final _zoom = ZoomControlState();
 
   @override
   void initState() {
@@ -308,8 +254,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _unitId = '';
     } else {
       // Query params URL: direct IDs from URL
-      _propertyId = _sanitizeId(uri.queryParameters['property']);
-      _unitId = _sanitizeId(uri.queryParameters['unit']) ?? '';
+      _propertyId = sanitizeId(uri.queryParameters['property']);
+      _unitId = sanitizeId(uri.queryParameters['unit']) ?? '';
     }
 
     // Bug #53: Add listeners to text controllers for auto-save (debounced)
@@ -325,75 +271,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Setup iframe scroll capture to prevent parent page scrolling
     setupIframeScrollCapture();
 
-    // Check for booking confirmation parameters (all payment types)
-    // NOTE: Email is NOT in URL - booking is fetched by bookingId
-    final confirmationRef = uri.queryParameters['confirmation'];
-    final bookingId = uri.queryParameters['bookingId'];
-    final paymentType = uri.queryParameters['payment'];
-    final stripeStatus = uri.queryParameters['stripe_status'];
-    final stripeSessionId = uri.queryParameters['session_id'];
-    final bookingStatus = uri.queryParameters['booking_status'];
+    final intent = parseInitialUrlIntent(uri);
 
-    // Defense-in-depth: Validate URL parameter formats before use
-    // Invalid formats are treated as missing parameters (fail-safe)
-    final isValidConfirmation = _isValidBookingReference(confirmationRef);
-    final isValidBookingId = _isValidFirestoreId(bookingId);
-    final isValidSessionId = _isValidStripeSessionId(stripeSessionId);
-
-    // Check if this is a Stripe return (NEW FLOW - booking created by webhook)
-    // URL has: stripe_status=success&session_id=cs_xxx but NO bookingId
-    // We need to poll for booking using session_id
-    final isStripeReturn = stripeStatus == 'success' && isValidSessionId;
-
-    // Legacy Stripe return (old flow - booking created before checkout)
-    final hasLegacyStripeParams =
-        isValidConfirmation &&
-        isValidBookingId &&
-        (paymentType == 'stripe' || stripeStatus == 'success');
-
-    // Check if this is a direct booking return (same tab - Pay on Arrival, Bank Transfer)
-    final isDirectBookingReturn =
-        bookingStatus == 'success' && isValidConfirmation && isValidBookingId;
-
-    // Validate unit and property immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // NEW: Stripe return with session_id (webhook creates booking)
-      // This is the new flow where booking doesn't exist at checkout time
-      if (isStripeReturn && !hasLegacyStripeParams) {
-        // Clear any cached form data first (prevents conflict with booked dates)
-        await _clearFormData();
-
-        // Safe to use ! - isStripeReturn guarantees isValidSessionId which requires non-null
-        await _handleStripeReturnWithSessionId(stripeSessionId!);
-        return; // Don't continue with normal initialization
+      switch (intent) {
+        case StripeReturnSession(:final sessionId):
+          await _clearFormData();
+          await _handleStripeReturnWithSessionId(sessionId);
+          return;
+        case LegacyStripeReturn(:final confirmationRef, :final bookingId):
+          await _clearFormData();
+          await _showConfirmationFromUrl(confirmationRef, bookingId);
+          return;
+        case DirectBookingReturn(
+          :final confirmationRef,
+          :final bookingId,
+          :final paymentType,
+        ):
+          await _showConfirmationFromUrl(
+            confirmationRef,
+            bookingId,
+            paymentMethod: paymentType,
+            isDirectBooking: true,
+          );
+          return;
+        case FreshLoad():
+          await _validateUnitAndProperty();
+          await _loadFormData();
       }
-
-      // Legacy Stripe return (old flow with bookingId in URL)
-      if (hasLegacyStripeParams) {
-        await _clearFormData();
-
-        // Safe to use ! - hasLegacyStripeParams guarantees isValidConfirmation & isValidBookingId
-        await _showConfirmationFromUrl(confirmationRef!, bookingId!);
-        return; // Don't continue with normal initialization
-      }
-
-      // If this is a direct booking return (same tab), show confirmation
-      if (isDirectBookingReturn) {
-        // Safe to use ! - isDirectBookingReturn guarantees isValidConfirmation & isValidBookingId
-        await _showConfirmationFromUrl(
-          confirmationRef!,
-          bookingId!,
-          paymentMethod: paymentType,
-          isDirectBooking: true,
-        );
-        return; // Don't continue with normal initialization
-      }
-
-      // Normal initialization for fresh page load
-      await _validateUnitAndProperty();
-
-      // Bug #53: Load saved form data if page was refreshed
-      await _loadFormData();
     });
   }
 
@@ -422,29 +327,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   void _initTabCommunication() {
     if (!kIsWeb) return; // Only on web platform
 
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:312',
-        'message': 'Tab communication init - entry',
-        'data': {
-          'isInIframe': isInIframe,
-          'hasExistingSubscription': _tabMessageSubscription != null,
-          'hasExistingService': _tabCommunicationService != null,
-        },
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'B',
-      };
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
-
     try {
       // LOW: Cancel any existing subscription to prevent memory leak
       // (safety measure in case this method is called multiple times)
@@ -460,30 +342,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       _tabMessageSubscription = _tabCommunicationService!.messageStream.listen(
         _handleTabMessage,
       );
-
-      // #region agent log
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_widget_screen.dart:327',
-          'message': 'Tab communication init - listeners setup',
-          'data': {
-            'hasSubscription': _tabMessageSubscription != null,
-            'isInIframe': isInIframe,
-            'willSetupPostMessage': isInIframe,
-            'willSetupPaymentBridge': isInIframe && kIsWeb,
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'B',
-        };
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_${logData['hypothesisId']}',
-        );
-      } catch (_) {}
-      // #endregion
 
       // If in iframe, also listen for postMessage from popup windows
       if (isInIframe) {
@@ -527,31 +385,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             final sessionId = result['sessionId'] as String?;
             final status = result['status'] as String?;
 
-            // #region agent log
-            try {
-              final logData = {
-                'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                'location': 'booking_widget_screen.dart:359',
-                'message': 'PaymentBridge message received',
-                'data': {
-                  'sessionId': sessionId,
-                  'status': status,
-                  'hasTimeout': _paymentCompletionTimeout != null,
-                  '_isProcessing': _isProcessing,
-                },
-                'sessionId': 'debug-session',
-                'runId': 'run1',
-                'hypothesisId': 'B',
-              };
-              // Debug logging via enhanced LoggingService (will be visible in browser console)
-              LoggingService.log(
-                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                tag: 'DEBUG_${logData['hypothesisId']}',
-              );
-            } catch (_) {}
-            // #endregion
-
             if (sessionId != null && status == 'success') {
               LoggingService.log(
                 '[PaymentBridge] Payment complete received, sessionId: $sessionId',
@@ -560,53 +393,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
               // CRITICAL: Cancel timeout since we received the message
               if (_paymentCompletionTimeout != null) {
-                // #region agent log
-                try {
-                  final logData = {
-                    'id':
-                        'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                    'location': 'booking_widget_screen.dart:369',
-                    'message': 'PaymentBridge - timeout cancel BEFORE',
-                    'data': {
-                      'hasTimeout': _paymentCompletionTimeout != null,
-                      '_isProcessing': _isProcessing,
-                    },
-                    'sessionId': 'debug-session',
-                    'runId': 'run1',
-                    'hypothesisId': 'B',
-                  };
-                  // Debug logging via enhanced LoggingService (will be visible in browser console)
-                  LoggingService.log(
-                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                    tag: 'DEBUG_${logData['hypothesisId']}',
-                  );
-                } catch (_) {}
-                // #endregion
-
                 _paymentCompletionTimeout!.cancel();
                 _paymentCompletionTimeout = null;
-
-                // #region agent log
-                try {
-                  final logData = {
-                    'id':
-                        'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                    'location': 'booking_widget_screen.dart:372',
-                    'message': 'PaymentBridge - timeout cancel AFTER',
-                    'data': {'hasTimeout': _paymentCompletionTimeout != null},
-                    'sessionId': 'debug-session',
-                    'runId': 'run1',
-                    'hypothesisId': 'B',
-                  };
-                  // Debug logging via enhanced LoggingService (will be visible in browser console)
-                  LoggingService.log(
-                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                    tag: 'DEBUG_${logData['hypothesisId']}',
-                  );
-                } catch (_) {}
-                // #endregion
 
                 LoggingService.log(
                   '[PaymentBridge] Payment completion timeout cancelled (message received)',
@@ -617,57 +405,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               // Handle payment completion by polling for booking
               // This is called when payment completes in popup and sends message to iframe
               if (mounted) {
-                // #region agent log
-                try {
-                  final logData = {
-                    'id':
-                        'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                    'location': 'booking_widget_screen.dart:377',
-                    'message': 'PaymentBridge - state reset BEFORE',
-                    'data': {
-                      '_isProcessing': _isProcessing,
-                      'isMounted': mounted,
-                    },
-                    'sessionId': 'debug-session',
-                    'runId': 'run1',
-                    'hypothesisId': 'C',
-                  };
-                  // Debug logging via enhanced LoggingService (will be visible in browser console)
-                  LoggingService.log(
-                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                    tag: 'DEBUG_${logData['hypothesisId']}',
-                  );
-                } catch (_) {}
-                // #endregion
-
                 // Reset processing state FIRST (before any async operations)
                 if (mounted) {
                   setState(() {
                     _isProcessing = false;
                   });
                 }
-
-                // #region agent log
-                try {
-                  final logData = {
-                    'id':
-                        'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                    'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                    'location': 'booking_widget_screen.dart:382',
-                    'message': 'PaymentBridge - state reset AFTER',
-                    'data': {'_isProcessing': _isProcessing},
-                    'sessionId': 'debug-session',
-                    'runId': 'run1',
-                    'hypothesisId': 'C',
-                  };
-                  // Debug logging via enhanced LoggingService (will be visible in browser console)
-                  LoggingService.log(
-                    '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                    tag: 'DEBUG_${logData['hypothesisId']}',
-                  );
-                } catch (_) {}
-                // #endregion
 
                 LoggingService.log(
                   '[PaymentBridge] Loading state reset (message received)',
@@ -818,50 +561,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   // REMOVED: _monitorStripePopup - no longer needed since Stripe redirects in same tab
   // (consistent with other payment methods: Bank Transfer, Pay on Arrival, etc.)
 
-  /// Send iframe height to parent window for auto-resize
-  /// Only sends if height changed significantly (>10px) to avoid spam
-  void _sendIframeHeight() {
-    if (!kIsWeb) return;
-
-    // Schedule measurement after frame is rendered
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      try {
-        final renderBox =
-            _contentKey.currentContext?.findRenderObject() as RenderBox?;
-        if (renderBox == null || !renderBox.hasSize) return;
-
-        // Defensive check: ensure size is valid and finite
-        final size = renderBox.size;
-        if (!size.height.isFinite ||
-            !size.width.isFinite ||
-            size.height <= 0 ||
-            size.width <= 0) {
-          return;
-        }
-
-        final height = size.height;
-
-        // Add padding for visual breathing room
-        final totalHeight = height + 32;
-
-        // Ensure totalHeight is valid before sending
-        if (!totalHeight.isFinite || totalHeight <= 0) return;
-
-        // Only send if height changed significantly (avoid spam)
-        if ((totalHeight - _lastSentHeight).abs() > 10) {
-          _lastSentHeight = totalHeight;
-          sendIframeHeight(totalHeight);
-        }
-      } catch (e) {
-        // Ignore errors if RenderBox is disposed or context is invalid
-        // This can happen if widget is disposed while callback is pending
-        return;
-      }
-    });
-  }
-
   /// Handle messages received from other browser tabs
   /// When payment completes in Tab B, this tab (Tab A) receives the notification
   void _handleTabMessage(TabMessage message) {
@@ -896,32 +595,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// This handles the case when popup is blocked and Stripe opens in new tab
   /// NOTE: Email is NOT required - booking is fetched by bookingId
   Future<void> _handlePaymentCompleteFromOtherTab(TabMessage message) async {
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:516',
-        'message': 'CrossTab message received - entry',
-        'data': {
-          'bookingId': message.bookingId,
-          'bookingRef': message.bookingRef,
-          'hasTimeout': _paymentCompletionTimeout != null,
-          '_isProcessing': _isProcessing,
-          'isMounted': mounted,
-        },
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'B',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
-
     final bookingId = message.bookingId;
     final bookingRef = message.bookingRef;
     final sessionId = message.sessionId;
@@ -1141,32 +814,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// If payment completion message doesn't arrive within timeout period,
   /// reset loading state to prevent infinite loading
   void _startPaymentCompletionTimeout() {
-    // #region agent log
-    if (kIsWeb) {
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_widget_screen.dart:717',
-          'message': 'Timeout start - entry',
-          'data': {
-            'hasExistingTimeout': _paymentCompletionTimeout != null,
-            'isMounted': mounted,
-            '_isProcessing': _isProcessing,
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'A',
-        };
-        // Debug logging via enhanced LoggingService (will be visible in browser console)
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_${logData['hypothesisId']}',
-        );
-      } catch (_) {}
-    }
-    // #endregion
-
     // Cancel any existing timeout
     _paymentCompletionTimeout?.cancel();
 
@@ -1178,25 +825,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     // Set timeout to 30 seconds
     // This gives enough time for webhook to process and message to arrive
     _paymentCompletionTimeout = Timer(const Duration(seconds: 30), () {
-      // #region agent log
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_widget_screen.dart:728',
-          'message': 'Timeout fired',
-          'data': {'isMounted': mounted, '_isProcessing': _isProcessing},
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'A',
-        };
-        // Debug logging via enhanced LoggingService (will be visible in browser console)
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_${logData['hypothesisId']}',
-        );
-      } catch (_) {}
-      // #endregion
       if (!mounted) {
         LoggingService.log(
           '[PaymentTimeout] Widget disposed, timeout cancelled',
@@ -1212,29 +840,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       // Reset processing state to prevent infinite loading
       if (mounted) {
-        // #region agent log
-        try {
-          final logData = {
-            'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-            'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-            'location': 'booking_widget_screen.dart:740',
-            'message': 'Timeout - state reset BEFORE',
-            'data': {
-              '_isProcessing': _isProcessing,
-              '_showGuestForm': _showGuestForm,
-            },
-            'sessionId': 'debug-session',
-            'runId': 'run1',
-            'hypothesisId': 'A',
-          };
-          // Debug logging via enhanced LoggingService (will be visible in browser console)
-          LoggingService.log(
-            '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-            tag: 'DEBUG_${logData['hypothesisId']}',
-          );
-        } catch (_) {}
-        // #endregion
-
         if (mounted) {
           setState(() {
             _isProcessing = false;
@@ -1242,29 +847,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           });
         }
         _resetFormState();
-
-        // #region agent log
-        try {
-          final logData = {
-            'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-            'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-            'location': 'booking_widget_screen.dart:747',
-            'message': 'Timeout - state reset AFTER',
-            'data': {
-              '_isProcessing': _isProcessing,
-              '_showGuestForm': _showGuestForm,
-            },
-            'sessionId': 'debug-session',
-            'runId': 'run1',
-            'hypothesisId': 'A',
-          };
-          // Debug logging via enhanced LoggingService (will be visible in browser console)
-          LoggingService.log(
-            '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-            tag: 'DEBUG_${logData['hypothesisId']}',
-          );
-        } catch (_) {}
-        // #endregion
 
         LoggingService.log(
           '[PaymentTimeout] Loading state reset due to timeout',
@@ -1274,26 +856,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
       _paymentCompletionTimeout = null;
     });
-
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:751',
-        'message': 'Timeout start - exit',
-        'data': {'timeoutCreated': _paymentCompletionTimeout != null},
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'A',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
   }
 
   /// Handle Stripe return when booking is created by webhook (NEW FLOW)
@@ -1471,7 +1033,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           message: WidgetTranslations.of(
             context,
             ref,
-          ).errorLoadingBooking(_safeErrorToString(e)),
+          ).errorLoadingBooking(safeErrorToString(e)),
           duration: const Duration(seconds: 5),
         );
 
@@ -1732,28 +1294,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
 
   // Bug #53: Form data persistence - delegates to FormPersistenceService
 
-  /// Build PersistedFormData from current state
-  PersistedFormData _buildPersistedFormData() {
-    return PersistedFormData(
-      unitId: _unitId,
-      propertyId: _propertyId,
-      checkIn: _checkIn,
-      checkOut: _checkOut,
-      firstName: _firstNameController.text,
-      lastName: _lastNameController.text,
-      email: _emailController.text,
-      phone: _phoneController.text,
-      countryCode: _selectedCountry.dialCode,
-      adults: _adults,
-      children: _children,
-      notes: _notesController.text,
-      paymentMethod: _selectedPaymentMethod,
-      pillBarDismissed: _pillBarDismissed,
-      hasInteractedWithBookingFlow: _hasInteractedWithBookingFlow,
-      timestamp: DateTime.now().toUtc(),
-    );
-  }
-
   /// Debounced save - prevents race conditions when user types quickly
   /// Called by text controller listeners
   void _saveFormDataDebounced() {
@@ -1771,7 +1311,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     if (_isDisposed) return;
     await FormPersistenceService.saveFormData(
       _unitId,
-      _buildPersistedFormData(),
+      _formState.toPersistedFormData(unitId: _unitId, propertyId: _propertyId),
     );
   }
 
@@ -1779,49 +1319,34 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Future<void> _loadFormData() async {
     final formData = await FormPersistenceService.loadFormData(_unitId);
     if (formData == null) return;
+    if (!mounted) return;
 
-    // Restore form data
-    if (mounted) {
-      setState(() {
-        _checkIn = formData.checkIn;
-        _checkOut = formData.checkOut;
-        _firstNameController.text = formData.firstName;
-        _lastNameController.text = formData.lastName;
-        _emailController.text = formData.email;
-        _phoneController.text = formData.phone;
-        _selectedCountry = formData.country;
-        _adults = formData.adults;
-        _children = formData.children;
-        _notesController.text = formData.notes;
-        _selectedPaymentMethod = formData.paymentMethod;
-        _pillBarDismissed = formData.pillBarDismissed;
-        _hasInteractedWithBookingFlow = formData.hasInteractedWithBookingFlow;
-        // Bug Fix: Don't auto-show guest form from cache
-        // User should explicitly select dates or click to open booking flow
+    setState(() {
+      _formState.applyFromPersisted(formData);
 
-        // Bug Fix: Clamp restored guest count to maxGuests
-        // Saved form data may have higher guest count if:
-        // 1. User previously booked a property with higher capacity
-        // 2. Owner changed the capacity setting since last visit
-        final maxG = _unit?.maxGuests ?? 0;
-        if (maxG > 0) {
-          final totalGuests = _adults + _children;
-          if (totalGuests > maxG) {
-            // Prioritize adults, reduce children first
-            _children = 0;
-            _adults = maxG.clamp(1, maxG);
-          }
+      // Bug Fix: Don't auto-show guest form from cache.
+      // User should explicitly select dates or click to open booking flow.
+
+      // Bug Fix: Clamp restored guest count to maxGuests.
+      // Saved form data may have higher guest count if:
+      //   1. User previously booked a property with higher capacity
+      //   2. Owner changed the capacity setting since last visit
+      final maxG = _unit?.maxGuests ?? 0;
+      if (maxG > 0) {
+        final totalGuests = _adults + _children;
+        if (totalGuests > maxG) {
+          _children = 0;
+          _adults = maxG.clamp(1, maxG);
         }
-        // Reset pets if the unit doesn't allow them
-        if (_unit != null && !_unit!.allowsPets) {
-          _pets = 0;
-        }
-      });
+      }
+      if (_unit != null && !_unit!.allowsPets) {
+        _pets = 0;
+      }
+    });
 
-      // Validate restored payment method - it may be invalid if widget mode changed
-      // (e.g., user had pay_on_arrival selected but owner changed to bookingInstant)
-      _setDefaultPaymentMethod();
-    }
+    // Validate restored payment method — may be invalid if widget mode changed
+    // (e.g. user had pay_on_arrival selected but owner switched to bookingInstant).
+    _setDefaultPaymentMethod();
   }
 
   /// Clear saved form data from localStorage
@@ -1892,52 +1417,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     }
 
     // Cancel payment completion timeout
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:1214',
-        'message': 'Dispose - cleanup entry',
-        'data': {
-          'hasTimeout': _paymentCompletionTimeout != null,
-          '_isProcessing': _isProcessing,
-          '_isDisposed': _isDisposed,
-        },
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'E',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
 
     _paymentCompletionTimeout?.cancel();
     _paymentCompletionTimeout = null;
 
-    // #region agent log
-    try {
-      final logData = {
-        'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-        'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-        'location': 'booking_widget_screen.dart:1217',
-        'message': 'Dispose - cleanup exit',
-        'data': {'hasTimeout': _paymentCompletionTimeout != null},
-        'sessionId': 'debug-session',
-        'runId': 'run1',
-        'hypothesisId': 'E',
-      };
-      // Debug logging via enhanced LoggingService (will be visible in browser console)
-      LoggingService.log(
-        '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-        tag: 'DEBUG_${logData['hypothesisId']}',
-      );
-    } catch (_) {}
-    // #endregion
+    _heightReporter.dispose();
+    _zoom.dispose();
 
     super.dispose();
   }
@@ -2068,7 +1553,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
     final widgetMode = _widgetSettings?.widgetMode ?? WidgetMode.bookingInstant;
 
     // Send iframe height to parent for auto-resize (web only, in iframe only)
-    _sendIframeHeight();
+    _heightReporter.send();
 
     return Scaffold(
       // In iframe: false (host site handles keyboard resize)
@@ -2179,8 +1664,8 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                 vertical: verticalPadding,
                               ),
                               child: Column(
-                                key:
-                                    _contentKey, // For iframe height measurement
+                                key: _heightReporter
+                                    .contentKey, // For iframe height measurement
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   // Custom title header (if configured)
@@ -2287,43 +1772,21 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                   // Listener captures scroll wheel events for desktop pan support
                                   Listener(
                                     onPointerSignal: (event) {
-                                      // Handle scroll wheel for desktop pan (only when zoomed)
-                                      if (event is PointerScrollEvent &&
-                                          _zoomScale > 1.0) {
-                                        // Get current transformation
-                                        final matrix = _transformationController
-                                            .value
-                                            .clone();
-                                        // Apply scroll delta as pan (inverted for natural scroll direction)
-                                        // Scroll down/right = move view down/right
-                                        matrix.setEntry(
-                                          0,
-                                          3,
-                                          matrix.entry(0, 3) -
-                                              event.scrollDelta.dx,
-                                        );
-                                        matrix.setEntry(
-                                          1,
-                                          3,
-                                          matrix.entry(1, 3) -
-                                              event.scrollDelta.dy,
-                                        );
-                                        _transformationController.value =
-                                            matrix;
+                                      if (event is PointerScrollEvent) {
+                                        _zoom.panByScroll(event.scrollDelta);
                                       }
                                     },
                                     child: InteractiveViewer(
-                                      key: _interactiveViewerKey,
+                                      key: _zoom.interactiveViewerKey,
                                       transformationController:
-                                          _transformationController,
+                                          _zoom.controller,
                                       boundaryMargin: const EdgeInsets.all(
                                         double.infinity,
                                       ),
                                       minScale: 1.0,
                                       maxScale: 3.0,
-                                      panEnabled:
-                                          _zoomScale >
-                                          1.0, // Pan only when zoomed
+                                      panEnabled: _zoom
+                                          .isZoomed, // Pan only when zoomed
                                       scaleEnabled:
                                           false, // Disable pinch - use buttons only
                                       child: LazyCalendarContainer(
@@ -2410,7 +1873,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                       top: 12,
                                       bottom: 4,
                                     ),
-                                    child: _PoweredByBadge(
+                                    child: PoweredByBadge(
                                       text: WidgetTranslations.of(
                                         context,
                                         ref,
@@ -2476,40 +1939,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 // Zoom control buttons (Web only)
                 if (kIsWeb)
                   ZoomControlButtons(
-                    currentScale: _zoomScale,
+                    currentScale: _zoom.scale,
                     onScaleChanged: (newScale) {
                       if (mounted) {
                         setState(() {
-                          _zoomScale = newScale;
-                          // Get InteractiveViewer size for centered zoom
-                          final renderBox =
-                              _interactiveViewerKey.currentContext
-                                      ?.findRenderObject()
-                                  as RenderBox?;
-                          if (renderBox != null) {
-                            final size = renderBox.size;
-                            // Calculate translation to keep zoom centered
-                            // Formula: translate = (1 - scale) * center / 2
-                            final dx = (1 - newScale) * size.width / 2;
-                            final dy = (1 - newScale) * size.height / 2;
-                            // Build transformation matrix for centered zoom:
-                            // 1. Scale uniformly
-                            // 2. Translate to keep center fixed
-                            final matrix = Matrix4.identity();
-                            matrix.setEntry(0, 0, newScale); // Scale X
-                            matrix.setEntry(1, 1, newScale); // Scale Y
-                            matrix.setEntry(0, 3, dx); // Translate X
-                            matrix.setEntry(1, 3, dy); // Translate Y
-                            _transformationController.value = matrix;
-                          } else {
-                            // Fallback to origin zoom if size not available
-                            _transformationController.value =
-                                Matrix4.diagonal3Values(
-                                  newScale,
-                                  newScale,
-                                  1.0,
-                                );
-                          }
+                          _zoom.applyCenteredZoom(newScale);
                         });
                       }
                     },
@@ -3794,32 +3228,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       // Client-side checks are unsafe due to TOCTOU (Time-of-check-to-time-of-use)
       final submitBookingUseCase = ref.read(submitBookingUseCaseProvider);
 
-      // #region agent log
-      try {
-        final logData = {
-          'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-          'location': 'booking_widget_screen.dart:2777',
-          'message': 'Booking submission - price calculation',
-          'data': {
-            'currentCalculationTotalPrice': calculation.totalPrice,
-            'lockedCalculationTotalPrice': _lockedPriceCalculation?.totalPrice,
-            'finalCalculationTotalPrice': finalCalculation.totalPrice,
-            'priceLockResult': priceLockResult?.toString(),
-            'checkIn': _checkIn?.toIso8601String(),
-            'checkOut': _checkOut?.toIso8601String(),
-          },
-          'sessionId': 'debug-session',
-          'runId': 'run1',
-          'hypothesisId': 'PRICE',
-        };
-        LoggingService.log(
-          '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-          tag: 'DEBUG_PRICE',
-        );
-      } catch (_) {}
-      // #endregion
-
       // Breadcrumb: fee breakdown at submission time
       LoggingService.addBreadcrumb(
         'Booking submission with fees',
@@ -3928,7 +3336,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           message: WidgetTranslations.of(
             context,
             ref,
-          ).errorCreatingBooking(_safeErrorToString(e)),
+          ).errorCreatingBooking(safeErrorToString(e)),
         );
       }
     } finally {
@@ -4200,60 +3608,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 tag: 'STRIPE',
               );
 
-              // #region agent log
-              try {
-                final logData = {
-                  'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                  'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                  'location': 'booking_widget_screen.dart:2660',
-                  'message': 'Timeout start decision - popup scenario',
-                  'data': {
-                    'popupResult': popupResult,
-                    'isInIframe': isInIframe,
-                    '_isProcessing': _isProcessing,
-                    'willStartTimeout': true,
-                  },
-                  'sessionId': 'debug-session',
-                  'runId': 'run1',
-                  'hypothesisId': 'A',
-                };
-                // Debug logging via enhanced LoggingService (will be visible in browser console)
-                LoggingService.log(
-                  '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                  tag: 'DEBUG_${logData['hypothesisId']}',
-                );
-              } catch (_) {}
-              // #endregion
-
               _startPaymentCompletionTimeout();
             }
           } else if (popupResult == 'redirect') {
-            // #region agent log
-            try {
-              final logData = {
-                'id': 'log_${DateTime.now().toUtc().millisecondsSinceEpoch}',
-                'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
-                'location': 'booking_widget_screen.dart:2662',
-                'message': 'Timeout start decision - redirect scenario',
-                'data': {
-                  'popupResult': popupResult,
-                  'isInIframe': isInIframe,
-                  '_isProcessing': _isProcessing,
-                  'willStartTimeout': false,
-                  'reason':
-                      'Redirect - page navigates away, timeout not needed',
-                },
-                'sessionId': 'debug-session',
-                'runId': 'run1',
-                'hypothesisId': 'A',
-              };
-              // Debug logging via enhanced LoggingService (will be visible in browser console)
-              LoggingService.log(
-                '[DEBUG] ${logData['message']} | Hypothesis: ${logData['hypothesisId']} | Data: ${jsonEncode(logData['data'])}',
-                tag: 'DEBUG_${logData['hypothesisId']}',
-              );
-            } catch (_) {}
-            // #endregion
             // Iframe + mobile: redirect top-level window (not iframe)
             // NOTE: In redirect scenario, we reset _isProcessing immediately because
             // the page will navigate away. Timeout is not needed here.
@@ -4346,7 +3703,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           message: WidgetTranslations.of(
             context,
             ref,
-          ).errorLaunchingStripe(_safeErrorToString(e)),
+          ).errorLaunchingStripe(safeErrorToString(e)),
         );
       }
     }
@@ -4519,7 +3876,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
           message: WidgetTranslations.of(
             context,
             ref,
-          ).errorLoadingBooking(_safeErrorToString(e)),
+          ).errorLoadingBooking(safeErrorToString(e)),
           duration: const Duration(seconds: 5),
         );
       }
@@ -4765,47 +4122,5 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       }
       rethrow;
     }
-  }
-}
-
-/// Small "Powered by BookBed" link with hover effect.
-class _PoweredByBadge extends StatefulWidget {
-  final String text;
-  final Color color;
-
-  const _PoweredByBadge({required this.text, required this.color});
-
-  @override
-  State<_PoweredByBadge> createState() => _PoweredByBadgeState();
-}
-
-class _PoweredByBadgeState extends State<_PoweredByBadge> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final effectiveColor = _isHovered
-        ? widget.color
-        : widget.color.withValues(alpha: 0.85);
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: () => launchUrl(
-          Uri.parse('https://bookbed.io'),
-          mode: LaunchMode.externalApplication,
-        ),
-        child: Text(
-          widget.text,
-          style: TextStyle(
-            fontSize: 11,
-            color: effectiveColor,
-            decoration: TextDecoration.underline,
-            decorationColor: effectiveColor,
-          ),
-        ),
-      ),
-    );
   }
 }

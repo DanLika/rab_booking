@@ -28,7 +28,13 @@ All version history from v4.6 to v6.67.
 
 - **Coverage delta** — main now reflects audit/33 P1 resolution. Admin surface contamination class (same root cause, different hosting target) tracked but unmerged. audit/37 Path C re-run gated on: (1) merge `fix/audit-33-admin-dev`, (2) run `tool/deploy-dev.sh admin`, (3) verify Firestore project ID in DevTools, (4) provision admin custom claim on `bookbed-dev`.
 
-- **No pushes.** All 4 new commits (`ae1b18f3`, `2f7189e9`, `877cddad`, `7bd49d73`, `fd2b14db`) local-only per task convention. Operator decides merge + push cadence.
+- **audit/35 follow-up — PR #470 opened** (`fix/audit-35-displayname-cooldown`, commit `bad97caa`, pushed to origin). Closes F-Auth-D1 + F-Auth-D2 from the auth-flows smoke:
+  - **F-Auth-D1 (MED) — displayName digit-strip.** `lib/shared/utils/validators/input_sanitizer.dart` `sanitizeName()` allow-list regex `[^\p{L}\s'\-]` → `[^\p{L}\p{N}\s'\-]`. Names with embedded/trailing digits (audit example: "BB Smoke C1") now persist verbatim. Defence-in-depth unchanged: `_htmlTagPattern` strips HTML, `_controlCharPattern` strips control chars, and `containsDangerousContent()` detector still flags XSS/SQLi separately. Injection chars (`< > ; / \ " = ( ) { } & $` etc.) are still removed by the allow-list. Side-effect: `lib/features/widget/domain/use_cases/submit_booking_use_case.dart:117` (widget guest name) also keeps digits — desirable (apartment numbers etc.).
+  - **F-Auth-D2 (LOW) — cooldown drift correction.** UI value in `email_verification_screen.dart` (`_startInitialCooldown`/`_startCooldown`) is and always was 60 s (matches Firebase Auth `sendEmailVerification()` internal rate-limit window). CHANGELOG 6.44 text "30-second initial cooldown" corrected to "60-second" with explicit audit/35 footnote (no code change).
+  - **Tests:** 52/52 green in `test/shared/utils/validators/input_sanitizer_test.dart`. Added 2 regression tests (`preserves digits in name`, `preserves Unicode digits across scripts`); updated 1 stale assertion (`removes script tags but preserves letters` → `…letters/digits`; input `John<script>alert(1)</script>Doe` now yields `Johnalert1Doe` rather than `JohnalertDoe`).
+  - **Verify:** `flutter analyze` on touched files = 0; repo baseline 1449 pre-existing untouched.
+
+- **No pushes** for audit/33 + audit/37 + admin-DEV work above. All 5 new commits (`ae1b18f3`, `2f7189e9`, `877cddad`, `7bd49d73`, `fd2b14db`) local-only per task convention. audit/35 follow-up PR #470 IS pushed (operator-requested).
 
 ---
 

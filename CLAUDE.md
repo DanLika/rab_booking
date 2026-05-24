@@ -29,7 +29,7 @@
 - [audit/32-tier4-widget-ui-smoke-2026-05-23.md](./audit/32-tier4-widget-ui-smoke-2026-05-23.md) - TIER 4 widget UI smoke (chrome-devtools), pre-#450 baseline: 4 ✅, CP3 widget_mode coupling 🟡, CP5 HR locale gap (PR #464, 2026-05-23)
 - [audit/34-booking-lifecycle-e2e-2026-05-24.md](./audit/34-booking-lifecycle-e2e-2026-05-24.md) - Booking lifecycle E2E (BB + CC approve+reject): NEW §5 — `onBookingCreated` writes ZERO `emails_sent.*` keys (idempotency exposure); audit/27 §3+§5 still hold (PR #465, 2026-05-24)
 - [audit/35-auth-flows-smoke-2026-05-24.md](./audit/35-auth-flows-smoke-2026-05-24.md) - Auth flows smoke (register/verify/reset): 5 checkpoints, 6 findings; C2 Gmail Authentication-Results DEFERRED §5.2; 2 PROD UIDs flagged for manual delete; CHANGELOG 6.44 cooldown drift 60↔30 (PR #466, 2026-05-24). **F-Auth-D1 + F-Auth-D2 closure PR #470** (`fix/audit-35-displayname-cooldown`, commit `bad97caa`): `InputSanitizer.sanitizeName` allow-list extended `[^\p{L}\s'\-]` → `[^\p{L}\p{N}\s'\-]` (digits preserved — "BB Smoke C1" no longer truncates to "BB Smoke C"); CHANGELOG 6.44 "30-second" corrected to "60-second" + audit/35 footnote. Tests 52/52 green (incl. 2 new regression tests + 1 stale assert updated). Defence-in-depth unchanged: `_htmlTagPattern` + `containsDangerousContent()` still catch XSS/SQLi. Side-effect: `submit_booking_use_case.dart:117` widget guest names now also keep digits.
-- [audit/36-ios-owner-smoke-2026-05-24.md](./audit/36-ios-owner-smoke-2026-05-24.md) - iOS owner app smoke (marionette): 5 pass + 2 docs-gap + 1 blocked; FINDING-iOS-01 ErrorBoundary catches Marionette taps (audit/20 applies); FINDING-iOS-02 Rezervacije list empty + drawer badge=1 (T11c subcoll suspect) (PR #468, 2026-05-24)
+- [audit/36-ios-owner-smoke-2026-05-24.md](./audit/36-ios-owner-smoke-2026-05-24.md) - iOS owner app smoke (marionette): 5 pass + 2 docs-gap + 1 blocked; FINDING-iOS-01 ErrorBoundary catches Marionette taps **✅ RESOLVED by PR #455** (audit/20 filter covers iOS via message + stack layers; marionette_flutter is pure Dart, platform-independent); FINDING-iOS-02 Rezervacije list empty + drawer badge=1 (T11c subcoll suspect) (PR #468, 2026-05-24)
 - [audit/37-admin-dashboard-smoke-2026-05-24.md](./audit/37-admin-dashboard-smoke-2026-05-24.md) - Admin Dashboard smoke (pre-check + DEV probe + admin.md). Run pending: `fix/audit-33-admin-dev` (PR #467) merge + `tool/deploy-dev.sh admin` + admin custom-claim provisioning §9 (PR #469, 2026-05-24)
 
 ---
@@ -149,7 +149,7 @@ Ovi fajlovi se učitavaju SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-05-24 | **Version**: 7.8
+**Last Updated**: 2026-05-24 | **Version**: 7.9
 
 # context-mode — MANDATORY routing rules
 

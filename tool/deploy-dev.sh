@@ -8,9 +8,10 @@
 # Usage:
 #   tool/deploy-dev.sh owner    # owner dashboard → bookbed-owner-dev.web.app
 #   tool/deploy-dev.sh widget   # booking widget  → bookbed-widget-dev.web.app
+#   tool/deploy-dev.sh admin    # admin dashboard → bookbed-admin-dev.web.app
 #
-# Admin DEV not yet supported — lib/admin_main_dev.dart does not exist.
-# See .claude/rules/hosting-build.md "Dart entrypoints" table.
+# All three surfaces enforce the same contamination guards (entry-point file
+# exists + imports firebase_options_dev). See audit/33 §2 + audit/37 §6 Path C.
 
 set -euo pipefail
 
@@ -30,6 +31,8 @@ Surfaces:
            deploy to hosting:owner on $PROJECT_ID.
   widget   Build booking widget with --target lib/widget_main_dev.dart,
            deploy to hosting:widget on $PROJECT_ID.
+  admin    Build admin dashboard with --target lib/admin_main_dev.dart,
+           deploy to hosting:admin on $PROJECT_ID.
 
 After deploy, open the URL → DevTools Network → confirm the first Firestore
 request targets projects/$PROJECT_ID/databases/(default). If it targets
@@ -53,13 +56,14 @@ case "$SURFACE" in
     TARGET="widget"
     URL="https://bookbed-widget-dev.web.app"
     ;;
+  admin)
+    ENTRY="lib/admin_main_dev.dart"
+    OUTDIR="build/web_admin"
+    TARGET="admin"
+    URL="https://bookbed-admin-dev.web.app"
+    ;;
   ""|"-h"|"--help")
     usage
-    ;;
-  admin)
-    err "Admin DEV entry point not yet implemented (lib/admin_main_dev.dart missing)."
-    err "See .claude/rules/hosting-build.md 'Dart entrypoints' table TODO."
-    exit 3
     ;;
   *)
     err "Unknown surface: $SURFACE"

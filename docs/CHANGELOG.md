@@ -2,7 +2,31 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-24 | **Version**: 6.92
+**Last Updated**: 2026-05-24 | **Version**: 6.94
+
+---
+
+**Changelog 6.94**: audit/32 N1 fix — widget locale wiring (PR #471) (2026-05-24):
+
+- **PR #471** (`fix/audit-32-widget-locale-wiring`, commit `efab0bdc`) closes audit/32 N1 partial: widget month-header (`MonthCalendarWidget`) + date-range pill (`CompactPillSummary`) rendered EN in HR mode despite `?lang=hr` switch.
+- **Root cause:** two parallel locale bugs.
+  1. All 3 widget entry points (`lib/widget_main.dart` + `_dev` + `_staging`) built `MaterialApp.router` without `locale:` / `supportedLocales:` / `localizationsDelegates:`. `languageProvider` (`lib/features/widget/presentation/providers/language_provider.dart:22`) parsed `?lang=` correctly, but `Localizations.localeOf(context)` read MaterialApp's locale (default `en_US`) — so `month_calendar_widget.dart:215` `DateFormat.yMMM(locale.toString())` ignored the URL switch.
+  2. `compact_pill_summary._DateRangeSection._dateFormat` was `static final DateFormat('MMM dd, yyyy')`. `DateFormat` captures locale at construction (intl: `_locale = canonicalizedLocale(locale ?? Intl.defaultLocale ?? systemLocale)`); static field → evaluated once at class load → locale locked to system EN forever, even after `Intl.defaultLocale` changed.
+- **Fix:** 3 entry points wire `locale: Locale(ref.watch(languageProvider))` + `supportedLocales: [hr, en, de, it]` + `GlobalMaterialLocalizations` delegates. `_DateRangeSection._formatDate()` constructs per call with explicit `translations.locale.languageCode`.
+- **Test churn:** `compact_pill_summary_test.dart` + `pill_bar_content_test.dart` add `setUpAll(() async => await initializeDateFormatting())` — production `main()` does this; bare flutter_test does not, so per-call `DateFormat(pattern, localeCode)` throws `LocaleDataException` without the symbols loaded.
+- **Verification:** `flutter analyze` repo-wide 0 issues; 8/8 compact_pill tests + pill_bar tests green. Pre-existing failures in `test/features/widget/data/helpers/availability_checker_test.dart`, `booking_price_calculator_test.dart`, `firebase_booking_calendar_repository_test.dart` reproduce on `main@ae1b18f3` — unrelated, out of scope.
+- **Out of scope (follow-up sweep):** same `DateFormat(pattern)` no-locale class at `payment_info_card.dart:245`, `booking_summary_card.dart:148/159`, `year_calendar_widget.dart:414`. Filed in PR body.
+- **Memory:** [dateformat-static-locale-trap.md](../) added — `static final _fmt = DateFormat(...)` is a footgun; Intl.defaultLocale doesn't propagate.
+- **Audit/32 status:** doc itself lives only on `doc/audit-32-smoke-h` (PR #464, not yet merged to main); CLAUDE.md references it but file is not on main. N1 finding now structurally fixed regardless of doc-merge status.
+
+---
+
+**Changelog 6.93**: 5 audit doc PRs (#464/#465/#466/#468/#469) pushed + main pushed; CI BLOCKED on GitHub Actions billing (2026-05-24):
+
+- **5 doc-only PRs opened + pushed** for audit/32/34/35/36/37 smoke reports. Branches: `doc/audit-32-smoke-h` (PR #464 — TIER 4 widget UI smoke), `doc/audit-34-lifecycle-smoke` (PR #465 — booking lifecycle E2E BB+CC), `doc/audit-35-auth-smoke` (PR #466 — auth flows register/verify/reset), `doc/audit-36-ios-smoke` (PR #468 — iOS owner marionette), `doc/audit-37-admin-smoke` (PR #469 — Admin Dashboard pre-check + DEV probe). All 5 carry `documentation` label. PR #467 (`fix/audit-33-admin-dev`) noted as dependency in audit/37 body.
+- **`main` pushed** (`8aa0940a..31d504b5`) — 5 local commits flushed to origin. Breaks the "operator-gated push" convention from 6.91 §51 (operator-approved via /effort=max prompt). Commits included: CLAUDE.md index entries for audit/32/34/35/36/37/38/39, version bumps 7.7→7.9, audit/35 F-Auth-D1/D2 closure note (6.91), audit/38 PR #462 env prereq doc, audit/39 Flutter Engine keyboard converter (6.92).
+- **CI BLOCKED — GitHub Actions billing failure.** All 5 PRs returned `conclusion: FAILURE` within 1-3 s on 3 jobs (`Run Tests`, `Test Cloud Functions`, `Validate Firestore Rules`) with annotation: *"The job was not started because recent account payments have failed or your spending limit needs to be increased."* Build/coverage/bundle-size jobs `SKIPPED` as dependents. PR #468 has no run yet — will trigger after billing unblocks. Operator action required outside Claude scope: GitHub → org settings → **Billing & plans** → resolve failed payment OR raise Actions spending limit. Re-run via `gh run rerun <id>` for runs `26356860746` (#464) + equivalents on #465/#466/#469; #468 auto-triggers.
+- **State at handoff**: working tree clean (`.mcp.json` + `jest_dx/` pre-existing untracked, out of scope). Memory updates landed (marionette-ios-gotchas, dev-hosting-prod-bundling-class, prod-auth-smoke, onbookingcreated-no-email-tracking). Safe to clear chat — all persisted (GitHub PRs + local commits + memory).
 
 ---
 

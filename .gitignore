@@ -105,3 +105,6 @@ node-compile-cache/
 
 # Jest worker/transform cache (created in repo root by some test runs)
 jest_dx/
+
+# Local MCP server config (IDE-managed)
+.mcp.json

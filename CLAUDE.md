@@ -25,6 +25,7 @@
 - [audit/27-bb-e2e-cc-reject.md](./audit/27-bb-e2e-cc-reject.md) - BB E2E CC reject flow execution (Terminal D): pending → cancelled + rejection_reason → calendar release → re-book same dates (2026-05-23)
 - [audit/28-tier4-resend-sentry-baseline.md](./audit/28-tier4-resend-sentry-baseline.md) - Tier 4 Resend + Sentry baseline: 18-template provider_id matrix (static), SPF gap (A1), DORMANT-5 finding (A2 → superseded by PR #462), trigger/verify/sentry scripts, fail-CLOSED recipe (2026-05-23)
 - [audit/30-ical-cache-invalidation.md](./audit/30-ical-cache-invalidation.md) - iCal export cache invalidation (PR #461): helper extracted, 4 call sites, date-edit gate, atomicBooking pre-flush, icalSync deferred (2026-05-24)
+- [audit/33-owner-dashboard-web-smoke-2026-05-24.md](./audit/33-owner-dashboard-web-smoke-2026-05-24.md) - Owner Dashboard web smoke HALTED on P1: `bookbed-owner-dev.web.app` deployed PROD-bundled build → Firestore writes hitting `rab-booking-248fc` instead of `bookbed-dev`; 3-part fix landed (owner_main_dev.dart asserts + per-env build commands + `tool/deploy-dev.sh` wrapper) via merge `ae1b18f3` (2026-05-24)
 
 ---
 
@@ -143,7 +144,7 @@ Ovi fajlovi se učitavaju SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-05-24 | **Version**: 7.6
+**Last Updated**: 2026-05-24 | **Version**: 7.7
 
 # context-mode — MANDATORY routing rules
 

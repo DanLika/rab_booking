@@ -2,7 +2,33 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-24 | **Version**: 6.90
+**Last Updated**: 2026-05-24 | **Version**: 6.91
+
+---
+
+**Changelog 6.91**: audit/33 deploy contamination fix merged + audit/37 admin smoke gap + admin DEV extension (2026-05-24):
+
+- **audit/33 merged to main** (merge commit `ae1b18f3`, FF + non-FF). Two upstream branches landed: `doc/audit-33-owner-smoke` (commits `e21e28eb` + `9a2e566e`) ships the smoke report itself, and `fix/audit-33-deploy-contamination` (commit `b1b22344`) ships the 3-part structural fix. Net contents now on main:
+  - `audit/33-owner-dashboard-web-smoke-2026-05-24.md` (387 lines) — P1 finding F-OwnerDashboard-001: `bookbed-owner-dev.web.app` was deploying builds with PROD `firebase_options.dart` bundled → Firestore writes silently landed in `rab-booking-248fc` instead of `bookbed-dev`. Auth attempt during smoke triggered 2 unintended PROD writes (`/Write/channel`) before halt.
+  - `lib/owner_main_dev.dart` augmented — `EnvironmentConfig.setEnvironment(Environment.development)` + `kDebugMode` project-ID assert (mirrors `widget_main_dev.dart` pattern; crashes on boot if PROD bundled).
+  - `.claude/rules/hosting-build.md` rewritten Build commands block — per-env table (DEV/STAGING/PROD × owner/widget/admin), entry-point matrix, explicit "NIKADA NE BUILDAJ `--target lib/main.dart` ZA DEV/STAGING" footgun, post-deploy verification recipe (DevTools Network → confirm Firestore project ID).
+  - `tool/deploy-dev.sh` (new, 142 lines) — manual deploy wrapper for owner + widget DEV. Build-time contamination guard: `grep firebase_options_dev "$ENTRY"` refuses to deploy if entry imports wrong options. Mirrors `deploy-widget.yml` CI for widget overlay/embed copy. Reminds operator to verify project ID in DevTools post-deploy.
+
+- **audit/37 admin smoke** — committed to `doc/audit-37-admin-smoke` (commits `877cddad` → `7bd49d73` → `fd2b14db`), **NOT yet merged**. 3 sections of findings:
+  - §3 #E1 + theme observation: PROD admin login renders; smoke blocked at #E1 because no admin Firebase custom-claim account exists in memory.
+  - §4b DEV admin probe (post-Path C precheck): `bookbed-admin-dev.web.app` site exists per `firebase hosting:sites:list` but serves a **stale build** (pre-Jan-26 — title "BookBed Admin"/"Login" vs current source "Welcome Back"/"Sign In"). PROD admin shows `© 2024` footer despite source using `DateTime.now().year` since `bd329688` (2026-05-22) → PROD build also stale.
+  - §6 Path C: redeployment + admin claim provisioning recipe. Originally would have re-introduced the audit/33 contamination on the admin surface — see admin-DEV-extension bullet below.
+  - `.claude/rules/admin.md` augmented on the same branch: per-env hosting table (PROD/DEV/STAGING URL → site → project), deploy commands, stale-build hazard callout, audit/30 `isAdminFromFirestore()` Firestore-role escape note + PR #462 mitigation reference, smoke-account requirements.
+
+- **admin DEV extension** — committed to `fix/audit-33-admin-dev` (commit `2f7189e9`), **NOT yet merged**. Closes the audit/37 → audit/33 chained dependency:
+  - `lib/admin_main_dev.dart` (new) — mirrors `owner_main_dev.dart` env-assert pattern: `EnvironmentConfig.setEnvironment(Environment.development)` + `kDebugMode` project-ID assert + `DevFirebaseOptions`. Title `BookBed Admin (Dev)`, locale hr, themeMode dark (parallel to `admin_main_staging.dart`).
+  - `tool/deploy-dev.sh` — admin case now wired alongside owner + widget. Same build-time contamination guard. Header + usage + case-block updated.
+  - `.claude/rules/hosting-build.md` — Dart entrypoints table row "admin DEV: MISSING (TODO)" replaced with `lib/admin_main_dev.dart`. Resolved-footgun note cross-references audit/37.
+  - Operator can now run `tool/deploy-dev.sh admin` to safely refresh `bookbed-admin-dev.web.app`. Required prerequisite before re-running audit/37 #E1–#E6 against the DEV admin URL.
+
+- **Coverage delta** — main now reflects audit/33 P1 resolution. Admin surface contamination class (same root cause, different hosting target) tracked but unmerged. audit/37 Path C re-run gated on: (1) merge `fix/audit-33-admin-dev`, (2) run `tool/deploy-dev.sh admin`, (3) verify Firestore project ID in DevTools, (4) provision admin custom claim on `bookbed-dev`.
+
+- **No pushes.** All 4 new commits (`ae1b18f3`, `2f7189e9`, `877cddad`, `7bd49d73`, `fd2b14db`) local-only per task convention. Operator decides merge + push cadence.
 
 ---
 

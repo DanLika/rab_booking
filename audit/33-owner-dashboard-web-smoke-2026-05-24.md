@@ -214,6 +214,8 @@ Per §2.3 step 4, the canonical doc only shows the PROD `--target lib/main.dart`
 
 Captured during initial load BEFORE any login attempt. Unrelated to PROD contamination — likely a Flutter null-safe gap in the login screen. Not investigated further (out of scope; flag for backlog). Possibly the same class as `memory/flutter-web-uri-null-tostring.md` (Uri null-toString crash). Reproduction: load `https://bookbed-owner-dev.web.app` in fresh incognito + DevTools console open.
 
+**Update 2026-05-24 — root cause closed in audit/39:** investigation in [`audit/39-n4-flutter-keyboard-converter-2026-05-24.md`](./39-n4-flutter-keyboard-converter-2026-05-24.md) reproduced the error with a full stack trace and read the source line direct from the deployed `main.dart.js:63310-63315`. The crash sits inside **Flutter Engine's web KeyboardConverter** (`kWebToLogicalKey[event.key]?[event.location]!`), not BookBed code. SAFETY-CLAUSE NO-FIX. CHANGELOG 6.68 Uri-pattern explicitly does NOT apply (confirmed). Trigger condition in this §4.4 capture ("BEFORE any login attempt") is unverified to match audit/39's synthetic-input repro — see audit/39 §2.
+
 ---
 
 ## 5. Cross-refs
@@ -233,10 +235,12 @@ Captured during initial load BEFORE any login attempt. Unrelated to PROD contami
 
 ### 6.1 Immediate operator actions (P1)
 
-1. **Re-deploy `bookbed-owner-dev.web.app`** with `--target lib/main_dev.dart` to stop ongoing contamination.
+1. **Re-deploy `bookbed-owner-dev.web.app`** with `--target lib/main_dev.dart` to stop ongoing contamination. ✅ landed via `ae1b18f3`.
 2. **Verify `bookbed-admin-dev.web.app`** — almost certainly has the same bug. Check Network panel after navigating to login.
 3. **Audit recent PROD Firestore writes** from any IP/UA that looks like dev testing — see §2.7 cleanup recommendation.
 4. **Stripe Connect dev test accounts** — verify no real Stripe Connect onboarding was triggered via this URL in the past 30 days.
+
+**Service-worker stale-bundle long-tail (added 2026-05-24, audit/39 §9):** even after the re-deploy lands, any browser that visited the dev URL BEFORE the fix continues to serve the cached PROD bundle until its service worker updates. Verified in audit/39: first probe after the deploy returned `firebase_core.getApps()[0].options.projectId === "rab-booking-248fc"` (PROD); after explicit `navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()))` + `caches.keys().then(ns => ns.forEach(n => caches.delete(n)))` + `indexedDB.databases().then(dbs => dbs.forEach(d => indexedDB.deleteDatabase(d.name)))` + reload, projectId flipped to `"bookbed-dev"`. Past visitors (developers, QA, automation that retained their browser profile) should hard-refresh once. The Flutter `flutter_service_worker.js` cache-busts via `?v=<digest>` and should pick up the new bundle on the next full reload cycle, but it requires the user to actually trigger that reload.
 
 ### 6.2 Doc/process actions (~1 hour total)
 
@@ -424,3 +428,36 @@ Expected: each URL prints **only** `bookbed-dev`. Any `rab-booking-248fc` hit = 
 |---|---|---|---|
 | #466 | `fix/audit-33-deploy-contamination` | Owner + widget DEV entry points + tool/deploy-dev.sh (2 surfaces) | ✅ Merged 2026-05-24 (`ae1b18f3`) |
 | #467 | `fix/audit-33-admin-dev` | Admin DEV entry point + tool/deploy-dev.sh admin case + hosting-build.md TODO close | Open, awaiting merge |
+
+### 11.3 HAR verification — owner DEV surface ✅ PASSED (2026-05-24, +~3h30m)
+
+After PR #466 merged + `tool/deploy-dev.sh owner` re-deploy, captured runtime HAR from `https://bookbed-owner-dev.web.app` (DevTools Network panel → Save all as HAR). File: `~/Downloads/bookbed-owner-dev.web.app.har` (6.7 MB, 38 entries, capture covers initial bootstrap + auth + profile-update flow).
+
+**Project-ID hit breakdown:**
+
+| Vector | Hits | Project |
+|---|---|---|
+| Firestore URLs (`projects/<id>` path) | 13 | `bookbed-dev` only |
+| Firestore request bodies / responses | 5 | `bookbed-dev` only |
+| Cloud Functions hosts | 2 | `us-central1-bookbed-dev.cloudfunctions.net` |
+| FCM registrations | 3 | `bookbed-dev` |
+| Identitytoolkit (auth) | 20 | resolved via apiKey — DEV per CF + Firestore signal |
+| **`rab-booking-248fc` (PROD) total** | **0** | — |
+
+**Network shape (38 entries):**
+- 20× Auth (`accounts:lookup`, `accounts:sendOobCode`, `accounts:update` — email-verification / profile-update flow)
+- 8× Firestore `Write/channel` + `Listen/channel`
+- 3× FCM register
+- 2× CF callable (`us-central1` — likely FCM-related; availability CF lives at `europe-west1` per `audit/06`, so this is a different callable)
+- 2× gstatic CDN
+- 1× hosting bootstrap
+
+**Verdict:** Runtime traffic on owner DEV surface NOW exclusively `bookbed-dev`. Runtime evidence is **stronger** than the static `curl + grep main.dart.js` recipe in §11.1 (static check verifies the bundle was built right; runtime check verifies the bundle actually connects right). F-OwnerDashboard-001 P1 structurally resolved on owner surface.
+
+**Remaining surface verification:**
+
+| Surface | Static (`curl + grep`) | Runtime (HAR) | Status |
+|---|---|---|---|
+| `bookbed-owner-dev.web.app` | not run | ✅ HAR clean (this §) | ✅ PASSED |
+| `bookbed-widget-dev.web.app` | pending | `audit/32` partial (CF only) | ⏳ PENDING — capture HAR after `tool/deploy-dev.sh widget` re-run |
+| `bookbed-admin-dev.web.app` | pending | n/a | ⏳ BLOCKED on PR #467 merge → `tool/deploy-dev.sh admin` |

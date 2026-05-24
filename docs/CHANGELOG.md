@@ -2,7 +2,25 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-24 | **Version**: 6.96
+**Last Updated**: 2026-05-24 | **Version**: 6.97
+
+---
+
+**Changelog 6.97**: audit/40 — FINDING-iOS-02 root cause + seed field-name fix (worktree, NOT pushed) (2026-05-24):
+
+- **audit/40 written** (`audit/40-finding-ios-02-investigation.md`, ~14 KB, 6 sections + 2 appendices). Renumbered from audit/38 to avoid collision with the pre-existing `audit/38-pr462-env-prereq.md` (different topic — Stripe env vars). Worktree-only commit on `investigate/finding-ios-02` (commits `7eda87d4` → `97f31f38` → `4b087b09`), NOT pushed.
+- **Root cause identified at the Firestore boundary, not in code.** Owner Rezervacije list rendered empty on the iOS marionette smoke (audit/36 §D3, FINDING-iOS-02) despite the drawer pending-count badge correctly showing 1+. Both queries share `collectionGroup('bookings').where('owner_id', '==', UID).where('status', '==', 'pending')` — the only divergence is a single `.orderBy('check_in', asc)` clause on the list path (`firebase_owner_bookings_repository.dart:1263` for pending in "All" filter, plus three non-pending branches). Firestore evaluates `orderBy(field)` by **excluding documents that lack the field** — the seeded docs were written with the wrong field names `check_in_date`/`check_out_date` (Timestamps with the wrong key), so the orderBy silently filtered them all out. Badge stream omits orderBy → still matched via where clauses alone.
+- **Hypotheses ruled out** (per audit/36 FINDING-iOS-02 diagnosis hints): provider_id requirement, payment_status filter, stale `keepAlive: true` Riverpod cache, "selected property" context, T11c subcollection migration, legacy top-level `/bookings` path. None of those candidates ran a divergent query — the list query simply returned 0 docs at the Firestore level before any client filtering. Cross-platform, NOT iOS-specific.
+- **Bonus**: audit/36 §D6 "Nedavne Aktivnosti populates with seed booking after swipe-down" was a misobservation. `recentOwnerBookings` routes through the same `_getOwnerBookingsPaginatedAllStatuses` → `orderBy('check_in', asc)` on all four status sub-queries — all returned 0 against the broken seed data (verified via Query E mirror script). `RecentActivityWidget` has no fallback content (empty state on `activities.isEmpty`).
+- **Test-env side effect (resolved by same fix)**: `atomicBooking.ts:743-744` overlap-detection query is `.where('check_in', '<', X).where('check_out', '>', Y)`. Against the broken seed docs it also returned 0 — so duplicate-overlap bookings could currently slip through on the affected test owner until backfill landed. Production unaffected (canonical writes via `atomicBooking.ts:1088-1089` always use `check_in`).
+- **Fix branch `fix/seed-checkin-field-name`** (worktree-only, commits `be93449a` → `82b709b2`, NOT pushed):
+  - `scripts/seed-bookbed-dev.js:129-130`: 2-line rename `check_in_date`/`check_out_date` → `check_in`/`check_out` (Timestamp value unchanged).
+  - `audit/migrations/40-backfill-checkin-field.js` (new, ~110 lines): idempotent rename-keys-in-place backfill. Dry-run default, `--apply` commits. Refuses to run against `rab-booking-248fc` (project-id guard — prod data already canonical). Only updates docs with `check_in_date` AND lacking `check_in`, so re-runnable; same pattern available for bookbed-staging onboarding.
+- **Backfill applied to bookbed-dev**: dry-run 5 docs targeted (4 test-owner + 1 `SEED_property_dev_01`); `--apply` wrote 5 docs in 1 batch. Post-fix live query: Query C (list pending) 0 → **1**; `_getOwnerBookingsPaginatedAllStatuses` mirror (covers `recentOwnerBookings`): pending=1, confirmed=1, completed=2, cancelled=0 → **4 total**. List + badge + Nedavne Aktivnosti now reconcile.
+- **P3 follow-up logged in §5 (separate PR)**: cosmetic `.name` → `.value` normalization at `firebase_owner_bookings_repository.dart:1107` (`BookingStatus.pending.name`). Same string today but a future-proofing footgun if a status is added whose Dart enum name diverges from its declared `.value`.
+- **Defensive `orderBy` fallback explicitly out of scope**: would entrench non-canonical schema in queryable behavior — same drift class that let the original seed bug persist undetected. Wording softened from "explicitly rejected" → "out of scope" to leave room for unrelated revisits (e.g. migration-window dual-write).
+- **iOS smoke (audit/36 §D3 resume) ready** — once `fix/seed-checkin-field-name` is pushed/merged + plist swapped to dev variant, repro should show 4 booking entries.
+- **NOT pushed**: both `investigate/finding-ios-02` (audit doc) and `fix/seed-checkin-field-name` (code + migration) are isolated worktree branches awaiting operator review/push decision.
 
 ---
 

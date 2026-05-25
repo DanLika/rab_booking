@@ -163,38 +163,71 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
     );
 
     try {
-      // Direct Firestore access to bypass model limitations
-      final docRef = FirebaseFirestore.instance
+      // Direct Firestore access to bypass model limitations.
+      //
+      // Token is stored in `widget_secrets/{unitId}` (owner-only read) so it
+      // can't be exfiltrated from the publicly-readable widget_settings doc.
+      // Public flag `ical_export_enabled` stays on widget_settings since the
+      // iCal-export Cloud Function checks it before authenticating with the
+      // token. Legacy reads fall back to widget_settings.ical_export_token
+      // during the migration window.
+      final propertyRef = FirebaseFirestore.instance
           .collection('properties')
-          .doc(propertyId)
+          .doc(propertyId);
+      final settingsRef = propertyRef
           .collection('widget_settings')
           .doc(unit.id);
+      final secretsRef = propertyRef.collection('widget_secrets').doc(unit.id);
 
-      final doc = await docRef.get();
+      final secretsDoc = await secretsRef.get();
       String? token;
 
-      if (doc.exists && doc.data() != null) {
-        token = doc.data()!['ical_export_token'] as String?;
+      if (secretsDoc.exists && secretsDoc.data() != null) {
+        token = secretsDoc.data()!['ical_export_token'] as String?;
       }
 
-      // If token is missing, generate one and enable export
+      // Legacy fallback: token might still live on widget_settings for
+      // unmigrated units. Treat it as authoritative once, then we'll move it
+      // to widget_secrets below.
+      bool legacyTokenSeen = false;
+      if (token == null || token.isEmpty) {
+        final legacyDoc = await settingsRef.get();
+        if (legacyDoc.exists && legacyDoc.data() != null) {
+          final legacy = legacyDoc.data()!['ical_export_token'] as String?;
+          if (legacy != null && legacy.isNotEmpty) {
+            token = legacy;
+            legacyTokenSeen = true;
+          }
+        }
+      }
+
+      // If token is missing, generate one
       if (token == null || token.isEmpty) {
         token = const Uuid().v4();
-
-        // Ensure we have ownerId (required for security rules)
-        final String ownerId = unit.ownerId ?? '';
-
-        // Merge with existing or create new with minimal fields
-        await docRef.set({
-          'ical_export_token': token,
-          'ical_export_enabled': true,
-          'updated_at': FieldValue.serverTimestamp(),
-          // Ensure required fields for new doc
-          'property_id': propertyId,
-          'owner_id': ownerId.isNotEmpty ? ownerId : null,
-          'id': unit.id,
-        }, SetOptions(merge: true));
       }
+
+      // Ensure we have ownerId (required for security rules)
+      final String ownerId = unit.ownerId ?? '';
+
+      // Write token to private widget_secrets doc
+      await secretsRef.set({
+        'ical_export_token': token,
+        'property_id': propertyId,
+        'owner_id': ownerId.isNotEmpty ? ownerId : null,
+        'unit_id': unit.id,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // Write the public flag (and any legacy-token cleanup) on widget_settings
+      await settingsRef.set({
+        'ical_export_enabled': true,
+        'updated_at': FieldValue.serverTimestamp(),
+        'property_id': propertyId,
+        'owner_id': ownerId.isNotEmpty ? ownerId : null,
+        'id': unit.id,
+        // Scrub: never persist the token on the public doc again.
+        if (legacyTokenSeen) 'ical_export_token': FieldValue.delete(),
+      }, SetOptions(merge: true));
 
       // Fetch feeds BEFORE closing loading dialog (await ensures data is ready)
       List<IcalFeed> allFeeds;

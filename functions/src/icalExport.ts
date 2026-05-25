@@ -135,13 +135,14 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 
     logInfo("[iCal Feed] Request received", { propertyId, unitId, excludeSource });
 
-    // 1. Verify token against widget_settings
-    const widgetSettingsDoc = await db
-      .collection("properties")
-      .doc(propertyId)
-      .collection("widget_settings")
-      .doc(unitId)
-      .get();
+    // 1. Verify token against widget_secrets (private) — falls back to legacy
+    //    widget_settings.ical_export_token during the migration window.
+    //    See audit/migrations/41-scrub-widget-settings-secrets.js.
+    const propertyRef = db.collection("properties").doc(propertyId);
+    const [widgetSettingsDoc, widgetSecretsDoc] = await Promise.all([
+      propertyRef.collection("widget_settings").doc(unitId).get(),
+      propertyRef.collection("widget_secrets").doc(unitId).get(),
+    ]);
 
     if (!widgetSettingsDoc.exists) {
       logError("[iCal Feed] Widget settings not found", { propertyId, unitId });
@@ -158,8 +159,17 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       return;
     }
 
+    // Stored token: prefer widget_secrets (post-migration), fall back to legacy
+    // widget_settings.ical_export_token.
+    const storedToken =
+      widgetSecretsDoc.exists ? widgetSecretsDoc.data()?.ical_export_token : undefined;
+    const legacyToken = widgetSettings.ical_export_token;
+    const tokenToCompare = (typeof storedToken === "string" && storedToken.length > 0) ?
+      storedToken :
+      (legacyToken || "");
+
     // Verify token using timing-safe comparison (prevents timing attacks)
-    if (!verifyIcalToken(token, widgetSettings.ical_export_token || "")) {
+    if (!verifyIcalToken(token, tokenToCompare)) {
       logError("[iCal Feed] Invalid token", { propertyId, unitId });
       response.status(403).send("Invalid token");
       return;

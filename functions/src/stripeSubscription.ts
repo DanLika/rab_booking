@@ -40,11 +40,31 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
     throw new HttpsError("invalid-argument", "Missing priceId or returnUrl.");
   }
 
-  // PLACEHOLDER PRICE VALIDATION
-  // TODO: Replace with actual Stripe Price IDs from config/env
-  // For now, we accept any string but in production we should whitelist allowed Price IDs
-  // const ALLOWED_PRICES = ["price_monthly_pro", "price_yearly_pro"];
-  // if (!ALLOWED_PRICES.includes(priceId)) { ... }
+  // Price ID allowlist (audit/38, .claude/rules/stripe.md § Subscription Flow).
+  // Source: process.env.ALLOWED_SUBSCRIPTION_PRICE_IDS — comma-separated, loaded
+  // from functions/.env.<project> at deploy. Empty/unset = deny-all (fail-CLOSED)
+  // so a forgotten env-var cannot reopen the bypass.
+  const allowedPriceIds = (process.env.ALLOWED_SUBSCRIPTION_PRICE_IDS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (allowedPriceIds.length === 0) {
+    logError("ALLOWED_SUBSCRIPTION_PRICE_IDS is empty — subscription checkout blocked", null, {
+      userId,
+      requestedPriceId: priceId,
+    });
+    throw new HttpsError(
+      "failed-precondition",
+      "Subscription pricing is not configured. Contact support."
+    );
+  }
+  if (!allowedPriceIds.includes(priceId)) {
+    logError("Subscription checkout rejected: priceId not in allowlist", null, {
+      userId,
+      requestedPriceId: priceId,
+    });
+    throw new HttpsError("invalid-argument", "Price not allowed.");
+  }
 
   try {
     const stripe = getStripeClient();

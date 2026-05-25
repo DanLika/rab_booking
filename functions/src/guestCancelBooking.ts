@@ -20,19 +20,9 @@ import {sendGuestCancellationPushNotification} from "./fcmService";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
 import {safeToDate} from "./utils/dateValidation";
-import Stripe from "stripe";
+import {getStripeClient, stripeSecretKey} from "./stripe";
 import {checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
-
-/**
- * Create Stripe client instance with secret key
- * Lazy initialization to avoid loading Stripe SDK unless needed
- */
-function createStripeClient(secretKey: string): Stripe {
-  return new Stripe(secretKey, {
-    apiVersion: "2025-09-30.clover",
-  });
-}
 
 /**
  * Validates email configuration to ensure all required fields are present
@@ -71,7 +61,7 @@ function validateEmailConfig(emailConfig: any): {
  * 2. Cancellation is within the allowed deadline (hours before check-in)
  * 3. Guest provides correct booking reference and email
  */
-export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (request) => {
+export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY", stripeSecretKey]}, async (request) => {
   const data = request.data;
 
   // Support both camelCase and snake_case for backward compatibility
@@ -309,31 +299,48 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY"]}, async (r
     if (cancellationResult.refundStatus === "pending_stripe" &&
         cancellationResult.refundAmount > 0) {
       try {
-        const stripeConfig = cancellationResult.widgetSettings.stripe_config;
+        // Refund via platform Stripe key + Connect account header (Direct Charges
+        // pattern, mirrors stripePayment.ts). Previously this read a per-property
+        // `stripe_config.secret_key` from the publicly-readable `widget_settings`
+        // doc — an exfiltration foothold that gave anonymous readers an owner's
+        // Stripe API secret. The secret_key field is no longer trusted; see
+        // `audit/migrations/41-scrub-widget-settings-secrets.js`.
+        // Single source of truth: users/{ownerId}.stripe_account_id (set during
+        // Connect onboarding in stripeConnect.ts:74, also read by stripePayment.ts).
+        // Avoid denormalized copies on widget_settings to prevent drift if the owner
+        // re-connects via Stripe dashboard.
+        const ownerId = booking.owner_id;
+        let ownerStripeAccountId: string | undefined;
+        if (ownerId) {
+          const ownerDoc = await db.collection("users").doc(ownerId).get();
+          ownerStripeAccountId = ownerDoc.data()?.stripe_account_id as string | undefined;
+        }
 
-        if (!stripeConfig || !stripeConfig.secret_key) {
-          logError("Stripe config missing for refund", null, {bookingId});
+        if (!ownerStripeAccountId) {
+          logError("Stripe Connect account ID missing for refund", null, {bookingId, ownerId});
           await bookingRef.update({refund_status: "failed"});
         } else {
-          // Create Stripe client with proper ES module import
-          const stripe = createStripeClient(stripeConfig.secret_key);
+          const stripe = getStripeClient();
           const paymentIntentId = cancellationResult.stripePaymentIntentId;
 
           if (!paymentIntentId) {
             logError("Stripe payment intent ID missing", null, {bookingId});
             await bookingRef.update({refund_status: "failed"});
           } else {
-            // Create Stripe refund
-            const refund = await stripe.refunds.create({
-              payment_intent: paymentIntentId,
-              amount: Math.round(cancellationResult.refundAmount * 100),
-              reason: "requested_by_customer",
-              metadata: {
-                booking_id: bookingId,
-                booking_reference: bookingReference,
-                cancelled_by: "guest",
+            // Direct Charges: refund executes on the connected account.
+            const refund = await stripe.refunds.create(
+              {
+                payment_intent: paymentIntentId,
+                amount: Math.round(cancellationResult.refundAmount * 100),
+                reason: "requested_by_customer",
+                metadata: {
+                  booking_id: bookingId,
+                  booking_reference: bookingReference,
+                  cancelled_by: "guest",
+                },
               },
-            });
+              {stripeAccount: ownerStripeAccountId}
+            );
 
             stripeRefundId = refund.id;
 

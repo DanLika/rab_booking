@@ -55,18 +55,22 @@ service cloud.firestore {
 
       // Users can update their own data, but NOT protected status fields.
       // Admins can update anything.
-      // Protected fields: subscription status, trial dates, account type, lifetime license
+      // Protected fields: subscription status, trial dates, account type, lifetime license,
+      // and admin-elevation fields (`role`, `isAdmin`). `role` was the escalation vector that
+      // turned `isAdminFromFirestore()` into a self-claimable admin gate.
       allow create: if (isOwner(userId) && !request.resource.data.keys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
-          'lifetime_license_granted_at', 'lifetime_license_granted_by'
+          'lifetime_license_granted_at', 'lifetime_license_granted_by',
+          'role', 'isAdmin'
         ])) || isAdmin() || isAdminFromFirestore();
       allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
-          'lifetime_license_granted_at', 'lifetime_license_granted_by'
+          'lifetime_license_granted_at', 'lifetime_license_granted_by',
+          'role', 'isAdmin'
         ])) || isAdmin() || isAdminFromFirestore();
       allow delete: if isAdmin() || isAdminFromFirestore(); // Users cannot delete themselves directly, must use Cloud Function
 
@@ -78,13 +82,15 @@ service cloud.firestore {
             'accountStatus', 'trialStartDate', 'trialExpiresAt',
             'statusChangedAt', 'statusChangedBy',
             'account_type', 'admin_override_account_type',
-            'lifetime_license_granted_at', 'lifetime_license_granted_by'
+            'lifetime_license_granted_at', 'lifetime_license_granted_by',
+            'role', 'isAdmin'
           ])) || isAdmin();
         allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
             'accountStatus', 'trialStartDate', 'trialExpiresAt',
             'statusChangedAt', 'statusChangedBy',
             'account_type', 'admin_override_account_type',
-            'lifetime_license_granted_at', 'lifetime_license_granted_by'
+            'lifetime_license_granted_at', 'lifetime_license_granted_by',
+            'role', 'isAdmin'
           ])) || isAdmin();
         allow delete: if isOwner(userId) || isAdmin();
       }
@@ -192,6 +198,17 @@ service cloud.firestore {
       match /widget_settings/{unitId} {
         allow read: if true; // Widget needs to read settings
         allow create, update, delete: if isPropertyOwner(propertyId);
+      }
+
+      // Widget secrets subcollection — owner-only, never publicly readable.
+      // Holds fields that MUST NOT leak to anonymous widget visitors:
+      //   - ical_export_token         (auth token for getUnitIcalFeed)
+      //   - stripe_secret_key         (legacy: per-property Stripe sk_, being phased out)
+      //   - resend_api_key            (legacy: per-property Resend key, being phased out)
+      // Cloud Functions read via Admin SDK (rules bypass). Owner dashboard reads
+      // via this rule for display/management.
+      match /widget_secrets/{unitId} {
+        allow read, create, update, delete: if isPropertyOwner(propertyId);
       }
 
       // iCal events subcollection — SF-023 LOCKED 2026-05-22

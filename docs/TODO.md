@@ -17,13 +17,13 @@ Priority order matches audit/50 § "Suggested fix order". Single-best-move first
 
 ### CRITICAL (3) — anon-exploitable or money path
 
-- **F-50-01** — Subscription `priceId` allow-list bypass. PR #462 in flight; audit/38 env prereq tracker. Effort: blocked on env var provisioning + #462 merge.
+- **F-50-01** — Subscription `priceId` allow-list bypass. 🚧 **PR #481 in flight (CI green, awaiting smoke + merge — see audit/51 addendum)**. Originally tracked under PR #462 / audit/38 env prereq. Effort: blocked on operator smoke matrix per PR #481 body.
 - **F-50-02** — `loginAttempts` collection wide-open (firestore.rules:386). Anon lockout DoS + email enumeration. Fix: either CF migration (best) or strict `affectedKeys().hasOnly([...])` mutation guard. Effort: S/M.
 - **F-50-03** — Stripe webhook lacks `event.id` dedup (functions/src/stripePayment.ts:887–901). Money path — duplicate-send risk on Stripe network retries. **Prereq:** scan Stripe Dashboard → Events tab for `id` duplicate pairs in last 7 days to size historical exposure. Fix: `stripe_webhook_events` Firestore dedup table + TTL policy. Effort: M.
 
 ### HIGH (2) — quick wins
 
-- **F-50-04** — Error stacks logged to Cloud Logging in 5+ CFs (bookingManagement, verifyBookingAccess, getBookingByStripeSession, stripePayment, updateBookingTokenExpiration). Fix: scrub `error.stack` from structured logs in `functions/src/logger.ts`. Keep stack on Sentry only. Effort: XS (~30min, single file).
+- **F-50-04** — Error stacks logged to Cloud Logging in 5+ CFs (bookingManagement, verifyBookingAccess, getBookingByStripeSession, stripePayment, updateBookingTokenExpiration). 🚧 **PR #483 in flight (CI green, awaiting Sentry-dashboard smoke + merge)**. Fix: scrub `error.stack` from structured logs in `functions/src/logger.ts`. Keep stack on Sentry only.
 - **F-50-05a** — `undici ≤6.23.0` (8 CVEs) reachable via owner-supplied iCal URLs in `icalSync.ts`. Fix: `overrides: { "undici": "^7.0.0" }` in `functions/package.json` + verify SDK compat. Effort: S (~30min).
 
 ### MEDIUM (6) — defense-in-depth

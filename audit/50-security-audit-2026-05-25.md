@@ -25,8 +25,8 @@
 - **File**: `functions/src/stripeSubscription.ts:37–47, 84`
 - **Evidence**: `const {priceId, returnUrl} = request.data;` flows directly to `price: priceId` in `lineItems`. Allow-list check is **commented out** (`// if (!ALLOWED_PRICES.includes(priceId)) { ... }`).
 - **Impact**: Authenticated user can pass any Stripe Price ID in their account (including ones from other test products) → subscribe at wrong price / 0¢.
-- **Status**: Already tracked. PR #462 implements the allow-list; audit/38 documents env prereq (`ALLOWED_SUBSCRIPTION_PRICE_IDS` empty on dev, missing on prod).
-- **Action**: Unblock PR #462 — provision Stripe Prices in test+live, set per-env env files, merge.
+- **Status**: 🚧 **PR #481 in flight** — implements allow-list via `ALLOWED_SUBSCRIPTION_PRICE_IDS` env var (fail-CLOSED on empty). CI green, awaiting operator smoke + merge. See audit/51 addendum for gate.
+- **Action**: Walk PR #481 smoke matrix → merge → SF-NNN allocation post-merge.
 
 ---
 
@@ -58,6 +58,7 @@
 - **Files**: `bookingManagement.ts:57`, `verifyBookingAccess.ts:232`, `getBookingByStripeSession.ts:148`, `stripePayment.ts:856`, `updateBookingTokenExpiration.ts:95` (others likely)
 - **Evidence**: structured `logError`/`logWarn` payloads include `error.stack`, which embeds file paths, line numbers, and bundled module names from `lib/`.
 - **Impact**: anyone with `roles/logging.viewer` (which expands across team/contractor IAM bindings) gets a free reverse-engineering surface. Also can leak DB error text for SQL-shaped Firestore errors.
+- **Status**: 🚧 **PR #483 in flight** — drops `stack` from `logData.error` in `functions/src/logger.ts`; Sentry path unchanged. New `functions/test/logger.test.ts` (3 cases) verifies scrub. CI green, awaiting Sentry-dashboard smoke (real event, JSON inspect, confirm `error.stack` absent end-to-end) + merge.
 - **Fix**: in `logger.ts`, scrub: `{ message: error.message, code: error.code }` only. Keep stack on Sentry (already scrubbed), not Cloud Logging.
 
 ### F-50-05a — `undici ≤6.23.0` (transitive via firebase-admin) in iCal-fetch path

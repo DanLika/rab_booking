@@ -1963,7 +1963,7 @@ GOOGLE_CLOUD_PROJECT=bookbed-dev node functions/scripts/normalize-booking-nights
 
 ### CRITICAL (3)
 
-1. **F-50-01 — Subscription `priceId` allow-list bypass.** `functions/src/stripeSubscription.ts:37–47, 84`. Allow-list je zakomentarisan; klijent može proslijediti bilo koji Stripe Price ID iz computer accounta. PR #462 u flight-u; audit/38 env prereq tracker.
+1. **F-50-01 — Subscription `priceId` allow-list bypass.** `functions/src/stripeSubscription.ts:37–47, 84`. Allow-list je zakomentarisan; klijent može proslijediti bilo koji Stripe Price ID iz vlastitog Stripe account-a. 🚧 **PR #481 in flight (CI green, awaiting operator smoke matrix + merge per audit/51 addendum).** Originally tracked u PR #462 / audit/38 env prereq.
 
 2. **F-50-02 — `loginAttempts` collection wide-open.** `firestore.rules:386–391`. `allow get, create, update: if true`. Dva napada: (a) email enumeration via anon `getDoc('loginAttempts/<email>')`, (b) account lockout DoS via anon `setDoc({ attempts: 999, lockedUntil: future })`. Fix: CF migracija pre-auth rate limit-a + lock rule na `if false`.
 
@@ -1971,7 +1971,7 @@ GOOGLE_CLOUD_PROJECT=bookbed-dev node functions/scripts/normalize-booking-nights
 
 ### HIGH (2) — quick wins
 
-4. **F-50-04 — Error stacks logged to Cloud Logging across 5+ CFs.** `bookingManagement.ts:57`, `verifyBookingAccess.ts:232`, `getBookingByStripeSession.ts:148`, `stripePayment.ts:856`, `updateBookingTokenExpiration.ts:95`. `error.stack` curi file paths + module names operativnom timu. Fix: skratiti na `{ message, code }` u `functions/src/logger.ts`.
+4. **F-50-04 — Error stacks logged to Cloud Logging across 5+ CFs.** `bookingManagement.ts:57`, `verifyBookingAccess.ts:232`, `getBookingByStripeSession.ts:148`, `stripePayment.ts:856`, `updateBookingTokenExpiration.ts:95`. `error.stack` curi file paths + module names operativnom timu. Fix: skratiti na `{ message, code }` u `functions/src/logger.ts`. 🚧 **PR #483 in flight (CI green, awaiting Sentry-dashboard smoke verify that scrub holds end-to-end + merge).**
 
 5. **F-50-05a — `undici ≤6.23.0` (transitive via `firebase-admin`).** 8 CVEs uključujući HTTP Request/Response Smuggling, CRLF Injection u `upgrade` option. Iskoristivo via owner-supplied iCal URL-ova kroz `icalSync.ts`. Fix: `overrides` u `functions/package.json` pin na `^7.0.0`.
 

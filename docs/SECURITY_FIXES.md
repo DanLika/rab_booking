@@ -1954,6 +1954,44 @@ GOOGLE_CLOUD_PROJECT=bookbed-dev node functions/scripts/normalize-booking-nights
 
 ---
 
+## 🗓️ Planirane sigurnosne ispravke (audit/50, 2026-05-25)
+
+**Izvor:** `audit/50-security-audit-2026-05-25.md` (/security-audit:run full results, commit `07069abf`)
+**Status:** 📋 Planirano — SF-NNN brojevi se dodjeljuju u trenutku merge-a PR-a, ne unaprijed. Razlog: PR #462 / #481 su u flight-u i mogu uzeti sljedeći SF-027 broj prije nego ovi planirani fix-evi land-uju; pre-allocation bi izazvao kolizije.
+
+15 net-new nalaza (3 CRITICAL + 2 HIGH + 6 MEDIUM + 4 LOW), line-level verified vs SF-001..SF-026. Top 5 stavki koje će dobiti zasebne SF entry-e pri merge-u:
+
+### CRITICAL (3)
+
+1. **F-50-01 — Subscription `priceId` allow-list bypass.** `functions/src/stripeSubscription.ts:37–47, 84`. Allow-list je zakomentarisan; klijent može proslijediti bilo koji Stripe Price ID iz computer accounta. PR #462 u flight-u; audit/38 env prereq tracker.
+
+2. **F-50-02 — `loginAttempts` collection wide-open.** `firestore.rules:386–391`. `allow get, create, update: if true`. Dva napada: (a) email enumeration via anon `getDoc('loginAttempts/<email>')`, (b) account lockout DoS via anon `setDoc({ attempts: 999, lockedUntil: future })`. Fix: CF migracija pre-auth rate limit-a + lock rule na `if false`.
+
+3. **F-50-03 — Stripe webhook lacks `event.id` dedup.** `functions/src/stripePayment.ts:887–901`. Samo signature verification; nema event-id Firestore dedup-a. Money path — Stripe normal retries (network, 5xx) re-fire-uju iste effects (double email, double balance credit). Fix: `stripe_webhook_events` collection + transaction dedup + TTL policy.
+
+### HIGH (2) — quick wins
+
+4. **F-50-04 — Error stacks logged to Cloud Logging across 5+ CFs.** `bookingManagement.ts:57`, `verifyBookingAccess.ts:232`, `getBookingByStripeSession.ts:148`, `stripePayment.ts:856`, `updateBookingTokenExpiration.ts:95`. `error.stack` curi file paths + module names operativnom timu. Fix: skratiti na `{ message, code }` u `functions/src/logger.ts`.
+
+5. **F-50-05a — `undici ≤6.23.0` (transitive via `firebase-admin`).** 8 CVEs uključujući HTTP Request/Response Smuggling, CRLF Injection u `upgrade` option. Iskoristivo via owner-supplied iCal URL-ova kroz `icalSync.ts`. Fix: `overrides` u `functions/package.json` pin na `^7.0.0`.
+
+### Plus 6 MEDIUM + 4 LOW (vidi audit/50)
+
+- MEDIUM: F-50-05 App Check (downgraded — deferred until F-50-02 ships), F-50-05b CSP missing on owner+admin, F-50-06 HSTS missing, F-50-07 Permissions-Policy missing, F-50-08 widget headers incomplete, F-50-09 `devices` update unbounded.
+- LOW: F-50-10 `eval()` in `web/index.html:669`, F-50-11 iframe_resizer postMessage `'*'`, F-50-12 `audit/raw/secrets.txt` tracked in git, F-50-13 residual npm audit moderate noise.
+
+### Fix order
+
+Pune prioritete + suggested PR sizing: vidi `docs/TODO.md` § "audit/50 security findings".
+
+### Done-when (per item)
+
+- PR otvoren s linkom na `audit/50` F-50-XX
+- PR merged → nova SF-NNN entry pisana ovdje (chronologically next free number)
+- Audit/50 finding marked closed s SF reference + commit SHA
+
+---
+
 ## ODBIJENI PRIJEDLOZI (Jules Audit)
 
 Sljedeći prijedlozi iz Jules AI audita su analizirani i odbijeni zbog visokog rizika ili nepotrebnosti:

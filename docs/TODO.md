@@ -4,6 +4,54 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ---
 
+## 🚨 TODO: audit/50 security findings (2026-05-25)
+
+**Prioritet:** mixed (3 CRITICAL + 2 HIGH + 6 MEDIUM + 4 LOW = 15 findings)
+**Izvor:** `audit/50-security-audit-2026-05-25.md` (/security-audit:run full results, commit `07069abf`)
+
+Priority order matches audit/50 § "Suggested fix order". Single-best-move first:
+
+### Highest-leverage move
+
+- **PR #481 review + merge** (`fix/audit-38-security-sprint`). Manual ~1h. Title: "security(audit/38): role escalation + secrets exfil + price allowlist". Read scope against F-50-01 (`ALLOWED_SUBSCRIPTION_PRICE_IDS`) before merge — if #481 implements allow-list, F-50-01 auto-closes. If only provisions env var, F-50-01 needs separate PR uncommenting `functions/src/stripeSubscription.ts:47`. Cascade benefit: unblocks #454 / #457 / #462 + resolves audit/50 F-50-01 + makes PR #482 prereq #3 auto-resolved.
+
+### CRITICAL (3) — anon-exploitable or money path
+
+- **F-50-01** — Subscription `priceId` allow-list bypass. PR #462 in flight; audit/38 env prereq tracker. Effort: blocked on env var provisioning + #462 merge.
+- **F-50-02** — `loginAttempts` collection wide-open (firestore.rules:386). Anon lockout DoS + email enumeration. Fix: either CF migration (best) or strict `affectedKeys().hasOnly([...])` mutation guard. Effort: S/M.
+- **F-50-03** — Stripe webhook lacks `event.id` dedup (functions/src/stripePayment.ts:887–901). Money path — duplicate-send risk on Stripe network retries. **Prereq:** scan Stripe Dashboard → Events tab for `id` duplicate pairs in last 7 days to size historical exposure. Fix: `stripe_webhook_events` Firestore dedup table + TTL policy. Effort: M.
+
+### HIGH (2) — quick wins
+
+- **F-50-04** — Error stacks logged to Cloud Logging in 5+ CFs (bookingManagement, verifyBookingAccess, getBookingByStripeSession, stripePayment, updateBookingTokenExpiration). Fix: scrub `error.stack` from structured logs in `functions/src/logger.ts`. Keep stack on Sentry only. Effort: XS (~30min, single file).
+- **F-50-05a** — `undici ≤6.23.0` (8 CVEs) reachable via owner-supplied iCal URLs in `icalSync.ts`. Fix: `overrides: { "undici": "^7.0.0" }` in `functions/package.json` + verify SDK compat. Effort: S (~30min).
+
+### MEDIUM (6) — defense-in-depth
+
+- **F-50-05** — App Check not enforced on any onCall. **Deferred** until F-50-02 ships (kills the credential-stuffing synergy that justified original HIGH rating). Effort: L (Flutter SDK + per-platform attest providers + per-CF flag).
+- **F-50-05b** — Owner + admin sites ship no `Content-Security-Policy` header. Fix: prereq remove `web/index.html:669` eval (F-50-10), then add `Content-Security-Policy-Report-Only` first → 1 week clean Sentry → promote to enforcing. Effort: M.
+- **F-50-06** — Missing HSTS on all 3 hosting sites (firebase.json).
+- **F-50-07** — Missing `Permissions-Policy` on all 3 sites.
+- **F-50-08** — Widget site lacks `X-Content-Type-Options` + `Referrer-Policy`.
+- **F-50-09** — `devices/{deviceId}` update unbounded (firestore.rules:127). Add `affectedKeys().hasOnly([...])`.
+
+Bundle F-50-06 + F-50-07 + F-50-08 into 1 firebase.json headers PR.
+
+### LOW (4) — defensive tightenings (can bundle into single XS PR)
+
+- **F-50-10** — `web/index.html:669` `eval()` for ES6 feature detection. Replace with try-block.
+- **F-50-11** — `web/iframe_resizer.js:13` `postMessage` `targetOrigin: '*'`. Capture parent origin via init handshake.
+- **F-50-12** — `audit/raw/secrets.txt` checked into git (grep dump of code paths, not real secrets but leaks layout). Add `audit/raw/` to `.gitignore`, `git rm` the file.
+- **F-50-13** — Residual `npm audit` moderate noise (fast-xml-parser via @google-cloud/storage). Monitor; pin via overrides if upstream lags past Q3.
+
+### Done-when
+
+- Each fix lands its own PR with link back to `audit/50` F-50-XX
+- New SF-NNN entry added to `docs/SECURITY_FIXES.md` at PR merge time (allocated in arrival order, not pre-allocated — see "Planirane sigurnosne ispravke" section there for rationale)
+- Carryover Semgrep follow-up run AFTER F-50-* sprint completes (better signal-to-noise once low-hanging removed)
+
+---
+
 ## 🧩 TODO: Booking widget refactor — Phases 2-5 (2026-05-22)
 
 **Prioritet:** P2 (tech debt; no user-visible change)

@@ -121,3 +121,76 @@ $ git branch | wc -l
 $ gh pr list --state open | wc -l
 11
 ```
+
+---
+
+## Addendum 2026-05-25 — F-50-* sprint Day 1 (CI-green, awaiting smoke + merge)
+
+Two PRs opened post-FINAL_CLEANUP, both CI-green and gated on operator smoke + merge:
+
+- **PR #481** `fix/audit-38-security-sprint` — 5-fix omnibus (role escalation, Stripe secret_key exfil, iCal token exfil, Resend key exfil, subscription priceId allow-list) + 2 operator scripts. CI green after test-fixture fix `fe8d9ce6`: 3 Flutter tests (`email_notification_config_test.dart`) + 8 CF tests (`icalExport.test.ts` dual-read mocks). 9 files, +496/-184. Closes audit/50 **F-50-01** at merge.
+- **PR #483** `fix/f-50-04-error-stack-scrub` — `functions/src/logger.ts` drops `error.stack` from Cloud Logging payload; Sentry path unchanged. New `functions/test/logger.test.ts` with 3 cases. Closes audit/50 **F-50-04** at merge.
+
+Both PRs `mergeStateStatus: UNSTABLE` despite all-green required checks — caused by `Build Android AAB` empty-conclusion (non-required, pending). Merge is allowed; `reviewDecision` is empty (single-author repo, no approval gating).
+
+### Gate: smoke matrix is the actual merge gate, not CI green
+
+CI green is permission to *consider* merging. Both PRs need operator smoke before merge — neither Claude nor automation can run:
+
+- **#483 smoke** (~5 min): trigger test error on `bookbed-dev`, open Sentry dashboard latest event, expand JSON, verify `error.stack` field is **absent** in the structured logging payload but **present** in Sentry's parsed exception view. Unit test proves the scrub function works; Sentry dashboard proves the SDK doesn't re-inject upstream.
+- **#481 smoke** (~30-45 min): walk full matrix per PR body — admin-escalation audit script, scrub-widget-secrets dry-run + execute on dev, deploy CF + rules to dev, role-write attempt (must reject), iCal feed token rotate w/ new + legacy fallback, guest cancel with Stripe refund routing through Connect, subscription checkout with allowlisted vs non-allowlisted priceId, confirm `resend_api_key` removed from any saved doc post-scrub.
+
+Per CLAUDE.md Top NEVER rule #3, dev → smoke → human OK → prod is mandatory for CF / rules deploys.
+
+### Post-merge task queue (do NOT execute until `mergedAt != null`)
+
+```bash
+# Verify merge state before proceeding
+gh pr view 481 --json mergedAt,mergedBy,mergeCommit
+gh pr view 483 --json mergedAt,mergedBy,mergeCommit
+```
+
+If both show `mergedAt` populated, then:
+
+- **Tracker updates** (`docs/SECURITY_FIXES.md`):
+  - Allocate SF-027..SF-032 in chronological merge order (NOT pre-allocated; PR #482 may take next number)
+  - SF entry per #481 sub-fix: role escalation, Stripe secret exfil, iCal token exfil, Resend key exfil, subscription allow-list (F-50-01 closed)
+  - SF entry per #483: logger error.stack scrub (F-50-04 closed)
+  - SF entry for test-fixture maintenance work (`fe8d9ce6` commit on `fix/audit-38-security-sprint`)
+- **`audit/51` addendum**: append merge timestamps + commit SHAs
+- **`docs/CHANGELOG.md`**: bump for user-visible Connect refund path change in #481 (affects owners with Stripe Connect — refund routing changed from per-property secret to platform key + Connect account header)
+- **`docs/TODO.md`**: strike F-50-01 and F-50-04 from § "audit/50 security findings"
+
+### PR #482 reconciliation (post-#481-merge)
+
+PR #482 (Draft, SF-021 widget_secrets) has 13 files; 5 are duplicates of #481, 8 are unique value. NOT close-as-superseded.
+
+- Duplicates (drop on rebase, accept main's version): `firestore.rules`, `functions/src/icalExport.ts`, `functions/src/stripeSubscription.ts`, `lib/features/widget/domain/models/settings/email_notification_config.dart`, `test/features/widget/domain/models/settings/email_notification_config_test.dart`
+- Unique value (keep): `functions/src/email/sendOwnerEmail.ts`, `functions/src/sentry.ts` (beforeSend filter), `functions/src/index.ts` (export sendOwnerEmail), `functions/scripts/{cleanup-ical-plaintext,count-owners-with-resend,hotfix-widget-secrets}.js`, `functions/test/firestore_rules/widget_secrets.test.ts`
+
+Recipe:
+```bash
+git checkout hotfix/widget-secrets-exfil
+git rebase origin/main
+# Resolve 5 duplicate-file conflicts: accept main (post-#481-merge version)
+# Verify 8 unique files survive
+# Prereq env var status:
+#   - ICAL_TOKEN_PEPPER: still need to provision per-env
+#   - RESEND_API_KEY: already provisioned (verified 2026-05-25)
+#   - ALLOWED_SUBSCRIPTION_PRICE_IDS: auto-resolved via #481 merge
+gh pr ready 482  # remove Draft state once env vars provisioned
+```
+
+### Branch hygiene gate
+
+FINAL_CLEANUP branch-delete authorization is SPENT. Each post-merge branch deletion needs fresh per-op user OK. List-only sweep:
+
+```bash
+git fetch origin --prune
+git branch --merged main | grep -vE '^\*|main'
+```
+
+### Smoke artifacts persistence
+
+File smoke walkthrough results in PR comment threads (#481, #483), NOT separate audit docs. PR-comment evidence stays attached to the merge for future forensic recovery via `gh pr view <N> --comments`. Separate audit doc only if smoke reveals new findings.
+

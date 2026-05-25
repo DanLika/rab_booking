@@ -101,9 +101,14 @@ export class Logger {
 
     if (error) {
       if (error instanceof Error) {
+        // F-50-04 (audit/50): `error.stack` intentionally NOT included in the
+        // Cloud Logging payload. Stack traces leak source paths and module
+        // structure to anyone with `roles/logging.viewer`, an over-broad IAM
+        // surface for forensic recon. The full Error (with stack) is still
+        // shipped to Sentry below via `captureException(error, ...)`, which
+        // is the appropriate sink for stacks.
         logData.error = {
           message: error.message,
-          stack: error.stack,
           name: error.name,
         };
         if (error instanceof HttpsError) {

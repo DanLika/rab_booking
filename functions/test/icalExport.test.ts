@@ -108,8 +108,11 @@ describe("iCal Export Endpoint", () => {
 
   it("should allow HEAD requests", async () => {
     req.method = "HEAD";
-    // Mock not found to exit early but pass method check
-    mockDb.get.mockResolvedValueOnce({ exists: false });
+    // Mock not found to exit early but pass method check.
+    // SF-021 dual-read: widget_settings + widget_secrets fetched in parallel
+    // via Promise.all in icalExport.ts. Both .get() calls must resolve.
+    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_settings
+    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_secrets
 
     await getUnitIcalFeed(req, res);
 
@@ -125,7 +128,8 @@ describe("iCal Export Endpoint", () => {
   });
 
   it("should return 404 if widget settings not found", async () => {
-    mockDb.get.mockResolvedValueOnce({ exists: false });
+    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_settings
+    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_secrets (SF-021 dual-read)
 
     await getUnitIcalFeed(req, res);
 
@@ -137,6 +141,7 @@ describe("iCal Export Endpoint", () => {
       exists: true,
       data: () => ({ ical_export_enabled: false }),
     });
+    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_secrets
 
     await getUnitIcalFeed(req, res);
 
@@ -144,7 +149,7 @@ describe("iCal Export Endpoint", () => {
     expect(res.send).toHaveBeenCalledWith("iCal export is disabled for this unit");
   });
 
-  it("should return 403 for invalid token", async () => {
+  it("should return 403 for invalid token (legacy widget_settings)", async () => {
     mockDb.get.mockResolvedValueOnce({
       exists: true,
       data: () => ({
@@ -152,8 +157,31 @@ describe("iCal Export Endpoint", () => {
         ical_export_token: "secret-token",
       }),
     });
+    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_secrets — fallback to widget_settings token
 
     req.path = "/prop-123/unit-123/wrong-token";
+
+    await getUnitIcalFeed(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.send).toHaveBeenCalledWith("Invalid token");
+  });
+
+  it("should return 403 for invalid token (widget_secrets takes precedence)", async () => {
+    // SF-021: when widget_secrets has a token, it overrides widget_settings.
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        ical_export_enabled: true,
+        ical_export_token: "legacy-token-should-be-ignored",
+      }),
+    });
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ ical_export_token: "new-secret-token" }),
+    });
+
+    req.path = "/prop-123/unit-123/legacy-token-should-be-ignored";
 
     await getUnitIcalFeed(req, res);
 
@@ -172,6 +200,7 @@ describe("iCal Export Endpoint", () => {
         ical_cache_etag: '"etag-123"',
       }),
     });
+    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_secrets
 
     req.headers["if-none-match"] = '"etag-123"';
 
@@ -191,6 +220,7 @@ describe("iCal Export Endpoint", () => {
         ical_cache_etag: '"etag-123"',
       }),
     });
+    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_secrets
 
     await getUnitIcalFeed(req, res);
 
@@ -199,7 +229,7 @@ describe("iCal Export Endpoint", () => {
   });
 
   it("should generate fresh feed if cache invalid", async () => {
-    // 1. Widget Settings (cache invalid/missing)
+    // 1a. Widget Settings (cache invalid/missing)
     mockDb.get.mockResolvedValueOnce({
       exists: true,
       data: () => ({
@@ -208,6 +238,9 @@ describe("iCal Export Endpoint", () => {
       }),
       ref: { update: jest.fn() },
     });
+
+    // 1b. Widget Secrets (SF-021 dual-read; fall back to widget_settings token)
+    mockDb.get.mockResolvedValueOnce({ exists: false });
 
     // 2. Unit Doc
     mockDb.get.mockResolvedValueOnce({
@@ -248,7 +281,7 @@ describe("iCal Export Endpoint", () => {
   it("should filter events when ?exclude= is used", async () => {
     req.query.exclude = "airbnb";
 
-    // 1. Widget Settings
+    // 1a. Widget Settings
     mockDb.get.mockResolvedValueOnce({
       exists: true,
       data: () => ({
@@ -259,6 +292,9 @@ describe("iCal Export Endpoint", () => {
       }),
       ref: { update: jest.fn() },
     });
+
+    // 1b. Widget Secrets (SF-021 dual-read)
+    mockDb.get.mockResolvedValueOnce({ exists: false });
 
     // 2. Unit Doc
     mockDb.get.mockResolvedValueOnce({

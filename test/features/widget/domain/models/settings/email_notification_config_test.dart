@@ -43,14 +43,18 @@ void main() {
     });
 
     group('fromMap', () {
-      test('parses all fields from map', () {
+      test('parses all fields from map (resend_api_key intentionally dropped)', () {
+        // resend_api_key is no longer round-tripped through Firestore — public-read
+        // widget_settings rule would expose it to anonymous widget visitors. Server-side
+        // email uses platform RESEND_API_KEY Firebase Secret. See SF-021 / audit/50.
         final map = {
           'enabled': true,
           'send_booking_confirmation': false,
           'send_payment_receipt': false,
           'send_owner_notification': false,
           'require_email_verification': true,
-          'resend_api_key': 'api-key-123',
+          'resend_api_key':
+              'api-key-123', // present in legacy docs; must NOT load
           'from_email': 'booking@example.com',
           'from_name': 'Example Hotel',
         };
@@ -62,7 +66,7 @@ void main() {
         expect(config.sendPaymentReceipt, false);
         expect(config.sendOwnerNotification, false);
         expect(config.requireEmailVerification, true);
-        expect(config.resendApiKey, 'api-key-123');
+        expect(config.resendApiKey, isNull); // intentionally dropped on read
         expect(config.fromEmail, 'booking@example.com');
         expect(config.fromName, 'Example Hotel');
       });
@@ -82,31 +86,38 @@ void main() {
     });
 
     group('toMap', () {
-      test('serializes all fields to map', () {
-        const config = EmailNotificationConfig(
-          enabled: true,
-          sendBookingConfirmation: true,
-          sendPaymentReceipt: false,
-          sendOwnerNotification: true,
-          requireEmailVerification: true,
-          resendApiKey: 'my-api-key',
-          fromEmail: 'test@test.com',
-          fromName: 'Test Name',
-        );
+      test(
+        'serializes all fields to map (resend_api_key intentionally absent)',
+        () {
+          // toMap MUST NOT emit resend_api_key — the widget_settings doc is public-read
+          // and writing the key here would leak it to anonymous visitors. See SF-021.
+          const config = EmailNotificationConfig(
+            enabled: true,
+            sendBookingConfirmation: true,
+            sendPaymentReceipt: false,
+            sendOwnerNotification: true,
+            requireEmailVerification: true,
+            resendApiKey: 'my-api-key', // in-memory only; must NOT serialize
+            fromEmail: 'test@test.com',
+            fromName: 'Test Name',
+          );
 
-        final map = config.toMap();
+          final map = config.toMap();
 
-        expect(map['enabled'], true);
-        expect(map['send_booking_confirmation'], true);
-        expect(map['send_payment_receipt'], false);
-        expect(map['send_owner_notification'], true);
-        expect(map['require_email_verification'], true);
-        expect(map['resend_api_key'], 'my-api-key');
-        expect(map['from_email'], 'test@test.com');
-        expect(map['from_name'], 'Test Name');
-      });
+          expect(map['enabled'], true);
+          expect(map['send_booking_confirmation'], true);
+          expect(map['send_payment_receipt'], false);
+          expect(map['send_owner_notification'], true);
+          expect(map['require_email_verification'], true);
+          expect(map.containsKey('resend_api_key'), isFalse); // SF-021 guard
+          expect(map['from_email'], 'test@test.com');
+          expect(map['from_name'], 'Test Name');
+        },
+      );
 
-      test('round-trips correctly through fromMap/toMap', () {
+      test('round-trips drop resendApiKey through fromMap/toMap (SF-021)', () {
+        // Round-trip is intentionally lossy for resendApiKey: it is stripped on
+        // toMap (security), so fromMap(toMap(x)) yields x with resendApiKey == null.
         const original = EmailNotificationConfig(
           enabled: true,
           sendBookingConfirmation: false,
@@ -118,9 +129,21 @@ void main() {
           fromName: 'Round Trip',
         );
 
+        const expectedAfterRoundTrip = EmailNotificationConfig(
+          enabled: true,
+          sendBookingConfirmation: false,
+          sendPaymentReceipt: true,
+          sendOwnerNotification: false,
+          requireEmailVerification: true,
+          // resendApiKey omitted — dropped by toMap/fromMap on purpose
+          fromEmail: 'round@trip.com',
+          fromName: 'Round Trip',
+        );
+
         final restored = EmailNotificationConfig.fromMap(original.toMap());
 
-        expect(restored, original);
+        expect(restored, expectedAfterRoundTrip);
+        expect(restored.resendApiKey, isNull);
       });
     });
 

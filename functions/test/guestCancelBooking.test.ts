@@ -13,6 +13,7 @@ import {HttpsError} from "firebase-functions/v2/https";
 
 jest.mock("firebase-functions/params", () => ({
   defineSecret: () => ({value: () => "mock-secret"}),
+  defineString: () => ({value: () => ""}),
 }));
 
 jest.mock("../src/firebase", () => ({

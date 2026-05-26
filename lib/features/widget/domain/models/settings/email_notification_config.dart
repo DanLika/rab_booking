@@ -60,6 +60,12 @@ class EmailNotificationConfig {
   });
 
   /// Create from Firestore map data
+  ///
+  /// `resend_api_key` is intentionally NOT read from Firestore: the legacy
+  /// client-side Resend integration leaked this field via the publicly-readable
+  /// `widget_settings` doc. The field is kept on the model for in-memory
+  /// continuity but no longer round-trips through persistence. Server-side
+  /// email delivery now uses the platform `RESEND_API_KEY` (Firebase Secret).
   factory EmailNotificationConfig.fromMap(Map<String, dynamic> map) {
     return EmailNotificationConfig(
       enabled: map['enabled'] ?? false,
@@ -67,13 +73,16 @@ class EmailNotificationConfig {
       sendPaymentReceipt: map['send_payment_receipt'] ?? true,
       sendOwnerNotification: map['send_owner_notification'] ?? true,
       requireEmailVerification: map['require_email_verification'] ?? false,
-      resendApiKey: map['resend_api_key'],
       fromEmail: map['from_email'],
       fromName: map['from_name'],
     );
   }
 
   /// Convert to Firestore map data
+  ///
+  /// `resend_api_key` is NOT written: the public-read `widget_settings` rule
+  /// would expose it to anonymous widget visitors. Server-side email uses the
+  /// platform Resend key (Firebase Secret).
   Map<String, dynamic> toMap() {
     return {
       'enabled': enabled,
@@ -81,7 +90,6 @@ class EmailNotificationConfig {
       'send_payment_receipt': sendPaymentReceipt,
       'send_owner_notification': sendOwnerNotification,
       'require_email_verification': requireEmailVerification,
-      'resend_api_key': resendApiKey,
       'from_email': fromEmail,
       'from_name': fromName,
     };

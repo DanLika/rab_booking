@@ -84,6 +84,18 @@ jest.mock("https", () => ({
   get: jest.fn(),
 }));
 
+// F-NEW-05: validateIcalUrl is now async and DNS-resolves the hostname.
+// Mock dns/promises so tests don't hit real DNS in CI. Default returns a
+// public IP; tests that need to exercise the SSRF block override below.
+jest.mock("dns/promises", () => ({
+  lookup: jest.fn(async (hostname: string, _opts: unknown) => {
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return [{ address: "127.0.0.1", family: 4 }];
+    }
+    return [{ address: "203.0.113.10", family: 4 }]; // TEST-NET-3 RFC5737
+  }),
+}));
+
 import { syncIcalFeedNow, scheduledIcalSync } from "../src/icalSync";
 import * as https from "https";
 import { db } from "../src/firebase";
@@ -108,8 +120,12 @@ describe("iCal Sync Functions", () => {
       commit: jest.fn().mockResolvedValue(true),
     });
 
-    // Setup default mock request/response behavior
-    (https.get as jest.Mock).mockImplementation((url, callback) => {
+    // Setup default mock request/response behavior.
+    // F-NEW-05: fetchIcalData now always calls https.get(url, options, callback)
+    // (3-arg form) — options carries the pinned-IP lookup callback when set.
+    // Support both 2-arg (legacy) and 3-arg signatures so the mock survives.
+    (https.get as jest.Mock).mockImplementation((url, optsOrCb, maybeCb) => {
+      const callback = typeof optsOrCb === "function" ? optsOrCb : maybeCb;
       callback(mockResponse);
       return mockRequest;
     });
@@ -193,7 +209,12 @@ describe("iCal Sync Functions", () => {
        });
 
       const wrapped = wrap(syncIcalFeedNow);
-      await expect(wrapped({ data: validData, auth: mockAuth })).rejects.toThrow("Internal or localhost URLs are not allowed");
+      // F-NEW-05: error string changed when validator switched from substring
+      // blocklist to DNS-resolve + private-IP check. localhost resolves to
+      // 127.0.0.1 which isPrivateOrUnsafeIp rejects.
+      await expect(wrapped({ data: validData, auth: mockAuth })).rejects.toThrow(
+        /private or reserved IP address/i
+      );
     });
 
     it("should sync successfully for valid input", async () => {

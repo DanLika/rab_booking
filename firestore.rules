@@ -399,12 +399,14 @@ service cloud.firestore {
     // LOCKED COLLECTIONS - Only Cloud Functions via Admin SDK
     // ========================================================================
 
-    // Login attempts - rate limiting
+    // Login attempts - F-50-02 CLOSED: server-only via Admin SDK.
+    // Client previously wrote directly with `allow get, create, update: if true`
+    // — anon-exploitable lockout DoS for any email. Writes now routed through
+    // `functions/src/loginLockout.ts` callables (recordLoginFailure,
+    // getLoginLockoutStatus, clearLoginAttempts) which IP-rate-limit and
+    // bound how fast an attacker can bump arbitrary email counters.
     match /loginAttempts/{email} {
-      // SECURITY: allow read/write for rate limiting. 
-      // rate_limit_service.dart uses sanitized email as doc ID.
-      allow get, create, update: if true;
-      allow list, delete: if false;
+      allow read, write: if false;
     }
 
     // Email verifications - OTP codes

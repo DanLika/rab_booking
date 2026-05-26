@@ -43,5 +43,8 @@
     "ts-jest": "^29.4.11",
     "typescript": "^5.7.0"
   },
+  "overrides": {
+    "undici": "^7.0.0"
+  },
   "private": true
 }

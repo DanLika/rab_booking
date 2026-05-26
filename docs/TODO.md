@@ -52,6 +52,18 @@ Bundle F-50-06 + F-50-07 + F-50-08 into 1 firebase.json headers PR.
 
 ---
 
+## 🛡 App Check launch checklist (referenced from SF-046)
+
+Security-sprint PR shipped App Check in **audit-only mode** (`enforceAppCheck: false, consumeAppCheckToken: true`) on `getUnitAvailability` and `createStripeCheckoutSession`. Functions log attestation when clients send a token; missing tokens are NOT rejected. Promoting to full enforcement (`enforceAppCheck: true`) requires:
+
+- [ ] **Provision `RECAPTCHA_SITE_KEY`** on `bookbed-dev` + `rab-booking-248fc` (reCAPTCHA v3 site key for web; Console: APIs & Services → Credentials → reCAPTCHA Enterprise)
+- [ ] **Web client init** in `web/index.html` + Flutter widget entry — initialize App Check with reCAPTCHA v3 provider after `Firebase.initializeApp`
+- [ ] **Native client init** — Flutter mobile entry points init App Check with DeviceCheck (iOS) / Play Integrity (Android) providers; pubspec dep `firebase_app_check ^0.4.x` already present
+- [ ] **Telemetry watch (1 week)** — confirm legit-traffic attestation rate > 99% in `serviceConfig.appCheckMetrics` before flipping enforcement
+- [ ] **Flip `enforceAppCheck: true`** on both CFs in follow-up PR; expand to other anon-callable surfaces (`emailVerification`, `passwordReset`, `subdomainService` once SF-047 lands)
+
+---
+
 ## 🧩 TODO: Booking widget refactor — Phases 2-5 (2026-05-22)
 
 **Prioritet:** P2 (tech debt; no user-visible change)

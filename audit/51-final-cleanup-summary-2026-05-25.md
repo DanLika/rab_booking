@@ -194,3 +194,30 @@ git branch --merged main | grep -vE '^\*|main'
 
 File smoke walkthrough results in PR comment threads (#481, #483), NOT separate audit docs. PR-comment evidence stays attached to the merge for future forensic recovery via `gh pr view <N> --comments`. Separate audit doc only if smoke reveals new findings.
 
+---
+
+## #481 merged 2026-05-26 (squash `a847497e`)
+
+- **Title:** security(audit/38): role escalation + secrets exfil + price allowlist
+- **mergedAt:** 2026-05-26T06:16:36Z
+- **mergedBy:** DanLika
+- **Smoke:** 5/5 PASS (F-50-01 priceId gate, role escalation rules, Connect Direct Charges refund, iCal `widget_secrets` dual-read, Resend env-var migration + operator scripts)
+- **SF entries opened:**
+  - ✅ SF-027 (priceId allowlist), SF-028 (role escalation), SF-032 (Stripe key exfil), SF-033 (Resend key exfil) — all closed by #481
+  - ⏳ SF-029 (refund-fail false-positive success), SF-030 (subcollection guard test gap), SF-031 (atomicBooking widget_settings read), SF-034 (logger.error scope expansion) — open followups
+- **Regression test debt filled separately:** **PR #496** (`functions/test/firestore_rules/users.test.ts` + `functions/test/guestCancelBooking.test.ts`) — these were referenced in #481's smoke matrix but were never tracked in git; recovered from local disk post-merge.
+- **Audit smoke artifact preserved:** **PR #497** (`functions/scripts/smoke-allowlist.js`) — re-runnable F-50-01 gate-logic smoke (4 cases). Useful for the upcoming prod-env provisioning step.
+- **Operator deferred:** prod env var provisioning (`ALLOWED_SUBSCRIPTION_PRICE_IDS`, fresh `ICAL_TOKEN_PEPPER`) + CF deploy to `rab-booking-248fc` + Firestore rules deploy. Per hard rule #3 (CF → widget → rules), this order must NOT be reversed.
+- **Post-merge anomaly flagged:** `deploy-widget.yml` auto-triggered on the squash to main and deployed the widget bundle to PROD. CF + rules deploy did NOT auto-fire. This leaves PROD in a transitional state (new widget code talking to old CFs + old rules). Mitigation: complete operator deploy ASAP, then track this auto-trigger ordering risk as a follow-up (audit/52 or `.github/workflows/deploy-widget.yml` gating issue).
+
+### Followup index (open after #481)
+
+| ID | Severity | Status | Owner |
+|---|---|---|---|
+| SF-029 | MEDIUM | open | followup PR — refund-fail UX + Sentry alert |
+| SF-030 | MEDIUM | open | followup PR — subcollection guard test |
+| SF-031 | MEDIUM | open | SF-021 scope completion |
+| SF-034 | HIGH | tracked in PR #495 | logger.error scope expansion + audit/50 addendum |
+| F-50-02 | CRITICAL | open | `loginAttempts` lockdown |
+| F-50-03 | CRITICAL | open | Stripe webhook event-ID dedup |
+

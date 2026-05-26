@@ -2991,3 +2991,142 @@ match /properties/{propertyId}/{allPaths=**} {
 
 **GDPR/Security implikacije:**
 Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podataka, što je kritično za sigurnost i usklađenost s regulativama.
+
+---
+
+## SF-027: Stripe priceId allowlist (F-50-01)
+
+**Status:** ✅ closed via #481 (`a847497e`, merged 2026-05-26)
+**Severity:** CRITICAL
+**Audit:** [audit/50 F-50-01](../audit/50-security-audit-2026-05-25.md)
+
+**Vector:** `stripeSubscription` callable accepted any client-supplied `priceId` and flowed it directly into `lineItems.price`. Authenticated user could subscribe to any product in the Stripe account at any (including $0) price — including products from other test workflows.
+
+**Fix:** Env-var-driven allowlist (`ALLOWED_SUBSCRIPTION_PRICE_IDS`), comma-separated, parsed at function boot. Empty env → **fail-CLOSED** (`failed-precondition` + "Subscription pricing is not configured" message). Unknown `priceId` → `invalid-argument` + "Price not allowed".
+
+**File:** `functions/src/stripeSubscription.ts:47-67`
+
+**Verification:**
+- 4/4 smoke cases pre-merge (priceId in allowlist → PASS, NOT in → reject, empty env → fail-CLOSED, env w/ whitespace + trailing comma → trimmed)
+- Regression coverage: **PR #497** (`functions/scripts/smoke-allowlist.js` — re-runnable, 4 cases)
+
+**Pre-deploy prereq:** `ALLOWED_SUBSCRIPTION_PRICE_IDS` env var MUST be set in `functions/.env.bookbed-dev` AND `functions/.env.rab-booking-248fc` BEFORE CF deploy, else all subscription flows break. Tracked in [audit/38](../audit/38-pr462-env-prereq.md).
+
+---
+
+## SF-028: Role escalation prevention
+
+**Status:** ✅ closed via #481 (`a847497e`)
+**Severity:** CRITICAL
+**Audit:** audit/38 / PR #481
+
+**Vector:** A regular user could self-write `role` or `isAdmin` fields on their own `users/{uid}` doc. `firestore.rules` `isAdminFromFirestore()` helper trusted the field unconditionally → instant global admin promotion.
+
+**Fix:** Protected-fields blocklist on `users/{userId}` update/create in `firestore.rules`. Both top-level and `users/{uid}/data/{document}` subcollection covered by rule, but subcollection guard is not yet test-covered (see SF-030).
+
+**File:** `firestore.rules` § `users/{userId}`
+
+**Verification:**
+- 4/4 rules tests (Case 1: regular user → role DENY, Case 2: regular user → isAdmin DENY, Case 3: admin → name ALLOW, Case 4: admin → promote other user ALLOW)
+- Total rules suite: 28 (baseline 24 + 4 new)
+- Regression coverage: **PR #496** (`functions/test/firestore_rules/users.test.ts`)
+
+**Follow-up:** SF-030 (subcollection guard test gap).
+
+---
+
+## SF-029: Refund-fail returns success=true (FINDING-2, pre-existing)
+
+**Status:** ⏳ open, P2 followup
+**Severity:** MEDIUM
+**Audit:** audit/38 review FINDING-2
+
+**Vector:** `guestCancelBooking` catch block sets `refund_status=failed` on the booking doc but returns `{success: true, message: "Cancellation processed"}` to the client. Guest receives a cancel-confirmation email despite money being stuck in Stripe (no refund posted). Operator only sees the failure via Sentry — not customer-facing.
+
+**Pre-existing:** NOT introduced by #481. The Connect Direct Charges refactor exposed this finding during review but the failure-path behavior is older.
+
+**Fix needed:**
+1. Surface `refund_status` to guest via a distinct "cancellation pending — refund delayed" message
+2. Sentry-tag operator alert with `severity:critical` for manual refund intervention
+3. Add `refund_status=pending_manual_review` intermediate state
+
+**Files to touch:** `functions/src/guestCancelBooking.ts`, `lib/features/booking/.../guest_cancel_email.ts`
+
+---
+
+## SF-030: Subcollection guard test coverage gap
+
+**Status:** ⏳ open, P2 followup
+**Severity:** MEDIUM
+
+**Vector:** `firestore.rules` applies the same `role`/`isAdmin` blocklist on `users/{uid}/data/{document}` subcollection (lines 81-94) as on top-level `users/{uid}`, but the subcollection rule has no test coverage. Silent regression risk if the blocklist drifts between top-level and subcollection paths.
+
+**Fix needed:** Extend `functions/test/firestore_rules/users.test.ts` (added in PR #496) with mirror cases for the subcollection path. 4 new cases analogous to existing top-level cases.
+
+---
+
+## SF-031: atomicBooking.ts widget_settings.stripe_config read
+
+**Status:** ⏳ open, P2 followup, SF-021 scope
+**Severity:** MEDIUM
+
+**Vector:** `functions/src/atomicBooking.ts` (line 358 area) reads `widget_settings.stripe_config` directly instead of going through the `widget_secrets` subcollection. Out of scope for #481 (which fixed only the refund path). Part of the SF-021 widget_secrets migration completion work.
+
+**Fix needed:** Migrate booking-create path to `widget_secrets` read. Add fallback dual-read pattern same as already-merged paths.
+
+---
+
+## SF-032: Stripe secret_key exfil migration to Connect Direct Charges
+
+**Status:** ✅ closed via #481 (`a847497e`)
+**Severity:** CRITICAL
+**Audit:** audit/38 / PR #481
+
+**Vector:** `guestCancelBooking` used per-owner Stripe `secret_key` stored in Firestore (`users/{ownerId}.stripe_secret_key`) to issue refunds. Storing live-mode secret keys in Firestore is a clear secrets-at-rest violation; any Firestore read leak (rule weakness, admin export, agent action) → full owner Stripe account compromise.
+
+**Fix:** Refund now goes through Connect Direct Charges:
+- Platform Stripe secret key (from `defineSecret('STRIPE_SECRET_KEY')`) issues the refund
+- `{stripeAccount: ownerStripeAccountId}` header routes the refund to the connected account
+- Connect account ID sourced from `users/{ownerId}.stripe_account_id` (a non-secret identifier)
+- Owner `stripe_secret_key` field is no longer read by any CF
+
+**Verification:**
+- 4/4 cases (happy path, insufficient balance, missing `stripe_account_id`, legacy `resend_api_key` compat)
+- Regression coverage: **PR #496** (`functions/test/guestCancelBooking.test.ts` — 4 cases, mocks Stripe + Firestore)
+
+**File:** `functions/src/guestCancelBooking.ts`
+
+---
+
+## SF-033: Resend API key exfil removal
+
+**Status:** ✅ closed via #481 (`a847497e`)
+**Severity:** HIGH
+**Audit:** audit/38 / PR #481
+
+**Vector:** `widget_settings.resend_api_key` stored live Resend API key in Firestore. Every email send (`sendOwnerEmail`, `customEmail`, etc.) read the key from Firestore at runtime — same secrets-at-rest class as SF-032.
+
+**Fix:** Resend key removed from Firestore. CF reads `process.env.RESEND_API_KEY` only (provisioned via `defineSecret('RESEND_API_KEY')` from Google Secret Manager). `email_notification_config.dart` model has the `resend_api_key` field stripped.
+
+**Files:**
+- `functions/src/emailService.ts` (env-var read)
+- `lib/features/widget/domain/models/settings/email_notification_config.dart` (model field removed)
+- `functions/src/email/sendOwnerEmail.ts`
+
+---
+
+## SF-034: logger.error scope expansion (F-50-04 v2 followup)
+
+**Status:** ⏳ open, P1, tracked in [PR #495](https://github.com/DanLika/rab_booking/pull/495) body
+**Severity:** HIGH
+**Audit:** audit/50 F-50-04 + memory `pr483-stack-leak-finding.md`
+
+**Vector:** Every `logger.error(msg, error)` call site outside `logger.ts` has the same `entryFromArgs` stack-leak (`firebase-functions/lib/logger/index.js:142-144` synthesizes `new Error(msg).stack` for ERROR severity → leaks `/workspace/lib/*` source paths into `jsonPayload.message`). PR #483 was found to be a no-op in production (smoke evidence: `audit/raw/pr483-smoke-2026-05-26-cloud-logging.json`); PR #495 is the v2 fix.
+
+**Fix paths:**
+1. Within `logger.ts`: switch from `functions.logger.error(message, logData)` to `functions.logger.write({message, ...logData, severity: "ERROR"})` (`write()` is `@public`, bypasses `entryFromArgs`). PR #495 implements both Path 1 (stack scrub on logData) and Path 2 (write bypass).
+2. Audit other call sites: every `functions.logger.error(...)` outside `logger.ts` still leaks. Either route all through `Logger.error` wrapper OR add a lint rule to forbid raw `functions.logger.error` outside `logger.ts`.
+
+**Smoke gate for PR #495:** re-run the trigger sequence from `audit/raw/pr483-smoke-2026-05-26-cloud-logging.json` (anon POST to `sendPasswordResetEmail` on `bookbed-dev`, `gcloud logging read`); PASS = `jsonPayload.message` contains no `\n    at /workspace/` substring.
+
+**Audit prescription drift:** Audit/50 F-50-04 originally said *"in logger.ts, scrub: { message: error.message, code: error.code } only. Keep stack on Sentry."* This was incomplete — the prescription needs an addendum explaining the `entryFromArgs` wrap. Addendum task: SF-034 also needs audit/50 patch.

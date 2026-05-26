@@ -2,7 +2,30 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-24 | **Version**: 6.97
+**Last Updated**: 2026-05-26 | **Version**: 6.98
+
+---
+
+**Changelog 6.98**: PR #481 — audit/38 security sprint (role escalation + secrets exfil + price allowlist) (2026-05-26):
+
+### Security
+- **F-50-01 — Stripe priceId allowlist**: subscription creation now fail-CLOSED on unknown `priceId`s. Env-var-driven (`ALLOWED_SUBSCRIPTION_PRICE_IDS`); empty env → "Subscription pricing is not configured" rejection. Closes audit/50 F-50-01. See SF-027.
+- **Role escalation prevention**: `firestore.rules` now blocks `role`/`isAdmin` self-writes on `users/{uid}` (top-level) update/create. Admin bypass preserved for promotion flows. See SF-028.
+- **Stripe `secret_key` exfil migration**: `guestCancelBooking` no longer reads per-owner Stripe secret keys from Firestore. Refunds now route through Connect Direct Charges (platform key + `{stripeAccount: ownerStripeAccountId}` header). Connect account ID sourced from `users/{ownerId}.stripe_account_id` (non-secret). See SF-032.
+- **iCal token migration**: `widget_secrets` subcollection now the canonical store for iCal export tokens; `widget_settings` retained as fallback (dual-read pattern). See SF-021 progress.
+- **Resend API key removal**: `email_notification_config.resend_api_key` field removed from model and Firestore. CFs read `process.env.RESEND_API_KEY` only (provisioned via `defineSecret('RESEND_API_KEY')`). See SF-033.
+
+### Changed
+- `guestCancelBooking` refund path: Connect Direct Charges via platform key (was per-owner secret key) — see SF-032.
+- `email_notification_config.dart` model: `resend_api_key` field removed — see SF-033.
+
+### Added (test infrastructure)
+- **PR #496**: regression tests for #481 — `functions/test/firestore_rules/users.test.ts` (role escalation, 4 cases, emulator-backed) + `functions/test/guestCancelBooking.test.ts` (Direct Charges refund, 4 cases). Both files were intended to land with #481 but were missed during squash-merge; recovered from local disk and committed post-merge.
+- **PR #497**: re-runnable F-50-01 allowlist gate-logic smoke script (`functions/scripts/smoke-allowlist.js`, 4 cases, pure-logic, no Stripe API). Useful for the upcoming prod-env provisioning step.
+
+### Deferred (operator action)
+- **PROD env vars NOT yet set**: `ALLOWED_SUBSCRIPTION_PRICE_IDS` and `ICAL_TOKEN_PEPPER` must be provisioned in `functions/.env.rab-booking-248fc` BEFORE CF deploy, else subscription flow fail-CLOSES and iCal export 500s.
+- **PROD CF + rules deploy lag**: `deploy-widget.yml` auto-deployed the new widget bundle to PROD on the squash to main, but CF + rules deploy did NOT auto-fire. PROD currently runs new widget code against old CFs + old rules. F-50-01 enforcement, role escalation prevention, and Connect Direct Charges refund are **NOT yet live on PROD**. Operator action required per hard rule #3 (CF → widget → rules order — already partially violated by the widget auto-trigger).
 
 ---
 

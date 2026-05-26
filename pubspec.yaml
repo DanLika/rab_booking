@@ -131,7 +131,7 @@ dev_dependencies:
   marionette_flutter: ^0.5.0
 
   # Sentry source maps upload (for better error tracking)
-  sentry_dart_plugin: ^3.2.1
+  sentry_dart_plugin: ^3.3.0
 
   # Icon Generation
   flutter_launcher_icons: ^0.13.1

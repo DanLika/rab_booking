@@ -120,7 +120,7 @@ dev_dependencies:
   riverpod_generator: ^2.4.3
 
   # Testing
-  mocktail: ^1.0.4
+  mocktail: ^1.0.5
   fake_cloud_firestore: ^4.0.1  # Moved from dependencies - test-only package
   # integration_test removed - was causing Android release build issues
   # (Flutter bug: dev_dependencies included in GeneratedPluginRegistrant.java)

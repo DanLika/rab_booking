@@ -101,9 +101,11 @@ export class Logger {
 
     if (error) {
       if (error instanceof Error) {
+        // F-50-04: omit `stack`. Forwarded to Sentry via captureException below;
+        // Cloud Logging access is broader (roles/logging.viewer) so paths/module
+        // names stay out of the structured payload.
         logData.error = {
           message: error.message,
-          stack: error.stack,
           name: error.name,
         };
         if (error instanceof HttpsError) {
@@ -133,10 +135,18 @@ export class Logger {
       return;
     }
 
+    // F-50-04 v2: use logger.write() to bypass firebase-functions entryFromArgs,
+    // which synthesizes `new Error(msg).stack` into jsonPayload.message when
+    // severity === "ERROR" and no Error instance is in args. write() writes the
+    // LogEntry verbatim — message stays a plain string.
+    //
+    // Order matters: `severity` is placed LAST so a stray `severity` key in
+    // logData (e.g., from a caller's structured-data object) cannot downgrade
+    // this ERROR log to INFO/WARN. Advisor flag from PR #495 v2 review.
     if (Object.keys(logData).length > 0) {
-      functions.logger.error(message, logData);
+      functions.logger.write({...logData, message, severity: "ERROR"});
     } else {
-      functions.logger.error(message);
+      functions.logger.write({message, severity: "ERROR"});
     }
 
     // Send to Sentry only when a real exception is available. Bare-string

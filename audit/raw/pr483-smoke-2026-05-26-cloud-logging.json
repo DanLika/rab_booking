@@ -1,0 +1,28 @@
+[
+  {
+    "jsonPayload": {
+      "error": {
+        "message": "INTERNAL ASSERT FAILED: Unable to create the email action link",
+        "name": "Error"
+      },
+      "message": "Error: Password reset failed - domain not authorized. Add the domain to Firebase Console > Authentication > Settings > Authorized domains\n    at entryFromArgs (/workspace/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/workspace/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at Logger.error (/workspace/lib/logger.js:176:30)\n    at logError (/workspace/lib/logger.js:244:51)\n    at /workspace/lib/passwordReset.js:134:35\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async /workspace/node_modules/@sentry/node/build/cjs/integrations/tracing/firebase/otel/patches/functions.js:138:22\n    at async /workspace/node_modules/firebase-functions/lib/common/providers/https.js:545:26"
+    },
+    "severity": "ERROR",
+    "timestamp": "2026-05-26T05:44:16.930563Z"
+  },
+  {
+    "jsonPayload": {
+      "error": {
+        "message": "INTERNAL ASSERT FAILED: Unable to create the email action link",
+        "name": "Error"
+      },
+      "message": "Error: Error sending password reset email\n    at entryFromArgs (/workspace/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/workspace/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at Logger.error (/workspace/lib/logger.js:176:30)\n    at logError (/workspace/lib/logger.js:244:51)\n    at /workspace/lib/passwordReset.js:112:31\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async /workspace/node_modules/@sentry/node/build/cjs/integrations/tracing/firebase/otel/patches/functions.js:138:22\n    at async /workspace/node_modules/firebase-functions/lib/common/providers/https.js:545:26"
+    },
+    "severity": "ERROR",
+    "timestamp": "2026-05-26T05:44:16.920123Z"
+  },
+  {
+    "severity": "ERROR",
+    "timestamp": "2026-05-26T05:44:16.218574Z"
+  }
+]

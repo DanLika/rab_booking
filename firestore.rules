@@ -46,6 +46,18 @@ service cloud.firestore {
         get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
     }
 
+    // hotfix/widget-secrets-exfil (A4): widget_settings is publicly readable
+    // (widget bootstrap). Block writes that would re-introduce migrated-out
+    // secret fields. Canonical home for these values is widget_secrets.
+    //   - ical_export_token (top-level)
+    //   - email_config.resend_api_key (nested)
+    //   - ical_cache_content / ical_cache_etag (top-level)
+    function noSecretsInWidgetSettings(data) {
+      return !data.keys().hasAny(['ical_export_token', 'ical_cache_content', 'ical_cache_etag']) &&
+        (!data.keys().hasAny(['email_config']) ||
+          !data.email_config.keys().hasAny(['resend_api_key']));
+    }
+
     // ========================================================================
     // USERS COLLECTION
     // ========================================================================
@@ -197,7 +209,12 @@ service cloud.firestore {
       // Widget settings subcollection
       match /widget_settings/{unitId} {
         allow read: if true; // Widget needs to read settings
-        allow create, update, delete: if isPropertyOwner(propertyId);
+        // hotfix/widget-secrets-exfil (A4): block re-introduction of
+        // migrated-out secret fields (ical_export_token, resend_api_key,
+        // ical_cache_*). Owner can still update everything else freely.
+        allow create, update: if isPropertyOwner(propertyId) &&
+          noSecretsInWidgetSettings(request.resource.data);
+        allow delete: if isPropertyOwner(propertyId);
       }
 
       // Widget secrets subcollection — owner-only, never publicly readable.
@@ -248,12 +265,28 @@ service cloud.firestore {
     }
 
     // Collection group: widget_settings
+    // hotfix/widget-secrets-exfil (A4): same field-level lockdown applies on
+    // the CG path. Delete still uses owner gate only.
     match /{path=**}/widget_settings/{unitId} {
       allow read: if true;
       allow create: if isAuthenticated() &&
         ('property_id' in request.resource.data) &&
-        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
-      allow update, delete: if isAuthenticated() &&
+        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid &&
+        noSecretsInWidgetSettings(request.resource.data);
+      allow update: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid &&
+        noSecretsInWidgetSettings(request.resource.data);
+      allow delete: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
+    }
+
+    // Collection group: widget_secrets (hotfix/widget-secrets-exfil A4)
+    // Owner-only at the CG path — auth + property_id ownership.
+    match /{path=**}/widget_secrets/{unitId} {
+      allow read, write: if isAuthenticated() &&
+        resource != null &&
         ('property_id' in resource.data) &&
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }

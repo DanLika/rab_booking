@@ -1,10 +1,17 @@
 import { onRequest } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 import * as crypto from "crypto";
 import { Timestamp } from "firebase-admin/firestore";
 import { db } from "./firebase";
 import { logInfo, logError } from "./logger";
 import { getClientIp, hashIp } from "./utils/ipUtils";
 import { checkRateLimit } from "./utils/rateLimit";
+
+// hotfix/widget-secrets-exfil (A5): the iCal token used to live in the
+// publicly-readable widget_settings doc, making it trivial to harvest. The
+// token now lives only as a peppered SHA-256 hash in widget_secrets/{unitId}.
+// The pepper is held server-side via Functions secrets.
+const icalTokenPepper = defineSecret("ICAL_TOKEN_PEPPER");
 
 // =============================================================================
 // CONFIGURATION
@@ -25,26 +32,45 @@ const ICAL_CONFIG = {
 };
 
 /**
- * Verify iCal export token using timing-safe comparison
- * SECURITY: Prevents timing attacks when comparing tokens
+ * Verify the user-supplied iCal token against the peppered SHA-256 hash
+ * stored in widget_secrets/{unitId}.
+ *
+ * SECURITY:
+ * - SHA-256 over (token + pepper) prevents a Firestore-only leak from
+ *   recovering the original token (the pepper lives in Functions secrets).
+ * - timingSafeEqual on equal-length buffers prevents timing side-channels.
+ *
+ * @param providedToken Token from the request URL.
+ * @param storedHashHex Hex SHA-256 hash from widget_secrets.ical_export_token_hash.
+ * @param pepper Server-side pepper string.
+ * @return true iff the token matches the stored hash.
  */
-function verifyIcalToken(providedToken: string, storedToken: string): boolean {
-  // Ensure both are strings and have reasonable length
-  if (typeof providedToken !== "string" || typeof storedToken !== "string") {
+function verifyIcalTokenHash(
+  providedToken: string,
+  storedHashHex: string,
+  pepper: string,
+): boolean {
+  if (
+    typeof providedToken !== "string" ||
+    typeof storedHashHex !== "string" ||
+    providedToken.length === 0 ||
+    storedHashHex.length === 0
+  ) {
     return false;
   }
 
-  // Use Buffer comparison for timing-safe check
-  // Pad to same length to prevent length-based timing attacks
-  const maxLength = Math.max(providedToken.length, storedToken.length);
-  const paddedProvided = providedToken.padEnd(maxLength, "\0");
-  const paddedStored = storedToken.padEnd(maxLength, "\0");
+  const computedHashHex = crypto
+    .createHash("sha256")
+    .update(`${providedToken}${pepper}`, "utf8")
+    .digest("hex");
 
+  const computed = Buffer.from(computedHashHex, "utf8");
+  const expected = Buffer.from(storedHashHex, "utf8");
+  if (computed.length !== expected.length) {
+    return false;
+  }
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(paddedProvided, "utf8"),
-      Buffer.from(paddedStored, "utf8")
-    );
+    return crypto.timingSafeEqual(computed, expected);
   } catch {
     return false;
   }
@@ -89,7 +115,9 @@ function setCacheHeaders(
  * - Outlook
  * - Any RFC 5545 compatible calendar app
  */
-export const getUnitIcalFeed = onRequest(async (request, response) => {
+export const getUnitIcalFeed = onRequest(
+  {secrets: [icalTokenPepper]},
+  async (request, response) => {
   // Set CORS headers
   response.set("Access-Control-Allow-Origin", "*");
   response.set("Access-Control-Allow-Methods", "GET");
@@ -135,9 +163,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 
     logInfo("[iCal Feed] Request received", { propertyId, unitId, excludeSource });
 
-    // 1. Verify token against widget_secrets (private) — falls back to legacy
-    //    widget_settings.ical_export_token during the migration window.
-    //    See audit/migrations/41-scrub-widget-settings-secrets.js.
+    // 1. Verify token against widget_secrets (hash) + read display state from widget_settings
     const propertyRef = db.collection("properties").doc(propertyId);
     const [widgetSettingsDoc, widgetSecretsDoc] = await Promise.all([
       propertyRef.collection("widget_settings").doc(unitId).get(),
@@ -150,7 +176,19 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       return;
     }
 
+    if (!widgetSecretsDoc.exists) {
+      // widget_secrets is created during the A3 migration. A missing doc means
+      // either pre-migration data or a unit that has never enabled iCal export.
+      logError("[iCal Feed] widget_secrets missing — token not migrated", {
+        propertyId,
+        unitId,
+      });
+      response.status(403).send("Invalid token");
+      return;
+    }
+
     const widgetSettings = widgetSettingsDoc.data();
+    const widgetSecrets = widgetSecretsDoc.data();
 
     // Check if iCal export is enabled
     if (!widgetSettings?.ical_export_enabled) {
@@ -159,17 +197,8 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
       return;
     }
 
-    // Stored token: prefer widget_secrets (post-migration), fall back to legacy
-    // widget_settings.ical_export_token.
-    const storedToken =
-      widgetSecretsDoc.exists ? widgetSecretsDoc.data()?.ical_export_token : undefined;
-    const legacyToken = widgetSettings.ical_export_token;
-    const tokenToCompare = (typeof storedToken === "string" && storedToken.length > 0) ?
-      storedToken :
-      (legacyToken || "");
-
-    // Verify token using timing-safe comparison (prevents timing attacks)
-    if (!verifyIcalToken(token, tokenToCompare)) {
+    const storedHash = widgetSecrets?.ical_export_token_hash || "";
+    if (!verifyIcalTokenHash(token, storedHash, icalTokenPepper.value())) {
       logError("[iCal Feed] Invalid token", { propertyId, unitId });
       response.status(403).send("Invalid token");
       return;
@@ -355,6 +384,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     response.status(500).send("Internal server error");
   }
 });
+
 
 /**
  * Represents a range of consecutive blocked days

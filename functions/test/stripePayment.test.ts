@@ -19,6 +19,9 @@ jest.mock("firebase-functions/params", () => ({
   defineSecret: () => ({
     value: () => "mock-stripe-webhook-secret",
   }),
+  defineString: () => ({
+    value: () => "",
+  }),
 }));
 jest.mock("../src/firebase", () => ({
   admin: {

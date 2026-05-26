@@ -3405,3 +3405,62 @@ Verified during PR #517 dev deploy smoke (2026-05-27): `_rateLimit.resetAttempts
 **Design note — IP rate limit interplay (audit/55):** `recordLoginFailure` is IP-rate-limited 1-per-60s. Five rapid mistypes from the same browser only bump the server counter by 1 (calls 2–5 return `RESOURCE_EXHAUSTED` and are swallowed by `rate_limit_service.dart:159–170`). The lockout is reachable via (a) attempts spaced ≥65s apart from one IP, or (b) distributed attacker — both acknowledged in `loginLockout.ts:22–25`. App Check enforcement closes (b).
 
 Related: SF-046 (App Check audit-only — full enforcement closes the residual distributed-DoS risk), audit/50 F-50-02, audit/55 design note, `docs/TODO.md` "App Check launch checklist".
+
+---
+
+## SF-051: PROD Stripe live key leaked via Secret Manager NAME (PROD-ONLY)
+
+**Datum:** 2026-05-26 (discovered) / 2025-12-21 (introduced)
+**Prioritet:** P0 — credential-structure leak, 5+ months exposure
+**Status:** 🔴 OPEN — operator action required
+**Audit:** `audit/53-prod-stripe-name-leak-2025-12-21.md`
+
+> Number note: SF-050 is reserved on sibling branch `fix/f-50-02-login-attempts-server-side` (F-50-02 server-side lockout). When that branch lands, this SF-051 sits cleanly after — no number conflict.
+
+### Problem
+
+PROD `rab-booking-248fc` Secret Manager contains a `firebase-managed: functions` secret whose NAME is a sanitized/uppercased form of a real `sk_live_*` Stripe key VALUE. The secret value (sha256 prefix `d01c8773fd31d243`) is **identical** to the proper-named `STRIPE_SECRET_KEY` — same key, two secret entries.
+
+| Field | Value |
+|---|---|
+| Secret name (123 chars) | `SK_LIVE_51SIS_GK_BOM_KO7V_DR04K3ETG_XGDTZ_T7T_O8BAS5G_IS8QS5L_ANPY_P2FFND_HM5BT7D_ONBEFBY_LLTE12Z7APE_OH0RH_S11M00A_LD9VEX1` |
+| Secret value | `sk_live_51SIsGkBomKO...` (len 107, sha256 prefix `d01c8773fd31d243`) |
+| CF bindings | **zero** (unbound dangling duplicate) |
+| Label | `firebase-managed: functions` |
+| Created | 2025-12-21T09:24:19Z |
+
+Name pattern = `uppercase(value)` with `_` at CamelCase boundaries. Case info within each word is lost (`51SIs` ↔ `51SiS` ↔ `51siS`), so single-shot reconstruction not possible — but Stripe-API brute force over case-permutations is feasible. Treat as credential-structure leak; **assume the live key is compromised**.
+
+5+ months exposure to anyone with `roles/secretmanager.viewer` (or broader) on PROD via `gcloud secrets list`, Cloud Console, IAM tooling, audit log surfaces. Metadata listing is NOT logged per principal — passive enumeration leaves no trace.
+
+dev (`bookbed-dev`) scanned — no analog (5 firebase-managed secrets all proper-named). `bookbed-staging` NOT yet scanned (TODO operator).
+
+### Suspected root cause (low confidence)
+
+Manual `firebase functions:secrets:set <KEY_VALUE>` or `gcloud secrets create <KEY_VALUE>` on 2025-12-21, passing the literal key VALUE where the symbolic NAME was expected. Firebase/GCP sanitized to fit Secret Manager regex `[a-zA-Z][a-zA-Z0-9_-]*`. Adjacent commit `09fd74fe` lands 22min later — NOT proven causal. Operator should consult shell history / firebase deploy logs for 2025-12-21 09:00-10:00Z.
+
+Current code (`functions/src/stripe.ts:12`, `functions/src/stripePayment.ts:35`) correctly uses symbolic names — no literal in HEAD.
+
+### Remediation sequence (6 steps — operator)
+
+Order matters: leaky secret is unbound, deletion is safe-first.
+
+1. **Delete** the leaky secret. Agent CLI is blocked (`gcloud.+secrets` hook); use Console UI OR REST `DELETE https://secretmanager.googleapis.com/v1/projects/rab-booking-248fc/secrets/SK_LIVE_..._LD9VEX1` with ADC token.
+2. **Rotate** the Stripe live key (Stripe Dashboard → Developers → API Keys → Roll). 12h grace window.
+3. **Update** `STRIPE_SECRET_KEY` proper-named secret via `:addVersion` REST call with new key (base64 payload).
+4. **Redeploy** PROD CFs binding `STRIPE_SECRET_KEY` (Gen 2 instances cache prior version until cold start). Enumerate via `gcloud functions list --format="value(name,serviceConfig.secretEnvironmentVariables)"`.
+5. **Access-log scan** since 2025-12-21: `gcloud logging read 'protoPayload.methodName=~"AccessSecretVersion" AND protoPayload.resourceName=~"SK_LIVE_51SIS"' --freshness=180d`; also scan `ListSecrets` for passive enumeration.
+6. **IAM audit**: enumerate principals with `roles/secretmanager.viewer|admin|secretAccessor|owner|editor|viewer` on `rab-booking-248fc`; triage non-staff / non-current.
+
+### Prevention (separate PR — recommended)
+
+- **A. CI lint** rejecting `defineSecret(/sk_test_|sk_live_|pk_test_|pk_live_|whsec_|re_/)` literal patterns in `functions/src/**`.
+- **B. Scheduled CF** `secretNameSanityScan` (weekly) — enumerate secret names across all envs, regex-match credential-shaped names, alert via Sentry. Pairs with the SF-049 value-placeholder scan as the two halves of secret-hygiene.
+
+### Files
+
+- Secret to delete: `projects/rab-booking-248fc/secrets/SK_LIVE_51SIS_GK_BOM_KO7V_DR04K3ETG_XGDTZ_T7T_O8BAS5G_IS8QS5L_ANPY_P2FFND_HM5BT7D_ONBEFBY_LLTE12Z7APE_OH0RH_S11M00A_LD9VEX1`
+- Secret to update post-rotation: `projects/rab-booking-248fc/secrets/STRIPE_SECRET_KEY`
+- Code reference (correct symbolic names in HEAD): `functions/src/stripe.ts:12`, `functions/src/stripePayment.ts:35`
+
+Related: `audit/53-prod-stripe-name-leak-2025-12-21.md`, `memory/prod-stripe-key-leaked-via-secret-name-2025-12-21.md`, `memory/ios-smoke-2026-05-26.md` (smoke trail that surfaced it).

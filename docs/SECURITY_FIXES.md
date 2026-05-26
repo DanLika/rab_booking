@@ -3215,7 +3215,7 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 
 ## SF-047: subdomainService auth gate + per-uid rate limit
 
-**Status:** ✅ closed via #509 (bundled with audit/52 doc PR, `5dab14f0`)
+**Status:** ✅ closed via #512 (re-included after #509 squash-merge dropped this surface)
 **Severity:** MEDIUM
 **Audit:** new (sweep)
 

@@ -10,7 +10,7 @@
 
 - **F-50-04 closure introduced a charge-model/refund-pattern mismatch.** Checkout creates a **Destination Charge** (`transfer_data.destination` + `on_behalf_of`, PI on platform) but `guestCancelBooking.ts` now refunds via `{stripeAccount: ownerStripeAccountId}` (Direct-Charge pattern). PI does not live on the connected account → refund call expected to fail with `No such payment_intent`. Latent until a guest cancellation hits the deadline window. **P0.**
 - **`customer.subscription.deleted` webhook blindly downgrades lifetime users.** No `accountType === "lifetime"` guard at `stripePayment.ts:1052-1058` — Stripe-side cancellation of any subscription tied to a lifetime user wipes their lifetime grant. **P0.**
-- **`ALLOWED_SUBSCRIPTION_PRICE_IDS` empty on both env files — P3 deferred (re-classified 2026-05-26).** Structural evidence supersedes earlier P0 framing: (a) Stripe Dashboard `acct_1SIsGkBomKO7vDr0` (bookbed.io live) has **0 subscription products** via MCP `list_products`; (b) **zero call-graph consumers** in `lib/` for `SubscriptionRepository.createCheckoutSession` / `subscriptionRepositoryProvider`; (c) web `_showUpgradeDialog` shows a "Pro subscription coming soon!" `AlertDialog` (canary text — guarded by CI); (d) mobile path redirects to `app.bookbed.io` via `url_launcher` (App Store Reader-App pattern, commit `18dc6bca` 2026-01-14). Fail-CLOSED at `stripeSubscription.ts:51` is correct posture until the canary flips. **Reopen triggers** are codified in F-52-03 below.
+- **`ALLOWED_SUBSCRIPTION_PRICE_IDS` empty on both env files** (`functions/.env` empty value, no entry in `functions/.env.rab-booking-248fc`). `gcloud functions describe` confirms runtime is empty on both `rab-booking-248fc` and `bookbed-dev`. Per `stripeSubscription.ts:51`, empty → throws `failed-precondition` → every `createSubscriptionCheckoutSession` call errors at the caller. **P0** — release blocker. Stripe MCP `list_products` on bookbed.io live returns `[]` (2026-05-26) so no paying user can hit the error *today*, but the moment a subscription UI link ships or a product is published the flow breaks for every caller. Fail-CLOSED is the safe runtime state, not an acceptable product state; provisioning must precede any UI rollout, not lag it.
 - No `idempotencyKey` on any Stripe write call across 4 files (checkout/customers/refunds/accounts/accountLinks/billingPortal). No Stripe-event idempotency guard (`stripeEvents/{event.id}` Firestore dedup). No `automatic_tax` / `tax_id_collection`. iCal feed has zero subscription-status enforcement (cancelled subs keep serving). All flagged below.
 - `.env.{development,production,staging}` at repo root contain `STRIPE_*` keys but no Flutter code loads them (no `flutter_dotenv` dep) — orphan files, not loaded at runtime. `.gitignore` covers them. No leak risk *today*, but the `sk_test_*` (107 chars, real) sitting in `.env.development` on dev machines is a soft hazard.
 
@@ -77,14 +77,12 @@ The `STRIPE_PUBLISHABLE_KEY` lines in `.env.development` / `.env.production` / `
 
 Code at `stripeSubscription.ts:47-67` reads `process.env.ALLOWED_SUBSCRIPTION_PRICE_IDS`, splits on `,`, filters empty, and **throws `HttpsError("failed-precondition", "Subscription pricing is not configured. Contact support.")` if `allowedPriceIds.length === 0`** — fail-CLOSED.
 
-**Risk.** **P3 deferred (verified 2026-05-26).** Re-classified from earlier P0 framing on structural evidence: Stripe Dashboard `acct_1SIsGkBomKO7vDr0` live mode has **0 subscription products** (MCP `list_products`); no Flutter call-graph consumer for `SubscriptionRepository.createCheckoutSession` or `subscriptionRepositoryProvider` (`rg` audit across `lib/`); web `_showUpgradeDialog` is a "Pro subscription coming soon!" `AlertDialog`; mobile redirects to web dashboard via `url_launcher` per App Store Reader-App pattern. Fail-CLOSED at `stripeSubscription.ts:51` is double-protected (env-var fence + no live caller). Provisioning an allowlist before products exist would be cargo-cult.
+**Risk.** **P0 — release blocker for subscription tier.** Verified empty at runtime on both projects via `gcloud functions describe createSubscriptionCheckoutSession --gen2 --region=us-central1 --format='value(serviceConfig.environmentVariables.ALLOWED_SUBSCRIPTION_PRICE_IDS)'`. Fail-CLOSED prevents *unauthorized* charges but does not prevent the *flow breaking for every paying user the moment a UI link is exposed*. Stripe MCP `list_products` on bookbed.io live returns `[]` (2026-05-26) so the time-bomb has not detonated yet, but provisioning is a hard prerequisite — not a follow-up — of any subscription UI rollout or first Stripe product publish. Treating it as P3 (the prior framing) under-estimates that any one of (a) a stray "Upgrade" button slipping into a release, (b) a future engineer publishing a Stripe product without checking env-vars first, or (c) a marketing campaign linking directly into checkout → instant revenue blocker.
 
-**Active impact (verified 2026-05-26).** Zero call-graph consumers of `SubscriptionRepository.createCheckoutSession` in `lib/`. The `_showUpgradeDialog` web path shows a "coming soon" AlertDialog (canary). Mobile path redirects to `app.bookbed.io` via `url_launcher` (App Store Reader-App pattern, commit `18dc6bca`). The broken Cloud Function has no live caller; the `failed-precondition` exception is unreachable from current UI.
+**Gap.** No CI guard that asserts `ALLOWED_SUBSCRIPTION_PRICE_IDS` is non-empty whenever a `createSubscriptionCheckoutSession` caller is present in the Flutter bundle. Without one, the time-bomb stays armed.
 
-**Gap (closed by CI guard).** `scripts/check-no-stray-stripe-ui.sh` (added in same commit) fails when (a) a new caller of `SubscriptionRepository.createCheckoutSession` / `createPortalSession` / `subscriptionRepositoryProvider` appears, OR (b) the `_showUpgradeDialog` canary text ("coming soon" / "stay tuned") is removed. Either condition triggers reopen to P0 — see F-52-03 reopen triggers.
-
-**Fix (when reopen fires).** Operator: run `tool/setup-pr462-env.sh` for both envs OR set explicitly:
-- `functions/.env.bookbed-dev` → `ALLOWED_SUBSCRIPTION_PRICE_IDS=price_TEST1,price_TEST2,...` (test-mode IDs)
+**Fix.** Operator: run `tool/setup-pr462-env.sh` for both envs OR set explicitly:
+- `functions/.env.bookbed-dev` → `ALLOWED_SUBSCRIPTION_PRICE_IDS=price_TEST1,price_TEST2,...` (test-mode price IDs from Stripe Dashboard → Test → Products)
 - `functions/.env.rab-booking-248fc` → `ALLOWED_SUBSCRIPTION_PRICE_IDS=price_LIVE1,price_LIVE2,...` (live-mode IDs)
 
 See `audit/38-pr462-env-prereq.md` and `.claude/rules/stripe.md § Subscription Flow`. Format note: report value **counts + last-4** in audit output, never full IDs.
@@ -429,7 +427,7 @@ For subscription checkout — BookBed IS the merchant of record. Subscription ti
 
 ---
 
-## Top P0 findings (2 active, 1 deferred)
+## Top P0 findings
 
 ### F-52-01 — Refund pattern mismatched with charge model (LATENT)
 
@@ -457,25 +455,17 @@ For subscription checkout — BookBed IS the merchant of record. Subscription ti
 
 ---
 
-### F-52-03 — DEFERRED (P3, re-classified 2026-05-26 from earlier P0 framing)
+### F-52-03 — `ALLOWED_SUBSCRIPTION_PRICE_IDS` empty at runtime on both projects (RELEASE BLOCKER)
 
 **Files.** `functions/.env:13` (empty value), `functions/.env.rab-booking-248fc` (line absent), no `functions/.env.bookbed-dev`. Consumer: `functions/src/stripeSubscription.ts:47-67`.
 
-**Issue.** `createSubscriptionCheckoutSession` reads the env var, splits + filters, throws `HttpsError("failed-precondition", "Subscription pricing is not configured. Contact support.")` if the allowlist is empty.
+**Issue.** `createSubscriptionCheckoutSession` reads the env var, splits + filters, and throws `HttpsError("failed-precondition", "Subscription pricing is not configured. Contact support.")` if the allowlist is empty. Runtime confirmation via `gcloud functions describe` on both `rab-booking-248fc` and `bookbed-dev`: variable value is the empty string. Every subscription-checkout call returns a hard error today.
 
-**Active impact (verified 2026-05-26).** Zero call-graph consumers of `SubscriptionRepository.createCheckoutSession` in `lib/`. The `_showUpgradeDialog` web path shows a "Pro subscription coming soon!" `AlertDialog` (canary text — guarded by CI, see scripts/check-no-stray-stripe-ui.sh). Mobile path redirects to `app.bookbed.io` via `url_launcher` (App Store Reader-App pattern, commit `18dc6bca` 2026-01-14). The broken Cloud Function has no live caller; the `failed-precondition` exception is unreachable from current UI.
+**Why P0 (not P3).** Fail-CLOSED is the safe runtime state, not an acceptable product state. The defect is invisible only because `list_products` on bookbed.io live currently returns `[]` (no Stripe product published, verified 2026-05-26). Three independent triggers re-arm the bomb: (a) any UI link to `createSubscriptionCheckoutSession` shipped before env-var population, (b) a first Stripe product published without operator running `tool/setup-pr462-env.sh`, (c) marketing/external campaign deep-linking into checkout. Any one converts this from "latent" to "broken for every paying user" with no graceful degradation path. Audit/38 already flagged this as a deploy prereq; demoting it to P3 implicitly trusted the absence of UI links — which is not enforced in code.
 
-**Re-classification rationale.** Structural protection is double-layered: (a) Stripe Dashboard has 0 products → no checkout intent to honour even if invoked; (b) UI has no caller path → checkout function cannot be invoked. Fail-CLOSED at `stripeSubscription.ts:51` is correct posture until the canary flips. Provisioning empty env vars before products exist would be cargo-cult — not "preparing for launch" but "shipping a misconfiguration that no operator workflow exercises". The earlier P0 framing under-estimated the structural barriers; pre-canary, the time-bomb has no fuse path.
+**Fix.** See Q5 fix block. Operator: run `tool/setup-pr462-env.sh` for both envs *before* any subscription UI ships or any live Stripe product is published. Plus add a CI guard (release-blocking) that fails when a Flutter binary contains a `createSubscriptionCheckoutSession` caller AND the matching env-var is empty.
 
-**Reopen triggers (any one → P0, run fix block + remove canary guard in same PR):**
-1. **Stripe Dashboard publishes any product** in `acct_1SIsGkBomKO7vDr0` (live) or test-mode account — `list_products` returns non-empty. Provisioning the allowlist is then mandatory before any further deploy.
-2. **UI route `/upgrade`, `/pricing`, `/subscribe`** (or equivalent) wired in `lib/core/config/router_*.dart` with real navigation — *not* a placeholder dialog.
-3. **`createSubscriptionCheckoutSession` literal appears in any new file** under `lib/` outside `subscription_repository.dart`.
-4. **Any new `ref.watch(subscriptionRepositoryProvider)` / `ref.read(subscriptionRepositoryProvider)` consumer**, OR any new caller of `SubscriptionRepository.createCheckoutSession` / `.createPortalSession`. **The CI guard at `scripts/check-no-stray-stripe-ui.sh` enforces this and the canary text — removing the "coming soon" / "stay tuned" body from `_showUpgradeDialog` trips the same reopen.**
-
-**Fix path (when reopened).** See Q5 fix block. Operator: run `tool/setup-pr462-env.sh` for both envs *before* the triggering commit merges. Plus update the CI guard to also assert env-var is non-empty whenever the Flutter bundle contains the new caller — currently the guard is canary-text-only because the caller doesn't exist yet.
-
-**Tracker.** `SF-037` — status: **Deferred (P3)**, depends on subscription tier launch + canary removal.
+**Tracker.** Propose `SF-037` (now Open, P0 — was Deferred).
 
 ---
 
@@ -489,7 +479,7 @@ For subscription checkout — BookBed IS the merchant of record. Subscription ti
 |---|---|---|---|
 | SF-035 | Stripe refund pattern realigned with Destination Charge model + idempotencyKey + reverse_transfer | P0 | Open (latent) |
 | SF-036 | `customer.subscription.deleted` webhook respects `accountType === "lifetime"` | P0 | Open |
-| SF-037 | `ALLOWED_SUBSCRIPTION_PRICE_IDS` provisioned on `rab-booking-248fc` + `bookbed-dev` runtime | P3 | Deferred (2026-05-26) — 0 Stripe products + 0 call-graph consumers + canary dialog. Reopen triggers per F-52-03. CI guard `scripts/check-no-stray-stripe-ui.sh` enforces. |
+| SF-037 | `ALLOWED_SUBSCRIPTION_PRICE_IDS` provisioned on `rab-booking-248fc` + `bookbed-dev` runtime + CI guard preventing UI shipping without env-var | P0 | Open — release blocker for any subscription UI rollout or first live Stripe product publish |
 | SF-038 | Stripe-event idempotency via `stripe_webhook_events/{event.id}` Firestore dedup | P1 | Open (also audit/50 F-50-03) |
 | SF-039 | `idempotencyKey` on every Stripe write call (refunds/customers/accounts/sessions) | P1 | Open |
 | SF-040 | `getStripeClient()` prefix assertion (sk_test vs sk_live per GCLOUD_PROJECT) | P1 | Open |
@@ -505,7 +495,7 @@ For subscription checkout — BookBed IS the merchant of record. Subscription ti
 ## Open questions for Duško
 
 1. **Q14 / F-52-01** — Has any production refund completed successfully since PR #481 merged (`a847497e`, 2026-05-25)? If yes, my Destination-vs-Direct reading is wrong; if no, please run a test-mode guest-cancel through `bookbed-dev` and check the function logs for "No such payment_intent" before relying on the refund flow in PROD.
-2. **Q5 / F-52-03** — Deferred to P3 on 2026-05-26 after structural verification (0 Stripe products + 0 call-graph consumers + canary "coming soon" dialog). CI guard `scripts/check-no-stray-stripe-ui.sh` enforces reopen triggers. Subscription tier launch timeline?
+2. **Q5 / F-52-03** — Confirmed empty at runtime on both projects (`gcloud functions describe`). Promoted back to P0 (release blocker). Two operator actions needed *before* any subscription UI ships or any live Stripe product is published: (a) run `tool/setup-pr462-env.sh` for both envs, (b) wire a CI guard that fails the build if a Flutter binary references `createSubscriptionCheckoutSession` while the matching env-var is empty. Subscription tier launch timeline?
 3. **Q17** — Is subscription enforcement intentional-soft (UI-only) or should `accountStatus` gate widget bookings + iCal feeds? Audit `accountStatus` consumers across the Flutter app and CF surface to confirm scope.
 4. **Q19** — Business-entity registration timeline? Stripe Tax cannot be enabled correctly until the platform side has a tax-registered entity. Defer Q19/Q20 fixes accordingly.
 5. **Q4 migration cleanup** — Did `audit/migrations/41-scrub-widget-settings-secrets.js` run on PROD Firestore, or only DEV? Per `memory/pr482-j-smoke-2026-05-26.md`, dev migration executed (2 docs). PROD status unknown from this audit.

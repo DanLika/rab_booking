@@ -23,6 +23,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import {logInfo, logError, logWarn} from "./logger";
 import {setUser, captureMessage} from "./sentry";
+import {checkRateLimit} from "./utils/rateLimit";
 
 const db = admin.firestore();
 const BATCH_SIZE = 400; // Firestore limit is 500, keep margin for safety
@@ -58,6 +59,17 @@ export const deleteUserAccount = onCall(
 
     // Set user context for Sentry error tracking
     setUser(userId);
+
+    // Per-uid cooldown — prevents accidental double-fire and bounds Firestore
+    // write cost from the cascading delete (timeoutSeconds: 540 above). One
+    // legitimate retry-after-network-error window is 60s; cooldown matches.
+    if (!checkRateLimit(`delete_account:${userId}`, 1, 60)) {
+      logWarn("[DeleteAccount] Rate-limit hit — duplicate within 60s", {userId});
+      throw new HttpsError(
+        "resource-exhausted",
+        "Account deletion already in progress. Please wait a moment and try again."
+      );
+    }
 
     logInfo("[DeleteAccount] Account deletion requested", {userId});
 

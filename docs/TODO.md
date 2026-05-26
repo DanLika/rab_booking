@@ -28,7 +28,7 @@ Priority order matches audit/50 § "Suggested fix order". Single-best-move first
 
 ### MEDIUM (6) — defense-in-depth
 
-- **F-50-05** — App Check not enforced on any onCall. **Deferred** until F-50-02 ships (kills the credential-stuffing synergy that justified original HIGH rating). Effort: L (Flutter SDK + per-platform attest providers + per-CF flag).
+- **F-50-05** — App Check: 🚧 **partial via SF-046** (audit-only mode shipped on `getUnitAvailability` + `createStripeCheckoutSession` in security-sprint PR). Full enforcement deferred until F-50-02 ships AND `RECAPTCHA_SITE_KEY` provisioned + Flutter/web client App Check init lands. See "App Check launch checklist" section below. Effort remaining: L.
 - **F-50-05b** — Owner + admin sites ship no `Content-Security-Policy` header. Fix: prereq remove `web/index.html:669` eval (F-50-10), then add `Content-Security-Policy-Report-Only` first → 1 week clean Sentry → promote to enforcing. Effort: M.
 - **F-50-06** — Missing HSTS on all 3 hosting sites (firebase.json).
 - **F-50-07** — Missing `Permissions-Policy` on all 3 sites.

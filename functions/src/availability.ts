@@ -117,6 +117,11 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
     timeoutSeconds: 30,
     maxInstances: 50,
     cors: true,
+    // SF-046: App Check audit-only mode. Logs attestation when present, does not
+    // reject missing tokens. Flip enforceAppCheck=true in follow-up PR after
+    // RECAPTCHA_SITE_KEY is provisioned and clients ship App Check init.
+    enforceAppCheck: false,
+    consumeAppCheckToken: true,
   },
   async (request): Promise<GetUnitAvailabilityOutput> => {
     const propertyId = requireNonEmptyString(request.data?.propertyId, "propertyId");

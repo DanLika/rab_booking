@@ -130,7 +130,12 @@ function isAllowedReturnUrl(returnUrl: string): boolean {
  *
  * Security: Validates return URL against whitelist
  */
-export const createStripeCheckoutSession = onCall({secrets: [stripeSecretKey, "RESEND_API_KEY"]}, async (request) => {
+export const createStripeCheckoutSession = onCall({
+  secrets: [stripeSecretKey, "RESEND_API_KEY"],
+  // SF-046: App Check audit-only — see availability.ts for full context.
+  enforceAppCheck: false,
+  consumeAppCheckToken: true,
+}, async (request) => {
   // ========================================================================
   // SECURITY: Rate Limiting - BEFORE any business logic
   // ========================================================================
@@ -910,6 +915,29 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
     logError("Webhook signature verification failed", error);
     res.status(400).send("Webhook signature verification failed");
+    return;
+  }
+
+  // SF-038 / audit/50 F-50-03: webhook event.id dedup.
+  // Stripe retries delivery on 5xx; without this guard, branches that aren't
+  // internally idempotent (customer.subscription.deleted, invoice.paid timestamp)
+  // double-execute. 30-day TTL bounds growth via expiresAt + Firestore TTL policy.
+  const eventRef = db.collection("stripe_webhook_events").doc(event.id);
+  const dedupResult = await db.runTransaction(async (t) => {
+    const snap = await t.get(eventRef);
+    if (snap.exists) return "duplicate";
+    t.set(eventRef, {
+      receivedAt: admin.firestore.FieldValue.serverTimestamp(),
+      type: event.type,
+      livemode: event.livemode,
+      apiVersion: event.api_version,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
+    return "new";
+  });
+  if (dedupResult === "duplicate") {
+    logInfo("Stripe webhook already processed", {eventId: event.id, type: event.type});
+    res.status(200).json({received: true, status: "duplicate"});
     return;
   }
 

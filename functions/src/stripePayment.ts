@@ -998,6 +998,8 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       res.json({received: true, booking_id: bookingId, status: "refund_synced"});
     } catch (error: any) {
       logError("Error processing charge.refunded", error);
+      // SF-038: compensating delete — let Stripe retry re-enter the handler.
+      await eventRef.delete().catch(() => {});
       res.status(500).send("Internal server error");
     }
   } else if (event.type === "checkout.session.expired") {
@@ -1103,6 +1105,11 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       res.json({received: true, status: "subscription_canceled"});
     } catch (error: any) {
       logError("Error processing customer.subscription.deleted", error);
+      // SF-038: compensating delete — let Stripe retry re-enter the handler.
+      // Without this, a transient Firestore failure here would mark the event
+      // "duplicate" on every subsequent retry, leaving a cancelled subscriber
+      // with active accountStatus indefinitely (security-review F-PR-WEBHOOK-DEDUP-AUTHZ-LOSS).
+      await eventRef.delete().catch(() => {});
       res.status(500).send("Internal server error");
     }
   } else if (event.type === "invoice.paid") {

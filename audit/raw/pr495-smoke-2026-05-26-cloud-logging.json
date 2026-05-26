@@ -1,0 +1,28 @@
+[
+  {
+    "jsonPayload": {
+      "error": {
+        "message": "INTERNAL ASSERT FAILED: Unable to create the email action link",
+        "name": "Error"
+      },
+      "message": "Password reset failed - domain not authorized. Add the domain to Firebase Console > Authentication > Settings > Authorized domains"
+    },
+    "severity": "ERROR",
+    "timestamp": "2026-05-26T09:28:08.243373Z"
+  },
+  {
+    "jsonPayload": {
+      "error": {
+        "message": "INTERNAL ASSERT FAILED: Unable to create the email action link",
+        "name": "Error"
+      },
+      "message": "Error sending password reset email"
+    },
+    "severity": "ERROR",
+    "timestamp": "2026-05-26T09:28:08.235829Z"
+  },
+  {
+    "severity": "ERROR",
+    "timestamp": "2026-05-26T09:28:07.582135Z"
+  }
+]

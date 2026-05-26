@@ -413,6 +413,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // SF-038: Stripe webhook event dedup — server-only via admin SDK.
+    // 30-day TTL via expiresAt field (configure Firestore TTL policy on this field).
+    match /stripe_webhook_events/{eventId} {
+      allow read, write: if false;
+    }
+
     // Email templates - locked for future use
     match /email_templates/{templateId} {
       allow read: if false;

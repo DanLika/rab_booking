@@ -2,7 +2,28 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-26 | **Version**: 6.98
+**Last Updated**: 2026-05-26 | **Version**: 7.00
+
+---
+
+**Changelog 7.00**: Security sprint — SF-038 + SF-046..SF-048 + audit/52 F-52-03 re-classification (2026-05-26):
+
+### Security
+- **SF-038 — Stripe webhook event.id dedup (HIGH)**: `handleStripeWebhook` now records each `event.id` in `stripe_webhook_events/{eventId}` Firestore doc via transactional `runTransaction`. Re-deliveries (Stripe retry on 5xx) detect `snap.exists` and short-circuit with `{status: "duplicate"}`. 30-day TTL via `expiresAt` field. Closes audit/50 F-50-03 + audit/52 Q11. Operator: set Firestore TTL policy on `expiresAt` post-deploy.
+- **SF-046 — App Check audit-only on widget CFs (MED)**: `getUnitAvailability` + `createStripeCheckoutSession` accept `consumeAppCheckToken: true` while `enforceAppCheck: false` — telemetry mode. Full enforcement deferred to follow-up after `RECAPTCHA_SITE_KEY` provisioning + Flutter/web client App Check init.
+- **SF-047 — subdomainService auth gate + rate limit (MED)**: `checkSubdomainAvailability` + `generateSubdomainFromName` now require `request.auth` + per-uid `checkRateLimit` (30 calls / 5 min). Originally part of #509 branch tip but dropped by squash-merge; re-included in this PR alongside the CI guard script + workflow step.
+- **SF-048 — deleteUserAccount per-uid cooldown (LOW)**: 1 call per 5 min per uid. Prevents accidental double-clicks and concurrent cascade corruption.
+- **F-52-03 re-classified P0 → P3 deferred**: Stripe Dashboard `acct_1SIsGkBomKO7vDr0` (bookbed.io live) confirmed 0 subscription products via MCP `list_products`; Flutter call-graph audit confirms 0 consumers of `SubscriptionRepository.createCheckoutSession` outside the repo file itself; `_showUpgradeDialog` is "Pro subscription coming soon!" canary; mobile redirects to `app.bookbed.io` via `url_launcher` (App Store Reader-App pattern). Fail-CLOSED at `stripeSubscription.ts:51` is correct posture. CI guard `scripts/check-no-stray-stripe-ui.sh` enforces reopen triggers (canary text + stray callers). SF-037 → P3 Deferred.
+
+### Out of scope (follow-up PRs)
+- **SF-045 / F-50-02 (CRITICAL)** — `loginAttempts/{email}` anon DoS — full refactor (rules lock + new `recordLoginAttempt` callable + Dart `RateLimitService` rewrite + 5 callsite sweep in `enhanced_auth_provider.dart`) deferred to dedicated PR to keep this sprint reviewable.
+- **SF-039 (P1)** — `idempotencyKey` sweep on remaining 6 Stripe write calls (`checkout.sessions.create` ×2, `customers.create`, `accounts.create`, `accountLinks.create`, `billingPortal.sessions.create`). Hotfix #508 closed `refunds.create` only.
+- **App Check full enforcement** — follow-up after `RECAPTCHA_SITE_KEY` provisioning + client init.
+
+### Refs
+- audit/50 (F-50-03), audit/52 (F-52-03 re-class)
+- PR #508 (F-52-01 + F-52-02 — merged 2026-05-26)
+- PR #509 (audit/52 doc — merged 2026-05-26)
 
 ---
 

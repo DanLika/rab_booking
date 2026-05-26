@@ -39,6 +39,17 @@ jobs:
       - name: Analyze project
         run: flutter analyze --no-fatal-infos
 
+      - name: F-52-03 reopen-trigger guard (audit/52 SF-037)
+        # Audit/52 demoted F-52-03 (ALLOWED_SUBSCRIPTION_PRICE_IDS empty on
+        # prod) from P0 → P3 deferred on 2026-05-26. Demotion rests on
+        # structural evidence: zero call-graph consumers of
+        # SubscriptionRepository + "coming soon" canary dialog. This guard
+        # fails if either changes — operator must provision the allowlist
+        # on rab-booking-248fc + bookbed-dev and remove this step in the
+        # same PR. See docs/audits/stripe-credentials-and-flow-52.md §
+        # F-52-03 for reopen triggers.
+        run: ./scripts/check-no-stray-stripe-ui.sh
+
       - name: Run tests
         run: flutter test --coverage
 

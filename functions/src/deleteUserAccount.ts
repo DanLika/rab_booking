@@ -23,6 +23,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import {logInfo, logError, logWarn} from "./logger";
 import {setUser, captureMessage} from "./sentry";
+import {checkRateLimit} from "./utils/rateLimit";
 
 const db = admin.firestore();
 const BATCH_SIZE = 400; // Firestore limit is 500, keep margin for safety
@@ -54,6 +55,15 @@ export const deleteUserAccount = onCall(
     const userId = request.auth?.uid;
     if (!userId) {
       throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    // SF-048: per-uid cooldown. 1 call per 5 minutes; prevents accidental double-clicks
+    // and concurrent deletion runs which can corrupt the cascade.
+    if (!checkRateLimit(`delete_account:${userId}`, 1, 300)) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Account deletion already in progress. Please wait a few minutes."
+      );
     }
 
     // Set user context for Sentry error tracking

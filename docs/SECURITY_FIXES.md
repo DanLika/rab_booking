@@ -3130,3 +3130,111 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 **Smoke gate for PR #495:** re-run the trigger sequence from `audit/raw/pr483-smoke-2026-05-26-cloud-logging.json` (anon POST to `sendPasswordResetEmail` on `bookbed-dev`, `gcloud logging read`); PASS = `jsonPayload.message` contains no `\n    at /workspace/` substring.
 
 **Audit prescription drift:** Audit/50 F-50-04 originally said *"in logger.ts, scrub: { message: error.message, code: error.code } only. Keep stack on Sentry."* This was incomplete — the prescription needs an addendum explaining the `entryFromArgs` wrap. Addendum task: SF-034 also needs audit/50 patch.
+
+---
+
+## SF-035: Stripe refund pattern realigned with Destination Charge model
+
+**Status:** ✅ closed via #508 (`015542ac`)
+**Severity:** P0 (latent)
+**Audit:** audit/52 F-52-01
+
+**Vector:** `guestCancelBooking.ts` post-#481 used Direct-Charge refund pattern (`{stripeAccount: ownerStripeAccountId}` header) but checkout creates Destination Charge (PI on platform). PI absent from connected account → `No such payment_intent` error. 90d log scan = 0 hits (latent, no PROD refund hit broken path).
+
+**Fix:** drop `{stripeAccount}` header, add `reverse_transfer: true` (claws funds from connected acct), add `idempotencyKey: refund-${bookingId}`.
+
+**Files:** `functions/src/guestCancelBooking.ts:331-343`
+
+---
+
+## SF-036: customer.subscription.deleted webhook respects accountType=lifetime
+
+**Status:** ✅ closed via #508 (`015542ac`)
+**Severity:** P0
+**Audit:** audit/52 F-52-02
+
+**Vector:** Webhook handler unconditionally wrote `accountStatus: "trial_expired"` for any user matched by `stripeSubscriptionId`. Lifetime users with lingering monthly subs (e.g. user upgraded to lifetime after monthly purchase) silently lose entitlement on Stripe-side sub cancel.
+
+**Fix:** `accountType === "lifetime"` short-circuit cancels the sub reference (`stripeSubscriptionStatus: "canceled"`, `stripeSubscriptionId` deleted) but preserves `accountStatus`.
+
+**Files:** `functions/src/stripePayment.ts:1052-1070`
+
+---
+
+## SF-037: ALLOWED_SUBSCRIPTION_PRICE_IDS provisioning
+
+**Status:** ⏸ Deferred (P3) — re-classified from P0 on 2026-05-26
+**Severity:** P3
+**Audit:** audit/52 F-52-03
+
+**Vector:** Env-var empty at runtime on both `rab-booking-248fc` and `bookbed-dev` → `createSubscriptionCheckoutSession` throws `failed-precondition` to every caller.
+
+**Re-classification rationale:** structural double-protection — Stripe Dashboard 0 products in live + zero call-graph consumers in Flutter (`_showUpgradeDialog` is "coming soon" canary, mobile redirects via `url_launcher`). Fail-CLOSED is correct posture until canary flips. Provisioning empty allowlist before products exist would be cargo-cult.
+
+**Reopen triggers:** see `docs/audits/stripe-credentials-and-flow-52.md` F-52-03. Enforced by CI guard `scripts/check-no-stray-stripe-ui.sh`.
+
+**Files:** `functions/.env`, `functions/.env.rab-booking-248fc`, `scripts/check-no-stray-stripe-ui.sh`
+
+---
+
+## SF-038: Stripe webhook event.id dedup
+
+**Status:** ✅ closed via this PR
+**Severity:** HIGH
+**Audit:** audit/50 F-50-03 + audit/52 Q11
+
+**Vector:** Stripe retries webhook delivery on 5xx; `handleStripeWebhook` had no `event.id` guard. Branches that aren't internally idempotent (`customer.subscription.deleted` race, `invoice.paid` clobbers `lastPaymentAt` timestamp on every retry) double-execute.
+
+**Fix:** transactional dedup against `stripe_webhook_events/{event.id}` Firestore doc — first delivery `create`s the doc + processes, subsequent deliveries see `snap.exists` and short-circuit with `{status: "duplicate"}`. 30-day TTL via `expiresAt` field bounds collection growth (configure Firestore TTL policy on this field post-deploy). Rules locked: server-only via Admin SDK.
+
+**Files:**
+- `functions/src/stripePayment.ts` (just after `constructEvent`)
+- `firestore.rules` (new `match /stripe_webhook_events/` block, server-only)
+
+**Post-deploy:** operator runs `gcloud firestore fields ttls update expiresAt --collection-group=stripe_webhook_events --enable-ttl` on both projects.
+
+---
+
+## SF-046: App Check audit-only mode on widget Cloud Functions
+
+**Status:** ✅ closed via this PR (audit-only mode; full enforcement deferred to follow-up)
+**Severity:** MEDIUM
+**Audit:** audit/52 Q12 + new
+
+**Vector:** Widget-facing CFs (`getUnitAvailability`, `createStripeCheckoutSession`) accepted anonymous callers with no client-attestation. Token-bucket rate limits exist but anon-callable surface for high-value ops (booking checkout) is wider than ideal.
+
+**Fix (this PR):** `enforceAppCheck: false, consumeAppCheckToken: true` on both CFs. Functions log attestation when client provides a token but do NOT reject missing tokens. Telemetry-only mode. Follow-up PR will flip to `enforceAppCheck: true` after `RECAPTCHA_SITE_KEY` provisioning + Flutter/web client App Check init lands.
+
+**Files:**
+- `functions/src/availability.ts:113` (options object)
+- `functions/src/stripePayment.ts:133` (options object)
+
+**Follow-up TODO:** see `docs/TODO.md` "App Check launch checklist".
+
+---
+
+## SF-047: subdomainService auth gate + per-uid rate limit
+
+**Status:** ✅ closed via #512 (re-included after #509 squash-merge dropped this surface)
+**Severity:** MEDIUM
+**Audit:** new (sweep)
+
+**Vector:** `checkSubdomainAvailability` and `generateSubdomainFromName` accepted anonymous callers with no rate limit. Scraping the reserved-list + brute-checking subdomain availability was free for anonymous clients.
+
+**Fix:** auth gate (`request.auth` required) + per-uid rate limit (30 calls per 5 min, separate buckets per function to avoid budget compounding).
+
+**Files:** `functions/src/subdomainService.ts:167-243` + `:252-292`
+
+---
+
+## SF-048: deleteUserAccount per-uid cooldown
+
+**Status:** ✅ closed via this PR
+**Severity:** LOW
+**Audit:** new (sweep)
+
+**Vector:** Authenticated user could trigger `deleteUserAccount` repeatedly. Cascade-delete already has internal write-batching (`BATCH_SIZE=400`) but concurrent invocations could corrupt the cascade or cause partial-deletion-then-retry races.
+
+**Fix:** `checkRateLimit(\`delete_account:${userId}\`, 1, 300)` — 1 call per 5 minutes per uid. Throws `resource-exhausted` on re-entry.
+
+**Files:** `functions/src/deleteUserAccount.ts:52-65`

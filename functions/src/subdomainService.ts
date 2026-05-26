@@ -2,6 +2,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import {logInfo} from "./logger";
 import {setUser} from "./sentry";
+import {checkRateLimit} from "./utils/rateLimit";
 
 const db = admin.firestore();
 
@@ -168,6 +169,18 @@ export const checkSubdomainAvailability = onCall<{
   subdomain: string;
   propertyId?: string;
 }>(async (request): Promise<CheckSubdomainResult> => {
+  // SF-047: auth gate + per-uid rate limit. 30 calls per 5 minutes is generous for
+  // typing-debounced UI but blocks scraped-enumeration attempts.
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required");
+  }
+  if (!checkRateLimit(`subdomain_check:${request.auth.uid}`, 30, 300)) {
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many subdomain checks. Please wait a few minutes."
+    );
+  }
+
   const {subdomain, propertyId} = request.data;
 
   if (!subdomain) {
@@ -253,6 +266,18 @@ export const generateSubdomainFromName = onCall<{
   propertyName: string;
   propertyId?: string;
 }>(async (request): Promise<GenerateSubdomainResult> => {
+  // SF-047: auth gate + per-uid rate limit (shares budget with checkSubdomainAvailability
+  // via the same key prefix would compound; using a separate bucket here).
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Authentication required");
+  }
+  if (!checkRateLimit(`subdomain_generate:${request.auth.uid}`, 30, 300)) {
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many subdomain generation requests. Please wait a few minutes."
+    );
+  }
+
   const {propertyName, propertyId} = request.data;
 
   if (!propertyName) {

@@ -28,7 +28,7 @@ Priority order matches audit/50 § "Suggested fix order". Single-best-move first
 
 ### MEDIUM (6) — defense-in-depth
 
-- **F-50-05** — App Check not enforced on any onCall. **Deferred** until F-50-02 ships (kills the credential-stuffing synergy that justified original HIGH rating). Effort: L (Flutter SDK + per-platform attest providers + per-CF flag).
+- **F-50-05** — App Check: 🚧 **partial via SF-046** (audit-only mode shipped on `getUnitAvailability` + `createStripeCheckoutSession` in security-sprint PR). Full enforcement deferred until F-50-02 ships AND `RECAPTCHA_SITE_KEY` provisioned + Flutter/web client App Check init lands. See "App Check launch checklist" section below. Effort remaining: L.
 - **F-50-05b** — Owner + admin sites ship no `Content-Security-Policy` header. Fix: prereq remove `web/index.html:669` eval (F-50-10), then add `Content-Security-Policy-Report-Only` first → 1 week clean Sentry → promote to enforcing. Effort: M.
 - **F-50-06** — Missing HSTS on all 3 hosting sites (firebase.json).
 - **F-50-07** — Missing `Permissions-Policy` on all 3 sites.
@@ -49,6 +49,18 @@ Bundle F-50-06 + F-50-07 + F-50-08 into 1 firebase.json headers PR.
 - Each fix lands its own PR with link back to `audit/50` F-50-XX
 - New SF-NNN entry added to `docs/SECURITY_FIXES.md` at PR merge time (allocated in arrival order, not pre-allocated — see "Planirane sigurnosne ispravke" section there for rationale)
 - Carryover Semgrep follow-up run AFTER F-50-* sprint completes (better signal-to-noise once low-hanging removed)
+
+---
+
+## 🛡 App Check launch checklist (referenced from SF-046)
+
+Security-sprint PR shipped App Check in **audit-only mode** (`enforceAppCheck: false, consumeAppCheckToken: true`) on `getUnitAvailability` and `createStripeCheckoutSession`. Functions log attestation when clients send a token; missing tokens are NOT rejected. Promoting to full enforcement (`enforceAppCheck: true`) requires:
+
+- [ ] **Provision `RECAPTCHA_SITE_KEY`** on `bookbed-dev` + `rab-booking-248fc` (reCAPTCHA v3 site key for web; Console: APIs & Services → Credentials → reCAPTCHA Enterprise)
+- [ ] **Web client init** in `web/index.html` + Flutter widget entry — initialize App Check with reCAPTCHA v3 provider after `Firebase.initializeApp`
+- [ ] **Native client init** — Flutter mobile entry points init App Check with DeviceCheck (iOS) / Play Integrity (Android) providers; pubspec dep `firebase_app_check ^0.4.x` already present
+- [ ] **Telemetry watch (1 week)** — confirm legit-traffic attestation rate > 99% in `serviceConfig.appCheckMetrics` before flipping enforcement
+- [ ] **Flip `enforceAppCheck: true`** on both CFs in follow-up PR; expand to other anon-callable surfaces (`emailVerification`, `passwordReset`, `subdomainService` once SF-047 lands)
 
 ---
 

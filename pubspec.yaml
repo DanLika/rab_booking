@@ -18,8 +18,8 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # State Management
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
+  flutter_riverpod: ^3.3.2-dev.2
+  riverpod_annotation: ^4.0.3-dev.2
   state_notifier: ^1.0.0
 
   # Backend & Database - Firebase
@@ -76,8 +76,8 @@ dependencies:
   url_launcher: ^6.3.1
 
   # JSON Serialization
-  freezed_annotation: ^2.4.4
-  json_annotation: ^4.9.0
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
 
   # Utilities
   share_plus: ^12.0.1
@@ -114,10 +114,10 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code Generation
-  build_runner: ^2.4.6
-  freezed: ^2.5.8
-  json_serializable: ^6.7.1
-  riverpod_generator: ^2.4.3
+  build_runner: ^2.15.0
+  freezed: ^3.2.6-dev.1
+  json_serializable: ^6.14.0
+  riverpod_generator: ^4.0.4-dev.3
 
   # Testing
   mocktail: ^1.0.5

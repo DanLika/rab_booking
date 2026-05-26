@@ -5,6 +5,7 @@ import {logInfo, logError, logWarn} from "./logger";
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
 import {logSecurityEvent, SecurityEventType} from "./utils/securityMonitoring";
+import {isAllowedReturnUrl} from "./utils/returnUrlValidation";
 
 /**
  * Cloud Function: Create or Get Stripe Connect Account
@@ -37,6 +38,25 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
 
   // Set user context for Sentry error tracking
   setUser(ownerId);
+
+  // F-NEW-02: validate both URLs against the BookBed allowlist before
+  // handing them to Stripe accountLinks.create. Without this, an attacker
+  // who tricks an owner into invoking this CF (XSS, social-engineered link)
+  // can land the post-Stripe-Connect-onboarding redirect on a phishing
+  // domain — high-trust position immediately after the user types KYC data.
+  if (!returnUrl || !isAllowedReturnUrl(returnUrl)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid returnUrl: must be a BookBed-controlled domain."
+    );
+  }
+  // refreshUrl is optional; fall back to returnUrl. If provided, validate.
+  if (refreshUrl && !isAllowedReturnUrl(refreshUrl)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid refreshUrl: must be a BookBed-controlled domain."
+    );
+  }
 
   try {
     // Get owner data

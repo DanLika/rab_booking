@@ -1,9 +1,10 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin} from "./firebase";
-import {logInfo, logError} from "./logger";
+import {logInfo, logError, logWarn} from "./logger";
 import {calculateTokenExpiration} from "./bookingAccessToken";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
+import {checkRateLimit} from "./utils/rateLimit";
 
 /**
  * Cloud Function: Update Booking Token Expiration
@@ -16,13 +17,28 @@ import {setUser} from "./sentry";
  * The token hash remains the same, only expiration date changes.
  */
 export const updateBookingTokenExpiration = onCall(async (request) => {
+  // F-NEW-06: require auth. Pre-fix the CF was anonymous + had no ownership
+  // check, allowing booking-ID enumeration via 404/200 oracle and token
+  // re-arming when an owner moves check_out forward.
+  if (!request.auth?.uid) {
+    throw new HttpsError("unauthenticated", "Authentication required");
+  }
+
+  const userId = request.auth.uid;
+  setUser(userId);
+
+  // F-NEW-06: per-uid rate limit. 30 calls / 5 min covers legitimate batch
+  // edits in the dashboard but blocks brute enumeration.
+  if (!checkRateLimit(`update_booking_token_exp:${userId}`, 30, 300)) {
+    logWarn("[UpdateBookingTokenExpiration] Rate-limit exceeded", {userId});
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many token-expiration updates. Please wait a few minutes."
+    );
+  }
+
   const data = request.data;
   const {bookingId} = data;
-
-  // Set user context for Sentry error tracking (if authenticated)
-  if (request.auth?.uid) {
-    setUser(request.auth.uid);
-  }
 
   // Validate required fields
   if (!bookingId) {
@@ -35,6 +51,7 @@ export const updateBookingTokenExpiration = onCall(async (request) => {
   try {
     logInfo("[UpdateBookingTokenExpiration] Updating token expiration", {
       bookingId,
+      userId,
     });
 
     // Find booking using helper (avoids FieldPath.documentId bug with collectionGroup)
@@ -46,6 +63,17 @@ export const updateBookingTokenExpiration = onCall(async (request) => {
 
     const bookingRef = bookingResult.doc.ref;
     const booking = bookingResult.data;
+
+    // F-NEW-06: ownership check. Only the property owner can refresh the
+    // token expiration; anonymous re-arming of leaked email links blocked.
+    if (booking.owner_id !== userId) {
+      logWarn("[UpdateBookingTokenExpiration] Ownership mismatch", {
+        bookingId,
+        userId,
+        ownerId: booking.owner_id,
+      });
+      throw new HttpsError("permission-denied", "You do not own this booking");
+    }
 
     // Check if booking has check-out date and access token
     if (!booking.check_out) {

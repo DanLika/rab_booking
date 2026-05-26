@@ -2,10 +2,84 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as https from "https";
 import * as http from "http";
+import * as dns from "dns/promises";
+import {LookupAddress} from "dns";
+import * as net from "net";
 import {admin} from "./firebase";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
 import {setUser, captureMessage} from "./sentry";
 import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
+
+/**
+ * F-NEW-05: SSRF defence for owner-supplied iCal URLs.
+ *
+ * Pre-fix the validator was a substring blocklist on `hostname` that bypassed
+ * trivially via IP encodings (decimal `2130706433`, hex `0x7f000001`, octal
+ * `0177.0.0.1`, IPv4-mapped IPv6 `[::ffff:169.254.169.254]`) plus
+ * DNS rebinding (validation host resolves to public IP, fetch host
+ * re-resolves to metadata IP).
+ *
+ * New approach:
+ *   1. Reject non-http(s) protocol.
+ *   2. Resolve hostname via `dns.lookup(all: true)`.
+ *   3. Reject if ANY resolved address is private/loopback/link-local/
+ *      multicast/IPv4-mapped-into-private-IPv6.
+ *   4. Return the pinned address.
+ *   5. `fetchIcalData` passes a custom `lookup` to http(s).get that returns
+ *      ONLY the pinned address, defeating DNS rebinding between validate
+ *      and fetch.
+ */
+
+/** RFC1918 + loopback + link-local + multicast + IPv4-mapped-IPv6 + IPv6 ULA. */
+function isPrivateOrUnsafeIp(ip: string): boolean {
+  if (!ip) return true;
+
+  // IPv4-mapped IPv6: ::ffff:a.b.c.d → strip prefix, check as IPv4.
+  const v4Mapped = ip.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+  if (v4Mapped) return isPrivateOrUnsafeIp(v4Mapped[1]);
+
+  if (net.isIPv4(ip)) {
+    const parts = ip.split(".").map((p) => Number(p));
+    if (parts.length !== 4 || parts.some((p) => Number.isNaN(p))) return true;
+    const [a, b] = parts;
+    if (a === 10) return true; // 10.0.0.0/8
+    if (a === 127) return true; // loopback
+    if (a === 0) return true; // 0.0.0.0/8 (this-network)
+    if (a === 169 && b === 254) return true; // link-local + GCP/AWS metadata
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true; // 192.168.0.0/16
+    if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64.0.0/10
+    if (a >= 224) return true; // multicast (224.0.0.0/4) + reserved (240.0.0.0/4)
+    return false;
+  }
+
+  if (net.isIPv6(ip)) {
+    const lower = ip.toLowerCase();
+    if (lower === "::1") return true; // loopback
+    if (lower === "::") return true; // unspecified
+    if (lower.startsWith("fe80:")) return true; // link-local
+    if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // ULA fc00::/7
+    if (lower.startsWith("ff")) return true; // multicast
+    return false;
+  }
+
+  // Not a valid IP literal (URL.hostname can still return a name here for
+  // exotic encodings); refuse — DNS resolution downstream will handle the
+  // real address check.
+  return false;
+}
+
+/**
+ * F-NEW-05 result: validated + resolved address pin.
+ */
+export interface IcalUrlValidation {
+  valid: boolean;
+  error?: string;
+  /** Resolved address to pin in the actual fetch (defeats DNS rebinding). */
+  pinnedAddress?: string;
+  /** Address family for net.connect lookup callback. */
+  pinnedFamily?: 4 | 6;
+}
 
 /**
  * Detect transient third-party fetch failures we should NOT alert on.
@@ -38,66 +112,93 @@ function isTransientFetchError(error: unknown): boolean {
 }
 
 /**
- * SECURITY: Validate iCal URL to prevent SSRF attacks
- * Only allows public HTTP/HTTPS URLs to known booking platforms
+ * F-NEW-05: SECURITY — validate + resolve iCal URL to prevent SSRF.
+ *
+ * Async because we DNS-resolve the hostname and check ALL returned addresses
+ * against the private-IP set. The resolved address is returned for the
+ * caller to pin in the actual fetch via a custom `lookup` callback —
+ * without pinning, DNS rebinding lets an attacker re-resolve the host to
+ * 169.254.169.254 (metadata server) between validation and fetch.
+ *
+ * SF-002 REVISED: domain whitelist removed (too restrictive for real owners
+ * importing from PMS / agencies). Security is now DNS-based, not string-based.
  */
-function validateIcalUrl(url: string): { valid: boolean; error?: string } {
+async function validateIcalUrl(url: string): Promise<IcalUrlValidation> {
+  let parsedUrl: URL;
   try {
-    const parsedUrl = new URL(url);
-
-    // Only allow HTTP/HTTPS protocols
-    if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-      return {valid: false, error: `Invalid protocol: ${parsedUrl.protocol}. Only HTTP/HTTPS allowed.`};
-    }
-
-    // Block localhost and internal IPs
-    const hostname = parsedUrl.hostname.toLowerCase();
-    const blockedPatterns = [
-      "localhost",
-      "127.0.0.1",
-      "0.0.0.0",
-      "::1",
-      "10.",
-      "172.16.", "172.17.", "172.18.", "172.19.",
-      "172.20.", "172.21.", "172.22.", "172.23.",
-      "172.24.", "172.25.", "172.26.", "172.27.",
-      "172.28.", "172.29.", "172.30.", "172.31.",
-      "192.168.",
-      "169.254.",
-      "metadata.google.internal",
-      "metadata.google",
-      ".internal",
-      ".local",
-    ];
-
-    for (const pattern of blockedPatterns) {
-      if (hostname === pattern || hostname.startsWith(pattern) || hostname.endsWith(pattern)) {
-        return {valid: false, error: "Internal or localhost URLs are not allowed."};
-      }
-    }
-
-    // SF-002 REVISED: Whitelist approach was too restrictive for real-world use.
-    // Users need to import from hundreds of different iCal providers (agencies, PMS, etc.)
-    // Security is maintained via:
-    // 1. Blocklist above (prevents SSRF to internal/localhost addresses)
-    // 2. iCal content validation (must contain BEGIN:VCALENDAR)
-    // 3. HTTPS-only requirement
-    // Log unknown domains for monitoring but ALLOW the request.
-    const knownDomains = [
-      "booking.com", "airbnb.com", "calendar.google.com",
-      "outlook.live.com", "outlook.office365.com", "yahoo.com",
-    ];
-    const isKnown = knownDomains.some((domain) =>
-      hostname === domain || hostname.endsWith(`.${domain}`)
-    );
-    if (!isKnown) {
-      logInfo("[iCal Sync] New iCal domain used (allowed)", {hostname});
-    }
-
-    return {valid: true};
-  } catch (error) {
+    parsedUrl = new URL(url);
+  } catch {
     return {valid: false, error: "Invalid URL format."};
   }
+
+  // Only http(s) — blocks file:, gopher:, ftp:, data:, etc.
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    return {
+      valid: false,
+      error: `Invalid protocol: ${parsedUrl.protocol}. Only HTTP/HTTPS allowed.`,
+    };
+  }
+
+  // Reject empty / numeric-only hostnames that could bypass IP encoding
+  // attacks. URL.hostname normalises decimal/hex/octal IP encodings to
+  // dotted form via WHATWG URL parser in many cases, but defensive: any
+  // hostname that resolves directly to an IP literal still goes through
+  // the post-DNS check below.
+  const hostname = parsedUrl.hostname.toLowerCase();
+  if (!hostname) {
+    return {valid: false, error: "URL must have a hostname."};
+  }
+
+  // Resolve hostname → list of addresses. Reject if ANY is private/unsafe.
+  let addresses: LookupAddress[];
+  try {
+    addresses = await dns.lookup(hostname, {all: true, verbatim: true});
+  } catch (err) {
+    return {
+      valid: false,
+      error: `Hostname does not resolve: ${(err as Error).message || "unknown"}`,
+    };
+  }
+
+  if (addresses.length === 0) {
+    return {valid: false, error: "Hostname returned no addresses."};
+  }
+
+  for (const addr of addresses) {
+    if (isPrivateOrUnsafeIp(addr.address)) {
+      logWarn("[iCal Sync] SSRF guard blocked private IP", {
+        hostname,
+        address: addr.address,
+      });
+      return {
+        valid: false,
+        error: "Hostname resolves to a private or reserved IP address.",
+      };
+    }
+  }
+
+  // Pin the FIRST resolved address (typically IPv4 first when verbatim:false,
+  // OS order when verbatim:true). Caller MUST pass this address as the
+  // pinned lookup to defeat DNS rebinding between this check and the fetch.
+  const pinned = addresses[0];
+
+  // Telemetry-only domain log (SF-002).
+  const knownDomains = [
+    "booking.com", "airbnb.com", "calendar.google.com",
+    "outlook.live.com", "outlook.office365.com", "yahoo.com",
+  ];
+  const isKnown = knownDomains.some((domain) =>
+    hostname === domain || hostname.endsWith(`.${domain}`)
+  );
+  if (!isKnown) {
+    logInfo("[iCal Sync] New iCal domain used (allowed)", {hostname});
+  }
+
+  return {
+    valid: true,
+    pinnedAddress: pinned.address,
+    pinnedFamily: pinned.family === 4 ? 4 : 6,
+  };
 }
 
 /**
@@ -341,14 +442,22 @@ async function syncSingleFeed(
     .doc(feedId);
 
   try {
-    // SECURITY: Validate URL before fetching (SSRF prevention)
-    const urlValidation = validateIcalUrl(ical_url);
+    // SECURITY: Validate URL before fetching (SSRF prevention).
+    // F-NEW-05: now async — DNS-resolves hostname + checks each address
+    // against private/loopback/IPv4-mapped-IPv6 ranges. Returns a pinned
+    // address that we pass to fetchIcalData to defeat DNS rebinding.
+    const urlValidation = await validateIcalUrl(ical_url);
     if (!urlValidation.valid) {
       throw new Error(`Invalid iCal URL: ${urlValidation.error}`);
     }
 
-    // Fetch iCal data
-    const icalData = await fetchIcalData(ical_url);
+    // Fetch iCal data using the pinned address (DNS rebinding defence)
+    const icalData = await fetchIcalData(
+      ical_url,
+      5,
+      urlValidation.pinnedAddress,
+      urlValidation.pinnedFamily,
+    );
 
     // BUG-009 FIX: Validate fetched iCal data before processing
     // Prevents accidental deletion of all events if the fetched data is empty/malformed
@@ -439,7 +548,12 @@ async function syncSingleFeed(
 // HTTP request timeout (30 seconds)
 const HTTP_TIMEOUT_MS = 30000;
 
-function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
+function fetchIcalData(
+  url: string,
+  maxRedirects: number = 5,
+  pinnedAddress?: string,
+  pinnedFamily?: 4 | 6,
+): Promise<string> {
   return new Promise((resolve, reject) => {
     if (maxRedirects <= 0) {
       reject(new Error("Too many redirects"));
@@ -448,8 +562,23 @@ function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
 
     const protocol = url.startsWith("https") ? https : http;
 
+    // F-NEW-05: pinned lookup defeats DNS rebinding between validateIcalUrl
+    // and the actual fetch. If a pin is provided, ALL DNS resolutions inside
+    // this request use it — the OS resolver is bypassed.
+    const requestOptions: https.RequestOptions = pinnedAddress
+      ? {
+          lookup: (
+            _hostname: string,
+            _options: unknown,
+            callback: (err: Error | null, address: string, family: number) => void,
+          ) => {
+            callback(null, pinnedAddress, pinnedFamily || 4);
+          },
+        }
+      : {};
+
     const request = protocol
-      .get(url, (response) => {
+      .get(url, requestOptions, (response) => {
         // Handle redirects (301, 302, 303, 307, 308)
         if (response.statusCode && [301, 302, 303, 307, 308].includes(response.statusCode)) {
           let redirectUrl = response.headers.location;
@@ -464,27 +593,33 @@ function fetchIcalData(url: string, maxRedirects: number = 5): Promise<string> {
             redirectUrl = `${urlObj.protocol}//${urlObj.host}${redirectUrl}`;
           }
 
-          // SECURITY (audit/31 HIGH-1): re-validate redirect target to prevent
-          // SSRF via attacker-controlled 302 (e.g. http://169.254.169.254/...).
-          // Without this, the initial validateIcalUrl pass only gates the first
-          // URL — redirects bypass blocklist (localhost, RFC1918, GCP metadata).
-          const redirectValidation = validateIcalUrl(redirectUrl);
-          if (!redirectValidation.valid) {
-            reject(new Error(
-              `Redirect blocked by SSRF guard: ${redirectValidation.error}`
-            ));
-            return;
-          }
-
-          logInfo("[iCal Sync] Following redirect", {
-            from: url.substring(0, 50) + "...",
-            to: redirectUrl.substring(0, 50) + "...",
-            statusCode: response.statusCode,
-          });
-
-          // Follow the redirect
-          fetchIcalData(redirectUrl, maxRedirects - 1)
-            .then(resolve)
+          // SECURITY (audit/31 HIGH-1 + F-NEW-05): re-validate redirect target
+          // to prevent SSRF via attacker-controlled 302. validateIcalUrl is
+          // now async (DNS lookup + private-IP rejection) and returns a fresh
+          // pin for the redirect destination — we use it to fetch the next
+          // hop, defeating DNS rebinding on the redirect chain too.
+          validateIcalUrl(redirectUrl)
+            .then((redirectValidation) => {
+              if (!redirectValidation.valid) {
+                reject(new Error(
+                  `Redirect blocked by SSRF guard: ${redirectValidation.error}`
+                ));
+                return;
+              }
+              logInfo("[iCal Sync] Following redirect", {
+                from: url.substring(0, 50) + "...",
+                to: (redirectUrl as string).substring(0, 50) + "...",
+                statusCode: response.statusCode,
+              });
+              fetchIcalData(
+                redirectUrl as string,
+                maxRedirects - 1,
+                redirectValidation.pinnedAddress,
+                redirectValidation.pinnedFamily,
+              )
+                .then(resolve)
+                .catch(reject);
+            })
             .catch(reject);
           return;
         }

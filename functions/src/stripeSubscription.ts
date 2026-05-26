@@ -3,6 +3,7 @@ import {getStripeClient, stripeSecretKey} from "./stripe";
 import {db} from "./firebase";
 import {logInfo, logError, logSuccess} from "./logger";
 import {checkRateLimit} from "./utils/rateLimit";
+import {isAllowedReturnUrl} from "./utils/returnUrlValidation";
 import * as admin from "firebase-admin";
 
 /**
@@ -38,6 +39,16 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
 
   if (!priceId || !returnUrl) {
     throw new HttpsError("invalid-argument", "Missing priceId or returnUrl.");
+  }
+
+  // F-NEW-02: validate returnUrl against the BookBed allowlist. Without
+  // this, success_url + cancel_url interpolate attacker-controlled domains
+  // and leak the {CHECKOUT_SESSION_ID} capability token in the redirect.
+  if (!isAllowedReturnUrl(returnUrl)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid returnUrl: must be a BookBed-controlled domain."
+    );
   }
 
   // Price ID allowlist (audit/38, .claude/rules/stripe.md § Subscription Flow).
@@ -144,6 +155,16 @@ export const createCustomerPortalSession = onCall({secrets: [stripeSecretKey]}, 
 
   const userId = request.auth.uid;
   const {returnUrl} = request.data;
+
+  // F-NEW-02: validate client-supplied return URL against allowlist before
+  // handing to billingPortal.sessions.create. Empty/missing falls back to
+  // the hard-coded dashboard URL (safe). Provided URL must pass allowlist.
+  if (returnUrl && !isAllowedReturnUrl(returnUrl)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Invalid returnUrl: must be a BookBed-controlled domain."
+    );
+  }
 
   try {
     const stripe = getStripeClient();

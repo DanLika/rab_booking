@@ -343,6 +343,33 @@ void sendMessageToParent(Map<String, dynamic> message) {
 @JS('JSON.stringify')
 external JSString _jsonStringify(JSAny value);
 
+/// F-NEW-04: postMessage origin allowlist. Mirrors `web/payment_bridge.js`
+/// validator. Without this check, an attacker-hosted page that embeds the
+/// widget in an iframe can postMessage `{source:'bookbed-widget',
+/// type:'stripe-payment-complete', sessionId:'cs_<leaked>'}` and trigger
+/// the widget to call `getBookingByStripeSession` and render guest PII —
+/// which the parent attacker page can then scrape.
+bool _isAllowedPostMessageOrigin(String origin) {
+  if (origin.isEmpty) return false;
+  // `null` origin appears for sandboxed/data-URL parents — reject.
+  if (origin == 'null') return false;
+  final Uri? uri = Uri.tryParse(origin);
+  if (uri == null) return false;
+  final String host = uri.host;
+  if (host.isEmpty) return false;
+  // BookBed-controlled domains + dev hosting + localhost
+  if (host == 'bookbed.io') return true;
+  if (host.endsWith('.bookbed.io')) return true;
+  if (host == 'bookbed-widget-dev.web.app') return true;
+  if (host == 'bookbed-owner-dev.web.app') return true;
+  if (host == 'bookbed-admin-dev.web.app') return true;
+  if (host == 'bookbed-widget-staging.web.app') return true;
+  if (host == 'bookbed-owner-staging.web.app') return true;
+  if (host == 'localhost') return true;
+  if (host == '127.0.0.1') return true;
+  return false;
+}
+
 /// Listen for postMessage from parent/opener window
 /// Returns cleanup function
 void Function() listenToParentMessages(
@@ -350,8 +377,12 @@ void Function() listenToParentMessages(
 ) {
   void handler(web.MessageEvent event) {
     try {
-      // Verify origin (allow all for iframe embedding flexibility)
-      // In production, you might want to restrict this
+      // F-NEW-04: reject untrusted origins BEFORE parsing the payload.
+      final origin = event.origin;
+      if (!_isAllowedPostMessageOrigin(origin)) {
+        web.console.log('[POSTMESSAGE] Rejected origin: $origin'.toJS);
+        return;
+      }
 
       final data = event.data;
       if (data == null) return;

@@ -120,10 +120,20 @@ service cloud.firestore {
       }
 
       // Security events subcollection - user login/logout/password change events
-      // Users can create and read their own security events
+      // Users can create and read their own security events.
+      // F-NEW-09: field-shape guard prevents arbitrary attribute injection
+      // (audit-trail poisoning). Limits create to the known SecurityEventType
+      // payload shape from `lib/core/services/security_events_service.dart`.
+      // TODO: bind timestamp to request.time after client switches from
+      // Timestamp.fromDate(client_clock) to FieldValue.serverTimestamp().
       match /securityEvents/{eventId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && request.resource.data.keys().hasOnly(
+            ['type', 'timestamp', 'deviceId', 'ipAddress', 'location', 'metadata']
+          )
+          && request.resource.data.type is string
+          && request.resource.data.type.size() <= 64;
         allow update, delete: if false; // Immutable audit log
       }
 
@@ -136,9 +146,26 @@ service cloud.firestore {
     }
 
     // User Profiles - LEGACY collection (kept for backwards compatibility)
+    // F-NEW-08: mirror the /users/{uid} affectedKeys exclusion so a write
+    // here cannot be used to flip role/isAdmin/account_type if any future
+    // code path reads /user_profiles/{uid} for those fields.
     match /user_profiles/{userId} {
       allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow create: if isOwner(userId) && !request.resource.data.keys().hasAny([
+          'accountStatus', 'trialStartDate', 'trialExpiresAt',
+          'statusChangedAt', 'statusChangedBy',
+          'account_type', 'admin_override_account_type',
+          'lifetime_license_granted_at', 'lifetime_license_granted_by',
+          'role', 'isAdmin'
+        ]);
+      allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'accountStatus', 'trialStartDate', 'trialExpiresAt',
+          'statusChangedAt', 'statusChangedBy',
+          'account_type', 'admin_override_account_type',
+          'lifetime_license_granted_at', 'lifetime_license_granted_by',
+          'role', 'isAdmin'
+        ]);
+      allow delete: if isOwner(userId);
     }
 
     // ========================================================================
@@ -326,27 +353,31 @@ service cloud.firestore {
     // ========================================================================
 
     // DEPRECATED: Top-level units
+    // F-NEW-07: lock create. Read kept for legacy migration tools; existing
+    // docs can still be updated/deleted by owner (cleanup path). New writes
+    // must go through the subcollection /properties/{p}/units/{u}.
     match /units/{unitId} {
       allow read: if true;
-      allow create: if canCreateAsOwner();
+      allow create: if false;
       allow update, delete: if isResourceOwner();
     }
 
     // DEPRECATED: Top-level bookings
-    // Same security rules as subcollection for consistency
+    // F-NEW-07: lock create. Subcollection /properties/{p}/units/{u}/bookings/{b}
+    // is the only valid write path. Read clause unchanged (T11-hotfix-partial,
+    // T11c history) — owner can still read own legacy docs.
     match /bookings/{bookingId} {
       allow read: if
         (isAuthenticated() && resource.data.owner_id == request.auth.uid);
-      // T11-hotfix-partial (2026-05-18): stripe_session_id + booking_reference public-read clauses removed.
-      // T11c (2026-05-22): unit_id + status public-read clause removed.
-      allow create: if canCreateAsOwner();
+      allow create: if false;
       allow update, delete: if isResourceOwner();
     }
 
     // DEPRECATED: Top-level daily_prices
+    // F-NEW-07: lock create. Subcollection path is the only valid write.
     match /daily_prices/{priceId} {
       allow read: if true;
-      allow create: if canCreateAsOwner();
+      allow create: if false;
       allow update, delete: if isResourceOwner();
     }
 

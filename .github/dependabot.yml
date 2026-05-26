@@ -42,6 +42,18 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Pin major versions of deps with known breaking-change scope.
+    # See audit/50 F-50-05a + #486 closure note: firebase-functions v7 changed
+    # `secrets: []` array semantics (bare strings rejected) across 14 call sites.
+    # TypeScript 6 breaks ts-jest compat. Unpin via PR once we schedule the
+    # dedicated migration session for each.
+    ignore:
+      - dependency-name: "firebase-functions"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "firebase-admin"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"

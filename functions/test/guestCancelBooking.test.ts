@@ -230,20 +230,24 @@ describe("PR #481: guestCancelBooking Connect Direct Charges refactor", () => {
   // ============================================================
   // CASE 1: Connect refund happy path
   // ============================================================
-  it("Case 1: refunds via Connect Direct Charges header on happy path", async () => {
+  it("Case 1: refunds Destination charge platform-scoped on happy path", async () => {
     setupMocks();
     const wrapped = wrap(guestCancelBooking);
 
     const result = await wrapped({data: validInvocation});
 
-    // Verify Stripe refund called with platform-key + stripeAccount header
+    // Verify Stripe refund called platform-scoped with reverse_transfer + idempotencyKey.
+    // audit/52 F-52-01 corrected the PR #481 mis-patch (Destination charge,
+    // not Direct charge — no stripeAccount header).
     expect(mockStripe.refunds.create).toHaveBeenCalledTimes(1);
     const [refundBody, refundOpts] = mockStripe.refunds.create.mock.calls[0];
 
     expect(refundBody.payment_intent).toBe(PI_ID);
     expect(refundBody.amount).toBe(10000); // 100€ * 100 cents
     expect(refundBody.reason).toBe("requested_by_customer");
-    expect(refundOpts).toEqual({stripeAccount: CONNECT_ACCT});
+    expect(refundBody.reverse_transfer).toBe(true);
+    expect(refundBody.metadata.connected_account).toBe(CONNECT_ACCT);
+    expect(refundOpts).toEqual({idempotencyKey: `refund-${BOOKING_ID}`});
 
     // Verify booking transitioned: cancelled + refund_status=processed
     const cancelUpdate = bookingUpdates.find((u) => u.status === "cancelled");
@@ -277,10 +281,11 @@ describe("PR #481: guestCancelBooking Connect Direct Charges refactor", () => {
 
     const result = await wrapped({data: validInvocation});
 
-    // Refund was attempted with correct shape
+    // Refund was attempted with correct shape (platform-scoped + idempotencyKey)
     expect(mockStripe.refunds.create).toHaveBeenCalledTimes(1);
-    const [, refundOpts] = mockStripe.refunds.create.mock.calls[0];
-    expect(refundOpts).toEqual({stripeAccount: CONNECT_ACCT});
+    const [refundBody, refundOpts] = mockStripe.refunds.create.mock.calls[0];
+    expect(refundBody.reverse_transfer).toBe(true);
+    expect(refundOpts).toEqual({idempotencyKey: `refund-${BOOKING_ID}`});
 
     // Booking went through transaction: status=cancelled + refund_status=pending_stripe
     const txnUpdate = bookingUpdates.find((u) => u.status === "cancelled");

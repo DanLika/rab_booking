@@ -1047,8 +1047,22 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
       const userDoc = usersSnapshot.docs[0];
       const userId = userDoc.id;
+      const userData = userDoc.data();
 
-      // Downgrade user to trial_expired (effectively revokes Pro access)
+      // Lifetime grant survives Stripe sub cancel. audit/52 F-52-02.
+      if (userData?.accountType === "lifetime") {
+        await userDoc.ref.update({
+          stripeSubscriptionStatus: "canceled",
+          stripeSubscriptionId: admin.firestore.FieldValue.delete(),
+          statusChangedAt: admin.firestore.FieldValue.serverTimestamp(),
+          statusChangedBy: "system_webhook",
+          statusChangeReason: "subscription_canceled_lifetime_user_unchanged",
+        });
+        logSuccess(`Lifetime user ${userId}: entitlement preserved`);
+        res.json({received: true, status: "lifetime_user_protected"});
+        return;
+      }
+
       await userDoc.ref.update({
         accountStatus: "trial_expired",
         stripeSubscriptionStatus: "canceled",

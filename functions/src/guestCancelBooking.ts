@@ -299,16 +299,8 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY", stripeSecr
     if (cancellationResult.refundStatus === "pending_stripe" &&
         cancellationResult.refundAmount > 0) {
       try {
-        // Refund via platform Stripe key + Connect account header (Direct Charges
-        // pattern, mirrors stripePayment.ts). Previously this read a per-property
-        // `stripe_config.secret_key` from the publicly-readable `widget_settings`
-        // doc — an exfiltration foothold that gave anonymous readers an owner's
-        // Stripe API secret. The secret_key field is no longer trusted; see
-        // `audit/migrations/41-scrub-widget-settings-secrets.js`.
-        // Single source of truth: users/{ownerId}.stripe_account_id (set during
-        // Connect onboarding in stripeConnect.ts:74, also read by stripePayment.ts).
-        // Avoid denormalized copies on widget_settings to prevent drift if the owner
-        // re-connects via Stripe dashboard.
+        // Destination refund: platform-scoped, reverse_transfer.
+        // See audit/52 F-52-01.
         const ownerId = booking.owner_id;
         let ownerStripeAccountId: string | undefined;
         if (ownerId) {
@@ -327,19 +319,20 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY", stripeSecr
             logError("Stripe payment intent ID missing", null, {bookingId});
             await bookingRef.update({refund_status: "failed"});
           } else {
-            // Direct Charges: refund executes on the connected account.
             const refund = await stripe.refunds.create(
               {
                 payment_intent: paymentIntentId,
                 amount: Math.round(cancellationResult.refundAmount * 100),
                 reason: "requested_by_customer",
+                reverse_transfer: true,
                 metadata: {
                   booking_id: bookingId,
                   booking_reference: bookingReference,
                   cancelled_by: "guest",
+                  connected_account: ownerStripeAccountId,
                 },
               },
-              {stripeAccount: ownerStripeAccountId}
+              {idempotencyKey: `refund-${bookingId}`}
             );
 
             stripeRefundId = refund.id;

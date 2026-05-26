@@ -90,12 +90,17 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
     if (!customerId) {
       // Create new customer
       logInfo(`Creating new Stripe customer for user ${userId}`);
-      const customer = await stripe.customers.create({
-        email: userEmail,
-        metadata: {
-          userId: userId,
+      const customer = await stripe.customers.create(
+        {
+          email: userEmail,
+          metadata: {
+            userId: userId,
+          },
         },
-      });
+        // SF-039: idempotencyKey scoped to userId. Network retry returns
+        // the same customer object instead of creating a duplicate.
+        {idempotencyKey: `customer-${userId}`}
+      );
       customerId = customer.id;
 
       // Save customer ID to user document
@@ -108,29 +113,37 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
     }
 
     // 4. Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
+    // SF-039: idempotencyKey on 1-hour bucket. Subscription checkout
+    // sessions expire in 24h; a bucket smaller than that prevents network
+    // retry from creating duplicate sessions but still allows the user to
+    // restart cleanly after the hour elapses.
+    const subCheckoutHourBucket = Math.floor(Date.now() / (60 * 60 * 1000));
+    const session = await stripe.checkout.sessions.create(
+      {
+        customer: customerId,
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: "subscription",
+        success_url: `${returnUrl}?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${returnUrl}?status=cancelled`,
+        client_reference_id: userId,
+        allow_promotion_codes: true,
+        subscription_data: {
+          metadata: {
+            userId: userId,
+          },
         },
-      ],
-      mode: "subscription",
-      success_url: `${returnUrl}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${returnUrl}?status=cancelled`,
-      client_reference_id: userId,
-      allow_promotion_codes: true,
-      subscription_data: {
         metadata: {
           userId: userId,
+          type: "subscription_upgrade",
         },
       },
-      metadata: {
-        userId: userId,
-        type: "subscription_upgrade",
-      },
-    });
+      {idempotencyKey: `sub-checkout-${userId}-${priceId}-${subCheckoutHourBucket}`}
+    );
 
     logSuccess(`Created subscription checkout session ${session.id} for user ${userId}`);
 
@@ -175,10 +188,17 @@ export const createCustomerPortalSession = onCall({secrets: [stripeSecretKey]}, 
       throw new HttpsError("failed-precondition", "No subscription account found.");
     }
 
-    const session = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: returnUrl || "https://app.bookbed.io/owner/subscription",
-    });
+    // SF-039: idempotencyKey on 1-minute bucket. Portal sessions are
+    // short-lived; bucket prevents network-retry duplicates without
+    // making "open billing portal" a no-op for long.
+    const portalMinuteBucket = Math.floor(Date.now() / 60000);
+    const session = await stripe.billingPortal.sessions.create(
+      {
+        customer: customerId,
+        return_url: returnUrl || "https://app.bookbed.io/owner/subscription",
+      },
+      {idempotencyKey: `portal-${userId}-${portalMinuteBucket}`}
+    );
 
     logSuccess(`Created customer portal session for user ${userId}`);
 

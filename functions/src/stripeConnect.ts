@@ -72,20 +72,27 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
     if (!stripeAccountId) {
       logInfo(`Creating new Stripe Express account for owner ${ownerId}`);
 
-      const account = await getStripeClient().accounts.create({
-        type: "express",
-        country: "HR", // Croatia
-        email: ownerData.email || undefined,
-        capabilities: {
-          card_payments: {requested: true},
-          transfers: {requested: true},
+      const account = await getStripeClient().accounts.create(
+        {
+          type: "express",
+          country: "HR", // Croatia
+          email: ownerData.email || undefined,
+          capabilities: {
+            card_payments: {requested: true},
+            transfers: {requested: true},
+          },
+          business_type: "individual",
+          metadata: {
+            owner_id: ownerId,
+            platform: "bookbed",
+          },
         },
-        business_type: "individual",
-        metadata: {
-          owner_id: ownerId,
-          platform: "bookbed",
-        },
-      });
+        // SF-039: idempotencyKey scoped to owner. Network retry of a
+        // submitted accounts.create returns the SAME account instead of
+        // creating a duplicate Express account and triggering a second
+        // KYC flow.
+        {idempotencyKey: `connect-account-${ownerId}`}
+      );
 
       stripeAccountId = account.id;
 
@@ -99,12 +106,20 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
     }
 
     // Create account link for onboarding or re-onboarding
-    const accountLink = await getStripeClient().accountLinks.create({
-      account: stripeAccountId,
-      refresh_url: refreshUrl || returnUrl,
-      return_url: returnUrl,
-      type: "account_onboarding",
-    });
+    // SF-039: idempotencyKey on a 1-minute bucket. Stripe account links are
+    // short-lived (~minutes) — a true idempotent key would return a stale
+    // link on legitimate re-invocation. Bucket per minute covers network
+    // retry of the same request without making "re-onboard" a no-op.
+    const minuteBucket = Math.floor(Date.now() / 60000);
+    const accountLink = await getStripeClient().accountLinks.create(
+      {
+        account: stripeAccountId,
+        refresh_url: refreshUrl || returnUrl,
+        return_url: returnUrl,
+        type: "account_onboarding",
+      },
+      {idempotencyKey: `account-link-${stripeAccountId}-${minuteBucket}`}
+    );
 
     return {
       success: true,

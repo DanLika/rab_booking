@@ -25,7 +25,8 @@
             "public": "build/web_owner",
             "ignore": [
                 "firebase.json",
-                "**/node_modules/**"
+                "**/node_modules/**",
+                "**/*.map"
             ],
             "rewrites": [
                 {
@@ -68,7 +69,8 @@
             "ignore": [
                 "firebase.json",
                 "**/.*",
-                "**/node_modules/**"
+                "**/node_modules/**",
+                "**/*.map"
             ],
             "rewrites": [
                 {
@@ -116,7 +118,8 @@
             "ignore": [
                 "firebase.json",
                 "**/.*",
-                "**/node_modules/**"
+                "**/node_modules/**",
+                "**/*.map"
             ],
             "rewrites": [
                 {

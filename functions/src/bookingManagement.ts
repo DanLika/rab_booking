@@ -377,7 +377,13 @@ export const onBookingStatusChange = onDocumentUpdated(
             after.guest_email || ""
           );
 
-          logSuccess("Booking approval email sent to guest", {email: after.guest_email});
+          // PII redaction: truncate guest email in logs (matches pattern in
+          // authRateLimit.ts / emailVerification.ts). Full email available in
+          // emails_sent.approval doc below — Cloud Logging needs only correlation.
+          logSuccess("Booking approval email sent to guest", {
+            emailRedacted: after.guest_email ?
+              `${(after.guest_email as string).substring(0, 3)}***` : "unknown",
+          });
 
           // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
           await event.data?.after.ref.update({
@@ -439,7 +445,11 @@ export const onBookingStatusChange = onDocumentUpdated(
             after.guest_email || ""
           );
 
-          logSuccess("Booking rejection email sent to guest", {email: after.guest_email});
+          // PII redaction: truncate guest email in logs (see approval branch).
+          logSuccess("Booking rejection email sent to guest", {
+            emailRedacted: after.guest_email ?
+              `${(after.guest_email as string).substring(0, 3)}***` : "unknown",
+          });
 
           // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
           await event.data?.after.ref.update({

@@ -136,4 +136,17 @@ describe("logger F-50-04 v2 — stack scrub + entryFromArgs bypass", () => {
     expect(payload.message).toBe("real message");
     expect(payload.userId).toBe("u1");
   });
+
+  test("rejects logData.severity override — output severity=ERROR even if logData provides 'INFO'", () => {
+    // Advisor flag (PR #495 v2 review): if `severity` were placed BEFORE
+    // ...logData spread, a caller's data object containing `severity: "INFO"`
+    // would silently downgrade the log. Verify our fix (severity last) holds.
+    logError("real error", null, {severity: "INFO", userId: "u1"});
+
+    expect(writeMock).toHaveBeenCalledTimes(1);
+    const payload = writeMock.mock.calls[0][0];
+    expect(payload.severity).toBe("ERROR");
+    expect(payload.message).toBe("real error");
+    expect(payload.userId).toBe("u1");
+  });
 });

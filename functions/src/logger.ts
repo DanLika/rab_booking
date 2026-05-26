@@ -138,12 +138,15 @@ export class Logger {
     // F-50-04 v2: use logger.write() to bypass firebase-functions entryFromArgs,
     // which synthesizes `new Error(msg).stack` into jsonPayload.message when
     // severity === "ERROR" and no Error instance is in args. write() writes the
-    // LogEntry verbatim — message stays a plain string. `message` is placed last
-    // so an explicit value always wins over any stray `message` key in logData.
+    // LogEntry verbatim — message stays a plain string.
+    //
+    // Order matters: `severity` is placed LAST so a stray `severity` key in
+    // logData (e.g., from a caller's structured-data object) cannot downgrade
+    // this ERROR log to INFO/WARN. Advisor flag from PR #495 v2 review.
     if (Object.keys(logData).length > 0) {
-      functions.logger.write({severity: "ERROR", ...logData, message});
+      functions.logger.write({...logData, message, severity: "ERROR"});
     } else {
-      functions.logger.write({severity: "ERROR", message});
+      functions.logger.write({message, severity: "ERROR"});
     }
 
     // Send to Sentry only when a real exception is available. Bare-string

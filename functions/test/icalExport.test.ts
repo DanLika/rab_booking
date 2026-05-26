@@ -1,4 +1,16 @@
 // Mock dependencies inside factory
+//
+// SF-024 hash migration (b79983d8): icalExport.ts now reads a peppered SHA-256
+// hash from widget_secrets/{unitId}.ical_export_token_hash and verifies the
+// client-supplied token against it. The pepper is provisioned via Functions
+// secrets (firebase-functions/params.defineSecret). Tests below mock the
+// secret to a fixed value so we can pre-compute the hash deterministically.
+jest.mock("firebase-functions/params", () => ({
+  defineSecret: jest.fn(() => ({
+    value: () => "test-pepper-value",
+  })),
+}));
+
 jest.mock("../src/firebase", () => {
   const mockFirestoreInstance = {
     collection: jest.fn().mockReturnThis(),
@@ -55,9 +67,18 @@ jest.mock("../src/utils/rateLimit", () => ({
   checkRateLimit: jest.fn().mockReturnValue(true),
 }));
 
+import * as crypto from "crypto";
 import { getUnitIcalFeed } from "../src/icalExport";
 import { checkRateLimit } from "../src/utils/rateLimit";
 import { db } from "../src/firebase";
+
+// Matches the literal in the firebase-functions/params mock above.
+const TEST_PEPPER = "test-pepper-value";
+
+/** Compute the peppered SHA-256 hash exactly as icalExport.ts does. */
+function hashToken(token: string, pepper: string = TEST_PEPPER): string {
+  return crypto.createHash("sha256").update(`${token}${pepper}`, "utf8").digest("hex");
+}
 
 describe("iCal Export Endpoint", () => {
   let req: any;
@@ -141,7 +162,13 @@ describe("iCal Export Endpoint", () => {
       exists: true,
       data: () => ({ ical_export_enabled: false }),
     });
-    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_secrets
+    // widget_secrets must exist so the missing-migration 403 doesn't preempt
+    // the export-disabled 403. Hash content is irrelevant — export-disabled
+    // check at line 194 fires BEFORE the token-hash check at line 201.
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ ical_export_token_hash: hashToken("valid-token") }),
+    });
 
     await getUnitIcalFeed(req, res);
 
@@ -194,13 +221,17 @@ describe("iCal Export Endpoint", () => {
       exists: true,
       data: () => ({
         ical_export_enabled: true,
-        ical_export_token: "valid-token",
         ical_cache_content: "cached-ical",
         ical_cache_generated_at: { toDate: () => new Date() }, // fresh
         ical_cache_etag: '"etag-123"',
       }),
     });
-    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_secrets
+    // SF-024 hash migration: widget_secrets holds the peppered SHA-256 hash
+    // of the URL-supplied token (no plain-token fallback).
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ ical_export_token_hash: hashToken("valid-token") }),
+    });
 
     req.headers["if-none-match"] = '"etag-123"';
 
@@ -214,13 +245,15 @@ describe("iCal Export Endpoint", () => {
       exists: true,
       data: () => ({
         ical_export_enabled: true,
-        ical_export_token: "valid-token",
         ical_cache_content: "cached-ical",
         ical_cache_generated_at: { toDate: () => new Date() }, // fresh
         ical_cache_etag: '"etag-123"',
       }),
     });
-    mockDb.get.mockResolvedValueOnce({ exists: false }); // widget_secrets
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ ical_export_token_hash: hashToken("valid-token") }),
+    });
 
     await getUnitIcalFeed(req, res);
 
@@ -234,13 +267,15 @@ describe("iCal Export Endpoint", () => {
       exists: true,
       data: () => ({
         ical_export_enabled: true,
-        ical_export_token: "valid-token",
       }),
       ref: { update: jest.fn() },
     });
 
-    // 1b. Widget Secrets (SF-021 dual-read; fall back to widget_settings token)
-    mockDb.get.mockResolvedValueOnce({ exists: false });
+    // 1b. Widget Secrets (SF-024 hash migration — peppered SHA-256 only)
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ ical_export_token_hash: hashToken("valid-token") }),
+    });
 
     // 2. Unit Doc
     mockDb.get.mockResolvedValueOnce({
@@ -286,15 +321,17 @@ describe("iCal Export Endpoint", () => {
       exists: true,
       data: () => ({
         ical_export_enabled: true,
-        ical_export_token: "valid-token",
         ical_cache_content: "cached-ical", // Should ignore cache
         ical_cache_generated_at: { toDate: () => new Date() },
       }),
       ref: { update: jest.fn() },
     });
 
-    // 1b. Widget Secrets (SF-021 dual-read)
-    mockDb.get.mockResolvedValueOnce({ exists: false });
+    // 1b. Widget Secrets (SF-024 hash migration — peppered SHA-256 only)
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ ical_export_token_hash: hashToken("valid-token") }),
+    });
 
     // 2. Unit Doc
     mockDb.get.mockResolvedValueOnce({

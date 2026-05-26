@@ -18,7 +18,7 @@ Priority order matches audit/50 § "Suggested fix order". Single-best-move first
 ### CRITICAL (3) — anon-exploitable or money path
 
 - **F-50-01** — Subscription `priceId` allow-list bypass. 🚧 **PR #481 in flight (CI green, awaiting smoke + merge — see audit/51 addendum)**. Originally tracked under PR #462 / audit/38 env prereq. Effort: blocked on operator smoke matrix per PR #481 body.
-- **F-50-02** — `loginAttempts` collection wide-open (firestore.rules:386). Anon lockout DoS + email enumeration. Fix: either CF migration (best) or strict `affectedKeys().hasOnly([...])` mutation guard. Effort: S/M.
+- **F-50-02** — ✅ **CLOSED** via SF-050 in PR #517 (`fix/f-50-02-login-attempts-server-side`). CF migration shipped: 3 new callables in `functions/src/loginLockout.ts` (`recordLoginFailure`, `getLoginLockoutStatus`, `clearLoginAttempts`) in eu-west1, IP-rate-limited; firestore.rules `loginAttempts/{email}` locked to `read, write: if false`; `lib/core/services/rate_limit_service.dart` refactored to call CFs (public API preserved). **Deploy ordering: CFs FIRST, then rule + client** — see PR body. **Residual risk:** distributed botnet can still bump victim's counter via many IPs; full closure on App Check rollout below. **Follow-up PR:** reorder `_rateLimit.resetAttempts(email)` in `enhanced_auth_provider.dart:722` from pre-auth to post-`signInWithEmailAndPassword` (auto-reset on read after 1h is the current safety net).
 - **F-50-03** — Stripe webhook lacks `event.id` dedup (functions/src/stripePayment.ts:887–901). Money path — duplicate-send risk on Stripe network retries. **Prereq:** scan Stripe Dashboard → Events tab for `id` duplicate pairs in last 7 days to size historical exposure. Fix: `stripe_webhook_events` Firestore dedup table + TTL policy. Effort: M.
 
 ### HIGH (2) — quick wins
@@ -28,7 +28,7 @@ Priority order matches audit/50 § "Suggested fix order". Single-best-move first
 
 ### MEDIUM (6) — defense-in-depth
 
-- **F-50-05** — App Check: 🚧 **partial via SF-046** (audit-only mode shipped on `getUnitAvailability` + `createStripeCheckoutSession` in security-sprint PR). Full enforcement deferred until F-50-02 ships AND `RECAPTCHA_SITE_KEY` provisioned + Flutter/web client App Check init lands. See "App Check launch checklist" section below. Effort remaining: L.
+- **F-50-05** — App Check: 🚧 **partial via SF-046** (audit-only mode shipped on `getUnitAvailability` + `createStripeCheckoutSession` in security-sprint PR). F-50-02 prereq now MET (closed via PR #517 SF-050). Remaining blockers: `RECAPTCHA_SITE_KEY` provisioning + Flutter/web client App Check init. See "App Check launch checklist" section below — this is now the next critical-path item to close F-50-02 residual DoS risk. Effort remaining: L.
 - **F-50-05b** — Owner + admin sites ship no `Content-Security-Policy` header. Fix: prereq remove `web/index.html:669` eval (F-50-10), then add `Content-Security-Policy-Report-Only` first → 1 week clean Sentry → promote to enforcing. Effort: M.
 - **F-50-06** — Missing HSTS on all 3 hosting sites (firebase.json).
 - **F-50-07** — Missing `Permissions-Policy` on all 3 sites.

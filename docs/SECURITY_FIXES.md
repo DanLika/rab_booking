@@ -3238,3 +3238,168 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 **Fix:** `checkRateLimit(\`delete_account:${userId}\`, 1, 300)` — 1 call per 5 minutes per uid. Throws `resource-exhausted` on re-entry.
 
 **Files:** `functions/src/deleteUserAccount.ts:52-65`
+
+---
+
+## SF-049: bookbed-dev Stripe webhook silently broken — placeholder signing secret + dead endpoint URL (DEV-ONLY)
+
+**Datum:** 2026-05-26
+**Prioritet:** HIGH (dev-only blast radius, no PROD exposure — but masks every webhook-driven smoke for 5 months)
+**Status:** ✅ Fixed in audit/52 smoke run (this commit)
+**Audit:** discovered during PR #508/#512 verification smoke
+
+### Problem
+
+`bookbed-dev` Secret Manager value for `STRIPE_WEBHOOK_SECRET` was the literal string `whsec_PLACEHOLDER` (length 27), created 2026-01-04 and never replaced. Stripe webhook signing secrets are `whsec_<38 chars>` format. Every webhook signature verification by `handleStripeWebhook` therefore failed at boundary check — `Webhook signature verification failed` ERROR + `[Security:CRITICAL] webhook_signature_failed` WARNING.
+
+Compounding: the configured webhook endpoint in Stripe test mode dashboard (`we_1SZsUpBomKO7vDr0yAHtRd51`) had been pointing at a stale Cloud Run URL `https://handlestripewebhook-e2afn4c6mq-uc.a.run.app` (no longer resolvable — service ID changed in some prior deploy). It also listed only `checkout.session.completed` in `enabled_events`, omitting 4 other event types the handler supports.
+
+Net effect on `bookbed-dev` for ~5 months (2026-01-04 → 2026-05-26):
+- Stripe test-mode webhook deliveries failed at network layer (DNS) — function never invoked, so 180-day log scan shows **0 signature errors** (deceptive false-clean signal).
+- `checkout.session.completed` → bookings never marked `payment_status=paid` via webhook path.
+- `customer.subscription.deleted` → F-52-02 lifetime guard never exercised in dev.
+- `charge.refunded` → refund completion side-effects never recorded.
+- `invoice.paid` → subscription renewal persistence skipped.
+- `checkout.session.expired` → expired pending bookings never cleaned via webhook (`autoCancelExpiredBookings` scheduled job still ran).
+
+PROD (`rab-booking-248fc`) and `bookbed-staging` are clean: both have real `whsec_*` 38-char secrets and webhook endpoints at current `handlestripewebhook-*` URLs (verified read-only during audit/52). Subnote: PROD + staging share an identical secret prefix `whsec_ozbvZ0...`, suggesting the same webhook secret is reused across both envs — an isolation gap worth a separate audit but not P0.
+
+### Fix
+
+1. Deleted stale endpoint `we_1SZsUpBomKO7vDr0yAHtRd51`.
+2. Created new endpoint at current Cloud Run URL with all 5 supported events:
+   - URL: `https://handlestripewebhook-whc46z5xxq-uc.a.run.app`
+   - Events: `checkout.session.completed`, `customer.subscription.deleted`, `charge.refunded`, `invoice.paid`, `checkout.session.expired`
+3. Captured returned `whsec_*` from create response, added as new version (v2) to `bookbed-dev` Secret Manager `STRIPE_WEBHOOK_SECRET`.
+4. Force-redeployed `handleStripeWebhook` so the new secret version is bound (Cloud Functions v2 instance cache holds prior value until cold start).
+5. Verified end-to-end via Scenario D (F-52-02 lifetime guard) — webhook delivered, signature validated, guard executed.
+
+### Detection
+
+Why this was missed for 5 months:
+- The dead webhook URL meant ZERO requests reached the function. Zero log signal. Smokes that asserted "webhook-driven status mutation occurred" silently passed because nothing changed AND nothing erred. False confidence in dev parity with PROD.
+- Smoke campaigns assumed the dev Stripe pipeline was wired; placeholder strings in SM look like real ones at a glance (`whsec_PLACEHOLDER` starts with `whsec_`).
+
+How it was caught now (audit/52 smoke 2026-05-26):
+- Scenario D forced a real subscription-cancel → webhook trigger
+- Inspected `pending_webhooks` field on the Stripe `Event` resource → showed delivery was pending (would have stayed pending until 3-day max-retry expiry)
+- Cloud Run service logs for `handlestripewebhook` revealed 3 consecutive `Webhook signature verification failed` after URL was fixed (still pre-secret-fix)
+- Inspected SM value prefix → `whsec_PLACEH...` 27 chars → smoking gun
+
+### Pre-smoke checklist (NEW — apply BEFORE next smoke campaign)
+
+Run this sanity scan on every env before any Stripe webhook–driven smoke or operator E2E test:
+
+```bash
+# CI-compatible (CLI access). For agent envs with SM CLI blocked, use REST + ADC equivalent.
+for project in bookbed-dev rab-booking-248fc bookbed-staging; do
+  echo "=== $project ==="
+  gcloud secrets list --project="$project" --format='value(name)' 2>/dev/null | while read s; do
+    val=$(gcloud secrets versions access latest --secret="$s" --project="$project" 2>/dev/null)
+    case "$val" in
+      *PLACEH*|*REPLACE_WITH*|*REPLACE_ME*|*TODO*|*CHANGE_ME*|*YOUR_*|*"<"*|"")
+        echo "BAD: $s (placeholder or empty)"
+        ;;
+    esac
+    [[ ${#val} -lt 16 ]] && echo "BAD: $s (suspiciously short, len=${#val})"
+  done
+
+  # Stripe-specific: verify webhook endpoint URL matches deployed CF + has all 5 events
+  if [[ -n "${STRIPE_TEST_SK_FOR_${project//-/_}:-}" ]]; then
+    sk="${STRIPE_TEST_SK_FOR_${project//-/_}}"
+    cf_url=$(gcloud functions describe handleStripeWebhook --region=us-central1 --project="$project" --format='value(serviceConfig.uri)' 2>/dev/null)
+    curl -s "https://api.stripe.com/v1/webhook_endpoints" -u "$sk:" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for ep in data.get('data', []):
+    print(f\"  endpoint={ep['id']} url={ep['url']} events={len(ep.get('enabled_events', []))} status={ep['status']}\")
+"
+    echo "  CF runtime URL: $cf_url"
+  fi
+done
+```
+
+Expected output: zero `BAD:` lines; for Stripe-enabled envs, every endpoint URL must match the current CF runtime URL exactly; events count >= 5.
+
+### Detection automation (FUTURE — separate PR)
+
+This class of failure is "external state silently drifts away from internal state". Two automation paths:
+
+1. **CI hook (cheap)**: Add `tool/pre-smoke-sanity.sh` invoked from `.github/workflows/ci.yml` (or `tool/deploy-dev.sh`) running the checklist above. Exit non-zero on any `BAD:` line — block smoke until secrets are real.
+
+2. **Scheduled CF (durable)**: New `secretSanityScan` scheduled function (daily) iterates `Secrets.listSecrets()`, accesses latest version, regex-matches placeholder shapes, alerts on flag. Same logic for webhook endpoint drift (compare configured URL to `gcloud functions describe`).
+
+Both also catch related issues: `ALLOWED_SUBSCRIPTION_PRICE_IDS` placeholder (audit/38), future hardcoded-token regressions, dev/staging env drift.
+
+### Files
+
+- bookbed-dev SM (REST PATCH): `STRIPE_WEBHOOK_SECRET` v2 added.
+- Stripe test mode (acct_1SIsGkBomKO7vDr0): endpoint `we_1SZsUpBomKO7vDr0yAHtRd51` deleted, new endpoint `we_1TbQwwBomKO7vDr0ZfB9tbig` created.
+- CF redeployed: `handleStripeWebhook` (us-central1) `2026-05-26T19:48Z` (after secret rotation).
+
+Related: audit/52, SF-038 (webhook event dedup — same handler), `memory/bookbed-dev-stripe-webhook-secret-placeholder.md`, `memory/pr462-env-prereq.md` (same placeholder class on `ALLOWED_SUBSCRIPTION_PRICE_IDS`).
+
+---
+
+## SF-050: loginAttempts lockout moved server-side (F-50-02 CLOSED)
+
+**Datum:** 2026-05-26
+**Prioritet:** CRITICAL
+**Status:** ✅ Fixed via PR #517 (`fix/f-50-02-login-attempts-server-side`)
+**Audit:** audit/50 F-50-02
+
+### Vector
+
+Pre-fix, `firestore.rules:403-407` allowed any anonymous caller to write `loginAttempts/{email}` documents:
+
+```firestore-rules
+match /loginAttempts/{email} {
+  allow get, create, update: if true;   // ❌ anon-exploitable
+  allow list, delete: if false;
+}
+```
+
+Concrete attack: `firestore().collection('loginAttempts').doc('victim@example.com').set({attemptCount: 99, lockedUntil: Timestamp.fromDate(new Date(2030,0,1))})` locks the victim out for 5+ years with no client-exposed recovery surface. Pre-auth account-lockout DoS on any known email.
+
+### Fix
+
+1. **`firestore.rules`** — `loginAttempts/{email}` tightened to `allow read, write: if false`.
+2. **`functions/src/loginLockout.ts`** (NEW, eu-west1, ~260 LOC):
+   - `recordLoginFailure(email)` — unauth, IP-rate-limited (1 call / 60s per IP), transactional increment, locks at MAX_ATTEMPTS=5 for 15min, auto-resets after 1h inactivity.
+   - `getLoginLockoutStatus(email)` — unauth, IP-rate-limited (30 / 5min per IP), returns `{locked, attemptCount, lockedUntilMs, remainingAttempts}`.
+   - `clearLoginAttempts(email)` — **AUTH REQUIRED**, verifies `request.auth.token.email` matches the sanitized email arg before delete. Prevents a logged-in user from clearing another email's attempts.
+   - All writes via Admin SDK (rules bypass).
+   - Storage layout preserved (`loginAttempts/{sanitized_email}`) — server-side migration only.
+3. **`functions/src/index.ts`** — exports the 3 new CFs.
+4. **`lib/core/services/rate_limit_service.dart`** — public API preserved (`checkRateLimit`, `recordFailedAttempt`, `resetAttempts`, `getRateLimitMessage`); implementations now call CFs via `FirebaseFunctions.instanceFor(region: 'europe-west1')`. Constructor changed from `{FirebaseFirestore? firestore}` to `{FirebaseFunctions? functions}` — only one caller (`enhanced_auth_provider.dart:2261`) uses default args, no other migration needed. Memory cache preserved for locked-state short-circuit. Fail-open on CF errors (CF outage doesn't lock all users out; IP-based `checkLoginRateLimit` remains independent fallback).
+
+### Residual risk
+
+A **distributed** attacker (botnet) can still bump victim's counter via many IPs — IP rate limit bounds per-IP rate, not aggregate. Botnet acquisition cost makes this expensive per victim, but not impossible. Full closure requires App Check enforcement (gated on `RECAPTCHA_SITE_KEY` provisioning + Flutter/web client App Check init per `docs/TODO.md` "App Check launch checklist", deferred).
+
+### Deploy ordering (CRITICAL)
+
+CFs **MUST** deploy BEFORE the rule change + client, otherwise live auth flow breaks (rule locks Firestore but CFs not yet present to handle the redirect):
+
+```bash
+firebase deploy --only \
+  functions:recordLoginFailure,functions:getLoginLockoutStatus,functions:clearLoginAttempts \
+  --project bookbed-dev
+
+firebase deploy --only firestore:rules --project bookbed-dev
+```
+
+After dev verification, repeat for `rab-booking-248fc`.
+
+### Files
+
+- `functions/src/loginLockout.ts` (NEW)
+- `functions/src/index.ts` (export added)
+- `firestore.rules` (loginAttempts/{email} locked)
+- `lib/core/services/rate_limit_service.dart` (refactored to call CFs)
+
+### Follow-up TODO
+
+`enhanced_auth_provider.dart:722` calls `_rateLimit.resetAttempts(email)` pre-Firebase-Auth-signIn — the new `clearLoginAttempts` CF throws `unauthenticated` there (caught + swallowed). Auto-reset on read after 1h inactivity is the safety net; reorder to post-signIn is a separate small PR.
+
+Related: SF-046 (App Check audit-only — full enforcement closes the residual distributed-DoS risk), audit/50 F-50-02, `docs/TODO.md` "App Check launch checklist".

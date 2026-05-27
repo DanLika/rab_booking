@@ -385,3 +385,91 @@ describe("iCal Sync Functions", () => {
     });
   });
 });
+
+/**
+ * SF-vibe57 M-11 — Hex IPv4-mapped IPv6 SSRF bypass coverage.
+ *
+ * `dns.lookup` may return IPv4-mapped IPv6 in either dotted
+ * (`::ffff:169.254.169.254`) OR hex (`::ffff:a9fe:a9fe`) form depending on
+ * resolver + `verbatim` flag. Pre-fix the validator only matched dotted;
+ * hex slipped through to `net.isIPv6` (returns false from the private
+ * matchers → `isPrivateOrUnsafeIp` returned false → SSRF reach).
+ *
+ * Cases below pin both: existing dotted branch still catches metadata IPs,
+ * AND new hex branch catches the same IPs in hex form + edge ranges
+ * (0.0.0.0, 255.255.255.255, mixed case, non-IPv4-mapped IPv6 pass-through).
+ */
+import { isPrivateOrUnsafeIp } from "../src/icalSync";
+
+describe("isPrivateOrUnsafeIp — SF-vibe57 M-11 hex IPv4-mapped IPv6", () => {
+  // Existing dotted branch (regression guard)
+  it("dotted IPv4-mapped IPv6 metadata IP → blocked", () => {
+    expect(isPrivateOrUnsafeIp("::ffff:169.254.169.254")).toBe(true);
+  });
+
+  // M-11 new branch
+  it("hex IPv4-mapped IPv6 metadata IP (lowercase) → blocked", () => {
+    expect(isPrivateOrUnsafeIp("::ffff:a9fe:a9fe")).toBe(true);
+  });
+
+  it("hex IPv4-mapped IPv6 metadata IP (uppercase) → blocked", () => {
+    expect(isPrivateOrUnsafeIp("::FFFF:A9FE:A9FE")).toBe(true);
+  });
+
+  it("hex IPv4-mapped IPv6 loopback (::ffff:7f00:1) → blocked", () => {
+    expect(isPrivateOrUnsafeIp("::ffff:7f00:1")).toBe(true);
+  });
+
+  it("hex IPv4-mapped IPv6 0.0.0.0 (::ffff:0:0) → blocked", () => {
+    expect(isPrivateOrUnsafeIp("::ffff:0:0")).toBe(true);
+  });
+
+  it("hex IPv4-mapped IPv6 RFC1918 10.0.0.1 (::ffff:a00:1) → blocked", () => {
+    expect(isPrivateOrUnsafeIp("::ffff:a00:1")).toBe(true);
+  });
+
+  it("hex IPv4-mapped IPv6 broadcast 255.255.255.255 (::ffff:ffff:ffff) → blocked", () => {
+    expect(isPrivateOrUnsafeIp("::ffff:ffff:ffff")).toBe(true);
+  });
+
+  it("hex IPv4-mapped IPv6 public IP 8.8.8.8 (::ffff:808:808) → allowed", () => {
+    expect(isPrivateOrUnsafeIp("::ffff:808:808")).toBe(false);
+  });
+
+  // Boundary: regex MUST NOT match generic IPv6 that happens to share
+  // the ::ffff prefix without the 2-group structure
+  it("generic IPv6 ::ffff:a:b:c:d → NOT matched by hex regex, falls to IPv6 path", () => {
+    // Not IPv4-mapped (4 hex groups after ::ffff is unusual but valid IPv6);
+    // regex requires exactly 2 groups after ::ffff. Falls to net.isIPv6 path
+    // which returns false (not a private prefix). Acceptable — DNS lookup
+    // downstream still validates.
+    expect(isPrivateOrUnsafeIp("::ffff:a:b:c:d")).toBe(false);
+  });
+
+  it("invalid hex (out-of-range chars) → NOT matched, falls through", () => {
+    // 'gggg' has chars outside [0-9a-f]; regex requires [0-9a-f]{1,4}.
+    expect(isPrivateOrUnsafeIp("::ffff:gggg:1")).toBe(false);
+  });
+
+  // Existing IPv4 + IPv6 paths (regression guards — confirm M-11 didn't
+  // break adjacent branches)
+  it("plain IPv4 RFC1918 10.0.0.1 → blocked", () => {
+    expect(isPrivateOrUnsafeIp("10.0.0.1")).toBe(true);
+  });
+
+  it("plain IPv4 public 8.8.8.8 → allowed", () => {
+    expect(isPrivateOrUnsafeIp("8.8.8.8")).toBe(false);
+  });
+
+  it("IPv6 loopback ::1 → blocked", () => {
+    expect(isPrivateOrUnsafeIp("::1")).toBe(true);
+  });
+
+  it("IPv6 ULA fd00::1 → blocked", () => {
+    expect(isPrivateOrUnsafeIp("fd00::1")).toBe(true);
+  });
+
+  it("empty string → blocked (fail-closed)", () => {
+    expect(isPrivateOrUnsafeIp("")).toBe(true);
+  });
+});

@@ -30,8 +30,13 @@ import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
  *      and fetch.
  */
 
-/** RFC1918 + loopback + link-local + multicast + IPv4-mapped-IPv6 + IPv6 ULA. */
-function isPrivateOrUnsafeIp(ip: string): boolean {
+/**
+ * RFC1918 + loopback + link-local + multicast + IPv4-mapped-IPv6 + IPv6 ULA.
+ *
+ * Exported for unit-test coverage of the SF-vibe57 M-11 hex IPv4-mapped IPv6
+ * branch; not part of the public CF surface.
+ */
+export function isPrivateOrUnsafeIp(ip: string): boolean {
   if (!ip) return true;
 
   // IPv4-mapped IPv6: ::ffff:a.b.c.d → strip prefix, check as IPv4.

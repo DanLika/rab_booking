@@ -92,6 +92,10 @@ export * from "./smsService";
 // Export authentication rate limiting (IP-based)
 export * from "./authRateLimit";
 
+// F-50-02: server-side email-based login lockout
+// (replaces client direct-write to loginAttempts collection)
+export * from "./loginLockout";
+
 // Export password history management
 export * from "./passwordHistory";
 

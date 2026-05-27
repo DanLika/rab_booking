@@ -63,14 +63,26 @@ service cloud.firestore {
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by',
-          'role', 'isAdmin'
+          'role', 'isAdmin',
+          // SF-vibe57 H-01: Stripe linkage fields are server-managed (Admin SDK
+          // writes in stripeConnect/stripePayment/stripeSubscription). Allowing
+          // client writes lets user squat victim's stripeSubscriptionId →
+          // customer.subscription.deleted webhook downgrades wrong UID.
+          'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
+          'stripeSubscriptionId', 'stripeCustomerId'
         ])) || isAdmin() || isAdminFromFirestore();
       allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'accountStatus', 'trialStartDate', 'trialExpiresAt',
           'statusChangedAt', 'statusChangedBy',
           'account_type', 'admin_override_account_type',
           'lifetime_license_granted_at', 'lifetime_license_granted_by',
-          'role', 'isAdmin'
+          'role', 'isAdmin',
+          // SF-vibe57 H-01: Stripe linkage fields are server-managed (Admin SDK
+          // writes in stripeConnect/stripePayment/stripeSubscription). Allowing
+          // client writes lets user squat victim's stripeSubscriptionId →
+          // customer.subscription.deleted webhook downgrades wrong UID.
+          'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
+          'stripeSubscriptionId', 'stripeCustomerId'
         ])) || isAdmin() || isAdminFromFirestore();
       allow delete: if isAdmin() || isAdminFromFirestore(); // Users cannot delete themselves directly, must use Cloud Function
 
@@ -83,14 +95,20 @@ service cloud.firestore {
             'statusChangedAt', 'statusChangedBy',
             'account_type', 'admin_override_account_type',
             'lifetime_license_granted_at', 'lifetime_license_granted_by',
-            'role', 'isAdmin'
+            'role', 'isAdmin',
+            // SF-vibe57 H-01: same deny-list as parent users/{uid} doc.
+            'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
+            'stripeSubscriptionId', 'stripeCustomerId'
           ])) || isAdmin();
         allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
             'accountStatus', 'trialStartDate', 'trialExpiresAt',
             'statusChangedAt', 'statusChangedBy',
             'account_type', 'admin_override_account_type',
             'lifetime_license_granted_at', 'lifetime_license_granted_by',
-            'role', 'isAdmin'
+            'role', 'isAdmin',
+            // SF-vibe57 H-01: same deny-list as parent users/{uid} doc.
+            'stripe_account_id', 'stripe_customer_id', 'stripe_connected_at',
+            'stripeSubscriptionId', 'stripeCustomerId'
           ])) || isAdmin();
         allow delete: if isOwner(userId) || isAdmin();
       }
@@ -467,8 +485,13 @@ service cloud.firestore {
     // App config - version control and force update settings
     // Read-only for authenticated users (mobile apps fetch version)
     // Only Cloud Functions can write (via Admin SDK)
+    // SF-vibe57 M-05: bound platform IDs so a future doc at
+    // app_config/internal_keys (or any non-platform id) cannot be enumerated
+    // by any authed user. Read still open to authenticated mobile clients for
+    // the 3 canonical platform docs only.
     match /app_config/{platform} {
-      allow read: if isAuthenticated(); // Any authenticated user can check version
+      allow read: if isAuthenticated()
+        && platform in ['android', 'ios', 'web'];
       allow write: if false; // Only Cloud Functions via Admin SDK
     }
 
@@ -476,9 +499,18 @@ service cloud.firestore {
     // Admins can read all events (for Activity Log screen)
     // Authenticated users can create events for their own actions
     // Cloud Functions write via Admin SDK (bypasses rules)
+    // SF-vibe57 M-04: bind userId field to caller + cap shape parity with
+    // users/{uid}/securityEvents subcollection. Pre-fix any authed user could
+    // forge entries about another userId, poisoning admin Activity Log.
     match /security_events/{eventId} {
       allow read: if isAdmin() || isAdminFromFirestore();
-      allow create: if isAuthenticated(); // User can log their own security events
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasOnly(
+          ['userId', 'type', 'timestamp', 'deviceId', 'ipAddress', 'location', 'metadata']
+        )
+        && request.resource.data.type is string
+        && request.resource.data.type.size() <= 64;
       allow update, delete: if false; // Immutable audit log
     }
 

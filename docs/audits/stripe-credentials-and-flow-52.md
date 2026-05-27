@@ -481,8 +481,8 @@ For subscription checkout — BookBed IS the merchant of record. Subscription ti
 | SF-036 | `customer.subscription.deleted` webhook respects `accountType === "lifetime"` | P0 | Open |
 | SF-037 | `ALLOWED_SUBSCRIPTION_PRICE_IDS` provisioned on `rab-booking-248fc` + `bookbed-dev` runtime + CI guard preventing UI shipping without env-var | P0 | Open — release blocker for any subscription UI rollout or first live Stripe product publish |
 | SF-038 | Stripe-event idempotency via `stripe_webhook_events/{event.id}` Firestore dedup | P1 | Open (also audit/50 F-50-03) |
-| SF-039 | `idempotencyKey` on every Stripe write call (refunds/customers/accounts/sessions) | P1 | Open |
-| SF-040 | `getStripeClient()` prefix assertion (sk_test vs sk_live per GCLOUD_PROJECT) | P1 | Open |
+| SF-039 | `idempotencyKey` on every Stripe write call (refunds/customers/accounts/sessions) | P1 | ✅ Closed via PR #516 (remaining 6 write calls; hotfix #508 already covered `refunds.create`) |
+| SF-040 | `getStripeClient()` prefix assertion (sk_test vs sk_live per GCLOUD_PROJECT) | P1 | ✅ Closed via PR #516 |
 | SF-041 | iCal feed enforces `accountStatus` (cancelled subs cannot serve feeds) | P2 | Open (product decision needed) |
 | SF-042 | `invoice.payment_failed` webhook handler + sub past_due grace state | P2 | Open |
 | SF-043 | `.env.{development,production,staging}` orphan Stripe key cleanup | P2 | Open |

@@ -40,6 +40,8 @@
 - [audit/51-final-cleanup-summary-2026-05-25.md](./audit/51-final-cleanup-summary-2026-05-25.md) - FINAL_CLEANUP 3-session summary: 42→11 PRs (−74%), 44→18 local branches (−59%), 22→1 worktrees (−95%), 658.89→49.15 MiB pack (−92%), 0 production incidents, 0 forensic loss. Archive at `~/bookbed-final-audit-archive-20260525-185455/`; carryover queue prioritized starting with PR #481 merge (2026-05-25)
 - [audit/53-prod-stripe-name-leak-2025-12-21.md](./audit/53-prod-stripe-name-leak-2025-12-21.md) - **P0** PROD Stripe live key leaked via Secret Manager NAME (SF-051): `firebase-managed: functions` secret `SK_LIVE_51SIS_..._LD9VEX1` (123 chars) is sanitized uppercase form of `sk_live_51SIsGkBomKO...` value (same sha256 as proper-named `STRIPE_SECRET_KEY`). Zero CF bindings — dangling. Visible since 2025-12-21 to anyone with `roles/secretmanager.viewer`. Rotate key + delete secret + IAM audit. Discovered during PR #513 iOS smoke (2026-05-26)
 - [audit/54-cf-smoke-2026-05-26.md](./audit/54-cf-smoke-2026-05-26.md) - CF-level security smoke on bookbed-dev for SF-038/047/048 + Sentry + TTL: 3 GREEN (B subdomain rate-limit, C delete cooldown, E TTL policy) + 2 deferred (A webhook dedup Stripe acct mismatch, D Sentry runtime filter). PR #515 reconciles Sentry DSN env-var fix lost during branch divergence; throwaway-user + parallel-call test patterns. NOT prod-cutover-ready. (2026-05-26)
+- [audit/55-f50-02-pr517-design-note-2026-05-27.md](./audit/55-f50-02-pr517-design-note-2026-05-27.md) - F-50-02 CLOSED via PR #517 (SF-050) dev smoke + narrative correction. 3 CFs in eu-west1 (`recordLoginFailure`/`getLoginLockoutStatus`/`clearLoginAttempts`), `loginAttempts/{email}` rule locked to `read, write: if false`, `rate_limit_service.dart` refactored. 3/3 smokes PASS on bookbed-dev. **Narrative correction**: `_rateLimit.resetAttempts(email)` is already POST `signIn`/`createUser` at both call sites (722 + 954) — earlier "reorder pre→post-auth" follow-up was based on inverted audit-doc, no longer needed. **Design tradeoff**: IP rate limit on `recordLoginFailure` (1/60s) means rapid same-IP mistypes only bump counter by 1 — lockout reachable via slow user OR distributed attacker (App Check closes the latter). Re-runnable smokes at `audit/smoke/f50-02-smoke{1,2,3}.sh`. (2026-05-27, PR #517)
+- [audit/56-pr514-review-2026-05-26.md](./audit/56-pr514-review-2026-05-26.md) - PR #514 review: 9 audit findings all PASS (1 HIGH webhook compensating-delete + 5 MED return-URL allowlist / launchUrl scheme / postMessage origin / SSRF DNS pin / token-expiration auth + 3 LOW rules). Live SSRF smoke on bookbed-dev exposed pinned `https.RequestOptions.lookup` callback regression: Node 18+ `autoSelectFamily` passes `options.all=true`, PR returned 3-arg form → `ERR_INVALID_IP_ADDRESS: Invalid IP address: undefined` — every legit feed would break post-merge. Fix `1c3d6985`: detect `options.all` + dispatch array OR 3-arg. Regression test added (synthetic options, no real network). 8/8 SSRF vectors still BLOCKED on fixed deploy. 10/10 CI green. Deferred: hex IPv4-mapped IPv6 regex hole in `isPrivateOrUnsafeIp` (SF-052 candidate, [[ssrf-ipv4-mapped-ipv6-hex-hole]]) + stripePayment.ts local `isAllowedReturnUrl` duplication. (2026-05-26)
 
 ---
 
@@ -158,7 +160,7 @@ Ovi fajlovi se učitavaju SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-05-24 | **Version**: 7.9
+**Last Updated**: 2026-05-27 | **Version**: 7.10
 
 # context-mode — MANDATORY routing rules
 

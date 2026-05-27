@@ -23,12 +23,13 @@ paths:
 - `STRIPE_SECRET_KEY` - Live secret key
 - `STRIPE_WEBHOOK_SECRET` - Live webhook signing secret
 
-## Stripe Connect Model: Standard (Direct charges)
+## Stripe Connect Model: Express (Destination charges)
 
-- Owner ima nezavisan Stripe račun
-- Novac ide DIREKTNO owner-u
+- Owner ima Express Connect account (`type: express` — platform-onboarded, ne Standard)
+- Charge se kreira na PLATFORM account, settle-uje se na owner-a putem `transfer_data.destination` (vidi `stripePayment.ts:808-809`: `on_behalf_of: ownerStripeAccountId, transfer_data: {...}`)
 - Platforma trenutno NE uzima fee (application_fee_amount = 0)
-- Owner je merchant of record (odgovoran za porez)
+- Owner je merchant of record putem `on_behalf_of` (odgovoran za porez)
+- Webhook `connect: null` (events fire na platformi, ne per-connected-account) — vidi `audit/61-webhook-event-coverage-2026-05-28.md` §5
 
 ## Minimum iznos
 

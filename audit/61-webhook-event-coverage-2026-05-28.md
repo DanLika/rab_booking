@@ -3,6 +3,7 @@
 **Date drafted:** 2026-05-27 (filename uses 2026-05-28 per requestor convention)
 **Trigger:** audit/60 §11 surfaced that PROD webhook subscribes 2 events while `handleStripeWebhook` handles 5+.
 **Method:** Read-only — `gcloud secrets versions access` for keys + Stripe REST `GET /v1/webhook_endpoints` + `GET /v1/accounts` + Cloud Logging reads on both projects (`bookbed-dev` + `rab-booking-248fc`). Zero `POST`/`PUT`/`DELETE` to Stripe; zero Secret Manager writes; zero CF/code edits.
+**Post-session update (2026-05-27):** SF-051 rotation CLOSED per `audit/62-sf051-rotation-closure-2026-05-27.md`. F-61-02 (Connect model fix) landed in `.claude/rules/stripe.md` this PR. Webhook expansion (§7-A) still PENDING — operator Dashboard click required. Connect orphan `acct_1TYSMdPWhhVc6lN0` (ababic785@gmail.com) rejected via API (reason=other).
 
 ---
 

@@ -3454,8 +3454,8 @@ Related: SF-046 (App Check audit-only — full enforcement closes the residual d
 
 **Datum:** 2026-05-26 (discovered) / 2025-12-21 (introduced)
 **Prioritet:** P0 — credential-structure leak, 5+ months exposure
-**Status:** 🔴 OPEN — operator action required
-**Audit:** `audit/53-prod-stripe-name-leak-2025-12-21.md`
+**Status:** ✅ CLOSED 2026-05-27 — key rotated (Expire immediately), STRIPE_SECRET_KEY v=5, 7 CFs redeployed, leaky secret DELETEd, SM v1-v4 destroyed. Brownout ~6-8 min, 0 customer impact.
+**Audit:** `audit/53-prod-stripe-name-leak-2025-12-21.md`, `audit/62-sf051-rotation-closure-2026-05-27.md` (execution log)
 
 > Number note: SF-050 is reserved on sibling branch `fix/f-50-02-login-attempts-server-side` (F-50-02 server-side lockout). When that branch lands, this SF-051 sits cleanly after — no number conflict.
 

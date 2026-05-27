@@ -3,7 +3,7 @@
 **Date drafted:** 2026-05-27 (filename uses 2026-05-28 per requestor convention)
 **Author:** read-only investigation via gcloud Secret Manager (read) + Stripe REST `GET /v1/account` + `GET /v1/accounts` + `GET /v1/subscriptions` + `GET /v1/webhook_endpoints` on PROD project `rab-booking-248fc`.
 **Scope:** PROD migration plan to consolidate `2 → 1` Stripe platform accounts AND fold in SF-051 (audit/53) leaked-secret cleanup.
-**Status:** **🟢 GO — but consolidation is much simpler than initial hypothesis suggested.** Single-account-in-code already confirmed; SF-051 leak is a duplicate-secret-name issue, not a real 2-account split.
+**Status:** **✅ SF-051 CLOSED 2026-05-27** — key rotated (Expire immediately), v=5 uploaded, 7 CFs redeployed, leaky secret DELETEd, SM v1-v4 destroyed. See `audit/62-sf051-rotation-closure-2026-05-27.md` for full execution log.
 
 ---
 

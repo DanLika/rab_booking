@@ -3649,3 +3649,52 @@ Related: PR #512 (source-removal merge `a99b2c0f`), PR #515 (deploy that surface
 curl -sI https://view.bookbed.io/main.dart.js.map | grep -i content-type
 # expect: text/html (SPA fallback) — pre-fix was application/json
 ```
+
+---
+
+## SF-056: SF-vibe57 batch — 11 findings closed across 3 PRs
+
+**Status:** ✅ closed via PRs #526 (rules), #527 (CF code), #528 (hosting headers); test backfill `cc9cbdcf` on #527
+**Severity:** 6 HIGH + 4 MEDIUM + 1 LOW
+**Audit:** `audit/57-vibe-security-2026-05-27.md` (4-agent baseline) + `audit/58-vibe-security-delta-2026-05-27.md` (delta + applied)
+
+**Findings closed (per audit/57 numbering):**
+
+| ID | Sev | PR | Vector |
+|---|---|---|---|
+| **H-01** | HIGH | #526 | Stripe-linkage UID-squat — client could write `stripeSubscriptionId: <victim_sub>` to own users doc; `customer.subscription.deleted` webhook `.where(...).limit(1)` is order-unstable → wrong-UID downgrade. Fix: deny-list 5 server-managed Stripe fields on `users/{uid}` + `users/{uid}/data` (create + update). All CF writes use Admin SDK so legit flows untouched. |
+| H-03 | HIGH | (already closed by F-NEW-07) | Deprecated top-level `/bookings/{id}` create lock. Verified at `firestore.rules:387-392` — `allow create: if false;`. No edit needed. |
+| **H-04** | HIGH | #527 | `verifyEmailCode` OTP brute via email rotation. Per-doc `MAX_ATTEMPTS=3` capped per email; attacker could rotate emails infinitely. Fix: `checkRateLimit` 10/min per IP at function entry. |
+| **H-06** | HIGH | #527 | `resendBookingEmail` mailbox-harassment + Resend bill amp. Owner-authed but no quota; each call rotated access_token + sent mail. Fix: `checkRateLimit` 5/hr per (uid, bookingId). |
+| **H-08** | HIGH | #527 | Stripe `customer_email` raw input to Stripe receipt while metadata used sanitized — audit-trail desync + spear-phish via attacker-controlled lookalike. Fix: `customer_email: sanitizedGuestEmail` at `stripePayment.ts:846`. |
+| **H-09** | HIGH | #527 | `customer.subscription.deleted` + `invoice.paid` no Connect-account correlation. Belt+suspenders after H-01: verify `userData.stripeCustomerId === subscription.customer` (or `invoice.customer`); mismatch returns HTTP 200 `customer_mismatch_skipped` (no retry). |
+| **M-04** | MEDIUM | #526 | Top-level `security_events` create unconstrained — any authed user could forge entries about other userIds, poisoning admin Activity Log. Fix: bind `userId == auth.uid` + hasOnly field allowlist + type validation (parity with subcollection guard). |
+| **M-05** | MEDIUM | #526 | `app_config/{platform}` read open to any authed user; future doc at `app_config/internal_keys` would leak. Fix: bound platform IDs to `['android','ios','web']`. |
+| **M-09 (partial)** | MEDIUM | #528 | Hosting CSP + HSTS missing. Partial fix: HSTS + Permissions-Policy added to all 3 targets (owner/widget/admin); widget gained nosniff + Referrer-Policy (N3a from audit/58). CSP for owner+admin DEFERRED — needs Flutter canvaskit-aware policy + visual smoke (separate PR). |
+| **M-11** | MEDIUM | #527 | SSRF IPv6 hex-form bypass — `isPrivateOrUnsafeIp` decimal regex missed `::ffff:a9fe:a9fe` (= 169.254.169.254 metadata reach) even with PR #514 F-NEW-05 DNS pin in place. Fix: second regex branch for hex IPv4-mapped IPv6, recurses through IPv4 path. Memory `[[ssrf-ipv4-mapped-ipv6-hex-hole]]` cleared. |
+| **L-04** | LOW | #526 | Storage `image/.*` allowed SVG → stored XSS via inline JS in widget display. Fix: tighten to `image/(jpeg|png|webp|gif|heic|heif)` on both `users/` + `properties/` paths. |
+
+**Tests added (PRs #526 + #527):**
+- `functions/test/firestore_rules/users.test.ts` — Cases 5-9 (5 per-field deny tests for H-01)
+- `functions/test/firestore_rules/global_collections.test.ts` (NEW) — 6 cases (M-04 + M-05)
+- `functions/test/icalSync.test.ts` — 15 cases (M-11 hex regex + adjacent-branch regression)
+
+Total: rules 39/39 pass (was 28; +11 new), jest unit 317/317 pass (was 302; +15 new), `tsc --noEmit` clean.
+
+**Files modified:**
+- `firestore.rules` — H-01 deny-list (4 blocks) + M-04 + M-05
+- `storage.rules` — L-04 (2 paths)
+- `firebase.json` — M-09 partial + N3 sub-findings (5 headers across 3 targets)
+- `functions/src/stripePayment.ts` — H-08 + H-09 (2 webhook sites)
+- `functions/src/emailVerification.ts` — H-04
+- `functions/src/icalSync.ts` — M-11 + `isPrivateOrUnsafeIp` exported for test access
+- `functions/src/resendBookingEmail.ts` — H-06
+- `functions/test/firestore_rules/{users,global_collections}.test.ts` + `functions/test/icalSync.test.ts` — coverage
+
+**Deploy gate (operator runbook):**
+1. Merge PR #526 (rules) first → `firebase deploy --only firestore:rules,storage --project bookbed-dev` → smoke (SVG upload rejected, app_config/foobar denied)
+2. Merge PR #527 (CF code) → `cd functions && npm run deploy --project bookbed-dev` → smoke (OTP brute test, resend throttle test, Stripe webhook mismatch replay)
+3. Merge PR #528 (hosting headers) → `firebase deploy --only hosting --project bookbed-dev` → `curl -I` per-surface header verification
+4. After all 3 dev-validated, promote to PROD in same order
+
+**Remaining open (audit/57 + audit/58):** H-02 (owner_id immutability — bigger surface, dedicated PR), H-05, H-07, 7 mediums (M-01, M-02, M-03, M-06, M-07, M-08, M-10) + M-09-CSP deferred, 6 lows (L-01, L-02, L-03, L-05, L-06, L-07).

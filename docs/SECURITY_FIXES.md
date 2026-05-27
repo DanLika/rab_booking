@@ -3470,3 +3470,108 @@ Order matters: leaky secret is unbound, deletion is safe-first.
 - Code reference (correct symbolic names in HEAD): `functions/src/stripe.ts:12`, `functions/src/stripePayment.ts:35`
 
 Related: `audit/53-prod-stripe-name-leak-2025-12-21.md`, `memory/prod-stripe-key-leaked-via-secret-name-2025-12-21.md`, `memory/ios-smoke-2026-05-26.md` (smoke trail that surfaced it).
+
+---
+
+## SF-052: Sentry `defineString.value()` invoked at module-load triggers deploy-time warning (DEV-PROD)
+
+**Datum:** 2026-05-27 (introduced by PR #515 merge `f871cc86`)
+**Prioritet:** LOW — cosmetic / observability noise (runtime unaffected)
+**Status:** 🟡 OPEN — follow-up PR candidate
+**Origin:** PR #515 cherry-pick smoke (Terminal D run)
+
+### Problem
+
+PR #515 replaced the hardcoded `SENTRY_DSN` constant in `functions/src/sentry.ts` with `defineString("SENTRY_DSN", {default: ""})` (line 13). `initSentry()` then calls `sentryDsn.value()` inside its body, and `initSentry()` itself is invoked at top-level import on the CF entry path → `.value()` resolves during the firebase-functions deploy *analysis* phase, before runtime env-vars are populated.
+
+Result during every `firebase deploy --only functions`:
+
+```
+WARNING: params.SENTRY_DSN.value() invoked during function deployment, instead of during runtime.
+WARNING: This is usually a mistake. In configs, use Params directly without calling .value().
+WARNING: example: { memory: memoryParam } not { memory: memoryParam.value() }
+INFO: Sentry DSN not provided, skipping initialization
+```
+
+Runtime is unaffected — confirmed via `gcloud logging read` on `bookbed-dev` post-deploy (2026-05-27 06:44Z): 0 skip messages in last 10 min, 5+ `Sentry initialized for Cloud Functions` success logs.
+
+### Why it matters
+
+- **False-positive INFO log** at deploy-time masks the real "DSN missing" signal future operators rely on. Once SF-053 (orphan sweep automation) or other deploy-hygiene work lands, this log is the only fail-soft signal that DSN env-var was set correctly — currently always fires.
+- **firebase-functions warning** is cumulative across redeploys; CI logs accumulate noise.
+
+### Fix shape
+
+Two viable patterns:
+
+1. **Lazy init inside `withSentry` wrapper** — move `sentryDsn.value()` read from `initSentry()` (module-load path) into `withSentry()` (handler-invocation path). Guard with `if (!isInitialized)` first-call check.
+2. **Top-level guard** — wrap `initSentry()` call in `if (process.env.K_SERVICE)` so the deploy-analysis runtime (which lacks `K_SERVICE`) doesn't trigger `.value()`. `K_SERVICE` is Cloud Run-only.
+
+Pattern 1 is preferred — also unblocks per-handler DSN override (e.g., separate scheduled-CF Sentry project) if ever needed.
+
+### Files
+
+- `functions/src/sentry.ts:13` — `defineString` declaration
+- `functions/src/sentry.ts` `initSentry()` — `.value()` call to relocate
+- `functions/src/sentry.ts` `withSentry()` — relocation target
+
+Related: PR #515 (merge `f871cc86`), `memory/sentry-cf-deploy-time-value-warning.md`.
+
+---
+
+## SF-053: Firebase deploy doesn't auto-delete source-removed CFs — orphan survival class
+
+**Datum:** 2026-05-27 (surfaced by PR #515 deploy block)
+**Prioritet:** MEDIUM — operational hygiene + small attack surface (orphan CFs remain callable until manually deleted)
+**Status:** 🟡 OPEN — sweep recipe documented, CI guard candidate
+**Origin:** PR #515 deploy failure (Terminal D run)
+
+### Problem
+
+PR #515 deploy to `bookbed-dev` aborted on first attempt with:
+
+```
+Error: The following functions are found in your project but do not exist in your local source code:
+    clearLoginAttempts(europe-west1)
+    getLoginLockoutStatus(europe-west1)
+    recordLoginFailure(europe-west1)
+Aborting because deletion cannot proceed in non-interactive mode.
+```
+
+These 3 CFs were source-removed by PR #512 (SF-038/046/048 sprint, merged `a99b2c0f`) as part of F-50-02 anon-DoS rewrite — `loginAttempts` table logic replaced with `recordLoginAttempt` callable elsewhere — but Firebase deploy doesn't auto-delete the deployed CFs. They survived ~5 days post-merge (2026-05-22 → 2026-05-27).
+
+`CI=true` flag in the deploy command makes the prompt non-interactive → abort. Fixed inline via `firebase functions:delete <name> --region europe-west1 --project=bookbed-dev --force` for each, then deploy retry succeeded.
+
+### Why it matters
+
+- **Attack surface**: orphan CFs remain callable via their direct Cloud Run URL until manually deleted. `recordLoginFailure` was anon-callable per F-50-02 audit — stayed live for 5 days after the rewrite that was meant to lock it down.
+- **CI/CD reliability**: any future `CI=true firebase deploy` is one squash-merge away from the same abort. Pre-PROD deploy windows are especially sensitive (operator under time pressure, partial deploys = inconsistent rules/CF/widget state).
+- **Inflated env audit**: `gcloud functions list` returns dead CFs, distorting telemetry + cost attribution.
+
+### Pre-deploy sweep recipe
+
+```bash
+gcloud functions list --project=<project-id> --format='value(name)' \
+  | while read fn; do
+      grep -rq "export.*$fn\|exports\.$fn" functions/src/ \
+        || echo "ORPHAN: $fn"
+    done
+```
+
+Run on `bookbed-dev` (already swept this PR) AND `rab-booking-248fc` BEFORE the next non-trivial PROD CF deploy (likely SF-049/SF-051 ops or F-50-01 PROD propagation). Then delete per orphan:
+
+```bash
+firebase functions:delete <name> --region <region> --project=<project-id> --force
+```
+
+### CI guard candidate (FUTURE — separate PR)
+
+Add `tool/check-cf-orphans.sh` invoked from `.github/workflows/ci.yml` pre-deploy. Exit non-zero on any orphan. Pairs with the SF-049 `pre-smoke-sanity.sh` recipe and the SF-051 secret-name-sanity scan as the three legs of deploy-hygiene automation.
+
+### Files
+
+- Source-side: `functions/src/index.ts` exports list (no refs to the 3 deleted names — verified `grep -rn 'clearLoginAttempts\|getLoginLockoutStatus\|recordLoginFailure' functions/src/` returns 0)
+- Deleted on `bookbed-dev`: 3 CFs above (europe-west1)
+- NOT yet swept on `rab-booking-248fc` or `bookbed-staging`
+
+Related: PR #512 (source-removal merge `a99b2c0f`), PR #515 (deploy that surfaced the orphans, merge `f871cc86`), `memory/firebase-cf-orphan-survival-class.md`.

@@ -2,7 +2,26 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-26 | **Version**: 7.00
+**Last Updated**: 2026-05-27 | **Version**: 7.01
+
+---
+
+**Changelog 7.01**: PR #515 — Sentry DSN externalized to env var + bookbed-dev redeploy (2026-05-27):
+
+### Security
+- **PR #515 — Sentry DSN env-var cherry-pick (LOW)**: hardcoded DSN string removed from `functions/src/sentry.ts` (replaced with `defineString("SENTRY_DSN", {default: ""})`) and `lib/widget_main.dart` + `lib/core/config/environment.dart` (replaced with `String.fromEnvironment('SENTRY_DSN')`). CI workflow `deploy-widget.yml` + 2 deploy scripts now pass `--dart-define=SENTRY_DSN=${SENTRY_DSN}`. Jest mocks for `firebase-functions/params` updated to stub `defineString` alongside existing `defineSecret`. Originally a sibling-branch cherry-pick (Jules-generated `73945333`), bundled to main with the mock fix.
+- **bookbed-dev CF redeploy**: `firebase deploy --only functions --project=bookbed-dev` ran post-merge with `functions/.env.bookbed-dev` provisioning `SENTRY_DSN`. Verified end-to-end via `gcloud functions describe getUnitAvailability` (env var bound) + `gcloud logging read` (0 skip-init messages, 5+ `"Sentry initialized for Cloud Functions"` success logs at 06:44Z).
+- **3 orphan CFs deleted** on `bookbed-dev`: `clearLoginAttempts`, `getLoginLockoutStatus`, `recordLoginFailure` (europe-west1) — leftover from PR #512 SF-038/048 anon-DoS rewrite that source-removed them but Firebase deploy doesn't auto-delete. Surfaced because `CI=true firebase deploy` is non-interactive. See SF-053.
+
+### Out of scope (follow-up PRs)
+- **SF-052** — Sentry lazy init: `sentryDsn.value()` is called at module-load → triggers `params.SENTRY_DSN.value() invoked during function deployment` WARNING + false-positive `"Sentry DSN not provided"` INFO during deploy analysis. Runtime unaffected. Fix: move `.value()` into `withSentry()` wrapper. See SF-052.
+- **SF-053** — CF orphan sweep automation: pre-deploy sweep recipe documented; CI guard candidate (`tool/check-cf-orphans.sh`). Run sweep on `rab-booking-248fc` BEFORE next PROD CF deploy. See SF-053.
+- **PROD env file NOT yet set**: `functions/.env.rab-booking-248fc` requires `SENTRY_DSN` provisioning BEFORE next PROD CF deploy, else PROD Sentry init silently no-ops (defaults to empty string → `"Sentry DSN not provided"`).
+
+### Refs
+- PR #515 (merge `f871cc86`, 2026-05-27)
+- SF-052, SF-053 (`docs/SECURITY_FIXES.md`)
+- `memory/sentry-cf-deploy-time-value-warning.md`, `memory/firebase-cf-orphan-survival-class.md`
 
 ---
 

@@ -238,6 +238,62 @@ describe("iCal Sync Functions", () => {
       expect(result.success).toBe(true);
       expect(https.get).toHaveBeenCalled();
     });
+
+    // Regression: Node 18+ with autoSelectFamily calls our pinned lookup with
+    // `options.all === true` and expects the array-form callback
+    // `(err, [{address, family}, ...])`. The 3-arg form yields
+    // `ERR_INVALID_IP_ADDRESS: Invalid IP address: undefined`, breaking every
+    // legit feed sync. Assert both shapes are dispatched correctly.
+    it("pinned lookup dispatches array form when options.all === true", async () => {
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc)
+        .mockResolvedValueOnce(mockFeedDoc)
+        .mockResolvedValueOnce({ docs: [], size: 0 })
+        .mockResolvedValueOnce({ docs: [] })
+        .mockResolvedValueOnce({ docs: [], length: 0 });
+
+      let capturedOptions: any = null;
+      (https.get as jest.Mock).mockImplementation((url, optsOrCb, maybeCb) => {
+        if (typeof optsOrCb === "object") capturedOptions = optsOrCb;
+        const callback = typeof optsOrCb === "function" ? optsOrCb : maybeCb;
+        callback(mockResponse);
+        return mockRequest;
+      });
+
+      const wrapped = wrap(syncIcalFeedNow);
+      await wrapped({ data: validData, auth: mockAuth });
+
+      expect(capturedOptions).toBeTruthy();
+      expect(typeof capturedOptions.lookup).toBe("function");
+
+      // all === true → array form
+      let arrResult: any = null;
+      capturedOptions.lookup("any.host", { all: true }, (...args: unknown[]) => {
+        arrResult = args;
+      });
+      expect(arrResult).toHaveLength(2);
+      expect(arrResult[0]).toBeNull();
+      expect(Array.isArray(arrResult[1])).toBe(true);
+      expect(arrResult[1][0]).toMatchObject({ address: "203.0.113.10", family: 4 });
+
+      // all === false → 3-arg form
+      let threeArgResult: any = null;
+      capturedOptions.lookup("any.host", { all: false }, (...args: unknown[]) => {
+        threeArgResult = args;
+      });
+      expect(threeArgResult).toHaveLength(3);
+      expect(threeArgResult[0]).toBeNull();
+      expect(threeArgResult[1]).toBe("203.0.113.10");
+      expect(threeArgResult[2]).toBe(4);
+
+      // options undefined → 3-arg form
+      let undefResult: any = null;
+      capturedOptions.lookup("any.host", undefined, (...args: unknown[]) => {
+        undefResult = args;
+      });
+      expect(undefResult).toHaveLength(3);
+      expect(undefResult[1]).toBe("203.0.113.10");
+    });
   });
 
   describe("scheduledIcalSync", () => {

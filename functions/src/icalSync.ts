@@ -565,14 +565,27 @@ function fetchIcalData(
     // F-NEW-05: pinned lookup defeats DNS rebinding between validateIcalUrl
     // and the actual fetch. If a pin is provided, ALL DNS resolutions inside
     // this request use it — the OS resolver is bypassed.
+    //
+    // Node 18+ enables `autoSelectFamily` by default. When enabled,
+    // net.createConnection calls our lookup with `options.all === true` and
+    // expects the array form `(err, [{address, family}, ...])`. Returning the
+    // 3-arg form `(err, address, family)` in that path yields
+    // `ERR_INVALID_IP_ADDRESS: Invalid IP address: undefined`. Detect the
+    // shape and dispatch both signatures.
+    const pinnedFam = pinnedFamily || 4;
     const requestOptions: https.RequestOptions = pinnedAddress
       ? {
           lookup: (
             _hostname: string,
-            _options: unknown,
-            callback: (err: Error | null, address: string, family: number) => void,
+            options: {all?: boolean} | undefined,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            callback: (...args: any[]) => void,
           ) => {
-            callback(null, pinnedAddress, pinnedFamily || 4);
+            if (options && options.all) {
+              callback(null, [{address: pinnedAddress, family: pinnedFam}]);
+            } else {
+              callback(null, pinnedAddress, pinnedFam);
+            }
           },
         }
       : {};

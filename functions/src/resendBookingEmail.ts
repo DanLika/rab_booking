@@ -9,6 +9,7 @@ import {
 import {findBookingById} from "./utils/bookingLookup";
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {setUser} from "./sentry";
+import {checkRateLimit} from "./utils/rateLimit";
 
 /**
  * Helper to convert Firestore Timestamp or Date to Date object
@@ -58,6 +59,22 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"]}, async (r
     throw new HttpsError(
       "invalid-argument",
       "Booking ID is required"
+    );
+  }
+
+  // SF-vibe57 H-06: per-(owner, booking) rate limit. Each call rotates
+  // `access_token` + sends mail via Resend — without a cap, owner (or
+  // anyone with hijacked owner session) can mailbox-harass guest +
+  // amplify Resend bill. 5/hr is generous for legit retry-on-bounce.
+  const rateLimitKey = `resend_booking_email:${request.auth.uid}:${bookingId}`;
+  if (!checkRateLimit(rateLimitKey, 5, 3600)) {
+    logError("[ResendBookingEmail] Rate limit exceeded", {
+      requesterId: request.auth.uid,
+      bookingId,
+    });
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many resend attempts for this booking. Please try again later."
     );
   }
 

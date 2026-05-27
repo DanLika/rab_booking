@@ -840,7 +840,10 @@ export const createStripeCheckoutSession = onCall({
         notes: sanitizedNotes || "",
         tax_legal_accepted: taxLegalAccepted ? "true" : "false",
       },
-      customer_email: guestEmail,
+      // SF-vibe57 H-08: use sanitized email for Stripe receipt (matches
+      // metadata.guest_email). Raw input would desync audit trail and enable
+      // spear-phish via Stripe-sent receipt to an attacker-controlled lookalike.
+      customer_email: sanitizedGuestEmail,
     }, {idempotencyKey: `checkout-${placeholderResult.placeholderBookingId}`});
 
     logInfo(`Stripe checkout session created: ${session.id}`);
@@ -1083,6 +1086,24 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       const userId = userDoc.id;
       const userData = userDoc.data();
 
+      // SF-vibe57 H-09: belt+suspenders Connect-account correlation after H-01.
+      // H-01 deny-list prevents client-side stripeSubscriptionId squat, but if
+      // an attacker beat us to it (or webhook fires on pre-H-01 corrupt doc),
+      // verify stripeCustomerId matches subscription.customer before downgrade.
+      // Mismatch → log + skip (do NOT retry — data integrity issue, not transient).
+      const stripeCustomerId = typeof subscription.customer === "string" ?
+        subscription.customer :
+        subscription.customer?.id;
+      if (userData?.stripeCustomerId && stripeCustomerId &&
+          userData.stripeCustomerId !== stripeCustomerId) {
+        logError(
+          `[H-09] stripeCustomerId mismatch on subscription.deleted for ${userId}: ` +
+          `doc=${userData.stripeCustomerId} stripe=${stripeCustomerId} sub=${subscriptionId}`
+        );
+        res.json({received: true, status: "customer_mismatch_skipped"});
+        return;
+      }
+
       // Lifetime grant survives Stripe sub cancel. audit/52 F-52-02.
       if (userData?.accountType === "lifetime") {
         await userDoc.ref.update({
@@ -1152,6 +1173,24 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
       const userDoc = usersSnapshot.docs[0];
       const userId = userDoc.id;
+      const userData = userDoc.data();
+
+      // SF-vibe57 H-09: belt+suspenders Connect-account correlation (parallel
+      // to customer.subscription.deleted handler above). invoice.customer is
+      // the canonical Stripe customer for the invoice; cross-check with
+      // userData.stripeCustomerId to catch any H-01 pre-fix squat residue.
+      const invoiceCustomerId = typeof invoice.customer === "string" ?
+        invoice.customer :
+        invoice.customer?.id;
+      if (userData?.stripeCustomerId && invoiceCustomerId &&
+          userData.stripeCustomerId !== invoiceCustomerId) {
+        logError(
+          `[H-09] stripeCustomerId mismatch on invoice.paid for ${userId}: ` +
+          `doc=${userData.stripeCustomerId} stripe=${invoiceCustomerId} sub=${subscriptionId}`
+        );
+        res.json({received: true, status: "customer_mismatch_skipped"});
+        return;
+      }
 
       // Ensure account is active (idempotent)
       await userDoc.ref.update({

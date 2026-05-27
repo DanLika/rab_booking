@@ -23,6 +23,7 @@ import {
 } from "./bookingAccessToken";
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {invalidateIcalCache} from "./utils/icalCache";
+import {redactEmail} from "./utils/logRedaction";
 
 // ==========================================
 // EMAIL ERROR TRACKING
@@ -218,7 +219,7 @@ export const onBookingCreated = onDocumentCreated(
       bookingId: event.params.bookingId,
       reference: booking.booking_reference,
       guest: booking.guest_name,
-      email: booking.guest_email,
+      emailRedacted: redactEmail(booking.guest_email),
     });
 
     try {
@@ -327,7 +328,7 @@ export const onBookingStatusChange = onDocumentUpdated(
           logInfo("Approval email already sent, skipping (idempotency check)", {
             bookingId: event.params.bookingId,
             sentAt: emailTracking.approval.sent_at,
-            email: emailTracking.approval.email,
+            emailRedacted: redactEmail(emailTracking.approval.email),
           });
           return;
         }
@@ -377,7 +378,11 @@ export const onBookingStatusChange = onDocumentUpdated(
             after.guest_email || ""
           );
 
-          logSuccess("Booking approval email sent to guest", {email: after.guest_email});
+          // PII redaction via redactEmail helper — full email available in
+          // emails_sent.approval doc below; Cloud Logging needs only correlation.
+          logSuccess("Booking approval email sent to guest", {
+            emailRedacted: redactEmail(after.guest_email as string | undefined),
+          });
 
           // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
           await event.data?.after.ref.update({
@@ -411,7 +416,7 @@ export const onBookingStatusChange = onDocumentUpdated(
           logInfo("Rejection email already sent, skipping (idempotency check)", {
             bookingId: event.params.bookingId,
             sentAt: emailTracking.rejection.sent_at,
-            email: emailTracking.rejection.email,
+            emailRedacted: redactEmail(emailTracking.rejection.email),
           });
           return;
         }
@@ -439,7 +444,10 @@ export const onBookingStatusChange = onDocumentUpdated(
             after.guest_email || ""
           );
 
-          logSuccess("Booking rejection email sent to guest", {email: after.guest_email});
+          // PII redaction via redactEmail helper (see approval branch).
+          logSuccess("Booking rejection email sent to guest", {
+            emailRedacted: redactEmail(after.guest_email as string | undefined),
+          });
 
           // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
           await event.data?.after.ref.update({
@@ -473,7 +481,7 @@ export const onBookingStatusChange = onDocumentUpdated(
           logInfo("Cancellation email already sent, skipping (idempotency check)", {
             bookingId: event.params.bookingId,
             sentAt: emailTracking.cancellation.sent_at,
-            email: emailTracking.cancellation.email,
+            emailRedacted: redactEmail(emailTracking.cancellation.email),
           });
           // Don't return here - we still need to create owner notification
         } else if (after.guest_email) {
@@ -532,7 +540,7 @@ export const onBookingStatusChange = onDocumentUpdated(
               "Booking Cancellation",
               booking.guest_email || ""
             );
-            logSuccess("Cancellation email sent", {email: booking.guest_email});
+            logSuccess("Cancellation email sent", {emailRedacted: redactEmail(booking.guest_email)});
 
             // ✅ MARK EMAIL AS SENT: Prevents duplicate sends on retry
             await event.data?.after.ref.update({

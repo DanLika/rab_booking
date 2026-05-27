@@ -3197,6 +3197,42 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 
 ---
 
+## SF-039: `idempotencyKey` sweep on remaining 6 Stripe write calls
+
+**Status:** ✅ closed via this PR (#516)
+**Severity:** P1 / MEDIUM
+**Audit:** audit/52 F-52-05 (`docs/audits/stripe-credentials-and-flow-52.md` SF-039)
+
+**Vector:** Hotfix #508 added `idempotencyKey` to `refunds.create` only. Six remaining Stripe write calls had none — network retry of `accounts.create` triggers a second KYC flow + duplicate Express account; retry of `checkout.sessions.create` produces stranded sessions tied to the same placeholder booking; retry of `customers.create` creates duplicate billing entities.
+
+**Fix:** `idempotencyKey` on every Stripe write call. Long-lived objects (accounts, customers, booking checkout) use deterministic identity-scoped keys. Short-lived objects (account onboarding link, billing portal session, subscription checkout) use time-bucketed keys so a true retry collapses but a legitimate re-invocation after the bucket elapses still works.
+
+**Files:**
+- `functions/src/stripeConnect.ts:55` — `accounts.create` → `connect-account-${ownerId}`
+- `functions/src/stripeConnect.ts:96` — `accountLinks.create` → `account-link-${id}-${minuteBucket}`
+- `functions/src/stripePayment.ts:844` — `checkout.sessions.create` → `checkout-${placeholderBookingId}`
+- `functions/src/stripeSubscription.ts:82` — `customers.create` → `customer-${userId}`
+- `functions/src/stripeSubscription.ts:135` — `checkout.sessions.create` → `sub-checkout-${userId}-${priceId}-${hourBucket}`
+- `functions/src/stripeSubscription.ts:179` — `billingPortal.sessions.create` → `portal-${userId}-${minuteBucket}`
+
+---
+
+## SF-040: `getStripeClient()` prefix assertion (sk_test vs sk_live per project)
+
+**Status:** ✅ closed via this PR (#516)
+**Severity:** P1 / MEDIUM
+**Audit:** audit/52 SF-040; related audit/53 SF-051 (PROD Stripe key leaked via Secret Manager name)
+
+**Vector:** A misconfigured Secret Manager value (`sk_live_*` rotated into dev, or `sk_test_*` left on prod) silently routes real charges to the wrong Stripe account. The mistake is invisible until a refund or webhook reveals the mode mismatch. Risk surface widened after the SF-051 PROD-key leak — operator error during rotation became plausible.
+
+**Fix:** `getStripeClient()` asserts the key prefix matches the project at first call. `rab-booking-248fc` requires `sk_live_*`; all other projects require `sk_test_*`. The error message names the project + expected prefix but never echoes the actual key (even partially) so the secret never lands in logs / Sentry. Analog of the Dart `kDebugMode` Firebase project-ID assert in `.claude/rules/ios-development.md`.
+
+**Files:** `functions/src/stripe.ts:33-44`
+
+**Caveat:** If neither `GCP_PROJECT` nor `GCLOUD_PROJECT` is set in env (rare in Gen 2 functions) the assert short-circuits — graceful but not strict. Acceptable defense-in-depth — Stripe itself rejects cross-mode calls on the wire.
+
+---
+
 ## SF-046: App Check audit-only mode on widget Cloud Functions
 
 **Status:** ✅ closed via this PR (audit-only mode; full enforcement deferred to follow-up)
@@ -3575,3 +3611,41 @@ Add `tool/check-cf-orphans.sh` invoked from `.github/workflows/ci.yml` pre-deplo
 - NOT yet swept on `rab-booking-248fc` or `bookbed-staging`
 
 Related: PR #512 (source-removal merge `a99b2c0f`), PR #515 (deploy that surfaced the orphans, merge `f871cc86`), `memory/firebase-cf-orphan-survival-class.md`.
+---
+
+## SF-054: PII log redaction sweep across email-sending Cloud Functions
+
+**Status:** ✅ closed via this PR (#516, follow-up commit `cf7cf573`)
+**Severity:** LOW (cumulative — Cloud Logging is org-readable and retained per project policy)
+**Audit:** new (PR #516 reviewer expansion)
+
+**Vector:** 19 `logSuccess` / `logInfo` callsites embedded raw `guest_email` / `owner_email` into Cloud Logging `jsonPayload`. Any role with `roles/logging.viewer` (broader than the booking surface itself) could pull a complete guest/owner email list by querying the function logs. Equivalent class to a low-severity credential leak — the email is the auth identifier on the platform.
+
+**Fix:** extracted `redactEmail(email?)` helper to `functions/src/utils/logRedaction.ts` (matches the established 3-char-prefix + `***` pattern from `authRateLimit.ts` / `verifyBookingAccess.ts` / `passwordReset.ts`). Applied to all 19 callsites — original PR #516 covered 2 of 19; reviewer sweep closed the remaining 17. Full email values still persist in Firestore `emails_sent.*` documents (subject to Firestore rules + retention), so audit/forensic correlation is preserved.
+
+**Files:**
+- `functions/src/utils/logRedaction.ts` (new — single-symbol audit-grep target)
+- `functions/src/emailService.ts` (12 sites: 436, 505, 572, 631, 690, 738, 784, 850, 914, 966, 1082, 1126)
+- `functions/src/bookingManagement.ts` (7 sites: 221 new-booking, 330 approval-skip, 380 approval-send, 420 rejection-skip, 449 rejection-send, 486 cancellation-skip, 545 cancellation-send)
+
+**Numbering note:** the follow-up commit message labeled this as `SF-041` — that number is reserved per `docs/audits/stripe-credentials-and-flow-52.md` for iCal feed `accountStatus` enforcement. Doc canonicalises the correct number SF-054; SF-041 stays reserved.
+
+---
+
+## SF-055: Source-map hosting exclusion
+
+**Status:** ✅ closed via this PR (#516) — live verification deferred to next hosting deploy
+**Severity:** LOW
+**Audit:** new (PR #516 sweep)
+
+**Vector:** Flutter web release builds emit `main.dart.js.map`. If uploaded to Firebase Hosting the file leaks an un-obfuscated symbol table for the deployed JS bundle — a reverse-engineering accelerant. Pre-fix probe showed `https://view.bookbed.io/main.dart.js.map` returning `200` with `content-type: application/json` (real source map served). Dev/owner hosting were already returning SPA fallback HTML so the leak was widget-prod-only.
+
+**Fix:** `**/*.map` added to the `ignore` array of all 3 hosting blocks (owner/widget/admin) in `firebase.json`. The `ignore` directive runs at deploy time — `.map` files are not uploaded. Requests for `/main.dart.js.map` fall through to the SPA rewrite (`"source": "**" → "/index.html"`) and return `text/html`. Note: returns `200 text/html`, not `404` — Firebase Hosting SPA rewrite catches unmatched paths. Verify via `content-type` header, not status code.
+
+**Files:** `firebase.json` (3 hosting blocks: owner @ ~L25, widget @ ~L68, admin @ ~L118)
+
+**Post-deploy verify:**
+```
+curl -sI https://view.bookbed.io/main.dart.js.map | grep -i content-type
+# expect: text/html (SPA fallback) — pre-fix was application/json
+```

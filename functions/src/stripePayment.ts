@@ -780,6 +780,10 @@ export const createStripeCheckoutSession = onCall({
     // Use booking reference from placeholder booking (guaranteed unique)
     const bookingRef = placeholderResult.bookingRef;
 
+    // SF-039: idempotencyKey scoped to placeholderBookingId. Placeholder is
+    // created inside the atomic transaction above (deterministic per booking
+    // attempt). Network retry of this CF returns the same Stripe session
+    // instead of two — no duplicate pending bookings, no stranded charges.
     const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -837,7 +841,7 @@ export const createStripeCheckoutSession = onCall({
         tax_legal_accepted: taxLegalAccepted ? "true" : "false",
       },
       customer_email: guestEmail,
-    });
+    }, {idempotencyKey: `checkout-${placeholderResult.placeholderBookingId}`});
 
     logInfo(`Stripe checkout session created: ${session.id}`);
     logInfo("Booking will be created by webhook after payment success");

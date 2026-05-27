@@ -52,6 +52,33 @@ Bundle F-50-06 + F-50-07 + F-50-08 into 1 firebase.json headers PR.
 
 ---
 
+## 🧹 TODO: PR #515 follow-ups (2026-05-27)
+
+**Origin:** PR #515 merge `f871cc86` (Sentry DSN env-var cherry-pick) + smoke run on `bookbed-dev` (Terminal D, 2026-05-27 06:44Z).
+
+Two follow-up candidates surfaced during deploy + verify. Both small, both deferrable but worth filing while context is fresh.
+
+### SF-052 — Sentry lazy init (LOW)
+
+- **What:** Move `sentryDsn.value()` read from `initSentry()` (module-load path) into `withSentry()` wrapper (handler-invocation path). Guard with `if (!isInitialized)` first-call check.
+- **Why:** PR #515 introduced `defineString("SENTRY_DSN", {default: ""})` at `functions/src/sentry.ts:13`; `.value()` resolves during deploy *analysis* phase → false-positive `"Sentry DSN not provided, skipping initialization"` INFO log + firebase-functions WARNING on every redeploy. Runtime unaffected (verified). See SF-052 in `docs/SECURITY_FIXES.md`.
+- **Effort:** XS (~30min). Single file, no behavior change at runtime.
+- **Chain:** Standalone or bundle with next `functions/src/sentry.ts` touch (PR #483 fix-cycle was last toucher).
+
+### SF-053 — CF orphan sweep + CI guard (MEDIUM)
+
+- **What:** (a) Pre-PROD-deploy: sweep `rab-booking-248fc` for orphan CFs using the recipe in SF-053. (b) Long-term: add `tool/check-cf-orphans.sh` invoked from CI pre-deploy.
+- **Why:** PR #515 deploy to `bookbed-dev` aborted on 3 orphans (`clearLoginAttempts` / `getLoginLockoutStatus` / `recordLoginFailure`) left behind by PR #512 source-removal — survived 5 days post-merge. `CI=true firebase deploy` is non-interactive → fails on every removed-CF transition. Real attack surface: anon-callable `recordLoginFailure` lived 5 days past F-50-02 rewrite. See SF-053 in `docs/SECURITY_FIXES.md`.
+- **Effort:** Sweep S (~15min per env). CI guard S/M (~2h with workflow integration).
+- **Chain:** Pairs with `pre-smoke-sanity.sh` (SF-049) + secret-name-sanity (SF-051) as the three legs of deploy-hygiene automation.
+
+### Done-when
+
+- SF-052 lands a PR moving `.value()` into `withSentry()`; next deploy shows 0 `params.SENTRY_DSN.value() invoked during function deployment` warnings.
+- SF-053 (a) pre-PROD sweep run on `rab-booking-248fc` BEFORE next PROD CF deploy (likely SF-049/SF-051 PROD ops). (b) CI guard PR optional/deferrable.
+
+---
+
 ## 🛡 App Check launch checklist (referenced from SF-046)
 
 Security-sprint PR shipped App Check in **audit-only mode** (`enforceAppCheck: false, consumeAppCheckToken: true`) on `getUnitAvailability` and `createStripeCheckoutSession`. Functions log attestation when clients send a token; missing tokens are NOT rejected. Promoting to full enforcement (`enforceAppCheck: true`) requires:

@@ -3193,6 +3193,8 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 
 **Post-deploy:** operator runs `gcloud firestore fields ttls update expiresAt --collection-group=stripe_webhook_events --enable-ttl` on both projects.
 
+**Dev validation (2026-05-26, audit/54 §A + §E):** CF deployed to bookbed-dev at 19:22Z (surgical) + 20:11Z (full redeploy). TTL policy enabled + ACTIVE on `stripe_webhook_events.expiresAt` @ 19:47Z. **Runtime dedup verification DEFERRED** — Stripe CLI session-bound to wrong account, bookbed-dev `STRIPE_WEBHOOK_SECRET` access hook-blocked. `stripe_webhook_events` collection still empty pre-cutover (reconciles with SF-049 placeholder backstory: dev webhook deliveries silently sig-failed for 5 months prior). Awaits real Stripe traffic post-secret-fix.
+
 ---
 
 ## SF-046: App Check audit-only mode on widget Cloud Functions
@@ -3225,6 +3227,8 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 
 **Files:** `functions/src/subdomainService.ts:167-243` + `:252-292`
 
+**Dev validation (2026-05-26, audit/54 §B):** ✅ GREEN on bookbed-dev. Anon POST → `401 UNAUTHENTICATED`. Authed 35-call sequential burst on throwaway user `USVVzpSBQCfh7yzYbf9kJr48lNT2` → 30 × 200 + 5 × 429 RESOURCE_EXHAUSTED, first fail at call #31 (matches spec). Initial parallel-fetch test method was bugged (dead `promises.push(fetch(...))` burned quota silently); advisor-caught + corrected.
+
 ---
 
 ## SF-048: deleteUserAccount per-uid cooldown
@@ -3238,6 +3242,8 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 **Fix:** `checkRateLimit(\`delete_account:${userId}\`, 1, 300)` — 1 call per 5 minutes per uid. Throws `resource-exhausted` on re-entry.
 
 **Files:** `functions/src/deleteUserAccount.ts:52-65`
+
+**Dev validation (2026-05-26, audit/54 §C):** ✅ GREEN on bookbed-dev via concurrent-call pattern (sequential design has structural flaw: 1st call deletes user → 2nd call rejected by Firebase Auth before reaching cooldown). `Promise.all([fetch, fetch])` on throwaway user `LMgycw5ES0aT9YINmZDUG5Khks82` → 1 × 200 OK (2469ms full cascade) + 1 × 429 RESOURCE_EXHAUSTED (431ms instant). Cooldown gate fires correctly on concurrent attempts.
 
 ---
 
@@ -3405,3 +3411,167 @@ Verified during PR #517 dev deploy smoke (2026-05-27): `_rateLimit.resetAttempts
 **Design note — IP rate limit interplay (audit/55):** `recordLoginFailure` is IP-rate-limited 1-per-60s. Five rapid mistypes from the same browser only bump the server counter by 1 (calls 2–5 return `RESOURCE_EXHAUSTED` and are swallowed by `rate_limit_service.dart:159–170`). The lockout is reachable via (a) attempts spaced ≥65s apart from one IP, or (b) distributed attacker — both acknowledged in `loginLockout.ts:22–25`. App Check enforcement closes (b).
 
 Related: SF-046 (App Check audit-only — full enforcement closes the residual distributed-DoS risk), audit/50 F-50-02, audit/55 design note, `docs/TODO.md` "App Check launch checklist".
+
+---
+
+## SF-051: PROD Stripe live key leaked via Secret Manager NAME (PROD-ONLY)
+
+**Datum:** 2026-05-26 (discovered) / 2025-12-21 (introduced)
+**Prioritet:** P0 — credential-structure leak, 5+ months exposure
+**Status:** 🔴 OPEN — operator action required
+**Audit:** `audit/53-prod-stripe-name-leak-2025-12-21.md`
+
+> Number note: SF-050 is reserved on sibling branch `fix/f-50-02-login-attempts-server-side` (F-50-02 server-side lockout). When that branch lands, this SF-051 sits cleanly after — no number conflict.
+
+### Problem
+
+PROD `rab-booking-248fc` Secret Manager contains a `firebase-managed: functions` secret whose NAME is a sanitized/uppercased form of a real `sk_live_*` Stripe key VALUE. The secret value (sha256 prefix `d01c8773fd31d243`) is **identical** to the proper-named `STRIPE_SECRET_KEY` — same key, two secret entries.
+
+| Field | Value |
+|---|---|
+| Secret name (123 chars) | `SK_LIVE_51SIS_GK_BOM_KO7V_DR04K3ETG_XGDTZ_T7T_O8BAS5G_IS8QS5L_ANPY_P2FFND_HM5BT7D_ONBEFBY_LLTE12Z7APE_OH0RH_S11M00A_LD9VEX1` |
+| Secret value | `sk_live_51SIsGkBomKO...` (len 107, sha256 prefix `d01c8773fd31d243`) |
+| CF bindings | **zero** (unbound dangling duplicate) |
+| Label | `firebase-managed: functions` |
+| Created | 2025-12-21T09:24:19Z |
+
+Name pattern = `uppercase(value)` with `_` at CamelCase boundaries. Case info within each word is lost (`51SIs` ↔ `51SiS` ↔ `51siS`), so single-shot reconstruction not possible — but Stripe-API brute force over case-permutations is feasible. Treat as credential-structure leak; **assume the live key is compromised**.
+
+5+ months exposure to anyone with `roles/secretmanager.viewer` (or broader) on PROD via `gcloud secrets list`, Cloud Console, IAM tooling, audit log surfaces. Metadata listing is NOT logged per principal — passive enumeration leaves no trace.
+
+dev (`bookbed-dev`) scanned — no analog (5 firebase-managed secrets all proper-named). `bookbed-staging` NOT yet scanned (TODO operator).
+
+### Suspected root cause (low confidence)
+
+Manual `firebase functions:secrets:set <KEY_VALUE>` or `gcloud secrets create <KEY_VALUE>` on 2025-12-21, passing the literal key VALUE where the symbolic NAME was expected. Firebase/GCP sanitized to fit Secret Manager regex `[a-zA-Z][a-zA-Z0-9_-]*`. Adjacent commit `09fd74fe` lands 22min later — NOT proven causal. Operator should consult shell history / firebase deploy logs for 2025-12-21 09:00-10:00Z.
+
+Current code (`functions/src/stripe.ts:12`, `functions/src/stripePayment.ts:35`) correctly uses symbolic names — no literal in HEAD.
+
+### Remediation sequence (6 steps — operator)
+
+Order matters: leaky secret is unbound, deletion is safe-first.
+
+1. **Delete** the leaky secret. Agent CLI is blocked (`gcloud.+secrets` hook); use Console UI OR REST `DELETE https://secretmanager.googleapis.com/v1/projects/rab-booking-248fc/secrets/SK_LIVE_..._LD9VEX1` with ADC token.
+2. **Rotate** the Stripe live key (Stripe Dashboard → Developers → API Keys → Roll). 12h grace window.
+3. **Update** `STRIPE_SECRET_KEY` proper-named secret via `:addVersion` REST call with new key (base64 payload).
+4. **Redeploy** PROD CFs binding `STRIPE_SECRET_KEY` (Gen 2 instances cache prior version until cold start). Enumerate via `gcloud functions list --format="value(name,serviceConfig.secretEnvironmentVariables)"`.
+5. **Access-log scan** since 2025-12-21: `gcloud logging read 'protoPayload.methodName=~"AccessSecretVersion" AND protoPayload.resourceName=~"SK_LIVE_51SIS"' --freshness=180d`; also scan `ListSecrets` for passive enumeration.
+6. **IAM audit**: enumerate principals with `roles/secretmanager.viewer|admin|secretAccessor|owner|editor|viewer` on `rab-booking-248fc`; triage non-staff / non-current.
+
+### Prevention (separate PR — recommended)
+
+- **A. CI lint** rejecting `defineSecret(/sk_test_|sk_live_|pk_test_|pk_live_|whsec_|re_/)` literal patterns in `functions/src/**`.
+- **B. Scheduled CF** `secretNameSanityScan` (weekly) — enumerate secret names across all envs, regex-match credential-shaped names, alert via Sentry. Pairs with the SF-049 value-placeholder scan as the two halves of secret-hygiene.
+
+### Files
+
+- Secret to delete: `projects/rab-booking-248fc/secrets/SK_LIVE_51SIS_GK_BOM_KO7V_DR04K3ETG_XGDTZ_T7T_O8BAS5G_IS8QS5L_ANPY_P2FFND_HM5BT7D_ONBEFBY_LLTE12Z7APE_OH0RH_S11M00A_LD9VEX1`
+- Secret to update post-rotation: `projects/rab-booking-248fc/secrets/STRIPE_SECRET_KEY`
+- Code reference (correct symbolic names in HEAD): `functions/src/stripe.ts:12`, `functions/src/stripePayment.ts:35`
+
+Related: `audit/53-prod-stripe-name-leak-2025-12-21.md`, `memory/prod-stripe-key-leaked-via-secret-name-2025-12-21.md`, `memory/ios-smoke-2026-05-26.md` (smoke trail that surfaced it).
+
+---
+
+## SF-052: Sentry `defineString.value()` invoked at module-load triggers deploy-time warning (DEV-PROD)
+
+**Datum:** 2026-05-27 (introduced by PR #515 merge `f871cc86`)
+**Prioritet:** LOW — cosmetic / observability noise (runtime unaffected)
+**Status:** 🟡 OPEN — follow-up PR candidate
+**Origin:** PR #515 cherry-pick smoke (Terminal D run)
+
+### Problem
+
+PR #515 replaced the hardcoded `SENTRY_DSN` constant in `functions/src/sentry.ts` with `defineString("SENTRY_DSN", {default: ""})` (line 13). `initSentry()` then calls `sentryDsn.value()` inside its body, and `initSentry()` itself is invoked at top-level import on the CF entry path → `.value()` resolves during the firebase-functions deploy *analysis* phase, before runtime env-vars are populated.
+
+Result during every `firebase deploy --only functions`:
+
+```
+WARNING: params.SENTRY_DSN.value() invoked during function deployment, instead of during runtime.
+WARNING: This is usually a mistake. In configs, use Params directly without calling .value().
+WARNING: example: { memory: memoryParam } not { memory: memoryParam.value() }
+INFO: Sentry DSN not provided, skipping initialization
+```
+
+Runtime is unaffected — confirmed via `gcloud logging read` on `bookbed-dev` post-deploy (2026-05-27 06:44Z): 0 skip messages in last 10 min, 5+ `Sentry initialized for Cloud Functions` success logs.
+
+### Why it matters
+
+- **False-positive INFO log** at deploy-time masks the real "DSN missing" signal future operators rely on. Once SF-053 (orphan sweep automation) or other deploy-hygiene work lands, this log is the only fail-soft signal that DSN env-var was set correctly — currently always fires.
+- **firebase-functions warning** is cumulative across redeploys; CI logs accumulate noise.
+
+### Fix shape
+
+Two viable patterns:
+
+1. **Lazy init inside `withSentry` wrapper** — move `sentryDsn.value()` read from `initSentry()` (module-load path) into `withSentry()` (handler-invocation path). Guard with `if (!isInitialized)` first-call check.
+2. **Top-level guard** — wrap `initSentry()` call in `if (process.env.K_SERVICE)` so the deploy-analysis runtime (which lacks `K_SERVICE`) doesn't trigger `.value()`. `K_SERVICE` is Cloud Run-only.
+
+Pattern 1 is preferred — also unblocks per-handler DSN override (e.g., separate scheduled-CF Sentry project) if ever needed.
+
+### Files
+
+- `functions/src/sentry.ts:13` — `defineString` declaration
+- `functions/src/sentry.ts` `initSentry()` — `.value()` call to relocate
+- `functions/src/sentry.ts` `withSentry()` — relocation target
+
+Related: PR #515 (merge `f871cc86`), `memory/sentry-cf-deploy-time-value-warning.md`.
+
+---
+
+## SF-053: Firebase deploy doesn't auto-delete source-removed CFs — orphan survival class
+
+**Datum:** 2026-05-27 (surfaced by PR #515 deploy block)
+**Prioritet:** MEDIUM — operational hygiene + small attack surface (orphan CFs remain callable until manually deleted)
+**Status:** 🟡 OPEN — sweep recipe documented, CI guard candidate
+**Origin:** PR #515 deploy failure (Terminal D run)
+
+### Problem
+
+PR #515 deploy to `bookbed-dev` aborted on first attempt with:
+
+```
+Error: The following functions are found in your project but do not exist in your local source code:
+    clearLoginAttempts(europe-west1)
+    getLoginLockoutStatus(europe-west1)
+    recordLoginFailure(europe-west1)
+Aborting because deletion cannot proceed in non-interactive mode.
+```
+
+These 3 CFs were source-removed by PR #512 (SF-038/046/048 sprint, merged `a99b2c0f`) as part of F-50-02 anon-DoS rewrite — `loginAttempts` table logic replaced with `recordLoginAttempt` callable elsewhere — but Firebase deploy doesn't auto-delete the deployed CFs. They survived ~5 days post-merge (2026-05-22 → 2026-05-27).
+
+`CI=true` flag in the deploy command makes the prompt non-interactive → abort. Fixed inline via `firebase functions:delete <name> --region europe-west1 --project=bookbed-dev --force` for each, then deploy retry succeeded.
+
+### Why it matters
+
+- **Attack surface**: orphan CFs remain callable via their direct Cloud Run URL until manually deleted. `recordLoginFailure` was anon-callable per F-50-02 audit — stayed live for 5 days after the rewrite that was meant to lock it down.
+- **CI/CD reliability**: any future `CI=true firebase deploy` is one squash-merge away from the same abort. Pre-PROD deploy windows are especially sensitive (operator under time pressure, partial deploys = inconsistent rules/CF/widget state).
+- **Inflated env audit**: `gcloud functions list` returns dead CFs, distorting telemetry + cost attribution.
+
+### Pre-deploy sweep recipe
+
+```bash
+gcloud functions list --project=<project-id> --format='value(name)' \
+  | while read fn; do
+      grep -rq "export.*$fn\|exports\.$fn" functions/src/ \
+        || echo "ORPHAN: $fn"
+    done
+```
+
+Run on `bookbed-dev` (already swept this PR) AND `rab-booking-248fc` BEFORE the next non-trivial PROD CF deploy (likely SF-049/SF-051 ops or F-50-01 PROD propagation). Then delete per orphan:
+
+```bash
+firebase functions:delete <name> --region <region> --project=<project-id> --force
+```
+
+### CI guard candidate (FUTURE — separate PR)
+
+Add `tool/check-cf-orphans.sh` invoked from `.github/workflows/ci.yml` pre-deploy. Exit non-zero on any orphan. Pairs with the SF-049 `pre-smoke-sanity.sh` recipe and the SF-051 secret-name-sanity scan as the three legs of deploy-hygiene automation.
+
+### Files
+
+- Source-side: `functions/src/index.ts` exports list (no refs to the 3 deleted names — verified `grep -rn 'clearLoginAttempts\|getLoginLockoutStatus\|recordLoginFailure' functions/src/` returns 0)
+- Deleted on `bookbed-dev`: 3 CFs above (europe-west1)
+- NOT yet swept on `rab-booking-248fc` or `bookbed-staging`
+
+Related: PR #512 (source-removal merge `a99b2c0f`), PR #515 (deploy that surfaced the orphans, merge `f871cc86`), `memory/firebase-cf-orphan-survival-class.md`.

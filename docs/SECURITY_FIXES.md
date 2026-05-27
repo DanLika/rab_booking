@@ -3193,6 +3193,8 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 
 **Post-deploy:** operator runs `gcloud firestore fields ttls update expiresAt --collection-group=stripe_webhook_events --enable-ttl` on both projects.
 
+**Dev validation (2026-05-26, audit/54 §A + §E):** CF deployed to bookbed-dev at 19:22Z (surgical) + 20:11Z (full redeploy). TTL policy enabled + ACTIVE on `stripe_webhook_events.expiresAt` @ 19:47Z. **Runtime dedup verification DEFERRED** — Stripe CLI session-bound to wrong account, bookbed-dev `STRIPE_WEBHOOK_SECRET` access hook-blocked. `stripe_webhook_events` collection still empty pre-cutover (reconciles with SF-049 placeholder backstory: dev webhook deliveries silently sig-failed for 5 months prior). Awaits real Stripe traffic post-secret-fix.
+
 ---
 
 ## SF-046: App Check audit-only mode on widget Cloud Functions
@@ -3225,6 +3227,8 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 
 **Files:** `functions/src/subdomainService.ts:167-243` + `:252-292`
 
+**Dev validation (2026-05-26, audit/54 §B):** ✅ GREEN on bookbed-dev. Anon POST → `401 UNAUTHENTICATED`. Authed 35-call sequential burst on throwaway user `USVVzpSBQCfh7yzYbf9kJr48lNT2` → 30 × 200 + 5 × 429 RESOURCE_EXHAUSTED, first fail at call #31 (matches spec). Initial parallel-fetch test method was bugged (dead `promises.push(fetch(...))` burned quota silently); advisor-caught + corrected.
+
 ---
 
 ## SF-048: deleteUserAccount per-uid cooldown
@@ -3238,6 +3242,8 @@ Ova ispravka sprječava neovlašteni pristup i modifikaciju korisničkih podatak
 **Fix:** `checkRateLimit(\`delete_account:${userId}\`, 1, 300)` — 1 call per 5 minutes per uid. Throws `resource-exhausted` on re-entry.
 
 **Files:** `functions/src/deleteUserAccount.ts:52-65`
+
+**Dev validation (2026-05-26, audit/54 §C):** ✅ GREEN on bookbed-dev via concurrent-call pattern (sequential design has structural flaw: 1st call deletes user → 2nd call rejected by Firebase Auth before reaching cooldown). `Promise.all([fetch, fetch])` on throwaway user `LMgycw5ES0aT9YINmZDUG5Khks82` → 1 × 200 OK (2469ms full cascade) + 1 × 429 RESOURCE_EXHAUSTED (431ms instant). Cooldown gate fires correctly on concurrent attempts.
 
 ---
 

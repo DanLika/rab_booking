@@ -16,9 +16,6 @@ import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options_staging.dart'; // Import STAGING options
 
-// Sentry not used in STAGING to avoid noise during pre-prod validation
-// const String _sentryDsn = ...
-
 /// WIDGET STAGING ENTRY POINT
 ///
 /// Uses [StagingFirebaseOptions] to connect to bookbed-staging project.

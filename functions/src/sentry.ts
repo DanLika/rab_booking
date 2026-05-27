@@ -6,11 +6,11 @@
  */
 
 import * as Sentry from "@sentry/node";
+import {defineString} from "firebase-functions/params";
 import {logInfo, logError} from "./logger";
 
 // Sentry DSN for Cloud Functions error tracking
-const SENTRY_DSN =
-  "https://2d78b151017ba853ff8b097914b92633@o4510516866908160.ingest.de.sentry.io/4510516869464144";
+const sentryDsn = defineString("SENTRY_DSN", {default: ""});
 
 // Track initialization state
 let isInitialized = false;
@@ -21,6 +21,7 @@ let isInitialized = false;
  * Cloud Functions Gen 2 does not reliably populate GCP_PROJECT; GCLOUD_PROJECT
  * is the documented fallback. Returning explicit per-project labels prevents
  * dev/staging errors from polluting the production Sentry dashboard.
+ * @return {string} the environment
  */
 function detectEnvironment(): string {
   if (process.env.FUNCTIONS_EMULATOR === "true") return "local";
@@ -40,9 +41,15 @@ export function initSentry(): void {
     return;
   }
 
+  const dsn = sentryDsn.value();
+  if (!dsn) {
+    logInfo("Sentry DSN not provided, skipping initialization");
+    return;
+  }
+
   try {
     Sentry.init({
-      dsn: SENTRY_DSN,
+      dsn,
       environment: detectEnvironment(),
       tracesSampleRate: 0.1, // 10% of transactions for performance monitoring
       // Tag all events as coming from cloud functions
@@ -68,8 +75,8 @@ export function initSentry(): void {
           "resource-exhausted",
           "cancelled",
         ]);
-        if (err && err.httpErrorCode !== undefined && typeof err.code === "string" &&
-            clientFaultCodes.has(err.code)) {
+        if (err && err.httpErrorCode !== undefined &&
+            typeof err.code === "string" && clientFaultCodes.has(err.code)) {
           return null;
         }
         return event;
@@ -89,6 +96,8 @@ export function initSentry(): void {
 
 /**
  * Capture an exception and send to Sentry
+ * @param {unknown} error the error to capture
+ * @param {Record<string, unknown>} context the context
  */
 export function captureException(
   error: unknown,
@@ -108,6 +117,9 @@ export function captureException(
 
 /**
  * Capture a message and send to Sentry
+ * @param {string} message the message
+ * @param {Sentry.SeverityLevel} level the level
+ * @param {Record<string, unknown>} context the context
  */
 export function captureMessage(
   message: string,
@@ -128,6 +140,8 @@ export function captureMessage(
 
 /**
  * Set user context for Sentry events
+ * @param {string | null} userId the user id
+ * @param {string} email the email
  */
 export function setUser(userId: string | null, email?: string): void {
   if (!isInitialized) {
@@ -143,6 +157,9 @@ export function setUser(userId: string | null, email?: string): void {
 
 /**
  * Add breadcrumb for debugging
+ * @param {string} message the message
+ * @param {string} category the category
+ * @param {Record<string, unknown>} data the data
  */
 export function addBreadcrumb(
   message: string,
@@ -164,6 +181,10 @@ export function addBreadcrumb(
 /**
  * Wrapper to capture errors in async functions
  * Use this to wrap your function handlers
+ * @param {string} functionName the function name
+ * @param {string | null} userId the user id
+ * @param {Function} fn the function
+ * @return {Promise<T>} the return value of the function
  */
 export async function withSentry<T>(
   functionName: string,

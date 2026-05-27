@@ -4,10 +4,13 @@
  * Handles unit lifecycle events, including cascade deletion
  * of subcollections when a unit is deleted.
  *
- * Subcollections deleted:
+ * Subcollections deleted (unit-level):
  * - bookings
  * - daily_prices
- * - widget_settings (if exists)
+ * - widget_settings (no-op safety net — see note in handler)
+ *
+ * Property-level docs cleaned (keyed by unit-id):
+ * - properties/{propertyId}/widget_settings/{unitId}
  *
  * @module unitManagement
  */
@@ -42,21 +45,28 @@ export const onUnitDeleted = onDocumentDeleted(
     });
 
     try {
-      const unitRef = db
-        .collection("properties")
-        .doc(propertyId)
-        .collection("units")
-        .doc(unitId);
+      const propRef = db.collection("properties").doc(propertyId);
+      const unitRef = propRef.collection("units").doc(unitId);
 
-      // Delete all subcollections in parallel
+      // widget_settings actually lives at properties/{pid}/widget_settings/{unitId}
+      // (property-level subcollection, doc-id = unitId), NOT under the unit.
+      // The unit-level deleteSubcollection is a no-op safety net for any future
+      // unit-scoped settings; the real cleanup is the property-level doc below.
+      const propLevelWidgetSettings = propRef.collection("widget_settings").doc(unitId);
+
       const results = await Promise.allSettled([
         deleteSubcollection(unitRef, "bookings", unitId),
         deleteSubcollection(unitRef, "daily_prices", unitId),
         deleteSubcollection(unitRef, "widget_settings", unitId),
+        propLevelWidgetSettings.delete(),
       ]);
 
-      // Log results
-      const subcollections = ["bookings", "daily_prices", "widget_settings"];
+      const subcollections = [
+        "bookings",
+        "daily_prices",
+        "widget_settings (unit-level no-op)",
+        "widget_settings (property-level doc)",
+      ];
       results.forEach((result, index) => {
         if (result.status === "rejected") {
           logWarn(

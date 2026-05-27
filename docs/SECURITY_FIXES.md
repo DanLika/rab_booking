@@ -3400,6 +3400,8 @@ After dev verification, repeat for `rab-booking-248fc`.
 
 ### Follow-up TODO
 
-`enhanced_auth_provider.dart:722` calls `_rateLimit.resetAttempts(email)` pre-Firebase-Auth-signIn — the new `clearLoginAttempts` CF throws `unauthenticated` there (caught + swallowed). Auto-reset on read after 1h inactivity is the safety net; reorder to post-signIn is a separate small PR.
+Verified during PR #517 dev deploy smoke (2026-05-27): `_rateLimit.resetAttempts(email)` is already called POST `signInWithEmailAndPassword` (line 722, inside the post-`_loadUserProfile` success branch) and POST `createUserWithEmailAndPassword` (line 954). Both call sites have `request.auth.token.email` set, so `clearLoginAttempts` succeeds normally — no swallowed `unauthenticated` error, no reliance on the 1h auto-reset safety net. The earlier narrative was an audit-doc inversion that survived into the SF-050 first draft; corrected here.
 
-Related: SF-046 (App Check audit-only — full enforcement closes the residual distributed-DoS risk), audit/50 F-50-02, `docs/TODO.md` "App Check launch checklist".
+**Design note — IP rate limit interplay (audit/55):** `recordLoginFailure` is IP-rate-limited 1-per-60s. Five rapid mistypes from the same browser only bump the server counter by 1 (calls 2–5 return `RESOURCE_EXHAUSTED` and are swallowed by `rate_limit_service.dart:159–170`). The lockout is reachable via (a) attempts spaced ≥65s apart from one IP, or (b) distributed attacker — both acknowledged in `loginLockout.ts:22–25`. App Check enforcement closes (b).
+
+Related: SF-046 (App Check audit-only — full enforcement closes the residual distributed-DoS risk), audit/50 F-50-02, audit/55 design note, `docs/TODO.md` "App Check launch checklist".

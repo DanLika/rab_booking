@@ -84,6 +84,18 @@ jest.mock("https", () => ({
   get: jest.fn(),
 }));
 
+// F-NEW-05: validateIcalUrl is now async and DNS-resolves the hostname.
+// Mock dns/promises so tests don't hit real DNS in CI. Default returns a
+// public IP; tests that need to exercise the SSRF block override below.
+jest.mock("dns/promises", () => ({
+  lookup: jest.fn(async (hostname: string, _opts: unknown) => {
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return [{ address: "127.0.0.1", family: 4 }];
+    }
+    return [{ address: "203.0.113.10", family: 4 }]; // TEST-NET-3 RFC5737
+  }),
+}));
+
 import { syncIcalFeedNow, scheduledIcalSync } from "../src/icalSync";
 import * as https from "https";
 import { db } from "../src/firebase";
@@ -108,8 +120,12 @@ describe("iCal Sync Functions", () => {
       commit: jest.fn().mockResolvedValue(true),
     });
 
-    // Setup default mock request/response behavior
-    (https.get as jest.Mock).mockImplementation((url, callback) => {
+    // Setup default mock request/response behavior.
+    // F-NEW-05: fetchIcalData now always calls https.get(url, options, callback)
+    // (3-arg form) — options carries the pinned-IP lookup callback when set.
+    // Support both 2-arg (legacy) and 3-arg signatures so the mock survives.
+    (https.get as jest.Mock).mockImplementation((url, optsOrCb, maybeCb) => {
+      const callback = typeof optsOrCb === "function" ? optsOrCb : maybeCb;
       callback(mockResponse);
       return mockRequest;
     });
@@ -193,7 +209,12 @@ describe("iCal Sync Functions", () => {
        });
 
       const wrapped = wrap(syncIcalFeedNow);
-      await expect(wrapped({ data: validData, auth: mockAuth })).rejects.toThrow("Internal or localhost URLs are not allowed");
+      // F-NEW-05: error string changed when validator switched from substring
+      // blocklist to DNS-resolve + private-IP check. localhost resolves to
+      // 127.0.0.1 which isPrivateOrUnsafeIp rejects.
+      await expect(wrapped({ data: validData, auth: mockAuth })).rejects.toThrow(
+        /private or reserved IP address/i
+      );
     });
 
     it("should sync successfully for valid input", async () => {
@@ -216,6 +237,62 @@ describe("iCal Sync Functions", () => {
 
       expect(result.success).toBe(true);
       expect(https.get).toHaveBeenCalled();
+    });
+
+    // Regression: Node 18+ with autoSelectFamily calls our pinned lookup with
+    // `options.all === true` and expects the array-form callback
+    // `(err, [{address, family}, ...])`. The 3-arg form yields
+    // `ERR_INVALID_IP_ADDRESS: Invalid IP address: undefined`, breaking every
+    // legit feed sync. Assert both shapes are dispatched correctly.
+    it("pinned lookup dispatches array form when options.all === true", async () => {
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc)
+        .mockResolvedValueOnce(mockFeedDoc)
+        .mockResolvedValueOnce({ docs: [], size: 0 })
+        .mockResolvedValueOnce({ docs: [] })
+        .mockResolvedValueOnce({ docs: [], length: 0 });
+
+      let capturedOptions: any = null;
+      (https.get as jest.Mock).mockImplementation((url, optsOrCb, maybeCb) => {
+        if (typeof optsOrCb === "object") capturedOptions = optsOrCb;
+        const callback = typeof optsOrCb === "function" ? optsOrCb : maybeCb;
+        callback(mockResponse);
+        return mockRequest;
+      });
+
+      const wrapped = wrap(syncIcalFeedNow);
+      await wrapped({ data: validData, auth: mockAuth });
+
+      expect(capturedOptions).toBeTruthy();
+      expect(typeof capturedOptions.lookup).toBe("function");
+
+      // all === true → array form
+      let arrResult: any = null;
+      capturedOptions.lookup("any.host", { all: true }, (...args: unknown[]) => {
+        arrResult = args;
+      });
+      expect(arrResult).toHaveLength(2);
+      expect(arrResult[0]).toBeNull();
+      expect(Array.isArray(arrResult[1])).toBe(true);
+      expect(arrResult[1][0]).toMatchObject({ address: "203.0.113.10", family: 4 });
+
+      // all === false → 3-arg form
+      let threeArgResult: any = null;
+      capturedOptions.lookup("any.host", { all: false }, (...args: unknown[]) => {
+        threeArgResult = args;
+      });
+      expect(threeArgResult).toHaveLength(3);
+      expect(threeArgResult[0]).toBeNull();
+      expect(threeArgResult[1]).toBe("203.0.113.10");
+      expect(threeArgResult[2]).toBe(4);
+
+      // options undefined → 3-arg form
+      let undefResult: any = null;
+      capturedOptions.lookup("any.host", undefined, (...args: unknown[]) => {
+        undefResult = args;
+      });
+      expect(undefResult).toHaveLength(3);
+      expect(undefResult[1]).toBe("203.0.113.10");
     });
   });
 

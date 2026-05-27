@@ -1160,6 +1160,12 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       res.json({received: true, status: "subscription_renewed"});
     } catch (error: any) {
       logError("Error processing invoice.paid", error);
+      // SF-038 compensating delete (F-NEW-01 re-apply): without this, a
+      // transient Firestore failure here strands a subscription renewal —
+      // dedup marks the event processed, retry short-circuits, lastPaymentAt
+      // never updates, and a subsequent customer.subscription.deleted
+      // downgrade looks unprovoked.
+      await eventRef.delete().catch(() => {});
       res.status(500).send("Internal server error");
     }
   } else if (event.type === "checkout.session.completed") {
@@ -1200,6 +1206,10 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
         return;
       } catch (error: any) {
         logError("Error activating subscription", error);
+        // SF-038 compensating delete (F-NEW-01 re-apply): without this, a
+        // transient Firestore failure strands a paid subscription — user
+        // paid Stripe but never gets accountStatus=active / accountType=premium.
+        await eventRef.delete().catch(() => {});
         res.status(500).send("Internal server error");
         return;
       }
@@ -1429,6 +1439,12 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       });
     } catch (error: any) {
       logError("Error processing webhook", error);
+      // SF-038 compensating delete (F-NEW-01 re-apply): WORST-CASE PATH —
+      // without this, a transient Firestore failure mid-booking-confirmation
+      // strands a paid booking. Placeholder stays "pending", cleanupExpired
+      // PendingBookings deletes it 15 min later → guest paid Stripe, no
+      // booking exists, no refund automation.
+      await eventRef.delete().catch(() => {});
       res.status(500).send("Internal server error");
     }
   } else {

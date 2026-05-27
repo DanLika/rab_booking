@@ -898,12 +898,21 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                           blockSpacing: 8,
                         ),
                         onTapLink: (text, href, title) {
-                          if (href != null) {
-                            launchUrl(
-                              Uri.parse(href),
-                              mode: LaunchMode.externalApplication,
-                            );
+                          // F-NEW-03: scheme allowlist. Gemini-streamed markdown
+                          // can contain arbitrary URLs (prompt injection, model
+                          // hallucination, RAG-poisoned KB). Only http(s) are
+                          // safe for `launchUrl(LaunchMode.externalApplication)`
+                          // — custom schemes (bookbed://, intent://, mailto:,
+                          // tel:, sms:, data:) hand the URI to OS app handlers
+                          // and become a deep-link injection surface for any
+                          // installed app.
+                          if (href == null) return;
+                          final Uri? uri = Uri.tryParse(href);
+                          if (uri == null) return;
+                          if (uri.scheme != 'http' && uri.scheme != 'https') {
+                            return;
                           }
+                          launchUrl(uri, mode: LaunchMode.externalApplication);
                         },
                       ),
               ),

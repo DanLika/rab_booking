@@ -30,13 +30,33 @@ import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
  *      and fetch.
  */
 
-/** RFC1918 + loopback + link-local + multicast + IPv4-mapped-IPv6 + IPv6 ULA. */
-function isPrivateOrUnsafeIp(ip: string): boolean {
+/**
+ * RFC1918 + loopback + link-local + multicast + IPv4-mapped-IPv6 + IPv6 ULA.
+ *
+ * Exported for unit-test coverage of the SF-vibe57 M-11 hex IPv4-mapped IPv6
+ * branch; not part of the public CF surface.
+ */
+export function isPrivateOrUnsafeIp(ip: string): boolean {
   if (!ip) return true;
 
   // IPv4-mapped IPv6: ::ffff:a.b.c.d → strip prefix, check as IPv4.
   const v4Mapped = ip.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
   if (v4Mapped) return isPrivateOrUnsafeIp(v4Mapped[1]);
+
+  // SF-vibe57 M-11: hex IPv4-mapped IPv6 (::ffff:a9fe:a9fe). Without this
+  // branch ::ffff:a9fe:a9fe (= 169.254.169.254) bypasses metadata-server
+  // protection via DNS rebinding.
+  const v4MappedHex = ip.toLowerCase().match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (v4MappedHex) {
+    const hi = parseInt(v4MappedHex[1], 16);
+    const lo = parseInt(v4MappedHex[2], 16);
+    if (Number.isNaN(hi) || Number.isNaN(lo)) return true;
+    const a = (hi >> 8) & 0xff;
+    const b = hi & 0xff;
+    const c = (lo >> 8) & 0xff;
+    const d = lo & 0xff;
+    return isPrivateOrUnsafeIp(`${a}.${b}.${c}.${d}`);
+  }
 
   if (net.isIPv4(ip)) {
     const parts = ip.split(".").map((p) => Number(p));

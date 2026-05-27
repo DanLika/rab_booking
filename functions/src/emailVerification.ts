@@ -242,6 +242,20 @@ export const sendEmailVerificationCode = onCall(
 export const verifyEmailCode = onCall(
   {cors: true},
   async (request) => {
+    // SF-vibe57 H-04: IP rate limit to mitigate OTP brute force. Per-doc
+    // MAX_ATTEMPTS=3 caps guesses per email, but without IP cap an attacker
+    // can rotate email values and chain attempts indefinitely. 10/min/IP is
+    // generous enough for legit typo retries.
+    const clientIp = getClientIp(request);
+    const ipHash = hashIp(clientIp);
+    if (!checkRateLimit(`verify_code_${ipHash}`, 10, 60)) {
+      logWarn("[EmailVerification] verifyEmailCode IP rate limit exceeded", {ipHash});
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many verification attempts from your location. Please try again later."
+      );
+    }
+
     try {
       const {email, code} = request.data;
 

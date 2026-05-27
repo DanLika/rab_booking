@@ -15,6 +15,21 @@ updates:
       - "dart"
     commit-message:
       prefix: "chore(deps)"
+    # Pin Flutter codegen packages past 3.0 — Riverpod 2→3 is a full Notifier API
+    # rewrite across ~150 @Riverpod providers; freezed 2→3 is breaking annotation
+    # changes. Requires dedicated migration audit doc. See closed PR #504.
+    # Unpin via PR once Riverpod 3 + freezed 3 GA + migration sprint scheduled.
+    ignore:
+      - dependency-name: "flutter_riverpod"
+        versions: [">=3.0.0"]
+      - dependency-name: "riverpod_annotation"
+        versions: [">=3.0.0"]
+      - dependency-name: "riverpod_generator"
+        versions: [">=3.0.0"]
+      - dependency-name: "freezed"
+        versions: [">=3.0.0"]
+      - dependency-name: "freezed_annotation"
+        versions: [">=3.0.0"]
 
   # Node.js dependencies for Cloud Functions
   - package-ecosystem: "npm"

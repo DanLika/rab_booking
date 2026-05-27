@@ -107,4 +107,43 @@ describe("users rule — role-escalation blocklist (audit/38)", () => {
       ctx.firestore().doc(`users/${TARGET_UID}`).update({ role: "admin" }),
     );
   });
+
+  // SF-vibe57 H-01: Stripe-linkage UID-squat deny-list.
+  // Attack: owner writes `stripeSubscriptionId: <victim_sub>` to own users doc;
+  // `customer.subscription.deleted` webhook lookup `where("stripeSubscriptionId","==",x).limit(1)`
+  // is order-unstable and may downgrade/corrupt victim's billing state.
+  test("Case 5 — regular user writing stripeSubscriptionId → DENY", async () => {
+    const ctx = testEnv.authenticatedContext(REGULAR_UID);
+    await assertFails(
+      ctx.firestore().doc(`users/${REGULAR_UID}`).update({ stripeSubscriptionId: "sub_attacker_squat" }),
+    );
+  });
+
+  test("Case 6 — regular user writing stripe_account_id → DENY", async () => {
+    const ctx = testEnv.authenticatedContext(REGULAR_UID);
+    await assertFails(
+      ctx.firestore().doc(`users/${REGULAR_UID}`).update({ stripe_account_id: "acct_attacker_squat" }),
+    );
+  });
+
+  test("Case 7 — regular user writing stripeCustomerId → DENY", async () => {
+    const ctx = testEnv.authenticatedContext(REGULAR_UID);
+    await assertFails(
+      ctx.firestore().doc(`users/${REGULAR_UID}`).update({ stripeCustomerId: "cus_attacker_squat" }),
+    );
+  });
+
+  test("Case 8 — regular user writing stripe_customer_id → DENY", async () => {
+    const ctx = testEnv.authenticatedContext(REGULAR_UID);
+    await assertFails(
+      ctx.firestore().doc(`users/${REGULAR_UID}`).update({ stripe_customer_id: "cus_attacker_squat" }),
+    );
+  });
+
+  test("Case 9 — regular user writing stripe_connected_at → DENY", async () => {
+    const ctx = testEnv.authenticatedContext(REGULAR_UID);
+    await assertFails(
+      ctx.firestore().doc(`users/${REGULAR_UID}`).update({ stripe_connected_at: new Date() }),
+    );
+  });
 });

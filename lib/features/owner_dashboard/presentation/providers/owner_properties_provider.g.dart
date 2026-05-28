@@ -57,7 +57,7 @@ final ownerPropertiesCountProvider = AutoDisposeFutureProvider<int>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef OwnerPropertiesCountRef = AutoDisposeFutureProviderRef<int>;
-String _$propertyByIdHash() => r'bdb8a872a1ee7890255facff3d78514bde32ad07';
+String _$propertyByIdHash() => r'8673b20d1b8c29e9e8fd97def96c46a702d27db5';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -82,20 +82,52 @@ class _SystemHash {
 
 /// Get property by ID
 ///
+/// Auth-race guard: cold-boot deep links (e.g. `bookbed://owner/property/<id>`)
+/// can fire this provider before Firebase Auth has restored its session.
+/// Firestore rules then reject the unauth read and Pigeon surfaces a noisy
+/// stacktrace. Hold the provider in `AsyncLoading` until auth settles so
+/// PropertyEditLoader keeps showing its UniversalLoader instead of flashing.
+/// `ref.watch(enhancedAuthProvider)` also satisfies the provider cache
+/// security rule in `.claude/rules/auth.md`.
+///
 /// Copied from [propertyById].
 @ProviderFor(propertyById)
 const propertyByIdProvider = PropertyByIdFamily();
 
 /// Get property by ID
 ///
+/// Auth-race guard: cold-boot deep links (e.g. `bookbed://owner/property/<id>`)
+/// can fire this provider before Firebase Auth has restored its session.
+/// Firestore rules then reject the unauth read and Pigeon surfaces a noisy
+/// stacktrace. Hold the provider in `AsyncLoading` until auth settles so
+/// PropertyEditLoader keeps showing its UniversalLoader instead of flashing.
+/// `ref.watch(enhancedAuthProvider)` also satisfies the provider cache
+/// security rule in `.claude/rules/auth.md`.
+///
 /// Copied from [propertyById].
 class PropertyByIdFamily extends Family<AsyncValue<PropertyModel?>> {
   /// Get property by ID
+  ///
+  /// Auth-race guard: cold-boot deep links (e.g. `bookbed://owner/property/<id>`)
+  /// can fire this provider before Firebase Auth has restored its session.
+  /// Firestore rules then reject the unauth read and Pigeon surfaces a noisy
+  /// stacktrace. Hold the provider in `AsyncLoading` until auth settles so
+  /// PropertyEditLoader keeps showing its UniversalLoader instead of flashing.
+  /// `ref.watch(enhancedAuthProvider)` also satisfies the provider cache
+  /// security rule in `.claude/rules/auth.md`.
   ///
   /// Copied from [propertyById].
   const PropertyByIdFamily();
 
   /// Get property by ID
+  ///
+  /// Auth-race guard: cold-boot deep links (e.g. `bookbed://owner/property/<id>`)
+  /// can fire this provider before Firebase Auth has restored its session.
+  /// Firestore rules then reject the unauth read and Pigeon surfaces a noisy
+  /// stacktrace. Hold the provider in `AsyncLoading` until auth settles so
+  /// PropertyEditLoader keeps showing its UniversalLoader instead of flashing.
+  /// `ref.watch(enhancedAuthProvider)` also satisfies the provider cache
+  /// security rule in `.claude/rules/auth.md`.
   ///
   /// Copied from [propertyById].
   PropertyByIdProvider call(String propertyId) {
@@ -126,9 +158,25 @@ class PropertyByIdFamily extends Family<AsyncValue<PropertyModel?>> {
 
 /// Get property by ID
 ///
+/// Auth-race guard: cold-boot deep links (e.g. `bookbed://owner/property/<id>`)
+/// can fire this provider before Firebase Auth has restored its session.
+/// Firestore rules then reject the unauth read and Pigeon surfaces a noisy
+/// stacktrace. Hold the provider in `AsyncLoading` until auth settles so
+/// PropertyEditLoader keeps showing its UniversalLoader instead of flashing.
+/// `ref.watch(enhancedAuthProvider)` also satisfies the provider cache
+/// security rule in `.claude/rules/auth.md`.
+///
 /// Copied from [propertyById].
 class PropertyByIdProvider extends AutoDisposeFutureProvider<PropertyModel?> {
   /// Get property by ID
+  ///
+  /// Auth-race guard: cold-boot deep links (e.g. `bookbed://owner/property/<id>`)
+  /// can fire this provider before Firebase Auth has restored its session.
+  /// Firestore rules then reject the unauth read and Pigeon surfaces a noisy
+  /// stacktrace. Hold the provider in `AsyncLoading` until auth settles so
+  /// PropertyEditLoader keeps showing its UniversalLoader instead of flashing.
+  /// `ref.watch(enhancedAuthProvider)` also satisfies the provider cache
+  /// security rule in `.claude/rules/auth.md`.
   ///
   /// Copied from [propertyById].
   PropertyByIdProvider(String propertyId)

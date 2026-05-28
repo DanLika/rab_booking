@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Admin login screen with modern UI and isAdmin verification
 class AdminLoginScreen extends ConsumerStatefulWidget {
@@ -26,8 +27,18 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.errorMessage == 'not_admin') {
-      _error = 'Access denied. Admin privileges required.';
+    // initState runs before context.l10n is reachable; defer 'not_admin'
+    // localization to didChangeDependencies.
+    _notAdmin = widget.errorMessage == 'not_admin';
+  }
+
+  bool _notAdmin = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_notAdmin && _error == null) {
+      _error = AppLocalizations.of(context).adminAccessDenied;
     }
   }
 
@@ -62,7 +73,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
         await ref.read(enhancedAuthProvider.notifier).signOut();
         if (mounted) {
           setState(() {
-            _error = 'Access denied. Admin privileges required.';
+            _error = AppLocalizations.of(context).adminAccessDenied;
             _isLoading = false;
           });
         }
@@ -98,7 +109,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
         .replaceAll(RegExp(r'^\[.*?\]\s*'), '')
         .trim();
     if (message.isEmpty || message.length > 200) {
-      return 'Login failed. Please check your credentials and try again.';
+      return AppLocalizations.of(context).adminLoginFailed;
     }
     return message;
   }
@@ -107,6 +118,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
   Widget build(BuildContext context) {
     // Determine gradient based on brightness
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       body: Stack(
@@ -196,7 +208,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Welcome Back',
+                                    l10n.adminWelcomeBack,
                                     style: Theme.of(context)
                                         .textTheme
                                         .headlineSmall
@@ -204,7 +216,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Please sign in to access the admin portal.',
+                                    l10n.adminLoginSubtitle,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -260,8 +272,8 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                   TextFormField(
                                     controller: _emailController,
                                     decoration: InputDecoration(
-                                      labelText: 'Email Address',
-                                      hintText: 'admin@bookbed.io',
+                                      labelText: l10n.adminEmailLabel,
+                                      hintText: l10n.adminEmailHint,
                                       prefixIcon: const Icon(
                                         Icons.email_outlined,
                                       ),
@@ -279,7 +291,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                     textInputAction: TextInputAction.next,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Email is required';
+                                        return l10n.adminEmailRequired;
                                       }
                                       return null;
                                     },
@@ -294,7 +306,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                       return TextFormField(
                                         controller: _passwordController,
                                         decoration: InputDecoration(
-                                          labelText: 'Password',
+                                          labelText: l10n.adminPasswordLabel,
                                           prefixIcon: const Icon(
                                             Icons.lock_outline,
                                           ),
@@ -330,7 +342,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                         textInputAction: TextInputAction.done,
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Password is required';
+                                            return l10n.adminPasswordRequired;
                                           }
                                           return null;
                                         },
@@ -365,9 +377,9 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                                                 color: Colors.white,
                                               ),
                                             )
-                                          : const Text(
-                                              'Sign In',
-                                              style: TextStyle(
+                                          : Text(
+                                              l10n.adminSignInButton,
+                                              style: const TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -387,7 +399,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
 
                   // Footer
                   Text(
-                    '© ${DateTime.now().year} BookBed Inc. All rights reserved.',
+                    l10n.adminFooterCopyright(DateTime.now().year),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(
                         context,

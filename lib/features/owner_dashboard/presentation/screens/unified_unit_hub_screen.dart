@@ -1441,7 +1441,11 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
       isMobile: isMobile,
       children: [
         _buildDetailRow(theme, l10n.unitHubName, _selectedUnit!.name),
-        _buildDetailRow(theme, l10n.unitHubSlug, _selectedUnit!.slug ?? 'N/A'),
+        _buildDetailRow(
+          theme,
+          l10n.unitHubSlug,
+          _selectedUnit!.slug ?? l10n.notSet,
+        ),
         if (_selectedUnit!.description != null)
           _buildDetailRow(
             theme,

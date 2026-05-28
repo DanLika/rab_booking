@@ -144,16 +144,60 @@ class AppLocalizationsHr extends AppLocalizations {
   String get dontHaveAccount => 'Nemate račun?';
 
   @override
-  String get signInWithGoogle => 'Prijavite se sa Google';
+  String get signInWithGoogle => 'Prijava preko Googlea';
 
   @override
-  String get continueWithGoogle => 'Nastavite s Google';
+  String get signInWithApple => 'Prijava preko Applea';
 
   @override
-  String get continueWithApple => 'Nastavite s Apple';
+  String get continueWithGoogle => 'Nastavi preko Googlea';
+
+  @override
+  String get continueWithApple => 'Nastavi preko Applea';
 
   @override
   String get welcomeBack => 'Dobrodošli nazad';
+
+  @override
+  String get adminWelcomeBack => 'Dobrodošli natrag';
+
+  @override
+  String get adminLoginSubtitle =>
+      'Prijavite se za pristup administracijskom portalu.';
+
+  @override
+  String get adminEmailLabel => 'Email adresa';
+
+  @override
+  String get adminEmailHint => 'admin@bookbed.io';
+
+  @override
+  String get adminEmailRequired => 'Email je obavezan';
+
+  @override
+  String get adminPasswordLabel => 'Lozinka';
+
+  @override
+  String get adminPasswordRequired => 'Lozinka je obavezna';
+
+  @override
+  String get adminSignInButton => 'Prijava';
+
+  @override
+  String get adminAccessDenied =>
+      'Pristup odbijen. Potrebne su administratorske ovlasti.';
+
+  @override
+  String get adminLoginFailed =>
+      'Prijava nije uspjela. Provjerite svoje podatke i pokušajte ponovno.';
+
+  @override
+  String adminFooterCopyright(int year) {
+    return '© $year BookBed Inc. Sva prava pridržana.';
+  }
+
+  @override
+  String get notSet => 'Nije postavljeno';
 
   @override
   String get loginToYourAccount => 'Prijavite se na svoj račun';

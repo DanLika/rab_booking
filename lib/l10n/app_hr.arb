@@ -48,10 +48,30 @@
   "phoneNumber": "Broj Telefona",
   "alreadyHaveAccount": "Već imate račun?",
   "dontHaveAccount": "Nemate račun?",
-  "signInWithGoogle": "Prijavite se sa Google",
-  "continueWithGoogle": "Nastavite s Google",
-  "continueWithApple": "Nastavite s Apple",
+  "signInWithGoogle": "Prijava preko Googlea",
+  "signInWithApple": "Prijava preko Applea",
+  "continueWithGoogle": "Nastavi preko Googlea",
+  "continueWithApple": "Nastavi preko Applea",
   "welcomeBack": "Dobrodošli nazad",
+  "adminWelcomeBack": "Dobrodošli natrag",
+  "adminLoginSubtitle": "Prijavite se za pristup administracijskom portalu.",
+  "adminEmailLabel": "Email adresa",
+  "adminEmailHint": "admin@bookbed.io",
+  "adminEmailRequired": "Email je obavezan",
+  "adminPasswordLabel": "Lozinka",
+  "adminPasswordRequired": "Lozinka je obavezna",
+  "adminSignInButton": "Prijava",
+  "adminAccessDenied": "Pristup odbijen. Potrebne su administratorske ovlasti.",
+  "adminLoginFailed": "Prijava nije uspjela. Provjerite svoje podatke i pokušajte ponovno.",
+  "adminFooterCopyright": "© {year} BookBed Inc. Sva prava pridržana.",
+  "@adminFooterCopyright": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "notSet": "Nije postavljeno",
   "loginToYourAccount": "Prijavite se na svoj račun",
   
   "authOwnerLogin": "Prijava vlasnika",

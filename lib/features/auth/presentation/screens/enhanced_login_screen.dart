@@ -697,14 +697,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
     final googleButton = SocialLoginButton(
       customIcon: const GoogleBrandIcon(),
-      label: 'Sign in with Google',
+      label: l10n.signInWithGoogle,
       enabled: !_isLoading,
       onPressed: () => _handleOAuthSignIn(authNotifier.signInWithGoogle),
     );
 
     final appleButton = SocialLoginButton(
       customIcon: const AppleBrandIcon(),
-      label: 'Sign in with Apple',
+      label: l10n.signInWithApple,
       enabled: !_isLoading,
       onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
     );

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:syncfusion_localizations/syncfusion_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/config/environment.dart';
@@ -718,6 +719,10 @@ class _InitializedAppState extends ConsumerState<_InitializedApp> {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
+        // Syncfusion calendar: HR day names + Backward/Forward nav button
+        // labels (audit/82). Without this delegate SfCalendar header strings
+        // stay in English regardless of MaterialApp locale.
+        SfGlobalLocalizations.delegate,
       ],
       supportedLocales: const [Locale('en'), Locale('hr')],
     );

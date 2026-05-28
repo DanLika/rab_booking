@@ -571,3 +571,498 @@ class BBBreakpoint {
   /// `>= 1440` — wide / ultra-wide
   static const double wide = 1440;
 }
+
+// ===========================================================================
+// 00b — TOKEN CONSOLIDATION ADDITIONS (Phase 1)
+//
+// These extend BB tokens to cover EVERY symbol referenced in
+// `lib/core/design_tokens/*` (12 legacy files, 95 importers, 161 unique
+// symbols). Exact old values are preserved verbatim. The codemod that
+// migrates the 95 importers from `design_tokens/*` to these BB tokens is
+// Phase 2 (separate PR, Jules).
+//
+// FROZEN-AREA NOTE: calendar (14 files) + Cjenovnik (`unit_pricing_screen.dart`)
+// will retain their `design_tokens/*` imports through Phase 2 to honor the
+// CLAUDE.md NIKADA NE MIJENJAJ contract on those surfaces. Token *additions*
+// here are safe — only *call-site rewrites* are restricted.
+// ===========================================================================
+
+// ===========================================================================
+// BBBorderWidth — was BorderTokens.width*
+// ===========================================================================
+
+class BBBorderWidth {
+  BBBorderWidth._();
+
+  /// 0 — no border
+  static const double none = 0.0;
+
+  /// 1 — default thin
+  static const double thin = 1.0;
+
+  /// 1.5 — slightly emphasized
+  static const double medium = 1.5;
+
+  /// 2 — focus rings, selected states
+  static const double thick = 2.0;
+}
+
+// ===========================================================================
+// BBOpacity — was OpacityTokens
+// ===========================================================================
+
+class BBOpacity {
+  BBOpacity._();
+
+  static const double transparent = 0.0;
+
+  /// 4% — barely-visible tint
+  static const double subtleOverlay = 0.04;
+
+  /// 8% — light hover/background
+  static const double lightOverlay = 0.08;
+
+  /// 12% — disabled states
+  static const double mediumOverlay = 0.12;
+
+  /// 16% — secondary backgrounds, dividers
+  static const double visible = 0.16;
+
+  /// 30% — modal scrim
+  static const double semiTransparent = 0.30;
+
+  /// 40% — watermark badges
+  static const double badgeSubtle = 0.40;
+
+  /// 50% — loading overlay
+  static const double mostlyVisible = 0.50;
+
+  /// 70%
+  static const double mostlyOpaque = 0.70;
+
+  /// 90%
+  static const double almostOpaque = 0.90;
+
+  /// 100%
+  static const double opaque = 1.0;
+
+  // Shadow opacity helpers
+  static const double shadowSubtle = 0.05;
+  static const double shadowLight = 0.08;
+  static const double shadowMedium = 0.10;
+  static const double shadowStrong = 0.15;
+  static const double shadowHeavy = 0.20;
+}
+
+// ===========================================================================
+// BBIconSize — was IconSizeTokens
+// ===========================================================================
+
+class BBIconSize {
+  BBIconSize._();
+
+  static const double tiny = 8.0;
+  static const double xs = 12.0;
+  static const double small = 16.0;
+  static const double medium = 20.0;
+  static const double large = 24.0;
+  static const double xl = 32.0;
+  static const double xxl = 40.0;
+  static const double huge = 48.0;
+  static const double massive = 64.0;
+  static const double gigantic = 80.0;
+
+  // Semantic aliases (component-specific)
+  static const double appBarAction = large; // 24
+  static const double navigation = large; // 24
+  static const double listItem = medium; // 20
+  static const double input = medium; // 20
+  static const double button = medium; // 20
+  static const double fab = large; // 24
+  static const double chip = small; // 16
+  static const double avatar = xl; // 32
+}
+
+// ===========================================================================
+// BBConstraint — was ConstraintTokens (NON-frozen subset only)
+//
+// Calendar-specific constraints (calendarCellMinHeight, calendarCellMaxHeight,
+// calendarDayCellSize, calendarMonthMin/MaxWidth, modalHeaderHeight) are NOT
+// re-exposed here — calendar code stays on the legacy ConstraintTokens to
+// honor the FROZEN dimensions contract.
+// ===========================================================================
+
+class BBConstraint {
+  BBConstraint._();
+
+  // Max-width presets
+  static const double maxWidgetWidth = 480.0;
+  static const double maxFormWidth = 600.0;
+  static const double maxModalWidth = 500.0;
+  static const double maxCardWidth = 400.0;
+  static const double maxNarrowContentWidth = 720.0;
+  static const double maxWideContentWidth = 1200.0;
+  static const double maxFullContentWidth = 1440.0;
+
+  // Min-width presets
+  static const double minWidgetWidth = 280.0;
+  static const double minButtonWidth = 88.0;
+  static const double minInputWidth = 200.0;
+  static const double minCardWidth = 240.0;
+
+  // Heights
+  static const double buttonHeight = 48.0;
+  static const double buttonHeightCompact = 40.0;
+  static const double buttonHeightLarge = 56.0;
+  static const double inputHeight = 48.0;
+  static const double inputHeightCompact = 40.0;
+  static const double inputHeightLarge = 56.0;
+  static const double appBarHeight = 56.0;
+  static const double bottomSheetPeekHeight = 100.0;
+  static const double maxScrollableHeight = 600.0;
+
+  // Aspect ratios
+  static const double cardAspectRatio = 16 / 9;
+  static const double squareAspectRatio = 1.0;
+  static const double wideAspectRatio = 21 / 9;
+  static const double portraitAspectRatio = 3 / 4;
+
+  // Touch targets
+  static const double minTouchTarget = 44.0;
+  static const double recommendedTouchTarget = 48.0;
+  static const double largeTouchTarget = 56.0;
+
+  // Icon-container squares
+  static const double iconContainerSmall = 32.0;
+  static const double iconContainerMedium = 40.0;
+  static const double iconContainerLarge = 48.0;
+  static const double iconContainerXL = 64.0;
+
+  // Section gaps (non-calendar)
+  static const double maxSectionGap = 64.0;
+  static const double sectionGap = 32.0;
+  static const double compactSectionGap = 24.0;
+}
+
+// ===========================================================================
+// Extension: BBSpace bridges (off-grid for codemod safety)
+// ===========================================================================
+
+extension BBSpaceBridges on BBSpace {
+  /// 2px — used by `SpacingTokens.xxs (2)`. Off the 4px-base grid; retained
+  /// to avoid silent layout shifts during codemod. Audit callers and migrate
+  /// to `BBSpace.xxs (4)` where 2px is gratuitously tight.
+  @Deprecated('Off-grid. Audit caller; migrate to BBSpace.xxs (4) if possible.')
+  static const double xxs2 = 2.0;
+
+  /// 6px — used by `SpacingTokens.xs2 (6)`. Off-grid.
+  @Deprecated('Off-grid. Audit caller; migrate to BBSpace.xs (8) if possible.')
+  static const double xs6 = 6.0;
+
+  /// 20px — used by `SpacingTokens.m2 (20)`. Off-grid.
+  @Deprecated('Off-grid. Audit caller; migrate to BBSpace.sm (16) or .md (24).')
+  static const double sm20 = 20.0;
+
+  /// 40px — used by `SpacingTokens.xl2 (40)`. Off-grid.
+  @Deprecated('Off-grid. Audit caller; migrate to BBSpace.lg (32) or .xl (48).')
+  static const double lg40 = 40.0;
+
+  /// 56px — used by `SpacingTokens.xxl2 (56)`. Off-grid.
+  @Deprecated(
+    'Off-grid. Audit caller; migrate to BBSpace.xl (48) or .xxl (64).',
+  )
+  static const double xl56 = 56.0;
+
+  /// 96px — used by `AppDimensions.spaceXXXL`. Above-scale.
+  @Deprecated('Above BBSpace.xxl. Add own const if truly needed.')
+  static const double xxxl96 = 96.0;
+}
+
+// ===========================================================================
+// Extension: BBRadius bridges (off-scale for codemod safety)
+// ===========================================================================
+
+extension BBRadiusBridges on BBRadius {
+  /// 0 — `BorderTokens.radiusSharp`
+  static const double sharp = 0.0;
+
+  /// 2 — `BorderTokens.radiusTiny`. Below BBRadius.xs (6).
+  @Deprecated('Off-scale. Audit caller; consider BBRadius.xs (6).')
+  static const double tiny = 2.0;
+
+  /// 4 — `BorderTokens.radiusSubtle` + `calendarCellRadius` (FROZEN). Below
+  /// BBRadius.xs (6). Used inside calendar — leave call-sites untouched.
+  @Deprecated('Off-scale. Calendar-frozen. New code: use BBRadius.xs (6).')
+  static const double subtle = 4.0;
+
+  /// 8 — `BorderTokens.radiusMedium` + component aliases (button/input/card/widgetContainer in legacy).
+  /// Between BBRadius.xs (6) and BBRadius.sm (12). Heavy usage (48× direct + via aliases).
+  @Deprecated(
+    'Off-scale. Audit visual impact; BBRadius.sm (12) is the mandate.',
+  )
+  static const double medium = 8.0;
+
+  /// 16 — `BorderTokens.radiusLarge`. Between BBRadius.sm (12) and BBRadius.md (20).
+  @Deprecated(
+    'Off-scale. Audit caller; BBRadius.md (20) is the canonical card radius.',
+  )
+  static const double large = 16.0;
+}
+
+// ===========================================================================
+// Extension: BBColor palette steps (Tailwind-style, exact old hex preserved)
+//
+// These are flat constants, NOT theme-aware. Use sparingly — prefer the
+// semantic BBColorSet via `BBColor.of(context)` for surfaces and text. These
+// steps exist to migrate `ColorTokens.grey/azure/coral/teal/pink/amber/
+// emerald/slate/sky/*` call-sites without value drift.
+// ===========================================================================
+
+extension BBColorPalette on BBColor {
+  // Greys
+  static const Color grey50 = Color(0xFFFAFAFA);
+  static const Color grey100 = Color(0xFFF5F5F5);
+  static const Color grey200 = Color(0xFFE5E7EB);
+  static const Color grey300 = Color(0xFFD1D5DB);
+  static const Color grey400 = Color(0xFF9CA3AF);
+  static const Color grey500 = Color(0xFF6B7280);
+  static const Color grey600 = Color(0xFF4B5563);
+  static const Color grey700 = Color(0xFF374151);
+  static const Color grey800 = Color(0xFF1F2937);
+  static const Color grey900 = Color(0xFF111827);
+
+  // Azure (purple-blue) — azure600 == BBColor.primary
+  static const Color azure50 = Color(0xFFF3F0FF);
+  static const Color azure100 = Color(0xFFE0D7FF);
+  static const Color azure200 = Color(0xFF9B86F3); // = BBColor.primaryLight
+  static const Color azure400 = Color(0xFF8164F0);
+  static const Color azure500 = Color(0xFF7B5DED);
+  static const Color azure600 = Color(0xFF6B4CE6); // = BBColor.primary
+  static const Color azure700 = Color(0xFF5B3DD6); // = BBColor.primaryDark
+  static const Color azure800 = Color(0xFF4B2DC6);
+  static const Color azure900 = Color(0xFF3B1FB6);
+
+  // Coral — coral500 == BBColor.secondary
+  static const Color coral400 = Color(0xFFFF8A80);
+  static const Color coral500 = Color(0xFFFF6B6B); // = BBColor.secondary
+  static const Color coral600 = Color(0xFFFF5252);
+
+  // Teal
+  static const Color teal50 = Color(0xFFF0FDFA);
+  static const Color teal100 = Color(0xFFCCF5E8);
+  static const Color teal200 = Color(0xFFD1FAE5);
+  static const Color teal400 = Color(0xFF34D399);
+  static const Color teal500 = Color(0xFF14B8A6);
+  static const Color teal600 = Color(0xFF0D9488);
+  static const Color teal700 = Color(0xFF0F766E);
+  static const Color teal900 = Color(0xFF134E4A);
+
+  // Pink (also: error-shaped, audit caller intent)
+  static const Color pink100 = Color(0xFFFFD4E5);
+  static const Color pink200 = Color(0xFFFEE2E2);
+  static const Color pink400 = Color(0xFFF87171);
+  static const Color pink500 = Color(0xFFEC4899);
+  static const Color pink600 = Color(0xFFDB2777);
+  static const Color pink700 = Color(0xFFEF4444);
+  static const Color pink900 = Color(0xFF7F1D1D);
+
+  // Amber
+  static const Color amber200 = Color(0xFFFDE68A);
+  static const Color amber400 = Color(0xFFFBBF24);
+  static const Color amber500 = Color(0xFFF59E0B);
+  static const Color amber600 = Color(0xFFD97706);
+  static const Color amber900 = Color(0xFF78350F);
+
+  // Emerald
+  static const Color emerald400 = Color(0xFF34D399);
+  static const Color emerald500 = Color(0xFF10B981);
+  static const Color emerald600 = Color(0xFF059669);
+  static const Color emerald900 = Color(0xFF064E3B);
+
+  // Slate
+  static const Color slate100 = Color(0xFFF1F5F9);
+  static const Color slate300 = Color(0xFFCBD5E1);
+  static const Color slate400 = Color(0xFF94A3B8);
+  static const Color slate500 = Color(0xFF64748B);
+  static const Color slate600 = Color(0xFF475569);
+  static const Color slate700 = Color(0xFF334155);
+  static const Color slate800 = Color(0xFF1E293B);
+  static const Color slate900 = Color(0xFF0F172A);
+
+  // Sky
+  static const Color sky100 = Color(0xFFE0F2FE);
+  static const Color sky500 = Color(0xFF0EA5E9);
+  static const Color sky900 = Color(0xFF0C4A6E);
+}
+
+// ===========================================================================
+// BBMotion bridges — was AnimationTokens (full duration + curve coverage)
+// ===========================================================================
+
+extension BBMotionBridges on BBMotion {
+  // Duration aliases (preserve exact old values)
+  static const Duration instant = Duration(milliseconds: 100);
+  static const Duration fast200 = Duration(
+    milliseconds: 200,
+  ); // = BBMotion.base
+  static const Duration normal = Duration(milliseconds: 300);
+  static const Duration slow500 = Duration(milliseconds: 500);
+  static const Duration slower = Duration(milliseconds: 600);
+  static const Duration long = Duration(milliseconds: 1000);
+  static const Duration notification = Duration(seconds: 3);
+  static const Duration autoDismiss = Duration(seconds: 5);
+
+  // Curves (re-exposed)
+  static const Curve linear = Curves.linear;
+  static const Curve ease = Curves.ease;
+  static const Curve easeIn = Curves.easeIn;
+  static const Curve easeOut = Curves.easeOut;
+  static const Curve easeInOut = Curves.easeInOut;
+  static const Curve fastOutSlowIn = Curves.fastOutSlowIn;
+  static const Curve elasticOut = Curves.elasticOut;
+  static const Curve bounceOut = Curves.bounceOut;
+  static const Curve decelerate = Curves.decelerate;
+
+  // Compound presets
+  static const Duration fadeDuration = fast200;
+  static const Curve fadeCurve = easeOut;
+  static const Duration scaleDuration = normal;
+  static const Curve scaleCurve = fastOutSlowIn;
+  static const Duration slideDuration = normal;
+  static const Curve slideCurve = easeOut;
+  static const Duration rotationDuration = normal;
+  static const Curve rotationCurve = easeInOut;
+}
+
+// ===========================================================================
+// BBType bridges — was TypographyTokens scalar fontSizes / lineHeights /
+// letterSpacings + font weights (most callers don't actually need the
+// scalars after migrating to BBType.* TextStyle factories, but bridges
+// retained so the codemod can do straight rename).
+// ===========================================================================
+
+extension BBTypeBridges on BBType {
+  // Font sizes (exact)
+  static const double fontSizeXS = 10.0;
+  static const double fontSizeXS2 = 11.0;
+  static const double fontSizeS = 12.0;
+  static const double fontSizeS2 = 13.0;
+  static const double fontSizeM = 14.0;
+  static const double fontSizeM2 = 15.0;
+  static const double fontSizeL = 16.0;
+  static const double fontSizeXL = 18.0;
+  static const double fontSizeXXL = 20.0;
+  static const double fontSizeXXXL = 24.0;
+  static const double fontSizeHuge = 26.0;
+  static const double poweredBySize = 9.0;
+
+  // Line heights
+  static const double lineHeightTight = 1.2;
+  static const double lineHeightNormal = 1.5;
+  static const double lineHeightRelaxed = 1.75;
+
+  // Letter spacings
+  static const double letterSpacingTight = -0.5;
+  static const double letterSpacingNormal = 0.0;
+  static const double letterSpacingWide = 0.5;
+
+  // Font family name (kept for non-BBType use)
+  static const String primaryFont = 'Inter';
+  static const List<String> fontFallback = <String>[
+    'Inter',
+    '-apple-system',
+    'BlinkMacSystemFont',
+    'Segoe UI',
+    'Roboto',
+    'Helvetica Neue',
+    'Arial',
+    'sans-serif',
+  ];
+
+  // FontWeight aliases (callers can switch to FontWeight.w*, but the names
+  // light/regular/medium/semiBold/bold are heavily used).
+  static const FontWeight weightLight = FontWeight.w300;
+  static const FontWeight weightRegular = FontWeight.w400;
+  static const FontWeight weightMedium = FontWeight.w500;
+  static const FontWeight weightSemiBold = FontWeight.w600;
+  static const FontWeight weightBold = FontWeight.w700;
+}
+
+// ===========================================================================
+// BBShadow extension — semantic shadow aliases (was ShadowTokens.subtle/light/
+// medium/strong/hover + widgetContainer = light).
+// ===========================================================================
+
+extension BBShadowAliases on BBShadow {
+  /// `ShadowTokens.subtle` — 1px y, 2px blur, 4% black
+  static const List<BoxShadow> subtle = <BoxShadow>[
+    BoxShadow(color: Color(0x0A000000), offset: Offset(0, 1), blurRadius: 2),
+  ];
+
+  /// `ShadowTokens.medium` — 4px y, 16px blur, 12% black
+  static const List<BoxShadow> mediumLegacy = <BoxShadow>[
+    BoxShadow(color: Color(0x1F000000), offset: Offset(0, 4), blurRadius: 16),
+  ];
+
+  /// `ShadowTokens.strong` / `hover` — 8px y, 24px blur, 16% black
+  static const List<BoxShadow> strong = <BoxShadow>[
+    BoxShadow(color: Color(0x29000000), offset: Offset(0, 8), blurRadius: 24),
+  ];
+}
+
+// ===========================================================================
+// BBGradient — was GradientTokens (brand + ambient)
+// ===========================================================================
+
+class BBGradient {
+  BBGradient._();
+
+  /// Brand primary — purple top-left → lighter purple bottom-right.
+  /// Used: AppBar, Drawer Header, primary CTAs.
+  static const LinearGradient brandPrimary = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[
+      Color(0xFF6B4CE6), // BBColor.primary
+      Color(0xFF7E5FEE),
+    ],
+  );
+
+  static const Color brandPrimaryStart = Color(0xFF6B4CE6);
+  static const Color brandPrimaryEnd = Color(0xFF7E5FEE);
+
+  /// Subtle background — light mode
+  static const LinearGradient subtleBackgroundLight = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[Color(0xFFFAF8F3), Color(0xFFFFFFFF)],
+  );
+
+  /// Subtle background — dark mode
+  static const LinearGradient subtleBackgroundDark = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[Color(0xFF1A1A1A), Color(0xFF121212)],
+  );
+
+  /// Primary accent
+  static const LinearGradient primaryAccent = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[Color(0xFF6B4CE6), Color(0xFF9B86F3)],
+  );
+
+  /// Success
+  static const LinearGradient success = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[Color(0xFF10B981), Color(0xFF34D399)],
+  );
+
+  /// Warning
+  static const LinearGradient warning = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[Color(0xFFF59E0B), Color(0xFFFBBF24)],
+  );
+}

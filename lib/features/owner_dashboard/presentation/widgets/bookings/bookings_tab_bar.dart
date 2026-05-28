@@ -121,7 +121,10 @@ class _TabButton extends StatelessWidget {
               width: isSelected ? 1.5 : 1,
             ),
           ),
-          alignment: Alignment.center,
+          // alignment removed: Container.alignment makes the box expand to fill
+          // parent constraints. Inside Wrap (post-F-63-04) that meant each tab
+          // grew to the parent column's full width and stacked vertically even
+          // on desktop. Row(mainAxisSize.min) below already sizes correctly.
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

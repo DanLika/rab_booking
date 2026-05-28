@@ -37,6 +37,8 @@
   "signIn": "Prijavite se",
   "register": "Registracija",
   "logout": "Odjava",
+  "logoutConfirmTitle": "Odjava",
+  "logoutConfirmMessage": "Jeste li sigurni da se želite odjaviti?",
   "email": "Email",
   "password": "Lozinka",
   "forgotPassword": "Zaboravili ste lozinku?",

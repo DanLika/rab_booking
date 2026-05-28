@@ -37,6 +37,8 @@
   "signIn": "Sign In",
   "register": "Register",
   "logout": "Logout",
+  "logoutConfirmTitle": "Log out",
+  "logoutConfirmMessage": "Are you sure you want to log out?",
   "email": "Email",
   "password": "Password",
   "forgotPassword": "Forgot Password?",

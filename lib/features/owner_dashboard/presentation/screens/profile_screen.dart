@@ -546,6 +546,25 @@ class ProfileScreen extends ConsumerWidget {
                             title: l10n.ownerProfileLogout,
                             subtitle: l10n.ownerProfileLogoutSubtitle,
                             onLogout: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: Text(l10n.logoutConfirmTitle),
+                                  content: Text(l10n.logoutConfirmMessage),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
+                                      child: Text(l10n.cancel),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: Text(l10n.logout),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed != true) return;
                               await ref
                                   .read(enhancedAuthProvider.notifier)
                                   .signOut();

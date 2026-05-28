@@ -14,6 +14,24 @@ export const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 // Initialize Stripe (lazy initialization to avoid deployment errors)
 let stripe: Stripe | null = null;
 
+// F-70-01: bookbed-dev us-central1 Cloud Run runs with Sentry init'd
+// (SENTRY_DSN set), and @sentry/node v10's OpenTelemetry HTTP
+// auto-instrumentation patches node:https in a way that breaks the Stripe
+// SDK's default NodeHttpClient — every Stripe call retries 2x then throws
+// StripeConnectionError, while raw https.request from the same Cloud Run
+// instance returns 200 OK. PROD escapes today only because SENTRY_DSN
+// is unset there (audit/74 §1), but the moment PROD wires up Sentry the
+// payment CFs would break identically.
+//
+// Fix: use Stripe.createFetchHttpClient — the SDK's fetch-based client
+// goes through global fetch (undici) instead of node:https, bypassing
+// the Sentry monkey-patch. Tested on dev: getStripeAccountStatus now
+// returns 200 with full account data; createStripeCheckoutSession reaches
+// the charges_enabled gate as designed (audit/74 §4).
+// Tradeoff: we lose per-request timeout granularity in older Node
+// versions; mitigated by Stripe SDK's own `timeout` option.
+const stripeHttpClient: Stripe.HttpClient = Stripe.createFetchHttpClient();
+
 /**
  * Get or initialize Stripe instance
  *
@@ -47,6 +65,7 @@ export function getStripeClient(): Stripe {
 
     stripe = new Stripe(apiKey, {
       apiVersion: "2025-09-30.clover",
+      httpClient: stripeHttpClient,
     });
   }
   return stripe;

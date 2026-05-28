@@ -1315,8 +1315,15 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
   }
 
-  /// Sign out
-  Future<void> signOut() async {
+  /// Sign out.
+  ///
+  /// [clearSavedEmail] — when true, also wipes the SecureStorage email +
+  /// rememberMe flag so the next login screen does NOT pre-fill the
+  /// just-logged-out user. Default false preserves the legacy convenience
+  /// behavior for session-expiry / credential-revoke paths. Explicit user-
+  /// initiated logout (e.g., Profil → Odjava) should pass true.
+  /// Audit ref: F-62-03 / F-58c-14.
+  Future<void> signOut({bool clearSavedEmail = false}) async {
     final userId = _auth.currentUser?.uid;
     if (userId != null) {
       await _security.logLogout(userId);
@@ -1335,11 +1342,16 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     // Clear user context for Sentry/Crashlytics error tracking
     LoggingService.clearUser();
 
-    // NOTE: We do NOT clear secure storage (Remember Me email) on sign out.
-    // The email should persist after logout so it's pre-filled on next login.
-    // Credentials are only cleared when user:
-    // 1. Unchecks "Remember Me" checkbox during login
-    // 2. Deletes their account
+    if (clearSavedEmail) {
+      try {
+        await SecureStorageService().clearCredentials();
+      } catch (e) {
+        LoggingService.log(
+          'SecureStorage clearCredentials failed (non-critical): $e',
+          tag: 'AUTH_LOGOUT',
+        );
+      }
+    }
 
     await _auth.signOut();
     // Keep isLoading false after sign out (not an initial check)

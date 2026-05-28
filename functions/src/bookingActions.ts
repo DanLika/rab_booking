@@ -1,11 +1,15 @@
-// Owner booking actions (approve / reject) — F-67-01.
+// Owner booking actions (approve / reject / cancel) — F-67-01 + sibling.
 //
-// Background: prior to this CF the owner dashboard called
+// Background: prior to these CFs the owner dashboard called
 // `bookingDoc.reference.update({status: ...})` directly via the Firestore SDK.
 // That produced a silent no-op for the user (see audit/67 §G) and gave no
-// server-side audit point. We move the state transition behind these
+// server-side audit point. We move the state transitions behind these
 // callables so the UI gets a clear success/error contract and the rules
 // surface can deny client status writes in a follow-up.
+//
+// `cancelBooking` additionally handles the Stripe refund leg via the shared
+// `processStripeRefund` helper so guest + owner cancellation paths cannot
+// drift on refund behaviour.
 
 import {onCall, HttpsError, CallableRequest} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
@@ -13,6 +17,8 @@ import {db} from "./firebase";
 import {logInfo, logSuccess, logWarn} from "./logger";
 import {setUser} from "./sentry";
 import {findBookingById} from "./utils/bookingLookup";
+import {processStripeRefund} from "./utils/bookingRefund";
+import {stripeSecretKey} from "./stripe";
 
 const REGION = "europe-west1";
 
@@ -25,6 +31,12 @@ interface BookingActionOutput {
   success: boolean;
   bookingId: string;
   status: string;
+}
+
+interface CancelBookingOutput extends BookingActionOutput {
+  refundAmount: number;
+  refundStatus: string;
+  refundId?: string;
 }
 
 /**
@@ -46,18 +58,20 @@ function requireString(value: unknown, field: string): string {
 }
 
 /**
- * Resolve a booking owned by `uid` and ensure it is still pending. Throws
- * the appropriate HttpsError on missing booking, ownership mismatch, or
- * non-pending status so callable handlers can stay focused on the state
- * transition itself.
+ * Resolve a booking owned by `uid` and ensure its current status is one of
+ * `allowedStatuses`. Throws the appropriate HttpsError on missing booking,
+ * ownership mismatch, or disallowed status so callable handlers can stay
+ * focused on the state transition itself.
  *
  * @param {string} uid - authenticated owner UID.
  * @param {string} bookingId - booking document ID.
+ * @param {readonly string[]} allowedStatuses - eligible source statuses.
  * @return {Promise} reference + data of the located booking.
  */
-async function loadOwnedPendingBooking(
+async function loadOwnedBookingForAction(
   uid: string,
-  bookingId: string
+  bookingId: string,
+  allowedStatuses: readonly string[]
 ): Promise<{
   ref: FirebaseFirestore.DocumentReference;
   data: FirebaseFirestore.DocumentData;
@@ -91,10 +105,10 @@ async function loadOwnedPendingBooking(
       "You do not own this booking."
     );
   }
-  if (data.status !== "pending") {
+  if (!allowedStatuses.includes(data.status)) {
     throw new HttpsError(
       "failed-precondition",
-      `Booking is not pending (current status: ${data.status}).`
+      `Booking status "${data.status}" is not eligible for this action.`
     );
   }
   return {ref: doc.ref, data};
@@ -137,7 +151,7 @@ export const approveBooking = onCall<
     const bookingId = requireString(request.data?.bookingId, "bookingId");
 
     logInfo("[approveBooking] start", {bookingId, uid});
-    const {ref} = await loadOwnedPendingBooking(uid, bookingId);
+    const {ref} = await loadOwnedBookingForAction(uid, bookingId, ["pending"]);
     await ref.update({
       status: "confirmed",
       approved_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -191,7 +205,7 @@ export const rejectBooking = onCall<
     }
 
     logInfo("[rejectBooking] start", {bookingId, uid});
-    const {ref} = await loadOwnedPendingBooking(uid, bookingId);
+    const {ref} = await loadOwnedBookingForAction(uid, bookingId, ["pending"]);
     await ref.update({
       status: "cancelled",
       rejection_reason: reason,
@@ -204,5 +218,171 @@ export const rejectBooking = onCall<
       path: ref.path,
     });
     return {success: true, bookingId, status: "cancelled"};
+  }
+);
+
+/**
+ * cancelBooking — owner-initiated cancellation of a `pending` or
+ * `confirmed` booking. Transitions status → cancelled inside a transaction
+ * that also computes the refund_amount / refund_status. After the
+ * transaction completes, if the booking was paid via Stripe the shared
+ * `processStripeRefund` helper issues the destination refund.
+ *
+ * Email + iCal cache invalidation fan out via the existing
+ * `onBookingStatusChange` Firestore trigger (bookingManagement.ts) — same
+ * path the guest cancellation flow already uses.
+ */
+export const cancelBooking = onCall<
+  BookingActionInput,
+  Promise<CancelBookingOutput>
+>(
+  {
+    region: REGION,
+    memory: "256MiB",
+    timeoutSeconds: 60,
+    maxInstances: 50,
+    cors: true,
+    secrets: [stripeSecretKey],
+  },
+  async (request) => {
+    const uid = requireAuth(request);
+    const bookingId = requireString(request.data?.bookingId, "bookingId");
+
+    const rawReason = request.data?.reason;
+    let reason = "Cancelled by owner";
+    if (rawReason !== undefined && rawReason !== null) {
+      if (typeof rawReason !== "string") {
+        throw new HttpsError("invalid-argument", "reason must be a string.");
+      }
+      const trimmed = rawReason.trim();
+      if (trimmed.length > 500) {
+        throw new HttpsError(
+          "invalid-argument",
+          "reason exceeds 500 characters."
+        );
+      }
+      if (trimmed.length > 0) {
+        reason = trimmed;
+      }
+    }
+
+    logInfo("[cancelBooking] start", {bookingId, uid});
+
+    // Ownership check + allow already-cancelled to fall through to the
+    // transaction's idempotent short-circuit. The transaction itself
+    // rejects truly ineligible states (completed / refunded).
+    const {ref: bookingRef, data: initial} = await loadOwnedBookingForAction(
+      uid,
+      bookingId,
+      ["pending", "confirmed", "cancelled"]
+    );
+    const bookingReference: string =
+      typeof initial.booking_reference === "string" ?
+        initial.booking_reference :
+        bookingId;
+
+    // Transactional state transition + refund-status preparation.
+    // Mirrors guestCancelBooking's atomic update so the two paths land
+    // the same set of fields.
+    const txResult = await db.runTransaction(async (transaction) => {
+      const fresh = await transaction.get(bookingRef);
+      if (!fresh.exists) {
+        throw new HttpsError("not-found", "Booking not found.");
+      }
+      const data = fresh.data()!;
+      if (data.status === "cancelled") {
+        return {
+          alreadyCancelled: true as const,
+          refundAmount: (data.refund_amount as number) || 0,
+          refundStatus: (data.refund_status as string) || "not_applicable",
+          stripePaymentIntentId: data.stripe_payment_intent_id as
+            | string
+            | undefined,
+        };
+      }
+      if (data.status !== "pending" && data.status !== "confirmed") {
+        throw new HttpsError(
+          "failed-precondition",
+          `Booking status "${data.status}" is not eligible for cancellation.`
+        );
+      }
+
+      const paymentStatus = data.payment_status;
+      const paymentMethod = data.payment_method;
+      const paidAmount = (data.paid_amount as number) || 0;
+      let refundAmount = 0;
+      let refundStatus = "not_applicable";
+      if (paymentStatus === "paid" && paidAmount > 0) {
+        refundAmount = paidAmount;
+        refundStatus =
+          paymentMethod === "stripe" ? "pending_stripe" : "pending_manual";
+      }
+
+      transaction.update(bookingRef, {
+        status: "cancelled",
+        cancelled_at: admin.firestore.FieldValue.serverTimestamp(),
+        cancelled_by: "owner",
+        cancellation_reason: reason,
+        refund_amount: refundAmount,
+        refund_status: refundStatus,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      return {
+        alreadyCancelled: false as const,
+        refundAmount,
+        refundStatus,
+        stripePaymentIntentId: data.stripe_payment_intent_id as
+          | string
+          | undefined,
+      };
+    });
+
+    if (txResult.alreadyCancelled) {
+      logInfo("[cancelBooking] idempotent — already cancelled", {bookingId});
+      return {
+        success: true,
+        bookingId,
+        status: "cancelled",
+        refundAmount: txResult.refundAmount,
+        refundStatus: txResult.refundStatus,
+      };
+    }
+
+    // Step 2: Stripe refund AFTER transaction (no external API inside Tx).
+    let refundId: string | undefined;
+    if (
+      txResult.refundStatus === "pending_stripe" &&
+      txResult.refundAmount > 0
+    ) {
+      const result = await processStripeRefund({
+        bookingId,
+        bookingReference,
+        bookingRef,
+        ownerId: uid,
+        stripePaymentIntentId: txResult.stripePaymentIntentId,
+        refundAmount: txResult.refundAmount,
+        cancelledBy: "owner",
+      });
+      refundId = result.refundId;
+    }
+
+    logSuccess("[cancelBooking] booking cancelled", {
+      bookingId,
+      uid,
+      path: bookingRef.path,
+      refundAmount: txResult.refundAmount,
+      refundStatus: txResult.refundStatus,
+      refundId,
+    });
+
+    return {
+      success: true,
+      bookingId,
+      status: "cancelled",
+      refundAmount: txResult.refundAmount,
+      refundStatus: txResult.refundStatus,
+      refundId,
+    };
   }
 );

@@ -111,6 +111,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get logout => 'Odjava';
 
   @override
+  String get logoutConfirmTitle => 'Odjava';
+
+  @override
+  String get logoutConfirmMessage => 'Jeste li sigurni da se želite odjaviti?';
+
+  @override
   String get email => 'Email';
 
   @override

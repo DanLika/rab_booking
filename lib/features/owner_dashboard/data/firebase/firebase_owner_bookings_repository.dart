@@ -903,31 +903,36 @@ class FirebaseOwnerBookingsRepository {
   /// as [approveBooking]: pending→confirmed + approved_at stamp.
   Future<void> confirmBooking(String bookingId) => approveBooking(bookingId);
 
-  /// Cancel booking with reason
-  /// Note: Cancellation email is automatically sent by onBookingStatusChange Cloud Function trigger
+  /// Cancel a booking via the `cancelBooking` Cloud Function (europe-west1).
+  /// Server performs ownership check, state guard (`pending`/`confirmed`
+  /// only), transactional status flip, and — if the booking was paid via
+  /// Stripe — the destination refund. Email + iCal cache invalidation fan
+  /// out via the existing `onBookingStatusChange` trigger.
+  ///
+  /// Sibling to F-67-01 approve/reject: the previous direct Firestore SDK
+  /// write was a silent no-op for some owners (audit/72 §1).
+  ///
+  /// [sendEmail] is retained for source-compat with existing call sites
+  /// but is no longer honoured on the client — the server-side trigger
+  /// owns the email path and is unconditional for owner-initiated cancels.
   Future<void> cancelBooking(
     String bookingId,
     String reason, {
     bool sendEmail = true,
   }) async {
     try {
-      // Find booking using helper method (avoids FieldPath.documentId bug)
-      final bookingDoc = await _findBookingById(bookingId);
-
-      if (bookingDoc == null) {
-        throw BookingException('Booking not found', code: 'booking/not-found');
-      }
-
-      // Update using the found document reference
-      await bookingDoc.reference.update({
-        'status': BookingStatus.cancelled.value,
-        'cancellation_reason': reason,
-        'cancelled_at': FieldValue.serverTimestamp(),
-        'updated_at': FieldValue.serverTimestamp(),
-      });
-
-      // Email is automatically sent by onBookingStatusChange Cloud Function
-      // when status changes to 'cancelled'
+      await _functions
+          .httpsCallable('cancelBooking')
+          .call<Map<String, dynamic>>({
+            'bookingId': bookingId,
+            if (reason.trim().isNotEmpty) 'reason': reason.trim(),
+          });
+    } on FirebaseFunctionsException catch (e) {
+      throw BookingException(
+        e.message ?? 'Failed to cancel booking',
+        code: 'booking/cancellation-${e.code}',
+        originalError: e,
+      );
     } catch (e) {
       throw BookingException.cancellationFailed(e);
     }

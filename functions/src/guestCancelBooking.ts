@@ -20,9 +20,10 @@ import {sendGuestCancellationPushNotification} from "./fcmService";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
 import {safeToDate} from "./utils/dateValidation";
-import {getStripeClient, stripeSecretKey} from "./stripe";
+import {stripeSecretKey} from "./stripe";
 import {checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
+import {processStripeRefund} from "./utils/bookingRefund";
 
 /**
  * Validates email configuration to ensure all required fields are present
@@ -293,76 +294,21 @@ export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY", stripeSecr
     // ====================================================================
     // Step 7: Process Stripe refund AFTER transaction completes
     // (Outside transaction to avoid blocking on external API)
+    // Shared helper used by both guest + owner cancellation flows so the
+    // refund leg cannot drift between callers. See audit/52 F-52-01 for the
+    // destination refund / reverse_transfer rationale.
     // ====================================================================
-    let stripeRefundId: string | undefined;
-
     if (cancellationResult.refundStatus === "pending_stripe" &&
         cancellationResult.refundAmount > 0) {
-      try {
-        // Destination refund: platform-scoped, reverse_transfer.
-        // See audit/52 F-52-01.
-        const ownerId = booking.owner_id;
-        let ownerStripeAccountId: string | undefined;
-        if (ownerId) {
-          const ownerDoc = await db.collection("users").doc(ownerId).get();
-          ownerStripeAccountId = ownerDoc.data()?.stripe_account_id as string | undefined;
-        }
-
-        if (!ownerStripeAccountId) {
-          logError("Stripe Connect account ID missing for refund", null, {bookingId, ownerId});
-          await bookingRef.update({refund_status: "failed"});
-        } else {
-          const stripe = getStripeClient();
-          const paymentIntentId = cancellationResult.stripePaymentIntentId;
-
-          if (!paymentIntentId) {
-            logError("Stripe payment intent ID missing", null, {bookingId});
-            await bookingRef.update({refund_status: "failed"});
-          } else {
-            const refund = await stripe.refunds.create(
-              {
-                payment_intent: paymentIntentId,
-                amount: Math.round(cancellationResult.refundAmount * 100),
-                reason: "requested_by_customer",
-                reverse_transfer: true,
-                metadata: {
-                  booking_id: bookingId,
-                  booking_reference: bookingReference,
-                  cancelled_by: "guest",
-                  connected_account: ownerStripeAccountId,
-                },
-              },
-              {idempotencyKey: `refund-${bookingId}`}
-            );
-
-            stripeRefundId = refund.id;
-
-            // Update booking with refund success
-            await bookingRef.update({
-              refund_status: "processed",
-              stripe_refund_id: stripeRefundId,
-              updated_at: admin.firestore.FieldValue.serverTimestamp(),
-            });
-
-            logSuccess(`Stripe refund processed: ${refund.id}`, {
-              bookingId,
-              refundAmount: cancellationResult.refundAmount,
-            });
-          }
-        }
-      } catch (stripeError) {
-        logError("Failed to process Stripe refund", stripeError, {
-          bookingId,
-          refundAmount: cancellationResult.refundAmount,
-        });
-
-        // Update booking to mark refund as failed
-        await bookingRef.update({
-          refund_status: "failed",
-          refund_error: String(stripeError),
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      }
+      await processStripeRefund({
+        bookingId,
+        bookingReference,
+        bookingRef,
+        ownerId: booking.owner_id,
+        stripePaymentIntentId: cancellationResult.stripePaymentIntentId,
+        refundAmount: cancellationResult.refundAmount,
+        cancelledBy: "guest",
+      });
     }
 
     // Send cancellation confirmation email to guest

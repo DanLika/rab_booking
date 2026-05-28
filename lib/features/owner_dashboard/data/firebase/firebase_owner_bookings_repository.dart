@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
@@ -65,8 +66,14 @@ class BidirectionalBookingsResult {
 class FirebaseOwnerBookingsRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final FirebaseFunctions _functions;
 
-  FirebaseOwnerBookingsRepository(this._firestore, this._auth);
+  FirebaseOwnerBookingsRepository(
+    this._firestore,
+    this._auth, {
+    FirebaseFunctions? functions,
+  }) : _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1');
 
   /// Helper method to safely extract String from dynamic value
   /// Handles cases where Firestore returns Map objects instead of Strings
@@ -133,7 +140,22 @@ class FirebaseOwnerBookingsRepository {
         data['property_id'] = extractedPropertyId;
       }
     }
+    _backfillGuestName(data);
     return BookingModel.fromJson({...data, 'id': doc.id});
+  }
+
+  /// F-67-02: When `guest_name` is missing or empty on a booking doc, derive
+  /// it from `guest_first_name` + `guest_last_name` if either is present.
+  /// Display-only — does NOT write back to Firestore.
+  static void _backfillGuestName(Map<String, dynamic> data) {
+    final existing = data['guest_name'];
+    if (existing is String && existing.trim().isNotEmpty) return;
+    final first = data['guest_first_name']?.toString().trim() ?? '';
+    final last = data['guest_last_name']?.toString().trim() ?? '';
+    final composed = ('$first $last').trim();
+    if (composed.isNotEmpty) {
+      data['guest_name'] = composed;
+    }
   }
 
   /// Get all bookings for owner's properties
@@ -788,6 +810,7 @@ class FirebaseOwnerBookingsRepository {
           bookingData['property_id'] = extractedPropertyId;
         }
       }
+      _backfillGuestName(bookingData);
       final booking = BookingModel.fromJson({
         ...bookingData,
         'id': bookingDoc.id,
@@ -841,81 +864,49 @@ class FirebaseOwnerBookingsRepository {
     }
   }
 
-  /// Approve pending booking (owner approval workflow)
+  /// Approve a pending booking via the `approveBooking` Cloud Function
+  /// (europe-west1). The server transitions status pending→confirmed,
+  /// stamps `approved_at`, and the existing `onBookingStatusChange` trigger
+  /// sends the guest the confirmation email.
+  ///
+  /// F-67-01 (audit/67 §G): direct Firestore SDK writes were a silent no-op
+  /// for some owners — routing through the CF gives a clear success/error
+  /// contract.
   Future<void> approveBooking(String bookingId) async {
     try {
-      debugPrint('[approveBooking] Starting approval for booking: $bookingId');
-
-      // Find booking using helper method (avoids FieldPath.documentId bug)
-      final bookingDoc = await _findBookingById(bookingId);
-      debugPrint(
-        '[approveBooking] _findBookingById result: ${bookingDoc != null ? 'found' : 'NOT FOUND'}',
+      await _functions
+          .httpsCallable('approveBooking')
+          .call<Map<String, dynamic>>({'bookingId': bookingId});
+    } on FirebaseFunctionsException catch (e) {
+      throw BookingException(
+        e.message ?? 'Failed to approve booking',
+        code: 'booking/approval-${e.code}',
+        originalError: e,
       );
-
-      if (bookingDoc == null) {
-        debugPrint(
-          '[approveBooking] ERROR: Booking not found in any collection',
-        );
-        throw BookingException('Booking not found', code: 'booking/not-found');
-      }
-
-      // Log the document path to verify correct subcollection
-      debugPrint(
-        '[approveBooking] Document path: ${bookingDoc.reference.path}',
-      );
-      debugPrint('[approveBooking] Current user: ${_auth.currentUser?.uid}');
-
-      // Update using the found document reference
-      debugPrint('[approveBooking] Attempting update...');
-      await bookingDoc.reference.update({
-        'status': BookingStatus.confirmed.value,
-        'approved_at': FieldValue.serverTimestamp(),
-        'updated_at': FieldValue.serverTimestamp(),
-      });
-      debugPrint('[approveBooking] Update SUCCESS');
-      // Email notification will be sent by onBookingStatusChange Cloud Function
-    } catch (e, stackTrace) {
-      debugPrint('[approveBooking] ERROR: $e');
-      debugPrint('[approveBooking] Stack trace: $stackTrace');
+    } catch (e) {
       throw BookingException.approvalFailed(e);
     }
   }
 
-  /// Reject pending booking (owner approval workflow)
+  /// Reject a pending booking via the `rejectBooking` Cloud Function
+  /// (europe-west1). Status transitions pending→cancelled, stamps
+  /// `rejected_at` + `rejection_reason`. Email handled by the same trigger.
   Future<void> rejectBooking(String bookingId, {String? reason}) async {
     try {
-      debugPrint('[rejectBooking] Starting rejection for booking: $bookingId');
-
-      // Find booking using helper method (avoids FieldPath.documentId bug)
-      final bookingDoc = await _findBookingById(bookingId);
-      debugPrint(
-        '[rejectBooking] _findBookingById result: ${bookingDoc != null ? 'found' : 'NOT FOUND'}',
+      await _functions
+          .httpsCallable('rejectBooking')
+          .call<Map<String, dynamic>>({
+            'bookingId': bookingId,
+            if (reason != null && reason.trim().isNotEmpty)
+              'reason': reason.trim(),
+          });
+    } on FirebaseFunctionsException catch (e) {
+      throw BookingException(
+        e.message ?? 'Failed to reject booking',
+        code: 'booking/rejection-${e.code}',
+        originalError: e,
       );
-
-      if (bookingDoc == null) {
-        debugPrint(
-          '[rejectBooking] ERROR: Booking not found in any collection',
-        );
-        throw BookingException('Booking not found', code: 'booking/not-found');
-      }
-
-      // Log the document path to verify correct subcollection
-      debugPrint('[rejectBooking] Document path: ${bookingDoc.reference.path}');
-      debugPrint('[rejectBooking] Current user: ${_auth.currentUser?.uid}');
-
-      // Update using the found document reference
-      debugPrint('[rejectBooking] Attempting update...');
-      await bookingDoc.reference.update({
-        'status': BookingStatus.cancelled.value,
-        'rejection_reason': reason ?? 'Rejected by owner',
-        'rejected_at': FieldValue.serverTimestamp(),
-        'updated_at': FieldValue.serverTimestamp(),
-      });
-      debugPrint('[rejectBooking] Update SUCCESS');
-      // Email notification will be sent by onBookingStatusChange Cloud Function
-    } catch (e, stackTrace) {
-      debugPrint('[rejectBooking] ERROR: $e');
-      debugPrint('[rejectBooking] Stack trace: $stackTrace');
+    } catch (e) {
       throw BookingException(
         'Failed to reject booking',
         code: 'booking/rejection-failed',
@@ -924,30 +915,9 @@ class FirebaseOwnerBookingsRepository {
     }
   }
 
-  /// Confirm pending booking
-  Future<void> confirmBooking(String bookingId) async {
-    try {
-      // Find booking using helper method (avoids FieldPath.documentId bug)
-      final bookingDoc = await _findBookingById(bookingId);
-
-      if (bookingDoc == null) {
-        throw BookingException('Booking not found', code: 'booking/not-found');
-      }
-
-      // Update using the found document reference
-      await bookingDoc.reference.update({
-        'status': BookingStatus.confirmed.value,
-        'approved_at': FieldValue.serverTimestamp(),
-        'updated_at': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw BookingException(
-        'Failed to confirm booking',
-        code: 'booking/confirmation-failed',
-        originalError: e,
-      );
-    }
-  }
+  /// Legacy alias kept for `bookings_table_view` callers — same semantics
+  /// as [approveBooking]: pending→confirmed + approved_at stamp.
+  Future<void> confirmBooking(String bookingId) => approveBooking(bookingId);
 
   /// Cancel booking with reason
   /// Note: Cancellation email is automatically sent by onBookingStatusChange Cloud Function trigger

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 
@@ -52,17 +52,19 @@ class GuestCountPicker extends ConsumerWidget {
     final allowsPets = petFee != null && onPetsChanged != null;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: colors.backgroundPrimary,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(colors, tr, isAtCapacity, effectiveMax),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
           _GuestRow(
             icon: Icons.person,
             label: tr.adults,
@@ -74,7 +76,7 @@ class GuestCountPicker extends ConsumerWidget {
             colors: colors,
             isAtCapacity: isAtCapacity,
           ),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
           _GuestRow(
             icon: Icons.child_care,
             label: tr.children,
@@ -87,7 +89,7 @@ class GuestCountPicker extends ConsumerWidget {
             isAtCapacity: isAtCapacity,
           ),
           if (allowsPets) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             _GuestRow(
               icon: Icons.pets,
               label: tr.pets,
@@ -102,7 +104,7 @@ class GuestCountPicker extends ConsumerWidget {
             ),
           ],
           if (isAtCapacity) ...[
-            const SizedBox(height: SpacingTokens.m),
+            const SizedBox(height: BBSpace.sm),
             _CapacityWarning(maxGuests: effectiveMax, colors: colors, tr: tr),
           ],
         ],
@@ -171,7 +173,7 @@ class _GuestRow extends StatelessWidget {
         Row(
           children: [
             Icon(icon, color: colors.textPrimary, size: 20),
-            const SizedBox(width: SpacingTokens.s),
+            const SizedBox(width: BBSpace.xs),
             Text(
               label,
               style: TextStyle(fontSize: 14, color: colors.textPrimary),
@@ -229,17 +231,17 @@ class _CapacityWarning extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.s),
+      padding: const EdgeInsets.all(BBSpace.xs),
       decoration: BoxDecoration(
         color: colors.error.withValues(alpha: 0.1),
-        borderRadius: BorderTokens.circularSmall,
+        borderRadius: BBRadius.xsAll,
         border: Border.all(color: colors.error),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.warning, color: colors.error, size: 14),
-          const SizedBox(width: SpacingTokens.xs),
+          const SizedBox(width: BBSpace.xxs),
           Text(
             tr.maxCapacityWarning(maxGuests),
             style: TextStyle(

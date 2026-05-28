@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/design_tokens/design_tokens.dart';
+import '../../core/design/tokens.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/auth/presentation/widgets/auth_logo_icon.dart';
 
@@ -102,7 +102,7 @@ class BookBedBrandedLoader extends StatelessWidget {
         fontSize: _percentageFontSize,
         fontWeight: FontWeight.w500,
         color: textColor,
-        fontFamily: TypographyTokens.primaryFont,
+        fontFamily: BBTypeBridges.primaryFont,
       ),
     );
   }

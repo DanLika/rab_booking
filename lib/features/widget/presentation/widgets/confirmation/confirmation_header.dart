@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Animated confirmation header with icon and message.
@@ -104,7 +105,7 @@ class ConfirmationHeader extends ConsumerWidget {
                 SizedBox(height: logoHeight, width: logoHeight),
             errorWidget: (context, url, error) => const SizedBox.shrink(),
           ),
-          const SizedBox(height: SpacingTokens.l),
+          const SizedBox(height: BBSpace.md),
         ],
 
         // Success icon with animation
@@ -120,7 +121,7 @@ class ConfirmationHeader extends ConsumerWidget {
           ),
         ),
 
-        const SizedBox(height: SpacingTokens.l),
+        const SizedBox(height: BBSpace.md),
 
         // Confirmation message
         // Bug #57 Fix: Add Semantics for accessibility
@@ -131,8 +132,8 @@ class ConfirmationHeader extends ConsumerWidget {
             confirmationMessage,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeXL,
-              fontWeight: TypographyTokens.bold,
+              fontSize: BBTypeBridges.fontSizeXL,
+              fontWeight: BBTypeBridges.weightBold,
               color: colors.textPrimary,
             ),
           ),

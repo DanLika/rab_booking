@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/widget_translations.dart';
 import '../theme/minimalist_colors.dart';
-import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 
 class ZoomHintOverlay extends ConsumerStatefulWidget {
   final VoidCallback onDismiss;
@@ -37,8 +37,10 @@ class _ZoomHintOverlayState extends ConsumerState<ZoomHintOverlay> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: colors.backgroundPrimary,
-            borderRadius: BorderTokens.circularMedium,
-            boxShadow: ShadowTokens.strong,
+            borderRadius: const BorderRadius.all(
+              Radius.circular(BBRadiusBridges.medium),
+            ),
+            boxShadow: BBShadowAliases.strong,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

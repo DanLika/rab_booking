@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/utils/web_utils.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../l10n/widget_translations.dart';
@@ -144,11 +144,13 @@ class _PwaInstallButtonState extends ConsumerState<PwaInstallButton> {
         disabledBackgroundColor: colors.textPrimary,
         disabledForegroundColor: colors.backgroundPrimary,
         padding: const EdgeInsets.symmetric(
-          horizontal: SpacingTokens.m,
-          vertical: SpacingTokens.s,
+          horizontal: BBSpace.sm,
+          vertical: BBSpace.xs,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderTokens.circularMedium,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
         ),
       ),
       icon: _isLoading

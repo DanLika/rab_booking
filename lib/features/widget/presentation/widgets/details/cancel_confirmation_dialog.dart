@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -44,9 +45,7 @@ class CancelConfirmationDialog extends ConsumerWidget {
 
     final tr = WidgetTranslations.of(context, ref);
     // Use pure black background for dark theme
-    final dialogBg = isDarkMode
-        ? ColorTokens.pureBlack
-        : colors.backgroundPrimary;
+    final dialogBg = isDarkMode ? Colors.black : colors.backgroundPrimary;
 
     // Use calendar status colors for consistency
     // Red from booked days, green from available days
@@ -57,15 +56,17 @@ class CancelConfirmationDialog extends ConsumerWidget {
 
     return AlertDialog(
       backgroundColor: dialogBg,
-      shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularLarge),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(BBRadiusBridges.large)),
+      ),
       title: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: cancelColor, size: 28),
-          const SizedBox(width: SpacingTokens.s),
+          const SizedBox(width: BBSpace.xs),
           Text(
             tr.cancelBooking,
             style: TextStyle(
-              fontWeight: TypographyTokens.bold,
+              fontWeight: BBTypeBridges.weightBold,
               color: colors.textPrimary,
             ),
           ),
@@ -78,20 +79,20 @@ class CancelConfirmationDialog extends ConsumerWidget {
           Text(
             tr.areYouSureCancelBooking,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
+              fontSize: BBTypeBridges.fontSizeM,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(SpacingTokens.m),
+            padding: const EdgeInsets.all(BBSpace.sm),
             decoration: BoxDecoration(
               // Dark mode: pure black background matching dialog, with visible border
-              color: isDarkMode
-                  ? ColorTokens.pureBlack
-                  : colors.backgroundSecondary,
-              borderRadius: BorderTokens.circularMedium,
+              color: isDarkMode ? Colors.black : colors.backgroundSecondary,
+              borderRadius: const BorderRadius.all(
+                Radius.circular(BBRadiusBridges.medium),
+              ),
               border: Border.all(
                 color: isDarkMode ? colors.borderMedium : colors.borderDefault,
                 width: isDarkMode ? 1.5 : 1.0,
@@ -103,39 +104,39 @@ class CancelConfirmationDialog extends ConsumerWidget {
                 Text(
                   tr.bookingReference,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXS,
+                    fontSize: BBTypeBridges.fontSizeXS,
                     color: colors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: SpacingTokens.xxs),
+                const SizedBox(height: BBSpaceBridges.xxs2),
                 Text(
                   bookingReference,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
-                    fontWeight: TypographyTokens.bold,
+                    fontSize: BBTypeBridges.fontSizeM,
+                    fontWeight: BBTypeBridges.weightBold,
                     color: colors.textPrimary,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           Container(
-            padding: const EdgeInsets.all(SpacingTokens.s),
+            padding: const EdgeInsets.all(BBSpace.xs),
             decoration: BoxDecoration(
               color: cancelColor.withValues(alpha: 0.08),
-              borderRadius: BorderTokens.circularSmall,
+              borderRadius: BBRadius.xsAll,
               border: Border.all(color: cancelColor.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
                 Icon(Icons.info_outline, color: cancelColor, size: 18),
-                const SizedBox(width: SpacingTokens.xs),
+                const SizedBox(width: BBSpace.xxs),
                 Expanded(
                   child: Text(
                     tr.actionCannotBeUndone,
                     style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeXS,
+                      fontSize: BBTypeBridges.fontSizeXS,
                       color: colors.textPrimary,
                     ),
                   ),
@@ -152,7 +153,7 @@ class CancelConfirmationDialog extends ConsumerWidget {
             tr.keepBooking,
             style: TextStyle(
               color: keepColor,
-              fontWeight: TypographyTokens.medium,
+              fontWeight: BBTypeBridges.weightMedium,
             ),
           ),
         ),
@@ -162,13 +163,15 @@ class CancelConfirmationDialog extends ConsumerWidget {
             backgroundColor: cancelColor,
             foregroundColor: Colors.white,
             elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderTokens.circularMedium,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(BBRadiusBridges.medium),
+              ),
             ),
           ),
           child: Text(
             tr.cancelBooking,
-            style: const TextStyle(fontWeight: TypographyTokens.semiBold),
+            style: const TextStyle(fontWeight: BBTypeBridges.weightSemiBold),
           ),
         ),
       ],

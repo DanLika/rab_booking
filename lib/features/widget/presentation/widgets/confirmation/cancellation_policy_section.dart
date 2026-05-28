@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Reusable cancellation policy section for booking confirmation
@@ -30,36 +31,38 @@ class CancellationPolicySection extends ConsumerWidget {
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Padding(
-      padding: const EdgeInsets.only(top: SpacingTokens.l),
+      padding: const EdgeInsets.only(top: BBSpace.md),
       child: Container(
-        padding: const EdgeInsets.all(SpacingTokens.m),
+        padding: const EdgeInsets.all(BBSpace.sm),
         decoration: BoxDecoration(
           color: cardBackground,
-          borderRadius: BorderTokens.circularMedium,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           border: Border.all(color: cardBorder, width: isDarkMode ? 1.5 : 1.0),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(colors, tr),
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             Text(
               tr.freeCancellationUpTo(deadlineHours),
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
-                fontWeight: TypographyTokens.semiBold,
+                fontSize: BBTypeBridges.fontSizeM,
+                fontWeight: BBTypeBridges.weightSemiBold,
                 color: colors.textPrimary,
               ),
             ),
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
             Text(
               tr.toCancelYourBooking,
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
+                fontSize: BBTypeBridges.fontSizeM,
                 color: colors.textSecondary,
               ),
             ),
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
             _buildCancellationStep(colors, tr.replyToConfirmationEmail),
             _buildCancellationStep(
               colors,
@@ -78,12 +81,12 @@ class CancellationPolicySection extends ConsumerWidget {
     return Row(
       children: [
         Icon(Icons.event_available, color: colors.textPrimary, size: 24),
-        const SizedBox(width: SpacingTokens.s),
+        const SizedBox(width: BBSpace.xs),
         Text(
           tr.cancellationPolicy,
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeL,
-            fontWeight: TypographyTokens.bold,
+            fontSize: BBTypeBridges.fontSizeL,
+            fontWeight: BBTypeBridges.weightBold,
             color: colors.textPrimary,
           ),
         ),
@@ -95,8 +98,8 @@ class CancellationPolicySection extends ConsumerWidget {
   Widget _buildCancellationStep(WidgetColorScheme colors, String text) {
     return Padding(
       padding: const EdgeInsets.only(
-        left: SpacingTokens.m,
-        top: SpacingTokens.xxs,
+        left: BBSpace.sm,
+        top: BBSpaceBridges.xxs2,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,7 +107,7 @@ class CancellationPolicySection extends ConsumerWidget {
           Text(
             '• ',
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
+              fontSize: BBTypeBridges.fontSizeM,
               color: colors.textSecondary,
             ),
           ),
@@ -112,7 +115,7 @@ class CancellationPolicySection extends ConsumerWidget {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
+                fontSize: BBTypeBridges.fontSizeM,
                 color: colors.textSecondary,
               ),
             ),

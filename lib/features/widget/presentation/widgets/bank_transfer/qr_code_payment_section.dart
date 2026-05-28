@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
@@ -40,18 +40,18 @@ class QrCodePaymentSection extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.l),
+      padding: const EdgeInsets.all(BBSpace.md),
       decoration: BoxDecoration(
         color: colors.backgroundTertiary,
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
         border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         children: [
           _buildHeader(colors),
-          const SizedBox(height: SpacingTokens.l),
+          const SizedBox(height: BBSpace.md),
           _buildQrCode(epcData, colors),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           _buildInfoBanner(colors),
         ],
       ),
@@ -62,18 +62,18 @@ class QrCodePaymentSection extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(SpacingTokens.s),
+          padding: const EdgeInsets.all(BBSpace.xs),
           decoration: BoxDecoration(
             color: colors.buttonPrimary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
+            borderRadius: BorderRadius.circular(BBRadiusBridges.subtle),
           ),
           child: Icon(
             Icons.qr_code_2,
             color: colors.buttonPrimary,
-            size: IconSizeTokens.medium,
+            size: BBIconSize.medium,
           ),
         ),
-        const SizedBox(width: SpacingTokens.m),
+        const SizedBox(width: BBSpace.sm),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,16 +81,16 @@ class QrCodePaymentSection extends StatelessWidget {
               Text(
                 translations.qrCodeForPayment,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeL,
-                  fontWeight: TypographyTokens.bold,
+                  fontSize: BBTypeBridges.fontSizeL,
+                  fontWeight: BBTypeBridges.weightBold,
                   color: colors.textPrimary,
                 ),
               ),
-              const SizedBox(height: SpacingTokens.xxs),
+              const SizedBox(height: BBSpaceBridges.xxs2),
               Text(
                 translations.scanWithMobileBank,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeS,
+                  fontSize: BBTypeBridges.fontSizeS,
                   color: colors.textSecondary,
                 ),
               ),
@@ -103,19 +103,19 @@ class QrCodePaymentSection extends StatelessWidget {
 
   Widget _buildQrCode(String epcData, MinimalistColorSchemeAdapter colors) {
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
-        color: ColorTokens.pureWhite,
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
         border: Border.all(
           color: colors.borderDefault,
-          width: BorderTokens.widthMedium,
+          width: BBBorderWidth.medium,
         ),
       ),
       child: QrImageView(
         data: epcData,
         size: 200.0,
-        backgroundColor: ColorTokens.pureWhite,
+        backgroundColor: Colors.white,
         errorCorrectionLevel: QrErrorCorrectLevel.M,
       ),
     );
@@ -123,25 +123,25 @@ class QrCodePaymentSection extends StatelessWidget {
 
   Widget _buildInfoBanner(MinimalistColorSchemeAdapter colors) {
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.s),
+      padding: const EdgeInsets.all(BBSpace.xs),
       decoration: BoxDecoration(
         color: colors.buttonPrimary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.subtle),
         border: Border.all(color: colors.buttonPrimary.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Icon(
             Icons.info_outline,
-            size: IconSizeTokens.small,
+            size: BBIconSize.small,
             color: colors.buttonPrimary,
           ),
-          const SizedBox(width: SpacingTokens.s),
+          const SizedBox(width: BBSpace.xs),
           Expanded(
             child: Text(
               translations.qrCodeContainsPaymentData,
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeS,
+                fontSize: BBTypeBridges.fontSizeS,
                 color: colors.textSecondary,
                 height: 1.4,
               ),

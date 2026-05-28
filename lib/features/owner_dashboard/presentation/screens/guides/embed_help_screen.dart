@@ -7,7 +7,7 @@ import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_color_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
-import '../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 
 /// Tabs for the Embed Help Screen
@@ -69,8 +69,8 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                GradientTokens.brandPrimaryStart,
-                GradientTokens.brandPrimaryEnd,
+                BBGradient.brandPrimaryStart,
+                BBGradient.brandPrimaryEnd,
               ],
             ),
           ),

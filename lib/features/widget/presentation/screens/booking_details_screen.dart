@@ -9,6 +9,7 @@ import '../mixins/theme_detection_mixin.dart';
 import '../../domain/models/booking_details_model.dart';
 import '../../domain/models/widget_settings.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../widgets/details/booking_status_banner.dart';
 import '../widgets/details/details_reference_card.dart';
@@ -248,7 +249,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
     // Use pure black background for dark theme in widget
     final backgroundColor = isDarkMode
-        ? ColorTokens.pureBlack
+        ? Colors.black
         : colors.backgroundPrimary;
 
     return Scaffold(
@@ -269,9 +270,9 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                       // Responsive padding - smaller on mobile
                       final screenWidth = constraints.maxWidth;
                       final horizontalPadding = screenWidth < 600
-                          ? SpacingTokens.m
-                          : SpacingTokens.l;
-                      final verticalPadding = SpacingTokens.l;
+                          ? BBSpace.sm
+                          : BBSpace.md;
+                      final verticalPadding = BBSpace.md;
 
                       return SingleChildScrollView(
                         padding: EdgeInsets.symmetric(
@@ -297,7 +298,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                                   colors: colors,
                                 ),
 
-                                const SizedBox(height: SpacingTokens.l),
+                                const SizedBox(height: BBSpace.md),
 
                                 // Booking reference - full width, prominent
                                 DetailsReferenceCard(
@@ -306,17 +307,17 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                                   colors: colors,
                                 ),
 
-                                const SizedBox(height: SpacingTokens.l),
+                                const SizedBox(height: BBSpace.md),
 
                                 // Single column layout
                                 _buildContentCards(colors, isDarkMode),
 
-                                const SizedBox(height: SpacingTokens.xl),
+                                const SizedBox(height: BBSpace.lg),
 
                                 // Action buttons - full width
                                 _buildActionButtons(colors, isDarkMode),
 
-                                const SizedBox(height: SpacingTokens.m),
+                                const SizedBox(height: BBSpace.sm),
 
                                 // Help text
                                 Builder(
@@ -329,7 +330,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                                       tr.needHelpContactOwner,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontSize: TypographyTokens.fontSizeS,
+                                        fontSize: BBTypeBridges.fontSizeS,
                                         color: colors.textTertiary,
                                       ),
                                     );
@@ -337,7 +338,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
                                 ),
 
                                 // Extra bottom padding for safe area
-                                const SizedBox(height: SpacingTokens.xl),
+                                const SizedBox(height: BBSpace.lg),
                               ],
                             ),
                           ),
@@ -365,8 +366,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.m,
-        vertical: SpacingTokens.s,
+        horizontal: BBSpace.sm,
+        vertical: BBSpace.xs,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -386,17 +387,17 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             hoverColor: colors.backgroundSecondary,
             splashColor: colors.backgroundSecondary,
           ),
-          const SizedBox(width: SpacingTokens.s),
+          const SizedBox(width: BBSpace.xs),
           // Title (centered)
           Text(
             tr.myBooking,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeXL,
-              fontWeight: TypographyTokens.bold,
+              fontSize: BBTypeBridges.fontSizeXL,
+              fontWeight: BBTypeBridges.weightBold,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(width: SpacingTokens.s),
+          const SizedBox(width: BBSpace.xs),
           // Language switcher button (right side) - shows current language flag
           IconButton(
             icon: Text(
@@ -488,7 +489,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           colors: colors,
           isDarkMode: isDarkMode,
         ),
-        const SizedBox(height: SpacingTokens.l),
+        const SizedBox(height: BBSpace.md),
         GuestInfoCard(
           guestName: widget.booking.guestName,
           guestEmail: widget.booking.guestEmail,
@@ -496,7 +497,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           colors: colors,
           isDarkMode: isDarkMode,
         ),
-        const SizedBox(height: SpacingTokens.l),
+        const SizedBox(height: BBSpace.md),
         BookingDatesCard(
           checkIn: widget.booking.checkIn,
           checkOut: widget.booking.checkOut,
@@ -506,7 +507,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           colors: colors,
           isDarkMode: isDarkMode,
         ),
-        const SizedBox(height: SpacingTokens.l),
+        const SizedBox(height: BBSpace.md),
         PaymentInfoCard(
           totalPrice: widget.booking.totalPrice,
           roomPrice: widget.booking.roomPrice,
@@ -524,7 +525,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         if (widget.booking.paymentMethod == 'bank_transfer' &&
             widget.booking.bankDetails != null &&
             widget.booking.remainingAmount > 0) ...[
-          const SizedBox(height: SpacingTokens.l),
+          const SizedBox(height: BBSpace.md),
           BankTransferDetailsCard(
             bankDetails: widget.booking.bankDetails!,
             bookingReference: widget.booking.bookingReference,
@@ -535,7 +536,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         // Contact info
         if (widget.booking.ownerEmail != null ||
             widget.booking.ownerPhone != null) ...[
-          const SizedBox(height: SpacingTokens.l),
+          const SizedBox(height: BBSpace.md),
           ContactOwnerCard(
             ownerEmail: widget.booking.ownerEmail,
             ownerPhone: widget.booking.ownerPhone,
@@ -544,7 +545,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         ],
         // Cancellation policy
         if (widget.widgetSettings?.allowGuestCancellation == true) ...[
-          const SizedBox(height: SpacingTokens.l),
+          const SizedBox(height: BBSpace.md),
           CancellationPolicyCard(
             deadlineHours:
                 widget.widgetSettings?.cancellationDeadlineHours ?? 48,
@@ -555,7 +556,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
         // Notes
         if (widget.booking.notes != null &&
             widget.booking.notes!.isNotEmpty) ...[
-          const SizedBox(height: SpacingTokens.l),
+          const SizedBox(height: BBSpace.md),
           BookingNotesCard(notes: widget.booking.notes!, colors: colors),
         ],
       ],
@@ -573,9 +574,7 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
 
     // Cancel button colors based on theme (from ColorTokens)
     final cancelBg = colors.statusCancelledBackground;
-    final cancelText = isDarkMode
-        ? ColorTokens.pureWhite
-        : ColorTokens.pureBlack;
+    final cancelText = isDarkMode ? Colors.white : Colors.black;
 
     // If booking is cancelled, don't show cancel button
     if (isCancelled) {
@@ -604,8 +603,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
           label: Text(
             _isCancelling ? tr.cancelling : tr.cancelBooking,
             style: const TextStyle(
-              fontSize: TypographyTokens.fontSizeL,
-              fontWeight: TypographyTokens.bold,
+              fontSize: BBTypeBridges.fontSizeL,
+              fontWeight: BBTypeBridges.weightBold,
             ),
           ),
           style: ElevatedButton.styleFrom(
@@ -613,10 +612,8 @@ class _BookingDetailsScreenState extends ConsumerState<BookingDetailsScreen>
             foregroundColor: canCancel ? cancelText : colors.textTertiary,
             disabledBackgroundColor: colors.buttonDisabled,
             disabledForegroundColor: colors.textTertiary,
-            padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderTokens.circularRounded,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
+            shape: const RoundedRectangleBorder(borderRadius: BBRadius.smAll),
           ),
         ),
       ),

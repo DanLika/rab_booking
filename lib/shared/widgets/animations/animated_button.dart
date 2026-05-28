@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../../core/design_tokens/animation_tokens.dart';
+import '../../../core/design/tokens.dart';
 
 /// Animated button with scale effect on press
 ///
@@ -36,7 +36,7 @@ class AnimatedPressButton extends StatefulWidget {
     required this.onPressed,
     required this.child,
     this.pressedScale = 0.95,
-    this.duration = AnimationTokens.instant,
+    this.duration = BBMotionBridges.instant,
     this.style,
     this.isFilled = true,
   });
@@ -83,7 +83,7 @@ class _AnimatedPressButtonState extends State<AnimatedPressButton> {
       child: AnimatedScale(
         scale: _isPressed ? widget.pressedScale : 1.0,
         duration: widget.duration,
-        curve: AnimationTokens.easeOut,
+        curve: BBMotionBridges.easeOut,
         child: button,
       ),
     );
@@ -128,7 +128,7 @@ class AnimatedIconButton extends StatefulWidget {
     this.iconSize = 24,
     this.iconColor,
     this.pressedScale = 0.85,
-    this.duration = AnimationTokens.instant,
+    this.duration = BBMotionBridges.instant,
     this.tooltip,
   });
 
@@ -152,7 +152,7 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton> {
       child: AnimatedScale(
         scale: _isPressed ? widget.pressedScale : 1.0,
         duration: widget.duration,
-        curve: AnimationTokens.easeOut,
+        curve: BBMotionBridges.easeOut,
         child: IconButton(
           onPressed: widget.onPressed,
           icon: Icon(widget.icon),
@@ -245,8 +245,8 @@ class _AnimatedFABState extends State<AnimatedFAB> {
       fab = fab
           .animate(onPlay: (controller) => controller.repeat(reverse: true))
           .scale(
-            duration: AnimationTokens.long,
-            curve: AnimationTokens.easeInOut,
+            duration: BBMotionBridges.long,
+            curve: BBMotionBridges.easeInOut,
             begin: const Offset(1.0, 1.0),
             end: const Offset(1.08, 1.08),
           );
@@ -262,8 +262,8 @@ class _AnimatedFABState extends State<AnimatedFAB> {
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
         scale: _isPressed ? widget.pressedScale : 1.0,
-        duration: AnimationTokens.instant,
-        curve: AnimationTokens.easeOut,
+        duration: BBMotionBridges.instant,
+        curve: BBMotionBridges.easeOut,
         child: fab,
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Card warning user to check spam folder for confirmation email.
@@ -23,23 +24,23 @@ class EmailSpamWarningCard extends ConsumerWidget {
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDark
-        ? ColorTokens.pureBlack
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.mail_outline, color: colors.textSecondary, size: 20),
-          const SizedBox(width: SpacingTokens.s),
+          const SizedBox(width: BBSpace.xs),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,16 +48,16 @@ class EmailSpamWarningCard extends ConsumerWidget {
                 Text(
                   tr.confirmationEmailSentTitle,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
-                    fontWeight: TypographyTokens.semiBold,
+                    fontSize: BBTypeBridges.fontSizeM,
+                    fontWeight: BBTypeBridges.weightSemiBold,
                     color: colors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: SpacingTokens.xxs),
+                const SizedBox(height: BBSpaceBridges.xxs2),
                 Text(
                   tr.checkInboxForConfirmation,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeS,
+                    fontSize: BBTypeBridges.fontSizeS,
                     color: colors.textSecondary,
                   ),
                 ),

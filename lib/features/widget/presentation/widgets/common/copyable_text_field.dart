@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../l10n/widget_translations.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
@@ -103,16 +103,16 @@ class CopyableTextField extends StatelessWidget {
     final useMonospace = _shouldUseMonospace(label);
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.s),
+      padding: const EdgeInsets.all(BBSpace.xs),
       decoration: BoxDecoration(
         color: colors.backgroundPrimary,
-        borderRadius: BorderRadius.circular(BorderTokens.radiusSubtle),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.subtle),
         border: Border.all(color: colors.borderDefault),
       ),
       child: Row(
         children: [
-          Icon(icon, color: colors.buttonPrimary, size: IconSizeTokens.small),
-          const SizedBox(width: SpacingTokens.s),
+          Icon(icon, color: colors.buttonPrimary, size: BBIconSize.small),
+          const SizedBox(width: BBSpace.xs),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,17 +120,17 @@ class CopyableTextField extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXS,
+                    fontSize: BBTypeBridges.fontSizeXS,
                     color: colors.textSecondary,
-                    fontWeight: TypographyTokens.medium,
+                    fontWeight: BBTypeBridges.weightMedium,
                   ),
                 ),
                 const SizedBox(height: 2),
                 SelectableText(
                   value,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
-                    fontWeight: TypographyTokens.semiBold,
+                    fontSize: BBTypeBridges.fontSizeM,
+                    fontWeight: BBTypeBridges.weightSemiBold,
                     color: colors.textPrimary,
                     fontFamily: useMonospace ? 'monospace' : null,
                   ),
@@ -141,7 +141,7 @@ class CopyableTextField extends StatelessWidget {
           IconButton(
             icon: Icon(
               Icons.content_copy,
-              size: IconSizeTokens.small,
+              size: BBIconSize.small,
               color: colors.buttonPrimary,
             ),
             onPressed: () async {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
 import '../../l10n/widget_translations.dart';
@@ -41,22 +41,22 @@ class ImportantNotesSection extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: colors.backgroundTertiary,
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
         border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(colors),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           if (useCustom && customNotes != null && customNotes.isNotEmpty)
             Text(
               customNotes,
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
+                fontSize: BBTypeBridges.fontSizeM,
                 color: colors.textPrimary,
                 height: 1.5,
               ),
@@ -74,14 +74,14 @@ class ImportantNotesSection extends StatelessWidget {
         Icon(
           Icons.info_outline,
           color: colors.buttonPrimary,
-          size: IconSizeTokens.medium,
+          size: BBIconSize.medium,
         ),
-        const SizedBox(width: SpacingTokens.xs),
+        const SizedBox(width: BBSpace.xxs),
         Text(
           translations.importantInformation,
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeL,
-            fontWeight: TypographyTokens.semiBold,
+            fontSize: BBTypeBridges.fontSizeL,
+            fontWeight: BBTypeBridges.weightSemiBold,
             color: colors.textPrimary,
           ),
         ),
@@ -91,14 +91,14 @@ class ImportantNotesSection extends StatelessWidget {
 
   Widget _buildNoteItem(String note, MinimalistColorSchemeAdapter colors) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: SpacingTokens.s),
+      padding: const EdgeInsets.only(bottom: BBSpace.xs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 6,
             height: 6,
-            margin: const EdgeInsets.only(top: 8, right: SpacingTokens.s),
+            margin: const EdgeInsets.only(top: 8, right: BBSpace.xs),
             decoration: BoxDecoration(
               color: colors.buttonPrimary,
               shape: BoxShape.circle,
@@ -108,7 +108,7 @@ class ImportantNotesSection extends StatelessWidget {
             child: Text(
               note,
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
+                fontSize: BBTypeBridges.fontSizeM,
                 color: colors.textPrimary,
                 height: 1.5,
               ),

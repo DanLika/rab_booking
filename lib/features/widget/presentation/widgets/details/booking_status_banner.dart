@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -26,16 +27,18 @@ class BookingStatusBanner extends ConsumerWidget {
     final (color, text, icon) = _getStatusInfo(tr);
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Icon(icon, color: color, size: 24),
-          const SizedBox(width: SpacingTokens.s),
+          const SizedBox(width: BBSpace.xs),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,15 +46,15 @@ class BookingStatusBanner extends ConsumerWidget {
                 Text(
                   tr.bookingStatus,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXS,
+                    fontSize: BBTypeBridges.fontSizeXS,
                     color: colors.textSecondary,
                   ),
                 ),
                 Text(
                   text,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeL,
-                    fontWeight: TypographyTokens.bold,
+                    fontSize: BBTypeBridges.fontSizeL,
+                    fontWeight: BBTypeBridges.weightBold,
                     color: color,
                   ),
                 ),

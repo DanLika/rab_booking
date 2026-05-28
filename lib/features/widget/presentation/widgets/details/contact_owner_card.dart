@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Card displaying property owner contact information.
@@ -38,16 +39,16 @@ class ContactOwnerCard extends ConsumerWidget {
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDark
-        ? ColorTokens.pureBlack
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Column(
@@ -56,18 +57,18 @@ class ContactOwnerCard extends ConsumerWidget {
           Text(
             tr.propertyOwnerContact,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              fontWeight: TypographyTokens.bold,
+              fontSize: BBTypeBridges.fontSizeM,
+              fontWeight: BBTypeBridges.weightBold,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           // Bug #69 Fix: Check for empty strings in addition to null
           if (ownerEmail != null && ownerEmail!.isNotEmpty)
             _buildInfoRow(tr.email, ownerEmail!, Icons.email),
           if (ownerPhone != null && ownerPhone!.isNotEmpty) ...[
             if (ownerEmail != null && ownerEmail!.isNotEmpty)
-              const SizedBox(height: SpacingTokens.s),
+              const SizedBox(height: BBSpace.xs),
             _buildInfoRow(tr.phone, ownerPhone!, Icons.phone),
           ],
         ],
@@ -79,7 +80,7 @@ class ContactOwnerCard extends ConsumerWidget {
     return Row(
       children: [
         Icon(icon, size: 20, color: colors.textSecondary),
-        const SizedBox(width: SpacingTokens.s),
+        const SizedBox(width: BBSpace.xs),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,15 +88,15 @@ class ContactOwnerCard extends ConsumerWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeXS,
+                  fontSize: BBTypeBridges.fontSizeXS,
                   color: colors.textSecondary,
                 ),
               ),
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeM,
-                  fontWeight: TypographyTokens.medium,
+                  fontSize: BBTypeBridges.fontSizeM,
+                  fontWeight: BBTypeBridges.weightMedium,
                   color: colors.textPrimary,
                 ),
               ),

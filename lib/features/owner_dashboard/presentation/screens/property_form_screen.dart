@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/constants/enums.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/async_utils.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -740,7 +740,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                               ),
                               const SizedBox(height: AppDimensions.spaceL),
 
-                              // Modern Gradient Save Button - uses brand gradient (GradientTokens.brandPrimary)
+                              // Modern Gradient Save Button - uses brand gradient (BBGradient.brandPrimary)
                               GradientButton(
                                 text: _isEditing
                                     ? l10n.propertyFormSaveChanges
@@ -774,7 +774,7 @@ class _PropertyFormScreenState extends ConsumerState<PropertyFormScreen>
                                     Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: const BoxDecoration(
-                                        gradient: GradientTokens.brandPrimary,
+                                        gradient: BBGradient.brandPrimary,
                                         shape: BoxShape.circle,
                                       ),
                                       child: const CircularProgressIndicator(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -56,16 +57,16 @@ class BookingReferenceCard extends ConsumerWidget {
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
 
     // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDark
-        ? ColorTokens.pureBlack
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Column(
@@ -73,24 +74,24 @@ class BookingReferenceCard extends ConsumerWidget {
           Text(
             tr.bookingReference,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
+              fontSize: BBTypeBridges.fontSizeS,
               color: colors.textSecondary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.xs),
+          const SizedBox(height: BBSpace.xxs),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SelectableText(
                 bookingReference,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeXL,
-                  fontWeight: TypographyTokens.bold,
+                  fontSize: BBTypeBridges.fontSizeXL,
+                  fontWeight: BBTypeBridges.weightBold,
                   letterSpacing: 2,
                   color: colors.textPrimary,
                 ),
               ),
-              const SizedBox(width: SpacingTokens.s),
+              const SizedBox(width: BBSpace.xs),
               IconButton(
                 icon: Icon(Icons.copy, color: colors.textSecondary),
                 onPressed: () => _copyToClipboard(context, tr),

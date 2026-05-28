@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../../core/design_tokens/animation_tokens.dart';
+import '../../../core/design/tokens.dart';
 
 /// Animated card with hover effects (scale + elevation) for desktop
 ///
@@ -54,7 +54,7 @@ class HoverScaleCard extends StatefulWidget {
     this.backgroundColor,
     this.borderColor,
     this.padding,
-    this.duration = AnimationTokens.fast,
+    this.duration = BBMotion.base,
   });
 
   @override
@@ -83,7 +83,7 @@ class _HoverScaleCardState extends State<HoverScaleCard> {
         onTapCancel: () => setState(() => _isPressed = false),
         child: AnimatedContainer(
           duration: widget.duration,
-          curve: AnimationTokens.easeOut,
+          curve: BBMotionBridges.easeOut,
           transform: Matrix4.identity()
             ..setEntry(
               0,
@@ -106,7 +106,7 @@ class _HoverScaleCardState extends State<HoverScaleCard> {
           transformAlignment: Alignment.center,
           child: AnimatedContainer(
             duration: widget.duration,
-            curve: AnimationTokens.easeOut,
+            curve: BBMotionBridges.easeOut,
             decoration: BoxDecoration(
               color: effectiveBackgroundColor,
               borderRadius: BorderRadius.circular(widget.borderRadius),
@@ -181,7 +181,7 @@ class HoverListTile extends StatefulWidget {
     required this.title,
     this.subtitle,
     this.trailing,
-    this.duration = AnimationTokens.fast,
+    this.duration = BBMotion.base,
     this.contentPadding,
   });
 
@@ -201,7 +201,7 @@ class _HoverListTileState extends State<HoverListTile> {
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: widget.duration,
-        curve: AnimationTokens.easeOut,
+        curve: BBMotionBridges.easeOut,
         color: _isHovered
             ? theme.colorScheme.primary.withAlpha((0.08 * 255).toInt())
             : Colors.transparent,
@@ -250,7 +250,7 @@ class AnimatedCardEntrance extends StatelessWidget {
     super.key,
     required this.child,
     this.delay = Duration.zero,
-    this.duration = AnimationTokens.fast,
+    this.duration = BBMotion.base,
     this.slideOffset = 30,
     this.animate = true,
   });
@@ -263,10 +263,10 @@ class AnimatedCardEntrance extends StatelessWidget {
 
     return child
         .animate(delay: delay)
-        .fadeIn(duration: duration, curve: AnimationTokens.easeOut)
+        .fadeIn(duration: duration, curve: BBMotionBridges.easeOut)
         .slideY(
           duration: duration,
-          curve: AnimationTokens.easeOut,
+          curve: BBMotionBridges.easeOut,
           begin: slideOffset,
           end: 0,
         );

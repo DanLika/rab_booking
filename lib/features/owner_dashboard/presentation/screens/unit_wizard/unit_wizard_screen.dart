@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
-import '../../../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../../core/utils/error_display_utils.dart';
 import '../../../../../../shared/models/unit_model.dart';
@@ -416,7 +416,7 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
             surfaceTintColor: Colors.transparent,
             flexibleSpace: Container(
               decoration: const BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
+                gradient: BBGradient.brandPrimary,
               ),
             ),
           ),

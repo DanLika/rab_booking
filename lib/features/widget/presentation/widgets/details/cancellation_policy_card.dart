@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
 import '../../l10n/widget_translations.dart';
@@ -45,16 +46,16 @@ class CancellationPolicyCard extends ConsumerWidget {
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDark
-        ? ColorTokens.pureBlack
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Column(
@@ -67,23 +68,23 @@ class CancellationPolicyCard extends ConsumerWidget {
                 size: 20,
                 color: statusColor,
               ),
-              const SizedBox(width: SpacingTokens.xs),
+              const SizedBox(width: BBSpace.xxs),
               Text(
                 tr.cancellationPolicy,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeM,
-                  fontWeight: TypographyTokens.bold,
+                  fontSize: BBTypeBridges.fontSizeM,
+                  fontWeight: BBTypeBridges.weightBold,
                   color: colors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
           Container(
-            padding: const EdgeInsets.all(SpacingTokens.s),
+            padding: const EdgeInsets.all(BBSpace.xs),
             decoration: BoxDecoration(
               color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderTokens.circularSmall,
+              borderRadius: BBRadius.xsAll,
               border: Border.all(color: statusColor.withValues(alpha: 0.3)),
             ),
             child: Column(
@@ -94,27 +95,27 @@ class CancellationPolicyCard extends ConsumerWidget {
                       ? tr.freeCancellationAvailable
                       : tr.cancellationDeadlinePassedShort,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeS,
-                    fontWeight: TypographyTokens.semiBold,
+                    fontSize: BBTypeBridges.fontSizeS,
+                    fontWeight: BBTypeBridges.weightSemiBold,
                     color: statusColor,
                   ),
                 ),
-                const SizedBox(height: SpacingTokens.xs),
+                const SizedBox(height: BBSpace.xxs),
                 Text(
                   _formatCancellationDeadline(deadlineHours, tr),
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeS,
+                    fontSize: BBTypeBridges.fontSizeS,
                     color: colors.textSecondary,
                   ),
                 ),
                 if (!canCancel) ...[
-                  const SizedBox(height: SpacingTokens.xs),
+                  const SizedBox(height: BBSpace.xxs),
                   Text(
                     tr.cancellationDeadlinePassedContactOwner,
                     style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeS,
+                      fontSize: BBTypeBridges.fontSizeS,
                       color: colors.warning,
-                      fontWeight: TypographyTokens.medium,
+                      fontWeight: BBTypeBridges.weightMedium,
                     ),
                   ),
                 ],

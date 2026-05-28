@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../../core/design_tokens/animation_tokens.dart';
+import '../../../core/design/tokens.dart';
 
 /// Animated empty state widget with fade + scale entrance animation
 ///
@@ -95,12 +95,12 @@ class AnimatedEmptyState extends StatelessWidget {
     return content
         .animate()
         .fadeIn(
-          duration: AnimationTokens.normal,
-          curve: AnimationTokens.easeOut,
+          duration: BBMotionBridges.normal,
+          curve: BBMotionBridges.easeOut,
         )
         .scale(
-          duration: AnimationTokens.normal,
-          curve: AnimationTokens.fastOutSlowIn,
+          duration: BBMotionBridges.normal,
+          curve: BBMotionBridges.fastOutSlowIn,
           begin: const Offset(0.8, 0.8),
           end: const Offset(1.0, 1.0),
         );
@@ -157,10 +157,10 @@ class StaggeredEmptyState extends StatelessWidget {
   Widget _buildAnimatedElement(int index, Widget child) {
     return child
         .animate(delay: staggerDelay * index)
-        .fadeIn(duration: AnimationTokens.fast, curve: AnimationTokens.easeOut)
+        .fadeIn(duration: BBMotion.base, curve: BBMotionBridges.easeOut)
         .slideY(
-          duration: AnimationTokens.fast,
-          curve: AnimationTokens.easeOut,
+          duration: BBMotion.base,
+          curve: BBMotionBridges.easeOut,
           begin: 20,
           end: 0,
         );

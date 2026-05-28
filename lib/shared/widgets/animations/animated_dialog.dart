@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../../core/design_tokens/animation_tokens.dart';
+import '../../../core/design/tokens.dart';
 
 /// Shows a dialog with scale + fade entrance animation
 ///
@@ -29,7 +29,7 @@ Future<T?> showAnimatedDialog<T>({
         barrierLabel ??
         MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: barrierColor ?? Colors.black54,
-    transitionDuration: transitionDuration ?? AnimationTokens.normal,
+    transitionDuration: transitionDuration ?? BBMotionBridges.normal,
     routeSettings: routeSettings,
     anchorPoint: anchorPoint,
     pageBuilder: (context, animation, secondaryAnimation) => builder(context),
@@ -37,12 +37,12 @@ Future<T?> showAnimatedDialog<T>({
       return ScaleTransition(
         scale: CurvedAnimation(
           parent: animation,
-          curve: AnimationTokens.fastOutSlowIn,
+          curve: BBMotionBridges.fastOutSlowIn,
         ),
         child: FadeTransition(
           opacity: CurvedAnimation(
             parent: animation,
-            curve: AnimationTokens.easeOut,
+            curve: BBMotionBridges.easeOut,
           ),
           child: child,
         ),
@@ -75,12 +75,12 @@ Future<T?> showSlideUpDialog<T>({
         barrierLabel ??
         MaterialLocalizations.of(context).modalBarrierDismissLabel,
     barrierColor: barrierColor ?? Colors.black54,
-    transitionDuration: transitionDuration ?? AnimationTokens.normal,
+    transitionDuration: transitionDuration ?? BBMotionBridges.normal,
     pageBuilder: (context, animation, secondaryAnimation) => builder(context),
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final slideAnimation =
           Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-            CurvedAnimation(parent: animation, curve: AnimationTokens.easeOut),
+            CurvedAnimation(parent: animation, curve: BBMotionBridges.easeOut),
           );
 
       return SlideTransition(
@@ -88,7 +88,7 @@ Future<T?> showSlideUpDialog<T>({
         child: FadeTransition(
           opacity: CurvedAnimation(
             parent: animation,
-            curve: AnimationTokens.easeOut,
+            curve: BBMotionBridges.easeOut,
           ),
           child: child,
         ),
@@ -127,7 +127,7 @@ Future<T?> showAnimatedBottomSheet<T>({
     clipBehavior: clipBehavior,
     constraints: constraints,
     transitionAnimationController: AnimationController(
-      duration: AnimationTokens.normal,
+      duration: BBMotionBridges.normal,
       vsync: Navigator.of(context),
     ),
     builder: builder,
@@ -158,8 +158,8 @@ class AnimatedDialogWrapper extends StatelessWidget {
   const AnimatedDialogWrapper({
     super.key,
     required this.child,
-    this.duration = AnimationTokens.normal,
-    this.curve = AnimationTokens.fastOutSlowIn,
+    this.duration = BBMotionBridges.normal,
+    this.curve = BBMotionBridges.fastOutSlowIn,
     this.animate = true,
   });
 
@@ -171,7 +171,7 @@ class AnimatedDialogWrapper extends StatelessWidget {
 
     return child
         .animate()
-        .fadeIn(duration: duration, curve: AnimationTokens.easeOut)
+        .fadeIn(duration: duration, curve: BBMotionBridges.easeOut)
         .scale(
           duration: duration,
           curve: curve,

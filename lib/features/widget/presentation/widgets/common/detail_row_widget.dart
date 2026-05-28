@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../theme/minimalist_colors.dart';
 
 /// A row displaying a label and value for booking details.
@@ -79,7 +79,7 @@ class DetailRowWidget extends StatelessWidget {
     required this.isDarkMode,
     this.isHighlighted = false,
     this.hasPadding = false,
-    this.valueFontWeight = TypographyTokens.semiBold,
+    this.valueFontWeight = BBTypeBridges.weightSemiBold,
     this.stacked = false,
     this.autoSize = false,
   }) : assert(label.isNotEmpty, 'Label cannot be empty'),
@@ -92,14 +92,14 @@ class DetailRowWidget extends StatelessWidget {
     final labelWidget = Text(
       label,
       style: TextStyle(
-        fontSize: TypographyTokens.fontSizeM,
+        fontSize: BBTypeBridges.fontSizeM,
         color: colors.textSecondary,
       ),
     );
 
     final valueStyle = TextStyle(
-      fontSize: TypographyTokens.fontSizeM,
-      fontWeight: isHighlighted ? TypographyTokens.bold : valueFontWeight,
+      fontSize: BBTypeBridges.fontSizeM,
+      fontWeight: isHighlighted ? BBTypeBridges.weightBold : valueFontWeight,
       color: isHighlighted ? colors.buttonPrimary : colors.textPrimary,
     );
 
@@ -129,7 +129,7 @@ class DetailRowWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             labelWidget,
-            const SizedBox(height: SpacingTokens.xxs),
+            const SizedBox(height: BBSpaceBridges.xxs2),
             valueWidget,
           ],
         ),
@@ -151,7 +151,7 @@ class DetailRowWidget extends StatelessWidget {
 
     if (hasPadding) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xxs),
+        padding: const EdgeInsets.symmetric(vertical: BBSpaceBridges.xxs2),
         child: content,
       );
     }

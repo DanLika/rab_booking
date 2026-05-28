@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 
 /// Country data model with flag emoji, name, and dial code
 class Country {
@@ -266,7 +266,9 @@ class CountryCodeDropdown extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           border: Border.all(color: borderColor ?? Colors.grey.shade300),
-          borderRadius: BorderTokens.circularMedium,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<Country>(
@@ -274,7 +276,7 @@ class CountryCodeDropdown extends StatelessWidget {
             icon: Icon(Icons.arrow_drop_down, color: textColor, size: 20),
             style: TextStyle(
               color: textColor,
-              fontSize: TypographyTokens.fontSizeM,
+              fontSize: BBTypeBridges.fontSizeM,
             ),
             dropdownColor: backgroundColor,
             items: countries.map((country) {
@@ -284,7 +286,7 @@ class CountryCodeDropdown extends StatelessWidget {
                   country.displayName,
                   style: TextStyle(
                     color: textColor,
-                    fontSize: TypographyTokens.fontSizeS,
+                    fontSize: BBTypeBridges.fontSizeS,
                   ),
                 ),
               );
@@ -301,8 +303,8 @@ class CountryCodeDropdown extends StatelessWidget {
                     country.shortDisplay,
                     style: TextStyle(
                       color: textColor,
-                      fontSize: TypographyTokens.fontSizeM,
-                      fontWeight: TypographyTokens.semiBold,
+                      fontSize: BBTypeBridges.fontSizeM,
+                      fontWeight: BBTypeBridges.weightSemiBold,
                     ),
                   ),
                 );

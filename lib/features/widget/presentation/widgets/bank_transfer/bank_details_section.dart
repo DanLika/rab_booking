@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../domain/models/widget_settings.dart';
 import '../common/copyable_text_field.dart';
@@ -26,17 +26,17 @@ class BankDetailsSection extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: colors.backgroundTertiary,
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
         border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(colors, tr),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           if (bankConfig.accountHolder != null)
             CopyableTextField(
               label: tr.accountHolder,
@@ -52,7 +52,7 @@ class BankDetailsSection extends ConsumerWidget {
               translations: tr, // Bug #40 Fix: Localized tooltip
             ),
           if (bankConfig.bankName != null) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             CopyableTextField(
               label: tr.bankName,
               value: bankConfig.bankName!,
@@ -68,7 +68,7 @@ class BankDetailsSection extends ConsumerWidget {
             ),
           ],
           if (bankConfig.iban != null) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             CopyableTextField(
               label: tr
                   .labelIban, // Bug Fix: Use localized label instead of hardcoded 'IBAN'
@@ -85,7 +85,7 @@ class BankDetailsSection extends ConsumerWidget {
             ),
           ],
           if (bankConfig.swift != null) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             CopyableTextField(
               label: tr
                   .labelSwiftBic, // Bug Fix: Use localized label instead of hardcoded 'SWIFT/BIC'
@@ -102,7 +102,7 @@ class BankDetailsSection extends ConsumerWidget {
             ),
           ],
           if (bankConfig.accountNumber != null) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             CopyableTextField(
               label: tr.accountNumber,
               value: bankConfig.accountNumber!,
@@ -131,14 +131,14 @@ class BankDetailsSection extends ConsumerWidget {
         Icon(
           Icons.account_balance,
           color: colors.buttonPrimary,
-          size: IconSizeTokens.medium,
+          size: BBIconSize.medium,
         ),
-        const SizedBox(width: SpacingTokens.xs),
+        const SizedBox(width: BBSpace.xxs),
         Text(
           tr.paymentDetails,
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeL,
-            fontWeight: TypographyTokens.semiBold,
+            fontSize: BBTypeBridges.fontSizeL,
+            fontWeight: BBTypeBridges.weightSemiBold,
             color: colors.textPrimary,
           ),
         ),

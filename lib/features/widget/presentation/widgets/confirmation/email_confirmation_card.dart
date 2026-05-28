@@ -2,6 +2,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -139,22 +140,22 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDark
-        ? ColorTokens.pureBlack
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Row(
         children: [
           Icon(Icons.email_outlined, color: colors.textPrimary),
-          const SizedBox(width: SpacingTokens.s),
+          const SizedBox(width: BBSpace.xs),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,13 +167,13 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                   child: Text(
                     tr.confirmationEmailSentTitle,
                     style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeM,
-                      fontWeight: TypographyTokens.semiBold,
+                      fontSize: BBTypeBridges.fontSizeM,
+                      fontWeight: BBTypeBridges.weightSemiBold,
                       color: colors.textPrimary,
                     ),
                   ),
                 ),
-                const SizedBox(height: SpacingTokens.xxs),
+                const SizedBox(height: BBSpaceBridges.xxs2),
                 // Bug #54 Fix: Check for empty email string
                 // Bug #57 Fix: Add Semantics for accessibility
                 // SelectableText fix: Use Wrap to allow email selection
@@ -184,7 +185,7 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                       ? Text(
                           '${tr.checkYourEmailAt} ${tr.forBookingDetails}',
                           style: TextStyle(
-                            fontSize: TypographyTokens.fontSizeS,
+                            fontSize: BBTypeBridges.fontSizeS,
                             color: colors.textSecondary,
                             fontStyle: FontStyle.italic,
                           ),
@@ -194,14 +195,14 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                             Text(
                               tr.checkYourEmailAt,
                               style: TextStyle(
-                                fontSize: TypographyTokens.fontSizeS,
+                                fontSize: BBTypeBridges.fontSizeS,
                                 color: colors.textSecondary,
                               ),
                             ),
                             SelectableText(
                               ' ${widget.guestEmail} ',
                               style: TextStyle(
-                                fontSize: TypographyTokens.fontSizeS,
+                                fontSize: BBTypeBridges.fontSizeS,
                                 fontWeight: FontWeight.w600,
                                 color: colors.textPrimary,
                               ),
@@ -209,7 +210,7 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                             Text(
                               tr.forBookingDetails,
                               style: TextStyle(
-                                fontSize: TypographyTokens.fontSizeS,
+                                fontSize: BBTypeBridges.fontSizeS,
                                 color: colors.textSecondary,
                               ),
                             ),
@@ -217,7 +218,7 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                         ),
                 ),
                 if (canResend) ...[
-                  const SizedBox(height: SpacingTokens.s),
+                  const SizedBox(height: BBSpace.xs),
                   // Bug #57 Fix: Add Semantics for accessibility
                   Semantics(
                     label: _emailResent
@@ -232,7 +233,7 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                       borderRadius: BorderRadius.circular(4),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          vertical: SpacingTokens.xxs,
+                          vertical: BBSpaceBridges.xxs2,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -252,13 +253,13 @@ class _EmailConfirmationCardState extends ConsumerState<EmailConfirmationCard> {
                                 size: 14,
                                 color: colors.textSecondary,
                               ),
-                            const SizedBox(width: SpacingTokens.xxs),
+                            const SizedBox(width: BBSpaceBridges.xxs2),
                             Text(
                               _emailResent
                                   ? tr.emailSent
                                   : tr.didntReceiveResendEmail,
                               style: TextStyle(
-                                fontSize: TypographyTokens.fontSizeS,
+                                fontSize: BBTypeBridges.fontSizeS,
                                 color: colors.textSecondary,
                                 decoration: TextDecoration.underline,
                                 decorationColor: colors.textSecondary,

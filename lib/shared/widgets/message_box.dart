@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/design_tokens/color_tokens.dart';
+import '../../core/design/tokens.dart';
 
 /// Standardized message box types for consistent UI across the app
 enum MessageBoxType {
@@ -179,14 +179,14 @@ class MessageBox extends StatelessWidget {
               : infoLight.withAlpha((0.15 * 255).toInt()),
           iconColor: isDark ? infoDark : infoLight,
           textColor: isDark
-              ? ColorTokens.slate100
+              ? BBColorPalette.slate100
               : const Color(0xFF1E3A8A), // Blue 900
         );
       case MessageBoxType.warning:
         return _MessageBoxColors(
           // Amber/yellow colors (consistent with snackbars)
           background: isDark
-              ? ColorTokens.amber900.withAlpha((0.4 * 255).toInt())
+              ? BBColorPalette.amber900.withAlpha((0.4 * 255).toInt())
               : const Color(0xFFFEF3C7), // amber-100
           border: isDark
               ? warningDark.withAlpha((0.4 * 255).toInt())
@@ -194,8 +194,8 @@ class MessageBox extends StatelessWidget {
           iconBackground: isDark
               ? warningDark.withAlpha((0.2 * 255).toInt())
               : warningLight.withAlpha((0.15 * 255).toInt()),
-          iconColor: isDark ? warningDark : ColorTokens.amber600,
-          textColor: isDark ? ColorTokens.slate100 : ColorTokens.amber900,
+          iconColor: isDark ? warningDark : BBColorPalette.amber600,
+          textColor: isDark ? BBColorPalette.slate100 : BBColorPalette.amber900,
         );
     }
   }

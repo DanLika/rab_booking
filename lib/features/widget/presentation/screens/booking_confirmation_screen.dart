@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/theme_provider.dart';
 import '../mixins/theme_detection_mixin.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/utils/web_utils.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/booking_model.dart';
@@ -287,7 +288,7 @@ class _BookingConfirmationScreenState
 
     // Use pure black background for dark theme in widget
     final backgroundColor = isDarkMode
-        ? ColorTokens.pureBlack
+        ? Colors.black
         : colors.backgroundPrimary;
 
     return Scaffold(
@@ -304,7 +305,7 @@ class _BookingConfirmationScreenState
                 // Content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(SpacingTokens.l),
+                    padding: const EdgeInsets.all(BBSpace.md),
                     child: Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 600),
@@ -322,13 +323,13 @@ class _BookingConfirmationScreenState
                                   ?.customLogoUrl,
                             ),
 
-                            const SizedBox(height: SpacingTokens.m),
+                            const SizedBox(height: BBSpace.sm),
 
                             // Payment verification warning (Stripe pending)
                             if (_shouldShowPaymentVerificationWarning)
                               Padding(
                                 padding: const EdgeInsets.only(
-                                  bottom: SpacingTokens.m,
+                                  bottom: BBSpace.sm,
                                 ),
                                 child: InfoCardWidget(
                                   title: tr.paymentVerificationInProgress,
@@ -343,12 +344,12 @@ class _BookingConfirmationScreenState
                               colors: colors,
                             ),
 
-                            const SizedBox(height: SpacingTokens.m),
+                            const SizedBox(height: BBSpace.sm),
 
                             // Email spam folder warning
                             EmailSpamWarningCard(colors: colors),
 
-                            const SizedBox(height: SpacingTokens.l),
+                            const SizedBox(height: BBSpace.md),
 
                             // Booking summary card
                             BookingSummaryCard(
@@ -370,7 +371,7 @@ class _BookingConfirmationScreenState
                               colors: colors,
                             ),
 
-                            const SizedBox(height: SpacingTokens.l),
+                            const SizedBox(height: BBSpace.md),
 
                             // Calendar export button (always enabled)
                             if (widget.booking != null)
@@ -416,20 +417,20 @@ class _BookingConfirmationScreenState
                               paymentMethod: widget.paymentMethod,
                             ),
 
-                            const SizedBox(height: SpacingTokens.xl),
+                            const SizedBox(height: BBSpace.lg),
 
-                            const SizedBox(height: SpacingTokens.m),
+                            const SizedBox(height: BBSpace.sm),
 
                             // Close button - always show for same-tab navigation
                             _buildCloseButton(colors, isDark: isDarkMode),
-                            const SizedBox(height: SpacingTokens.xl),
+                            const SizedBox(height: BBSpace.lg),
 
                             // Helpful info
                             Text(
                               tr.saveBookingReference,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: TypographyTokens.fontSizeS,
+                                fontSize: BBTypeBridges.fontSizeS,
                                 color: colors.textSecondary,
                               ),
                             ),
@@ -465,8 +466,8 @@ class _BookingConfirmationScreenState
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.m,
-        vertical: SpacingTokens.s,
+        horizontal: BBSpace.sm,
+        vertical: BBSpace.xs,
       ),
       child: Row(
         children: [
@@ -480,8 +481,8 @@ class _BookingConfirmationScreenState
               child: Text(
                 tr.bookingConfirmation,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeXL,
-                  fontWeight: TypographyTokens.bold,
+                  fontSize: BBTypeBridges.fontSizeXL,
+                  fontWeight: BBTypeBridges.weightBold,
                   color: colors.textPrimary,
                 ),
               ),
@@ -496,10 +497,8 @@ class _BookingConfirmationScreenState
   Widget _buildCloseButton(WidgetColorScheme colors, {required bool isDark}) {
     final tr = WidgetTranslations.of(context, ref);
     // Use white button with black text for dark theme
-    final buttonBg = isDark ? ColorTokens.pureWhite : colors.buttonPrimary;
-    final buttonText = isDark
-        ? ColorTokens.pureBlack
-        : colors.buttonPrimaryText;
+    final buttonBg = isDark ? Colors.white : colors.buttonPrimary;
+    final buttonText = isDark ? Colors.black : colors.buttonPrimaryText;
 
     return SizedBox(
       width: double.infinity,
@@ -508,16 +507,14 @@ class _BookingConfirmationScreenState
         style: ElevatedButton.styleFrom(
           backgroundColor: buttonBg,
           foregroundColor: buttonText,
-          padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderTokens.circularRounded,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
+          shape: const RoundedRectangleBorder(borderRadius: BBRadius.smAll),
         ),
         child: Text(
           tr.close,
           style: const TextStyle(
-            fontSize: TypographyTokens.fontSizeL,
-            fontWeight: TypographyTokens.bold,
+            fontSize: BBTypeBridges.fontSizeL,
+            fontWeight: BBTypeBridges.weightBold,
           ),
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/utils/date_time_parser.dart';
 import '../../l10n/widget_translations.dart';
 import '../../../domain/constants/widget_constants.dart';
@@ -78,16 +79,16 @@ class PaymentInfoCard extends ConsumerWidget {
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDark
-        ? ColorTokens.pureBlack
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Column(
@@ -96,30 +97,30 @@ class PaymentInfoCard extends ConsumerWidget {
           Text(
             tr.paymentInformation,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeL,
-              fontWeight: TypographyTokens.bold,
+              fontSize: BBTypeBridges.fontSizeL,
+              fontWeight: BBTypeBridges.weightBold,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           _buildPaymentRow(tr.total, totalPrice, bold: true),
           if (roomPrice != null && roomPrice! > 0) ...[
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
             _buildPaymentRow(tr.room, roomPrice!),
           ],
           if (extraGuestFees != null && extraGuestFees! > 0) ...[
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
             _buildPaymentRow(tr.extraGuestFees, extraGuestFees!),
           ],
           if (petFees != null && petFees! > 0) ...[
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
             _buildPaymentRow(tr.petFees, petFees!),
           ],
-          const SizedBox(height: SpacingTokens.xs),
+          const SizedBox(height: BBSpace.xxs),
           _buildPaymentRow(tr.deposit, depositAmount),
-          const SizedBox(height: SpacingTokens.xs),
+          const SizedBox(height: BBSpace.xxs),
           _buildPaymentRow(tr.paid, paidAmount, color: colors.success),
-          const SizedBox(height: SpacingTokens.xs),
+          const SizedBox(height: BBSpace.xxs),
           _buildPaymentRow(
             tr.remaining,
             remainingAmount,
@@ -127,14 +128,14 @@ class PaymentInfoCard extends ConsumerWidget {
                 ? colors.error
                 : colors.success,
           ),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
           Divider(color: colors.borderDefault),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
           _buildStatusRow(tr),
-          const SizedBox(height: SpacingTokens.xs),
+          const SizedBox(height: BBSpace.xxs),
           _buildMethodRow(tr),
           if (paymentDeadline != null) ...[
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
             _buildDeadlineRow(tr),
           ],
         ],
@@ -163,22 +164,20 @@ class PaymentInfoCard extends ConsumerWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: bold
-                ? TypographyTokens.fontSizeM
-                : TypographyTokens.fontSizeS,
-            fontWeight: bold ? TypographyTokens.bold : TypographyTokens.regular,
+            fontSize: bold ? BBTypeBridges.fontSizeM : BBTypeBridges.fontSizeS,
+            fontWeight: bold
+                ? BBTypeBridges.weightBold
+                : BBTypeBridges.weightRegular,
             color: color ?? colors.textSecondary,
           ),
         ),
         Text(
           _formatAmount(amount),
           style: TextStyle(
-            fontSize: bold
-                ? TypographyTokens.fontSizeL
-                : TypographyTokens.fontSizeM,
+            fontSize: bold ? BBTypeBridges.fontSizeL : BBTypeBridges.fontSizeM,
             fontWeight: bold
-                ? TypographyTokens.bold
-                : TypographyTokens.semiBold,
+                ? BBTypeBridges.weightBold
+                : BBTypeBridges.weightSemiBold,
             color: color ?? colors.textPrimary,
           ),
         ),
@@ -197,7 +196,7 @@ class PaymentInfoCard extends ConsumerWidget {
         Text(
           tr.paymentStatusLabel,
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
+            fontSize: BBTypeBridges.fontSizeS,
             color: colors.textSecondary,
           ),
         ),
@@ -217,15 +216,15 @@ class PaymentInfoCard extends ConsumerWidget {
         Text(
           tr.paymentMethodLabel,
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
+            fontSize: BBTypeBridges.fontSizeS,
             color: colors.textSecondary,
           ),
         ),
         Text(
           _formatPaymentMethod(tr),
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
-            fontWeight: TypographyTokens.medium,
+            fontSize: BBTypeBridges.fontSizeS,
+            fontWeight: BBTypeBridges.weightMedium,
             color: colors.textPrimary,
           ),
         ),
@@ -257,15 +256,15 @@ class PaymentInfoCard extends ConsumerWidget {
         Text(
           tr.paymentDeadline,
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
+            fontSize: BBTypeBridges.fontSizeS,
             color: colors.textSecondary,
           ),
         ),
         Text(
           _formatDeadline(paymentDeadline, tr),
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeS,
-            fontWeight: TypographyTokens.semiBold,
+            fontSize: BBTypeBridges.fontSizeS,
+            fontWeight: BBTypeBridges.weightSemiBold,
             color: colors.error,
           ),
         ),
@@ -284,19 +283,19 @@ class PaymentInfoCard extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.s,
-        vertical: SpacingTokens.xxs,
+        horizontal: BBSpace.xs,
+        vertical: BBSpaceBridges.xxs2,
       ),
       decoration: BoxDecoration(
         color: statusColor.withValues(alpha: 0.1),
-        borderRadius: BorderTokens.circularRounded,
+        borderRadius: BBRadius.smAll,
         border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Text(
         statusText,
         style: TextStyle(
-          fontSize: TypographyTokens.fontSizeXS,
-          fontWeight: TypographyTokens.semiBold,
+          fontSize: BBTypeBridges.fontSizeXS,
+          fontWeight: BBTypeBridges.weightSemiBold,
           color: statusColor,
         ),
       ),

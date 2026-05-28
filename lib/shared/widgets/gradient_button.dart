@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../core/design_tokens/gradient_tokens.dart';
+import '../../core/design/tokens.dart';
 
 /// Reusable premium gradient button with animations
 ///
 /// Uses flutter_animate for shimmer effect during loading state.
-/// Uses GradientTokens.brandPrimary for consistent branding across themes.
+/// Uses BBGradient.brandPrimary for consistent branding across themes.
 class GradientButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
@@ -42,7 +42,7 @@ class _GradientButtonState extends State<GradientButton> {
   Widget build(BuildContext context) {
     final gradientColors =
         widget.gradientColors ??
-        [GradientTokens.brandPrimaryStart, GradientTokens.brandPrimaryEnd];
+        [BBGradient.brandPrimaryStart, BBGradient.brandPrimaryEnd];
 
     final borderRadius = widget.borderRadius ?? BorderRadius.circular(16);
 

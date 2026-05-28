@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/design_tokens/animation_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -1091,12 +1091,12 @@ class _AnimatedEmptyStateContent extends StatelessWidget {
             )
             .animate()
             .fadeIn(
-              duration: AnimationTokens.normal,
-              curve: AnimationTokens.easeOut,
+              duration: BBMotionBridges.normal,
+              curve: BBMotionBridges.easeOut,
             )
             .scale(
-              duration: AnimationTokens.normal,
-              curve: AnimationTokens.fastOutSlowIn,
+              duration: BBMotionBridges.normal,
+              curve: BBMotionBridges.fastOutSlowIn,
               begin: const Offset(0.5, 0.5),
               end: const Offset(1.0, 1.0),
             ),
@@ -1125,13 +1125,10 @@ class _AnimatedEmptyStateContent extends StatelessWidget {
               ],
             )
             .animate(delay: staggerDelay)
-            .fadeIn(
-              duration: AnimationTokens.fast,
-              curve: AnimationTokens.easeOut,
-            )
+            .fadeIn(duration: BBMotion.base, curve: BBMotionBridges.easeOut)
             .slideY(
-              duration: AnimationTokens.fast,
-              curve: AnimationTokens.easeOut,
+              duration: BBMotion.base,
+              curve: BBMotionBridges.easeOut,
               begin: 20,
               end: 0,
             ),
@@ -1191,12 +1188,12 @@ class _AnimatedEmptyStateContent extends StatelessWidget {
             )
             .animate(delay: staggerDelay * 2)
             .fadeIn(
-              duration: AnimationTokens.normal,
-              curve: AnimationTokens.easeOut,
+              duration: BBMotionBridges.normal,
+              curve: BBMotionBridges.easeOut,
             )
             .slideY(
-              duration: AnimationTokens.normal,
-              curve: AnimationTokens.easeOut,
+              duration: BBMotionBridges.normal,
+              curve: BBMotionBridges.easeOut,
               begin: 30,
               end: 0,
             ),

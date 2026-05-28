@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../utils/widget_input_decoration_helper.dart';
@@ -41,7 +41,7 @@ class GuestNameFields extends ConsumerWidget {
             validator: FirstNameValidator.validate,
           ),
         ),
-        const SizedBox(width: SpacingTokens.m),
+        const SizedBox(width: BBSpace.sm),
         Expanded(
           child: _buildNameField(
             controller: lastNameController,

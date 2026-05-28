@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/design_tokens/animation_tokens.dart';
+import '../../../core/design/tokens.dart';
 
 /// Animated content switcher with crossfade transition
 ///
@@ -33,8 +33,8 @@ class AnimatedContentSwitcher extends StatelessWidget {
     required this.showContent,
     required this.skeleton,
     required this.content,
-    this.duration = AnimationTokens.normal,
-    this.curve = AnimationTokens.easeInOut,
+    this.duration = BBMotionBridges.normal,
+    this.curve = BBMotionBridges.easeInOut,
   });
 
   @override
@@ -85,7 +85,7 @@ class AnimatedAsyncBuilder<T> extends StatelessWidget {
     required this.skeleton,
     required this.builder,
     this.errorBuilder,
-    this.duration = AnimationTokens.normal,
+    this.duration = BBMotionBridges.normal,
   });
 
   @override

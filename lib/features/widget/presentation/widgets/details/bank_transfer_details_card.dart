@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../../l10n/widget_translations.dart';
@@ -42,16 +43,16 @@ class BankTransferDetailsCard extends ConsumerWidget {
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDark
-        ? ColorTokens.pureBlack
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Column(
@@ -61,37 +62,37 @@ class BankTransferDetailsCard extends ConsumerWidget {
           Row(
             children: [
               Icon(Icons.account_balance, color: colors.primary, size: 20),
-              const SizedBox(width: SpacingTokens.s),
+              const SizedBox(width: BBSpace.xs),
               Text(
                 tr.bankTransferDetails,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeL,
-                  fontWeight: TypographyTokens.bold,
+                  fontSize: BBTypeBridges.fontSizeL,
+                  fontWeight: BBTypeBridges.weightBold,
                   color: colors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
 
           // Info alert
           Container(
-            padding: const EdgeInsets.all(SpacingTokens.s),
+            padding: const EdgeInsets.all(BBSpace.xs),
             decoration: BoxDecoration(
               color: colors.info.withValues(alpha: 0.1),
-              borderRadius: BorderTokens.circularSmall,
+              borderRadius: BBRadius.xsAll,
               border: Border.all(color: colors.info.withValues(alpha: 0.3)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.info_outline, color: colors.info, size: 16),
-                const SizedBox(width: SpacingTokens.s),
+                const SizedBox(width: BBSpace.xs),
                 Expanded(
                   child: Text(
                     tr.bankTransferInstructions,
                     style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeXS,
+                      fontSize: BBTypeBridges.fontSizeXS,
                       color: colors.info,
                     ),
                   ),
@@ -99,12 +100,12 @@ class BankTransferDetailsCard extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
 
           // Bank details
           if (bankDetails.bankName != null) ...[
             _buildDetailRow(context, ref, tr.bankName, bankDetails.bankName!),
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
           ],
           if (bankDetails.accountHolder != null) ...[
             _buildDetailRow(
@@ -113,7 +114,7 @@ class BankTransferDetailsCard extends ConsumerWidget {
               tr.accountHolder,
               bankDetails.accountHolder!,
             ),
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
           ],
           if (bankDetails.iban != null) ...[
             _buildDetailRow(
@@ -123,7 +124,7 @@ class BankTransferDetailsCard extends ConsumerWidget {
               bankDetails.iban!,
               copyable: true,
             ),
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
           ],
           if (bankDetails.swift != null) ...[
             _buildDetailRow(
@@ -133,12 +134,12 @@ class BankTransferDetailsCard extends ConsumerWidget {
               bankDetails.swift!,
               copyable: true,
             ),
-            const SizedBox(height: SpacingTokens.xs),
+            const SizedBox(height: BBSpace.xxs),
           ],
 
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
           Divider(color: colors.borderDefault),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
 
           // Payment reference and amount
           _buildDetailRow(
@@ -149,7 +150,7 @@ class BankTransferDetailsCard extends ConsumerWidget {
             copyable: true,
             highlight: true,
           ),
-          const SizedBox(height: SpacingTokens.xs),
+          const SizedBox(height: BBSpace.xxs),
           _buildDetailRow(
             context,
             ref,
@@ -180,7 +181,7 @@ class BankTransferDetailsCard extends ConsumerWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
+              fontSize: BBTypeBridges.fontSizeS,
               color: colors.textSecondary,
             ),
           ),
@@ -195,11 +196,11 @@ class BankTransferDetailsCard extends ConsumerWidget {
                   value,
                   style: TextStyle(
                     fontSize: highlight
-                        ? TypographyTokens.fontSizeM
-                        : TypographyTokens.fontSizeS,
+                        ? BBTypeBridges.fontSizeM
+                        : BBTypeBridges.fontSizeS,
                     fontWeight: highlight
-                        ? TypographyTokens.bold
-                        : TypographyTokens.medium,
+                        ? BBTypeBridges.weightBold
+                        : BBTypeBridges.weightMedium,
                     color: highlightColor ?? colors.textPrimary,
                     fontFamily: copyable ? 'monospace' : null,
                   ),
@@ -207,10 +208,10 @@ class BankTransferDetailsCard extends ConsumerWidget {
                 ),
               ),
               if (copyable) ...[
-                const SizedBox(width: SpacingTokens.xs),
+                const SizedBox(width: BBSpace.xxs),
                 InkWell(
                   onTap: () => _copyToClipboard(context, ref, value),
-                  borderRadius: BorderTokens.circularSmall,
+                  borderRadius: BBRadius.xsAll,
                   child: Padding(
                     padding: const EdgeInsets.all(4),
                     child: Icon(

@@ -4,7 +4,7 @@ import '../../../../shared/models/additional_service_model.dart';
 import '../providers/additional_services_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/minimalist_colors.dart';
-import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../../shared/utils/ui/snackbar_helper.dart';
 import '../l10n/widget_translations.dart';
 
@@ -64,10 +64,12 @@ class AdditionalServicesWidget extends ConsumerWidget {
     VoidCallback? onSelectionChanged,
   ) {
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: colors.backgroundPrimary,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: colors.borderDefault),
         boxShadow: isDarkMode
             ? MinimalistShadows.medium
@@ -80,11 +82,11 @@ class AdditionalServicesWidget extends ConsumerWidget {
           Row(
             children: [
               Icon(Icons.add_circle, color: colors.buttonPrimary),
-              const SizedBox(width: SpacingTokens.xs),
+              const SizedBox(width: BBSpace.xxs),
               Text(
                 WidgetTranslations.of(context, ref).additionalServices,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeL,
+                  fontSize: BBTypeBridges.fontSizeL,
                   fontWeight: FontWeight.bold,
                   color: colors.textPrimary,
                   fontFamily: 'Manrope',
@@ -92,7 +94,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           Column(
             children: [
               ...services.map(
@@ -104,9 +106,9 @@ class AdditionalServicesWidget extends ConsumerWidget {
                   onSelectionChanged,
                 ),
               ),
-              const SizedBox(height: SpacingTokens.m),
+              const SizedBox(height: BBSpace.sm),
               Divider(color: colors.borderDefault),
-              const SizedBox(height: SpacingTokens.xs),
+              const SizedBox(height: BBSpace.xxs),
               _buildServicesTotal(context, ref, services, colors),
             ],
           ),
@@ -127,14 +129,14 @@ class AdditionalServicesWidget extends ConsumerWidget {
     final isSelected = quantity > 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: SpacingTokens.s),
-      padding: const EdgeInsets.all(SpacingTokens.s),
+      margin: const EdgeInsets.only(bottom: BBSpace.xs),
+      padding: const EdgeInsets.all(BBSpace.xs),
       decoration: BoxDecoration(
         border: Border.all(
           color: isSelected ? colors.borderStrong : colors.borderDefault,
-          width: isSelected ? BorderTokens.widthMedium : BorderTokens.widthThin,
+          width: isSelected ? BBBorderWidth.medium : BBBorderWidth.thin,
         ),
-        borderRadius: BorderTokens.circularSmall,
+        borderRadius: BBRadius.xsAll,
         color: isSelected
             ? colors.backgroundSecondary
             : colors.backgroundPrimary,
@@ -167,7 +169,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
               onSelectionChanged?.call();
             },
           ),
-          const SizedBox(width: SpacingTokens.xs),
+          const SizedBox(width: BBSpace.xxs),
 
           // Service details
           Expanded(
@@ -177,7 +179,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                 Text(
                   service.name,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
+                    fontSize: BBTypeBridges.fontSizeM,
                     fontWeight: FontWeight.bold,
                     color: colors.textPrimary,
                     fontFamily: 'Manrope',
@@ -186,21 +188,21 @@ class AdditionalServicesWidget extends ConsumerWidget {
                 if (service.description != null &&
                     service.description!.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: SpacingTokens.xxs),
+                    padding: const EdgeInsets.only(top: BBSpaceBridges.xxs2),
                     child: Text(
                       service.description!,
                       style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeXS,
+                        fontSize: BBTypeBridges.fontSizeXS,
                         color: colors.textSecondary,
                         fontFamily: 'Manrope',
                       ),
                     ),
                   ),
-                const SizedBox(height: SpacingTokens.xxs),
+                const SizedBox(height: BBSpaceBridges.xxs2),
                 Text(
                   service.formattedPrice,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeS,
+                    fontSize: BBTypeBridges.fontSizeS,
                     fontWeight: FontWeight.w600,
                     color: colors.textPrimary,
                     fontFamily: 'Manrope',
@@ -215,7 +217,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: colors.borderDefault),
-                borderRadius: BorderTokens.circularSmall,
+                borderRadius: BBRadius.xsAll,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -238,7 +240,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                             onSelectionChanged?.call();
                           }
                         : null,
-                    padding: const EdgeInsets.all(SpacingTokens.xxs),
+                    padding: const EdgeInsets.all(BBSpaceBridges.xxs2),
                     constraints: const BoxConstraints(
                       minWidth: 32,
                       minHeight: 32,
@@ -246,12 +248,12 @@ class AdditionalServicesWidget extends ConsumerWidget {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingTokens.xs,
+                      horizontal: BBSpace.xxs,
                     ),
                     child: Text(
                       quantity.toString(),
                       style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeS,
+                        fontSize: BBTypeBridges.fontSizeS,
                         fontWeight: FontWeight.bold,
                         color: colors.textPrimary,
                         fontFamily: 'Manrope',
@@ -282,7 +284,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                           });
                       onSelectionChanged?.call();
                     },
-                    padding: const EdgeInsets.all(SpacingTokens.xxs),
+                    padding: const EdgeInsets.all(BBSpaceBridges.xxs2),
                     constraints: const BoxConstraints(
                       minWidth: 32,
                       minHeight: 32,
@@ -322,7 +324,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
         Text(
           WidgetTranslations.of(context, ref).servicesTotal,
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeM,
+            fontSize: BBTypeBridges.fontSizeM,
             fontWeight: FontWeight.bold,
             color: colors.textPrimary,
             fontFamily: 'Manrope',
@@ -332,7 +334,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
           // Bug Fix: Use localized currency symbol instead of hardcoded '€'
           '${WidgetTranslations.of(context, ref).currencySymbol}${total.toStringAsFixed(2)}',
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeL,
+            fontSize: BBTypeBridges.fontSizeL,
             fontWeight: FontWeight.bold,
             color: colors.textPrimary,
             fontFamily: 'Manrope',

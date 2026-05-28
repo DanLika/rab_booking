@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../theme/minimalist_colors.dart';
 
 /// An informational card widget for displaying messages with an icon.
@@ -77,7 +77,7 @@ class InfoCardWidget extends StatelessWidget {
     final hasTitle = title != null && title!.isNotEmpty;
     final effectiveIconSize =
         iconSize ?? (hasTitle ? _iconSizeWithTitle : _iconSizeSimple);
-    final iconSpacing = hasTitle ? SpacingTokens.s : _iconToTextSpacingSimple;
+    final iconSpacing = hasTitle ? BBSpace.xs : _iconToTextSpacingSimple;
 
     // Bug #51 Fix: Add Semantics for accessibility
     final semanticsLabel = hasTitle ? '$title: $message' : message;
@@ -87,12 +87,14 @@ class InfoCardWidget extends StatelessWidget {
       hint: 'Information message',
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: hasTitle ? SpacingTokens.m : SpacingTokens.s,
-          vertical: hasTitle ? SpacingTokens.m : SpacingTokens.s,
+          horizontal: hasTitle ? BBSpace.sm : BBSpace.xs,
+          vertical: hasTitle ? BBSpace.sm : BBSpace.xs,
         ),
         decoration: BoxDecoration(
           color: backgroundColor ?? colors.backgroundTertiary,
-          borderRadius: BorderTokens.circularMedium,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           border: Border.all(color: colors.borderDefault),
         ),
         child: Row(
@@ -121,7 +123,7 @@ class InfoCardWidget extends StatelessWidget {
 
   Widget _buildContent(MinimalistColorSchemeAdapter colors, bool hasTitle) {
     final messageStyle = TextStyle(
-      fontSize: TypographyTokens.fontSizeS,
+      fontSize: BBTypeBridges.fontSizeS,
       color: colors.textSecondary,
     );
 
@@ -148,12 +150,12 @@ class InfoCardWidget extends StatelessWidget {
         Text(
           title!,
           style: TextStyle(
-            fontSize: TypographyTokens.fontSizeM,
-            fontWeight: TypographyTokens.bold,
+            fontSize: BBTypeBridges.fontSizeM,
+            fontWeight: BBTypeBridges.weightBold,
             color: colors.textPrimary,
           ),
         ),
-        const SizedBox(height: SpacingTokens.xs),
+        const SizedBox(height: BBSpace.xxs),
         Text(message, style: messageStyle),
       ],
     );

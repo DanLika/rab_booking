@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../theme/minimalist_colors.dart';
 
 /// A selectable payment option card with radio button styling.
@@ -63,25 +63,27 @@ class PaymentOptionWidget extends StatelessWidget {
       value: depositAmount,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         child: Container(
-          padding: const EdgeInsets.all(SpacingTokens.m),
+          padding: const EdgeInsets.all(BBSpace.sm),
           decoration: BoxDecoration(
             border: Border.all(
               color: isSelected ? colors.borderFocus : colors.borderDefault,
-              width: isSelected
-                  ? BorderTokens.widthMedium
-                  : BorderTokens.widthThin,
+              width: isSelected ? BBBorderWidth.medium : BBBorderWidth.thin,
             ),
-            borderRadius: BorderTokens.circularMedium,
+            borderRadius: const BorderRadius.all(
+              Radius.circular(BBRadiusBridges.medium),
+            ),
             color: isSelected ? colors.backgroundSecondary : null,
           ),
           child: Row(
             children: [
               _RadioIndicator(isSelected: isSelected, colors: colors),
-              const SizedBox(width: SpacingTokens.s),
+              const SizedBox(width: BBSpace.xs),
               _buildIcons(colors),
-              const SizedBox(width: SpacingTokens.s),
+              const SizedBox(width: BBSpace.xs),
               Expanded(child: _buildContent(colors)),
             ],
           ),
@@ -106,7 +108,7 @@ class PaymentOptionWidget extends StatelessWidget {
       children: [
         Icon(icon, color: iconColor, size: _primaryIconSize),
         if (secondaryIcon case final secIcon?) ...[
-          const SizedBox(width: SpacingTokens.xxs),
+          const SizedBox(width: BBSpaceBridges.xxs2),
           Icon(secIcon, color: iconColor, size: _secondaryIconSize),
         ],
       ],
@@ -133,7 +135,7 @@ class PaymentOptionWidget extends StatelessWidget {
               ),
             ),
             if (depositAmount case final amount?) ...[
-              const SizedBox(width: SpacingTokens.xs),
+              const SizedBox(width: BBSpace.xxs),
               Text(
                 amount,
                 style: TextStyle(
@@ -145,7 +147,7 @@ class PaymentOptionWidget extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: SpacingTokens.xxs),
+        const SizedBox(height: BBSpaceBridges.xxs2),
         AutoSizeText(
           subtitle,
           maxLines: 2,

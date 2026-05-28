@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -369,7 +369,7 @@ class _WidgetAdvancedSettingsScreenState
                 padding: EdgeInsets.symmetric(horizontal: padding),
                 child: Container(
                   decoration: BoxDecoration(
-                    gradient: GradientTokens.brandPrimary,
+                    gradient: BBGradient.brandPrimary,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Material(

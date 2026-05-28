@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Card displaying additional booking notes.
@@ -38,16 +39,16 @@ class BookingNotesCard extends ConsumerWidget {
     // Detect dark mode for better contrast
     final isDark = colors.backgroundPrimary.computeLuminance() < 0.5;
     // Dark mode: pure black background matching parent, with visible border
-    final cardBackground = isDark
-        ? ColorTokens.pureBlack
-        : colors.backgroundSecondary;
+    final cardBackground = isDark ? Colors.black : colors.backgroundSecondary;
     final cardBorder = isDark ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDark ? 1.5 : 1.0),
       ),
       child: Column(
@@ -56,22 +57,22 @@ class BookingNotesCard extends ConsumerWidget {
           Row(
             children: [
               Icon(Icons.notes, size: 20, color: colors.textSecondary),
-              const SizedBox(width: SpacingTokens.xs),
+              const SizedBox(width: BBSpace.xxs),
               Text(
                 tr.additionalNotes,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeM,
-                  fontWeight: TypographyTokens.bold,
+                  fontSize: BBTypeBridges.fontSizeM,
+                  fontWeight: BBTypeBridges.weightBold,
                   color: colors.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
           Text(
             notes,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
+              fontSize: BBTypeBridges.fontSizeS,
               color: colors.textSecondary,
               height: 1.5,
             ),

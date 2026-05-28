@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../theme/minimalist_colors.dart';
 
 /// A card displaying a single payment method with icon, title, and optional subtitle.
@@ -35,16 +35,18 @@ class PaymentMethodCard extends StatelessWidget {
       label: title,
       hint: subtitle,
       child: Container(
-        padding: const EdgeInsets.all(SpacingTokens.m),
+        padding: const EdgeInsets.all(BBSpace.sm),
         decoration: BoxDecoration(
           color: colors.backgroundTertiary,
-          borderRadius: BorderTokens.circularMedium,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           border: Border.all(color: colors.borderDefault),
         ),
         child: Row(
           children: [
             Icon(icon, color: colors.textPrimary, size: _iconSize),
-            const SizedBox(width: SpacingTokens.s),
+            const SizedBox(width: BBSpace.xs),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

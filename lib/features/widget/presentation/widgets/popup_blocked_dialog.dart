@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/utils/web_utils.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../shared/utils/ui/snackbar_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
@@ -24,9 +25,7 @@ class PopupBlockedDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final dialogBg = isDarkMode
-        ? ColorTokens.pureBlack
-        : colors.backgroundPrimary;
+    final dialogBg = isDarkMode ? Colors.black : colors.backgroundPrimary;
 
     // Get WidgetColorScheme for widget-specific colors
     final widgetColors = colors;
@@ -34,17 +33,17 @@ class PopupBlockedDialog extends ConsumerWidget {
     return AlertDialog(
       backgroundColor: dialogBg,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(BorderTokens.radiusLarge),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.large),
       ),
       title: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: colors.warning, size: 24),
-          const SizedBox(width: SpacingTokens.s),
+          const SizedBox(width: BBSpace.xs),
           Expanded(
             child: Text(
               'Popup Blocked',
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeL,
+                fontSize: BBTypeBridges.fontSizeL,
                 fontWeight: FontWeight.bold,
                 color: colors.textPrimary,
               ),
@@ -61,12 +60,12 @@ class PopupBlockedDialog extends ConsumerWidget {
             Text(
               'Your browser blocked the payment popup. To complete your booking, please choose one of the options below:',
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
+                fontSize: BBTypeBridges.fontSizeM,
                 color: colors.textSecondary,
                 height: 1.5,
               ),
             ),
-            const SizedBox(height: SpacingTokens.l),
+            const SizedBox(height: BBSpace.md),
             _buildOption(
               context: context,
               colors: widgetColors,
@@ -75,7 +74,7 @@ class PopupBlockedDialog extends ConsumerWidget {
               description: 'Opens Stripe Checkout in a new tab',
               onTap: () => _handleOpenPaymentPage(context),
             ),
-            const SizedBox(height: SpacingTokens.m),
+            const SizedBox(height: BBSpace.sm),
             _buildOption(
               context: context,
               colors: widgetColors,
@@ -85,7 +84,7 @@ class PopupBlockedDialog extends ConsumerWidget {
               onTap: () => _handleCopyLink(context, ref),
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: SpacingTokens.m),
+              const SizedBox(height: BBSpace.sm),
               _buildOption(
                 context: context,
                 colors: colors,
@@ -117,17 +116,21 @@ class PopupBlockedDialog extends ConsumerWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderTokens.circularMedium,
+      borderRadius: const BorderRadius.all(
+        Radius.circular(BBRadiusBridges.medium),
+      ),
       child: Container(
-        padding: const EdgeInsets.all(SpacingTokens.m),
+        padding: const EdgeInsets.all(BBSpace.sm),
         decoration: BoxDecoration(
           border: Border.all(color: colors.borderDefault),
-          borderRadius: BorderTokens.circularMedium,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
         ),
         child: Row(
           children: [
             Icon(icon, color: colors.accent, size: 24),
-            const SizedBox(width: SpacingTokens.m),
+            const SizedBox(width: BBSpace.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,16 +138,16 @@ class PopupBlockedDialog extends ConsumerWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeM,
+                      fontSize: BBTypeBridges.fontSizeM,
                       fontWeight: FontWeight.w600,
                       color: colors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: SpacingTokens.xs),
+                  const SizedBox(height: BBSpace.xxs),
                   Text(
                     description,
                     style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeS,
+                      fontSize: BBTypeBridges.fontSizeS,
                       color: colors.textSecondary,
                     ),
                   ),

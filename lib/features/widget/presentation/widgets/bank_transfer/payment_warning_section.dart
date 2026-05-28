@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -24,23 +24,20 @@ class PaymentWarningSection extends StatelessWidget {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: colors.warning.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
-        border: Border.all(
-          color: colors.warning,
-          width: BorderTokens.widthMedium,
-        ),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
+        border: Border.all(color: colors.warning, width: BBBorderWidth.medium),
       ),
       child: Row(
         children: [
           Icon(
             Icons.access_time,
             color: colors.warning,
-            size: IconSizeTokens.large,
+            size: BBIconSize.large,
           ),
-          const SizedBox(width: SpacingTokens.m),
+          const SizedBox(width: BBSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,16 +45,16 @@ class PaymentWarningSection extends StatelessWidget {
                 Text(
                   translations.paymentAmount(depositAmount),
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeL,
-                    fontWeight: TypographyTokens.bold,
+                    fontSize: BBTypeBridges.fontSizeL,
+                    fontWeight: BBTypeBridges.weightBold,
                     color: colors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: SpacingTokens.xxs),
+                const SizedBox(height: BBSpaceBridges.xxs2),
                 Text(
                   translations.deadlineLabel(deadline),
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeM,
+                    fontSize: BBTypeBridges.fontSizeM,
                     color: colors.textSecondary,
                   ),
                 ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../theme/minimalist_colors.dart';
 
 /// Centralized helper for creating consistent InputDecoration for widget feature
@@ -36,23 +36,33 @@ class WidgetInputDecorationHelper {
       isDense: isDense,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         borderSide: BorderSide(color: colors.textSecondary),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         borderSide: BorderSide(color: colors.textSecondary),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         borderSide: BorderSide(color: colors.textPrimary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         borderSide: BorderSide(color: colors.error, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         borderSide: BorderSide(color: colors.error, width: 2),
       ),
       errorStyle: TextStyle(color: colors.error, fontSize: 12, height: 1.0),

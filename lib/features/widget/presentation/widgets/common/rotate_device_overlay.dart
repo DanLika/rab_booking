@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
+import '../../../../../core/design_tokens/design_tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Overlay prompting user to rotate device to landscape mode.
@@ -57,7 +58,7 @@ class RotateDeviceOverlay extends StatelessWidget {
         color: colors.backgroundPrimary.withValues(alpha: _backgroundOpacity),
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(SpacingTokens.xl),
+            padding: const EdgeInsets.all(BBSpace.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -66,7 +67,7 @@ class RotateDeviceOverlay extends StatelessWidget {
                   size: iconSize,
                   color: colors.textPrimary,
                 ),
-                const SizedBox(height: SpacingTokens.l),
+                const SizedBox(height: BBSpace.md),
                 // Bug #51 Fix: Add Semantics for rotate prompt
                 Semantics(
                   label: translations.rotateYourDevice,
@@ -77,17 +78,17 @@ class RotateDeviceOverlay extends StatelessWidget {
                       Text(
                         translations.rotateYourDevice,
                         style: TextStyle(
-                          fontSize: TypographyTokens.fontSizeXXL,
-                          fontWeight: TypographyTokens.bold,
+                          fontSize: BBTypeBridges.fontSizeXXL,
+                          fontWeight: BBTypeBridges.weightBold,
                           color: colors.textPrimary,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: SpacingTokens.m),
+                      const SizedBox(height: BBSpace.sm),
                       Text(
                         translations.rotateForBestExperience,
                         style: TextStyle(
-                          fontSize: TypographyTokens.fontSizeM,
+                          fontSize: BBTypeBridges.fontSizeM,
                           color: colors.textSecondary,
                         ),
                         textAlign: TextAlign.center,
@@ -95,7 +96,7 @@ class RotateDeviceOverlay extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: SpacingTokens.xl),
+                const SizedBox(height: BBSpace.lg),
                 _buildSwitchButton(),
               ],
             ),
@@ -106,12 +107,8 @@ class RotateDeviceOverlay extends StatelessWidget {
   }
 
   Widget _buildSwitchButton() {
-    final backgroundColor = isDarkMode
-        ? ColorTokens.pureWhite
-        : ColorTokens.pureBlack;
-    final foregroundColor = isDarkMode
-        ? ColorTokens.pureBlack
-        : ColorTokens.pureWhite;
+    final backgroundColor = isDarkMode ? Colors.white : Colors.black;
+    final foregroundColor = isDarkMode ? Colors.black : Colors.white;
 
     // Bug #51 Fix: Add Semantics for button
     return Semantics(
@@ -124,18 +121,20 @@ class RotateDeviceOverlay extends StatelessWidget {
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
           padding: const EdgeInsets.symmetric(
-            horizontal: SpacingTokens.xl,
-            vertical: SpacingTokens.m,
+            horizontal: BBSpace.lg,
+            vertical: BBSpace.sm,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderTokens.circularMedium,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(BBRadiusBridges.medium),
+            ),
           ),
         ),
         child: Text(
           translations.switchToMonthView,
           style: const TextStyle(
-            fontSize: TypographyTokens.fontSizeM,
-            fontWeight: TypographyTokens.semiBold,
+            fontSize: BBTypeBridges.fontSizeM,
+            fontWeight: BBTypeBridges.weightSemiBold,
           ),
         ),
       ),

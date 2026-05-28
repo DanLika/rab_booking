@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../l10n/widget_translations.dart';
 import '../../../domain/constants/widget_constants.dart';
@@ -93,11 +93,11 @@ class PriceBreakdownWidget extends StatelessWidget {
     final colors = MinimalistColorSchemeAdapter(dark: isDarkMode);
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         // Pure white (light) / pure black (dark) for form containers
         color: colors.backgroundPrimary,
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
         border: Border.all(color: colors.borderDefault),
       ),
       child: Column(
@@ -112,7 +112,7 @@ class PriceBreakdownWidget extends StatelessWidget {
           // Extra guest fees (only show if > tolerance)
           if (extraGuestFees.abs() > WidgetConstants.priceTolerance &&
               formattedExtraGuestFees != null) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             PriceRowWidget(
               label: translations.extraGuestFees,
               amount: formattedExtraGuestFees!,
@@ -123,7 +123,7 @@ class PriceBreakdownWidget extends StatelessWidget {
           // Pet fees (only show if > tolerance)
           if (petFees.abs() > WidgetConstants.priceTolerance &&
               formattedPetFees != null) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             PriceRowWidget(
               label: translations.petFees,
               amount: formattedPetFees!,
@@ -135,7 +135,7 @@ class PriceBreakdownWidget extends StatelessWidget {
           // Bug #37 Fix: Use tolerance-based comparison to handle floating point precision
           if (additionalServicesTotal.abs() > WidgetConstants.priceTolerance &&
               formattedAdditionalServices != null) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             PriceRowWidget(
               label: translations.additionalServices,
               amount: formattedAdditionalServices!,
@@ -144,7 +144,7 @@ class PriceBreakdownWidget extends StatelessWidget {
           ],
 
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: SpacingTokens.s),
+            padding: const EdgeInsets.symmetric(vertical: BBSpace.xs),
             child: Divider(height: 1, color: colors.borderDefault),
           ),
 
@@ -158,16 +158,16 @@ class PriceBreakdownWidget extends StatelessWidget {
 
           // Deposit info (hidden in no-payment mode)
           if (showDeposit) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             Text(
               translations.depositWithPercentage(
                 formattedDeposit,
                 depositPercentage,
               ),
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeS,
+                fontSize: BBTypeBridges.fontSizeS,
                 color: colors.textSecondary,
-                fontFamily: TypographyTokens.primaryFont,
+                fontFamily: BBTypeBridges.primaryFont,
               ),
             ),
           ],

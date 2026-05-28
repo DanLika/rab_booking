@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -144,14 +144,16 @@ class _ConnectivityBannerState extends ConsumerState<ConnectivityBanner>
         child: SafeArea(
           bottom: false,
           child: Container(
-            margin: const EdgeInsets.all(SpacingTokens.m),
+            margin: const EdgeInsets.all(BBSpace.sm),
             padding: const EdgeInsets.symmetric(
-              horizontal: SpacingTokens.m,
-              vertical: SpacingTokens.s,
+              horizontal: BBSpace.sm,
+              vertical: BBSpace.xs,
             ),
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: BorderTokens.circularMedium,
+              borderRadius: const BorderRadius.all(
+                Radius.circular(BBRadiusBridges.medium),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.2),
@@ -165,7 +167,7 @@ class _ConnectivityBannerState extends ConsumerState<ConnectivityBanner>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(icon, color: Colors.white, size: 20),
-                const SizedBox(width: SpacingTokens.s),
+                const SizedBox(width: BBSpace.xs),
                 Flexible(
                   child: Text(
                     message,

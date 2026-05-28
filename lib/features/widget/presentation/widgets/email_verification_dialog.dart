@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../l10n/widget_translations.dart';

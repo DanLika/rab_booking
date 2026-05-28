@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/design_tokens/color_tokens.dart';
+import '../../../../core/design/tokens.dart';
 
 /// Minimalist Color Palette
 /// Black, White, and Grey tones for clean, modern aesthetic
@@ -696,7 +697,7 @@ class MinimalistColorSchemeAdapter implements WidgetColorScheme {
 
   @override
   Color get statusCancelledBorder =>
-      dark ? ColorTokens.pink700 : ColorTokens.pink400;
+      dark ? BBColorPalette.pink700 : BBColorPalette.pink400;
 
   // Buttons
   @override

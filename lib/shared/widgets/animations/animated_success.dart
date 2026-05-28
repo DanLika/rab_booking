@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../../../core/design_tokens/animation_tokens.dart';
+import '../../../core/design/tokens.dart';
 
 /// Animated checkmark with scale + bounce effect for success feedback
 ///
@@ -47,7 +47,7 @@ class _AnimatedCheckmarkState extends State<AnimatedCheckmark>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: AnimationTokens.slower,
+      duration: BBMotionBridges.slower,
       vsync: this,
     );
 
@@ -280,9 +280,9 @@ class SuccessOverlay extends StatelessWidget {
     // Fade in, hold, then fade out and dismiss
     return content
         .animate()
-        .fadeIn(duration: AnimationTokens.fast, curve: AnimationTokens.easeOut)
+        .fadeIn(duration: BBMotion.base, curve: BBMotionBridges.easeOut)
         .then(delay: autoDismissAfter)
-        .fadeOut(duration: AnimationTokens.fast, curve: AnimationTokens.easeIn)
+        .fadeOut(duration: BBMotion.base, curve: BBMotionBridges.easeIn)
         .callback(callback: (_) => onDismiss?.call());
   }
 }

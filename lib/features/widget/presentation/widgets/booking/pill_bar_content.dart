@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../l10n/widget_translations.dart';
 import '../../theme/minimalist_colors.dart';
 import 'compact_pill_summary.dart';
@@ -108,7 +108,7 @@ class PillBarContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _WideScreenHeader(onClose: onClose, colors: colors),
-        const SizedBox(height: SpacingTokens.m),
+        const SizedBox(height: BBSpace.sm),
         ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: SingleChildScrollView(
@@ -125,7 +125,7 @@ class PillBarContent extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: SpacingTokens.m),
+                const SizedBox(width: BBSpace.sm),
                 Expanded(
                   flex: _rightColumnFlex,
                   child: Column(
@@ -147,7 +147,7 @@ class PillBarContent extends StatelessWidget {
                         showDeposit: showDeposit,
                         translations: translations,
                       ),
-                      const SizedBox(height: SpacingTokens.m),
+                      const SizedBox(height: BBSpace.sm),
                       paymentSectionBuilder(),
                     ],
                   ),
@@ -186,11 +186,11 @@ class PillBarContent extends StatelessWidget {
           translations: translations,
         ),
         if (showGuestForm && !isWideScreen) ...[
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           guestFormBuilder(),
           additionalServicesBuilder(),
           taxLegalBuilder(),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           paymentSectionBuilder(),
         ],
       ],

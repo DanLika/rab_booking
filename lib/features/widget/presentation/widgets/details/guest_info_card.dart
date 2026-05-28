@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
 import '../common/detail_row_widget.dart';
 import '../../l10n/widget_translations.dart';
@@ -36,15 +37,17 @@ class GuestInfoCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Dark mode: pure black background matching parent, with visible border
     final cardBackground = isDarkMode
-        ? ColorTokens.pureBlack
+        ? Colors.black
         : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDarkMode ? 1.5 : 1.0),
       ),
       child: Column(
@@ -54,12 +57,12 @@ class GuestInfoCard extends ConsumerWidget {
           Text(
             tr.guestInformation,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeL,
-              fontWeight: TypographyTokens.bold,
+              fontSize: BBTypeBridges.fontSizeL,
+              fontWeight: BBTypeBridges.weightBold,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           // Use DetailRowWidget for consistent styling
           DetailRowWidget(
             label: tr.guest,

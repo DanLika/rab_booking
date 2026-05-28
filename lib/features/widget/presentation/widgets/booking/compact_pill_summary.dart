@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../l10n/widget_translations.dart';
 import '../../theme/minimalist_colors.dart';
 import '../../../utils/date_normalizer.dart';
@@ -76,7 +76,7 @@ class CompactPillSummary extends StatelessWidget {
     return Column(
       children: [
         _CloseButton(onTap: onClose, isDarkMode: isDarkMode, colors: colors),
-        const SizedBox(height: SpacingTokens.s),
+        const SizedBox(height: BBSpace.xs),
         _DateRangeSection(
           checkIn: checkIn,
           checkOut: checkOut,
@@ -85,7 +85,7 @@ class CompactPillSummary extends StatelessWidget {
           isDarkMode: isDarkMode,
           colors: colors,
         ),
-        const SizedBox(height: SpacingTokens.m),
+        const SizedBox(height: BBSpace.sm),
         PriceBreakdownWidget(
           isDarkMode: isDarkMode,
           nights: nights,
@@ -102,7 +102,7 @@ class CompactPillSummary extends StatelessWidget {
           showDeposit: showDeposit,
           translations: translations,
         ),
-        const SizedBox(height: SpacingTokens.m),
+        const SizedBox(height: BBSpace.sm),
         if (showReserveButton)
           _ReserveButton(
             onTap: onReserve,
@@ -140,9 +140,7 @@ class _CloseButton extends StatelessWidget {
               CompactPillSummary._closeButtonPadding,
             ),
             decoration: BoxDecoration(
-              color: isDarkMode
-                  ? ColorTokens.pureWhite
-                  : colors.backgroundSecondary,
+              color: isDarkMode ? Colors.white : colors.backgroundSecondary,
               borderRadius: BorderRadius.circular(
                 CompactPillSummary._closeButtonRadius,
               ),
@@ -151,7 +149,7 @@ class _CloseButton extends StatelessWidget {
             child: Icon(
               Icons.close,
               size: CompactPillSummary._closeIconSize,
-              color: isDarkMode ? ColorTokens.pureBlack : colors.textSecondary,
+              color: isDarkMode ? Colors.black : colors.textSecondary,
             ),
           ),
         ),
@@ -221,12 +219,12 @@ class _DateRangeSection extends StatelessWidget {
 
         return Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: SpacingTokens.m,
-            vertical: SpacingTokens.s,
+            horizontal: BBSpace.sm,
+            vertical: BBSpace.xs,
           ),
           decoration: BoxDecoration(
             color: colors.buttonPrimary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(SpacingTokens.m),
+            borderRadius: BorderRadius.circular(BBSpace.sm),
             border: Border.all(
               color: colors.buttonPrimary.withValues(alpha: 0.3),
             ),
@@ -244,7 +242,7 @@ class _DateRangeSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildDateRow(dateText),
-        const SizedBox(height: SpacingTokens.xs),
+        const SizedBox(height: BBSpace.xxs),
         _NightsBadge(
           nights: nights,
           translations: translations,
@@ -260,7 +258,7 @@ class _DateRangeSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildDateRow(dateText),
-        const SizedBox(width: SpacingTokens.s),
+        const SizedBox(width: BBSpace.xs),
         _NightsBadge(
           nights: nights,
           translations: translations,
@@ -276,7 +274,7 @@ class _DateRangeSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.calendar_month, size: 16, color: colors.buttonPrimary),
-        const SizedBox(width: SpacingTokens.xs),
+        const SizedBox(width: BBSpace.xxs),
         Flexible(
           child: Text(
             dateText,
@@ -309,10 +307,7 @@ class _NightsBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: SpacingTokens.s,
-        vertical: 2,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: BBSpace.xs, vertical: 2),
       decoration: BoxDecoration(
         color: colors.statusAvailableBackground,
         borderRadius: BorderRadius.circular(CompactPillSummary._badgeRadius),

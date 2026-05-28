@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../common/detail_row_widget.dart';
 import '../../l10n/widget_translations.dart';
 
@@ -96,15 +97,17 @@ class BookingSummaryCard extends ConsumerWidget {
     final tr = WidgetTranslations.of(context, ref);
     // Dark mode: pure black background matching parent, with visible border
     final cardBackground = isDarkMode
-        ? ColorTokens.pureBlack
+        ? Colors.black
         : colors.backgroundSecondary;
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: cardBackground,
-        borderRadius: BorderTokens.circularMedium,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(BBRadiusBridges.medium),
+        ),
         border: Border.all(color: cardBorder, width: isDarkMode ? 1.5 : 1.0),
       ),
       child: Column(
@@ -113,12 +116,12 @@ class BookingSummaryCard extends ConsumerWidget {
           Text(
             tr.bookingDetails,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeL,
-              fontWeight: TypographyTokens.bold,
+              fontSize: BBTypeBridges.fontSizeL,
+              fontWeight: BBTypeBridges.weightBold,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           DetailRowWidget(
             label: tr.property,
             value: unitName ?? propertyName,
@@ -141,7 +144,7 @@ class BookingSummaryCard extends ConsumerWidget {
             valueFontWeight: FontWeight.w400,
             stacked: true, // Email can be long, show below label
           ),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
           DetailRowWidget(
             label: tr.checkIn,
             // Bug Fix: Use locale for proper date formatting (e.g., "Ponedjeljak, 15. sij. 2024" for HR)
@@ -178,7 +181,7 @@ class BookingSummaryCard extends ConsumerWidget {
             hasPadding: true,
             valueFontWeight: FontWeight.w400,
           ),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
           // Show price breakdown if available
           if (roomPrice != null) ...[
             DetailRowWidget(

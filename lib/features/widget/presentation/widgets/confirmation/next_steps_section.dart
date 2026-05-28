@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../l10n/widget_translations.dart';
 
 /// Reusable next steps section for booking confirmation
@@ -27,12 +28,14 @@ class NextStepsSection extends ConsumerWidget {
     final cardBorder = isDarkMode ? colors.borderMedium : colors.borderDefault;
 
     return Padding(
-      padding: const EdgeInsets.only(top: SpacingTokens.l),
+      padding: const EdgeInsets.only(top: BBSpace.md),
       child: Container(
-        padding: const EdgeInsets.all(SpacingTokens.m),
+        padding: const EdgeInsets.all(BBSpace.sm),
         decoration: BoxDecoration(
           color: cardBackground,
-          borderRadius: BorderTokens.circularMedium,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           border: Border.all(color: cardBorder, width: isDarkMode ? 1.5 : 1.0),
         ),
         child: Column(
@@ -41,12 +44,12 @@ class NextStepsSection extends ConsumerWidget {
             Text(
               tr.whatsNext,
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeL,
-                fontWeight: TypographyTokens.bold,
+                fontSize: BBTypeBridges.fontSizeL,
+                fontWeight: BBTypeBridges.weightBold,
                 color: colors.textPrimary,
               ),
             ),
-            const SizedBox(height: SpacingTokens.m),
+            const SizedBox(height: BBSpace.sm),
             ...steps.asMap().entries.map((entry) {
               final index = entry.key;
               final step = entry.value;
@@ -179,7 +182,7 @@ class NextStepsSection extends ConsumerWidget {
                   child: Icon(icon, color: colors.backgroundPrimary, size: 20),
                 ),
               ),
-              const SizedBox(width: SpacingTokens.m),
+              const SizedBox(width: BBSpace.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,16 +190,16 @@ class NextStepsSection extends ConsumerWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeM,
-                        fontWeight: TypographyTokens.semiBold,
+                        fontSize: BBTypeBridges.fontSizeM,
+                        fontWeight: BBTypeBridges.weightSemiBold,
                         color: colors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: SpacingTokens.xxs),
+                    const SizedBox(height: BBSpaceBridges.xxs2),
                     Text(
                       description,
                       style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeS,
+                        fontSize: BBTypeBridges.fontSizeS,
                         color: colors.textSecondary,
                       ),
                     ),
@@ -206,7 +209,7 @@ class NextStepsSection extends ConsumerWidget {
             ],
           ),
           if (!isLast) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             Container(
               margin: const EdgeInsets.only(left: 19),
               width: 3,
@@ -216,7 +219,7 @@ class NextStepsSection extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(1.5),
               ),
             ),
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
           ],
         ],
       ),

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -222,10 +222,10 @@ class OwnerAppDrawer extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
       decoration: BoxDecoration(
-        gradient: GradientTokens.brandPrimary,
+        gradient: BBGradient.brandPrimary,
         boxShadow: [
           BoxShadow(
-            color: GradientTokens.brandPrimaryStart.withValues(alpha: 0.3),
+            color: BBGradient.brandPrimaryStart.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),

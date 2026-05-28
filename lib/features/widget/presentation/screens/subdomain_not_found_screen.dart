@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../l10n/widget_translations.dart';
 
 /// Screen displayed when a subdomain URL doesn't match any property.
@@ -32,7 +33,7 @@ class SubdomainNotFoundScreen extends ConsumerWidget {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(SpacingTokens.xl),
+            padding: const EdgeInsets.all(BBSpace.lg),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 500),
               child: Column(
@@ -52,60 +53,64 @@ class SubdomainNotFoundScreen extends ConsumerWidget {
                       color: colors.error,
                     ),
                   ),
-                  const SizedBox(height: SpacingTokens.xl),
+                  const SizedBox(height: BBSpace.lg),
 
                   // Title
                   Text(
                     tr.propertyNotFoundTitle,
                     style: GoogleFonts.inter(
-                      fontSize: TypographyTokens.fontSizeXXL,
-                      fontWeight: TypographyTokens.bold,
+                      fontSize: BBTypeBridges.fontSizeXXL,
+                      fontWeight: BBTypeBridges.weightBold,
                       color: colors.textPrimary,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: SpacingTokens.m),
+                  const SizedBox(height: BBSpace.sm),
 
                   // Subdomain display
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: SpacingTokens.m,
-                      vertical: SpacingTokens.s,
+                      horizontal: BBSpace.sm,
+                      vertical: BBSpace.xs,
                     ),
                     decoration: BoxDecoration(
                       color: colors.backgroundTertiary,
-                      borderRadius: BorderTokens.circularMedium,
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(BBRadiusBridges.medium),
+                      ),
                       border: Border.all(color: colors.borderDefault),
                     ),
                     child: Text(
                       subdomain,
                       style: GoogleFonts.jetBrainsMono(
-                        fontSize: TypographyTokens.fontSizeM,
-                        fontWeight: TypographyTokens.medium,
+                        fontSize: BBTypeBridges.fontSizeM,
+                        fontWeight: BBTypeBridges.weightMedium,
                         color: colors.textSecondary,
                       ),
                     ),
                   ),
-                  const SizedBox(height: SpacingTokens.l),
+                  const SizedBox(height: BBSpace.md),
 
                   // Explanation
                   Text(
                     tr.propertyNotFoundExplanation,
                     style: GoogleFonts.inter(
-                      fontSize: TypographyTokens.fontSizeM,
+                      fontSize: BBTypeBridges.fontSizeM,
                       color: colors.textSecondary,
                       height: 1.6,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: SpacingTokens.xl),
+                  const SizedBox(height: BBSpace.lg),
 
                   // Contact support
                   Container(
-                    padding: const EdgeInsets.all(SpacingTokens.l),
+                    padding: const EdgeInsets.all(BBSpace.md),
                     decoration: BoxDecoration(
                       color: colors.backgroundTertiary,
-                      borderRadius: BorderTokens.circularLarge,
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(BBRadiusBridges.large),
+                      ),
                       border: Border.all(color: colors.borderDefault),
                     ),
                     child: Column(
@@ -115,20 +120,20 @@ class SubdomainNotFoundScreen extends ConsumerWidget {
                           size: 32,
                           color: colors.primary,
                         ),
-                        const SizedBox(height: SpacingTokens.s),
+                        const SizedBox(height: BBSpace.xs),
                         Text(
                           tr.needHelp,
                           style: GoogleFonts.inter(
-                            fontSize: TypographyTokens.fontSizeM,
-                            fontWeight: TypographyTokens.semiBold,
+                            fontSize: BBTypeBridges.fontSizeM,
+                            fontWeight: BBTypeBridges.weightSemiBold,
                             color: colors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: SpacingTokens.xs),
+                        const SizedBox(height: BBSpace.xxs),
                         Text(
                           tr.contactPropertyOwnerForHelp,
                           style: GoogleFonts.inter(
-                            fontSize: TypographyTokens.fontSizeS,
+                            fontSize: BBTypeBridges.fontSizeS,
                             color: colors.textSecondary,
                           ),
                           textAlign: TextAlign.center,

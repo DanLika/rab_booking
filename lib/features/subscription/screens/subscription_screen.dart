@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/config/environment.dart';
 import '../../../core/design_tokens/design_tokens.dart';
+import '../../../core/design/tokens.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/common_app_bar.dart';
 import '../../owner_dashboard/presentation/widgets/owner_app_drawer.dart';
@@ -47,24 +48,24 @@ class SubscriptionScreen extends StatelessWidget {
     AppLocalizations l10n,
   ) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(SpacingTokens.l),
+      padding: const EdgeInsets.all(BBSpace.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Current status card
           _buildStatusCard(colors, l10n),
-          const SizedBox(height: SpacingTokens.xl),
+          const SizedBox(height: BBSpace.lg),
 
           // Available plans title
           Text(
             l10n.subscriptionAvailablePlans,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeXL,
-              fontWeight: TypographyTokens.bold,
+              fontSize: BBTypeBridges.fontSizeXL,
+              fontWeight: BBTypeBridges.weightBold,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
 
           // Plans
           _buildPlanCard(
@@ -81,7 +82,7 @@ class SubscriptionScreen extends StatelessWidget {
             isCurrent: true,
             isRecommended: false,
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
 
           _buildPlanCard(
             colors: colors,
@@ -100,18 +101,18 @@ class SubscriptionScreen extends StatelessWidget {
             isRecommended: true,
             onUpgrade: () => _showUpgradeDialog(context, l10n),
           ),
-          const SizedBox(height: SpacingTokens.xxl),
+          const SizedBox(height: BBSpace.xl),
 
           // FAQ Section
           Text(
             l10n.subscriptionFaq,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeXL,
-              fontWeight: TypographyTokens.bold,
+              fontSize: BBTypeBridges.fontSizeXL,
+              fontWeight: BBTypeBridges.weightBold,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
 
           _buildFaqItem(
             colors: colors,
@@ -135,16 +136,16 @@ class SubscriptionScreen extends StatelessWidget {
 
   Widget _buildStatusCard(WidgetColorScheme colors, AppLocalizations l10n) {
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.l),
+      padding: const EdgeInsets.all(BBSpace.md),
       decoration: BoxDecoration(
         color: colors.accent.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
         border: Border.all(color: colors.accent.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(SpacingTokens.s),
+            padding: const EdgeInsets.all(BBSpace.xs),
             decoration: BoxDecoration(
               color: colors.accent.withValues(alpha: 0.2),
               shape: BoxShape.circle,
@@ -155,7 +156,7 @@ class SubscriptionScreen extends StatelessWidget {
               size: 24,
             ),
           ),
-          const SizedBox(width: SpacingTokens.m),
+          const SizedBox(width: BBSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,7 +164,7 @@ class SubscriptionScreen extends StatelessWidget {
                 Text(
                   l10n.subscriptionCurrentStatus,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeS,
+                    fontSize: BBTypeBridges.fontSizeS,
                     color: colors.textSecondary,
                   ),
                 ),
@@ -171,8 +172,8 @@ class SubscriptionScreen extends StatelessWidget {
                 Text(
                   l10n.subscriptionStatusTrial,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeL,
-                    fontWeight: TypographyTokens.semiBold,
+                    fontSize: BBTypeBridges.fontSizeL,
+                    fontWeight: BBTypeBridges.weightSemiBold,
                     color: colors.textPrimary,
                   ),
                 ),
@@ -195,10 +196,10 @@ class SubscriptionScreen extends StatelessWidget {
     VoidCallback? onUpgrade,
   }) {
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.l),
+      padding: const EdgeInsets.all(BBSpace.md),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
         border: Border.all(
           color: isRecommended
               ? colors.accent
@@ -216,8 +217,8 @@ class SubscriptionScreen extends StatelessWidget {
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeXL,
-                    fontWeight: TypographyTokens.bold,
+                    fontSize: BBTypeBridges.fontSizeXL,
+                    fontWeight: BBTypeBridges.weightBold,
                     color: colors.textPrimary,
                   ),
                 ),
@@ -225,20 +226,18 @@ class SubscriptionScreen extends StatelessWidget {
               if (isCurrent)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: SpacingTokens.s,
-                    vertical: SpacingTokens.xs,
+                    horizontal: BBSpace.xs,
+                    vertical: BBSpace.xxs,
                   ),
                   decoration: BoxDecoration(
                     color: colors.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(
-                      BorderTokens.radiusSmall,
-                    ),
+                    borderRadius: BorderRadius.circular(BBRadius.xs),
                   ),
                   child: Text(
                     'Current',
                     style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeXS,
-                      fontWeight: TypographyTokens.semiBold,
+                      fontSize: BBTypeBridges.fontSizeXS,
+                      fontWeight: BBTypeBridges.weightSemiBold,
                       color: colors.success,
                     ),
                   ),
@@ -246,27 +245,25 @@ class SubscriptionScreen extends StatelessWidget {
               if (isRecommended)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: SpacingTokens.s,
-                    vertical: SpacingTokens.xs,
+                    horizontal: BBSpace.xs,
+                    vertical: BBSpace.xxs,
                   ),
                   decoration: BoxDecoration(
                     color: colors.accent,
-                    borderRadius: BorderRadius.circular(
-                      BorderTokens.radiusSmall,
-                    ),
+                    borderRadius: BorderRadius.circular(BBRadius.xs),
                   ),
                   child: const Text(
                     'RECOMMENDED',
                     style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeXS,
-                      fontWeight: TypographyTokens.bold,
+                      fontSize: BBTypeBridges.fontSizeXS,
+                      fontWeight: BBTypeBridges.weightBold,
                       color: Colors.white,
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
 
           // Price
           Row(
@@ -276,27 +273,27 @@ class SubscriptionScreen extends StatelessWidget {
               Text(
                 price,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeXXL + 8,
-                  fontWeight: TypographyTokens.bold,
+                  fontSize: BBTypeBridges.fontSizeXXL + 8,
+                  fontWeight: BBTypeBridges.weightBold,
                   color: colors.textPrimary,
                 ),
               ),
-              const SizedBox(width: SpacingTokens.xs),
+              const SizedBox(width: BBSpace.xxs),
               Text(
                 period,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeM,
+                  fontSize: BBTypeBridges.fontSizeM,
                   color: colors.textSecondary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
 
           // Features
           ...features.map(
             (feature) => Padding(
-              padding: const EdgeInsets.only(bottom: SpacingTokens.xs),
+              padding: const EdgeInsets.only(bottom: BBSpace.xxs),
               child: Row(
                 children: [
                   Icon(
@@ -304,12 +301,12 @@ class SubscriptionScreen extends StatelessWidget {
                     color: colors.success,
                     size: 18,
                   ),
-                  const SizedBox(width: SpacingTokens.s),
+                  const SizedBox(width: BBSpace.xs),
                   Expanded(
                     child: Text(
                       feature,
                       style: TextStyle(
-                        fontSize: TypographyTokens.fontSizeM,
+                        fontSize: BBTypeBridges.fontSizeM,
                         color: colors.textPrimary,
                       ),
                     ),
@@ -321,7 +318,7 @@ class SubscriptionScreen extends StatelessWidget {
 
           // Upgrade button
           if (onUpgrade != null) ...[
-            const SizedBox(height: SpacingTokens.m),
+            const SizedBox(height: BBSpace.sm),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -329,15 +326,13 @@ class SubscriptionScreen extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   backgroundColor: colors.accent,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: SpacingTokens.m,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
                 ),
                 child: const Text(
                   'Upgrade Now',
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeL,
-                    fontWeight: TypographyTokens.semiBold,
+                    fontSize: BBTypeBridges.fontSizeL,
+                    fontWeight: BBTypeBridges.weightSemiBold,
                   ),
                 ),
               ),
@@ -354,11 +349,11 @@ class SubscriptionScreen extends StatelessWidget {
     required String answer,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: SpacingTokens.m),
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      margin: const EdgeInsets.only(bottom: BBSpace.sm),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,16 +361,16 @@ class SubscriptionScreen extends StatelessWidget {
           Text(
             question,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeM,
-              fontWeight: TypographyTokens.semiBold,
+              fontSize: BBTypeBridges.fontSizeM,
+              fontWeight: BBTypeBridges.weightSemiBold,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.xs),
+          const SizedBox(height: BBSpace.xxs),
           Text(
             answer,
             style: TextStyle(
-              fontSize: TypographyTokens.fontSizeS,
+              fontSize: BBTypeBridges.fontSizeS,
               color: colors.textSecondary,
               height: 1.5,
             ),
@@ -421,13 +416,13 @@ class SubscriptionScreen extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(SpacingTokens.xl),
+        padding: const EdgeInsets.all(BBSpace.lg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Icon
             Container(
-              padding: const EdgeInsets.all(SpacingTokens.l),
+              padding: const EdgeInsets.all(BBSpace.md),
               decoration: BoxDecoration(
                 color: primaryColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
@@ -438,31 +433,31 @@ class SubscriptionScreen extends StatelessWidget {
                 color: primaryColor,
               ),
             ),
-            const SizedBox(height: SpacingTokens.xl),
+            const SizedBox(height: BBSpace.lg),
 
             // Title
             Text(
               l10n.subscriptionWebOnlyTitle,
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeXXL,
-                fontWeight: TypographyTokens.bold,
+                fontSize: BBTypeBridges.fontSizeXXL,
+                fontWeight: BBTypeBridges.weightBold,
                 color: colors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: SpacingTokens.m),
+            const SizedBox(height: BBSpace.sm),
 
             // Description
             Text(
               l10n.subscriptionWebOnlyMessage,
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
+                fontSize: BBTypeBridges.fontSizeM,
                 color: colors.textSecondary,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: SpacingTokens.xxl),
+            const SizedBox(height: BBSpace.xl),
 
             // Continue to Web button
             FilledButton.icon(
@@ -473,12 +468,12 @@ class SubscriptionScreen extends StatelessWidget {
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: SpacingTokens.xl,
-                  vertical: SpacingTokens.m,
+                  horizontal: BBSpace.lg,
+                  vertical: BBSpace.sm,
                 ),
                 textStyle: const TextStyle(
-                  fontSize: TypographyTokens.fontSizeL,
-                  fontWeight: TypographyTokens.semiBold,
+                  fontSize: BBTypeBridges.fontSizeL,
+                  fontWeight: BBTypeBridges.weightSemiBold,
                 ),
               ),
             ),

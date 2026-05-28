@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../theme/minimalist_colors.dart';
 
 /// Compact zoom control buttons (Google Maps style)
@@ -76,15 +76,15 @@ class _ZoomButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderTokens.circularSmall,
+        borderRadius: BBRadius.xsAll,
         child: Container(
           width: 32,
           height: 32,
           decoration: BoxDecoration(
             color: colors.backgroundPrimary,
-            borderRadius: BorderTokens.circularSmall,
+            borderRadius: BBRadius.xsAll,
             border: Border.all(color: colors.borderDefault),
-            boxShadow: ShadowTokens.light,
+            boxShadow: BBShadow.sm,
           ),
           child: Icon(
             icon,

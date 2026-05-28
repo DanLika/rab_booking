@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import '../../core/design_tokens/gradient_tokens.dart';
+import '../../core/design/tokens.dart';
 
 /// Reusable standard AppBar (non-sliver) for screens using Scaffold
 /// Provides consistent styling with gradient background
-/// Uses GradientTokens.brandPrimary for consistent branding across themes
+/// Uses BBGradient.brandPrimary for consistent branding across themes
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// App bar title text
   final String title;
@@ -20,7 +20,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final void Function(BuildContext)? onLeadingIconTap;
 
   /// Custom gradient colors (optional - defaults to brand gradient)
-  /// If null, uses GradientTokens.brandPrimary (Purple 100% → 70%)
+  /// If null, uses BBGradient.brandPrimary (Purple 100% → 70%)
   final List<Color>? gradientColors;
 
   /// Title text color
@@ -66,7 +66,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     // Use custom colors or brand gradient (Purple 100% → 70%)
     final effectiveColors =
         gradientColors ??
-        [GradientTokens.brandPrimaryStart, GradientTokens.brandPrimaryEnd];
+        [BBGradient.brandPrimaryStart, BBGradient.brandPrimaryEnd];
 
     return Container(
       decoration: BoxDecoration(

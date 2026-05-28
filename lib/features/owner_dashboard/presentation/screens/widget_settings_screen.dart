@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -678,7 +678,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                 // Gradient save button (uses brand gradient)
                 Container(
                   decoration: BoxDecoration(
-                    gradient: GradientTokens.brandPrimary,
+                    gradient: BBGradient.brandPrimary,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Material(
@@ -837,7 +837,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                           height: 2,
                           width: 40,
                           decoration: BoxDecoration(
-                            gradient: GradientTokens.brandPrimary,
+                            gradient: BBGradient.brandPrimary,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
@@ -988,7 +988,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                           height: 2,
                           width: 40,
                           decoration: BoxDecoration(
-                            gradient: GradientTokens.brandPrimary,
+                            gradient: BBGradient.brandPrimary,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
@@ -1520,7 +1520,7 @@ class _WidgetSettingsScreenState extends ConsumerState<WidgetSettingsScreen>
                           height: 2,
                           width: 40,
                           decoration: BoxDecoration(
-                            gradient: GradientTokens.brandPrimary,
+                            gradient: BBGradient.brandPrimary,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),

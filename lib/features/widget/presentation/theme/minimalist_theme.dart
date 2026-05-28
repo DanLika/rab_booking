@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'minimalist_colors.dart';
-import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 
 /// Modern Minimalist Theme for the widget
 /// Clean black-white-grey design with subtle accents
@@ -156,8 +156,8 @@ class MinimalistTheme {
         elevation: 0,
         centerTitle: true,
         titleTextStyle: GoogleFonts.inter(
-          fontSize: TypographyTokens.fontSizeXXL,
-          fontWeight: TypographyTokens.semiBold,
+          fontSize: BBTypeBridges.fontSizeXXL,
+          fontWeight: BBTypeBridges.weightSemiBold,
           color: textColor,
         ),
       ),
@@ -172,7 +172,9 @@ class MinimalistTheme {
             ? MinimalistColorsDark.shadow02
             : MinimalistColors.shadow02,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderTokens.card,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           side: shadowLevel == 0
               ? BorderSide(color: borderColor)
               : BorderSide.none,
@@ -196,12 +198,19 @@ class MinimalistTheme {
                         ? MinimalistColorsDark.shadow02
                         : MinimalistColors.shadow02)
                   : Colors.transparent,
-              padding: SpacingTokens.buttonPadding,
-              shape: RoundedRectangleBorder(borderRadius: BorderTokens.button),
+              padding: const EdgeInsets.symmetric(
+                horizontal: BBSpace.md,
+                vertical: 14,
+              ),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(BBRadiusBridges.medium),
+                ),
+              ),
               textStyle: GoogleFonts.inter(
-                fontSize: TypographyTokens.fontSizeL,
-                fontWeight: TypographyTokens.semiBold,
-                letterSpacing: TypographyTokens.letterSpacingWide,
+                fontSize: BBTypeBridges.fontSizeL,
+                fontWeight: BBTypeBridges.weightSemiBold,
+                letterSpacing: BBTypeBridges.letterSpacingWide,
               ),
             ).copyWith(
               // Hover effect
@@ -233,14 +242,21 @@ class MinimalistTheme {
             color: isDark
                 ? MinimalistColorsDark.buttonSecondaryBorder
                 : MinimalistColors.buttonSecondaryBorder,
-            width: BorderTokens.widthMedium,
+            width: BBBorderWidth.medium,
           ),
-          padding: SpacingTokens.buttonPadding,
-          shape: RoundedRectangleBorder(borderRadius: BorderTokens.button),
+          padding: const EdgeInsets.symmetric(
+            horizontal: BBSpace.md,
+            vertical: 14,
+          ),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(BBRadiusBridges.medium),
+            ),
+          ),
           textStyle: GoogleFonts.inter(
-            fontSize: TypographyTokens.fontSizeL,
-            fontWeight: TypographyTokens.semiBold,
-            letterSpacing: TypographyTokens.letterSpacingWide,
+            fontSize: BBTypeBridges.fontSizeL,
+            fontWeight: BBTypeBridges.weightSemiBold,
+            letterSpacing: BBTypeBridges.letterSpacingWide,
           ),
         ),
       ),
@@ -248,10 +264,13 @@ class MinimalistTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: textColor,
-          padding: SpacingTokens.buttonPadding,
+          padding: const EdgeInsets.symmetric(
+            horizontal: BBSpace.md,
+            vertical: 14,
+          ),
           textStyle: GoogleFonts.inter(
-            fontSize: TypographyTokens.fontSizeL,
-            fontWeight: TypographyTokens.medium,
+            fontSize: BBTypeBridges.fontSizeL,
+            fontWeight: BBTypeBridges.weightMedium,
           ),
         ),
       ),
@@ -262,43 +281,53 @@ class MinimalistTheme {
         fillColor: isDark
             ? MinimalistColorsDark.backgroundElevated1
             : MinimalistColors.backgroundSecondary,
-        contentPadding: SpacingTokens.allM,
+        contentPadding: const EdgeInsets.all(BBSpace.sm),
         border: OutlineInputBorder(
-          borderRadius: BorderTokens.input,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.input,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.input,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           borderSide: BorderSide(
             color: isDark ? MinimalistColorsDark.borderStrong : primaryColor,
-            width: BorderTokens.widthMedium,
+            width: BBBorderWidth.medium,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.input,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           borderSide: BorderSide(
             color: isDark ? MinimalistColorsDark.error : MinimalistColors.error,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderTokens.input,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           borderSide: BorderSide(
             color: isDark ? MinimalistColorsDark.error : MinimalistColors.error,
-            width: BorderTokens.widthMedium,
+            width: BBBorderWidth.medium,
           ),
         ),
         labelStyle: GoogleFonts.inter(
-          fontSize: TypographyTokens.fontSizeM,
+          fontSize: BBTypeBridges.fontSizeM,
           color: isDark
               ? MinimalistColorsDark.textSecondary
               : MinimalistColors.textSecondary,
         ),
         hintStyle: GoogleFonts.inter(
-          fontSize: TypographyTokens.fontSizeM,
+          fontSize: BBTypeBridges.fontSizeM,
           color: isDark
               ? MinimalistColorsDark.textTertiary
               : MinimalistColors.textTertiary,
@@ -308,8 +337,8 @@ class MinimalistTheme {
       // Divider theme
       dividerTheme: DividerThemeData(
         color: borderColor,
-        thickness: BorderTokens.widthThin,
-        space: SpacingTokens.m,
+        thickness: BBBorderWidth.thin,
+        space: BBSpace.sm,
       ),
 
       // Icon theme
@@ -321,102 +350,102 @@ class MinimalistTheme {
     return TextTheme(
       // Display styles
       displayLarge: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeXXXL,
-        fontWeight: TypographyTokens.bold,
-        height: TypographyTokens.lineHeightTight,
-        letterSpacing: TypographyTokens.letterSpacingTight,
+        fontSize: BBTypeBridges.fontSizeXXXL,
+        fontWeight: BBTypeBridges.weightBold,
+        height: BBTypeBridges.lineHeightTight,
+        letterSpacing: BBTypeBridges.letterSpacingTight,
         color: textColor,
       ),
       displayMedium: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeXXL,
-        fontWeight: TypographyTokens.bold,
-        height: TypographyTokens.lineHeightTight,
+        fontSize: BBTypeBridges.fontSizeXXL,
+        fontWeight: BBTypeBridges.weightBold,
+        height: BBTypeBridges.lineHeightTight,
         color: textColor,
       ),
       displaySmall: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeXL,
-        fontWeight: TypographyTokens.semiBold,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeXL,
+        fontWeight: BBTypeBridges.weightSemiBold,
+        height: BBTypeBridges.lineHeightNormal,
         color: textColor,
       ),
 
       // Headline styles
       headlineLarge: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeXXL,
-        fontWeight: TypographyTokens.semiBold,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeXXL,
+        fontWeight: BBTypeBridges.weightSemiBold,
+        height: BBTypeBridges.lineHeightNormal,
         color: textColor,
       ),
       headlineMedium: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeXL,
-        fontWeight: TypographyTokens.semiBold,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeXL,
+        fontWeight: BBTypeBridges.weightSemiBold,
+        height: BBTypeBridges.lineHeightNormal,
         color: textColor,
       ),
       headlineSmall: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeL,
-        fontWeight: TypographyTokens.semiBold,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeL,
+        fontWeight: BBTypeBridges.weightSemiBold,
+        height: BBTypeBridges.lineHeightNormal,
         color: textColor,
       ),
 
       // Title styles
       titleLarge: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeXL,
-        fontWeight: TypographyTokens.medium,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeXL,
+        fontWeight: BBTypeBridges.weightMedium,
+        height: BBTypeBridges.lineHeightNormal,
         color: textColor,
       ),
       titleMedium: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeL,
-        fontWeight: TypographyTokens.medium,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeL,
+        fontWeight: BBTypeBridges.weightMedium,
+        height: BBTypeBridges.lineHeightNormal,
         color: textColor,
       ),
       titleSmall: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeM,
-        fontWeight: TypographyTokens.medium,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeM,
+        fontWeight: BBTypeBridges.weightMedium,
+        height: BBTypeBridges.lineHeightNormal,
         color: textColor,
       ),
 
       // Body styles
       bodyLarge: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeL,
-        fontWeight: TypographyTokens.regular,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeL,
+        fontWeight: BBTypeBridges.weightRegular,
+        height: BBTypeBridges.lineHeightNormal,
         color: textColor,
       ),
       bodyMedium: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeM,
-        fontWeight: TypographyTokens.regular,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeM,
+        fontWeight: BBTypeBridges.weightRegular,
+        height: BBTypeBridges.lineHeightNormal,
         color: textColor,
       ),
       bodySmall: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeS,
-        fontWeight: TypographyTokens.regular,
-        height: TypographyTokens.lineHeightNormal,
+        fontSize: BBTypeBridges.fontSizeS,
+        fontWeight: BBTypeBridges.weightRegular,
+        height: BBTypeBridges.lineHeightNormal,
         color: MinimalistColors.textSecondary,
       ),
 
       // Label styles
       labelLarge: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeM,
-        fontWeight: TypographyTokens.medium,
-        letterSpacing: TypographyTokens.letterSpacingWide,
+        fontSize: BBTypeBridges.fontSizeM,
+        fontWeight: BBTypeBridges.weightMedium,
+        letterSpacing: BBTypeBridges.letterSpacingWide,
         color: textColor,
       ),
       labelMedium: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeS,
-        fontWeight: TypographyTokens.medium,
-        letterSpacing: TypographyTokens.letterSpacingWide,
+        fontSize: BBTypeBridges.fontSizeS,
+        fontWeight: BBTypeBridges.weightMedium,
+        letterSpacing: BBTypeBridges.letterSpacingWide,
         color: textColor,
       ),
       labelSmall: GoogleFonts.inter(
-        fontSize: TypographyTokens.fontSizeXS,
-        fontWeight: TypographyTokens.regular,
-        letterSpacing: TypographyTokens.letterSpacingNormal,
+        fontSize: BBTypeBridges.fontSizeXS,
+        fontWeight: BBTypeBridges.weightRegular,
+        letterSpacing: BBTypeBridges.letterSpacingNormal,
         color: MinimalistColors.textTertiary,
       ),
     );

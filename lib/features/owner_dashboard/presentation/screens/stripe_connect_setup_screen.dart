@@ -6,7 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/design_tokens/animation_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
@@ -979,7 +979,7 @@ class _MoneyLoadingAnimation extends StatelessWidget {
                   )
                   .moveY(
                     duration: Duration(milliseconds: 800 + (index * 150)),
-                    curve: AnimationTokens.easeInOut,
+                    curve: BBMotionBridges.easeInOut,
                     begin: 0,
                     end:
                         -20, // 20 pixels max movement (moveY uses absolute pixels)
@@ -987,7 +987,7 @@ class _MoneyLoadingAnimation extends StatelessWidget {
                   .fade(
                     delay: Duration.zero, // Run in parallel with moveY
                     duration: Duration(milliseconds: 800 + (index * 150)),
-                    curve: AnimationTokens.easeInOut,
+                    curve: BBMotionBridges.easeInOut,
                     begin: 0.4,
                     end: 1.0,
                   );

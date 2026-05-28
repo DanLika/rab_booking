@@ -44,6 +44,7 @@ import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/models/booking_model.dart';
 import '../theme/minimalist_colors.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 // EmailNotificationService now used via EmailNotificationHelper
 import '../../../../core/services/booking_service.dart';
 import '../../../../core/services/logging_service.dart';
@@ -688,9 +689,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   Future<void> _showPaymentDelayedDialog() async {
     final isDarkMode = ref.read(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
-    final dialogBg = isDarkMode
-        ? ColorTokens.pureBlack
-        : colors.backgroundPrimary;
+    final dialogBg = isDarkMode ? Colors.black : colors.backgroundPrimary;
     final tr = WidgetTranslations.of(context, ref);
 
     await showDialog<void>(
@@ -698,16 +697,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
       barrierDismissible: false, // User must acknowledge
       builder: (context) => AlertDialog(
         backgroundColor: dialogBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderTokens.circularLarge),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(BBRadiusBridges.large),
+          ),
+        ),
         title: Row(
           children: [
             Icon(Icons.check_circle, color: colors.success, size: 28),
-            const SizedBox(width: SpacingTokens.s),
+            const SizedBox(width: BBSpace.xs),
             Expanded(
               child: Text(
                 tr.paymentSuccessful,
                 style: TextStyle(
-                  fontWeight: TypographyTokens.bold,
+                  fontWeight: BBTypeBridges.weightBold,
                   color: colors.textPrimary,
                 ),
               ),
@@ -721,16 +724,18 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             Text(
               tr.paymentProcessedButDelayed,
               style: TextStyle(
-                fontSize: TypographyTokens.fontSizeM,
+                fontSize: BBTypeBridges.fontSizeM,
                 color: colors.textPrimary,
               ),
             ),
-            const SizedBox(height: SpacingTokens.m),
+            const SizedBox(height: BBSpace.sm),
             Container(
-              padding: const EdgeInsets.all(SpacingTokens.m),
+              padding: const EdgeInsets.all(BBSpace.sm),
               decoration: BoxDecoration(
                 color: colors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderTokens.circularMedium,
+                borderRadius: const BorderRadius.all(
+                  Radius.circular(BBRadiusBridges.medium),
+                ),
                 border: Border.all(
                   color: colors.warning.withValues(alpha: 0.3),
                 ),
@@ -741,12 +746,12 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   Text(
                     tr.whatToDoNext,
                     style: TextStyle(
-                      fontSize: TypographyTokens.fontSizeS,
-                      fontWeight: TypographyTokens.bold,
+                      fontSize: BBTypeBridges.fontSizeS,
+                      fontWeight: BBTypeBridges.weightBold,
                       color: colors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: SpacingTokens.xs),
+                  const SizedBox(height: BBSpace.xxs),
                   _buildInstructionItem(tr.checkEmailForConfirmation, colors),
                   _buildInstructionItem(tr.checkSpamFolder, colors),
                   _buildInstructionItem(tr.contactOwnerIfNoEmail, colors),
@@ -761,8 +766,10 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.buttonPrimary,
               foregroundColor: colors.buttonPrimaryText,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderTokens.circularMedium,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(BBRadiusBridges.medium),
+                ),
               ),
             ),
             child: Text(tr.iUnderstand),
@@ -775,11 +782,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
   /// Helper to build instruction items for the payment delayed dialog
   Widget _buildInstructionItem(String text, WidgetColorScheme colors) {
     return Padding(
-      padding: const EdgeInsets.only(top: SpacingTokens.xs),
+      padding: const EdgeInsets.only(top: BBSpace.xxs),
       child: Text(
         text,
         style: TextStyle(
-          fontSize: TypographyTokens.fontSizeS,
+          fontSize: BBTypeBridges.fontSizeS,
           color: colors.textSecondary,
         ),
       ),
@@ -2273,14 +2280,14 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                             : 1; // Fallback to 1 night if dates are invalid
                         return Column(
                           children: [
-                            const SizedBox(height: SpacingTokens.m),
+                            const SizedBox(height: BBSpace.sm),
                             AdditionalServicesWidget(
                               propertyId: _propertyId ?? '',
                               unitId: _unitId,
                               nights: nights,
                               guests: _adults + _children,
                             ),
-                            const SizedBox(height: SpacingTokens.m),
+                            const SizedBox(height: BBSpace.sm),
                           ],
                         );
                       } catch (e) {
@@ -2313,7 +2320,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         // Wrap with horizontal padding on mobile for edge inset
         if (isMobile) {
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: SpacingTokens.s),
+            padding: const EdgeInsets.symmetric(horizontal: BBSpace.xs),
             child: pillBar,
           );
         }
@@ -2350,7 +2357,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ref,
             ).noPaymentMethodsAvailable,
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
           // Disabled confirm button
           Builder(
             builder: (context) {
@@ -2360,11 +2367,9 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                 child: ElevatedButton(
                   onPressed: null, // Disabled
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: SpacingTokens.m,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderTokens.circularRounded,
+                    padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BBRadius.smAll,
                     ),
                   ),
                   child: Text(
@@ -2458,7 +2463,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         color: minimalistColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: SpacingTokens.s),
+                    const SizedBox(height: BBSpace.xs),
                     PaymentMethodCard(
                       icon: singleMethod == 'stripe'
                           ? Icons.credit_card
@@ -2469,7 +2474,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       subtitle: singleMethodSubtitle,
                       isDarkMode: isDarkMode,
                     ),
-                    const SizedBox(height: SpacingTokens.m),
+                    const SizedBox(height: BBSpace.sm),
                   ],
                 );
               }
@@ -2486,7 +2491,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                       color: minimalistColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: SpacingTokens.s),
+                  const SizedBox(height: BBSpace.xs),
                 ],
               );
             },
@@ -2542,7 +2547,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                         final tr = WidgetTranslations.of(context, ref);
                         return Padding(
                           padding: EdgeInsets.only(
-                            top: isStripeEnabled ? SpacingTokens.s : 0,
+                            top: isStripeEnabled ? BBSpace.xs : 0,
                           ),
                           child: PaymentOptionWidget(
                             icon: Icons.account_balance_rounded,
@@ -2573,7 +2578,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
             },
           ),
 
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
         ],
 
         // Info message for bookingPending mode
@@ -2588,7 +2593,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               );
             },
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
         ],
 
         // Confirm button
@@ -2604,9 +2609,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               foregroundColor: minimalistColors.buttonPrimaryText,
               disabledBackgroundColor: minimalistColors.buttonPrimary,
               disabledForegroundColor: minimalistColors.buttonPrimaryText,
-              padding: const EdgeInsets.symmetric(vertical: SpacingTokens.m),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderTokens.circularMedium,
+              padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(BBRadiusBridges.medium),
+                ),
               ),
             ),
             child: _isProcessing
@@ -2679,7 +2686,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               color: minimalistColors.textPrimary,
             ),
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
 
           // Name fields (First Name + Last Name in a Row)
           GuestNameFields(
@@ -2742,7 +2749,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   alpha: 0.3,
                 ),
               ),
-              const SizedBox(width: SpacingTokens.s),
+              const SizedBox(width: BBSpace.xs),
               // Phone number input
               Expanded(
                 child: PhoneField(
@@ -2753,11 +2760,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               ),
             ],
           ),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
 
           // Special requests field
           NotesField(controller: _notesController, isDarkMode: isDarkMode),
-          const SizedBox(height: SpacingTokens.m),
+          const SizedBox(height: BBSpace.sm),
 
           // Guest count picker
           GuestCountPicker(
@@ -2789,7 +2796,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   }
                 : null,
           ),
-          const SizedBox(height: SpacingTokens.s),
+          const SizedBox(height: BBSpace.xs),
 
           // Confirm booking button (only show if showButton parameter is true)
           if (showButton)
@@ -2805,11 +2812,11 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                   foregroundColor: minimalistColors.buttonPrimaryText,
                   disabledBackgroundColor: minimalistColors.buttonPrimary,
                   disabledForegroundColor: minimalistColors.buttonPrimaryText,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: SpacingTokens.m,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderTokens.circularMedium,
+                  padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(BBRadiusBridges.medium),
+                    ),
                   ),
                 ),
                 child: _isProcessing

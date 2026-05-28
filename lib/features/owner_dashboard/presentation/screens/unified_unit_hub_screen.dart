@@ -3,7 +3,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/design_tokens/gradient_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -265,7 +265,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               ],
               flexibleSpace: Container(
                 decoration: const BoxDecoration(
-                  gradient: GradientTokens.brandPrimary,
+                  gradient: BBGradient.brandPrimary,
                 ),
               ),
             ),
@@ -787,7 +787,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          gradient: GradientTokens.brandPrimary,
+                          gradient: BBGradient.brandPrimary,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Material(
@@ -1484,7 +1484,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             // Gradient button using brand gradient
             Container(
               decoration: BoxDecoration(
-                gradient: GradientTokens.brandPrimary,
+                gradient: BBGradient.brandPrimary,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Material(
@@ -1718,7 +1718,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                             height: 2,
                             width: 40,
                             decoration: BoxDecoration(
-                              gradient: GradientTokens.brandPrimary,
+                              gradient: BBGradient.brandPrimary,
                               borderRadius: BorderRadius.circular(1),
                             ),
                           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../theme/minimalist_colors.dart';
 
 /// A row displaying a label and amount for price breakdowns.
@@ -56,11 +56,11 @@ class PriceRowWidget extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: isBold
-                  ? TypographyTokens.fontSizeM
-                  : TypographyTokens.fontSizeS,
+                  ? BBTypeBridges.fontSizeM
+                  : BBTypeBridges.fontSizeS,
               color: color ?? colors.textSecondary,
               fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
-              fontFamily: TypographyTokens.primaryFont,
+              fontFamily: BBTypeBridges.primaryFont,
             ),
           ),
         ),
@@ -75,11 +75,11 @@ class PriceRowWidget extends StatelessWidget {
               softWrap: false,
               style: TextStyle(
                 fontSize: isBold
-                    ? TypographyTokens.fontSizeL
-                    : TypographyTokens.fontSizeS,
+                    ? BBTypeBridges.fontSizeL
+                    : BBTypeBridges.fontSizeS,
                 color: color ?? colors.textPrimary,
                 fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
-                fontFamily: TypographyTokens.primaryFont,
+                fontFamily: BBTypeBridges.primaryFont,
               ),
             ),
           ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 
@@ -29,24 +29,26 @@ class NoPaymentInfo extends ConsumerWidget {
       label: errorMessage,
       hint: 'Error message',
       child: Container(
-        margin: const EdgeInsets.only(top: SpacingTokens.m),
-        padding: const EdgeInsets.all(SpacingTokens.m),
+        margin: const EdgeInsets.only(top: BBSpace.sm),
+        padding: const EdgeInsets.all(BBSpace.sm),
         decoration: BoxDecoration(
           color: colors.error.withValues(
             alpha: isDarkMode ? _darkModeAlpha : _lightModeAlpha,
           ),
-          borderRadius: BorderTokens.circularMedium,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           border: Border.all(color: colors.error),
         ),
         child: Row(
           children: [
             Icon(Icons.error_outline, color: colors.error),
-            const SizedBox(width: SpacingTokens.s),
+            const SizedBox(width: BBSpace.xs),
             Expanded(
               child: Text(
                 errorMessage,
                 style: TextStyle(
-                  fontSize: TypographyTokens.fontSizeS,
+                  fontSize: BBTypeBridges.fontSizeS,
                   color: colors.error,
                 ),
               ),

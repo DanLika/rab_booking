@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../../core/design_tokens/design_tokens.dart';
+import '../../../../../../core/design/tokens.dart';
 import '../../../l10n/widget_translations.dart';
 import '../../../theme/minimalist_colors.dart';
 import '../../../utils/widget_input_decoration_helper.dart';
@@ -49,7 +49,7 @@ class EmailFieldWithVerification extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(child: emailField),
-        const SizedBox(width: SpacingTokens.m),
+        const SizedBox(width: BBSpace.sm),
         _buildVerificationStatus(colors, tr),
       ],
     );
@@ -88,7 +88,9 @@ class EmailFieldWithVerification extends ConsumerWidget {
         height: _successContainerSize,
         decoration: BoxDecoration(
           color: colors.success.withValues(alpha: 0.1),
-          borderRadius: BorderTokens.circularMedium,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(BBRadiusBridges.medium),
+          ),
           border: Border.all(color: colors.success, width: 1.5),
         ),
         child: Center(
@@ -110,8 +112,10 @@ class EmailFieldWithVerification extends ConsumerWidget {
           disabledBackgroundColor: colors.textPrimary,
           disabledForegroundColor: colors.backgroundPrimary,
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderTokens.circularMedium,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(BBRadiusBridges.medium),
+            ),
           ),
         ),
         child: isLoading

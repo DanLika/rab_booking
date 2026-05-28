@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/theme_provider.dart';
 import '../providers/widget_settings_provider.dart';
 import '../theme/minimalist_colors.dart';
-import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../domain/models/widget_settings.dart';
 import '../l10n/widget_translations.dart';
 
@@ -71,12 +71,12 @@ class _TaxLegalDisclaimerWidgetState
 
     final tr = WidgetTranslations.of(context, ref);
     return Container(
-      padding: const EdgeInsets.all(SpacingTokens.m),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         // Pure white (light) / pure black (dark) for form containers
         color: colors.backgroundPrimary,
         border: Border.all(color: colors.borderDefault),
-        borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+        borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
         boxShadow: isDarkMode
             ? MinimalistShadows.medium
             : MinimalistShadows.light,
@@ -88,9 +88,9 @@ class _TaxLegalDisclaimerWidgetState
           // Collapsible header
           InkWell(
             onTap: () => setState(() => _isExpanded = !_isExpanded),
-            borderRadius: BorderRadius.circular(BorderTokens.radiusMedium),
+            borderRadius: BorderRadius.circular(BBRadiusBridges.medium),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: SpacingTokens.xs),
+              padding: const EdgeInsets.symmetric(vertical: BBSpace.xxs),
               child: Row(
                 children: [
                   Icon(
@@ -98,7 +98,7 @@ class _TaxLegalDisclaimerWidgetState
                     color: colors.textSecondary,
                     size: 24,
                   ),
-                  const SizedBox(width: SpacingTokens.m),
+                  const SizedBox(width: BBSpace.sm),
                   Expanded(
                     child: Text(
                       tr.taxLegalInformation,
@@ -122,16 +122,16 @@ class _TaxLegalDisclaimerWidgetState
 
           // Expandable content
           if (_isExpanded) ...[
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             Divider(height: 1, color: colors.borderDefault),
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             Container(
               constraints: const BoxConstraints(maxHeight: 200),
               child: SingleChildScrollView(
                 child: Text(
                   taxConfig.disclaimerText,
                   style: TextStyle(
-                    fontSize: TypographyTokens.fontSizeS,
+                    fontSize: BBTypeBridges.fontSizeS,
                     color: colors.textSecondary,
                     height: 1.5,
                     fontFamily: 'Manrope',
@@ -139,9 +139,9 @@ class _TaxLegalDisclaimerWidgetState
                 ),
               ),
             ),
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
             Divider(height: 1, color: colors.borderDefault),
-            const SizedBox(height: SpacingTokens.s),
+            const SizedBox(height: BBSpace.xs),
           ],
 
           // Accept checkbox

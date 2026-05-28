@@ -567,7 +567,7 @@ class ProfileScreen extends ConsumerWidget {
                               if (confirmed != true) return;
                               await ref
                                   .read(enhancedAuthProvider.notifier)
-                                  .signOut();
+                                  .signOut(clearSavedEmail: true);
                               if (context.mounted) {
                                 context.go(OwnerRoutes.login);
                               }

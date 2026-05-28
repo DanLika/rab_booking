@@ -11,7 +11,7 @@ class AppTypography {
   // ============================================================================
 
   /// Heading font - Playfair Display (elegant serif for titles)
-  static String get headingFont => GoogleFonts.playfairDisplay().fontFamily!;
+  static String get headingFont => GoogleFonts.inter().fontFamily!;
 
   /// Body font - Inter (clean sans-serif for readability)
   static String get bodyFont => GoogleFonts.inter().fontFamily!;
@@ -100,7 +100,7 @@ class AppTypography {
     return TextTheme(
       // Display styles (H1 - largest text for hero sections) - ENHANCED for drama
       // Desktop: 72px, Tablet: 56px, Mobile: 40px (responsive handled in components)
-      displayLarge: GoogleFonts.playfairDisplay(
+      displayLarge: GoogleFonts.inter(
         fontSize: 72, // Increased from 48px for more impact
         fontWeight: FontWeight.w700,
         letterSpacing: -1.0, // Tighter for large text
@@ -108,7 +108,7 @@ class AppTypography {
       ),
       // H2 - Major section headers - ENHANCED
       // Desktop: 48px, Tablet: 40px, Mobile: 32px
-      displayMedium: GoogleFonts.playfairDisplay(
+      displayMedium: GoogleFonts.inter(
         fontSize: 48, // Increased from 36px
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
@@ -116,7 +116,7 @@ class AppTypography {
       ),
       // H3 - Section headers - ENHANCED
       // Desktop: 32px, Tablet: 28px, Mobile: 24px
-      displaySmall: GoogleFonts.playfairDisplay(
+      displaySmall: GoogleFonts.inter(
         fontSize: 32, // Increased from 24px
         fontWeight: FontWeight.w700,
         letterSpacing: -0.25,
@@ -124,19 +124,19 @@ class AppTypography {
       ),
 
       // Headline styles (card titles, subsections)
-      headlineLarge: GoogleFonts.playfairDisplay(
+      headlineLarge: GoogleFonts.inter(
         fontSize: 32,
         fontWeight: FontWeight.w600,
         letterSpacing: 0,
         height: 1.25,
       ),
-      headlineMedium: GoogleFonts.playfairDisplay(
+      headlineMedium: GoogleFonts.inter(
         fontSize: 28,
         fontWeight: FontWeight.w600,
         letterSpacing: 0,
         height: 1.29,
       ),
-      headlineSmall: GoogleFonts.playfairDisplay(
+      headlineSmall: GoogleFonts.inter(
         fontSize: 24,
         fontWeight: FontWeight.w600,
         letterSpacing: 0,
@@ -244,7 +244,7 @@ class AppTypography {
 
   /// Hero title style (for landing page) - ENHANCED for dramatic impact
   /// Desktop: 96px, Tablet: 72px, Mobile: 56px (responsive handled in components)
-  static TextStyle get heroTitle => GoogleFonts.playfairDisplay(
+  static TextStyle get heroTitle => GoogleFonts.inter(
     fontSize: 96, // Increased from 56px for desktop drama
     fontWeight: FontWeight.w700,
     letterSpacing: -1.5, // Tighter tracking for large text
@@ -320,7 +320,7 @@ class AppTypography {
   // ============================================================================
 
   /// Large display text (for marketing headlines)
-  static TextStyle get displayXL => GoogleFonts.playfairDisplay(
+  static TextStyle get displayXL => GoogleFonts.inter(
     fontSize: 64,
     fontWeight: weightExtrabold,
     letterSpacing: letterSpacingTight,
@@ -401,30 +401,30 @@ class AppTypography {
   );
 
   /// Quote text style (testimonials, blockquotes) - ENHANCED with italic elegance
-  /// Note: PlayfairDisplay doesn't have light weights, using Regular (400)
-  static TextStyle get quote => GoogleFonts.playfairDisplay(
+  /// 2026-05-28: switched from PlayfairDisplay to Inter (unified font, audit/80d).
+  static TextStyle get quote => GoogleFonts.inter(
     fontSize: 24, // Increased from 20px for more impact
-    fontWeight: weightRegular, // PlayfairDisplay min weight is 400
+    fontWeight: weightRegular,
     letterSpacing: letterSpacingNormal,
     height: lineHeightRelaxed,
     fontStyle: FontStyle.italic,
   );
 
-  /// Testimonial text style - Italic Playfair for emotional impact
-  /// Note: PlayfairDisplay doesn't have light weights, using Regular (400)
-  static TextStyle get testimonial => GoogleFonts.playfairDisplay(
+  /// Testimonial text style - Italic for emotional impact
+  /// 2026-05-28: switched from PlayfairDisplay to Inter (unified font, audit/80d).
+  static TextStyle get testimonial => GoogleFonts.inter(
     fontSize: 20,
-    fontWeight: weightRegular, // PlayfairDisplay min weight is 400
+    fontWeight: weightRegular,
     letterSpacing: 0.15,
     height: 1.7,
     fontStyle: FontStyle.italic,
   );
 
   /// Pull quote style - Large italic for featured quotes
-  /// Note: PlayfairDisplay doesn't have light weights, using Regular (400)
-  static TextStyle get pullQuote => GoogleFonts.playfairDisplay(
+  /// 2026-05-28: switched from PlayfairDisplay to Inter (unified font, audit/80d).
+  static TextStyle get pullQuote => GoogleFonts.inter(
     fontSize: 32,
-    fontWeight: weightRegular, // PlayfairDisplay min weight is 400
+    fontWeight: weightRegular,
     letterSpacing: -0.5,
     height: 1.3,
     fontStyle: FontStyle.italic,

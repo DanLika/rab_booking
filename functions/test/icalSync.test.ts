@@ -294,6 +294,46 @@ describe("iCal Sync Functions", () => {
       expect(undefResult).toHaveLength(3);
       expect(undefResult[1]).toBe("203.0.113.10");
     });
+
+    // F-67-05: an arbitrary thrown Error inside syncSingleFeed must NOT
+    // surface its raw message (which can carry upstream host / status /
+    // response body) to the client. The outer handler must wrap it in a
+    // generic HttpsError.
+    it("does not leak upstream Error message in HttpsError response", async () => {
+      // Only enqueue the 2 doc reads before fetchIcalData throws —
+      // leaving extra onces in the queue would bleed into the next test.
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc)
+        .mockResolvedValueOnce(mockFeedDoc);
+
+      // Force fetchIcalData to surface a host-bearing error message.
+      // Save + restore implementation so it doesn't bleed across tests
+      // (beforeEach clears call history, not impl).
+      const prevImpl = (https.get as jest.Mock).getMockImplementation();
+      (https.get as jest.Mock).mockImplementation(() => {
+        throw new Error("connect ECONNREFUSED ical.booking.com:443");
+      });
+      try {
+        const wrapped = wrap(syncIcalFeedNow);
+        let captured: unknown;
+        try {
+          await wrapped({ data: validData, auth: mockAuth });
+        } catch (err) {
+          captured = err;
+        }
+
+        expect(captured).toBeTruthy();
+        const msg =
+          (captured as { message?: string }).message ?? String(captured);
+        expect(msg).not.toContain("ical.booking.com");
+        expect(msg).not.toContain("ECONNREFUSED");
+        expect(msg).toMatch(/feed url|ical feed|verify the feed/i);
+      } finally {
+        if (prevImpl) {
+          (https.get as jest.Mock).mockImplementation(prevImpl);
+        }
+      }
+    });
   });
 
   describe("scheduledIcalSync", () => {

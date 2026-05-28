@@ -433,9 +433,15 @@ export const syncIcalFeedNow = onCall(async (request) => {
     };
   } catch (error) {
     if (error instanceof HttpsError) throw error;
+    // F-67-05: previously echoed the upstream Error message verbatim — that
+    // leaked things like `host: ical.booking.com 400 Bad Request` into the
+    // client response. Server-side detail is preserved via logError (Sentry +
+    // Cloud Logging); the client gets a generic, actionable message.
     logError("[iCal Sync] Error in manual sync", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    throw new HttpsError("internal", "Sync failed: " + errorMessage);
+    throw new HttpsError(
+      "internal",
+      "Sync failed. Verify the feed URL is reachable and points to a valid iCal feed."
+    );
   }
 });
 
@@ -468,7 +474,13 @@ async function syncSingleFeed(
     // address that we pass to fetchIcalData to defeat DNS rebinding.
     const urlValidation = await validateIcalUrl(ical_url);
     if (!urlValidation.valid) {
-      throw new Error(`Invalid iCal URL: ${urlValidation.error}`);
+      // F-67-05: throw as HttpsError so outer handler re-throws unchanged.
+      // This is a client-supplied URL — the validation reason is safe to
+      // surface (it's our own message, not upstream).
+      throw new HttpsError(
+        "failed-precondition",
+        `Invalid iCal URL: ${urlValidation.error}`
+      );
     }
 
     // Fetch iCal data using the pinned address (DNS rebinding defence)
@@ -489,7 +501,10 @@ async function syncSingleFeed(
       // into logs/Sentry. Report only size + a non-secret-bearing prefix
       // class.
       const sizeBytes = icalData ? icalData.length : 0;
-      throw new Error(
+      // F-67-05: throw as HttpsError — message is our own (size + header
+      // name only, no upstream body/host); safe to surface to owner UI.
+      throw new HttpsError(
+        "failed-precondition",
         `Fetched iCal data is empty or invalid for feed: ${feedId} ` +
         `(received ${sizeBytes} bytes, missing BEGIN:VCALENDAR header)`
       );

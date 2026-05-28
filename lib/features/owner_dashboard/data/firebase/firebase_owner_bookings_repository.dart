@@ -140,7 +140,22 @@ class FirebaseOwnerBookingsRepository {
         data['property_id'] = extractedPropertyId;
       }
     }
+    _backfillGuestName(data);
     return BookingModel.fromJson({...data, 'id': doc.id});
+  }
+
+  /// F-67-02: When `guest_name` is missing or empty on a booking doc, derive
+  /// it from `guest_first_name` + `guest_last_name` if either is present.
+  /// Display-only — does NOT write back to Firestore.
+  static void _backfillGuestName(Map<String, dynamic> data) {
+    final existing = data['guest_name'];
+    if (existing is String && existing.trim().isNotEmpty) return;
+    final first = data['guest_first_name']?.toString().trim() ?? '';
+    final last = data['guest_last_name']?.toString().trim() ?? '';
+    final composed = ('$first $last').trim();
+    if (composed.isNotEmpty) {
+      data['guest_name'] = composed;
+    }
   }
 
   /// Get all bookings for owner's properties
@@ -795,6 +810,7 @@ class FirebaseOwnerBookingsRepository {
           bookingData['property_id'] = extractedPropertyId;
         }
       }
+      _backfillGuestName(bookingData);
       final booking = BookingModel.fromJson({
         ...bookingData,
         'id': bookingDoc.id,

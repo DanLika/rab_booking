@@ -119,9 +119,15 @@ class PersistedFormData {
     );
   }
 
-  /// Check if data is expired (older than 24 hours)
+  /// Check if data is expired.
+  ///
+  /// F-67-03: tightened from 24h to 1h. The widget runs on a shared
+  /// `view.bookbed.io` origin (incl. all client subdomains + iframe embeds),
+  /// so a long TTL means visitor A's draft is restored for visitor B on the
+  /// same unit. 1h still covers the legitimate "refresh / return-from-Stripe"
+  /// resume case without holding PII for a full day.
   bool get isExpired {
-    return DateTime.now().toUtc().difference(timestamp).inHours > 24;
+    return DateTime.now().toUtc().difference(timestamp).inMinutes > 60;
   }
 }
 

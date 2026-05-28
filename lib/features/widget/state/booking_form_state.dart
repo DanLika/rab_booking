@@ -335,7 +335,13 @@ class BookingFormState extends ChangeNotifier {
       adults: _adults,
       children: _children,
       pets: _pets,
-      notes: notesController.text,
+      // F-67-03: special requests are NOT persisted across sessions —
+      // shared-kiosk + iframe-embed visitors share the same view.bookbed.io
+      // localStorage origin, so persisting freeform text leaked prior
+      // visitors' notes (incl. fragments of an old XSS test payload that
+      // rendered inert thanks to SF-014 sanitization but is still a privacy
+      // leak).
+      notes: '',
       paymentMethod: _selectedPaymentMethod,
       pillBarDismissed: _pillBarDismissed,
       hasInteractedWithBookingFlow: _hasInteractedWithBookingFlow,

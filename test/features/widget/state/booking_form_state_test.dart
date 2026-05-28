@@ -246,7 +246,9 @@ void main() {
         expect(data.lastName, 'Smith');
         expect(data.email, 'jane@smith.com');
         expect(data.phone, '555-1234');
-        expect(data.notes, 'late check-in');
+        // F-67-03: notes are intentionally NOT persisted to avoid leaking
+        // special-requests text across shared-origin widget sessions.
+        expect(data.notes, '');
         expect(data.paymentMethod, 'bank_transfer');
         expect(data.pillBarDismissed, isTrue);
         expect(data.hasInteractedWithBookingFlow, isTrue);
@@ -370,7 +372,9 @@ void main() {
         expect(target.lastNameController.text, source.lastNameController.text);
         expect(target.emailController.text, source.emailController.text);
         expect(target.phoneController.text, source.phoneController.text);
-        expect(target.notesController.text, source.notesController.text);
+        // F-67-03: notes are intentionally NOT round-tripped through persistence.
+        expect(target.notesController.text, '');
+        expect(source.notesController.text, 'two cribs please');
         expect(target.adults, source.adults);
         expect(target.children, source.children);
         expect(target.selectedPaymentMethod, source.selectedPaymentMethod);

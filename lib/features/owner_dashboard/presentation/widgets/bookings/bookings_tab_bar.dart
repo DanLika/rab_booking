@@ -27,18 +27,18 @@ class BookingsTabBar extends ConsumerWidget {
       ('imported', l10n.bookingsTabImported), // Special marker for imported
     ];
 
-    return Container(
-      height: 48,
-      margin: const EdgeInsets.only(bottom: 16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        itemCount: tabs.length,
-        itemBuilder: (context, index) {
+    // F-63-04: Wrap allows tabs to flow to a second line under large-text
+    // accessibility (system font_scale=2.0) and long HR translations
+    // ("Otkazane" → "O…" clip already visible at 1.0× per audit/63).
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16, left: 4, right: 4),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: List.generate(tabs.length, (index) {
           final tabValue = tabs[index].$1;
           final label = tabs[index].$2;
 
-          // Determine if this tab is selected
           final bool isSelected;
           final BookingStatus? status;
           final bool isImportedTab = tabValue == 'imported';
@@ -51,27 +51,24 @@ class BookingsTabBar extends ConsumerWidget {
             isSelected = !filters.showImportedOnly && filters.status == status;
           }
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: _TabButton(
-              label: label,
-              isSelected: isSelected,
-              status: status,
-              isImportedTab: isImportedTab,
-              onTap: () {
-                if (isImportedTab) {
-                  ref
-                      .read(bookingsFiltersNotifierProvider.notifier)
-                      .setShowImportedOnly(true);
-                } else {
-                  ref
-                      .read(bookingsFiltersNotifierProvider.notifier)
-                      .setStatus(status);
-                }
-              },
-            ),
+          return _TabButton(
+            label: label,
+            isSelected: isSelected,
+            status: status,
+            isImportedTab: isImportedTab,
+            onTap: () {
+              if (isImportedTab) {
+                ref
+                    .read(bookingsFiltersNotifierProvider.notifier)
+                    .setShowImportedOnly(true);
+              } else {
+                ref
+                    .read(bookingsFiltersNotifierProvider.notifier)
+                    .setStatus(status);
+              }
+            },
           );
-        },
+        }),
       ),
     );
   }
@@ -124,7 +121,10 @@ class _TabButton extends StatelessWidget {
               width: isSelected ? 1.5 : 1,
             ),
           ),
-          alignment: Alignment.center,
+          // alignment removed: Container.alignment makes the box expand to fill
+          // parent constraints. Inside Wrap (post-F-63-04) that meant each tab
+          // grew to the parent column's full width and stacked vertically even
+          // on desktop. Row(mainAxisSize.min) below already sizes correctly.
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

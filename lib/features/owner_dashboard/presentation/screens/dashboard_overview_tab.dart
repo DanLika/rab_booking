@@ -867,55 +867,51 @@ class _DateRangeSelector extends ConsumerWidget {
         vertical: isMobile ? 12 : 16,
       ),
       color: Colors.transparent,
-      child: Center(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: PlatformScrollPhysics.adaptive,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AppFilterChip(
-                label: l10n.ownerAnalyticsLast7Days,
-                selected: dateRange.preset == 'last7',
-                onSelected: () {
-                  ref
-                      .read(dashboardDateRangeNotifierProvider.notifier)
-                      .setPreset('last7');
-                },
-              ),
-              const SizedBox(width: 8),
-              AppFilterChip(
-                label: l10n.ownerAnalyticsLast30Days,
-                selected: dateRange.preset == 'last30',
-                onSelected: () {
-                  ref
-                      .read(dashboardDateRangeNotifierProvider.notifier)
-                      .setPreset('last30');
-                },
-              ),
-              const SizedBox(width: 8),
-              AppFilterChip(
-                label: l10n.ownerAnalyticsLast90Days,
-                selected: dateRange.preset == 'last90',
-                onSelected: () {
-                  ref
-                      .read(dashboardDateRangeNotifierProvider.notifier)
-                      .setPreset('last90');
-                },
-              ),
-              const SizedBox(width: 8),
-              AppFilterChip(
-                label: l10n.ownerAnalyticsLast365Days,
-                selected: dateRange.preset == 'last365',
-                onSelected: () {
-                  ref
-                      .read(dashboardDateRangeNotifierProvider.notifier)
-                      .setPreset('last365');
-                },
-              ),
-            ],
+      // F-63-04: Wrap allows chips to flow to a second line under large-text
+      // accessibility (system font_scale=2.0). Replaces horizontal scroll which
+      // hid the last 2-3 chips off-screen at 200% scale (audit/63).
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          AppFilterChip(
+            label: l10n.ownerAnalyticsLast7Days,
+            selected: dateRange.preset == 'last7',
+            onSelected: () {
+              ref
+                  .read(dashboardDateRangeNotifierProvider.notifier)
+                  .setPreset('last7');
+            },
           ),
-        ),
+          AppFilterChip(
+            label: l10n.ownerAnalyticsLast30Days,
+            selected: dateRange.preset == 'last30',
+            onSelected: () {
+              ref
+                  .read(dashboardDateRangeNotifierProvider.notifier)
+                  .setPreset('last30');
+            },
+          ),
+          AppFilterChip(
+            label: l10n.ownerAnalyticsLast90Days,
+            selected: dateRange.preset == 'last90',
+            onSelected: () {
+              ref
+                  .read(dashboardDateRangeNotifierProvider.notifier)
+                  .setPreset('last90');
+            },
+          ),
+          AppFilterChip(
+            label: l10n.ownerAnalyticsLast365Days,
+            selected: dateRange.preset == 'last365',
+            onSelected: () {
+              ref
+                  .read(dashboardDateRangeNotifierProvider.notifier)
+                  .setPreset('last365');
+            },
+          ),
+        ],
       ),
     );
   }

@@ -14,6 +14,9 @@ initSentry();
 // Export booking management functions
 export * from "./bookingManagement";
 
+// Export booking action callables (F-67-01: approve / reject via CF, not direct SDK)
+export * from "./bookingActions";
+
 // Export atomic booking function (prevents race conditions)
 export * from "./atomicBooking";
 

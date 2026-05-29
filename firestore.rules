@@ -222,7 +222,15 @@ service cloud.firestore {
           // SECURITY: Write access requires property ownership AND owner_id integrity
           // This ensures an owner cannot create a booking with a fake owner_id
           allow create: if isPropertyOwner(propertyId) && request.resource.data.owner_id == request.auth.uid;
-          allow update, delete: if isPropertyOwner(propertyId);
+          // Phase B (audit/78): client-SDK updates may NOT touch status-machine
+          // fields. Status transitions go through approveBooking / rejectBooking /
+          // cancelBooking / completeBooking callables (Admin SDK bypasses rules).
+          // Owner can still edit non-status fields (guest_count, internal_notes,
+          // dates via updateBookingAtomic, etc.) via direct SDK or the CF.
+          allow update: if isPropertyOwner(propertyId)
+            && !request.resource.data.diff(resource.data).affectedKeys()
+                 .hasAny(['status','approved_at','rejected_at','rejection_reason','cancelled_at','cancellation_reason','completed_at']);
+          allow delete: if isPropertyOwner(propertyId);
         }
 
         // Daily prices subcollection

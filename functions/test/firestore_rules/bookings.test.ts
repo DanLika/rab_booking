@@ -199,4 +199,77 @@ describe("bookings rule (T11c closed)", () => {
     const ctx = testEnv.unauthenticatedContext();
     await assertFails(ctx.firestore().doc(BOOKING_PATH).get());
   });
+
+  // ---- audit/78 Phase B: status-machine field denylist on client SDK updates ----
+
+  test("Phase B — owner update with status field DENIED (must use approveBooking CF)", async () => {
+    // Use a DIFFERENT value than the seed ('confirmed') so diff() detects a change.
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({status: "cancelled"}),
+    );
+  });
+
+  test("Phase B — owner update with any of the 7 status-machine fields DENIED", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    const denied = [
+      {approved_at: new Date()},
+      {rejected_at: new Date()},
+      {rejection_reason: "spam"},
+      {cancelled_at: new Date()},
+      {cancellation_reason: "guest no-show"},
+      {completed_at: new Date()},
+    ];
+    for (const patch of denied) {
+      await assertFails(ctx.firestore().doc(BOOKING_PATH).update(patch));
+    }
+  });
+
+  test("Phase B — owner update of non-status fields ALLOWED (internal_notes)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertSucceeds(
+      ctx.firestore().doc(BOOKING_PATH).update({internal_notes: "VIP — repeat guest"}),
+    );
+  });
+
+  test("Phase B — owner update mixing allowed + denied field DENIED (atomic)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({
+        internal_notes: "moved to cancelled",
+        status: "cancelled", // diff() vs seed 'confirmed' → poisons the write
+      }),
+    );
+  });
+
+  test("Phase B — create with pending status ALLOWED (status set, not affected by diff)", async () => {
+    const NEW_BOOKING_PATH =
+      `properties/${PROPERTY_ID}/units/${UNIT_ID}/bookings/new-booking-phase-b`;
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertSucceeds(
+      ctx.firestore().doc(NEW_BOOKING_PATH).set({
+        owner_id: OWNER_UID,
+        property_id: PROPERTY_ID,
+        unit_id: UNIT_ID,
+        status: "pending",
+        guest_email: "guest@example.com",
+        guest_name: "New Guest",
+        total_price: 50,
+        check_in: new Date("2026-07-01"),
+        check_out: new Date("2026-07-03"),
+      }),
+    );
+  });
+
+  test("Phase B — foreign uid update still DENIED (not property owner) regardless of fields", async () => {
+    const ctx = testEnv.authenticatedContext(FOREIGN_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({internal_notes: "hijack"}),
+    );
+  });
+
+  test("Phase B — owner delete still ALLOWED (rule split preserved delete semantics)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertSucceeds(ctx.firestore().doc(BOOKING_PATH).delete());
+  });
 });

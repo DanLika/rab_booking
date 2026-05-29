@@ -1,6 +1,11 @@
 # Miscellaneous
 *.class
 *.log
+
+# SF-NEW (audit/50 F-50-12): audit/raw/ holds local-only grep dumps that
+# accelerate attacker recon if exposed (line/file references for auth tokens,
+# secrets, hack/fixme markers). Treat as scratch — never commit.
+audit/raw/
 *.pyc
 *.swp
 .DS_Store

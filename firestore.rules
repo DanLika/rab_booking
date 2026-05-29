@@ -156,9 +156,16 @@ service cloud.firestore {
       }
 
       // Devices subcollection - user device tracking for session management
+      // SF-NEW (audit/50 F-50-09): updates restricted to mutable telemetry keys only
+      // (deviceId, createdAt, userAgent stay immutable; deletion still allowed).
       match /devices/{deviceId} {
         allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'lastSeenAt', 'fcmToken', 'appVersion', 'platform',
+            'pushEnabled', 'tokenUpdatedAt', 'lastActiveAt'
+          ]);
         allow delete: if isOwner(userId);
       }
     }

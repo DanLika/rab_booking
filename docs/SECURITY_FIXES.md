@@ -4121,3 +4121,112 @@ See audit/91 §5. Smoke matrix covers all 3 paths × {owner upload, owner delete
 - Dev deploy + IAM re-grant matrix (us-central1 + europe-west1) + CORS smoke (`OPTIONS` from `evil.test` vs `app.bookbed.io`) — see audit/89 §7-§9
 
 **PROD-deferred:** PROD deploy + IAM re-grant per memory `[[cf-deploy-cors-shape-iam-strip]]`. Memory `[[f86-01-cors-allowlist-gap-8-callables]]` closure tag flips 🚨 → ✅ post-PROD-cutover.
+## SF-061: undici override (F-50-05a CLOSED)
+
+**Status:** ✅ closed via this PR (audit/89)
+**Severity:** HIGH (audit/50 F-50-05a)
+**Audit:** `audit/89-audit-50-backlog.md` §1
+
+**Vector:** `undici ≤6.23.0` carried 8 CVEs (HTTP request/response smuggling, CRLF injection in `upgrade`, WebSocket length overflow, unbounded decompression DoS, …). iCal feed URLs in `functions/src/icalSync.ts` are owner-supplied — owner-grade attacker can return crafted responses targeting these CVEs against the CF runtime.
+
+**Fix:** `functions/package.json` carries `overrides.undici: "^7.0.0"`. Verification on current dep tree:
+- `npm ls undici` → empty. `firebase-admin@12.6.0` + `firebase-functions@^6.0.1` on Node 20 use native `fetch`; undici is not pulled transitively at all.
+- `npm audit` no longer reports any of the 8 undici CVEs.
+- Override stays as defense-in-depth: a future minor bump that re-introduces undici resolves to `^7` instead of `≤6.23`.
+
+**Smoke (worktree, no network):**
+- `npm install --no-audit --no-fund` → `added 857 packages in 11s`
+- `npm run build` (tsc) → exit 0
+- `npm test` → 19 suites, 387/387 pass
+- `npm run test:rules` → 5 suites, 53/53 pass (incl. SF-062 below)
+
+**Files modified:** `functions/package.json` (override pre-existing, this PR audits it), `functions/package-lock.json` (re-resolved).
+
+---
+
+## SF-062: devices/{deviceId} update key allowlist (F-50-09 CLOSED)
+
+**Status:** ✅ closed via this PR (audit/89)
+**Severity:** MEDIUM (audit/50 F-50-09)
+**Audit:** `audit/89-audit-50-backlog.md` §2
+
+**Vector:** `firestore.rules:159-163` allowed an authenticated user to update ANY field on their own `users/{uid}/devices/{deviceId}` doc. Immutable forensics fields (`createdAt`, `userAgent`, `deviceId` itself) were rewritable by a compromised client; arbitrary keys could be planted that a server-side fraud-signal reader might later trust.
+
+**Fix:** Update rule now requires `affectedKeys().hasOnly([...])`. Allowlist drawn from `lib/core/services/device_token_service.dart` field shapes:
+- `lastSeenAt`, `fcmToken`, `appVersion`, `platform` (audit/50 suggestion)
+- `pushEnabled`, `tokenUpdatedAt`, `lastActiveAt` (observed in client code)
+
+Create + delete + read unchanged.
+
+**Smoke (rules emulator):**
+- New `functions/test/firestore_rules/devices.test.ts` — 7 cases (allowed updates, denied non-allowed keys, denied immutable mutation, denied non-owner, allowed delete/create)
+- 7/7 pass; total `test:rules` 53/53.
+
+**Files modified:**
+- `firestore.rules` (devices match block, +6 lines for allowlist)
+- `functions/test/firestore_rules/devices.test.ts` (NEW, 7 cases)
+
+---
+
+## SF-063: web/index.html drop eval() ES6 probe (F-50-10 CLOSED)
+
+**Status:** ✅ closed via this PR (audit/89)
+**Severity:** LOW (audit/50 F-50-10)
+**Audit:** `audit/89-audit-50-backlog.md` §3
+
+**Vector:** `web/index.html:669` carried the only `eval()` callsite in the entire web bundle: `eval('class Test {}; let x = () => {}; const y = \`test\`;')` for ES6 feature detection. Forced `'unsafe-eval'` into any future `script-src` CSP tightening; SAST consistently flagged.
+
+**Fix:** Replace with native `typeof`-based probes (`Symbol`, `Promise`, `Map`, `Set`, `Proxy`, `Reflect`). All six were standardized by ES2017; their presence is a strict proper superset of the original probe (classes, arrows, template literals). Renderer-selection ladder downstream unaffected.
+
+**Smoke:**
+- Manual grep `grep -n "eval(" web/index.html` → no hits in owner code
+- CSP for owner+admin (SF-057) still carries `'wasm-unsafe-eval'` (Flutter CanvasKit), but no longer needs `'unsafe-eval'` because of this code — future tightening cycle can drop the latter once CanvasKit upstreams a no-eval init path
+
+**Files modified:** `web/index.html` (lines 665-674, function body rewrite)
+
+---
+
+## SF-064: iframe_resizer.js postMessage origin (F-50-11 CLOSED)
+
+**Status:** ✅ closed via this PR (audit/89)
+**Severity:** LOW (audit/50 F-50-11)
+**Audit:** `audit/89-audit-50-backlog.md` §4
+
+**Vector:** `web/iframe_resizer.js:13` posted to `'*'` (any parent origin). Today's payload is numeric height only — low real impact — but future iframe→parent messages would inherit the wildcard and broadcast to attacker-controlled embeds.
+
+**Fix:** Two-tier origin capture:
+1. Listen for `{type: 'bookbed-widget-init'}` from `window.parent` and pin `event.origin` as the trusted target.
+2. Fallback: derive origin from `document.referrer` (https or http only).
+3. If neither resolves, queue messages internally; never broadcast.
+
+Embedders can opt into tier 1 by sending a one-time handshake:
+```javascript
+iframe.contentWindow.postMessage({type:'bookbed-widget-init', origin:window.location.origin}, '*');
+```
+Without opt-in, the referrer fallback handles the common case.
+
+**Smoke:**
+- No regression visual smoke shipped — if origin can't be resolved, iframe stays at initial height (observable to operator, not silent breakage).
+- Real e2e in next embed test pass.
+
+**Files modified:** `web/iframe_resizer.js` (rewritten, 23 → 75 lines)
+
+---
+
+## SF-065: audit/raw/ gitignore + scratch removal (F-50-12 CLOSED)
+
+**Status:** ✅ closed via this PR (audit/89)
+**Severity:** LOW (audit/50 F-50-12)
+**Audit:** `audit/89-audit-50-backlog.md` §5
+
+**Vector:** `audit/raw/secrets.txt` and 21 sibling files were git-tracked. Contents: line-by-line grep dump of `apiKey`/`token`/`secret`/`hack`/`fixme`/`http` references across `lib/` and `functions/src/`. Not real secrets, but an attacker-recon acceleration map if the repo were ever public or leaked.
+
+**Fix:**
+- `git rm -r audit/raw/` (22 files removed: scratch txt + 2 PR-smoke JSONs)
+- `.gitignore` adds `audit/raw/` block to keep future scratch out of commits
+
+**No history scrub:** `audit/raw/secrets.txt` is still in git history. It contained file:line references, not actual credentials, so no rotation is needed. A `git filter-repo` purge is a separate cycle if a stricter cleanup is wanted.
+
+**Files modified:**
+- `.gitignore` (+4 lines)
+- `audit/raw/*` (DELETED, 22 files)

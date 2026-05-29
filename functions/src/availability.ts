@@ -30,6 +30,7 @@ import {db, admin} from "./firebase";
 import {logInfo, logError, logWarn} from "./logger";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 const MAX_RANGE_DAYS = 366;
 const MAX_BOOKINGS_PER_QUERY = 500;
@@ -116,7 +117,7 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
     memory: "256MiB",
     timeoutSeconds: 30,
     maxInstances: 50,
-    cors: true,
+    cors: getCorsAllowlist(),
     // SF-046: App Check audit-only mode. Logs attestation when present, does not
     // reject missing tokens. Flip enforceAppCheck=true in follow-up PR after
     // RECAPTCHA_SITE_KEY is provisioned and clients ship App Check init.

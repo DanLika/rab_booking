@@ -2,7 +2,37 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-29 | **Version**: 7.02
+**Last Updated**: 2026-05-29 | **Version**: 7.03
+
+---
+
+**Changelog 7.03**: audit/89 F-86-01 closure — CORS allowlist on 8 framework-default callables (SF-062, 2026-05-29):
+
+### Security
+- **PR #565 — `cors: getCorsAllowlist()` on 8 framework-default callables (SF-062, P1)**: closes the audit/79 §3 #4 / audit/84 PR #559 carryover. 8 callables left on Firebase Functions v2 reflective-`Origin` default — verified pre-fix on bookbed-dev that `OPTIONS -H "Origin: https://evil.test"` echoed attacker origin back as ACAO. Wired `cors: getCorsAllowlist()` (helper from SF-060) preserving every existing opt. Targets per region:
+  - **us-central1**: `createBookingAtomic`, `createStripeCheckoutSession`, `guestCancelBooking` (payment hot-path), `checkSubdomainAvailability`
+  - **europe-west1**: `deleteUserAccount`, `recordLoginFailure`, `getLoginLockoutStatus`, `clearLoginAttempts`
+- **Test mocks (NOT a regression)**: `test/stripePayment.test.ts` + `test/guestCancelBooking.test.ts` mocked `firebase-functions/params` exposing only `defineSecret` + `defineString`. Pre-fix `onCall(opts, …)` skipped the `Expression` instance-check fast-path (`"cors" in opts === false`); post-fix, the lib hits `opts.cors instanceof params_1.Expression` at module load. Mocks extended with `Expression: class Expression {}` to keep the array path reachable. 387/387 jest + 46/46 rules-jest still green.
+
+### Verification
+- `npm run build` → 0 tsc errors
+- `npm test` → 19 suites / 387 tests pass
+- `npm run test:rules` → 4 suites / 46 tests pass
+- Dev deploy + IAM re-grant on both regions per `[[cf-deploy-cors-shape-iam-strip]]`
+- 34-cell smoke matrix on bookbed-dev (8 OPTIONS × 3 origins evil/owner/widget + 9 widget-origin cells incl wildcard regex `*.view.bookbed.io` + 1 functional `POST` proving end-to-end callable execution post-CORS gate) → all GREEN. `Vary: Origin, Access-Control-Request-Headers` present on every response.
+
+### Operational notes baked into memory
+- **Cloud Run service-name lowercase normalization**: on bookbed-dev, the underlying Cloud Run services for Firebase v2 callables are lowercase (`createbookingatomic`, not `createBookingAtomic`). IAM re-grant loop with camelCase names returned `NOT_FOUND` for all 8 on first attempt. Use `gcloud run services list --region=<r>` to confirm the actual service name before scripting the IAM loop. May or may not hold on PROD — verify before PROD cutover.
+- audit/89 §5 "Stale-`node_modules` gotcha": fresh-clone build of `functions/` reported 4 `tsc` errors against `Stripe.Stripe` namespace — `stripe@19.1.0` resolved on-disk vs `^22.2.0` in `package.json`. PR #503 (audit/78) merged the bump + adapt content together; carry-forward node_modules masked it. `npm install` resolves. Symmetric to the `flutter pub get` pub-cache desync trap (CLAUDE.md TOOLING GOTCHA).
+
+### Out of scope (deferred)
+- **PROD deploy + IAM re-grant on `rab-booking-248fc`** — manual gate per the same `[[cf-deploy-cors-shape-iam-strip]]` recipe; ~60 s degraded window expected post-cors-shape-flip. Memory `[[f86-01-cors-allowlist-gap-8-callables]]` flips DEV-CLOSED → ✅ post-PROD.
+
+### Refs
+- audit/89-f86-01-cors-fix.md
+- PR #565 (`fix/f86-01-cors-8-callables`)
+- SF-062 (`docs/SECURITY_FIXES.md`)
+- memory: `[[f86-01-cors-allowlist-gap-8-callables]]`, `[[oncall-default-cors-reflective]]`, `[[cf-deploy-cors-shape-iam-strip]]`
 
 ---
 

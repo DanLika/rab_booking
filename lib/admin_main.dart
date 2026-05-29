@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/init/app_check_init.dart';
 import 'core/theme/app_theme.dart';
 import 'features/admin/providers/admin_providers.dart';
 // Using production Firebase project
@@ -18,6 +19,8 @@ void main() async {
 
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await AppCheckInit.activate(isProd: true);
 
   runApp(const ProviderScope(child: AdminApp()));
 }

@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/environment.dart';
+import 'core/init/app_check_init.dart';
 import 'core/theme/app_theme.dart';
 import 'features/admin/providers/admin_providers.dart';
 import 'firebase_options_dev.dart';
@@ -45,6 +46,8 @@ void main() async {
       'Check --target flag (must be lib/admin_main_dev.dart for dev).',
     );
   }
+
+  await AppCheckInit.activate(isProd: false);
 
   runApp(const ProviderScope(child: AdminApp()));
 }

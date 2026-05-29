@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/config/environment.dart';
 import 'firebase_options.dart';
+import 'core/init/app_check_init.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'main.dart' as app;
 
@@ -35,6 +36,8 @@ void main() async {
       '$actualProjectId (expected $expectedProjectId).',
     );
   }
+
+  await AppCheckInit.activate(isProd: true);
 
   app.runMainApp();
 }

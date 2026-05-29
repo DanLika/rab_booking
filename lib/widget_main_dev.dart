@@ -15,6 +15,7 @@ import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options_dev.dart'; // Import DEV options
+import 'core/init/app_check_init.dart';
 
 /// WIDGET DEVELOPMENT ENTRY POINT
 ///
@@ -62,6 +63,8 @@ void main() async {
 
   // Initialize Firebase with DEV options (Safari fix)
   await _initializeFirebaseSafelyDev();
+
+  await AppCheckInit.activate(isProd: false);
 
   SharedPreferences? prefs;
   try {

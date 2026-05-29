@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:marionette_flutter/marionette_flutter.dart';
 import 'core/config/environment.dart';
 import 'firebase_options_dev.dart';
+import 'core/init/app_check_init.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'main.dart' as app;
 
@@ -51,6 +52,8 @@ void main() async {
 
   // Connect to emulators in development
   // await _connectToEmulators();
+
+  await AppCheckInit.activate(isProd: false);
 
   app.runMainApp();
 }

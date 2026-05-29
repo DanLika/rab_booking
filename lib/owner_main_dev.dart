@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'core/config/environment.dart';
+import 'core/init/app_check_init.dart';
 import 'firebase_options_dev.dart';
 import 'main.dart' show runMainApp;
 
@@ -36,6 +37,8 @@ void main() async {
       'Check ios/Runner/GoogleService-Info.plist and --target flag.',
     );
   }
+
+  await AppCheckInit.activate(isProd: false);
 
   runMainApp();
 }

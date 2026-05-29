@@ -7,6 +7,44 @@ on:
     branches: [ main, develop ]
 
 jobs:
+  # Job 0: Detect changed paths — gates heavy jobs (build-web, build-android,
+  # test-functions) away from design/audit/docs-only PRs. Negation `!` under
+  # `lib/**` lets `lib/core/design/**` skip heavy even though it lives under
+  # lib/. Always-running gates (test, coverage-check, validate-firestore-rules,
+  # bundle-size cascade off build-web) are unchanged. New-branch push with no
+  # base falls back to "all changed" → heavy=true (safe default). See
+  # audit/81-ci-path-filter.md for the truth table.
+  detect-changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      heavy: ${{ steps.filter.outputs.heavy }}
+      functions: ${{ steps.filter.outputs.functions }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            heavy:
+              - 'lib/**'
+              - '!lib/core/design/**'
+              - 'web/**'
+              - 'firestore.rules'
+              - 'storage.rules'
+              - 'pubspec.yaml'
+              - 'pubspec.lock'
+              - 'android/**'
+              - 'ios/**'
+              - 'tool/**'
+              - '.github/workflows/**'
+            functions:
+              - 'functions/**'
+              - '.github/workflows/**'
+
   # Job 1: Run tests
   test:
     name: Run Tests
@@ -63,7 +101,8 @@ jobs:
   build-web:
     name: Build Web Widget
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, detect-changes]
+    if: needs.detect-changes.outputs.heavy == 'true'
     timeout-minutes: 15
 
     steps:
@@ -100,7 +139,8 @@ jobs:
   build-android:
     name: Build Android AAB
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, detect-changes]
+    if: needs.detect-changes.outputs.heavy == 'true'
     timeout-minutes: 30
     steps:
       - name: Checkout code
@@ -163,6 +203,8 @@ jobs:
   test-functions:
     name: Test Cloud Functions
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.functions == 'true'
     timeout-minutes: 10
 
     steps:

@@ -4,6 +4,40 @@ Extracted from CLAUDE.md — inactive planning items.
 
 ---
 
+## 🚨 TODO: PROD cutover queue (audit/90, 2026-05-29)
+
+**Source:** `audit/90-prod-cutover-runbook.md` (PR #566). Read runbook end-to-end before acting on any item below.
+
+**Operator priority order:**
+
+1. **B-3 — F-90-01 SF-050 IAM grants (URGENT, INDEPENDENT of cutover).** PROD `recordloginfailure` / `getloginlockoutstatus` / `clearloginattempts` have empty IAM policy. `rate_limit_service.dart` fails open → per-email server-side login throttle currently non-functional on PROD. Fix:
+   ```bash
+   for SVC in recordloginfailure getloginlockoutstatus clearloginattempts; do
+     gcloud run services add-iam-policy-binding "$SVC" \
+       --project=rab-booking-248fc --region=europe-west1 \
+       --member=allUsers --role=roles/run.invoker
+   done
+   ```
+   Verify: OPTIONS preflight returns HTTP/2 204 + ACAO header on all three. Effort: XS (~5 min).
+
+2. **B-4 — merge PR #565 (SF-062 CORS allowlist on 8 callables) → run audit/90 §3.1.** No env prereqs. Tests green. ~30 min including IAM re-grant loop + smoke.
+
+3. **B-1 — provision PROD `ICAL_TOKEN_PEPPER`** (Secret Manager, needs `roles/secretmanager.admin` on `rab-booking-248fc`). Recipe in audit/90 §1.1. Gates B-5.
+
+4. **B-2 — populate PROD `ALLOWED_SUBSCRIPTION_PRICE_IDS`** in `functions/.env.rab-booking-248fc` after creating PROD subscription Prices in Stripe Dashboard LIVE mode. Gates B-5.
+
+5. **B-5 — promote PR #482 (SF-021 widget_secrets lockdown) from Draft → ready, merge → run audit/90 §3.2.** Only AFTER B-1 + B-2 green. ~45 min including migration + widget bundle + rules.
+
+**Deferred (operator gate, NOT cutover-blocking):**
+
+- **B-6 — audit/88 branch cleanup.** 12 remote merged-into-main candidates ready for delete; 47 remote unmerged review; 55 local. Per-batch approval required.
+- **B-7 — staging cleanup decision.** audit/86 §"STAGING" — 5 real orphans + 13 missing CF deploys. Redeploy or retire staging (no half-mirror).
+- **B-8 — SF-052 Sentry `defineString.value()` lazy init.** Cosmetic deploy-time warning. Bundle with next `functions/src/sentry.ts` touch.
+
+**Explicit out-of-scope** (audit/90 §7): SF-061 App Check enforcement (DEFERRED — reCAPTCHA prereq + 7d verified-rate gate), wider CORS sweep beyond 18 already-migrated callables, App Check client init follow-ups (4 of 5 audit/85 boxes still unchecked).
+
+---
+
 ## 🚨 TODO: audit/50 security findings (2026-05-25)
 
 **Prioritet:** mixed (3 CRITICAL + 2 HIGH + 6 MEDIUM + 4 LOW = 15 findings)

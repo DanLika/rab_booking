@@ -1,9 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:cloud_functions/cloud_functions.dart';
 import 'logging_service.dart';
 
-/// IP Geolocation result
+/// IP Geolocation result.
+///
+/// `ipAddress` is intentionally left empty — `getClientGeolocation` CF never
+/// returns the IP to the client (privacy by design — the IP only lives
+/// server-side for the lookup).
 class GeoLocationResult {
   final String ipAddress;
   final String? country;
@@ -28,136 +31,58 @@ class GeoLocationResult {
     if (country != null && country!.isNotEmpty) parts.add(country!);
     return parts.isEmpty ? 'Unknown Location' : parts.join(', ');
   }
-
-  factory GeoLocationResult.fromJson(Map<String, dynamic> json) {
-    return GeoLocationResult(
-      ipAddress: json['ip'] ?? json['query'] ?? '',
-      country: json['country'] ?? json['country_name'],
-      city: json['city'],
-      region: json['region'] ?? json['regionName'],
-      latitude: json['latitude']?.toDouble() ?? json['lat']?.toDouble(),
-      longitude: json['longitude']?.toDouble() ?? json['lon']?.toDouble(),
-    );
-  }
 }
 
-/// Free IP Geolocation Service.
+/// Server-side IP Geolocation (F-58c-13 closure).
 ///
-/// Uses multiple free APIs as fallbacks:
-/// 1. ipapi.co (150 requests/day, no key required)
-/// 2. ipwhois.app (10000 requests/month, no key required)
+/// Pre-fix this class called `ipapi.co` + `ipwhois.app` directly from the
+/// browser on every login/signup, leaking the client IP and approximate
+/// location to two third parties before the dashboard even rendered.
 ///
-/// Note: ip-api.com was removed because it only supports HTTPS for paid users,
-/// which causes Mixed Content errors on HTTPS sites.
+/// Now: calls `getClientGeolocation` callable in `europe-west1`. The CF reads
+/// the verified `x-forwarded-for` / `rawRequest.ip`, proxies to a single
+/// upstream (ipapi.co), returns only `{country, region, city}`. The IP itself
+/// never enters the client.
 ///
-/// Usage:
-/// ```dart
-/// final service = IpGeolocationService();
-///
-/// // Get current location (auto-detect IP)
-/// final location = await service.getCurrentLocation();
-/// print(location?.locationString); // "Zagreb, Croatia"
-///
-/// // Get location for specific IP
-/// final result = await service.getGeolocation('8.8.8.8');
-/// ```
+/// Failure (network blip, CF cold-start past timeout, upstream 503) degrades
+/// to `null` — callers in `enhanced_auth_provider.dart` already treat that as
+/// "location unknown" and continue.
 class IpGeolocationService {
-  final http.Client _client;
+  final FirebaseFunctions _functions;
 
-  IpGeolocationService({http.Client? client})
-    : _client = client ?? http.Client();
+  IpGeolocationService({FirebaseFunctions? functions})
+    : _functions =
+          functions ?? FirebaseFunctions.instanceFor(region: 'europe-west1');
 
-  /// Get geolocation for current IP (automatic detection)
   Future<GeoLocationResult?> getCurrentLocation() async {
-    return await getGeolocation(null);
+    try {
+      final callable = _functions.httpsCallable(
+        'getClientGeolocation',
+        options: HttpsCallableOptions(timeout: const Duration(seconds: 5)),
+      );
+      final response = await callable.call<Map<Object?, Object?>>();
+      final raw = response.data;
+      final country = (raw['country'] as String?) ?? '';
+      final region = (raw['region'] as String?) ?? '';
+      final city = (raw['city'] as String?) ?? '';
+      if (country.isEmpty && region.isEmpty && city.isEmpty) return null;
+      return GeoLocationResult(
+        ipAddress: '',
+        country: country.isEmpty ? null : country,
+        region: region.isEmpty ? null : region,
+        city: city.isEmpty ? null : city,
+      );
+    } catch (e) {
+      unawaited(LoggingService.logError('getClientGeolocation CF failed', e));
+      return null;
+    }
   }
 
-  /// Get geolocation for specific IP address
+  /// API-surface compat shim: geolocation by arbitrary IP is no longer
+  /// supported client-side (server uses the request's verified IP).
   Future<GeoLocationResult?> getGeolocation(String? ipAddress) async {
-    // Try multiple providers in sequence (all HTTPS)
-    final providers = [
-      () => _tryIpApiCo(ipAddress),
-      () => _tryIpWhoisApp(ipAddress),
-    ];
-
-    for (final provider in providers) {
-      try {
-        final result = await provider();
-        if (result != null) return result;
-      } catch (e) {
-        // Continue to next provider
-        unawaited(LoggingService.logError('Geolocation provider failed', e));
-      }
-    }
-
-    return null; // All providers failed
+    return getCurrentLocation();
   }
 
-  /// Try ipapi.co (150 requests/day)
-  Future<GeoLocationResult?> _tryIpApiCo(String? ipAddress) async {
-    final url = ipAddress != null && ipAddress.isNotEmpty
-        ? 'https://ipapi.co/$ipAddress/json/'
-        : 'https://ipapi.co/json/';
-
-    // PERFORMANCE: 1s timeout per provider (total 3s for all providers)
-    final response = await _client
-        .get(Uri.parse(url))
-        .timeout(const Duration(seconds: 1));
-
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-
-      // Check for error
-      if (json.containsKey('error') && json['error'] == true) {
-        return null;
-      }
-
-      return GeoLocationResult(
-        ipAddress: json['ip'] ?? '',
-        country: json['country_name'],
-        city: json['city'],
-        region: json['region'],
-        latitude: json['latitude']?.toDouble(),
-        longitude: json['longitude']?.toDouble(),
-      );
-    }
-
-    return null;
-  }
-
-  /// Try ipwhois.app (10000 requests/month)
-  Future<GeoLocationResult?> _tryIpWhoisApp(String? ipAddress) async {
-    final url = ipAddress != null && ipAddress.isNotEmpty
-        ? 'https://ipwhois.app/json/$ipAddress'
-        : 'https://ipwhois.app/json/';
-
-    // PERFORMANCE: 1s timeout per provider (total 3s for all providers)
-    final response = await _client
-        .get(Uri.parse(url))
-        .timeout(const Duration(seconds: 1));
-
-    if (response.statusCode == 200) {
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-
-      // Check for success
-      if (json['success'] == false) {
-        return null;
-      }
-
-      return GeoLocationResult(
-        ipAddress: json['ip'] ?? '',
-        country: json['country'],
-        city: json['city'],
-        region: json['region'],
-        latitude: json['latitude']?.toDouble(),
-        longitude: json['longitude']?.toDouble(),
-      );
-    }
-
-    return null;
-  }
-
-  void dispose() {
-    _client.close();
-  }
+  void dispose() {}
 }

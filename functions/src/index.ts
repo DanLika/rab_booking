@@ -74,6 +74,9 @@ export * from "./resendGuestBookingEmail";
 // Export subdomain management functions
 export * from "./subdomainService";
 
+// Export server-side IP geolocation (F-58c-13: replaces client ipapi.co/ipwhois.app calls)
+export * from "./getClientGeolocation";
+
 // Export cleanup scheduled functions (Stripe pending bookings)
 export * from "./cleanupExpiredPendingBookings";
 

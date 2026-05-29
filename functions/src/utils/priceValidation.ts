@@ -360,6 +360,11 @@ export async function validateBookingPrice(
     // Log security event to Firestore + Sentry (fire-and-forget)
     // IMPORTANT: Only send to Sentry if truly suspicious (prevents false positive spam)
     if (isSuspicious) {
+      // Tier severity (FLUTTER-6X triage): server already auto-corrects every
+      // mismatch, so only egregious manipulations are Sentry-loud. Threshold
+      // tuned for "actually worth waking someone" vs noise.
+      const sentrySeverity: "low" | "high" =
+        difference > 500 || percentageDifference > 50 ? "high" : "low";
       logPriceMismatch(unitId, clientTotalPrice, serverExpectedTotal, {
         propertyId,
         checkIn: checkInDate.toDate().toISOString(),
@@ -367,7 +372,7 @@ export async function validateBookingPrice(
         serverNightlyPrice,
         servicesTotal: validatedServicesTotal,
         percentageDifference: percentageDifference.toFixed(2),
-      }).catch(() => { });
+      }, sentrySeverity).catch(() => { });
     } else {
       // Small mismatch - log to Cloud Logs only (no Sentry spam)
       logInfo("[PriceValidation] Small price mismatch (cached/floating-point) - using server price", {

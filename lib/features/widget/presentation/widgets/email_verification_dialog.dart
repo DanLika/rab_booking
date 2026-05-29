@@ -337,6 +337,9 @@ class _EmailVerificationDialogState
                         Icons.close,
                         color: widget.colors.textSecondary,
                       ),
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).closeButtonTooltip,
                       onPressed: () => Navigator.of(context).pop(false),
                     ),
                   ],

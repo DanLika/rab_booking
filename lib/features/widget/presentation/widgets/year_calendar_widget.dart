@@ -239,6 +239,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             color: colors.textPrimary,
           ),
           padding: EdgeInsets.zero,
+          tooltip: '${_currentYear - 1}',
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
             minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -268,6 +269,7 @@ class _YearCalendarWidgetState extends ConsumerState<YearCalendarWidget> {
             color: colors.textPrimary,
           ),
           padding: EdgeInsets.zero,
+          tooltip: '${_currentYear + 1}',
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
             minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,

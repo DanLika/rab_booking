@@ -55,6 +55,7 @@ class _ZoomHintOverlayState extends ConsumerState<ZoomHintOverlay> {
               ),
               IconButton(
                 icon: const Icon(Icons.close),
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 onPressed: () {
                   setState(() {
                     _isVisible = false;

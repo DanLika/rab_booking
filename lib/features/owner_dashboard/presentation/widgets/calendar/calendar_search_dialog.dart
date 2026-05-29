@@ -189,6 +189,9 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).closeButtonTooltip,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -211,6 +214,9 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear),
+                                tooltip: MaterialLocalizations.of(
+                                  context,
+                                ).deleteButtonTooltip,
                                 onPressed: () {
                                   _searchController.clear();
                                   _performSearch('');

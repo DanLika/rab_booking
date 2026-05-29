@@ -4095,3 +4095,29 @@ Cross-ref [audit/90](../audit/90-prod-cutover-runbook.md) operator blockers list
 ### Verification (17/17 PASS on bookbed-dev)
 
 See audit/91 §5. Smoke matrix covers all 3 paths × {owner upload, owner delete, owner get for ical} × {valid file, SVG, 5+ MiB oversize} + IDOR by throwaway UID + anon. All allow/deny outcomes per spec.
+## SF-062: CORS allowlist on 8 framework-default callables (F-86-01)
+
+**Status:** ✅ DEV CLOSED — PROD pending manual gate (per autonomous-scope ban)
+**Severity:** P1 (memory `[[f86-01-cors-allowlist-gap-8-callables]]`)
+**Audit:** `audit/89-f86-01-cors-fix.md`
+
+**Problem:** audit/84 PR #559 (SF-060) swept the explicit-`cors: true` callables but left the framework-default subset (`onCall(opts, handler)` where `opts.cors` is omitted) untouched. Firebase Functions v2 default behavior reflects whatever `Origin` header arrives back as `Access-Control-Allow-Origin`. Verified pre-fix on bookbed-dev: `OPTIONS -H "Origin: https://evil.test"` echoes the attacker origin. 3 payment hot-path callables affected (`createBookingAtomic`, `createStripeCheckoutSession`, `guestCancelBooking`) — Stripe Checkout URL bodies cross-origin-readable from any attacker site.
+
+**Fix:** import `getCorsAllowlist` from `./utils/corsAllowlist` (PR #559 helper), inject `cors: getCorsAllowlist()` into each call site's existing opts. All other opts preserved verbatim.
+
+**Files modified:**
+- `functions/src/subdomainService.ts` — `checkSubdomainAvailability` (us-central1)
+- `functions/src/atomicBooking.ts` — `createBookingAtomic` (us-central1, payment hot-path)
+- `functions/src/stripePayment.ts` — `createStripeCheckoutSession` (us-central1, payment hot-path)
+- `functions/src/guestCancelBooking.ts` — `guestCancelBooking` (us-central1, payment hot-path)
+- `functions/src/deleteUserAccount.ts` — `deleteUserAccount` (europe-west1)
+- `functions/src/loginLockout.ts` — `recordLoginFailure` + `getLoginLockoutStatus` + `clearLoginAttempts` (europe-west1)
+- `functions/test/stripePayment.test.ts` + `functions/test/guestCancelBooking.test.ts` — mock `firebase-functions/params` extended with `Expression: class Expression {}` to keep `onCall(opts, …)` instance-check from `TypeError` at module load
+
+**Verification:**
+- `npm run build` → 0 errors
+- `npm test` → 19 suites / 387 tests pass
+- `npm run test:rules` → 4 suites / 46 tests pass
+- Dev deploy + IAM re-grant matrix (us-central1 + europe-west1) + CORS smoke (`OPTIONS` from `evil.test` vs `app.bookbed.io`) — see audit/89 §7-§9
+
+**PROD-deferred:** PROD deploy + IAM re-grant per memory `[[cf-deploy-cors-shape-iam-strip]]`. Memory `[[f86-01-cors-allowlist-gap-8-callables]]` closure tag flips 🚨 → ✅ post-PROD-cutover.

@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 import {logInfo} from "./logger";
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 const db = admin.firestore();
 
@@ -168,7 +169,7 @@ async function generateUniqueSubdomain(base: string, excludePropertyId?: string)
 export const checkSubdomainAvailability = onCall<{
   subdomain: string;
   propertyId?: string;
-}>(async (request): Promise<CheckSubdomainResult> => {
+}>({cors: getCorsAllowlist()}, async (request): Promise<CheckSubdomainResult> => {
   // SF-047: auth gate + per-uid rate limit. 30 calls per 5 minutes is generous for
   // typing-debounced UI but blocks scraped-enumeration attempts.
   if (!request.auth) {

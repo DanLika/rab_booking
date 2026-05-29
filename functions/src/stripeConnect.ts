@@ -178,9 +178,11 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
     let balance = null;
     if (isOnboarded) {
       try {
-        const balanceData = await getStripeClient().balance.retrieve({
-          stripeAccount: stripeAccountId,
-        });
+        // v22 SDK enforces stripeAccount as RequestOptions, not params.
+        const balanceData = await getStripeClient().balance.retrieve(
+          {},
+          {stripeAccount: stripeAccountId},
+        );
         balance = {
           available: balanceData.available.map((b) => ({
             amount: b.amount / 100, // Convert cents to euros

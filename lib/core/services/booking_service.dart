@@ -406,67 +406,15 @@ class BookingService {
     }
   }
 
-  /// Update booking status
-  /// NEW STRUCTURE: First find booking via collection group, then update
-  Future<void> updateBookingStatus({
-    required String bookingId,
-    required BookingStatus status,
-  }) async {
-    try {
-      final doc = await _findBookingDocById(bookingId);
-      if (doc == null || !doc.exists) {
-        throw BookingServiceException('Booking not found');
-      }
-
-      await doc.reference.update({
-        'status': status.toString().split('.').last,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
-
-      LoggingService.logSuccess(
-        '[BookingService] Booking $bookingId status updated to $status',
-      );
-    } catch (e) {
-      await LoggingService.logError(
-        '[BookingService] Error updating booking status',
-        e,
-      );
-      throw BookingServiceException('Failed to update booking status: $e');
-    }
-  }
-
-  /// Cancel booking
-  /// NEW STRUCTURE: First find booking via collection group, then update
-  Future<void> cancelBooking({
-    required String bookingId,
-    required String reason,
-    String? cancelledBy,
-  }) async {
-    try {
-      final doc = await _findBookingDocById(bookingId);
-      if (doc == null || !doc.exists) {
-        throw BookingServiceException('Booking not found');
-      }
-
-      await doc.reference.update({
-        'status': BookingStatus.cancelled.toString().split('.').last,
-        'cancellation_reason': reason,
-        'cancelled_at': FieldValue.serverTimestamp(),
-        'cancelled_by': cancelledBy,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
-
-      LoggingService.logSuccess(
-        '[BookingService] Booking $bookingId cancelled',
-      );
-    } catch (e) {
-      await LoggingService.logError(
-        '[BookingService] Error cancelling booking',
-        e,
-      );
-      throw BookingServiceException('Failed to cancel booking: $e');
-    }
-  }
+  // F-67-01 cleanup (2026-05-29): the prior `updateBookingStatus({bookingId,
+  // status})` + `cancelBooking({bookingId, reason, cancelledBy})` methods
+  // on this class wrote `status` directly via the Firestore SDK. They had
+  // zero callers in lib/ (verified via grep) and were a residual rule-deny
+  // surface ahead of the Phase B `firestore.rules` tightening. Owner status
+  // transitions all go through the `approveBooking` / `rejectBooking` /
+  // `cancelBooking` / `completeBooking` callables in
+  // `functions/src/bookingActions.ts` and field-level edits go through
+  // `updateBookingAtomic` (atomicBooking.ts). Removed.
 }
 
 /// Custom exception for booking service errors

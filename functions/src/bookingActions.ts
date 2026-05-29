@@ -1,4 +1,4 @@
-// Owner booking actions (approve / reject / cancel) — F-67-01 + sibling.
+// Owner booking actions (approve / reject / cancel / complete) — F-67-01 + sibling.
 //
 // Background: prior to these CFs the owner dashboard called
 // `bookingDoc.reference.update({status: ...})` directly via the Firestore SDK.
@@ -10,6 +10,12 @@
 // `cancelBooking` additionally handles the Stripe refund leg via the shared
 // `processStripeRefund` helper so guest + owner cancellation paths cannot
 // drift on refund behaviour.
+//
+// `completeBooking` finishes the migration class: was the last booking-status
+// transition still writing direct from the Flutter SDK
+// (`firebase_owner_bookings_repository.ts completeBooking()` → `.reference.update`).
+// Eligible source statuses are `confirmed` (typical) or `pending` (edge case
+// where owner skips approve and goes straight to complete after guest-stay).
 
 import {onCall, HttpsError, CallableRequest} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
@@ -384,5 +390,58 @@ export const cancelBooking = onCall<
       refundStatus: txResult.refundStatus,
       refundId,
     };
+  }
+);
+
+/**
+ * completeBooking — transitions a `confirmed` booking to `completed`.
+ * Stamps `completed_at` + `updated_at`. Closes the F-67-01 migration
+ * class: the previous Flutter callsite
+ * (`firebase_owner_bookings_repository.completeBooking()`) wrote
+ * `status='completed'` directly via the client SDK, which audit/67 §G
+ * showed as a silent no-op for owners on PROD (rules deny was already
+ * present but client never surfaced the error).
+ *
+ * Source status restricted to `confirmed` only: both UI entrypoints
+ * (`owner_bookings_screen.dart:1819` card action, `bookings_table_view
+ * .dart:484` popup menu) gate the button to
+ * `status == confirmed && booking.isPast`, so `pending` → `completed`
+ * is not a legitimate transition — accepting it server-side would only
+ * enlarge the attack surface. To complete a booking that is still
+ * pending the owner must approve first.
+ *
+ * Email + iCal fan-out happens via the existing `onBookingStatusChange`
+ * Firestore trigger — same path the other three actions rely on.
+ */
+export const completeBooking = onCall<
+  BookingActionInput,
+  Promise<BookingActionOutput>
+>(
+  {
+    region: REGION,
+    memory: "256MiB",
+    timeoutSeconds: 30,
+    maxInstances: 50,
+    cors: true,
+  },
+  async (request) => {
+    const uid = requireAuth(request);
+    const bookingId = requireString(request.data?.bookingId, "bookingId");
+
+    logInfo("[completeBooking] start", {bookingId, uid});
+    const {ref} = await loadOwnedBookingForAction(uid, bookingId, [
+      "confirmed",
+    ]);
+    await ref.update({
+      status: "completed",
+      completed_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    logSuccess("[completeBooking] booking completed", {
+      bookingId,
+      uid,
+      path: ref.path,
+    });
+    return {success: true, bookingId, status: "completed"};
   }
 );

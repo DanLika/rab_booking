@@ -954,21 +954,26 @@ class FirebaseOwnerBookingsRepository {
     }
   }
 
-  /// Mark booking as completed
+  /// Mark booking as completed via the `completeBooking` Cloud Function
+  /// (europe-west1). Server performs ownership check, state guard
+  /// (`confirmed` or `pending` only), and the status flip with
+  /// `completed_at` timestamp. Email + iCal fan-out runs in the existing
+  /// `onBookingStatusChange` trigger.
+  ///
+  /// Closes the F-67-01 migration class: the previous direct Firestore SDK
+  /// write was a silent no-op (rules denied; client never surfaced the
+  /// error). See audit/67 §G.
   Future<void> completeBooking(String bookingId) async {
     try {
-      // Find booking using helper method (avoids FieldPath.documentId bug)
-      final bookingDoc = await _findBookingById(bookingId);
-
-      if (bookingDoc == null) {
-        throw BookingException('Booking not found', code: 'booking/not-found');
-      }
-
-      // Update using the found document reference
-      await bookingDoc.reference.update({
-        'status': BookingStatus.completed.value,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+      await _functions
+          .httpsCallable('completeBooking')
+          .call<Map<String, dynamic>>({'bookingId': bookingId});
+    } on FirebaseFunctionsException catch (e) {
+      throw BookingException(
+        e.message ?? 'Failed to complete booking',
+        code: 'booking/completion-${e.code}',
+        originalError: e,
+      );
     } catch (e) {
       throw BookingException(
         'Failed to complete booking',

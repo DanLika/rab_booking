@@ -329,11 +329,11 @@ The same JS-error-type appears on the login form submit, but the underlying caus
 2. Investigate `keyboard_dismiss_fix_web.dart` interaction with autofill events.
 3. Workaround in production: direct JS `firebase_auth.signInWithEmailAndPassword` call (smoke test used this).
 
-## 🟡 TODO: Guest counter (adults / children / pets) doesn't persist to form cache (2026-05-23)
+## ✅ DONE: Guest counter (adults / children / pets) form-cache persist (2026-05-29)
 
 **Prioritet:** P3 (UX papercut — counters reset to defaults on refresh while name/email/phone restore correctly)
 **Izvor:** PR #447 smoke verification (CHANGELOG 6.81), `booking_widget_screen.dart:2765-2782`
-**Status:** Pre-existing on `main` — `git diff main..HEAD` over the region is empty as of 2026-05-23. NOT introduced by PR #447's Phase 0+1 refactor.
+**Status:** ✅ CLOSED 2026-05-29 — all 3 handlers now call `_saveFormDataDebounced()` (500ms debounce, matches text-controller pattern). Pre-existing on `main` from 2026-05-23 audit.
 
 **Defect:** The `onAdultsChanged` / `onChildrenChanged` / `onPetsChanged` callbacks passed to `GuestCountPicker` only call `setState(() => _adults = value)` etc. They never trigger `_saveFormData()` — unlike the text controllers, which register `_saveFormDataDebounced` listeners (lines 262-266). As a result:
 

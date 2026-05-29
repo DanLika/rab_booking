@@ -51,6 +51,7 @@
 - **Evidence**: signature verification present; no `event.id` storage / dedup before processing.
 - **Impact**: Stripe retries (network blip, 5xx) replay the same `event.id`; current code path will re-send confirmation emails, re-credit owner balance, re-mark bookings paid. Single-event-per-effect is not guaranteed.
 - **Fix**: at top of handler after `constructEvent`, `runTransaction(t => { const ref = db.collection('stripe_webhook_events').doc(event.id); if ((await t.get(ref)).exists) return /* skip */; t.create(ref, { receivedAt: serverTimestamp() }) })` with TTL policy (30 days).
+- **Status**: ✅ **CLOSED** — dedup table + TTL implementation live on bookbed-dev as of `functions/src/stripePayment.ts:928-946`. Validated end-to-end in `audit/70 §4.2` (2026-05-28): same forged event sent twice → `{received: true}` first, `{received: true, status: "duplicate"}` second. Firestore `stripe_webhook_events/{event.id}` doc created with `expiresAt`, `receivedAt`, `type`, `apiVersion`, `livemode` (TTL collection per audit/54 §E).
 
 ## HIGH
 

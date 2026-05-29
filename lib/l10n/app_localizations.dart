@@ -14572,6 +14572,18 @@ abstract class AppLocalizations {
   /// **'Available Plans'**
   String get subscriptionAvailablePlans;
 
+  /// No description provided for @subscriptionBadgeCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get subscriptionBadgeCurrent;
+
+  /// No description provided for @subscriptionBadgeRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'RECOMMENDED'**
+  String get subscriptionBadgeRecommended;
+
   /// No description provided for @subscriptionCurrentStatus.
   ///
   /// In en, this message translates to:

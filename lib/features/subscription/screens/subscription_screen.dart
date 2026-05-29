@@ -70,6 +70,7 @@ class SubscriptionScreen extends StatelessWidget {
           // Plans
           _buildPlanCard(
             colors: colors,
+            l10n: l10n,
             title: l10n.subscriptionFreeTrial,
             price: l10n.subscriptionFreeTrialPrice,
             period: l10n.subscriptionFreeTrialPeriod,
@@ -86,6 +87,7 @@ class SubscriptionScreen extends StatelessWidget {
 
           _buildPlanCard(
             colors: colors,
+            l10n: l10n,
             title: l10n.subscriptionPlanPro,
             price: l10n.subscriptionProPrice,
             period: l10n.subscriptionProPeriod,
@@ -187,6 +189,7 @@ class SubscriptionScreen extends StatelessWidget {
 
   Widget _buildPlanCard({
     required WidgetColorScheme colors,
+    required AppLocalizations l10n,
     required String title,
     required String price,
     required String period,
@@ -234,7 +237,7 @@ class SubscriptionScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(BBRadius.xs),
                   ),
                   child: Text(
-                    'Current',
+                    l10n.subscriptionBadgeCurrent,
                     style: TextStyle(
                       fontSize: BBTypeBridges.fontSizeXS,
                       fontWeight: BBTypeBridges.weightSemiBold,
@@ -252,9 +255,9 @@ class SubscriptionScreen extends StatelessWidget {
                     color: colors.accent,
                     borderRadius: BorderRadius.circular(BBRadius.xs),
                   ),
-                  child: const Text(
-                    'RECOMMENDED',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.subscriptionBadgeRecommended,
+                    style: const TextStyle(
                       fontSize: BBTypeBridges.fontSizeXS,
                       fontWeight: BBTypeBridges.weightBold,
                       color: Colors.white,

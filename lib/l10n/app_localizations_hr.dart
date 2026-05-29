@@ -8140,6 +8140,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get subscriptionAvailablePlans => 'Dostupni planovi';
 
   @override
+  String get subscriptionBadgeCurrent => 'Trenutni';
+
+  @override
+  String get subscriptionBadgeRecommended => 'PREPORUČENO';
+
+  @override
   String get subscriptionCurrentStatus => 'Trenutni status';
 
   @override

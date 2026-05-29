@@ -3436,6 +3436,8 @@
   },
   "subscriptionLoginRequired": "Molimo prijavite se za pregled pretplate",
   "subscriptionAvailablePlans": "Dostupni planovi",
+  "subscriptionBadgeCurrent": "Trenutni",
+  "subscriptionBadgeRecommended": "PREPORUČENO",
   "subscriptionCurrentStatus": "Trenutni status",
   "subscriptionExpires": "Ističe: {date}",
   "@subscriptionExpires": {

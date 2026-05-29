@@ -49,9 +49,29 @@
   "alreadyHaveAccount": "Already have an account?",
   "dontHaveAccount": "Don't have an account?",
   "signInWithGoogle": "Sign in with Google",
+  "signInWithApple": "Sign in with Apple",
   "continueWithGoogle": "Continue with Google",
   "continueWithApple": "Continue with Apple",
   "welcomeBack": "Welcome Back",
+  "adminWelcomeBack": "Welcome Back",
+  "adminLoginSubtitle": "Please sign in to access the admin portal.",
+  "adminEmailLabel": "Email Address",
+  "adminEmailHint": "admin@bookbed.io",
+  "adminEmailRequired": "Email is required",
+  "adminPasswordLabel": "Password",
+  "adminPasswordRequired": "Password is required",
+  "adminSignInButton": "Sign In",
+  "adminAccessDenied": "Access denied. Admin privileges required.",
+  "adminLoginFailed": "Login failed. Please check your credentials and try again.",
+  "adminFooterCopyright": "© {year} BookBed Inc. All rights reserved.",
+  "@adminFooterCopyright": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "notSet": "Not set",
   "loginToYourAccount": "Sign in to your account",
   
   "authOwnerLogin": "Owner Login",

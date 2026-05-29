@@ -409,6 +409,13 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         return SfCalendar(
           key: ValueKey('calendar_${isMobile}_$agendaHeight'),
           controller: _calendarController,
+          // i18n: Monday as first day of week (matches Timeline calendar).
+          // HR locale text (Pon/Uto/Sri… Backward → Natrag etc.) comes from
+          // SfGlobalLocalizations.delegate registered in MaterialApp +
+          // syncfusion_localizations dep (audit/82). Affects header
+          // day-strip + month-name rendering only; FROZEN calendar cell
+          // dimensions untouched.
+          firstDayOfWeek: DateTime.monday,
           view: _currentView,
           minDate: minDate,
           maxDate: maxDate,

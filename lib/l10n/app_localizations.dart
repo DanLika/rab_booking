@@ -374,6 +374,12 @@ abstract class AppLocalizations {
   /// **'Sign in with Google'**
   String get signInWithGoogle;
 
+  /// No description provided for @signInWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Apple'**
+  String get signInWithApple;
+
   /// No description provided for @continueWithGoogle.
   ///
   /// In en, this message translates to:
@@ -391,6 +397,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Welcome Back'**
   String get welcomeBack;
+
+  /// No description provided for @adminWelcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Back'**
+  String get adminWelcomeBack;
+
+  /// No description provided for @adminLoginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to access the admin portal.'**
+  String get adminLoginSubtitle;
+
+  /// No description provided for @adminEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Address'**
+  String get adminEmailLabel;
+
+  /// No description provided for @adminEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'admin@bookbed.io'**
+  String get adminEmailHint;
+
+  /// No description provided for @adminEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is required'**
+  String get adminEmailRequired;
+
+  /// No description provided for @adminPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get adminPasswordLabel;
+
+  /// No description provided for @adminPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is required'**
+  String get adminPasswordRequired;
+
+  /// No description provided for @adminSignInButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
+  String get adminSignInButton;
+
+  /// No description provided for @adminAccessDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Access denied. Admin privileges required.'**
+  String get adminAccessDenied;
+
+  /// No description provided for @adminLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed. Please check your credentials and try again.'**
+  String get adminLoginFailed;
+
+  /// No description provided for @adminFooterCopyright.
+  ///
+  /// In en, this message translates to:
+  /// **'© {year} BookBed Inc. All rights reserved.'**
+  String adminFooterCopyright(int year);
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get notSet;
 
   /// No description provided for @loginToYourAccount.
   ///

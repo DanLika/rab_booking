@@ -147,6 +147,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInWithGoogle => 'Sign in with Google';
 
   @override
+  String get signInWithApple => 'Sign in with Apple';
+
+  @override
   String get continueWithGoogle => 'Continue with Google';
 
   @override
@@ -154,6 +157,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get welcomeBack => 'Welcome Back';
+
+  @override
+  String get adminWelcomeBack => 'Welcome Back';
+
+  @override
+  String get adminLoginSubtitle => 'Please sign in to access the admin portal.';
+
+  @override
+  String get adminEmailLabel => 'Email Address';
+
+  @override
+  String get adminEmailHint => 'admin@bookbed.io';
+
+  @override
+  String get adminEmailRequired => 'Email is required';
+
+  @override
+  String get adminPasswordLabel => 'Password';
+
+  @override
+  String get adminPasswordRequired => 'Password is required';
+
+  @override
+  String get adminSignInButton => 'Sign In';
+
+  @override
+  String get adminAccessDenied => 'Access denied. Admin privileges required.';
+
+  @override
+  String get adminLoginFailed =>
+      'Login failed. Please check your credentials and try again.';
+
+  @override
+  String adminFooterCopyright(int year) {
+    return '© $year BookBed Inc. All rights reserved.';
+  }
+
+  @override
+  String get notSet => 'Not set';
 
   @override
   String get loginToYourAccount => 'Sign in to your account';

@@ -10,6 +10,7 @@ class CalendarViewSwitcher extends ConsumerStatefulWidget {
   final String unitId;
   final Function(DateTime? start, DateTime? end)? onRangeSelected;
   final bool forceMonthView;
+  final DateTime? focusedDate;
 
   const CalendarViewSwitcher({
     super.key,
@@ -17,6 +18,7 @@ class CalendarViewSwitcher extends ConsumerStatefulWidget {
     required this.unitId,
     this.onRangeSelected,
     this.forceMonthView = false,
+    this.focusedDate,
   });
 
   @override
@@ -52,6 +54,7 @@ class _CalendarViewSwitcherState extends ConsumerState<CalendarViewSwitcher> {
       propertyId: widget.propertyId,
       unitId: widget.unitId,
       onRangeSelected: widget.onRangeSelected,
+      focusedDate: widget.focusedDate,
     ),
     CalendarViewType.year => YearCalendarWidget(
       propertyId: widget.propertyId,

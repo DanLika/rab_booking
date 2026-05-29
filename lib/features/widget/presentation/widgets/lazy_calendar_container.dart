@@ -30,6 +30,7 @@ class LazyCalendarContainer extends StatefulWidget {
   final String unitId;
   final Function(DateTime? start, DateTime? end)? onRangeSelected;
   final bool forceMonthView;
+  final DateTime? focusedDate;
 
   const LazyCalendarContainer({
     super.key,
@@ -37,6 +38,7 @@ class LazyCalendarContainer extends StatefulWidget {
     required this.unitId,
     this.onRangeSelected,
     this.forceMonthView = false,
+    this.focusedDate,
   });
 
   @override
@@ -96,6 +98,7 @@ class _LazyCalendarContainerState extends State<LazyCalendarContainer> {
               unitId: widget.unitId,
               onRangeSelected: widget.onRangeSelected,
               forceMonthView: widget.forceMonthView,
+              focusedDate: widget.focusedDate,
             )
           : const SizedBox.shrink(),
     );

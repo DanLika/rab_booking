@@ -1811,6 +1811,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                         propertyId: _propertyId ?? '',
                                         unitId: unitId,
                                         forceMonthView: forceMonthView,
+                                        focusedDate: _formState.checkIn,
                                         // Disable date selection in calendar_only mode
                                         onRangeSelected:
                                             widgetMode ==

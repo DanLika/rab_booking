@@ -133,13 +133,24 @@ export async function logWebhookSignatureFailure(
 }
 
 /**
- * Quick helper for price mismatch detection
+ * Quick helper for price mismatch detection.
+ *
+ * `severity` controls Sentry visibility:
+ *   - "high" → Sentry error + Cloud Logging warn (reserved for egregious
+ *     mismatches that suggest genuine manipulation)
+ *   - "low"  → Cloud Logging info only, no Sentry (default for sub-threshold
+ *     mismatches the server already auto-corrects)
+ *
+ * Tiering is set by the caller (FLUTTER-6X triage) because the server
+ * already auto-corrects every mismatch — Sentry-loud is reserved for the
+ * >50% / >€500 class where investigation is warranted.
  */
 export async function logPriceMismatch(
   unitId: string,
   clientPrice: number,
   serverPrice: number,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
+  severity: SecuritySeverity = "high"
 ): Promise<void> {
   await logSecurityEvent(
     SecurityEventType.PRICE_MISMATCH_DETECTED,
@@ -150,6 +161,6 @@ export async function logPriceMismatch(
       difference: Math.abs(serverPrice - clientPrice),
       ...details,
     },
-    "high"
+    severity
   );
 }

@@ -8,6 +8,7 @@ import {sanitizeEmail} from "./utils/inputSanitization";
 import {setUser} from "./sentry";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Get UTC day string (YYYY-MM-DD) for consistent daily reset across timezones
@@ -54,7 +55,7 @@ function hashEmail(email: string): string {
  * Rate limiting: Max 5 codes per email per day
  */
 export const sendEmailVerificationCode = onCall(
-  {cors: true, secrets: ["RESEND_API_KEY"]},
+  {cors: getCorsAllowlist(), secrets: ["RESEND_API_KEY"]},
   async (request) => {
     // SECURITY: IP-based rate limiting to prevent spam (10 requests per hour per IP)
     const clientIp = getClientIp(request);
@@ -240,7 +241,7 @@ export const sendEmailVerificationCode = onCall(
  * 4. Marks as verified if valid
  */
 export const verifyEmailCode = onCall(
-  {cors: true},
+  {cors: getCorsAllowlist()},
   async (request) => {
     // SF-vibe57 H-04: IP rate limit to mitigate OTP brute force. Per-doc
     // MAX_ATTEMPTS=3 caps guesses per email, but without IP cap an attacker
@@ -416,7 +417,7 @@ export const verifyEmailCode = onCall(
  * - sessionId: string | null - Session ID for tracking
  */
 export const checkEmailVerificationStatus = onCall(
-  {cors: true},
+  {cors: getCorsAllowlist()},
   async (request) => {
     try {
       const {email} = request.data;

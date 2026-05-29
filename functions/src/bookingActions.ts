@@ -25,6 +25,7 @@ import {setUser} from "./sentry";
 import {findBookingById} from "./utils/bookingLookup";
 import {processStripeRefund} from "./utils/bookingRefund";
 import {stripeSecretKey} from "./stripe";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 const REGION = "europe-west1";
 
@@ -150,7 +151,7 @@ export const approveBooking = onCall<
     memory: "256MiB",
     timeoutSeconds: 30,
     maxInstances: 50,
-    cors: true,
+    cors: getCorsAllowlist(),
   },
   async (request) => {
     const uid = requireAuth(request);
@@ -186,7 +187,7 @@ export const rejectBooking = onCall<
     memory: "256MiB",
     timeoutSeconds: 30,
     maxInstances: 50,
-    cors: true,
+    cors: getCorsAllowlist(),
   },
   async (request) => {
     const uid = requireAuth(request);
@@ -247,7 +248,7 @@ export const cancelBooking = onCall<
     memory: "256MiB",
     timeoutSeconds: 60,
     maxInstances: 50,
-    cors: true,
+    cors: getCorsAllowlist(),
     secrets: [stripeSecretKey],
   },
   async (request) => {
@@ -422,7 +423,7 @@ export const completeBooking = onCall<
     memory: "256MiB",
     timeoutSeconds: 30,
     maxInstances: 50,
-    cors: true,
+    cors: getCorsAllowlist(),
   },
   async (request) => {
     const uid = requireAuth(request);

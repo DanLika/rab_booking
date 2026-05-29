@@ -15,6 +15,7 @@ import {Resend} from "resend";
 import {setUser} from "./sentry";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 // Lazy initialization of Resend client
 let resend: Resend | null = null;
@@ -56,7 +57,7 @@ function getFromName(): string {
  * Rate limiting: Firebase Auth handles rate limiting automatically
  */
 export const sendPasswordResetEmail = onCall(
-  {cors: true, secrets: ["RESEND_API_KEY"]},
+  {cors: getCorsAllowlist(), secrets: ["RESEND_API_KEY"]},
   async (request) => {
     // SECURITY: IP-based rate limiting to prevent spam (5 requests per hour per IP)
     const clientIp = getClientIp(request);

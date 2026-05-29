@@ -2,6 +2,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {logInfo, logWarn, logError} from "./logger";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Cloud Function: getClientGeolocation
@@ -35,7 +36,7 @@ export const getClientGeolocation = onCall<unknown, Promise<GeoLocationOutput>>(
     memory: "128MiB",
     timeoutSeconds: 10,
     maxInstances: 50,
-    cors: true,
+    cors: getCorsAllowlist(),
   },
   async (request): Promise<GeoLocationOutput> => {
     const ip = getClientIp(request);

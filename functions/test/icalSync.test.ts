@@ -99,6 +99,7 @@ jest.mock("dns/promises", () => ({
 import { syncIcalFeedNow, scheduledIcalSync } from "../src/icalSync";
 import * as https from "https";
 import { db } from "../src/firebase";
+import * as logger from "../src/logger";
 
 const { wrap } = test;
 
@@ -328,6 +329,80 @@ describe("iCal Sync Functions", () => {
         expect(msg).not.toContain("ical.booking.com");
         expect(msg).not.toContain("ECONNREFUSED");
         expect(msg).toMatch(/feed url|ical feed|verify the feed/i);
+      } finally {
+        if (prevImpl) {
+          (https.get as jest.Mock).mockImplementation(prevImpl);
+        }
+      }
+    });
+
+    // FLUTTER-7B: owner-fault iCal validation rejections (file://, private
+    // IPs, malformed URL) must NOT escalate to Sentry. They surface to the
+    // owner via feed.last_error already. Since F-67-05 the URL-validation
+    // throw at syncSingleFeed is an HttpsError("failed-precondition") — the
+    // outer syncIcalFeedNow catch short-circuits via
+    // `if (error instanceof HttpsError) throw error;`, so the asserts here
+    // target the INNER syncSingleFeed catch where the filter actually fires.
+    it("FLUTTER-7B: file:// URL routes through logWarn, not logError", async () => {
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc)
+        .mockResolvedValueOnce({
+          exists: true,
+          data: () => ({
+            ...mockFeedDoc.data(),
+            ical_url: "file:///etc/passwd",
+          }),
+          ref: { update: jest.fn().mockResolvedValue(true) },
+        });
+
+      const wrapped = wrap(syncIcalFeedNow);
+      await expect(
+        wrapped({ data: validData, auth: mockAuth })
+      ).rejects.toThrow(/Invalid iCal URL: Invalid protocol: file/);
+
+      // Inner syncSingleFeed catch MUST route owner-fault validation through
+      // logWarn — keeps Sentry quiet on bad-paste / SSRF-smoke probes.
+      const errCalls = (logger.logError as jest.Mock).mock.calls.map(
+        (c) => c[0]
+      );
+      expect(errCalls).not.toContain("[iCal Sync] Error syncing feed");
+
+      const warnCalls = (logger.logWarn as jest.Mock).mock.calls.map(
+        (c) => c[0]
+      );
+      expect(warnCalls).toContain(
+        "[iCal Sync] Owner-fault validation rejection"
+      );
+    });
+
+    // FLUTTER-7B over-broadening guard: genuine non-owner-fault errors (parse
+    // failure, missing BEGIN:VCALENDAR, unexpected internal exceptions) MUST
+    // still hit logError → Sentry. The filter only catches the documented
+    // owner-fault patterns, not all throws.
+    it("FLUTTER-7B: empty-body parse failure stays on logError", async () => {
+      mockDb.get
+        .mockResolvedValueOnce(mockPropertyDoc)
+        .mockResolvedValueOnce(mockFeedDoc);
+
+      // Force fetchIcalData to return empty body (200 OK, no VCALENDAR).
+      // The BUG-009 guard inside syncSingleFeed throws "Fetched iCal data is
+      // empty or invalid for feed: …" which is NOT in the owner-fault
+      // pattern set — must escalate to logError.
+      const prevImpl = (https.get as jest.Mock).getMockImplementation();
+      mockResponse.on.mockImplementation((event: string, cb: (arg?: string) => void) => {
+        if (event === "data") cb("");
+        if (event === "end") cb();
+      });
+      try {
+        const wrapped = wrap(syncIcalFeedNow);
+        await expect(
+          wrapped({ data: validData, auth: mockAuth })
+        ).rejects.toThrow(/empty or invalid for feed/);
+
+        const errCalls = (logger.logError as jest.Mock).mock.calls.map(
+          (c) => c[0]
+        );
+        expect(errCalls).toContain("[iCal Sync] Error syncing feed");
       } finally {
         if (prevImpl) {
           (https.get as jest.Mock).mockImplementation(prevImpl);

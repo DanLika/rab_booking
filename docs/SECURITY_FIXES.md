@@ -4228,3 +4228,24 @@ Without opt-in, the referrer fallback handles the common case.
 **Files modified:**
 - `.gitignore` (+4 lines)
 - `audit/raw/*` (DELETED, 22 files)
+## SF-066: iCal owner-fault Sentry noise filter — FLUTTER-7B CLOSED
+
+**Status:** ✅ CLOSED (PR pending merge; dev-only routing change)
+**Severity:** LOW (operational hygiene — not a security defect; SSRF guard logic unchanged)
+**Audit:** `audit/91-flutter-7b-ical-noise.md`
+**Sentry:** FLUTTER-7B (14 events, 1 user, last 2026-05-27)
+
+**Problem:** `syncSingleFeed` / `syncIcalFeedNow` / `scheduledIcalSync` catch blocks called `logError("[iCal Sync] Error syncing feed", error, {feedId})` for **every** failure class, including owner-fault validation rejections (SSRF guard rejecting `file://` or private IPs, malformed URL, upstream HTTP 4xx). The audit/55 SSRF smoke run on 2026-05-27 generated 14 false-positive Sentry events from one test-account session probing the file-scheme rejection. F-67-05 (PR `50753cf5`) addressed the thrown-HttpsError path via `sentry.ts` `beforeSend` filter, but `fetchIcalData` still rejects plain `Error('HTTP 4\d\d: …')` for upstream 4xx — those bypass `beforeSend` and re-surface the noise class on every real owner with a wrong feed URL.
+
+**Fix:** Added `isUserFaultIcalError(error)` next to existing `isTransientFetchError` in `functions/src/icalSync.ts`, matching `/^Invalid iCal URL:/`, `/^Redirect blocked by SSRF guard:/`, `/^HTTP 4\d\d:/`, and the direct `validateIcalUrl` error-string fallbacks. All three catch sites now route owner-fault rejections through `logWarn` instead of `logError` — keeping `feedRef.update({status:"error", last_error})` (owner-facing) **unchanged**. Genuine internal bugs (empty body / missing `BEGIN:VCALENDAR` header / unexpected exceptions) stay on `logError`.
+
+**Verification:**
+- `tsc` clean
+- `npx jest` 389/389 pass (2 new regression tests in `functions/test/icalSync.test.ts`):
+  - `FLUTTER-7B: file:// URL routes through logWarn, not logError`
+  - `FLUTTER-7B: empty-body parse failure stays on logError` (over-broadening guard)
+- `npm run test:rules` green
+
+**Files modified:** `functions/src/icalSync.ts` (+ helper + 3 catch sites), `functions/test/icalSync.test.ts` (+2 tests). No `lib/` / iOS / Android / hosting / rules changes.
+
+**Cross-refs:** PR #514 (FLUTTER-7C sibling — `autoSelectFamily` array-form lookup), F-67-05 PR `50753cf5` (HttpsError-conversion path), `.claude/rules/cloud-functions.md` (`Sentry.init` `beforeSend` HttpsError client-fault filter).

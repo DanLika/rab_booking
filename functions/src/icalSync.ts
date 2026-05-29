@@ -132,6 +132,37 @@ function isTransientFetchError(error: unknown): boolean {
 }
 
 /**
+ * Detect owner-fault iCal validation rejections that should NOT escalate to
+ * Sentry. SSRF guard rejections (`file://`, private IPs, malformed URLs) and
+ * upstream 4xx surface to the owner via `feed.last_error` + `status: "error"`
+ * — operators don't need Sentry pages on bad pastes. Closes FLUTTER-7B
+ * (audit/55 SSRF smoke probes were polluting the Sentry feed; same noise
+ * fires whenever a real owner pastes a malformed feed URL).
+ *
+ * The genuine bug class (parse failures, empty feed body, internal
+ * exceptions) stays on `logError` → Sentry — only validation rejections move
+ * to WARN.
+ */
+function isUserFaultIcalError(error: unknown): boolean {
+  if (!error) return false;
+  const message = error instanceof Error ? error.message : String(error);
+  // syncSingleFeed wraps every validateIcalUrl rejection with this prefix.
+  if (/^Invalid iCal URL:/.test(message)) return true;
+  // Redirect blocked by the SSRF guard during fetch (validateIcalUrl called
+  // again on the redirect target — same rejection class).
+  if (/^Redirect blocked by SSRF guard:/.test(message)) return true;
+  // HTTP 4xx from upstream (formatted by fetchIcalData) — owner's URL is
+  // wrong, expired, or auth-gated. Not actionable for us.
+  if (/^HTTP 4\d\d:/.test(message)) return true;
+  // Defensive fallback for direct validateIcalUrl strings, in case the
+  // `Invalid iCal URL:` prefix ever changes upstream of this check.
+  if (/^(Invalid URL format|Invalid protocol:|URL must have a hostname|Hostname (does not resolve|returned no addresses|resolves to a private))/.test(message)) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * F-NEW-05: SECURITY — validate + resolve iCal URL to prevent SSRF.
  *
  * Async because we DNS-resolve the hostname and check ALL returned addresses
@@ -332,6 +363,14 @@ export const scheduledIcalSync = onSchedule(
               propertyId,
               platform: feedData.platform,
             });
+          } else if (isUserFaultIcalError(error)) {
+            // FLUTTER-7B: owner-fault validation (SSRF, 4xx, bad URL) — feed
+            // doc already carries last_error for the UI.
+            logWarn("[Scheduled iCal Sync] Feed sync skipped (owner-fault)", {
+              feedId,
+              propertyId,
+              platform: feedData.platform,
+            });
           } else {
             logError("[Scheduled iCal Sync] Failed to sync feed", error, {
               feedId,
@@ -437,7 +476,22 @@ export const syncIcalFeedNow = onCall(async (request) => {
     // leaked things like `host: ical.booking.com 400 Bad Request` into the
     // client response. Server-side detail is preserved via logError (Sentry +
     // Cloud Logging); the client gets a generic, actionable message.
-    logError("[iCal Sync] Error in manual sync", error);
+    //
+    // FLUTTER-7B: owner-fault validation rejections (SSRF guard, 4xx, bad URL)
+    // log as WARN — they show up in feed.last_error already.
+    if (isUserFaultIcalError(error)) {
+      logWarn("[iCal Sync] Manual sync rejected (owner-fault)", {
+        feedId,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    } else if (isTransientFetchError(error)) {
+      logWarn("[iCal Sync] Manual sync skipped (transient upstream)", {
+        feedId,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    } else {
+      logError("[iCal Sync] Error in manual sync", error);
+    }
     throw new HttpsError(
       "internal",
       "Sync failed. Verify the feed URL is reachable and points to a valid iCal feed."
@@ -551,11 +605,17 @@ async function syncSingleFeed(
 
     return result.insertedCount; // Return number of bookings created
   } catch (error) {
-    // Transient upstream failures (5xx, network, DNS) are not actionable for
-    // us — log as WARN, skip Sentry. The feed doc's `status: "error"` carries
-    // the persistent signal for the UI.
+    // Transient upstream failures (5xx, network, DNS) and owner-fault
+    // validation rejections (SSRF, 4xx, malformed URL — FLUTTER-7B) are not
+    // actionable for us — log as WARN, skip Sentry. The feed doc's
+    // `status: "error"` carries the persistent signal for the UI.
     if (isTransientFetchError(error)) {
       logWarn("[iCal Sync] Transient upstream failure", {
+        feedId,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    } else if (isUserFaultIcalError(error)) {
+      logWarn("[iCal Sync] Owner-fault validation rejection", {
         feedId,
         message: error instanceof Error ? error.message : String(error),
       });

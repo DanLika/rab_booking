@@ -21,6 +21,7 @@ import '../../core/services/analytics_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/services/fcm_service.dart';
 import '../../core/utils/password_validator.dart';
+import '../../core/utils/web_storage_wipe.dart';
 import '../../shared/models/user_model.dart';
 import '../../shared/providers/repository_providers.dart';
 import '../constants/enums.dart';
@@ -1369,6 +1370,15 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
     }
 
     await _auth.signOut();
+
+    // F-58c-14: signOut() only clears the firebaseLocalStorageDb IDB store.
+    // sessionStorage + localStorage + cookies survive — a shared-kiosk
+    // attacker can still read leftover "remember me" / cached PII. Web-only
+    // multi-store wipe closes the gap. Mobile/desktop stub is a no-op.
+    if (kIsWeb) {
+      await wipeWebStorageOnLogout(reload: clearSavedEmail);
+    }
+
     // Keep isLoading false after sign out (not an initial check)
     state = const EnhancedAuthState(isLoading: false);
   }

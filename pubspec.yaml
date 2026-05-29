@@ -33,7 +33,7 @@ dependencies:
   firebase_messaging: ^16.1.1  # Push notifications (hidden until mobile app release)
 
   # Google Sign-In (native Android/iOS)
-  google_sign_in: ^6.2.2
+  google_sign_in: ^6.3.0
 
   # Apple Sign-In (native iOS)
   sign_in_with_apple: ^7.0.1

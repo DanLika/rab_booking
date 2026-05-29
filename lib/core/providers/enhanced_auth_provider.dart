@@ -1213,6 +1213,21 @@ class EnhancedAuthNotifier extends StateNotifier<EnhancedAuthState> {
         // because the profile is already loaded, leaving requiresEmailVerification=true
         await _loadUserProfile(refreshedUser, forceRefresh: true);
       }
+    } on FirebaseAuthException catch (e) {
+      // FLUTTER-70 triage: silence recoverable codes that would otherwise
+      // flood Sentry. Auth state listener routes the user back to login,
+      // and the next refresh will retry on flaky connections.
+      const recoverableCodes = {
+        'user-token-expired', // TTL ~1h; idle users on /email-verification hit this routinely
+        'network-request-failed', // flaky network; next refresh succeeds
+      };
+      if (recoverableCodes.contains(e.code)) {
+        LoggingService.logInfo(
+          'EnhancedAuthProvider: recoverable auth error during email-verification refresh (${e.code})',
+        );
+        return;
+      }
+      rethrow; // genuine auth errors → fall into the generic catch below
     } catch (e, stackTrace) {
       // Network errors during reload are non-critical - user can retry
       // Don't crash the app, just log the error

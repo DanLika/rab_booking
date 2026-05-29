@@ -4152,11 +4152,9 @@ See audit/91 §5. Smoke matrix covers all 3 paths × {owner upload, owner delete
 
 **Vector:** `firestore.rules:159-163` allowed an authenticated user to update ANY field on their own `users/{uid}/devices/{deviceId}` doc. Immutable forensics fields (`createdAt`, `userAgent`, `deviceId` itself) were rewritable by a compromised client; arbitrary keys could be planted that a server-side fraud-signal reader might later trust.
 
-**Fix:** Update rule now requires `affectedKeys().hasOnly([...])`. Allowlist drawn from `lib/core/services/device_token_service.dart` field shapes:
-- `lastSeenAt`, `fcmToken`, `appVersion`, `platform` (audit/50 suggestion)
-- `pushEnabled`, `tokenUpdatedAt`, `lastActiveAt` (observed in client code)
+**Fix:** Update rule now requires `affectedKeys().hasOnly(['lastSeenAt', 'fcmToken', 'appVersion', 'platform'])`. Matches audit/50 suggestion exactly. Create + delete + read unchanged.
 
-Create + delete + read unchanged.
+Cross-checked vs `lib/core/services/security_events_service.dart:270-280` (the only client writer): `set(..., SetOptions(merge: true))` writes `{deviceId, platform, fcmToken, lastSeenAt}`. Subsequent calls hit the `update` rule; `affectedKeys()` reports only fields whose value changed. `deviceId` + `platform` stable across calls → don't enter `affectedKeys`. `lastSeenAt` + `fcmToken` are both in the allowlist. `appVersion` is forward-compat (not written today; allowlisted for future telemetry).
 
 **Smoke (rules emulator):**
 - New `functions/test/firestore_rules/devices.test.ts` — 7 cases (allowed updates, denied non-allowed keys, denied immutable mutation, denied non-owner, allowed delete/create)

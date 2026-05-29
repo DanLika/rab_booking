@@ -56,6 +56,9 @@ beforeEach(async () => {
 
   await testEnv.withSecurityRulesDisabled(async (ctx: RulesTestContext) => {
     const db = ctx.firestore();
+    // Seed shape mirrors what an existing device doc looks like after first
+    // trackDevice() write + an extra immutable forensic field set server-side
+    // (createdAt, userAgent) — these MUST stay unmutable.
     await db.doc(`users/${OWNER_UID}/devices/${DEVICE_ID}`).set({
       deviceId: DEVICE_ID,
       createdAt: new Date("2026-01-01T00:00:00Z"),
@@ -81,6 +84,8 @@ describe("devices rule — update key allowlist (audit/50 F-50-09)", () => {
 
   test("Case 2 — owner updates multiple allowed keys → ALLOW", async () => {
     const ctx = testEnv.authenticatedContext(OWNER_UID);
+    // Mirrors the real-client trackDevice() set(merge:true) payload —
+    // unchanged keys (platform unchanged from seed) won't enter affectedKeys.
     await assertSucceeds(
       ctx
         .firestore()
@@ -89,7 +94,6 @@ describe("devices rule — update key allowlist (audit/50 F-50-09)", () => {
           lastSeenAt: new Date(),
           fcmToken: "NEW_TOKEN_BBBB",
           appVersion: "1.0.1",
-          platform: "web",
         })
     );
   });

@@ -96,14 +96,33 @@ match /devices/{deviceId} {
   allow create: if isOwner(userId);
   allow update: if isOwner(userId) &&
     request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-      'lastSeenAt', 'fcmToken', 'appVersion', 'platform',
-      'pushEnabled', 'tokenUpdatedAt', 'lastActiveAt'
+      'lastSeenAt', 'fcmToken', 'appVersion', 'platform'
     ]);
   allow delete: if isOwner(userId);
 }
 ```
 
-Allowlist follows the audit/50 suggested set + 3 additions observed in `lib/core/services/device_token_service.dart` field shapes (`pushEnabled`, `tokenUpdatedAt`, `lastActiveAt`).
+Allowlist matches exactly the audit/50 suggested set (`lastSeenAt, fcmToken, appVersion, platform`).
+
+### Cross-checked against actual client writer
+
+Only writer to `users/{uid}/devices/{deviceId}` is `lib/core/services/security_events_service.dart:270-280`:
+
+```dart
+await _firestore
+    .collection('users').doc(userId)
+    .collection('devices').doc(deviceId)
+    .set({
+      'deviceId': deviceInfo.deviceId,        // = docId; same value across calls
+      'platform': deviceInfo.platform,        // stable
+      'fcmToken': deviceInfo.fcmToken,        // rotates
+      'lastSeenAt': Timestamp.fromDate(...),  // changes every call
+    }, SetOptions(merge: true));
+```
+
+Subsequent `set(merge:true)` calls hit the `update` rule. `affectedKeys()` returns only keys whose **value** changed between old and new doc — `deviceId` and `platform` stable across calls so they don't enter `affectedKeys`; only `lastSeenAt` (and `fcmToken` on rotation) do. Both are in the 4-key allowlist → rule allows.
+
+`appVersion` is not currently written by `security_events_service.dart`; it is allowlisted as forward-compat for a future device-token surface (e.g. version-gated force-update telemetry).
 
 ### Coverage
 

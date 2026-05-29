@@ -153,7 +153,12 @@ class CalendarTopToolbar extends StatelessWidget {
                         ),
                         SizedBox(width: isCompact ? 4 : 8),
                         Text(
-                          dateRange.toDisplayString(isWeek: isWeekView),
+                          dateRange.toDisplayString(
+                            isWeek: isWeekView,
+                            locale: Localizations.localeOf(
+                              context,
+                            ).languageCode,
+                          ),
                           style:
                               (isCompact
                                       ? theme.textTheme.labelSmall

@@ -19,6 +19,7 @@ import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options.dart';
 import 'core/config/environment.dart';
+import 'core/init/app_check_init.dart';
 
 /// Widget-only entry point for embeddable booking widget
 ///
@@ -117,6 +118,8 @@ void main() async {
     // Supports: hr, en, de, it based on URL ?language= parameter
     initializeDateFormatting(),
   ]);
+
+  await AppCheckInit.activate(isProd: true);
 
   // Override SharedPreferences provider if initialization succeeded
   final overrides = prefs != null

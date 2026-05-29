@@ -90,7 +90,7 @@ dependencies:
 
   # AI Chat (Gemini via Firebase)
   firebase_ai: ^3.12.1
-  firebase_app_check: ^0.4.1+4
+  firebase_app_check: ^0.4.4+1
 
   # Markdown rendering (for AI chat responses)
   flutter_markdown: ^0.7.4+3

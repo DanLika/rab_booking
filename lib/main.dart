@@ -24,6 +24,7 @@ import 'core/services/logging_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/sentry_env.dart';
 import 'core/utils/web_utils.dart';
+import 'core/init/app_check_init.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'shared/providers/repository_providers.dart';
@@ -432,6 +433,11 @@ Future<void> _initializeInBackground() async {
       }
       LoggingService.log('Ignoring duplicate-app error', tag: 'INIT');
     }
+
+    // App Check activation — idempotent; dedicated entry points (main_dev /
+    // main_prod / widget_main / admin_main*) call this earlier, so this fires
+    // only when main.dart is itself the entrypoint.
+    await AppCheckInit.activate(isProd: true);
 
     // Enable Firestore Persistence (must be done before other Firestore usage)
     LoggingService.log('Configuring Firestore persistence...', tag: 'INIT');

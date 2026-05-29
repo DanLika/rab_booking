@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/config/environment.dart';
 import 'firebase_options_staging.dart';
+import 'core/init/app_check_init.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'main.dart' as app;
 
@@ -28,6 +29,8 @@ void main() async {
       'Check ios/Runner/GoogleService-Info.plist and --target flag.',
     );
   }
+
+  await AppCheckInit.activate(isProd: false);
 
   app.runMainApp();
 }

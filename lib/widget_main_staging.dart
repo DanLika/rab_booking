@@ -15,6 +15,7 @@ import 'features/widget/presentation/theme/dynamic_theme_service.dart';
 import 'features/widget/presentation/providers/widget_config_provider.dart';
 import 'shared/providers/widget_repository_providers.dart';
 import 'firebase_options_staging.dart'; // Import STAGING options
+import 'core/init/app_check_init.dart';
 
 /// WIDGET STAGING ENTRY POINT
 ///
@@ -65,6 +66,8 @@ void main() async {
   GoogleFonts.config.allowRuntimeFetching = false;
 
   await _initializeFirebaseSafelyStaging();
+
+  await AppCheckInit.activate(isProd: false);
 
   SharedPreferences? prefs;
   try {

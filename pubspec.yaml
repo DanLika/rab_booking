@@ -57,9 +57,7 @@ dependencies:
   cached_network_image: ^3.4.1
   image_picker: ^1.2.2
 
-  # PDF & Receipt Generation
-  pdf: ^3.12.0
-  printing: ^5.12.0
+  # Filesystem access (used by ICS download stub)
   path_provider: ^2.1.2
 
   # QR Code Generation
@@ -179,12 +177,6 @@ flutter:
     - assets/google_fonts/Inter-Medium.ttf
     - assets/google_fonts/Inter-SemiBold.ttf
     - assets/google_fonts/Inter-Bold.ttf
-    # PlayfairDisplay fonts (5 weights - used in headings, quotes)
-    - assets/google_fonts/PlayfairDisplay-Regular.ttf
-    - assets/google_fonts/PlayfairDisplay-SemiBold.ttf
-    - assets/google_fonts/PlayfairDisplay-Bold.ttf
-    - assets/google_fonts/PlayfairDisplay-ExtraBold.ttf
-    - assets/google_fonts/PlayfairDisplay-Italic.ttf
     - assets/images/
     - assets/images/platforms/
     - assets/kb/

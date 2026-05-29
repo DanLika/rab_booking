@@ -3429,6 +3429,8 @@
   },
   "subscriptionLoginRequired": "Please log in to view subscription",
   "subscriptionAvailablePlans": "Available Plans",
+  "subscriptionBadgeCurrent": "Current",
+  "subscriptionBadgeRecommended": "RECOMMENDED",
   "subscriptionCurrentStatus": "Current Status",
   "subscriptionExpires": "Expires: {date}",
   "@subscriptionExpires": {

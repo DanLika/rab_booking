@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:intl/intl.dart';
 
 part 'date_range_selection.freezed.dart';
 part 'date_range_selection.g.dart';
@@ -142,42 +143,25 @@ class DateRangeSelection with _$DateRangeSelection {
     }
   }
 
-  /// Get display string for this range
-  String toDisplayString({required bool isWeek}) {
+  /// Get display string for this range, localized.
+  ///
+  /// [locale] is the BCP 47 language code (e.g. `hr`, `en`). Falls back to
+  /// `Intl.defaultLocale` / `en` when null.
+  String toDisplayString({required bool isWeek, String? locale}) {
+    final monthAbbr = DateFormat('MMM', locale);
+    final monthFull = DateFormat('MMMM', locale);
+
     if (isWeek) {
-      // Format: "23 Oct - 29 Oct 2025"
       final startDay = startDate.day;
       final endDay = endDate.day;
-      final startMonth = _getMonthName(startDate.month);
-      final endMonth = _getMonthName(endDate.month);
 
       if (startDate.month == endDate.month) {
-        return '$startDay - $endDay $endMonth ${startDate.year}';
+        return '$startDay - $endDay ${monthAbbr.format(endDate)} ${startDate.year}';
       } else {
-        return '$startDay $startMonth - $endDay $endMonth ${startDate.year}';
+        return '$startDay ${monthAbbr.format(startDate)} - $endDay ${monthAbbr.format(endDate)} ${startDate.year}';
       }
     } else {
-      // Format: "October 2025"
-      return '${_getMonthName(startDate.month)} ${startDate.year}';
+      return '${monthFull.format(startDate)} ${startDate.year}';
     }
-  }
-
-  static String _getMonthName(int month) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    if (month < 1 || month > 12) return 'Invalid';
-    return months[month - 1];
   }
 }

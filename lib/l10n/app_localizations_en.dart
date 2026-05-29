@@ -8075,6 +8075,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionAvailablePlans => 'Available Plans';
 
   @override
+  String get subscriptionBadgeCurrent => 'Current';
+
+  @override
+  String get subscriptionBadgeRecommended => 'RECOMMENDED';
+
+  @override
   String get subscriptionCurrentStatus => 'Current Status';
 
   @override

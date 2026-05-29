@@ -1,5 +1,4 @@
 import {onCall, onRequest, HttpsError} from "firebase-functions/v2/https";
-import Stripe from "stripe";
 import {defineSecret} from "firebase-functions/params";
 import {
   sendBookingApprovedEmail,
@@ -903,7 +902,9 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
     return;
   }
 
-  let event: Stripe.Event;
+  // v22 cjs entry decouples namespace types from default import; rely on
+  // inferred return type from `webhooks.constructEvent`.
+  let event: Awaited<ReturnType<ReturnType<typeof getStripeClient>["webhooks"]["constructEvent"]>>;
 
   try {
     const stripeClient = getStripeClient();
@@ -950,7 +951,8 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
 
   // Handle the event
   if (event.type === "charge.refunded") {
-    const charge = event.data.object as Stripe.Charge;
+    // v22: event.data.object narrows via event.type discriminant.
+    const charge = event.data.object;
     const paymentIntentId = charge.payment_intent as string;
     const amountRefunded = charge.amount_refunded; // In cents
 
@@ -1010,7 +1012,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       res.status(500).send("Internal server error");
     }
   } else if (event.type === "checkout.session.expired") {
-    const session = event.data.object as Stripe.Checkout.Session;
+    const session = event.data.object;
     const metadata = session.metadata;
 
     // SUBSCRIPTION CHECKOUT EXPIRED - no action needed
@@ -1063,7 +1065,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
     // ========================================================================
     // SUBSCRIPTION CANCELLATION
     // ========================================================================
-    const subscription = event.data.object as Stripe.Subscription;
+    const subscription = event.data.object;
     const subscriptionId = subscription.id;
 
     logInfo(`Processing customer.subscription.deleted for subscription: ${subscriptionId}`);
@@ -1141,7 +1143,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
     // ========================================================================
     // SUBSCRIPTION RENEWAL / PAYMENT SUCCESS
     // ========================================================================
-    const invoice = event.data.object as Stripe.Invoice;
+    const invoice = event.data.object;
     // Cast to any to handle potential type definition mismatches
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const subscription = (invoice as any).subscription;
@@ -1212,7 +1214,7 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       res.status(500).send("Internal server error");
     }
   } else if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
+    const session = event.data.object;
     const metadata = session.metadata;
 
     // ========================================================================

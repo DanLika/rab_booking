@@ -12,7 +12,9 @@ import {defineSecret} from "firebase-functions/params";
 export const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 
 // Initialize Stripe (lazy initialization to avoid deployment errors)
-let stripe: Stripe | null = null;
+// v22 split the namespace: `Stripe` is the callable constructor (StripeConstructor)
+// and `Stripe.Stripe` is the class — the latter is needed in type position.
+let stripe: Stripe.Stripe | null = null;
 
 // F-70-01: bookbed-dev us-central1 Cloud Run runs with Sentry init'd
 // (SENTRY_DSN set), and @sentry/node v10's OpenTelemetry HTTP
@@ -30,7 +32,7 @@ let stripe: Stripe | null = null;
 // the charges_enabled gate as designed (audit/74 §4).
 // Tradeoff: we lose per-request timeout granularity in older Node
 // versions; mitigated by Stripe SDK's own `timeout` option.
-const stripeHttpClient: Stripe.HttpClient = Stripe.createFetchHttpClient();
+const stripeHttpClient = Stripe.createFetchHttpClient();
 
 /**
  * Get or initialize Stripe instance
@@ -42,7 +44,7 @@ const stripeHttpClient: Stripe.HttpClient = Stripe.createFetchHttpClient();
  * Analog of the Dart kDebugMode Firebase project-ID assert in
  * .claude/rules/ios-development.md.
  */
-export function getStripeClient(): Stripe {
+export function getStripeClient(): Stripe.Stripe {
   if (!stripe) {
     const apiKey = stripeSecretKey.value();
     if (!apiKey) {
@@ -63,8 +65,13 @@ export function getStripeClient(): Stripe {
       }
     }
 
+    // Pin Stripe API to "2025-09-30.clover" — matches the PROD webhook
+    // endpoint api_version (audit/68, [[stripe-webhook-api-version-immutable]]).
+    // v22 SDK narrows the type to the latest dahlia version; cast keeps the
+    // legacy pin without changing server-side schema.
     stripe = new Stripe(apiKey, {
-      apiVersion: "2025-09-30.clover",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      apiVersion: "2025-09-30.clover" as any,
       httpClient: stripeHttpClient,
     });
   }

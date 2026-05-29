@@ -184,6 +184,7 @@ class _GuestRow extends StatelessWidget {
           children: [
             IconButton(
               onPressed: canDecrement ? onDecrement : null,
+              tooltip: '$label −',
               icon: Icon(
                 Icons.remove_circle_outline,
                 color: colors.textPrimary,
@@ -191,18 +192,23 @@ class _GuestRow extends StatelessWidget {
             ),
             SizedBox(
               width: GuestCountPicker._countDisplayWidth,
-              child: Text(
-                '$count',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
+              child: Semantics(
+                label: '$label: $count',
+                excludeSemantics: true,
+                child: Text(
+                  '$count',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colors.textPrimary,
+                  ),
                 ),
               ),
             ),
             IconButton(
               onPressed: canIncrement ? onIncrement : null,
+              tooltip: '$label +',
               icon: Icon(
                 Icons.add_circle_outline,
                 color: isAtCapacity

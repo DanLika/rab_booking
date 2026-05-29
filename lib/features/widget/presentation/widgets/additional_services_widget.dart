@@ -228,6 +228,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                       size: 16,
                       color: colors.textPrimary,
                     ),
+                    tooltip: '${service.name} −',
                     onPressed: quantity > 1
                         ? () {
                             ref
@@ -262,6 +263,7 @@ class AdditionalServicesWidget extends ConsumerWidget {
                   ),
                   IconButton(
                     icon: Icon(Icons.add, size: 16, color: colors.textPrimary),
+                    tooltip: '${service.name} +',
                     onPressed: () {
                       // Check max quantity - use local variable to avoid null assertion
                       final maxQuantity = service.maxQuantity;

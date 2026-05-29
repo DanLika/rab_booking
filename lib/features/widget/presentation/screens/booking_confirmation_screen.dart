@@ -474,6 +474,7 @@ class _BookingConfirmationScreenState
           // Back button - always show for same-tab navigation
           IconButton(
             icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: _navigateToCleanCalendar,
           ),
           Expanded(

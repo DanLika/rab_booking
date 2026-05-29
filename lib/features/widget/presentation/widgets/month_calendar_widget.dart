@@ -225,6 +225,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             color: colors.textPrimary,
           ),
           padding: EdgeInsets.zero,
+          tooltip: DateFormat.yMMM(
+            locale.toString(),
+          ).format(_previousMonth(_currentMonth)),
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
             minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
@@ -265,6 +268,9 @@ class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
             color: colors.textPrimary,
           ),
           padding: EdgeInsets.zero,
+          tooltip: DateFormat.yMMM(
+            locale.toString(),
+          ).format(_nextMonth(_currentMonth)),
           constraints: BoxConstraints(
             minWidth: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,
             minHeight: isSmallScreen ? 28 : ConstraintTokens.iconContainerSmall,

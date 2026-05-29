@@ -116,6 +116,9 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).closeButtonTooltip,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],

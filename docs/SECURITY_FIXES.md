@@ -3698,3 +3698,150 @@ Total: rules 39/39 pass (was 28; +11 new), jest unit 317/317 pass (was 302; +15 
 4. After all 3 dev-validated, promote to PROD in same order
 
 **Remaining open (audit/57 + audit/58):** H-02 (owner_id immutability — bigger surface, dedicated PR), H-05, H-07, 7 mediums (M-01, M-02, M-03, M-06, M-07, M-08, M-10) + M-09-CSP deferred, 6 lows (L-01, L-02, L-03, L-05, L-06, L-07).
+
+---
+
+## SF-057: Owner + admin hosting CSP — M-09 deferred → closed
+
+**Status:** ✅ closed via PR #557
+**Severity:** MEDIUM (audit/58 M-09 carryover, audit/79 §3 #2 + #6)
+**Audit:** `audit/84-security-sweep-2026-05-29.md` STEP 1
+
+**Vector:** Owner (`app.bookbed.io`) and admin (`bookbed-admin.web.app`) hosting blocks shipped only `X-Frame-Options: DENY` + HSTS + Permissions-Policy. No `Content-Security-Policy` → any stored-XSS sink (e.g. unescaped guest field rendered in owner dashboard) could load arbitrary script. SF-056 / PR #528 deferred this to a follow-up because of Flutter CanvasKit's `'unsafe-eval'` requirement.
+
+**Fix:** Restrictive CSP added to both owner + admin headers blocks:
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.gstatic.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://js.stripe.com https://*.sentry.io;
+style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+font-src 'self' data: https://fonts.gstatic.com;
+img-src 'self' data: blob: https://*.gstatic.com https://*.googleusercontent.com https://firebasestorage.googleapis.com;
+connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://*.sentry.io https://api.stripe.com https://*.ingest.sentry.io;
+frame-src https://js.stripe.com https://hooks.stripe.com https://*.firebaseapp.com;
+worker-src 'self' blob:;
+object-src 'none';
+base-uri 'self';
+form-action 'self'
+```
+
+Widget kept its `frame-ancestors *` (embed contract).
+
+**Smoke (PROD post-deploy 2026-05-29T14:27Z):**
+- `curl -sI https://app.bookbed.io` returns CSP header
+- `curl -sI https://bookbed-admin.web.app` returns CSP header
+- `curl -sI https://view.bookbed.io` keeps `frame-ancestors *`
+- `main.dart.js` HTTP 200 on all 3 hosts (CanvasKit + Sentry + Firebase load)
+
+**Files modified:** `firebase.json` (8 inserts across 2 blocks)
+
+**Advisor catch:** added `worker-src 'self' blob:` (Flutter spawns CanvasKit worker in some browsers — without it, white-screen on owner/admin).
+
+---
+
+## SF-058: Client-side IP geolocation PII leak — F-58c-13 CLOSED
+
+**Status:** ✅ closed via PR #558
+**Severity:** HIGH (audit/58c F-58c-13, audit/79 §3 #3)
+**Audit:** `audit/84-security-sweep-2026-05-29.md` STEP 2A
+
+**Vector:** `lib/core/services/ip_geolocation_service.dart` called `ipapi.co/json/` and `ipwhois.app/json/` directly from the browser on every login/signup (3 callsites in `enhanced_auth_provider.dart`: register :734, login :973, security-event log :2263). IP + approximate location leaked to TWO third parties before the dashboard rendered. Sentry filter silenced the failures so it was invisible. Memory: `[[ipwhois-app-pii-leak-on-login]]`.
+
+**Fix:** New `getClientGeolocation` callable in `europe-west1`:
+- Reads verified `x-forwarded-for` / `rawRequest.ip` server-side
+- Proxies to a single upstream (`ipapi.co`)
+- Returns ONLY `{country, region, city}` — the IP itself never reaches the client
+- Rate limit: 60 / hour / hashed-IP
+- Graceful empty on upstream failure (caller treats as "location unknown")
+
+Client `IpGeolocationService` rewritten to call the callable via `cloud_functions` `HttpsCallable`. API surface preserved (3 callsites untouched).
+
+**Smoke (dev + PROD 2026-05-29T14:50Z):**
+- `POST .../getClientGeolocation` returns 200 + `{country, region, city}`
+- IAM `allUsers/invoker` granted on dev + PROD Cloud Run service post-deploy
+- Browser Network tab on PROD owner login no longer shows `ipapi.co` / `ipwhois.app` requests
+
+**Files modified:**
+- `functions/src/getClientGeolocation.ts` (NEW, +95 lines)
+- `functions/src/index.ts` (+3 export lines)
+- `lib/core/services/ip_geolocation_service.dart` (rewritten, −163 + 91)
+
+---
+
+## SF-059: Logout multi-store wipe — F-58c-14 CLOSED
+
+**Status:** ✅ closed via PR #558
+**Severity:** MEDIUM (audit/58c F-58c-14, audit/79 §3 #5)
+**Audit:** `audit/84-security-sweep-2026-05-29.md` STEP 2B
+
+**Vector:** Firebase Auth `signOut()` only clears the `firebaseLocalStorageDb` IndexedDB store. `sessionStorage`, `localStorage`, and document cookies survived → on a shared kiosk, the next user could still read leftover "remember me" / cached PII / fragment leftovers (see also audit/67 F-67-03 widget storage leak). Memory: `[[firebase-auth-logout-multi-store]]`.
+
+**Fix:** New `wipeWebStorageOnLogout({reload})` helper, wired into `enhanced_auth_provider.dart` `signOut()`:
+- Clears `sessionStorage` (entire origin)
+- Clears `localStorage` (entire origin)
+- Expires every document cookie (`path=/`, epoch expires)
+- Optional `location.reload()` so in-memory Flutter state is dropped together with storage
+
+Conditional import:
+- `lib/core/utils/web_storage_wipe.dart` (barrel)
+- `..._web.dart` (real implementation via `package:web`)
+- `..._stub.dart` (no-op on mobile/desktop)
+
+`kIsWeb` guard in `signOut()` skips the call on non-web platforms. `reload: clearSavedEmail` ties hard refresh to the explicit "Odjava" path; auth-state-change auto-signouts skip the reload.
+
+**Files modified:**
+- `lib/core/utils/web_storage_wipe{,_web,_stub}.dart` (NEW)
+- `lib/core/providers/enhanced_auth_provider.dart` (+10 lines around `_auth.signOut()`)
+
+---
+
+## SF-060: `cors: true` reflective origin → explicit allowlist (F-58-07 partial)
+
+**Status:** ⚠️ PARTIAL closure via PR #559
+**Severity:** MEDIUM (audit/58 F-58-07, audit/79 §3 #4)
+**Audit:** `audit/84-security-sweep-2026-05-29.md` STEP 3
+
+**Vector:** Firebase Functions v2 `cors: true` reflects whatever `Origin` header the client sends. Removes the same-origin defense layer entirely — any third-party origin can make `fetch` requests against the callable (auth gate still holds, but CSRF window opens for anything that depends on origin). Memory: `[[oncall-default-cors-reflective]]`.
+
+**Fix:** New `functions/src/utils/corsAllowlist.ts` exporting `getCorsAllowlist(): (string | RegExp)[]`:
+- Production allowlist: `app.bookbed.io`, `view.bookbed.io`, `bookbed-admin.web.app`, canonical `*.web.app` / `*.firebaseapp.com`
+- Regex for tenant subdomains: `^https://[a-z0-9][a-z0-9-]*\.view\.bookbed\.io$`
+- Per-env append (dev / staging / emulator) via `GCP_PROJECT`
+
+10 explicit `cors: true` occurrences across 5 files swapped to `cors: getCorsAllowlist()`:
+- `functions/src/availability.ts` (×1)
+- `functions/src/bookingActions.ts` (×4 — approve/reject/cancel/complete)
+- `functions/src/emailVerification.ts` (×3)
+- `functions/src/passwordReset.ts` (×1)
+- `functions/src/getClientGeolocation.ts` (×1 — own CF from SF-058)
+
+**Why partial:** audit/58 estimated ~35 callables. Reality: 10 explicit + remainder relying on Firebase v2 framework default (still reflective). Broader sweep is a follow-up audit.
+
+**Smoke (dev + PROD 2026-05-29T15:13Z):**
+- OPTIONS preflight with `Origin: https://evil.test` → no `Access-Control-Allow-Origin` header → browser rejects
+- OPTIONS with `Origin: https://app.bookbed.io` → echoed back → allowed
+- OPTIONS with `Origin: https://bookbed-owner-dev.web.app` on dev project → allowed (per-env append)
+- 387/387 jest tests pass
+
+**PROD-safety regression observed:** Firebase v2 deploy where `cors` option flips between `true` and array/RegExp STRIPS the existing Cloud Run `allUsers/invoker` IAM binding on PROD. All 7 updated PROD CFs returned HTTP 403 for ~60 s between deploy completion and `gcloud run services add-iam-policy-binding` re-grant loop. Cached as memory `[[cf-deploy-cors-shape-iam-strip]]` for future deploys.
+
+**Files modified:** `functions/src/utils/corsAllowlist.ts` (NEW), 5 CF source files (+9 / -10 lines)
+
+---
+
+## SF-061 (DEFERRED): App Check enforcement on Stripe checkout + availability
+
+**Status:** ⏭️ DEFERRED — blocked on client `FirebaseAppCheck.instance.activate()` callsite
+**Severity:** HIGH (audit/79 §3 #1)
+**Audit:** `audit/84-security-sweep-2026-05-29.md` STEP 4
+
+**Target:** Flip `enforceAppCheck: false → true` on:
+- `functions/src/stripePayment.ts` `createStripeCheckoutSession` (line ~135)
+- `functions/src/availability.ts` `getUnitAvailability` (line ~123)
+
+**Blocker:** `firebase_app_check: ^0.4.1+4` pub dep is declared in `pubspec.yaml:93` but no `FirebaseAppCheck.instance.activate(webProvider: ReCaptchaV3Provider(...))` callsite exists anywhere in `lib/`. Cloud Monitoring `firebaseappcheck.googleapis.com/request_count` `result=VERIFIED` rate is guaranteed 0%. Flipping `enforceAppCheck` without client init would block ALL legit booking + widget traffic.
+
+**Prereq for re-attempt (STEP 4 gating logic):**
+1. Land client `FirebaseAppCheck.instance.activate(...)` per surface (owner + widget + admin) with reCAPTCHA Enterprise key provisioned
+2. Wait 7 days for verified-rate stabilization
+3. Re-run STEP 4 gate (`gcloud monitoring time-series list ... | awk` verified-rate calc); proceed only if ≥0.95
+4. Flip the two `enforceAppCheck: false → true` constants + redeploy CFs

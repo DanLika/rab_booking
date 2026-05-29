@@ -2,7 +2,30 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-05-27 | **Version**: 7.01
+**Last Updated**: 2026-05-29 | **Version**: 7.02
+
+---
+
+**Changelog 7.02**: audit/84 security sweep — CSP, IP-geo CF, logout wipe, CORS allowlist (2026-05-29):
+
+### Security
+- **PR #557 — CSP owner + admin hosting (SF-057, MED)**: restrictive Content-Security-Policy added to owner (`app.bookbed.io`) + admin (`bookbed-admin.web.app`) `firebase.json` blocks. Widget keeps `frame-ancestors *` (embed contract). `worker-src 'self' blob:` included for Flutter CanvasKit. Closes audit/58 M-09 deferred + audit/79 §3 #2 + #6.
+- **PR #558 — IP-geo CF + multi-store logout wipe (SF-058 + SF-059, HIGH + MED)**: new `getClientGeolocation` callable (europe-west1) replaces client-side `ipapi.co` + `ipwhois.app` calls on every login/signup; IP never leaves server (F-58c-13 CLOSED). `signOut()` now wipes `sessionStorage` + `localStorage` + cookies + optional `location.reload()` on `kIsWeb` via conditional import (F-58c-14 CLOSED). 3 callsites in `enhanced_auth_provider.dart` API-surface compat.
+- **PR #559 — `cors: true` → explicit allowlist (SF-060, MED partial)**: new `functions/src/utils/corsAllowlist.ts` exporting `getCorsAllowlist(): (string | RegExp)[]`; 10 explicit `cors: true` occurrences across 5 files (availability, bookingActions ×4, emailVerification ×3, passwordReset, getClientGeolocation) swapped to `cors: getCorsAllowlist()`. PROD allowlist gates Origin to app/view/admin + canonical `*.web.app` / `*.firebaseapp.com` + tenant `{tenant}.view.bookbed.io` regex. Per-env append via `GCP_PROJECT`. Closes audit/58 F-58-07 partial (framework-default reflective CORS on other callables remains follow-up).
+
+### Out of scope (deferred follow-ups)
+- **SF-061 — App Check enforcement on `createStripeCheckoutSession` + `getUnitAvailability`** (audit/79 §3 #1): blocked on client `FirebaseAppCheck.instance.activate(...)` callsite — pub dep loaded but never activated, so verified-rate gate guaranteed 0%. Flipping `enforceAppCheck: true` would block all legit traffic. Prereq: provision reCAPTCHA Enterprise key + add client init per surface, wait 7d for verified-rate stabilization, then flip.
+- Broader `cors:` sweep on framework-default callables (audit/79 §3 #4 carryover) — out of SF-060 scope.
+
+### Operational notes baked into memory
+- **`cf-deploy-cors-shape-iam-strip`** — Firebase v2 onCall deploy where `cors` flips between `true` and array/RegExp strips Cloud Run `allUsers/invoker` IAM on PROD. ~60s degraded window observed 2026-05-29 15:11–15:13 UTC during SF-060 deploy. Always re-grant post-deploy via `gcloud run services add-iam-policy-binding` loop. PROD recovered green; no failed-booking reports.
+- Worktree CF deploys need manual `cp functions/.env*` from main working tree (gitignored, not propagated by `git worktree add`).
+
+### Refs
+- audit/84 (full sweep notes), audit/79 §3 (origin findings)
+- PR #557, #558, #559 (merged 2026-05-29)
+- SF-057, SF-058, SF-059, SF-060, SF-061 deferred (`docs/SECURITY_FIXES.md`)
+- `memory/cf-deploy-cors-shape-iam-strip.md`
 
 ---
 

@@ -79,7 +79,7 @@ Two follow-up candidates surfaced during deploy + verify. Both small, both defer
 
 ---
 
-## 🛡 App Check launch checklist (referenced from SF-046)
+## 🛡 App Check launch checklist (referenced from SF-046 + SF-061 deferred)
 
 Security-sprint PR shipped App Check in **audit-only mode** (`enforceAppCheck: false, consumeAppCheckToken: true`) on `getUnitAvailability` and `createStripeCheckoutSession`. Functions log attestation when clients send a token; missing tokens are NOT rejected. Promoting to full enforcement (`enforceAppCheck: true`) requires:
 
@@ -88,6 +88,35 @@ Security-sprint PR shipped App Check in **audit-only mode** (`enforceAppCheck: f
 - [ ] **Native client init** — Flutter mobile entry points init App Check with DeviceCheck (iOS) / Play Integrity (Android) providers; pubspec dep `firebase_app_check ^0.4.x` already present
 - [ ] **Telemetry watch (1 week)** — confirm legit-traffic attestation rate > 99% in `serviceConfig.appCheckMetrics` before flipping enforcement
 - [ ] **Flip `enforceAppCheck: true`** on both CFs in follow-up PR; expand to other anon-callable surfaces (`emailVerification`, `passwordReset`, `subdomainService` once SF-047 lands)
+
+**Why blocked (audit/84 STEP 4, 2026-05-29):** automated sweep tried to flip
+`enforceAppCheck: true` gated on Cloud Monitoring verified-rate ≥0.95 over
+7d. `grep -rn 'FirebaseAppCheck.instance.activate\|FirebaseAppCheck' lib/`
+returned ZERO hits — pub dep loaded but never activated. Verified rate
+guaranteed 0%, gate correctly deferred. Re-attempt STEP 4 after the 5
+unchecked boxes above are done.
+
+---
+
+## 🚨 TODO: audit/84 sweep follow-ups (2026-05-29)
+
+Mostly informational — the sweep itself landed PR #557/#558/#559 closing
+audit/79 §3 #2/#3/#5/#6 plus partial #4. Remaining work:
+
+- [ ] **Broader `cors:` allowlist sweep on framework-default callables** —
+      SF-060 only covered the 10 explicit `cors: true` occurrences. Other
+      onCalls relying on Firebase v2 default `cors` are still reflective.
+      Estimated ~25 callables. Wrap into `getCorsAllowlist()` per the
+      helper already in `functions/src/utils/corsAllowlist.ts`.
+- [ ] **`tool/deploy-cors-shape-iam-restore.sh`** — codify the
+      `gcloud run services add-iam-policy-binding` re-grant loop into a
+      script invoked automatically after any deploy that touches `cors`
+      options on `onCall` CFs. Memory `[[cf-deploy-cors-shape-iam-strip]]`
+      captures the manual recipe.
+- [ ] **Worktree `.env` propagation** — fresh `git worktree add` doesn't
+      copy gitignored `functions/.env*`, blocking CF deploy from
+      worktrees. Add a post-worktree hook OR a `tool/wt-bootstrap.sh`
+      that copies them. Hit twice during audit/84 sweep.
 
 ---
 

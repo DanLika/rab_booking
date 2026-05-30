@@ -50,18 +50,7 @@ void main() async {
     );
   }
 
-  // Connect to emulators in development
-  // await _connectToEmulators();
-
   await AppCheckInit.activate(isProd: false);
 
   app.runMainApp();
 }
-
-// Future<void> _connectToEmulators() async {
-//   final host = 'localhost';
-//   FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
-//   await FirebaseAuth.instance.useAuthEmulator(host, 9099);
-//   FirebaseStorage.instance.useStorageEmulator(host, 9199);
-//   FirebaseFunctions.instance.useFunctionsEmulator(host, 5001);
-// }

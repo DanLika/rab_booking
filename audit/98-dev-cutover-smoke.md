@@ -172,9 +172,12 @@ action is required to make the TZ line "take effect" on intervals.
 ### 3.3 F-94-02-CREATE — direct-REST subdomain squat **still reachable** (KNOWN GAP, documented in audit/96)
 
 Smoke 6e confirmed: an authenticated owner can `PATCH /v1/projects/bookbed-dev/databases/(default)/documents/properties/{newId}`
-with `subdomain="airbnb-{ts}"` (or any format-valid value, including bare
-`"airbnb"` / `"marriott"` / etc.) in the **initial** field set, bypassing the
-lib-side 2-phase create that PR #581 (SF-069) added. Rules at lines 213-220
+with `subdomain="airbnb-{ts}"` in the **initial** field set, bypassing the
+lib-side 2-phase create that PR #581 (SF-069) added. (The probe used a
+timestamped suffix to keep the squat trivially cleanable. Bare `"airbnb"` /
+`"marriott"` / `"hilton"` would pass the same `firestore.rules:217-220`
+format regex — the only check at the rules layer — and the same outcome
+applies; the timestamped suffix is incidental, not a softening of the proof.) Rules at lines 213-220
 format-validate but do **not** consult the reserved-subdomain list or the
 uniqueness index — those checks live exclusively in `setPropertySubdomain`
 (`subdomainService.ts`).

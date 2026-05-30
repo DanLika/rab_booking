@@ -89,7 +89,7 @@ export const checkInTomorrowReminder = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const doc of bookingsSnapshot.docs) {
+      const promises = bookingsSnapshot.docs.map(async (doc) => {
         const booking = doc.data();
         const ownerId = booking.owner_id;
 
@@ -97,7 +97,7 @@ export const checkInTomorrowReminder = onSchedule(
           logWarn("[Check-in Reminder] Booking missing owner_id", {
             bookingId: doc.id,
           });
-          continue;
+          return;
         }
 
         const guestName = booking.guest_details?.name ||
@@ -106,7 +106,7 @@ export const checkInTomorrowReminder = onSchedule(
 
         // Skip if we already sent this reminder (prevent duplicates on retries)
         if (booking.checkInReminderSent) {
-          continue;
+          return;
         }
 
         try {
@@ -134,7 +134,9 @@ export const checkInTomorrowReminder = onSchedule(
           });
           errorCount++;
         }
-      }
+      });
+
+      await Promise.all(promises);
 
       logSuccess("[Check-in Reminder] Completed", {
         sent: sentCount,
@@ -196,7 +198,7 @@ export const checkOutTodayReminder = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const doc of bookingsSnapshot.docs) {
+      const promises = bookingsSnapshot.docs.map(async (doc) => {
         const booking = doc.data();
         const ownerId = booking.owner_id;
 
@@ -204,7 +206,7 @@ export const checkOutTodayReminder = onSchedule(
           logWarn("[Check-out Reminder] Booking missing owner_id", {
             bookingId: doc.id,
           });
-          continue;
+          return;
         }
 
         const guestName = booking.guest_details?.name ||
@@ -213,7 +215,7 @@ export const checkOutTodayReminder = onSchedule(
 
         // Skip if we already sent this reminder (prevent duplicates on retries)
         if (booking.checkOutReminderSent) {
-          continue;
+          return;
         }
 
         try {
@@ -241,7 +243,9 @@ export const checkOutTodayReminder = onSchedule(
           });
           errorCount++;
         }
-      }
+      });
+
+      await Promise.all(promises);
 
       logSuccess("[Check-out Reminder] Completed", {
         sent: sentCount,
@@ -303,12 +307,12 @@ export const pendingPaymentReminder = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const doc of bookingsSnapshot.docs) {
+      const promises = bookingsSnapshot.docs.map(async (doc) => {
         const booking = doc.data();
         const ownerId = booking.owner_id;
 
         if (!ownerId) {
-          continue;
+          return;
         }
 
         const guestName = booking.guest_details?.name ||
@@ -317,7 +321,7 @@ export const pendingPaymentReminder = onSchedule(
 
         // Check if we already sent this reminder (prevent duplicates)
         if (booking.paymentReminderSent) {
-          continue;
+          return;
         }
 
         try {
@@ -346,7 +350,9 @@ export const pendingPaymentReminder = onSchedule(
           });
           errorCount++;
         }
-      }
+      });
+
+      await Promise.all(promises);
 
       logSuccess("[Payment Reminder] Completed", {
         sent: sentCount,
@@ -403,7 +409,7 @@ export const biweeklySummary = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const ownerDoc of ownersSnapshot.docs) {
+      const promises = ownersSnapshot.docs.map(async (ownerDoc) => {
         const ownerId = ownerDoc.id;
 
         try {
@@ -428,7 +434,7 @@ export const biweeklySummary = onSchedule(
 
           // Only send if there's activity
           if (bookingsCount === 0 && totalRevenue === 0) {
-            continue;
+            return;
           }
 
           const formattedRevenue = new Intl.NumberFormat("hr-HR", {
@@ -453,7 +459,9 @@ export const biweeklySummary = onSchedule(
           logError("[Bi-weekly Summary] Failed for owner", error, {ownerId});
           errorCount++;
         }
-      }
+      });
+
+      await Promise.all(promises);
 
       logSuccess("[Bi-weekly Summary] Completed", {
         sent: sentCount,
@@ -513,7 +521,7 @@ export const monthlyRevenueReport = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
-      for (const ownerDoc of ownersSnapshot.docs) {
+      const promises = ownersSnapshot.docs.map(async (ownerDoc) => {
         const ownerId = ownerDoc.id;
 
         try {
@@ -543,7 +551,7 @@ export const monthlyRevenueReport = onSchedule(
 
           // Only send if there's activity
           if (confirmedCount === 0 && cancelledCount === 0) {
-            continue;
+            return;
           }
 
           const formattedRevenue = new Intl.NumberFormat("hr-HR", {
@@ -570,7 +578,9 @@ export const monthlyRevenueReport = onSchedule(
           logError("[Monthly Report] Failed for owner", error, {ownerId});
           errorCount++;
         }
-      }
+      });
+
+      await Promise.all(promises);
 
       logSuccess("[Monthly Report] Completed", {
         sent: sentCount,
@@ -643,14 +653,14 @@ export const newAppUpdateNotification = onDocumentUpdated(
       let skippedCount = 0;
       let errorCount = 0;
 
-      for (const userDoc of usersSnapshot.docs) {
+      const promises = usersSnapshot.docs.map(async (userDoc) => {
         const userId = userDoc.id;
         const userData = userDoc.data();
 
         // Check if user was already notified for this version
         if (userData.lastNotifiedAppVersion === newVersion) {
           skippedCount++;
-          continue;
+          return;
         }
 
         try {
@@ -664,7 +674,7 @@ export const newAppUpdateNotification = onDocumentUpdated(
 
           if (!tokensDoc.exists || !tokensDoc.data()) {
             skippedCount++;
-            continue;
+            return;
           }
 
           const tokensData = tokensDoc.data();
@@ -672,7 +682,7 @@ export const newAppUpdateNotification = onDocumentUpdated(
 
           if (!hasTokens) {
             skippedCount++;
-            continue;
+            return;
           }
 
           // Send push notification
@@ -701,7 +711,9 @@ export const newAppUpdateNotification = onDocumentUpdated(
           logError("[App Update] Failed for user", error, {userId});
           errorCount++;
         }
-      }
+      });
+
+      await Promise.all(promises);
 
       logSuccess("[App Update] Notification complete", {
         platform,

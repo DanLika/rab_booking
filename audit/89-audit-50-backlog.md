@@ -18,21 +18,21 @@
 | F-50-02 `loginAttempts` anon DoS | open | ✅ CLOSED 2026-05-27 via SF-050 (PR #517) | SF-050 | #517 |
 | F-50-03 Stripe webhook event-id dedup | open | ✅ CLOSED via PR (verified in audit/70 §4.2) | (verified) | (audit/70) |
 | F-50-04 error.stack scrub | PR #483 closed → PR #495 | ✅ MERGED 2026-05-26 (`cb7b7759`) | (n/a) | #495 |
-| F-50-05a undici ≤6.23 8 CVEs | overrides absent in lock | ✅ override `^7.0.0` in package.json + tree NO LONGER pulls undici (firebase-admin 12.6 → Node fetch); zero CVE matches | **SF-061** | this PR |
+| F-50-05a undici ≤6.23 8 CVEs | overrides absent in lock | ✅ override `^7.0.0` in package.json + tree NO LONGER pulls undici (firebase-admin 12.6 → Node fetch); zero CVE matches | **SF-064** | this PR |
 | F-50-05  App Check  | DEFERRED post-#481/#517 | DEFERRED — out of this PR (see audit/85) | (n/a) | (n/a) |
 | F-50-05b CSP owner+admin | OPEN at audit/50 | ✅ shipped via SF-057 (audit/84, PR #557) | SF-057 | #557 |
 | F-50-06 HSTS all 3 sites | OPEN at audit/50 | ✅ shipped via SF-057 (audit/84, PR #557) | SF-057 | #557 |
 | F-50-07 Permissions-Policy | OPEN at audit/50 | ✅ shipped via SF-057 (audit/84, PR #557) | SF-057 | #557 |
 | F-50-08 widget `nosniff` + Referrer-Policy | OPEN at audit/50 | ✅ shipped via SF-057 (audit/84, PR #557) | SF-057 | #557 |
-| F-50-09 `devices/{deviceId}` update unbounded | open | ✅ field allowlist on update rule + 7 regression tests | **SF-062** | this PR |
-| F-50-10 `web/index.html:669` `eval()` | open | ✅ replaced with native feature probes; no `unsafe-eval` from this code path | **SF-063** | this PR |
-| F-50-11 `iframe_resizer.js` postMessage `*` | open | ✅ init-handshake parent-origin capture + referrer fallback + drop-on-unknown | **SF-064** | this PR |
-| F-50-12 `audit/raw/` checked into git | open | ✅ `git rm -r audit/raw/` (22 files inc. `secrets.txt`) + `.gitignore` rule | **SF-065** | this PR |
+| F-50-09 `devices/{deviceId}` update unbounded | open | ✅ field allowlist on update rule + 7 regression tests | **SF-065** | this PR |
+| F-50-10 `web/index.html:669` `eval()` | open | ✅ replaced with native feature probes; no `unsafe-eval` from this code path | **SF-068** | this PR |
+| F-50-11 `iframe_resizer.js` postMessage `*` | open | ✅ init-handshake parent-origin capture + referrer fallback + drop-on-unknown | **SF-069** | this PR |
+| F-50-12 `audit/raw/` checked into git | open | ✅ `git rm -r audit/raw/` (22 files inc. `secrets.txt`) + `.gitignore` rule | **SF-070** | this PR |
 | F-50-13 npm audit moderate residual | n/a | MONITOR — no code change; upstream SDK chain | (n/a) | (n/a) |
 
 ---
 
-## Section 1 — F-50-05a undici override (SF-061)
+## Section 1 — F-50-05a undici override (SF-064)
 
 ### State at start
 
@@ -72,7 +72,7 @@ Defense-in-depth: if a future minor bump of `firebase-admin` or `firebase-functi
 
 ---
 
-## Section 2 — F-50-09 devices/{deviceId} update allowlist (SF-062)
+## Section 2 — F-50-09 devices/{deviceId} update allowlist (SF-065)
 
 ### Before
 
@@ -146,7 +146,7 @@ Not deployed in this PR — autonomy scope blocks `firebase deploy`. The rule la
 
 ---
 
-## Section 3 — F-50-10 drop `eval()` ES6 detect (SF-063)
+## Section 3 — F-50-10 drop `eval()` ES6 detect (SF-068)
 
 ### Before
 
@@ -192,7 +192,7 @@ This removes the last in-bundle `eval`-class call. Stripping `'unsafe-eval'` fro
 
 ---
 
-## Section 4 — F-50-11 iframe `postMessage` targetOrigin (SF-064)
+## Section 4 — F-50-11 iframe `postMessage` targetOrigin (SF-069)
 
 ### Before
 
@@ -225,7 +225,7 @@ Resize messages are advisory (parent grows iframe height); first failure mode if
 
 ---
 
-## Section 5 — F-50-12 `audit/raw/` lockdown (SF-065)
+## Section 5 — F-50-12 `audit/raw/` lockdown (SF-070)
 
 ### Before
 

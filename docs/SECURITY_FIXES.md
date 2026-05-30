@@ -4121,7 +4121,7 @@ See audit/91 §5. Smoke matrix covers all 3 paths × {owner upload, owner delete
 - Dev deploy + IAM re-grant matrix (us-central1 + europe-west1) + CORS smoke (`OPTIONS` from `evil.test` vs `app.bookbed.io`) — see audit/89 §7-§9
 
 **PROD-deferred:** PROD deploy + IAM re-grant per memory `[[cf-deploy-cors-shape-iam-strip]]`. Memory `[[f86-01-cors-allowlist-gap-8-callables]]` closure tag flips 🚨 → ✅ post-PROD-cutover.
-## SF-061: undici override (F-50-05a CLOSED)
+## SF-064: undici override (F-50-05a CLOSED)
 
 **Status:** ✅ closed via this PR (audit/89)
 **Severity:** HIGH (audit/50 F-50-05a)
@@ -4138,13 +4138,13 @@ See audit/91 §5. Smoke matrix covers all 3 paths × {owner upload, owner delete
 - `npm install --no-audit --no-fund` → `added 857 packages in 11s`
 - `npm run build` (tsc) → exit 0
 - `npm test` → 19 suites, 387/387 pass
-- `npm run test:rules` → 5 suites, 53/53 pass (incl. SF-062 below)
+- `npm run test:rules` → 5 suites, 53/53 pass (incl. SF-065 below)
 
 **Files modified:** `functions/package.json` (override pre-existing, this PR audits it), `functions/package-lock.json` (re-resolved).
 
 ---
 
-## SF-062: devices/{deviceId} update key allowlist (F-50-09 CLOSED)
+## SF-065: devices/{deviceId} update key allowlist (F-50-09 CLOSED)
 
 **Status:** ✅ closed via this PR (audit/89)
 **Severity:** MEDIUM (audit/50 F-50-09)
@@ -4166,7 +4166,7 @@ Cross-checked vs `lib/core/services/security_events_service.dart:270-280` (the o
 
 ---
 
-## SF-063: web/index.html drop eval() ES6 probe (F-50-10 CLOSED)
+## SF-068: web/index.html drop eval() ES6 probe (F-50-10 CLOSED)
 
 **Status:** ✅ closed via this PR (audit/89)
 **Severity:** LOW (audit/50 F-50-10)
@@ -4184,7 +4184,7 @@ Cross-checked vs `lib/core/services/security_events_service.dart:270-280` (the o
 
 ---
 
-## SF-064: iframe_resizer.js postMessage origin (F-50-11 CLOSED)
+## SF-069: iframe_resizer.js postMessage origin (F-50-11 CLOSED)
 
 **Status:** ✅ closed via this PR (audit/89)
 **Severity:** LOW (audit/50 F-50-11)
@@ -4211,7 +4211,7 @@ Without opt-in, the referrer fallback handles the common case.
 
 ---
 
-## SF-065: audit/raw/ gitignore + scratch removal (F-50-12 CLOSED)
+## SF-070: audit/raw/ gitignore + scratch removal (F-50-12 CLOSED)
 
 **Status:** ✅ closed via this PR (audit/89)
 **Severity:** LOW (audit/50 F-50-12)

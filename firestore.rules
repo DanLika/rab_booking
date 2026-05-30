@@ -203,8 +203,33 @@ service cloud.firestore {
       // Contains: name, description, location, amenities, images
       // NOTE: owner_id is visible but not sensitive (similar to Airbnb host profiles)
       allow read: if true;
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      // SF-068 F-94-02 partial mitigation: at create the client-provided
+      // `subdomain` must be null OR format-valid (3-30 chars, lowercase
+      // alphanumerics + hyphens, no leading/trailing hyphen). Squatting a
+      // format-valid string remains OPEN — closing it needs a lib refactor
+      // (firebase_owner_properties_repository.dart:195 currently writes
+      // subdomain directly; should drop at create + call setPropertySubdomain
+      // post-create). Reserved-name list NOT replicated here to avoid drift
+      // with subdomainService.ts RESERVED_SUBDOMAINS; CF call before write
+      // remains the authoritative guard.
+      allow create: if canCreateAsOwner()
+        && (request.resource.data.get('subdomain', null) == null
+            || (request.resource.data.subdomain is string
+                && request.resource.data.subdomain.size() >= 3
+                && request.resource.data.subdomain.size() <= 30
+                && request.resource.data.subdomain.matches('^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$')));
+      // SF-068 F-94-02-UPDATE: lock server-managed fields on update.
+      // - `subdomain` is CF-only (setPropertySubdomain validates format,
+      //   reservation, uniqueness). Direct-write bypassed validation and let
+      //   an owner squat any subdomain (e.g. competitor names) by writing
+      //   the field.
+      // - `owner_id` immutable post-create — would otherwise allow handing
+      //   ownership of a property to another UID via direct write.
+      // - `created_at` immutable — audit-trail integrity.
+      allow update: if isResourceOwner()
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['subdomain', 'owner_id', 'created_at']);
+      allow delete: if isResourceOwner();
 
       // Units subcollection
       match /units/{unitId} {
@@ -257,9 +282,23 @@ service cloud.firestore {
       }
 
       // Widget settings subcollection
+      // SF-068 F-94-04: ical_cache_* fields are CF-managed:
+      //   functions/src/icalExport.ts:330 (writes cache on getUnitIcalFeed)
+      //   functions/src/utils/icalCache.ts (FieldValue.delete() on flush)
+      // Direct-write bypass would let an owner (a) inject arbitrary content
+      // served to external aggregators like Booking.com / Airbnb via the
+      // cached iCal feed, (b) freeze the cache by setting
+      // ical_cache_generated_at to a future date so the CF never regenerates.
       match /widget_settings/{unitId} {
         allow read: if true; // Widget needs to read settings
-        allow create, update, delete: if isPropertyOwner(propertyId);
+        allow create: if isPropertyOwner(propertyId);
+        allow update: if isPropertyOwner(propertyId)
+          && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny([
+                'ical_cache_content', 'ical_cache_generated_at',
+                'ical_cache_etag', 'ical_cache_unit_name'
+              ]);
+        allow delete: if isPropertyOwner(propertyId);
       }
 
       // Widget secrets subcollection — owner-only, never publicly readable.
@@ -286,9 +325,18 @@ service cloud.firestore {
 
       // iCal feeds subcollection (feed configurations)
       // Path: properties/{propertyId}/ical_feeds/{feedId}
+      // SF-068 F-94-03: sync_count / event_count / last_synced are CF-managed
+      // (functions/src/icalSync.ts:535-542). Direct-write bypass would let an
+      // owner (a) fake activity stats on the dashboard, (b) freeze scheduled
+      // sync by setting last_synced to a future date (scheduled job uses
+      // last_synced + sync_interval_minutes gate at icalSync.ts:296-311).
       match /ical_feeds/{feedId} {
         allow read: if isPropertyOwner(propertyId);
-        allow create, update, delete: if isPropertyOwner(propertyId);
+        allow create: if isPropertyOwner(propertyId);
+        allow update: if isPropertyOwner(propertyId)
+          && !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['sync_count', 'event_count', 'last_synced']);
+        allow delete: if isPropertyOwner(propertyId);
       }
     }
 
@@ -310,12 +358,23 @@ service cloud.firestore {
     }
 
     // Collection group: widget_settings
+    // SF-068 F-94-04: mirror the subcollection-path ical_cache_* deny so the
+    // CG write path (used by some owner dashboard repos) doesn't slip the
+    // same fields past.
     match /{path=**}/widget_settings/{unitId} {
       allow read: if true;
       allow create: if isAuthenticated() &&
         ('property_id' in request.resource.data) &&
         get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
-      allow update, delete: if isAuthenticated() &&
+      allow update: if isAuthenticated() &&
+        ('property_id' in resource.data) &&
+        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny([
+              'ical_cache_content', 'ical_cache_generated_at',
+              'ical_cache_etag', 'ical_cache_unit_name'
+            ]);
+      allow delete: if isAuthenticated() &&
         ('property_id' in resource.data) &&
         get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
     }

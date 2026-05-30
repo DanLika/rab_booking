@@ -423,12 +423,13 @@ service cloud.firestore {
     // properties/{propertyId}/units/{unitId}/additional_services/{serviceId}
     // See rule at line ~180
 
-    // Platform connections - external platform OAuth/API connections (Booking.com, Airbnb)
-    // Owner can read/write their own connections
+    // SF-NNN platform_connections orphan removed (audit/86 §5 dead-code
+    // recommendation). Zero readers/writers in `lib/` or `functions/src/`
+    // as of 2026-05-30; rule + collection were never wired up. Deny-all
+    // fail-CLOSED in case any straggler docs exist; safe to remove the
+    // collection entirely via a separate cleanup task.
     match /platform_connections/{connectionId} {
-      allow read: if isResourceOwner();
-      allow create: if canCreateAsOwner();
-      allow update, delete: if isResourceOwner();
+      allow read, write: if false;
     }
 
     // DEPRECATED: Root-level iCal feeds

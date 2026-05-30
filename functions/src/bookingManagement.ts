@@ -93,6 +93,7 @@ function toMillisOrZero(t: unknown): number {
 export const autoCancelExpiredBookings = onSchedule(
   {
     schedule: "every 24 hours",
+    timeZone: "Europe/Zagreb",
     secrets: ["RESEND_API_KEY"],
   },
   async () => {
@@ -113,7 +114,23 @@ export const autoCancelExpiredBookings = onSchedule(
         expiredCount: expiredBookings.size,
       });
 
-      const cancelPromises = expiredBookings.docs.map(async (doc) => {
+      // SF-NNN F-95-03: skip external/iCal-imported bookings. Mirrors filter
+      // in autoCompleteCheckedOutBookings.ts:127-140. External platforms
+      // (Booking.com / Airbnb / Adriagate) manage their own lifecycle.
+      const filteredBookings = expiredBookings.docs.filter((doc) => {
+        const data = doc.data();
+        if (data.source && ["booking_com", "airbnb", "ical", "external"].includes(String(data.source).toLowerCase())) {
+          logInfo("[AutoCancel] Skipping external booking", {bookingId: doc.id, source: data.source});
+          return false;
+        }
+        if (doc.id.startsWith("ical_")) {
+          logInfo("[AutoCancel] Skipping iCal-imported booking", {bookingId: doc.id});
+          return false;
+        }
+        return true;
+      });
+
+      const cancelPromises = filteredBookings.map(async (doc) => {
         const booking = doc.data();
 
         await doc.ref.update({
@@ -169,7 +186,11 @@ export const autoCancelExpiredBookings = onSchedule(
 
       await Promise.all(cancelPromises);
 
-      logSuccess("Auto-cancelled expired bookings", {count: expiredBookings.size});
+      logSuccess("Auto-cancelled expired bookings", {
+        candidates: expiredBookings.size,
+        cancelled: filteredBookings.length,
+        externalSkipped: expiredBookings.size - filteredBookings.length,
+      });
     } catch (error) {
       logError("Error auto-cancelling bookings", error);
     }

@@ -102,17 +102,12 @@ async function deleteSubcollection(
   subcollectionName: string,
   unitId: string
 ): Promise<void> {
+  // SF-NNN F-95-05: single fetch path. The previous pre-check fetch +
+  // while-loop fetch was a duplicate read of the same batch (the loop's
+  // first iteration handles the empty case via the same query).
   const collectionRef = parentRef.collection(subcollectionName);
-  const snapshot = await collectionRef.limit(BATCH_SIZE).get();
-
-  if (snapshot.empty) {
-    logInfo(`[UnitManagement] No ${subcollectionName} to delete`, {unitId});
-    return;
-  }
-
   let totalDeleted = 0;
 
-  // Process in batches
   while (true) {
     const batchSnapshot = await collectionRef.limit(BATCH_SIZE).get();
 
@@ -128,7 +123,6 @@ async function deleteSubcollection(
     await batch.commit();
     totalDeleted += batchSnapshot.size;
 
-    // If we got less than BATCH_SIZE, we're done
     if (batchSnapshot.size < BATCH_SIZE) {
       break;
     }
@@ -139,5 +133,7 @@ async function deleteSubcollection(
       unitId,
       count: totalDeleted,
     });
+  } else {
+    logInfo(`[UnitManagement] No ${subcollectionName} to delete`, {unitId});
   }
 }

@@ -38,6 +38,10 @@ export interface BookingEmailTracking {
   pending_request?: EmailSent;
   pending_owner_notification?: EmailSent;
   owner_notification?: EmailSent;
+  // audit/34 §5 — per-trigger idempotency marker for onBookingCreated.
+  // Reuses emails_sent map so existing dot-notation + read path stays
+  // consistent; not an email send.
+  initial_trigger_processed?: EmailSent;
 }
 
 /**

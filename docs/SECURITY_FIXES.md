@@ -4315,3 +4315,73 @@ Lib refactor, 2-phase atomic reserve + best-effort rollback:
 - F-96-01: `lib/shared/repositories/firebase/firebase_property_repository.dart` — dead provider, ista vuln klasa, 0 lib callera. Delete ili refactor pri sljedećoj prilici.
 - F-96-02: `setPropertySubdomain` CF TOCTOU race između `isSubdomainTaken` query i `update` poziva. Manja eksponiranost vs pre-fix lib direct-write (CF i dalje rejects reserved-list + ownership-checks). Zatvoriti tx-om ili rule-level uniqueness checkom.
 - Backfill: postojeće squatovane subdomene na PROD/dev nisu retroaktivno otkrivene — operativni follow-up via skripta koja cross-checkira `properties.subdomain` protiv reserved-liste + duplikata.
+
+---
+
+## SF-077: FLUTTER-7E booking_reference auto-heal + audit/34 §5 onBookingCreated idempotency
+
+**Datum**: 2026-05-30
+**Prioritet**: Medium (handled: yes, no silent data loss; email-retry storm + Sentry noise + duplicate notifications)
+**Status**: ✅ Riješeno na branch-u `fix/flutter-7e-booking-ref-autoheal` (CF-only, NO rules/lib edit)
+**Audit**: [`audit/97-flutter-7e-booking-ref.md`](../audit/97-flutter-7e-booking-ref.md)
+**Sentry**: FLUTTER-7E (issue 123267795, dev env)
+**Zahvaćeni fajlovi**: `functions/src/bookingManagement.ts`, `functions/src/utils/bookingHelpers.ts`, `functions/test/bookingManagement.test.ts`
+
+### Problem (FLUTTER-7E)
+
+`onBookingStatusChange` rejection grana (`bookingManagement.ts:460`) i approval grana (`:388`) prosljeđivali `after.booking_reference || ""` direktno u `sendBookingRejectedEmail` / `sendBookingApprovedEmail`. `validateRequiredString` u `emailService.ts:191-194` baca na prazan string — `|| ""` fallback ne pomaže. Cancellation grana (`:514-532`) je već imala inline auto-heal pattern; rejection + approval ga nisu mirrori­rali.
+
+Bookings bez `booking_reference` field-a nastaju iz: (1) SEED skripti koje direct-write Firestore zaobilazeći `createBookingAtomic` (audit/67 F-67-01 fixture); (2) legacy doc-ova predatiranih `booking_reference` rollout-u; (3) partial migracija. `emailRetry` zatim potroši 4 attempta prije surface-anja, amplifying noise.
+
+### Problem (audit/34 §5)
+
+`onBookingCreated` izvodi 3 side-effecta — iCal cache flush, email send chain, in-app notification create — ali ne piše per-trigger marker na `emails_sent.*`. Pri Firestore-trigger redelivery (network, deploy, transient failure) sve 3 akcije se re-run; email re-send je zaštićen `atomicBooking.ts` per-key marker-ima (`pending_request` etc.) ali notification create se duplicira (`createBookingNotification` nema dedup).
+
+### Fix
+
+**A — type extension.** `functions/src/utils/bookingHelpers.ts:41-44` — `initial_trigger_processed?: EmailSent` na `BookingEmailTracking` (reuse `emails_sent` map dot-notation).
+
+**B — `onBookingCreated` idempotency (audit/34 §5).** `bookingManagement.ts:217-230` — early-return guard. `bookingManagement.ts:308-321` — write marker `emails_sent.initial_trigger_processed: {sent_at, email, booking_id, provider_id: null}` nakon notification create.
+
+**C — FLUTTER-7E auto-heal.** `bookingManagement.ts:385-408` (approval) + `:497-520` (rejection) — inline auto-heal mirror cancellation grane:
+
+```ts
+if (!booking.booking_reference) {
+  const newRef = generateBookingReference(event.params.bookingId);
+  await event.data?.after.ref.update({
+    booking_reference: newRef,
+    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+  });
+  booking.booking_reference = newRef;
+  logWarn("[onStatusChange] Restored missing booking_reference (approval|rejection)", {...});
+}
+```
+
+Email senderi zatim primaju `booking.booking_reference` (nikad `""`). Cancellation grana **netaknuta** — već radi.
+
+### Verifikacija
+
+```
+cd functions
+npm run build   # tsc: 0 errors
+npm test        # 19 suites, 406 tests, 100% green (was 402, +4 regression)
+```
+
+Nova regression-test pokrivanja:
+1. **FLUTTER-7E rejection** — refless `pending → cancelled` w/ `rejection_reason` → auto-heal write + email šalje s `BK-3KG0VFHCC71K` (deterministic iz Sentry payload bookingId-a `3kG0vFHcc71k73Ykx3Mg`).
+2. **FLUTTER-7E approval** — refless `pending → confirmed` w/ `approved_at` → ista provjera za approval.
+3. **audit/34 §5 marker write** — bank-transfer booking → marker pisan na `emails_sent.initial_trigger_processed`.
+4. **audit/34 §5 short-circuit** — booking već ima marker → `createBookingNotification` se NE poziva na redelivery.
+
+### Out of scope (carry-forward)
+
+- `autoCancelExpiredBookings:158` (scheduled path) — ista FLUTTER-7E klasa, follow-up PR.
+- SEED skripte pod `scripts/` — bookings without `booking_reference` (audit/40 + audit/67 hygiene).
+- `lib/`, `ios/`, `android/`, `firestore.rules` — netaknuti per scope.
+
+### Cross-refs
+
+- audit/97 (full root-cause + verification matrix).
+- FLUTTER-79 sibling (Stripe Connect egress, zatvoren via PR #541 / audit/74).
+- audit/34 §5 (root cause of compounding noise — closed by this PR).
+- audit/67 F-67-01 (UI silent no-op + SEED fixture path that originally triggered FLUTTER-7E).

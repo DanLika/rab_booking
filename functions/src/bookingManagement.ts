@@ -214,6 +214,21 @@ export const onBookingCreated = onDocumentCreated(
 
     if (!booking) return;
 
+    // audit/34 §5: idempotency guard for retry storms. Event delivery on
+    // onDocumentCreated may be redelivered (network, deploy, transient
+    // failure); without a marker each redelivery re-flushes the iCal cache
+    // and re-creates the in-app notification. The marker is per-trigger,
+    // not per-email (atomicBooking.ts handles initial-email idempotency
+    // via emails_sent.pending_request / .confirmation etc.).
+    const emailTracking = booking.emails_sent as BookingEmailTracking | undefined;
+    if (emailTracking?.initial_trigger_processed) {
+      logInfo("onBookingCreated already processed for this booking, skipping retry", {
+        bookingId: event.params.bookingId,
+        processedAt: emailTracking.initial_trigger_processed.sent_at,
+      });
+      return;
+    }
+
     // Flush iCal export cache for this unit so external calendars see the
     // new booking on next pull instead of waiting up to 5 min for TTL expiry.
     // Fires for ALL payment methods (Stripe-confirmed and pending alike).
@@ -293,6 +308,18 @@ export const onBookingCreated = onDocumentCreated(
           // Continue - notification failure shouldn't break the flow
         }
       }
+
+      // audit/34 §5: write per-trigger idempotency marker. Reuses emails_sent
+      // map (dot-notation never clobbers atomicBooking's pending_request /
+      // confirmation entries; both writers append distinct keys).
+      await event.data?.ref.update({
+        "emails_sent.initial_trigger_processed": {
+          sent_at: admin.firestore.FieldValue.serverTimestamp(),
+          email: booking.guest_email || "",
+          booking_id: event.params.bookingId,
+          provider_id: null,
+        },
+      });
     } catch (error) {
       logError("Failed to send booking emails", error, {bookingId: event.params.bookingId});
       // Don't throw - we don't want to fail booking creation if email fails
@@ -355,10 +382,34 @@ export const onBookingStatusChange = onDocumentUpdated(
         }
 
         try {
+          const booking = after as any;
+
+          // FLUTTER-7E: AUTO-HEAL missing booking_reference before email send so
+          // sendBookingApprovedEmail never receives "" and the CF doesn't throw
+          // (which would trigger 4× Functions retry storm). Mirrors the
+          // cancellation branch (~:514).
+          if (!booking.booking_reference) {
+            const newRef = generateBookingReference(event.params.bookingId);
+            await event.data?.after.ref.update({
+              booking_reference: newRef,
+              updated_at: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            booking.booking_reference = newRef;
+            logWarn(
+              "[onStatusChange] Restored missing booking_reference (approval)",
+              {
+                bookingId: event.params.bookingId,
+                newReference: newRef,
+                propertyId: booking.property_id,
+                unitId: booking.unit_id,
+              }
+            );
+          }
+
           // Fetch property details
           const propertyDoc = await db
             .collection("properties")
-            .doc(after.property_id)
+            .doc(booking.property_id)
             .get();
           const propertyData = propertyDoc.data();
 
@@ -366,7 +417,7 @@ export const onBookingStatusChange = onDocumentUpdated(
           // The plaintext token is only available at generation time,
           // so we must create a new one when approving the booking
           const {token: accessToken, hashedToken} = generateBookingAccessToken();
-          const checkOutDate = safeToDate(after.check_out, "check_out");
+          const checkOutDate = safeToDate(booking.check_out, "check_out");
           const tokenExpiration = calculateTokenExpiration(checkOutDate);
 
           // Update booking with new access token (before sending email)
@@ -383,20 +434,20 @@ export const onBookingStatusChange = onDocumentUpdated(
           const providerId = await sendEmailWithRetry(
             () =>
               sendBookingApprovedEmail(
-                after.guest_email || "",
-                after.guest_name || "Guest",
-                after.booking_reference || "",
-                safeToDate(after.check_in, "check_in"),
+                booking.guest_email || "",
+                booking.guest_name || "Guest",
+                booking.booking_reference,
+                safeToDate(booking.check_in, "check_in"),
                 checkOutDate,
                 propertyData?.name || "Property",
                 propertyData?.contact_email,
                 accessToken, // Plaintext token for "View my reservation" link
-                after.total_price,
-                after.deposit_amount || after.advance_amount,
-                after.property_id // For subdomain URL generation
+                booking.total_price,
+                booking.deposit_amount || booking.advance_amount,
+                booking.property_id // For subdomain URL generation
               ),
             "Booking Approved",
-            after.guest_email || ""
+            booking.guest_email || ""
           );
 
           // PII redaction via redactEmail helper — full email available in
@@ -443,11 +494,35 @@ export const onBookingStatusChange = onDocumentUpdated(
         }
 
         try {
+          const booking = after as any;
+
+          // FLUTTER-7E: AUTO-HEAL missing booking_reference before email send so
+          // sendBookingRejectedEmail never receives "" and the CF doesn't throw
+          // (which would trigger 4× Functions retry storm). Mirrors the
+          // cancellation branch (~:514).
+          if (!booking.booking_reference) {
+            const newRef = generateBookingReference(event.params.bookingId);
+            await event.data?.after.ref.update({
+              booking_reference: newRef,
+              updated_at: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            booking.booking_reference = newRef;
+            logWarn(
+              "[onStatusChange] Restored missing booking_reference (rejection)",
+              {
+                bookingId: event.params.bookingId,
+                newReference: newRef,
+                propertyId: booking.property_id,
+                unitId: booking.unit_id,
+              }
+            );
+          }
+
           // Fetch unit and property details
           // NOTE: Units are stored as subcollection: properties/{propertyId}/units/{unitId}
           const propertyDoc = await db
             .collection("properties")
-            .doc(after.property_id)
+            .doc(booking.property_id)
             .get();
           const propertyData = propertyDoc.data();
 
@@ -455,14 +530,14 @@ export const onBookingStatusChange = onDocumentUpdated(
           const providerId = await sendEmailWithRetry(
             () =>
               sendBookingRejectedEmail(
-                after.guest_email || "",
-                after.guest_name || "Guest",
-                after.booking_reference || "",
+                booking.guest_email || "",
+                booking.guest_name || "Guest",
+                booking.booking_reference,
                 propertyData?.name || "Property",
-                after.rejection_reason
+                booking.rejection_reason
               ),
             "Booking Rejected",
-            after.guest_email || ""
+            booking.guest_email || ""
           );
 
           // PII redaction via redactEmail helper (see approval branch).

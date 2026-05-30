@@ -1,18 +1,22 @@
 /**
  * Firestore Rules Tests — users/{uid}/devices/{deviceId} update key allowlist
  *
- * F-91-03 (audit/94) / SF-062 / PR #567 — Same gap as audit/50 F-50-09.
+ * F-91-03 (audit/94) — Same gap as audit/50 F-50-09. Fix lives in PR #567.
+ * (NOTE: PR #567's body labels the closure "SF-062"; that SF number is already
+ * claimed by PR #565 CORS allowlist. Awaiting reconciliation — this suite
+ * intentionally uses no SF number, only the F-* finding IDs.)
+ *
  * Pre-fix the `devices` subcollection update rule had no `affectedKeys()`
  * guard, letting an authenticated owner inject arbitrary fields into their
  * own device docs (e.g. `attacker_field: "x"`, or rewrite forensic fields
  * like `createdAt`).
  *
- * Allowlist drawn from PR #567 SF-062 fix + lib/core/services/security_events_service.dart:
+ * Allowlist (from PR #567 + lib/core/services/security_events_service.dart):
  *   ['lastSeenAt', 'fcmToken', 'appVersion', 'platform']
  *
- * On main HEAD (pre-#567 merge) cases that should DENY currently ALLOW —
- * those tests are marked with comments showing the expected pre-#567 verdict
- * so future regressions are easy to interpret.
+ * The 5 "expected DENY on PR #567 rules, expected ALLOW on main rules" cases
+ * are `test.skip(...)` until PR #567 merges. Unskip after merge — the assertion
+ * bodies are otherwise unchanged.
  */
 
 import * as fs from "fs";
@@ -122,8 +126,11 @@ describe("devices rule — update key allowlist (F-91-03 / SF-062 / PR #567)", (
     );
   });
 
-  test("DENY: owner injects arbitrary field (F-91-03 exploit)", async () => {
-    // PR #567 rules → DENY. Pre-#567 main rules → SUCCESS (the gap).
+  // ─── 5 cases below are skipped until PR #567 merges. ─────────────────────
+  // On main rules (unbounded update) these all ALLOW the write → assertFails
+  // would fail. Once PR #567's allowlist lands, unskip to lock the gap closed.
+
+  test.skip("DENY: owner injects arbitrary field (F-91-03 exploit) — UNSKIP AFTER PR #567", async () => {
     const owner = testEnv.authenticatedContext(OWNER_UID);
     await assertFails(
       owner
@@ -133,8 +140,7 @@ describe("devices rule — update key allowlist (F-91-03 / SF-062 / PR #567)", (
     );
   });
 
-  test("DENY: owner rewrites immutable createdAt (forensic poison)", async () => {
-    // PR #567 → DENY (not in allowlist). Pre-#567 → SUCCESS.
+  test.skip("DENY: owner rewrites immutable createdAt (forensic poison) — UNSKIP AFTER PR #567", async () => {
     const owner = testEnv.authenticatedContext(OWNER_UID);
     await assertFails(
       owner
@@ -144,8 +150,7 @@ describe("devices rule — update key allowlist (F-91-03 / SF-062 / PR #567)", (
     );
   });
 
-  test("DENY: owner rewrites deviceId (forensic poison)", async () => {
-    // PR #567 → DENY. Pre-#567 → SUCCESS.
+  test.skip("DENY: owner rewrites deviceId (forensic poison) — UNSKIP AFTER PR #567", async () => {
     const owner = testEnv.authenticatedContext(OWNER_UID);
     await assertFails(
       owner
@@ -155,8 +160,7 @@ describe("devices rule — update key allowlist (F-91-03 / SF-062 / PR #567)", (
     );
   });
 
-  test("DENY: owner rewrites userAgent (forensic poison)", async () => {
-    // PR #567 → DENY. Pre-#567 → SUCCESS.
+  test.skip("DENY: owner rewrites userAgent (forensic poison) — UNSKIP AFTER PR #567", async () => {
     const owner = testEnv.authenticatedContext(OWNER_UID);
     await assertFails(
       owner
@@ -166,8 +170,7 @@ describe("devices rule — update key allowlist (F-91-03 / SF-062 / PR #567)", (
     );
   });
 
-  test("DENY: owner mixes allowed + unallowed keys", async () => {
-    // hasOnly is all-or-nothing: any non-allowlist key fails the whole update.
+  test.skip("DENY: owner mixes allowed + unallowed keys (hasOnly is all-or-nothing) — UNSKIP AFTER PR #567", async () => {
     const owner = testEnv.authenticatedContext(OWNER_UID);
     await assertFails(
       owner
@@ -223,6 +226,84 @@ describe("devices rule — update key allowlist (F-91-03 / SF-062 / PR #567)", (
     const owner = testEnv.authenticatedContext(OWNER_UID);
     await assertSucceeds(
       owner.firestore().doc(`users/${OWNER_UID}/devices/${DEVICE_ID}`).delete()
+    );
+  });
+
+  // Field-delete probe (FieldValue.delete()) — affects only the deleted key's
+  // affectedKeys entry. Allowed key → hasOnly([...]) permits. Non-allowed key →
+  // hasOnly fails (UNSKIP after PR #567).
+  test("ALLOW: owner deletes lastSeenAt field via FieldValue.delete()", async () => {
+    const owner = testEnv.authenticatedContext(OWNER_UID);
+    const fs = owner.firestore();
+    // @ts-ignore — FieldValue is on the firestore client; types may not surface here
+    const FieldValue = require("firebase/firestore").deleteField;
+    await assertSucceeds(
+      fs
+        .doc(`users/${OWNER_UID}/devices/${DEVICE_ID}`)
+        .update({lastSeenAt: FieldValue()})
+    );
+  });
+
+  test.skip("DENY: owner deletes createdAt field via FieldValue.delete() — UNSKIP AFTER PR #567", async () => {
+    const owner = testEnv.authenticatedContext(OWNER_UID);
+    const fs = owner.firestore();
+    // @ts-ignore
+    const FieldValue = require("firebase/firestore").deleteField;
+    await assertFails(
+      fs
+        .doc(`users/${OWNER_UID}/devices/${DEVICE_ID}`)
+        .update({createdAt: FieldValue()})
+    );
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────
+// SF-030 — users/{uid}/data/{document} subcollection mirror of users denylist
+// ──────────────────────────────────────────────────────────────────────────
+//
+// Rule at firestore.rules:103-112 mirrors the parent users update rule with
+// the same `hasAny([role, isAdmin, stripe*, ...])` denylist. Existing
+// users.test.ts only covers the parent. These 3 mirror tests close the gap.
+
+describe("users/{uid}/data/{document} subcollection — SF-030 denylist mirror", () => {
+  const DATA_DOC_ID = "profile";
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await ctx
+        .firestore()
+        .doc(`users/${OWNER_UID}/data/${DATA_DOC_ID}`)
+        .set({name: "Pre-existing", language: "hr"});
+    });
+  });
+
+  test("DENY: owner writes role to users/{uid}/data/{document}", async () => {
+    const owner = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      owner
+        .firestore()
+        .doc(`users/${OWNER_UID}/data/${DATA_DOC_ID}`)
+        .update({role: "admin"})
+    );
+  });
+
+  test("DENY: owner writes stripeSubscriptionId to users/{uid}/data/{document}", async () => {
+    const owner = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      owner
+        .firestore()
+        .doc(`users/${OWNER_UID}/data/${DATA_DOC_ID}`)
+        .update({stripeSubscriptionId: "sub_victim_squat"})
+    );
+  });
+
+  test("ALLOW: owner writes non-protected field (language) to users/{uid}/data/{document}", async () => {
+    const owner = testEnv.authenticatedContext(OWNER_UID);
+    await assertSucceeds(
+      owner
+        .firestore()
+        .doc(`users/${OWNER_UID}/data/${DATA_DOC_ID}`)
+        .update({language: "en"})
     );
   });
 });

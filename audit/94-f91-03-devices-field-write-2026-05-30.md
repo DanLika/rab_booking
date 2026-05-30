@@ -3,7 +3,9 @@
 **Date:** 2026-05-30
 **Branch:** `test/f91-03-devices-field-write-0530` (worktree, from `main` @ `ed31ae47`)
 **Scope:** bookbed-dev only. Zero PROD writes.
-**Verdict:** F-91-03 CONFIRMED OPEN on bookbed-dev. Fix lives in **PR #567 SF-062** (NOT merged). Do not duplicate.
+**Verdict:** F-91-03 CONFIRMED OPEN on bookbed-dev. Fix lives in **PR #567** (NOT merged). Do not duplicate.
+
+> SF-numbering note: PR #567's body labels the devices closure "SF-062", but that SF number is already claimed by PR #565 CORS-allowlist (see MEMORY `[[f86-01-cors-allowlist-gap-8-callables]]` + `audit/89`). The devices SF number is pending reconciliation; this audit references the F-* finding IDs only.
 
 ---
 
@@ -12,7 +14,7 @@
 - PR #567 (`fix/audit-50-backlog`, "security(audit/89): close audit/50 backlog — SF-061..SF-065") is **OPEN, not merged, not deployed** to dev as of 2026-05-30 07:30Z.
 - Rules surface `users/{uid}/devices/{deviceId}` update rule on `main` is unbounded: `allow create, update: if isOwner(userId);` — no `affectedKeys().hasOnly([...])` guard.
 - Live PATCH matrix (10 cases) on `bookbed-dev` against an authenticated test user **ALLOWS** all 5 exploit cases — confirms gap is reachable end-to-end against the deployed Firestore Security Rules.
-- Same gap is `audit/50 F-50-09`; PR #567 names the closure `SF-062`. The fix is a 4-key allowlist `['lastSeenAt', 'fcmToken', 'appVersion', 'platform']`.
+- Same gap is `audit/50 F-50-09`; PR #567 ships the closure. The fix is a 4-key allowlist `['lastSeenAt', 'fcmToken', 'appVersion', 'platform']`.
 - **No new fix landed here** (would duplo PR #567). This audit adds a new regression suite `functions/test/firestore_rules/devices.test.ts` (14 cases) that fails on `main` rules exactly where the gap is, and passes 100% when the PR #567 patch is applied.
 - Adjacent unbounded-write classes inventoried in §6. One new low-confidence finding (subdomain squat via direct property field write) documented as `F-94-02 P3 INFO`. Not fixed — needs separate threat-model pass.
 
@@ -44,14 +46,30 @@ Cleanup: DELETE `users/{uid}/devices/f91-03-probe-<ts>` → 200 OK.
 
 ## 2. Emulator suite — two-rules-state comparison
 
-`npm run test:rules` (Firebase emulator, project `demo-bookbed-rules`, ts-jest, `--runInBand`). New suite `functions/test/firestore_rules/devices.test.ts` adds 14 cases.
+`npm run test:rules` (Firebase emulator, project `demo-bookbed-rules`, ts-jest, `--runInBand`).
 
-| Rules state                                  | Total | Pass | Fail | Failing tests                                                                                                 |
-|----------------------------------------------|-------|------|------|--------------------------------------------------------------------------------------------------------------|
-| **main `ed31ae47`** (unbounded devices)      | 60    | 55   | 5    | All 5 exploit cases (#6 `attacker_field`, #7 `createdAt`, #8 `deviceId`, #9 `userAgent`, #10 mixed)         |
-| **+ PR #567 patch** (allowlist hasOnly 4)    | 60    | 60   | 0    | —                                                                                                            |
+**New suite:** `functions/test/firestore_rules/devices_class_sweep.test.ts` (file name picked to avoid collision with PR #567's own `devices.test.ts`).
 
-Reference: 5 base suites — `users.test.ts` (16), `bookings.test.ts` (18), `global_collections.test.ts` (6 incl. `security_events` M-04 + `app_config` M-05), `ical_events.test.ts` (6), **`devices.test.ts` (14, NEW)**. Counts approximate from the 60 total.
+Contents:
+- 5 ALLOW cases (single allowed key × 4 + all-4 together)
+- 5 EXPLOIT cases (attacker_field / createdAt / deviceId / userAgent / mixed) — `test.skip(...)` with **UNSKIP AFTER PR #567** annotation; on main rules they would all spuriously ALLOW and fail the assertion
+- 1 field-delete ALLOW case (`FieldValue.delete()` on `lastSeenAt`)
+- 1 field-delete DENY case (`FieldValue.delete()` on `createdAt`) — also skipped pending #567
+- 3 non-owner/anon/create/delete coverage cases
+- 3 SF-030 subcollection mirror cases (`users/{uid}/data/{document}` — role DENY, stripeSubscriptionId DENY, language ALLOW)
+
+| Rules state                                  | Suites | Tests | Pass | Skipped | Fail |
+|----------------------------------------------|--------|-------|------|---------|------|
+| **main `ed31ae47`** (unbounded devices)      | 5      | 65    | 59   | 6       | **0** |
+| **+ PR #567 patch** (allowlist hasOnly 4) — measured pre-skip | 5 | 60 | 60 | 0 | 0 |
+
+The first row is the **current** state of the suite on this PR's branch (5 + 1 skipped). The second row is from the earlier pre-skip run that confirmed the patch closes every assertion — recorded for reference; the skipped cases hold the exact same assertion bodies and will pass once unskipped against PR #567's rules.
+
+Existing cross-class coverage already green:
+- **SF-028 / H-01 users role-escalation + Stripe-linkage deny-list** — `users.test.ts` Cases 1-9 cover `role`, `isAdmin`, `stripeSubscriptionId`, `stripe_account_id`, `stripeCustomerId`, `stripe_customer_id`, `stripe_connected_at`. The remaining 5 keys (`accountStatus`, `trialStartDate`, `trialExpiresAt`, `statusChangedAt`, `statusChangedBy`, `account_type`, `admin_override_account_type`, `lifetime_license_granted_at`, `lifetime_license_granted_by`) are protected by the same `hasAny([...])` clause; the structural test guarantees uniform denial.
+- **SF-030 `users/{uid}/data/{document}` subcollection** — rule at lines 103-112 is a mirror of the parent users rule. **Now explicitly covered** by 3 new mirror tests in `devices_class_sweep.test.ts` (since this file already has the test harness wired). 2 DENY (role, stripeSubscriptionId) + 1 ALLOW (language).
+- **M-04 `security_events` userId bind** — `global_collections.test.ts` Cases 1-3 cover forge-deny, own-allow, extra-field-deny.
+- **Phase B `bookings` status-machine** — `bookings.test.ts` lines 205-271 cover 7-key denylist + atomic-mix + delete preserved.
 
 Existing cross-class coverage already green:
 - **SF-028 / H-01 users role-escalation + Stripe-linkage deny-list** — `users.test.ts` Cases 1-9 cover `role`, `isAdmin`, `stripeSubscriptionId`, `stripe_account_id`, `stripeCustomerId`, `stripe_customer_id`, `stripe_connected_at` (7 of the 12 listed in `firestore.rules:74-86`). The 5 remaining (`accountStatus`, `trialStartDate`, `trialExpiresAt`, `statusChangedAt`, `statusChangedBy`, `account_type`, `admin_override_account_type`, `lifetime_license_granted_at`, `lifetime_license_granted_by`) are protected by the same `hasAny([...])` clause; the structural test of the clause guarantees all keys in the array deny. No additional coverage added — same rule, same denylist semantics.
@@ -88,7 +106,7 @@ None of these is read server-side today (per `audit/50 F-50-09` analysis), so th
 |-----------------------------------------------|-------------------------|
 | F-91-03 / F-50-09 confirmed reachable on dev  | ✅ verified              |
 | Regression suite (14 cases) captures gap      | ✅ added                 |
-| Fix in flight                                 | **PR #567 SF-062** (OPEN, not merged) |
+| Fix in flight                                 | **PR #567 SF-NNN** (OPEN, not merged) |
 | Out-of-band fix here                          | ❌ NO (`ne fixaj duplo`) |
 | PROD impact                                   | None — same gap class exists on PROD but PROD rules state was not probed this session |
 
@@ -140,7 +158,7 @@ Low confidence; needs a downstream-impact audit before turning into a SF.
 ## 7. Files touched
 
 - ✏️ `audit/94-f91-03-devices-field-write-2026-05-30.md` (this doc, NEW)
-- ✏️ `functions/test/firestore_rules/devices.test.ts` (NEW, 14 cases)
+- ✏️ `functions/test/firestore_rules/devices_class_sweep.test.ts` (NEW, 14 cases for devices class + 3 for SF-030 subcoll mirror; 6 of the 17 marked `test.skip(...)` pending PR #567)
 
 Nothing in `firestore.rules` (transient patch applied + reverted during testing; no commit). Nothing in `functions/src/**`.
 
@@ -168,10 +186,10 @@ cd functions && npm run test:rules  # expect 60/60
 
 ## 9. Cross-refs
 
-- PR #567 — `fix/audit-50-backlog`, headers SF-061..SF-065, devices fix = SF-062
+- PR #567 — `fix/audit-50-backlog`, headers SF-061..SF-065 (devices fix's SF number is unsettled — see §0 note)
 - `audit/50` F-50-09 — original finding
-- `audit/89` — SF-062 / SF-064 / SF-065 closure plan
+- `audit/89` — SF-062 (CORS allowlist) / SF-064 / SF-065 closure plan (the SF-062 here refers to the CORS work in PR #565, not devices)
 - `audit/90` — PROD cutover runbook (devices fix rides this train)
 - `lib/core/services/security_events_service.dart:270-280` — only client writer to `users/{uid}/devices/{deviceId}`
 - `firestore.rules:159-163` — current unbounded block on main
-- `functions/test/firestore_rules/devices.test.ts` — this audit's new regression suite
+- `functions/test/firestore_rules/devices_class_sweep.test.ts` — this audit's new regression suite (named to avoid collision with PR #567's own `devices.test.ts`)

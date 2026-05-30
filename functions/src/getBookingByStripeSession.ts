@@ -1,9 +1,8 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {db} from "./firebase";
+import {db, admin} from "./firebase";
 import {logInfo, logError, logWarn} from "./logger";
 import {setUser} from "./sentry";
 import {safeToDate, calculateBookingNights} from "./utils/dateValidation";
-import {admin} from "./firebase";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
 

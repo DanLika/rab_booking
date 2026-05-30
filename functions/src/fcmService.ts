@@ -404,9 +404,9 @@ export async function sendTrialExpiringPushNotification(
   daysRemaining: number
 ): Promise<boolean> {
   const dayText = daysRemaining === 1 ? "dan" : "dana";
-  const urgency = daysRemaining === 1
-    ? "ističe sutra"
-    : `ističe za ${daysRemaining} ${dayText}`;
+  const urgency = daysRemaining === 1 ?
+    "ističe sutra" :
+    `ističe za ${daysRemaining} ${dayText}`;
 
   return sendPushNotification({
     userId,

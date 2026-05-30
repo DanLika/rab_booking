@@ -4,59 +4,83 @@ service firebase.storage {
   match /b/{bucket}/o {
     // User-specific files (profile images, unit images, etc.)
     // Path: users/{userId}/...
+    //
+    // SF-091 (2026-05-30): split `allow write` → `create, update` + `delete`.
+    // `request.resource` is null on DELETE, so the old combined rule with
+    // `request.resource.size < ...` + `.contentType.matches(...)` evaluates
+    // those clauses against null and silently denies every legit owner DELETE
+    // (F-91-02). Size/content-type gates only make sense for inbound bytes.
     match /users/{userId}/{allPaths=**} {
-      // Users can read their own files
       allow read: if request.auth != null && request.auth.uid == userId;
-      
-      // Users can write their own files with size and type restrictions
-      // SEC-002: File validation - max 10MB, images only
-      allow write: if request.auth != null 
+
+      // SEC-002: File validation — max 10MB, images only.
+      allow create, update: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.size < 10 * 1024 * 1024  // 10MB max
-        && request.resource.contentType.matches('image/(jpeg|png|webp|gif|heic|heif)');  // Images only
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|gif|heic|heif)');
+
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
     // Property images (public read for widget display)
     // Path: properties/{propertyId}/...
+    //
+    // SF-091 (2026-05-30): three issues collapsed into one rewrite.
+    //   1) The Firestore lookup must use `firestore.get(...)` — plain `get()`
+    //      is Firestore-rules-only and silently evaluates to null in Storage
+    //      rules (the deploy compiler emits `[W] Invalid function name: get`
+    //      but still releases). Pre-fix `get(...)` → ownership check always
+    //      false → every owner write to `properties/**` was silently denied
+    //      since SEC-001 landed (Jan 7, 2026). Hidden because clients
+    //      actually upload property images to `users/{uid}/properties/{pid}/`
+    //      via `lib/core/services/storage_service.dart:135` and only fall
+    //      back to `properties/...` paths in legacy/admin flows.
+    //   2) `$(database)` is unbound in Storage rules — must be literal
+    //      `(default)` per Firebase docs.
+    //   3) DELETE was bundled with write+size+contentType gates that
+    //      evaluate against null `request.resource` → silent DELETE deny
+    //      across all rule blocks (F-91-02). Split into `create, update` +
+    //      `delete`.
     match /properties/{propertyId}/{allPaths=**} {
-      // Anyone can read (for public widget display)
       allow read: if true;
-      // SEC-001: Write allowed ONLY by property owner (IDOR fix)
-      // SEC-002: File validation - max 10MB, images only
-      allow write: if request.auth != null
-        && get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid
+
+      // SEC-001: ownership enforced via Firestore lookup. SEC-002: size + type.
+      allow create, update: if request.auth != null
+        && firestore.get(/databases/(default)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid
         && request.resource.size < 10 * 1024 * 1024
         && request.resource.contentType.matches('image/(jpeg|png|webp|gif|heic|heif)');
+
+      allow delete: if request.auth != null
+        && firestore.get(/databases/(default)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
     }
 
-    // iCal exports — SF-025 LOCKED 2026-05-22
+    // iCal exports — SF-025 LOCKED 2026-05-22, SF-091 rewrite 2026-05-30
     // Path: ical-exports/{propertyId}/{unitId}/calendar.ics
     //
-    // Pre-fix: `allow read: if true` + a deterministic path (propertyId +
-    // unitId, both harvestable from public-read Firestore properties + units
-    // collections) let any anonymous caller GET the .ics file directly,
-    // bypassing the Storage download-token. The .ics SUMMARY field is
-    // `Booking: <guest_name>` (ical_generator.dart) — full guest-name
-    // enumeration across every property.
+    // SF-025: anonymous GET path-guess against this deterministic path used
+    // to leak guest names from the .ics SUMMARY field. Rule-mediated reads
+    // now require auth + ownership; owner-held tokenized download URLs
+    // (`getDownloadURL()`) still work because download tokens bypass rules.
     //
-    // Now: rule-mediated reads require auth + property ownership. Owner-held
-    // tokenized URLs (returned by `getDownloadURL()`, used by external
-    // calendar subscribers like Booking.com / Airbnb) keep working because
-    // download tokens bypass rules by design.
+    // SF-091 (2026-05-30): same triple as `properties/**` block above —
+    // `get` → `firestore.get`, `$(database)` → `(default)`, write → split
+    // into create/update + delete. Owner write/delete/read-via-SDK to this
+    // path were all silently denied since SF-025 landed; failures hidden by
+    // `ical_export_service.dart:131-137` `autoRegenerateIfEnabled()` catch
+    // (only surface = stale .ics feeds, never a user-visible error).
     //
-    // Path-guess attack now denied: anonymous GETs of
-    // `/v0/b/.../o/ical-exports%2F.../calendar.ics?alt=media` (no token)
-    // return 401 instead of leaking guest names.
-    //
-    // 5 MiB cap on writes — a calendar.ics for the busiest unit is < 200 KB
-    // (one VEVENT per booking, ~250 bytes). 5 MiB is an order-of-magnitude
-    // safety bound that still cuts off pathological abuse.
+    // 5 MiB cap kept — a real calendar.ics is < 200 KB (one VEVENT per
+    // booking, ~250 bytes); 5 MiB is an order-of-magnitude safety bound.
     match /ical-exports/{propertyId}/{unitId}/{allPaths=**} {
-      allow read: if request.auth != null &&
-        get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
-      allow write: if request.auth != null
-        && get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid
+      allow read: if request.auth != null
+        && firestore.get(/databases/(default)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
+
+      allow create, update: if request.auth != null
+        && firestore.get(/databases/(default)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid
         && request.resource.size < 5 * 1024 * 1024;
+
+      allow delete: if request.auth != null
+        && firestore.get(/databases/(default)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
     }
 
     // Public assets (logos, default images, etc.)

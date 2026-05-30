@@ -400,6 +400,36 @@ export const biweeklySummary = onSchedule(
         count: ownersSnapshot.size,
       });
 
+      // Batch fetch all relevant bookings to avoid N+1 queries
+      const chunkSize = 30;
+      const ownerIds = ownersSnapshot.docs.map((doc) => doc.id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const bookingsByOwner = new Map<string, any[]>();
+
+      const fetchPromises = [];
+      for (let i = 0; i < ownerIds.length; i += chunkSize) {
+        const chunk = ownerIds.slice(i, i + chunkSize);
+        fetchPromises.push(
+          db
+            .collectionGroup("bookings")
+            .where("owner_id", "in", chunk)
+            .where("created_at", ">=", startTs)
+            .get()
+        );
+      }
+
+      const chunksSnapshots = await Promise.all(fetchPromises);
+      for (const snapshot of chunksSnapshots) {
+        for (const doc of snapshot.docs) {
+          const booking = doc.data();
+          const ownerId = booking.owner_id;
+          if (!bookingsByOwner.has(ownerId)) {
+            bookingsByOwner.set(ownerId, []);
+          }
+          bookingsByOwner.get(ownerId)!.push(booking);
+        }
+      }
+
       let sentCount = 0;
       let errorCount = 0;
 
@@ -407,21 +437,19 @@ export const biweeklySummary = onSchedule(
         const ownerId = ownerDoc.id;
 
         try {
-          // Get bookings created in the last 15 days for this owner
-          const bookingsSnapshot = await db
-            .collectionGroup("bookings")
-            .where("owner_id", "==", ownerId)
-            .where("created_at", ">=", startTs)
-            .limit(100)
-            .get();
+          const ownerBookings = bookingsByOwner.get(ownerId) || [];
 
-          const bookingsCount = bookingsSnapshot.size;
+          // Cap at 100 to match old behaviour, all within date range fetched
+          const recentBookings = ownerBookings.slice(0, 100);
+          const bookingsCount = recentBookings.length;
 
           // Calculate revenue from confirmed/completed bookings
           let totalRevenue = 0;
-          bookingsSnapshot.docs.forEach((doc) => {
-            const booking = doc.data();
-            if (booking.status === "confirmed" || booking.status === "completed") {
+          recentBookings.forEach((booking) => {
+            if (
+              booking.status === "confirmed" ||
+              booking.status === "completed"
+            ) {
               totalRevenue += booking.total_price || 0;
             }
           });
@@ -436,10 +464,12 @@ export const biweeklySummary = onSchedule(
             currency: "EUR",
           }).format(totalRevenue);
 
+          const pluralHr = getBookingPluralHr(bookingsCount);
           await sendPushNotification({
             userId: ownerId,
             title: "Vaš dvotjedni pregled 📊",
-            body: `Zadnjih 15 dana: ${bookingsCount} ${getBookingPluralHr(bookingsCount)}, ${formattedRevenue} prihoda.`,
+            body: `Zadnjih 15 dana: ${bookingsCount} ${pluralHr}, ` +
+                  `${formattedRevenue} prihoda.`,
             category: "payments",
             data: {
               action: "biweekly_summary",

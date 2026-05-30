@@ -88,6 +88,7 @@ export const checkInTomorrowReminder = onSchedule(
 
       let sentCount = 0;
       let errorCount = 0;
+      const batch = db.batch();
 
       for (const doc of bookingsSnapshot.docs) {
         const booking = doc.data();
@@ -121,8 +122,8 @@ export const checkInTomorrowReminder = onSchedule(
             },
           });
 
-          // Mark as sent to prevent duplicates
-          await doc.ref.update({
+          // Mark as sent in batch to prevent duplicates
+          batch.update(doc.ref, {
             checkInReminderSent: true,
           });
 
@@ -134,6 +135,10 @@ export const checkInTomorrowReminder = onSchedule(
           });
           errorCount++;
         }
+      }
+
+      if (sentCount > 0) {
+        await batch.commit();
       }
 
       logSuccess("[Check-in Reminder] Completed", {
@@ -195,6 +200,7 @@ export const checkOutTodayReminder = onSchedule(
 
       let sentCount = 0;
       let errorCount = 0;
+      const batch = db.batch();
 
       for (const doc of bookingsSnapshot.docs) {
         const booking = doc.data();
@@ -228,8 +234,8 @@ export const checkOutTodayReminder = onSchedule(
             },
           });
 
-          // Mark as sent to prevent duplicates
-          await doc.ref.update({
+          // Mark as sent in batch to prevent duplicates
+          batch.update(doc.ref, {
             checkOutReminderSent: true,
           });
 
@@ -241,6 +247,10 @@ export const checkOutTodayReminder = onSchedule(
           });
           errorCount++;
         }
+      }
+
+      if (sentCount > 0) {
+        await batch.commit();
       }
 
       logSuccess("[Check-out Reminder] Completed", {

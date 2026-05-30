@@ -1,12 +1,12 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {db} from "./firebase";
+import {db, admin} from "./firebase";
 import {logInfo, logError, logWarn} from "./logger";
 import {verifyAccessToken} from "./bookingAccessToken";
 import {setUser} from "./sentry";
 import {safeToDate, calculateBookingNights} from "./utils/dateValidation";
-import {admin} from "./firebase";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Cloud Function: Verify Booking Access
@@ -17,7 +17,7 @@ import {checkRateLimit} from "./utils/rateLimit";
  *
  * Returns sanitized booking details if verification succeeds.
  */
-export const verifyBookingAccess = onCall(async (request) => {
+export const verifyBookingAccess = onCall({cors: getCorsAllowlist()}, async (request) => {
   // SECURITY: IP-based rate limiting to prevent brute-force (30 requests per hour per IP)
   const clientIp = getClientIp(request);
   const ipHash = hashIp(clientIp);

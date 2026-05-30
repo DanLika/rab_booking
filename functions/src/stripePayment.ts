@@ -141,7 +141,7 @@ export const createStripeCheckoutSession = onCall({
   secrets: [stripeSecretKey, "RESEND_API_KEY"],
   cors: getCorsAllowlist(),
   // SF-046: App Check audit-only — see availability.ts for full context.
-  enforceAppCheck: false,
+  enforceAppCheck: true,
   consumeAppCheckToken: true,
 }, async (request) => {
   // ========================================================================

@@ -80,14 +80,31 @@ export async function findBookingById(
 
     const allUnits = await Promise.all(unitsPromises);
 
-    // Step 2: Build list of all booking paths to check
+    // Step 2: Build list of all booking paths to check.
+    //
+    // Canonical path: properties/{propId}/bookings/{bookingId} — what
+    // atomicBooking writes today. Legacy path: properties/{propId}/units/{unitId}/bookings/{bookingId}
+    // — older units-nested layout still present in dev. Without the canonical
+    // entry the lookup silently fails for guest cancel (audit/93 F-93-02).
     const bookingChecks: Array<{
       propId: string;
-      unitId: string;
+      unitId: string | null;
       bookingRef: FirebaseFirestore.DocumentReference;
     }> = [];
 
     for (const {propDoc, unitsSnapshot} of allUnits) {
+      // Canonical property-level subcollection (unitId resolved from doc).
+      bookingChecks.push({
+        propId: propDoc.id,
+        unitId: null,
+        bookingRef: db
+          .collection("properties")
+          .doc(propDoc.id)
+          .collection("bookings")
+          .doc(bookingId),
+      });
+
+      // Legacy units-nested subcollection.
       for (const unitDoc of unitsSnapshot.docs) {
         bookingChecks.push({
           propId: propDoc.id,
@@ -126,7 +143,7 @@ export async function findBookingById(
           doc: bookingDoc,
           data,
           propertyId: propId,
-          unitId: unitId,
+          unitId: unitId ?? data.unit_id,
         };
       }
     }

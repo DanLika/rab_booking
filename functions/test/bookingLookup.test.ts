@@ -63,6 +63,29 @@ jest.mock("firebase-admin", () => {
         return {
           doc: (propId: string) => ({
             collection: (sub: string) => {
+              if (sub === "bookings") {
+                // audit/93 F-93-02 — canonical property-level booking subcollection.
+                return {
+                  doc: (bookingId: string) => ({
+                    get: async () => {
+                      const key = `properties/${propId}/bookings/${bookingId}`;
+                      const found = fixtures.bookingsByPath[key];
+                      if (found) {
+                        return {
+                          exists: true,
+                          data: () => found.data(),
+                          ref: {path: key},
+                        };
+                      }
+                      return {
+                        exists: false,
+                        data: () => undefined,
+                        ref: {path: key},
+                      };
+                    },
+                  }),
+                };
+              }
               if (sub === "units") {
                 return {
                   get: async () => ({docs: fixtures.unitsByProperty[propId] || []}),
@@ -201,6 +224,21 @@ describe("findBookingById", () => {
     expect(r).not.toBeNull();
     expect(r!.propertyId).toBe("p-1");
     expect(r!.unitId).toBe("u-1");
+  });
+
+  it("Strategy 2: parallel search finds booking at canonical properties/<p>/bookings/<id> (audit/93 F-93-02)", async () => {
+    fixtures.properties = [doc("p-2", {})];
+    fixtures.unitsByProperty["p-2"] = [doc("u-2", {})];
+    // Canonical path — what atomicBooking writes today.
+    fixtures.bookingsByPath["properties/p-2/bookings/canon-1"] = doc(
+      "canon-1",
+      {check_in: "2026-09-01", property_id: "p-2", unit_id: "u-canon-from-doc"}
+    );
+    const r = await findBookingById("canon-1"); // no ownerId — guest cancel sim
+    expect(r).not.toBeNull();
+    expect(r!.propertyId).toBe("p-2");
+    // unitId falls back to data.unit_id when path doesn't include it.
+    expect(r!.unitId).toBe("u-canon-from-doc");
   });
 
   it("Strategy 3: legacy top-level collection fallback", async () => {

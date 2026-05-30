@@ -278,6 +278,108 @@ describe("iCal Export Endpoint", () => {
     expect(content).toContain("SUMMARY:Reserved"); // GDPR check
   });
 
+  // ---------------------------------------------------------------------------
+  // F-92-01 / SF-063: empty-token bypass regression
+  // ---------------------------------------------------------------------------
+  // verifyIcalToken("", "") used to return true via
+  // crypto.timingSafeEqual(Buffer.from(""), Buffer.from("")). Closed by
+  // fail-CLOSED guard at top of verifyIcalToken. These tests pin the behaviour
+  // for: (a) URL forms that strip to empty token, and (b) the legit-feed path
+  // remains intact.
+  // ---------------------------------------------------------------------------
+
+  it("F-92-01: rejects empty token via /{pid}/{uid}/.ics strip even when stored token empty", async () => {
+    // Matches the live bookbed-dev SEED state: widget_secrets.ical_export_token
+    // missing (PR #482 migration wrote _plaintext/_hash, read-side reads bare
+    // ical_export_token), legacy widget_settings.ical_export_token also missing.
+    // Both sides empty → MUST return 403, never 200.
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        ical_export_enabled: true,
+        // No ical_export_token in widget_settings (legacy migrated out)
+      }),
+    });
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        // No ical_export_token in widget_secrets (suffixed by migration)
+        ical_export_token_plaintext: "a".repeat(64),
+        ical_export_token_hash: "b".repeat(64),
+      }),
+    });
+
+    req.path = "/prop-123/unit-123/.ics"; // pathParts[2]=".ics" → strip → ""
+
+    await getUnitIcalFeed(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.send).toHaveBeenCalledWith("Invalid token");
+  });
+
+  it("F-92-01: rejects empty token via case-insensitive .ICS strip", async () => {
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ ical_export_enabled: true }),
+    });
+    mockDb.get.mockResolvedValueOnce({ exists: false });
+
+    req.path = "/prop-123/unit-123/.ICS"; // /i flag strips .ICS too
+
+    await getUnitIcalFeed(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+  });
+
+  it("F-92-01: rejects when supplied token non-empty but stored token empty (config gap)", async () => {
+    // Defence-in-depth: if storedToken collapses to "" via the dual-read
+    // fallback (e.g. both widget_settings.ical_export_token AND
+    // widget_secrets.ical_export_token absent), even a non-empty supplied
+    // token must NOT succeed. Closes the inverse half of the bypass.
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        ical_export_enabled: true,
+        // legacy token blanked / never set
+      }),
+    });
+    mockDb.get.mockResolvedValueOnce({ exists: false });
+
+    req.path = "/prop-123/unit-123/anything-non-empty";
+
+    await getUnitIcalFeed(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+  });
+
+  it("F-92-01: legit feed with matching token still 200 (no regression)", async () => {
+    // Regression guard — fix MUST NOT break working setups.
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({
+        ical_export_enabled: true,
+        ical_export_token: "legit-token-32-hex-xxxxxxxxxxxxxx",
+      }),
+      ref: { update: jest.fn() },
+    });
+    mockDb.get.mockResolvedValueOnce({ exists: false });
+    mockDb.get.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ name: "Test Unit" }),
+    });
+    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] }); // bookings
+    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] }); // blocked_days
+    mockDb.get.mockResolvedValueOnce({ size: 0, docs: [] }); // ical_events
+
+    req.path = "/prop-123/unit-123/legit-token-32-hex-xxxxxxxxxxxxxx";
+
+    await getUnitIcalFeed(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const content = res.send.mock.calls[0][0];
+    expect(content).toContain("BEGIN:VCALENDAR");
+  });
+
   it("should filter events when ?exclude= is used", async () => {
     req.query.exclude = "airbnb";
 

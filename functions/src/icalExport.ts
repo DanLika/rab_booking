@@ -27,10 +27,23 @@ const ICAL_CONFIG = {
 /**
  * Verify iCal export token using timing-safe comparison
  * SECURITY: Prevents timing attacks when comparing tokens
+ *
+ * Fail-CLOSED on empty token on either side (F-92-01 / SF-063):
+ *   crypto.timingSafeEqual(Buffer.from(""), Buffer.from("")) returns true.
+ *   Without this guard, a request like /{pid}/{uid}/.ics (third segment ".ics"
+ *   strips to "") matched against an empty storedToken (legacy migrated out,
+ *   widget_secrets read-side key mismatched) would yield true → 200 with full
+ *   feed. Reject empty on EITHER side regardless of pad-equalisation.
  */
 function verifyIcalToken(providedToken: string, storedToken: string): boolean {
   // Ensure both are strings and have reasonable length
   if (typeof providedToken !== "string" || typeof storedToken !== "string") {
+    return false;
+  }
+
+  // F-92-01: empty-token bypass — fail-CLOSED before timing-safe compare.
+  // No legitimate token is zero-length; treat empty either side as config gap.
+  if (providedToken.length === 0 || storedToken.length === 0) {
     return false;
   }
 

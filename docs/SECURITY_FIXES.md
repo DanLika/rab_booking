@@ -80,6 +80,35 @@ permanently. Branches drafted in parallel that picked the same number must
 rebase. To avoid future collisions, branches that want to reserve a new
 SF should add their row to this table on creation, not on merge.
 
+### audit/N file name collisions (2026-05-30)
+
+Same parallel-session class produced multiple `audit/N-*.md` files for
+the same audit number. Files are NOT renumbered (rename = git history
+breakage + cross-link churn risk); this table maps the collisions for
+future readers + tooling so a query like "what is audit/86?" resolves
+unambiguously by filename suffix, not number alone.
+
+| audit/N | Files (suffix-distinct) | Topic |
+|----|----|----|
+| audit/86 | `86-android-sf-smoke-0529.md` | Android SF smoke 2026-05-29 |
+| audit/86 | `86-data-integrity-edge-2026-05-30.md` | Data-integrity edge sweep (PR #579) |
+| audit/86 | `86-f94-direct-write.md` | F-94 direct-write findings (PR #578) |
+| audit/86 | `86-ios-smoke-2026-05-29.md` | iOS SF smoke 2026-05-29 |
+| audit/86 | `86-orphan-sweep.md` | CF / branch orphan sweep |
+| audit/87 | `87-f95-low-bundle.md` | F-95 LOW + platform_connections dead-code (PR #580) |
+| audit/87 | `87-secret-sanity.md` | Secret sanity audit |
+| audit/91 | `91-cf-smoke-auth.md` | Auth/security CF smoke (PR #569) |
+| audit/91 | `91-data-layer-smoke.md` | Data-layer rules + index smoke (PR #570) |
+| audit/91 | `91-f91-02-storage-delete.md` | F-91-02 storage DELETE (PR #575, SF-067) |
+| audit/91 | `91-flutter-7b-ical-noise.md` | FLUTTER-7B iCal noise (PR #568, SF-066) |
+| audit/92 | `92-cf-smoke-ical-email-2026-05-30.md` | iCal + email + notif + lifecycle CF smoke |
+| audit/92 | `92-cf-smoke-payment-2026-05-30.md` | Payment + booking CF smoke (PR #572, F-93 fixes) |
+| audit/92 | `92-f92-01-ical-token.md` | F-92-01 iCal empty-token bypass (PR #574, SF-063) |
+
+Going forward, claim the next `audit/N` index by adding a placeholder
+row to this table (or `CLAUDE.md ## Dodatni dokumenti`) at branch
+creation, not at PR open — same authority rule as SF reservation above.
+
 ---
 
 ## SF-001: Owner ID Validation in Booking Creation

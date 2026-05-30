@@ -513,26 +513,37 @@ export const monthlyRevenueReport = onSchedule(
       let sentCount = 0;
       let errorCount = 0;
 
+      // Optimize: Fetch all bookings for the month in a single query (1 Query instead of N+1)
+      const allBookingsSnapshot = await db
+        .collectionGroup("bookings")
+        .where("check_in", ">=", startTs)
+        .where("check_in", "<=", endTs)
+        .get();
+
+      // Group bookings by owner in memory
+      const bookingsByOwner: Record<string, any[]> = {};
+      allBookingsSnapshot.docs.forEach((doc) => {
+        const booking = doc.data();
+        if (booking.owner_id) {
+          if (!bookingsByOwner[booking.owner_id]) {
+            bookingsByOwner[booking.owner_id] = [];
+          }
+          bookingsByOwner[booking.owner_id].push(booking);
+        }
+      });
+
       for (const ownerDoc of ownersSnapshot.docs) {
         const ownerId = ownerDoc.id;
 
         try {
-          // Get bookings for previous month (by check_in date for accurate reporting)
-          const bookingsSnapshot = await db
-            .collectionGroup("bookings")
-            .where("owner_id", "==", ownerId)
-            .where("check_in", ">=", startTs)
-            .where("check_in", "<=", endTs)
-            .limit(500)
-            .get();
+          const ownerBookings = bookingsByOwner[ownerId] || [];
 
           // Calculate stats
           let totalRevenue = 0;
           let confirmedCount = 0;
           let cancelledCount = 0;
 
-          bookingsSnapshot.docs.forEach((doc) => {
-            const booking = doc.data();
+          ownerBookings.forEach((booking) => {
             if (booking.status === "confirmed" || booking.status === "completed") {
               totalRevenue += booking.total_price || 0;
               confirmedCount++;

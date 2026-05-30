@@ -9,6 +9,7 @@ import {admin} from "./firebase";
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
 import {setUser, captureMessage} from "./sentry";
 import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * F-NEW-05: SSRF defence for owner-supplied iCal URLs.
@@ -403,7 +404,7 @@ export const scheduledIcalSync = onSchedule(
  * Callable function to sync a specific iCal feed immediately
  * Called from Owner Dashboard when user clicks "Sync Now"
  */
-export const syncIcalFeedNow = onCall(async (request) => {
+export const syncIcalFeedNow = onCall({cors: getCorsAllowlist()}, async (request) => {
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");

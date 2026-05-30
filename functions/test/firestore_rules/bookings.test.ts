@@ -272,4 +272,64 @@ describe("bookings rule (T11c closed)", () => {
     const ctx = testEnv.authenticatedContext(OWNER_UID);
     await assertSucceeds(ctx.firestore().doc(BOOKING_PATH).delete());
   });
+
+  // ---- F-99-01 (audit/100): CF-managed scalar deny extends Phase B coverage ----
+
+  test("F-99-01 — owner update of payment_intent_id DENIED (Stripe webhook lookup key)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({payment_intent_id: "pi_test_other"}),
+    );
+  });
+
+  test("F-99-01 — owner update of emails_sent DENIED (CF idempotency marker)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({
+        emails_sent: {initial_trigger_processed: true},
+      }),
+    );
+  });
+
+  test("F-99-01 — owner update of booking_reference DENIED (guest lookup capability)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({booking_reference: "BK-FORGED"}),
+    );
+  });
+
+  test("F-99-01 — owner update of owner_id DENIED (cross-owner detach)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({owner_id: FOREIGN_UID}),
+    );
+  });
+
+  test("F-99-01 — owner update of created_at DENIED (audit-trail tamper)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({created_at: new Date("2020-01-01")}),
+    );
+  });
+
+  test("F-99-01 — owner update of source DENIED", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({source: "imported"}),
+    );
+  });
+
+  test("F-99-01 — owner update of provider_id DENIED", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertFails(
+      ctx.firestore().doc(BOOKING_PATH).update({provider_id: "airbnb"}),
+    );
+  });
+
+  test("F-99-01 — owner update of internal_notes still ALLOWED (deny-list narrow)", async () => {
+    const ctx = testEnv.authenticatedContext(OWNER_UID);
+    await assertSucceeds(
+      ctx.firestore().doc(BOOKING_PATH).update({internal_notes: "follow-up email sent"}),
+    );
+  });
 });

@@ -9,6 +9,7 @@ import {
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
 import {getClientIp, hashIp} from "./utils/ipUtils";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Helper to convert Firestore Timestamp or Date to Date object
@@ -39,7 +40,7 @@ function toDate(value: any): Date {
  * Rate limited to prevent abuse: 3 requests per booking per hour.
  */
 export const resendGuestBookingEmail = onCall(
-  {secrets: ["RESEND_API_KEY"]},
+  {secrets: ["RESEND_API_KEY"], cors: getCorsAllowlist()},
   async (request) => {
     const {bookingReference, guestEmail} = request.data;
 

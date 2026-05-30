@@ -6,6 +6,7 @@ import {enforceRateLimit} from "./utils/rateLimit";
 import {db} from "./firebase";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Callable Cloud Function: Send custom email to guest
@@ -17,7 +18,7 @@ import {setUser} from "./sentry";
  * - Rate limiting: 10 emails per minute per user
  * - Input validation and length limits
  */
-export const sendCustomEmailToGuest = onCall({secrets: ["RESEND_API_KEY"]}, async (request) => {
+export const sendCustomEmailToGuest = onCall({secrets: ["RESEND_API_KEY"], cors: getCorsAllowlist()}, async (request) => {
   // Verify authentication
   if (!request.auth) {
     throw new HttpsError(

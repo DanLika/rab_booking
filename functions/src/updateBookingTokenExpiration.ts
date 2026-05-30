@@ -5,6 +5,7 @@ import {calculateTokenExpiration} from "./bookingAccessToken";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Cloud Function: Update Booking Token Expiration
@@ -16,7 +17,7 @@ import {checkRateLimit} from "./utils/rateLimit";
  * SECURITY: Only updates token expiration, does not regenerate the token itself.
  * The token hash remains the same, only expiration date changes.
  */
-export const updateBookingTokenExpiration = onCall(async (request) => {
+export const updateBookingTokenExpiration = onCall({cors: getCorsAllowlist()}, async (request) => {
   // F-NEW-06: require auth. Pre-fix the CF was anonymous + had no ownership
   // check, allowing booking-ID enumeration via 404/200 oracle and token
   // re-arming when an owner moves check_out forward.

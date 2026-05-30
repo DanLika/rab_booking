@@ -4034,9 +4034,6 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
         );
       }
       return false;
-
-      // Alternative: Allow booking if check fails (better UX, less safe)
-      // return true; // Fallback: Allow booking if check fails
     }
   }
 

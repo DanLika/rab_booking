@@ -88,6 +88,7 @@ export const checkInTomorrowReminder = onSchedule(
 
       let sentCount = 0;
       let errorCount = 0;
+      const updatePromises: Promise<any>[] = [];
 
       for (const doc of bookingsSnapshot.docs) {
         const booking = doc.data();
@@ -122,9 +123,15 @@ export const checkInTomorrowReminder = onSchedule(
           });
 
           // Mark as sent to prevent duplicates
-          await doc.ref.update({
-            checkInReminderSent: true,
-          });
+          updatePromises.push(
+            doc.ref.update({
+              checkInReminderSent: true,
+            }).catch((error) => {
+              logError("[Check-in Reminder] Failed to update document", error, {
+                bookingId: doc.id,
+              });
+            })
+          );
 
           sentCount++;
         } catch (error) {
@@ -135,6 +142,8 @@ export const checkInTomorrowReminder = onSchedule(
           errorCount++;
         }
       }
+
+      await Promise.all(updatePromises);
 
       logSuccess("[Check-in Reminder] Completed", {
         sent: sentCount,
@@ -195,6 +204,7 @@ export const checkOutTodayReminder = onSchedule(
 
       let sentCount = 0;
       let errorCount = 0;
+      const updatePromises: Promise<any>[] = [];
 
       for (const doc of bookingsSnapshot.docs) {
         const booking = doc.data();
@@ -229,9 +239,15 @@ export const checkOutTodayReminder = onSchedule(
           });
 
           // Mark as sent to prevent duplicates
-          await doc.ref.update({
-            checkOutReminderSent: true,
-          });
+          updatePromises.push(
+            doc.ref.update({
+              checkOutReminderSent: true,
+            }).catch((error) => {
+              logError("[Check-out Reminder] Failed to update document", error, {
+                bookingId: doc.id,
+              });
+            })
+          );
 
           sentCount++;
         } catch (error) {
@@ -242,6 +258,8 @@ export const checkOutTodayReminder = onSchedule(
           errorCount++;
         }
       }
+
+      await Promise.all(updatePromises);
 
       logSuccess("[Check-out Reminder] Completed", {
         sent: sentCount,
@@ -302,6 +320,7 @@ export const pendingPaymentReminder = onSchedule(
 
       let sentCount = 0;
       let errorCount = 0;
+      const updatePromises: Promise<any>[] = [];
 
       for (const doc of bookingsSnapshot.docs) {
         const booking = doc.data();
@@ -333,10 +352,16 @@ export const pendingPaymentReminder = onSchedule(
           });
 
           // Mark reminder as sent
-          await doc.ref.update({
-            paymentReminderSent: true,
-            paymentReminderSentAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
+          updatePromises.push(
+            doc.ref.update({
+              paymentReminderSent: true,
+              paymentReminderSentAt: admin.firestore.FieldValue.serverTimestamp(),
+            }).catch((error) => {
+              logError("[Payment Reminder] Failed to update document", error, {
+                bookingId: doc.id,
+              });
+            })
+          );
 
           sentCount++;
         } catch (error) {
@@ -347,6 +372,8 @@ export const pendingPaymentReminder = onSchedule(
           errorCount++;
         }
       }
+
+      await Promise.all(updatePromises);
 
       logSuccess("[Payment Reminder] Completed", {
         sent: sentCount,

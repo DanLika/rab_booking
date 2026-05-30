@@ -663,14 +663,17 @@
       }
 
       // Detect old browser (ES6 support check)
+      // SF-NEW (audit/50 F-50-10): drop eval() to keep CSP free of 'unsafe-eval'
+      // for the script-src list. Native feature probes cover the same surface.
       function isModernBrowser() {
-        try {
-          // Check for ES6 features
-          eval('class Test {}; let x = () => {}; const y = `test`;');
-          return true;
-        } catch (e) {
-          return false;
-        }
+        return (
+          typeof Symbol === 'function' &&
+          typeof Promise === 'function' &&
+          typeof Map === 'function' &&
+          typeof Set === 'function' &&
+          typeof Proxy === 'function' &&
+          typeof Reflect === 'object'
+        );
       }
 
       // Choose renderer based on browser capabilities

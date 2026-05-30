@@ -1,2 +1,0 @@
-functions/src/utils/rateLimit.ts:272: * console.log(`Calls remaining: ${status.remaining}`);
-functions/src/email/templates/email-verification.ts:120:    console.log(`[EmailVerification] Resend email sent, ID: ${typedResult.data.id}`);

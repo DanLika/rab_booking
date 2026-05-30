@@ -156,9 +156,18 @@ service cloud.firestore {
       }
 
       // Devices subcollection - user device tracking for session management
+      // SF-NEW (audit/50 F-50-09): updates restricted to mutable telemetry keys
+      // observed in lib/core/services/security_events_service.dart trackDevice()
+      // (lastSeenAt + fcmToken on every call; platform stable but rewritten via
+      // set(merge:true); appVersion forward-compat). Immutable forensics fields
+      // (deviceId, createdAt, userAgent) cannot change once written.
       match /devices/{deviceId} {
         allow read: if isOwner(userId);
-        allow create, update: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'lastSeenAt', 'fcmToken', 'appVersion', 'platform'
+          ]);
         allow delete: if isOwner(userId);
       }
     }

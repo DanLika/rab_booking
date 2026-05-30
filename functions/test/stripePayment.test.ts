@@ -230,6 +230,95 @@ describe("Stripe Payment Functions", () => {
       );
     });
 
+    // F-93-01 (SF-073): localhost / 127.0.0.1 must NEVER be allowed in PROD.
+    // Pre-fix `getAllowedReturnDomains` returned localhost unconditionally — an
+    // operator-network exfil vector. Regression locks the prod branch.
+    it("F-93-01 (SF-073): rejects http://localhost returnUrl in PROD env", async () => {
+      const origGcp = process.env.GCP_PROJECT;
+      const origGcloud = process.env.GCLOUD_PROJECT;
+      const origEmu = process.env.FUNCTIONS_EMULATOR;
+      // PROD env = no GCP_PROJECT / no GCLOUD_PROJECT / no emulator flag.
+      delete process.env.GCP_PROJECT;
+      delete process.env.GCLOUD_PROJECT;
+      delete process.env.FUNCTIONS_EMULATOR;
+      try {
+        const wrapped = wrap(createStripeCheckoutSession);
+        await expect(
+          wrapped({
+            data: {
+              bookingData: validBookingData,
+              returnUrl: "http://localhost:3000/checkout-done",
+            },
+          })
+        ).rejects.toThrow(
+          new HttpsError(
+            "invalid-argument",
+            "Invalid return URL. Please try again from the booking page."
+          )
+        );
+        // Also reject the literal-IP form.
+        await expect(
+          wrapped({
+            data: {
+              bookingData: validBookingData,
+              returnUrl: "http://127.0.0.1:3000/checkout-done",
+            },
+          })
+        ).rejects.toThrow(
+          new HttpsError(
+            "invalid-argument",
+            "Invalid return URL. Please try again from the booking page."
+          )
+        );
+      } finally {
+        if (origGcp === undefined) delete process.env.GCP_PROJECT;
+        else process.env.GCP_PROJECT = origGcp;
+        if (origGcloud === undefined) delete process.env.GCLOUD_PROJECT;
+        else process.env.GCLOUD_PROJECT = origGcloud;
+        if (origEmu === undefined) delete process.env.FUNCTIONS_EMULATOR;
+        else process.env.FUNCTIONS_EMULATOR = origEmu;
+      }
+    });
+
+    // F-93-01 sibling: under the emulator the same localhost URL IS allowed,
+    // so devs still get a working checkout. Mocks Firestore + Stripe so the
+    // call advances past the URL gate.
+    it("F-93-01 (SF-073): allows http://localhost returnUrl under emulator", async () => {
+      const origEmu = process.env.FUNCTIONS_EMULATOR;
+      process.env.FUNCTIONS_EMULATOR = "true";
+      try {
+        mockDb.collection().doc().get
+          .mockResolvedValueOnce(mockPropertyDoc)
+          .mockResolvedValueOnce(mockUnitDoc)
+          .mockResolvedValueOnce(mockOwnerDoc);
+        mockStripe.accounts.retrieve.mockResolvedValue(mockStripeAccount);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mockDb.runTransaction.mockImplementation(async (callback: any) => {
+          const transaction = {
+            get: jest.fn().mockResolvedValue({ docs: [] }),
+            set: jest.fn(),
+          };
+          return await callback(transaction);
+        });
+        mockStripe.checkout.sessions.create.mockResolvedValue({
+          id: "sess_local",
+          url: "https://checkout.stripe.com/pay/sess_local",
+        });
+        const wrapped = wrap(createStripeCheckoutSession);
+        const result = await wrapped({
+          data: {
+            bookingData: validBookingData,
+            returnUrl: "http://localhost:5001/widget/done",
+          },
+          auth: { uid: "dev-user" },
+        });
+        expect(result.success).toBe(true);
+      } finally {
+        if (origEmu === undefined) delete process.env.FUNCTIONS_EMULATOR;
+        else process.env.FUNCTIONS_EMULATOR = origEmu;
+      }
+    });
+
     it("should throw an error if rate limit is exceeded", async () => {
       const { checkRateLimit } = require("../src/utils/rateLimit");
       checkRateLimit.mockReturnValue(false);
@@ -372,12 +461,14 @@ describe("Stripe Payment Functions", () => {
         .mockResolvedValueOnce(mockOwnerDoc);          // owner doc for email
 
       const req = {
+        method: "POST",
         headers: { "stripe-signature": "valid-sig" },
         rawBody: "raw-body",
       };
       const res = {
         status: jest.fn().mockReturnThis(),
         send: jest.fn(),
+        set: jest.fn(),
         json: jest.fn(),
       };
 
@@ -417,12 +508,14 @@ describe("Stripe Payment Functions", () => {
       mockDb.collection().doc().get.mockResolvedValue(alreadyConfirmedBooking);
 
        const req = {
+        method: "POST",
         headers: { "stripe-signature": "valid-sig" },
         rawBody: "raw-body",
       };
       const res = {
         status: jest.fn().mockReturnThis(),
         send: jest.fn(),
+        set: jest.fn(),
         json: jest.fn(),
       };
 
@@ -447,6 +540,7 @@ describe("Stripe Payment Functions", () => {
       });
 
       const req = {
+        method: "POST",
         headers: { "stripe-signature": "invalid-sig" },
         rawBody: "raw-body",
       };
@@ -459,6 +553,61 @@ describe("Stripe Payment Functions", () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.send).toHaveBeenCalledWith("Webhook signature verification failed");
+    });
+
+    // F-93-03 (SF-071): Stripe webhooks must reject non-POST methods with 405.
+    // Pre-fix the endpoint accepted GET (and PUT / DELETE) and let them fall
+    // into the "missing signature" 400 path — wrong status code and noisy logs.
+    it.each(["GET", "PUT", "PATCH", "DELETE", "OPTIONS"])(
+      "F-93-03 (SF-071): rejects %s with 405 Method Not Allowed",
+      async (method) => {
+        const req = {
+          method,
+          headers: {},
+          rawBody: undefined,
+        };
+        const res = {
+          status: jest.fn().mockReturnThis(),
+          send: jest.fn(),
+          set: jest.fn(),
+          json: jest.fn(),
+        };
+        await handleStripeWebhook(req as any, res as any);
+        expect(res.set).toHaveBeenCalledWith("Allow", "POST");
+        expect(res.status).toHaveBeenCalledWith(405);
+        expect(res.send).toHaveBeenCalledWith("Method Not Allowed");
+        // Must NOT touch Stripe at all on non-POST.
+        expect(mockStripe.webhooks.constructEvent).not.toHaveBeenCalled();
+      }
+    );
+
+    // F-93-04 (SF-072): malformed JSON payload (after signature passes)
+    // must surface as 400 "Invalid JSON payload" — not bubble out as 500.
+    it("F-93-04 (SF-072): returns 400 invalid-argument on malformed JSON body", async () => {
+      mockStripe.webhooks.constructEvent.mockImplementation(() => {
+        // Simulate stripe-node's `JSON.parse(payload)` after HMAC compare passes.
+        throw new SyntaxError("Unexpected token } in JSON at position 7");
+      });
+
+      const req = {
+        method: "POST",
+        headers: { "stripe-signature": "valid-sig" },
+        rawBody: "{ invalid }",
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+        json: jest.fn(),
+      };
+      await handleStripeWebhook(req as any, res as any);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith("Invalid JSON payload");
+      // Must NOT fire the signature-failure security alert.
+      const { logError } = require("../src/logger");
+      expect(logError).not.toHaveBeenCalledWith(
+        "Webhook signature verification failed",
+        expect.anything()
+      );
     });
 
   });

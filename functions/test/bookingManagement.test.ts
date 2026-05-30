@@ -147,6 +147,80 @@ describe("Booking Management Functions", () => {
         "created"
       );
     });
+
+    // audit/34 §5 — per-trigger idempotency marker for retry storms.
+    it("should write emails_sent.initial_trigger_processed marker so redelivery short-circuits", async () => {
+      // Arrange
+      const bookingData = {
+        property_id: "prop-456",
+        unit_id: "unit-456",
+        guest_name: "Jane Doe",
+        guest_email: "jane@example.com",
+        payment_method: "bank_transfer",
+        require_owner_approval: true,
+      };
+      const snapshot = test.firestore.makeDocumentSnapshot(
+        bookingData,
+        "properties/prop-456/units/unit-456/bookings/booking-456"
+      );
+      const mockUpdate = jest.fn().mockResolvedValue(true);
+      Object.defineProperty(snapshot.ref, "update", { value: mockUpdate });
+      const wrapped = test.wrap(onBookingCreated);
+
+      // Act
+      await wrapped({
+        data: snapshot,
+        params: { propertyId: "prop-456", unitId: "unit-456", bookingId: "booking-456" },
+      });
+
+      // Assert — marker written under emails_sent.initial_trigger_processed
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          "emails_sent.initial_trigger_processed": expect.objectContaining({
+            email: "jane@example.com",
+            booking_id: "booking-456",
+            provider_id: null,
+          }),
+        })
+      );
+    });
+
+    // Retry storm prevention — second delivery short-circuits when marker present.
+    it("should skip processing when emails_sent.initial_trigger_processed already set", async () => {
+      // Arrange — booking already has the marker (mid-retry state)
+      const bookingData = {
+        property_id: "prop-789",
+        unit_id: "unit-789",
+        guest_name: "Already Processed",
+        payment_method: "bank_transfer",
+        require_owner_approval: true,
+        emails_sent: {
+          initial_trigger_processed: {
+            sent_at: "mock-timestamp",
+            email: "x@example.com",
+            booking_id: "booking-789",
+            provider_id: null,
+          },
+        },
+      };
+      const snapshot = test.firestore.makeDocumentSnapshot(
+        bookingData,
+        "properties/prop-789/units/unit-789/bookings/booking-789"
+      );
+      const wrapped = test.wrap(onBookingCreated);
+
+      const { createBookingNotification } = require("../src/notificationService");
+      createBookingNotification.mockClear();
+
+      // Act
+      await wrapped({
+        data: snapshot,
+        params: { propertyId: "prop-789", unitId: "unit-789", bookingId: "booking-789" },
+      });
+
+      // Assert — no notification created on retry (short-circuit)
+      expect(createBookingNotification).not.toHaveBeenCalled();
+    });
   });
 
   describe("onBookingStatusChange", () => {
@@ -232,6 +306,106 @@ describe("Booking Management Functions", () => {
         "Test Property",
         "Not available"
       );
+    });
+
+    // FLUTTER-7E regression: refless rejection → auto-heal + email sends.
+    it("should auto-heal missing booking_reference on rejection and still send email", async () => {
+      // Arrange — SEED-style booking written without booking_reference
+      // (mirrors audit/67 F-67-01 fixture path that triggered FLUTTER-7E).
+      const beforeData = { status: "pending", property_id: "prop-x" };
+      const afterData = {
+        status: "cancelled",
+        rejection_reason: "F-67-01 smoke reject",
+        property_id: "prop-x",
+        guest_email: "guest@example.com",
+        // NOTE: no booking_reference
+      };
+
+      mockDb.collection().doc().get.mockResolvedValue({
+        exists: true,
+        data: () => ({ name: "Test Property" }),
+      });
+
+      const beforeSnapshot = test.firestore.makeDocumentSnapshot(
+        beforeData, "properties/prop-x/units/unit-x/bookings/3kG0vFHcc71k73Ykx3Mg"
+      );
+      const afterSnapshot = test.firestore.makeDocumentSnapshot(
+        afterData, "properties/prop-x/units/unit-x/bookings/3kG0vFHcc71k73Ykx3Mg"
+      );
+
+      const mockUpdate = jest.fn().mockResolvedValue(true);
+      Object.defineProperty(afterSnapshot.ref, "update", { value: mockUpdate });
+
+      const wrapped = test.wrap(onBookingStatusChange);
+
+      // Act
+      await wrapped({
+        data: test.makeChange(beforeSnapshot, afterSnapshot),
+        params: { propertyId: "prop-x", unitId: "unit-x", bookingId: "3kG0vFHcc71k73Ykx3Mg" }
+      });
+
+      // Assert — auto-heal persisted + email called with healed ref (not empty)
+      const expectedRef = "BK-3KG0VFHCC71K";
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ booking_reference: expectedRef })
+      );
+      const { sendBookingRejectedEmail } = require("../src/emailService");
+      expect(sendBookingRejectedEmail).toHaveBeenCalledWith(
+        "guest@example.com",
+        "Guest",
+        expectedRef,
+        "Test Property",
+        "F-67-01 smoke reject"
+      );
+    });
+
+    // FLUTTER-7E sibling: refless approval → auto-heal + email sends.
+    it("should auto-heal missing booking_reference on approval and still send email", async () => {
+      // Arrange
+      const beforeData = { status: "pending", property_id: "prop-y" };
+      const afterData = {
+        status: "confirmed",
+        approved_at: new Date(),
+        property_id: "prop-y",
+        guest_email: "guest@example.com",
+        check_in: new Date(),
+        check_out: new Date(),
+        // NOTE: no booking_reference
+      };
+
+      mockDb.collection().doc().get.mockResolvedValue({
+        exists: true,
+        data: () => ({ name: "Test Property" }),
+      });
+
+      const beforeSnapshot = test.firestore.makeDocumentSnapshot(
+        beforeData, "properties/prop-y/units/unit-y/bookings/abcdEFgh1234"
+      );
+      const afterSnapshot = test.firestore.makeDocumentSnapshot(
+        afterData, "properties/prop-y/units/unit-y/bookings/abcdEFgh1234"
+      );
+
+      const mockUpdate = jest.fn().mockResolvedValue(true);
+      Object.defineProperty(afterSnapshot.ref, "update", { value: mockUpdate });
+
+      const wrapped = test.wrap(onBookingStatusChange);
+
+      // Act
+      await wrapped({
+        data: test.makeChange(beforeSnapshot, afterSnapshot),
+        params: { propertyId: "prop-y", unitId: "unit-y", bookingId: "abcdEFgh1234" }
+      });
+
+      // Assert
+      const expectedRef = "BK-ABCDEFGH1234";
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ booking_reference: expectedRef })
+      );
+      const { sendBookingApprovedEmail } = require("../src/emailService");
+      expect(sendBookingApprovedEmail).toHaveBeenCalled();
+      const callArgs = sendBookingApprovedEmail.mock.calls[0];
+      // 3rd positional arg is booking_reference
+      expect(callArgs[2]).toBe(expectedRef);
     });
   });
 });

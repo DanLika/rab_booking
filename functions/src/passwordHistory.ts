@@ -104,15 +104,19 @@ export const checkPasswordHistory = onCall(
 
     // Check if password was recently used
     // SECURITY: Must compare against each hash since bcrypt includes random salt
-    for (const storedHash of history) {
-      const isMatch = await comparePassword(password, storedHash);
-      if (isMatch) {
-        logWarn("[PasswordHistory] Password reuse attempt", {userId});
-        throw new HttpsError(
-          "failed-precondition",
-          "You cannot reuse a recently used password. Please choose a different password."
-        );
-      }
+    const matchPromises = history.map((storedHash) =>
+      comparePassword(password, storedHash)
+    );
+    const matchResults = await Promise.all(matchPromises);
+    const hasMatch = matchResults.some((isMatch) => isMatch);
+
+    if (hasMatch) {
+      logWarn("[PasswordHistory] Password reuse attempt", {userId});
+      throw new HttpsError(
+        "failed-precondition",
+        "You cannot reuse a recently used password. " +
+        "Please choose a different password."
+      );
     }
 
     logInfo("[PasswordHistory] Password check passed", {userId});

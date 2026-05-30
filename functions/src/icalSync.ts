@@ -264,6 +264,7 @@ async function validateIcalUrl(url: string): Promise<IcalUrlValidation> {
 export const scheduledIcalSync = onSchedule(
   {
     schedule: "every 15 minutes",
+    timeZone: "Europe/Zagreb",
     timeoutSeconds: 540, // 9 minutes (max for scheduled functions)
     memory: "512MiB",
     region: "europe-west1",

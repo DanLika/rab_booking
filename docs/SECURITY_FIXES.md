@@ -4028,3 +4028,70 @@ Placed after the `typeof !== "string"` guard, before the pad+`timingSafeEqual` b
 - Rotate `widget_secrets.ical_export_token` on SEED units once PR #482 read-side merges (or repopulate legacy `widget_settings.ical_export_token`)
 
 **Cross-ref:** memory `[[ical-export-empty-token-bypass]]`, `[[widget-secrets-exfil-deploy-prereqs]]`, `[[pr482-j-smoke-2026-05-26]]`, audit/90 §1 (PROD `ICAL_TOKEN_PEPPER` gap blocks PR #482).
+## SF-067: Storage rules — DELETE deny + Firestore-lookup silent no-op (F-91-02 + bonus SEC-001 / SF-025 closure)
+
+**Status:** ✅ FIXED on bookbed-dev 2026-05-30 (rules deploy + IAM grant). PROD GATED on operator IAM step (§4 of audit).
+**Severity:** P1 (owner DELETE on `users/**` was silent-deny since SEC-002 contentType gate added) + HIGH bonus (SEC-001 `properties/**` write silent-no-op since Jan 7, 2026, and SF-025 `ical-exports/**` write/read silent-no-op since 2026-05-22).
+**Audit:** [audit/91-f91-02-storage-delete.md](../audit/91-f91-02-storage-delete.md)
+**Branch / PR:** `test/f91-02-storage-delete-0530`
+
+### Findings
+
+**F-91-02 (P1) — silent owner DELETE deny on all three protected blocks.**
+
+Original `allow write` clauses bundled size + contentType validation:
+
+```
+allow write: if request.auth != null
+  && request.auth.uid == userId
+  && request.resource.size < 10 * 1024 * 1024
+  && request.resource.contentType.matches('image/(jpeg|png|webp|gif|heic|heif)');
+```
+
+On DELETE, `request.resource` is null → `null.size < N` evaluates false → DELETE silently denied. Confirmed empirically on bookbed-dev (DELETE returns 403 with `Permission denied.`). Affects:
+
+- `lib/core/services/storage_service.dart:118` `deleteProfileImage` — error swallowed → profile pic delete UI is no-op
+- `lib/core/services/ical_export_service.dart:151` `deleteIcalFile` — wrapped in `autoRegenerateIfEnabled` catch (line 131-137) → stale .ics on the auto-regen path
+- `lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart:346` `deletePropertyImage` — rethrows; reachability uncertain (§7 of audit)
+
+**Bonus — SEC-001 (Jan 7, 2026) + SF-025 (May 22, 2026) Firestore cross-product lookup never worked.**
+
+Both blocks use:
+
+```
+get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid
+```
+
+Two errors:
+- `get(...)` is Firestore-rules-only — Storage rules require `firestore.get(...)`. Pre-fix compile emitted `[W] Invalid function name: get.` but still released → call evaluates to null.
+- `$(database)` is unbound in Storage rules. Per Firebase docs use literal `(default)`.
+
+Net: owner write/delete to `properties/**` and `ical-exports/**` (and read via SDK for ical) silently denied for 5 months / 8 days respectively. Not user-visible because the production property-image upload path actually writes to `users/{uid}/properties/{pid}/{fname}` (hits `users/**` rule), and the iCal-export `autoRegenerateIfEnabled` catch downgrades the failure to a log line. CF-side iCal regeneration in `functions/src/icalSync.ts` is admin-SDK and bypasses rules.
+
+### Fix (storage.rules)
+
+1. Split `allow write` → `allow create, update` + `allow delete` in all 3 blocks. Size + content-type gates apply only to `create, update`.
+2. `get(...)` → `firestore.get(...)`.
+3. `$(database)` → `(default)`.
+
+`request.method` is Firestore-only and NOT exposed in Storage rules — granular `allow delete:` is the canonical separator.
+
+### IAM (operator step — load-bearing)
+
+`firestore.get()` from Storage rules executes as the Firebase Storage service agent. Grant `roles/datastore.viewer` (minimal scope) on the project:
+
+```bash
+gcloud projects add-iam-policy-binding {PROJECT_ID} \
+  --member="serviceAccount:service-{PROJECT_NUMBER}@gcp-sa-firebasestorage.iam.gserviceaccount.com" \
+  --role="roles/datastore.viewer" \
+  --condition=None
+```
+
+- bookbed-dev (project number `733027606474`): ✅ granted 2026-05-30.
+- rab-booking-248fc (PROD): **operator must grant before deploying these rules** — otherwise `properties/**` + `ical-exports/**` continue to silently deny AND `users/**` DELETE silently denies (F-91-02 regression re-introduced via the bundled IAM dep).
+
+Cross-ref [audit/90](../audit/90-prod-cutover-runbook.md) operator blockers list.
+
+### Verification (17/17 PASS on bookbed-dev)
+
+See audit/91 §5. Smoke matrix covers all 3 paths × {owner upload, owner delete, owner get for ical} × {valid file, SVG, 5+ MiB oversize} + IDOR by throwaway UID + anon. All allow/deny outcomes per spec.

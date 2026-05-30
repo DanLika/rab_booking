@@ -4249,3 +4249,40 @@ Without opt-in, the referrer fallback handles the common case.
 **Files modified:** `functions/src/icalSync.ts` (+ helper + 3 catch sites), `functions/test/icalSync.test.ts` (+2 tests). No `lib/` / iOS / Android / hosting / rules changes.
 
 **Cross-refs:** PR #514 (FLUTTER-7C sibling — `autoSelectFamily` array-form lookup), F-67-05 PR `50753cf5` (HttpsError-conversion path), `.claude/rules/cloud-functions.md` (`Sentry.init` `beforeSend` HttpsError client-fault filter).
+
+---
+
+## SF-076: Property create subdomain squat — route through CF (F-94-02-CREATE)
+
+**Datum**: 2026-05-30
+**Prioritet**: Medium
+**Status**: ✅ Riješeno (lib-only, no rules/CF edit)
+**Audit**: [`audit/96-f94-02-create-fix.md`](../audit/96-f94-02-create-fix.md)
+**Cross-ref**: F-94-02-CREATE (audit/86 §7); F-94-02-UPDATE / F-94-03 / F-94-04 already closed via PR #578 (SF-074)
+**Zahvaćeni fajlovi**: `lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart`
+
+### Problem
+
+`createProperty()` u lib repo-u embedirao `subdomain` direktno u inicijalni Firestore `add({...})`. Firestore rule format-validira polje ali ne provjerava ni reserved-list (npr. `admin`, `api`, `widget`) ni uniqueness — ti checkovi žive samo u `functions/src/subdomainService.ts`. Maliciozni vlasnik može direktno preko Firestore SDK / REST surface-a (zaobilazeći UI-jev debounced `checkSubdomainAvailability`) napisati property doc s format-valid ali well-known subdomenom (`marriott`, `airbnb`, `booking-com`, …) i squatovati je. UPDATE path je bio zatvoren ranije kroz `affectedKeys` rule deny u PR #578, ali rule ne može blokirati subdomain field na *inicijalnom* doc create-u bez razbijanja flow-a; jedini ispravan put je rutiranje kroz već postojeći `setPropertySubdomain` CF.
+
+### Fix
+
+Lib refactor, 2-phase atomic reserve + best-effort rollback:
+
+1. `createProperty()` izostavlja `subdomain` iz inicijalnog `add({...})` write-a.
+2. Ako caller proslijedi `subdomain != null && !isEmpty`, repo poziva `setPropertySubdomain` CF (`{propertyId: docRef.id, subdomain: normalized}`).
+3. Na CF failure (uniqueness miss, reserved, invalid format, network) repo izvodi best-effort `docRef.delete()` rollback i baca `PropertyException(code: 'property/subdomain-reserve-failed', originalError: cfError)`.
+4. `updateProperty()` više ne piše `subdomain` field direktno — param je preserved za source-compat s postojećim UI callsite-om koji već rutira kroz CF, ali tiho ignoriran. Komentar u kodu upućuje na `setPropertySubdomain` kao kanonsku stazu.
+
+### Verifikacija
+
+- `flutter analyze lib/features/owner_dashboard/data/firebase/firebase_owner_properties_repository.dart` → 0 issues
+- `flutter analyze lib/features/owner_dashboard` → 0 issues (nakon `flutter pub get` + `dart run build_runner build --delete-conflicting-outputs` u fresh worktree-u; vidi `.claude/rules/build-runner.md`)
+- `flutter test test/shared/models/property_model_subdomain_test.dart test/shared/models/property_model_test.dart` → 47/47 passed
+- UI flow u `property_form_screen.dart` već gate-ovao submit preko `_isSubdomainAvailable`, ovaj fix samo zatvara backend bypass
+
+### Parallel findings (out of scope, tracked u audit/96)
+
+- F-96-01: `lib/shared/repositories/firebase/firebase_property_repository.dart` — dead provider, ista vuln klasa, 0 lib callera. Delete ili refactor pri sljedećoj prilici.
+- F-96-02: `setPropertySubdomain` CF TOCTOU race između `isSubdomainTaken` query i `update` poziva. Manja eksponiranost vs pre-fix lib direct-write (CF i dalje rejects reserved-list + ownership-checks). Zatvoriti tx-om ili rule-level uniqueness checkom.
+- Backfill: postojeće squatovane subdomene na PROD/dev nisu retroaktivno otkrivene — operativni follow-up via skripta koja cross-checkira `properties.subdomain` protiv reserved-liste + duplikata.

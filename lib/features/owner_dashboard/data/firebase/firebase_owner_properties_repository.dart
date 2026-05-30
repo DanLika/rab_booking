@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
@@ -188,11 +189,16 @@ class FirebaseOwnerPropertiesRepository {
       // to avoid race condition where immediate read returns null timestamps
       final now = Timestamp.now();
 
+      // F-94-02-CREATE: `subdomain` is intentionally NOT written here. The
+      // initial doc create runs under owner-write rules that format-validate
+      // the field but do not check the reserved-list or uniqueness — letting
+      // any format-valid string be squatted (e.g. "marriott", "airbnb").
+      // Reservation is delegated to `setPropertySubdomain` below, which is
+      // the only path that enforces the full validation pipeline.
       final docRef = await _firestore.collection('properties').add({
         'owner_id': ownerId,
         'name': name,
         'slug': slug,
-        'subdomain': subdomain,
         'description': description,
         'property_type': propertyType,
         'location': location,
@@ -210,9 +216,43 @@ class FirebaseOwnerPropertiesRepository {
         'updated_at': now,
       });
 
+      // Reserve subdomain via Cloud Function if caller supplied one. The CF
+      // enforces auth, ownership, format, reserved-list, and uniqueness.
+      // On failure, attempt a best-effort rollback so we don't leak an
+      // orphan property without the subdomain the caller requested.
+      final normalizedSubdomain = subdomain?.trim().toLowerCase();
+      if (normalizedSubdomain != null && normalizedSubdomain.isNotEmpty) {
+        try {
+          final callable = FirebaseFunctions.instance.httpsCallable(
+            'setPropertySubdomain',
+          );
+          await callable
+              .call<Map<String, dynamic>>({
+                'propertyId': docRef.id,
+                'subdomain': normalizedSubdomain,
+              })
+              .withCloudFunctionTimeout('setPropertySubdomain');
+        } catch (cfError) {
+          try {
+            await docRef.delete();
+          } catch (rollbackError) {
+            await LoggingService.logError(
+              'createProperty subdomain reserve failed; orphan rollback also failed',
+              rollbackError,
+            );
+          }
+          throw PropertyException(
+            'Failed to reserve subdomain',
+            code: 'property/subdomain-reserve-failed',
+            originalError: cfError,
+          );
+        }
+      }
+
       final doc = await docRef.get();
       return PropertyModel.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
+      if (e is PropertyException) rethrow;
       throw PropertyException.creationFailed(e);
     }
   }
@@ -239,7 +279,14 @@ class FirebaseOwnerPropertiesRepository {
       final updates = <String, dynamic>{};
       if (name != null) updates['name'] = name;
       if (slug != null) updates['slug'] = slug;
-      if (subdomain != null) updates['subdomain'] = subdomain;
+      // F-94-02-CREATE companion: `subdomain` is intentionally NOT written
+      // here. The only path that should mutate this field is the
+      // `setPropertySubdomain` Cloud Function (enforces reserved-list +
+      // uniqueness). The UI in property_form_screen.dart already routes
+      // through the CF and passes `subdomain: null` when changed; the
+      // unchanged path used to re-write the existing value (no-op under the
+      // affectedKeys rule but redundant). Param is kept for source-compat
+      // with existing callers and silently ignored.
       if (description != null) updates['description'] = description;
       if (propertyType != null) updates['property_type'] = propertyType;
       if (location != null) updates['location'] = location;

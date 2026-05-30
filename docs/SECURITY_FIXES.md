@@ -3988,3 +3988,43 @@ Mirrors the existing `corsAllowlist.ts` `LOCAL_DEV_ORIGINS` convention (added in
 2. Emulator branch: `process.env.FUNCTIONS_EMULATOR = "true"`, same localhost URL — call advances past gate and returns `{success: true}`.
 
 **Cross-ref:** F-93-01; bundled with [SF-071](#sf-071-handlestripewebhook-post-only-method-gate-405) and [SF-072](#sf-072-malformed-json-payload--400-not-500).
+## SF-063: `getUnitIcalFeed` empty-token bypass — F-92-01
+
+**Status:** ✅ FIXED (branch `test/f92-01-ical-token-deep-0530`, PR pending) — NOT DEPLOYED
+**Severity:** MEDIUM (defence-in-depth gap; no PII exfiltrated — dates + unit name + booking IDs only)
+**Audit:** `audit/92-f92-01-ical-token.md`
+**Reserved gap:** SF-062 held for audit/89 PR #565 (`getCorsAllowlist()` 8-callable wiring)
+
+**Bug:** `verifyIcalToken("", "")` returns **true** because `crypto.timingSafeEqual(Buffer.from("", "utf8"), Buffer.from("", "utf8"))` is `true` (two zero-length buffers are byte-equal). `getUnitIcalFeed` (`functions/src/icalExport.ts`) strips `.ics` suffix from the third path segment with `/\.ics$/i`, so a URL `.../getUnitIcalFeed/{pid}/{uid}/.ics` (third segment literally `.ics`) collapses to empty token. Combined with empty stored-token (PR #482 widget_secrets migration moved tokens to `_plaintext`/`_hash` suffixed fields that `main` does not read → fall-through to legacy `widget_settings.ical_export_token` which was blanked during migration → `tokenToCompare = ""`), the request returns **HTTP 200 + full RFC 5545 feed**.
+
+**Affected URL forms (all → 200 OK on `bookbed-dev` SEED units pre-fix):**
+- `/{pid}/{uid}/.ics`
+- `/{pid}/{uid}/.ICS` (case-insensitive regex)
+- `/{pid}/{uid}/%2eics` (Express URL-decodes `%2e`→`.` before path-split)
+- `HEAD /{pid}/{uid}/.ics` (200, body empty per HEAD, cache headers + CT leak still)
+
+**Affected env:** bookbed-dev only. PROD verified non-vulnerable (legacy `widget_settings.ical_export_token` still populated; PR #482 migration not yet run on PROD).
+
+**Fix (5 lines in `verifyIcalToken`):**
+```ts
+// F-92-01: empty-token bypass — fail-CLOSED before timing-safe compare.
+// No legitimate token is zero-length; treat empty either side as config gap.
+if (providedToken.length === 0 || storedToken.length === 0) {
+  return false;
+}
+```
+
+Placed after the `typeof !== "string"` guard, before the pad+`timingSafeEqual` block. Pepper/hash logic untouched; PR #482 read-side wiring can proceed independently.
+
+**Verification:**
+- 16/16 `icalExport.test.ts` (12 pre-existing + 4 new F-92-01 regression — empty `.ics`, `.ICS` case, config-gap inverse, legit-feed no-regression)
+- 391/391 functions jest total
+- 0 TypeScript errors
+- Live re-probe pending post-deploy (NOT in scope of this PR)
+
+**Operator follow-up (post-merge):**
+- `tool/deploy-dev.sh` to land fix on `bookbed-dev`
+- Re-run `audit/smoke/f92-01-probe.js` schema check (expected: 2/2 still VULNERABLE pre-token-reset; HTTP-level vector closed)
+- Rotate `widget_secrets.ical_export_token` on SEED units once PR #482 read-side merges (or repopulate legacy `widget_settings.ical_export_token`)
+
+**Cross-ref:** memory `[[ical-export-empty-token-bypass]]`, `[[widget-secrets-exfil-deploy-prereqs]]`, `[[pr482-j-smoke-2026-05-26]]`, audit/90 §1 (PROD `ICAL_TOKEN_PEPPER` gap blocks PR #482).

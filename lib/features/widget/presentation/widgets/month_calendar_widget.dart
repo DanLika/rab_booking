@@ -25,11 +25,18 @@ class MonthCalendarWidget extends ConsumerStatefulWidget {
   final String unitId;
   final Function(DateTime? start, DateTime? end)? onRangeSelected;
 
+  /// Month to focus on at first mount and when this value changes. Used to
+  /// restore the calendar view to the cached check-in month after a page
+  /// reload — without it the grid stays pinned to today while the summary
+  /// card already shows the restored Jun 03–07 selection.
+  final DateTime? focusedDate;
+
   const MonthCalendarWidget({
     super.key,
     required this.propertyId,
     required this.unitId,
     this.onRangeSelected,
+    this.focusedDate,
   });
 
   @override
@@ -40,13 +47,35 @@ class MonthCalendarWidget extends ConsumerStatefulWidget {
 class _MonthCalendarWidgetState extends ConsumerState<MonthCalendarWidget> {
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
-  DateTime _currentMonth = DateTime.utc(
-    DateTime.now().toUtc().year,
-    DateTime.now().toUtc().month,
-  );
+  late DateTime _currentMonth;
   DateTime? _hoveredDate; // For hover tooltip (desktop)
   Offset _mousePosition = Offset.zero; // Track mouse position for tooltip
   bool _isValidating = false; // Prevent concurrent date range validations
+
+  @override
+  void initState() {
+    super.initState();
+    _currentMonth = _truncateToMonth(
+      widget.focusedDate ?? DateTime.now().toUtc(),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant MonthCalendarWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newFocus = widget.focusedDate;
+    if (newFocus != null && newFocus != oldWidget.focusedDate) {
+      final target = _truncateToMonth(newFocus);
+      if (target != _currentMonth) {
+        setState(() => _currentMonth = target);
+      }
+    }
+  }
+
+  static DateTime _truncateToMonth(DateTime d) {
+    final u = d.toUtc();
+    return DateTime.utc(u.year, u.month);
+  }
 
   @override
   Widget build(BuildContext context) {

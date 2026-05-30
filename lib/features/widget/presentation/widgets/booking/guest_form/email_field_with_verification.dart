@@ -70,7 +70,6 @@ class EmailFieldWithVerification extends ConsumerWidget {
         prefixIcon: Icon(Icons.email_outlined, color: colors.textPrimary),
         isDarkMode: isDarkMode,
         isDense: true,
-        errorMaxLines: 1,
       ),
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: EmailValidator.validate,

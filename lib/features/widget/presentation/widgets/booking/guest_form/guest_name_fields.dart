@@ -76,7 +76,6 @@ class GuestNameFields extends ConsumerWidget {
             : null,
         isDarkMode: isDarkMode,
         isDense: true,
-        errorMaxLines: 1,
       ),
       autovalidateMode: AutovalidateMode.onUserInteraction,
       validator: validator,

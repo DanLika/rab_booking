@@ -1811,6 +1811,7 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                         propertyId: _propertyId ?? '',
                                         unitId: unitId,
                                         forceMonthView: forceMonthView,
+                                        focusedDate: _formState.checkIn,
                                         // Disable date selection in calendar_only mode
                                         onRangeSelected:
                                             widgetMode ==
@@ -2779,20 +2780,20 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
               if (mounted) {
                 setState(() => _adults = value);
               }
-              _saveFormData();
+              _saveFormDataDebounced();
             },
             onChildrenChanged: (value) {
               if (mounted) {
                 setState(() => _children = value);
               }
-              _saveFormData();
+              _saveFormDataDebounced();
             },
             onPetsChanged: _unit?.petFee != null
                 ? (value) {
                     if (mounted) {
                       setState(() => _pets = value);
                     }
-                    _saveFormData();
+                    _saveFormDataDebounced();
                   }
                 : null,
           ),

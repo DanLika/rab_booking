@@ -39,6 +39,49 @@ Ovaj dokument prati sve sigurnosne ispravke u projektu. Svaka ispravka je detalj
 
 ---
 
+## SF Numbering Reconciliation (2026-05-30)
+
+Several in-flight PRs picked overlapping SF numbers because audit/57..audit/95
+ran across parallel sessions and each session derived its "next free" slot
+from a different point-in-time view of this file. The table below is the
+canonical mapping. Future rebases must align headings to it.
+
+Ceiling on `main` HEAD `ed31ae47` at the time of reconciliation: **SF-061**.
+
+| SF | PR | Branch | Finding | Title | Status |
+|----|----|--------|---------|-------|--------|
+| SF-061 | (merged) | — | (audit/84 STEP 4) | App Check enforcement on Stripe checkout + availability | ⏭️ DEFERRED |
+| SF-062 | #565 | `fix/f86-01-cors-8-callables` | F-86-01 | CORS allowlist on 8 framework-default callables | 🟡 dev-deployed, PROD-gated |
+| SF-063 | #574 | `test/f92-01-ical-token-deep-0530` | F-92-01 | `getUnitIcalFeed` empty-token bypass | 🟡 fixed on branch |
+| SF-064 | #567 | `fix/audit-50-backlog` | F-50-05a | `undici` override (defense-in-depth) | ⚠️ doc-rebase required |
+| SF-065 | #567 | `fix/audit-50-backlog` | F-50-09 | `devices/{deviceId}` update key allowlist | ⚠️ doc-rebase required |
+| SF-066 | #568 | (sentry beforeSend) | FLUTTER-7B | `icalSync` owner-fault validation → `logWarn` (HttpsError-only filter) | 🟡 fixed on branch |
+| SF-067 | #575 | `test/f91-02-storage-delete-0530` | F-91-02 + SEC-001/SF-025 | `storage.rules` DELETE split + `firestore.get(...)` cross-product | 🟡 dev-fixed, PROD-gated |
+| SF-068 | #567 | `fix/audit-50-backlog` | F-50-10 | drop `eval()` ES6 probe in `web/index.html` | ⚠️ doc-rebase required |
+| SF-069 | #567 | `fix/audit-50-backlog` | F-50-11 | `iframe_resizer.js` postMessage `*` → handshake-pinned origin | ⚠️ doc-rebase required |
+| SF-070 | #567 | `fix/audit-50-backlog` | F-50-12 | `audit/raw/` (incl. `secrets.txt`) lockdown | ⚠️ doc-rebase required |
+| SF-071 | (this PR) | `fix/sf-reconcile-f93-bundle-0530` | F-93-03 | `handleStripeWebhook` POST-only (405 on GET/PUT/…) | ✅ this PR |
+| SF-072 | (this PR) | `fix/sf-reconcile-f93-bundle-0530` | F-93-04 | Malformed JSON payload → 400 invalid-argument, not 500 | ✅ this PR |
+| SF-073 | (this PR) | `fix/sf-reconcile-f93-bundle-0530` | F-93-01 | `localhost` / `127.0.0.1` stripped from PROD `getAllowedReturnDomains` | ✅ this PR |
+
+### Doc-rebase action for PR #567
+
+PR #567 body and entries currently claim `SF-061..SF-065` for its 5 fixes.
+Pre-merge it must rebase the doc to swap to the canonical mapping above
+(SF-064, SF-065, SF-068, SF-069, SF-070 — SF-061 already taken by App Check
+DEFERRED, SF-062 by PR #565 CORS, SF-063 by PR #574 iCal, SF-066 by PR #568
+Sentry, SF-067 by PR #575 storage). No code change in #567 needed for
+reconciliation — heading swap only.
+
+### Authority rule going forward
+
+The first PR that names a SF number AND lands in `main` reserves it
+permanently. Branches drafted in parallel that picked the same number must
+rebase. To avoid future collisions, branches that want to reserve a new
+SF should add their row to this table on creation, not on merge.
+
+---
+
 ## SF-001: Owner ID Validation in Booking Creation
 
 **Datum**: 2026-01-05  
@@ -3845,3 +3888,103 @@ Conditional import:
 2. Wait 7 days for verified-rate stabilization
 3. Re-run STEP 4 gate (`gcloud monitoring time-series list ... | awk` verified-rate calc); proceed only if ≥0.95
 4. Flip the two `enforceAppCheck: false → true` constants + redeploy CFs
+
+---
+
+## SF-071: `handleStripeWebhook` POST-only method gate (405)
+
+**Status:** ✅ Riješeno (this PR — branch `fix/sf-reconcile-f93-bundle-0530`)
+**Severity:** LOW (audit/95 F-93-03 — defensive)
+**Audit:** `audit/95-f93-bundle.md` §1
+
+**Vector:** `handleStripeWebhook` is wired through `onRequest` and accepts every HTTP verb. `GET /handleStripeWebhook` from a security scanner or curious operator fell into the "Missing signature" 400 branch, polluted Sentry with `logWebhookSignatureFailure` events, and gave probing tooling no signal that this endpoint is POST-only. Not exploitable on its own — Stripe's signature gate still holds — but normalises probing into a quiet noise floor that masks real signature-failure attacks.
+
+**Fix:** `functions/src/stripePayment.ts` — first statement in the `onRequest` handler:
+
+```ts
+if (req.method !== "POST") {
+  res.set("Allow", "POST");
+  res.status(405).send("Method Not Allowed");
+  return;
+}
+```
+
+`Allow: POST` per RFC 9110 §15.5.6 so well-behaved scanners back off. Runs before `req.headers["stripe-signature"]` is touched, before Stripe SDK is instantiated, before any logging fires — the cheapest possible reject path.
+
+**Tests:** `functions/test/stripePayment.test.ts` — `it.each(["GET", "PUT", "PATCH", "DELETE", "OPTIONS"])` asserts `res.status(405)` + `res.set("Allow", "POST")` + `mockStripe.webhooks.constructEvent` NOT called. Pre-existing happy-path tests updated with `method: "POST"` + `set: jest.fn()` on res mock.
+
+**Cross-ref:** F-93-03; bundled with [SF-072](#sf-072-malformed-json-payload--400-not-500) and [SF-073](#sf-073-localhost-stripped-from-prod-getallowedreturndomains) under audit/95.
+
+---
+
+## SF-072: Malformed JSON payload → 400, not 500
+
+**Status:** ✅ Riješeno (this PR)
+**Severity:** LOW (audit/95 F-93-04 — defensive)
+**Audit:** `audit/95-f93-bundle.md` §2
+
+**Vector:** `stripe.webhooks.constructEvent(rawBody, sig, secret)` runs synchronous `JSON.parse(payload)` after HMAC compare passes. A syntactically invalid body therefore throws `SyntaxError` out of the SDK. Pre-fix the catch path collapsed every error into "Webhook signature verification failed" — wrong message — and downstream consumers that wrapped this CF in additional handler layers (audit/95 cross-stack trace) bubbled the SyntaxError up as an unhandled exception → Functions framework default 500.
+
+**Fix:** `functions/src/stripePayment.ts` `handleStripeWebhook` catch block — distinguish SyntaxError / `StripeInvalidRequestError` / `/JSON/i` message match BEFORE the signature-failure branch, return `400` + `"Invalid JSON payload"`. Logs as `logWarn`, NOT `logError`, NOT `logWebhookSignatureFailure` (no SecurityEvent record).
+
+```ts
+if (error instanceof SyntaxError ||
+    (error?.message && error.message.includes("JSON"))) {
+  logWarn("Webhook received malformed JSON payload", { errorMessage: error?.message });
+  res.status(400).send("Invalid JSON payload");
+  return;
+}
+```
+
+Two matchers, case-sensitive `JSON`:
+- `instanceof SyntaxError` — direct re-throw from `JSON.parse` (canonical detection).
+- `error.message.includes("JSON")` — fallback for SDK drift where Stripe wraps malformed-payload cases. Case-sensitive so partial-word matches like "Json-Web-Token" do not false-positive into the security-alert-silencer branch.
+
+**Tests:** mocks `constructEvent` to throw `SyntaxError("Unexpected token } in JSON at position 7")`, asserts 400 + "Invalid JSON payload" + `logError("Webhook signature verification failed", ...)` NOT called (security-alert noise channel stays clean).
+
+**Cross-ref:** F-93-04; bundled with [SF-071](#sf-071-handlestripewebhook-post-only-method-gate-405) and [SF-073](#sf-073-localhost-stripped-from-prod-getallowedreturndomains).
+
+---
+
+## SF-073: `localhost` stripped from PROD `getAllowedReturnDomains`
+
+**Status:** ✅ Riješeno (this PR)
+**Severity:** MEDIUM (audit/95 F-93-01 — open-redirect / exfil class)
+**Audit:** `audit/95-f93-bundle.md` §3
+
+**Vector:** `functions/src/stripePayment.ts:getAllowedReturnDomains()` unconditionally appended `"http://localhost"` and `"http://127.0.0.1"` to its return-URL allowlist. `isAllowedReturnUrl()` uses `startsWith(domain)` — so a PROD `returnUrl=http://localhost:9999/exfil` matched, Stripe Checkout was created with `success_url` / `cancel_url` pointing at localhost, and the post-payment redirect landed on whatever HTTP listener was bound to that port on the operator's machine (or, more dangerously, on the victim's machine via attacker-controlled `success_url` if the booking widget surface ever leaked a returnUrl override into client-controllable input). Not currently reachable from the production widget (its returnUrl is hard-coded to the deployed origin), but defense-in-depth: the allowlist must reflect ENV.
+
+**Fix:**
+
+```ts
+function getAllowedReturnDomains(): string[] {
+  const base = [
+    "https://bookbed.io",
+    "https://app.bookbed.io",
+    "https://view.bookbed.io",
+  ];
+  const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
+  const isEmulator = process.env.FUNCTIONS_EMULATOR === "true";
+  if (projectId === "bookbed-dev" || isEmulator) {
+    base.push("https://bookbed-widget-dev.web.app");
+    base.push("https://bookbed-owner-dev.web.app");
+  }
+  if (projectId === "bookbed-staging") {
+    base.push("https://bookbed-widget-staging.web.app");
+    base.push("https://bookbed-owner-staging.web.app");
+  }
+  if (isEmulator) {
+    base.push("http://localhost");
+    base.push("http://127.0.0.1");
+  }
+  return base;
+}
+```
+
+Mirrors the existing `corsAllowlist.ts` `LOCAL_DEV_ORIGINS` convention (added in SF-060) — both gates are now consistent: localhost is emulator-only.
+
+**Tests:**
+1. PROD branch: explicitly `delete process.env.GCP_PROJECT / GCLOUD_PROJECT / FUNCTIONS_EMULATOR`, then `createStripeCheckoutSession` with `returnUrl="http://localhost:3000/done"` AND `"http://127.0.0.1:3000/done"` — both rejected with HttpsError `invalid-argument` "Invalid return URL. Please try again from the booking page." Env restored in `finally`.
+2. Emulator branch: `process.env.FUNCTIONS_EMULATOR = "true"`, same localhost URL — call advances past gate and returns `{success: true}`.
+
+**Cross-ref:** F-93-01; bundled with [SF-071](#sf-071-handlestripewebhook-post-only-method-gate-405) and [SF-072](#sf-072-malformed-json-payload--400-not-500).

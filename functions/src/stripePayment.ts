@@ -43,21 +43,28 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 // Per-env dev/staging hosts are appended at request time based on GCP_PROJECT
 // so the prod allowlist stays minimal. See getAllowedReturnDomains().
 function getAllowedReturnDomains(): string[] {
+  // F-93-01 (SF-073): localhost / 127.0.0.1 must NEVER appear in PROD's allowlist.
+  // They are appended below only when running under the Functions emulator. A PROD
+  // returnUrl pointing to localhost is an exfil vector (attacker-controlled host
+  // on the operator's network gets the success-redirect with session info).
   const base = [
     "https://bookbed.io", // Marketing site (for future use)
     "https://app.bookbed.io", // Owner dashboard
     "https://view.bookbed.io", // Booking widget (main domain)
-    "http://localhost", // Local development
-    "http://127.0.0.1", // Local development
   ];
   const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-  if (projectId === "bookbed-dev" || process.env.FUNCTIONS_EMULATOR === "true") {
+  const isEmulator = process.env.FUNCTIONS_EMULATOR === "true";
+  if (projectId === "bookbed-dev" || isEmulator) {
     base.push("https://bookbed-widget-dev.web.app");
     base.push("https://bookbed-owner-dev.web.app");
   }
   if (projectId === "bookbed-staging") {
     base.push("https://bookbed-widget-staging.web.app");
     base.push("https://bookbed-owner-staging.web.app");
+  }
+  if (isEmulator) {
+    base.push("http://localhost");
+    base.push("http://127.0.0.1");
   }
   return base;
 }
@@ -887,6 +894,16 @@ export const createStripeCheckoutSession = onCall({
  * - No more "ghost bookings" - only paid bookings exist
  */
 export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeWebhookSecret, "RESEND_API_KEY"]}, async (req, res) => {
+  // F-93-03 (SF-071): Stripe webhooks are POST-only per Stripe's API contract.
+  // Any GET/PUT/PATCH/DELETE/OPTIONS hitting this endpoint is a probe; reject
+  // with 405 before we read any other request state. `Allow: POST` header per
+  // RFC 9110 §15.5.6 so well-behaved scanners stop hammering it.
+  if (req.method !== "POST") {
+    res.set("Allow", "POST");
+    res.status(405).send("Method Not Allowed");
+    return;
+  }
+
   const sig = req.headers["stripe-signature"];
 
   if (!sig) {
@@ -914,6 +931,26 @@ export const handleStripeWebhook = onRequest({secrets: [stripeSecretKey, stripeW
       webhookSecret
     );
   } catch (error: any) {
+    // F-93-04 (SF-072): `stripe.webhooks.constructEvent` runs `JSON.parse`
+    // on `req.rawBody` after the HMAC compare passes. If the payload is
+    // syntactically invalid JSON, the synchronous parse throws SyntaxError
+    // that — without this branch — collapses into the "signature failed"
+    // path and used to bubble out as 500 from downstream consumers when
+    // observed across the v2 onRequest stack. Distinguish it: malformed
+    // payload is an invalid-argument (400), not a signature attack.
+    // Case-sensitive `JSON` substring match by design — Stripe error messages
+    // mentioning "JSON" via lowercase ("json-encoded", etc.) are signature-
+    // layer noise, not parse failures. We want only the canonical
+    // SyntaxError-from-JSON.parse case to land here.
+    if (error instanceof SyntaxError ||
+        (error?.message && error.message.includes("JSON"))) {
+      logWarn("Webhook received malformed JSON payload", {
+        errorMessage: error?.message,
+      });
+      res.status(400).send("Invalid JSON payload");
+      return;
+    }
+
     // SECURITY: Log webhook signature failure (potential attack)
     logWebhookSignatureFailure(
       error.message || "Unknown error",

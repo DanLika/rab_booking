@@ -577,9 +577,9 @@ async function syncSingleFeed(
     await deleteOldEvents(db, feedId, propertyId);
 
     // Insert new events with echo detection
-    const source = (platform === "other" && custom_platform_name)
-      ? sanitizeSource(custom_platform_name)
-      : platform;
+    const source = (platform === "other" && custom_platform_name) ?
+      sanitizeSource(custom_platform_name) :
+      platform;
 
     const result = await insertNewEventsWithEchoDetection(
       db, feedId, unit_id, propertyId, source, events, existingBookings
@@ -668,22 +668,22 @@ function fetchIcalData(
     // `ERR_INVALID_IP_ADDRESS: Invalid IP address: undefined`. Detect the
     // shape and dispatch both signatures.
     const pinnedFam = pinnedFamily || 4;
-    const requestOptions: https.RequestOptions = pinnedAddress
-      ? {
-          lookup: (
-            _hostname: string,
-            options: {all?: boolean} | undefined,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            callback: (...args: any[]) => void,
-          ) => {
-            if (options && options.all) {
-              callback(null, [{address: pinnedAddress, family: pinnedFam}]);
-            } else {
-              callback(null, pinnedAddress, pinnedFam);
-            }
-          },
-        }
-      : {};
+    const requestOptions: https.RequestOptions = pinnedAddress ?
+      {
+        lookup: (
+          _hostname: string,
+          options: {all?: boolean} | undefined,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          callback: (...args: any[]) => void,
+        ) => {
+          if (options && options.all) {
+            callback(null, [{address: pinnedAddress, family: pinnedFam}]);
+          } else {
+            callback(null, pinnedAddress, pinnedFam);
+          }
+        },
+      } :
+      {};
 
     const request = protocol
       .get(url, requestOptions, (response) => {
@@ -1066,9 +1066,9 @@ async function insertNewEventsWithEchoDetection(
     }
 
     // Determine event status based on echo detection
-    const eventStatus = echoResult.recommendedAction === "flag_review"
-      ? "needs_review"
-      : "active";
+    const eventStatus = echoResult.recommendedAction === "flag_review" ?
+      "needs_review" :
+      "active";
 
     if (echoResult.recommendedAction === "flag_review") {
       flaggedForReview++;

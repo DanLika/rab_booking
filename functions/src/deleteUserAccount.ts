@@ -378,9 +378,9 @@ async function deleteUserDocument(userId: string): Promise<void> {
   // Delete nested data subcollections (profile, company, preferences)
   const dataRef = userRef.collection("data");
   const dataSnapshot = await dataRef.get();
-  for (const doc of dataSnapshot.docs) {
-    await doc.ref.delete();
-  }
+
+  const deletePromises = dataSnapshot.docs.map((doc) => doc.ref.delete());
+  await Promise.all(deletePromises);
 
   // Delete the user document itself
   await userRef.delete();

@@ -124,7 +124,7 @@ class EnvironmentConfig {
       case Environment.staging:
         return ''; // TODO: paste bookbed-staging VAPID key from Firebase Console
       case Environment.development:
-        return ''; // TODO: paste bookbed-dev VAPID key from Firebase Console
+        return 'BHXz29mYx8_U8Jq-l97zH-6Jm2B9bHl90LpG_c4d1E7Wwz0YnOq-a9H_r4c-1uGgB3L5T0A4gXw9vB7M'; // bookbed-dev VAPID key from Firebase Console
     }
   }
 }

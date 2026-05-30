@@ -41,6 +41,7 @@ import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
 import {setUser, captureMessage} from "./sentry";
 import {invalidateIcalCache} from "./utils/icalCache";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 // NOTIFICATION PREFERENCES: Owner can now opt-out of emails in Notification Settings
 // Pending bookings FORCE send (critical - requires owner approval)
 // Instant bookings RESPECT preferences (owner can opt-out)
@@ -57,7 +58,7 @@ const MAX_BOOKING_NIGHTS = 365; // 1 year maximum (DoS protection)
  * CRITICAL: Prevents double bookings by ensuring only ONE booking
  * succeeds when multiple users try to book same dates simultaneously.
  */
-export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"]}, async (request) => {
+export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"], cors: getCorsAllowlist()}, async (request) => {
   const userId = request.auth?.uid || null;
   const data = request.data;
 

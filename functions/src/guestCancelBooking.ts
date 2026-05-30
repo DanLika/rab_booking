@@ -24,6 +24,7 @@ import {stripeSecretKey} from "./stripe";
 import {checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {processStripeRefund} from "./utils/bookingRefund";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Validates email configuration to ensure all required fields are present
@@ -62,7 +63,7 @@ function validateEmailConfig(emailConfig: any): {
  * 2. Cancellation is within the allowed deadline (hours before check-in)
  * 3. Guest provides correct booking reference and email
  */
-export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY", stripeSecretKey]}, async (request) => {
+export const guestCancelBooking = onCall({secrets: ["RESEND_API_KEY", stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
   const data = request.data;
 
   // Support both camelCase and snake_case for backward compatibility

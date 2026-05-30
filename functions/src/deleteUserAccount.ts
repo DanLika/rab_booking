@@ -24,6 +24,7 @@ import * as admin from "firebase-admin";
 import {logInfo, logError, logWarn} from "./logger";
 import {setUser, captureMessage} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 const db = admin.firestore();
 const BATCH_SIZE = 400; // Firestore limit is 500, keep margin for safety
@@ -47,6 +48,7 @@ const BATCH_SIZE = 400; // Firestore limit is 500, keep margin for safety
 export const deleteUserAccount = onCall(
   {
     region: "europe-west1",
+    cors: getCorsAllowlist(),
     // Allow longer timeout for large accounts
     timeoutSeconds: 540,
   },

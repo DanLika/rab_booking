@@ -22,6 +22,7 @@ jest.mock("firebase-functions/params", () => ({
   defineString: () => ({
     value: () => "",
   }),
+  Expression: class Expression {},
 }));
 jest.mock("../src/firebase", () => ({
   admin: {

@@ -33,6 +33,7 @@ import {logInfo, logWarn} from "./logger";
 import {checkRateLimit} from "./utils/rateLimit";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {sanitizeEmail} from "./utils/inputSanitization";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -96,7 +97,7 @@ function buildResponse(state: AttemptState | null): AttemptStateResponse {
  * can bump a victim's counter.
  */
 export const recordLoginFailure = onCall(
-  {region: "europe-west1"},
+  {region: "europe-west1", cors: getCorsAllowlist()},
   async (request): Promise<AttemptStateResponse> => {
     const email = typeof request.data?.email === "string" ? request.data.email : "";
     const sanitized = sanitizeEmail(email);
@@ -169,7 +170,7 @@ export const recordLoginFailure = onCall(
  * Rate-limited per IP: 30 calls / 5 min — caps enumeration cost.
  */
 export const getLoginLockoutStatus = onCall(
-  {region: "europe-west1"},
+  {region: "europe-west1", cors: getCorsAllowlist()},
   async (request): Promise<AttemptStateResponse> => {
     const email = typeof request.data?.email === "string" ? request.data.email : "";
     const sanitized = sanitizeEmail(email);
@@ -210,7 +211,7 @@ export const getLoginLockoutStatus = onCall(
  * from clearing another email's attempts.
  */
 export const clearLoginAttempts = onCall(
-  {region: "europe-west1"},
+  {region: "europe-west1", cors: getCorsAllowlist()},
   async (request): Promise<{cleared: boolean}> => {
     if (!request.auth?.uid) {
       throw new HttpsError("unauthenticated", "must be authenticated");

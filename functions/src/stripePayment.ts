@@ -29,6 +29,7 @@ import {
   SecurityEventType,
 } from "./utils/securityMonitoring";
 import {setUser, captureMessage} from "./sentry";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
@@ -138,6 +139,7 @@ function isAllowedReturnUrl(returnUrl: string): boolean {
  */
 export const createStripeCheckoutSession = onCall({
   secrets: [stripeSecretKey, "RESEND_API_KEY"],
+  cors: getCorsAllowlist(),
   // SF-046: App Check audit-only — see availability.ts for full context.
   enforceAppCheck: false,
   consumeAppCheckToken: true,

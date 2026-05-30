@@ -1,6 +1,11 @@
-# audit/92 — Payment + Booking CF smoke (bookbed-dev)
+# audit/93 — Payment + Booking CF smoke (bookbed-dev)
 
-> Audit/91 number was taken by a parallel session (CF auth smoke — `sanitize-email-no-format-check` memory pointer, F-92-01..F-92-04). This payload is renumbered audit/92 + findings F-92-01..F-92-04 to avoid collision.
+> Audit numbers 91 and 92 were both claimed by parallel sessions this date:
+> - audit/91 — CF auth smoke (`sanitize-email-no-format-check` memory pointer; commit `f2ceeb78`)
+> - audit/91 — data-layer smoke (rules + indexes; commit `dd2dcf6b`)
+> - audit/93 — CF iCal/email/notif/lifecycle smoke (commit `c57cb381`, F-93-01..F-93-03 reserved)
+>
+> This payload is renumbered audit/93 + findings F-93-01..F-93-04 to avoid all collisions.
 
 
 **Date**: 2026-05-30
@@ -14,7 +19,7 @@
 
 - **51 cases run** across 8 callable CFs + 1 onRequest webhook + verify path.
 - **3 NEW findings** (all ≤ P2). None block PROD cutover.
-- **1 fix applied in-PR**: F-92-02 `findBookingById` Strategy-2 path mismatch (canonical `properties/*/bookings/{id}` ignored, only legacy `properties/*/units/*/bookings/{id}` checked) → guest cancel + token expiration silently broken on canonical data. Fix: parallel-check both paths. 2-line addition + `unitId ?? data.unit_id` fallback.
+- **1 fix applied in-PR**: F-93-02 `findBookingById` Strategy-2 path mismatch (canonical `properties/*/bookings/{id}` ignored, only legacy `properties/*/units/*/bookings/{id}` checked) → guest cancel + token expiration silently broken on canonical data. Fix: parallel-check both paths. 2-line addition + `unitId ?? data.unit_id` fallback.
 - **SF-022 Sentry HttpsError client-fault filter**: confirmed — every probed error code is in the drop set (`invalid-argument`, `unauthenticated`, `permission-denied`, `not-found`, `failed-precondition`, `resource-exhausted`). Sentry stays quiet for normal validation rejections.
 - **SF-034/054 stack leak**: confirmed CLEAN — no body in 51 responses contains `at /Users/…` or `.ts:` stack frames.
 - **SF-001 ownerId server-fetch**: confirmed working — A3 tampered `ownerId` reached the same payment-gate as A9 authed-happy, meaning the server uses `property.owner_id`, not the client value.
@@ -94,7 +99,7 @@ All 9 target CFs ACTIVE. All in us-central1 (per [[cf-region-split-us-eu]]) — 
 | B2 | bookingData present, no returnUrl | 🟡 | 400 | `FAILED_PRECONDITION` | falls through to "Property owner's payment account is not fully set up" — returnUrl validation skipped when undefined (`if (returnUrl) {...}` guard, line 245). Not a security bug (no redirect can fire without `success_url`), but the order leaks Stripe-Connect onboarding state to unauthed callers. |
 | B3 | `returnUrl="not a url"` | ✅ | 400 | `INVALID_ARGUMENT` | "Invalid return URL format." (URL constructor throws) |
 | B4 | `returnUrl="https://evil.example.com/?token={CHECKOUT_SESSION_ID}"` | ✅ | 400 | `INVALID_ARGUMENT` | "Invalid return URL. Please try again from the booking page." (generic; SF-053-style hygiene — no allowlist leak) |
-| B5 | `returnUrl="http://localhost:8000/"` | 🟡 | 400 | `FAILED_PRECONDITION` | localhost is in `BASE_ALLOWED_DOMAINS` for ALL envs (`returnUrlValidation.ts:5`) — passes allowlist, falls through to onboarding-state gate. See F-92-01 below. |
+| B5 | `returnUrl="http://localhost:8000/"` | 🟡 | 400 | `FAILED_PRECONDITION` | localhost is in `BASE_ALLOWED_DOMAINS` for ALL envs (`returnUrlValidation.ts:5`) — passes allowlist, falls through to onboarding-state gate. See F-93-01 below. |
 | B6 | bookingData missing fields | ✅ | 400 | `INVALID_ARGUMENT` | "Invalid booking data. Please refresh the page and try again." |
 | B7 | happy with valid `returnUrl` + complete `bookingData` | 🟡 | 400 | `FAILED_PRECONDITION` | "Property owner's payment account is not fully set up" — test owner Stripe acct `charges_enabled: false` (F-70-02 hCaptcha blocker). Path stops before Stripe session create. |
 
@@ -104,10 +109,10 @@ All 9 target CFs ACTIVE. All in us-central1 (per [[cf-region-split-us-eu]]) — 
 |---|---|---|---|---|---|
 | W1 | no `stripe-signature` header | ✅ | 400 | "Missing signature" | gate at line 893 |
 | W2 | `stripe-signature: t=123,v1=baadc0ffee` (bad) | ✅ | 400 | "Webhook signature verification failed" | `constructEvent` catch at 924 |
-| W3 | method=GET | 🟡 | 400 | "Missing signature" | onRequest doesn't gate by method — falls into sig check first. F-92-03. |
+| W3 | method=GET | 🟡 | 400 | "Missing signature" | onRequest doesn't gate by method — falls into sig check first. F-93-03. |
 | W4 | method=PUT | 🟡 | 400 | "Missing signature" | same as W3 |
 | W5 | 100 KB body + bad sig | ✅ | 400 | "Webhook signature verification failed" | Stripe SDK handles large rawBody |
-| W6 | malformed JSON body + bad sig | ❌ | **500** | "Internal Server Error" | F-92-04: an exception escapes the sig-verify try/catch when body is not parseable, returning 500 + uncaught Sentry capture (NOT in client-fault drop set). |
+| W6 | malformed JSON body + bad sig | ❌ | **500** | "Internal Server Error" | F-93-04: an exception escapes the sig-verify try/catch when body is not parseable, returning 500 + uncaught Sentry capture (NOT in client-fault drop set). |
 
 Dedup + event-handler smoke (`customer.subscription.deleted`, `invoice.paid`, `charge.refunded`, `checkout.session.expired`) **NOT EXERCISED** — requires a real Stripe-signed event replay (we do not have the webhook secret outside Secret Manager). Code paths confirmed by static read at `stripePayment.ts:929-1212`; `stripe_webhook_events` collection exists (0 dev rows). Re-test gated on Stripe CLI fixture + dev webhook signing secret.
 
@@ -136,9 +141,9 @@ Dedup + event-handler smoke (`customer.subscription.deleted`, `invoice.paid`, `c
 |---|---|---|---|---|---|
 | GC1 | empty payload | ✅ | 400 | `INVALID_ARGUMENT` | "Missing required fields: booking_id, booking_reference, guest_email" |
 | GC2 | bogus `bookingId="BOGUS_91"` | ✅ | 404 | `NOT_FOUND` | "Booking not found" |
-| GC3 | real bookingId `SEED_test_book_pending_01` + wrong reference | ❌ | 404 | `NOT_FOUND` | **F-92-02**: expected `PERMISSION_DENIED "Invalid booking reference"` but `findBookingById` can't find the doc at all (path mismatch). |
-| GC4 | real bookingId + wrong email | ❌ | 404 | `NOT_FOUND` | F-92-02 same root cause — doc invisible to lookup. |
-| GC5 | real bookingId for completed booking (BB-TEST01) | ❌ | 404 | `NOT_FOUND` | F-92-02 same — should be `failed-precondition "Cannot cancel booking with status: completed"`. |
+| GC3 | real bookingId `SEED_test_book_pending_01` + wrong reference | ❌ | 404 | `NOT_FOUND` | **F-93-02**: expected `PERMISSION_DENIED "Invalid booking reference"` but `findBookingById` can't find the doc at all (path mismatch). |
+| GC4 | real bookingId + wrong email | ❌ | 404 | `NOT_FOUND` | F-93-02 same root cause — doc invisible to lookup. |
+| GC5 | real bookingId for completed booking (BB-TEST01) | ❌ | 404 | `NOT_FOUND` | F-93-02 same — should be `failed-precondition "Cannot cancel booking with status: completed"`. |
 
 ### §4.7 `getBookingByStripeSession` + `verifyBookingAccess`
 
@@ -150,12 +155,12 @@ Dedup + event-handler smoke (`customer.subscription.deleted`, `invoice.paid`, `c
 | VB1 | empty payload | ✅ | 400 | "Booking reference and email are required" | |
 | VB2 | `bookingReference + guestEmail` (wrong param `guestEmail`) | 🟡 | 400 | same | docs: param is `email` not `guestEmail` — caller-side gotcha (not a CF bug). |
 | VB3 | `bookingReference="BB-FAKE99" + email` correct param | ✅ | 200 | `{success:false, reason:"invalid_credentials"}` | enumeration-safe |
-| VB4 | `bookingReference="BB-TEST03" + email="seed-pending@example.com"` | ✅ | 200 | `{success:true, booking:{…}}` | full booking detail returned to verified caller; `findBookingByReference` (CG `booking_reference`) works correctly — does NOT have F-92-02 |
+| VB4 | `bookingReference="BB-TEST03" + email="seed-pending@example.com"` | ✅ | 200 | `{success:true, booking:{…}}` | full booking detail returned to verified caller; `findBookingByReference` (CG `booking_reference`) works correctly — does NOT have F-93-02 |
 | VB5 | real ref + wrong email | ✅ | 200 | `{success:false, reason:"invalid_credentials"}` | enumeration-safe (same reason as VB3, prevents booking-ref discovery) |
 
 ## §5 Findings
 
-### F-92-01 — `returnUrl` allowlist includes `http://localhost` + `http://127.0.0.1` in PROD (P3)
+### F-93-01 — `returnUrl` allowlist includes `http://localhost` + `http://127.0.0.1` in PROD (P3)
 
 `functions/src/utils/returnUrlValidation.ts:5`:
 
@@ -177,7 +182,7 @@ const BASE_ALLOWED_DOMAINS = [
 
 **Not in this PR** — scope limited; needs a dedicated PR with rules + reviewer sign-off on the constants split.
 
-### F-92-02 — `findBookingById` Strategy 2 looks at wrong path → guest cancel silently broken (P1)
+### F-93-02 — `findBookingById` Strategy 2 looks at wrong path → guest cancel silently broken (P1)
 
 `functions/src/utils/bookingLookup.ts:92-102` — Strategy 2 builds `bookingChecks` against `properties/{propId}/units/{unitId}/bookings/{bookingId}` (4-level path). But the canonical write target is `properties/{propId}/bookings/{bookingId}` (3-level, written by `atomicBooking.ts:1216`). Strategy 3 (legacy top-level `bookings/{id}`) is also empty (0 rows on dev).
 
@@ -198,7 +203,7 @@ Smoke evidence: GC3/GC4/GC5 all return 404 even though `SEED_test_book_pending_0
 
 Blast radius: +N reads per Strategy 2 call where N = total properties (one extra Firestore read per property). For 50-property tenants this is +50 reads — negligible; Strategy 1 already short-circuits when ownerId is provided.
 
-### F-92-03 — webhook handler accepts non-POST methods (P3)
+### F-93-03 — webhook handler accepts non-POST methods (P3)
 
 `handleStripeWebhook` (onRequest) does not gate by HTTP method. GET / PUT / DELETE all reach the signature check, return `400 Missing signature`. Defense-in-depth would `405 Method Not Allowed` for non-POST early.
 
@@ -206,7 +211,7 @@ Not exploitable on its own (sig check still rejects), but distorts hosting metri
 
 **Fix**: 2-line `if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }` at handler top. Out of scope for this PR; doc-only.
 
-### F-92-04 — webhook returns 500 on malformed JSON body (P3)
+### F-93-04 — webhook returns 500 on malformed JSON body (P3)
 
 Sending `body="{this:is/not::json}}"` with any (even bad) signature returns HTTP 500 "Internal Server Error", not 400. Sentry would capture as `internal` (NOT in HttpsError client-fault drop set per `.claude/rules/cloud-functions.md` § HttpsError filter) → Sentry alert noise.
 
@@ -244,7 +249,7 @@ Likely the exception escapes the `try { event = stripe.webhooks.constructEvent(.
 +    // Canonical path: properties/{propId}/bookings/{bookingId} — what
 +    // atomicBooking writes today. Legacy path: properties/{propId}/units/{unitId}/bookings/{bookingId}
 +    // — older units-nested layout still present in dev. Without the canonical
-+    // entry the lookup silently fails for guest cancel (audit/92 F-92-02).
++    // entry the lookup silently fails for guest cancel (audit/93 F-93-02).
      const bookingChecks: Array<{
        propId: string;
 -      unitId: string;
@@ -314,9 +319,9 @@ Full case set in `/tmp/bb-smoke-results.json` + `/tmp/bb-smoke-results-pt2.json`
 
 ## §10 Open follow-ups (not in this PR)
 
-1. **F-92-01 PR**: localhost out of `BASE_ALLOWED_DOMAINS` on PROD — env-gate in `getAllowedReturnDomains()`. ~4 LOC.
-2. **F-92-03 PR**: `handleStripeWebhook` 405 on non-POST. ~2 LOC.
-3. **F-92-04 PR**: `handleStripeWebhook` 400 (not 500) on malformed JSON. Needs Stripe SDK behavior verify + Sentry noise check.
+1. **F-93-01 PR**: localhost out of `BASE_ALLOWED_DOMAINS` on PROD — env-gate in `getAllowedReturnDomains()`. ~4 LOC.
+2. **F-93-03 PR**: `handleStripeWebhook` 405 on non-POST. ~2 LOC.
+3. **F-93-04 PR**: `handleStripeWebhook` 400 (not 500) on malformed JSON. Needs Stripe SDK behavior verify + Sentry noise check.
 4. **Webhook dedup smoke**: needs Stripe CLI + dev `STRIPE_WEBHOOK_SECRET` (rotated 2026-05-26 per [[bookbed-dev-stripe-webhook-secret-placeholder]]) to replay signed events for `customer.subscription.deleted` + `invoice.paid` + `charge.refunded` + `checkout.session.expired` + duplicate-id dedup confirm.
 5. **Connect Direct refund smoke**: requires F-70-02 hCaptcha unblock on `acct_1Tc037PnKJAl9q6s` → `charges_enabled: true` → real charge → guest cancel refund flow → reverse_transfer verification.
 6. **Path-layout cleanup**: 1 legacy `properties/SEED_property_dev_01/units/SEED_unit_dev_01/bookings/SEED_booking_dev_01` doc exists on bookbed-dev with cancelled status — same booking ID as the canonical `properties/SEED_property_dev_01/bookings/SEED_booking_dev_01` (confirmed status). Double-write residue from older atomicBooking. Backfill / delete dev-only — not blocking.

@@ -85,7 +85,7 @@ export async function findBookingById(
     // Canonical path: properties/{propId}/bookings/{bookingId} — what
     // atomicBooking writes today. Legacy path: properties/{propId}/units/{unitId}/bookings/{bookingId}
     // — older units-nested layout still present in dev. Without the canonical
-    // entry the lookup silently fails for guest cancel (audit/92 F-92-02).
+    // entry the lookup silently fails for guest cancel (audit/93 F-93-02).
     const bookingChecks: Array<{
       propId: string;
       unitId: string | null;

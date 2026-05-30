@@ -64,7 +64,7 @@ jest.mock("firebase-admin", () => {
           doc: (propId: string) => ({
             collection: (sub: string) => {
               if (sub === "bookings") {
-                // audit/92 F-92-02 — canonical property-level booking subcollection.
+                // audit/93 F-93-02 — canonical property-level booking subcollection.
                 return {
                   doc: (bookingId: string) => ({
                     get: async () => {
@@ -226,7 +226,7 @@ describe("findBookingById", () => {
     expect(r!.unitId).toBe("u-1");
   });
 
-  it("Strategy 2: parallel search finds booking at canonical properties/<p>/bookings/<id> (audit/92 F-92-02)", async () => {
+  it("Strategy 2: parallel search finds booking at canonical properties/<p>/bookings/<id> (audit/93 F-93-02)", async () => {
     fixtures.properties = [doc("p-2", {})];
     fixtures.unitsByProperty["p-2"] = [doc("u-2", {})];
     // Canonical path — what atomicBooking writes today.

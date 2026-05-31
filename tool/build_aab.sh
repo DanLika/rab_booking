@@ -55,4 +55,8 @@ if [[ $# -eq 0 ]]; then
     set -- --release --target lib/main.dart
 fi
 
-exec flutter build appbundle "$@"
+# `--no-tree-shake-icons` required because BbIcon (lib/shared/widgets/redesign/
+# bb_icon.dart) resolves IconData by string name at runtime; tree-shaking
+# breaks the lookup (Phase 1 audit/103 §3). Caller can override by passing
+# --tree-shake-icons explicitly (later flag wins).
+exec flutter build appbundle --no-tree-shake-icons "$@"

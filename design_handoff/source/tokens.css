@@ -1,0 +1,297 @@
+/* ============================================================
+   BookBed Design System — Tokens
+   Single source of truth. Matches lib/core/design/tokens.dart spec.
+   ============================================================ */
+
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400..700,0..1,0&display=block');
+
+/* ============================================================
+   Color tokens — LIGHT theme (default)
+   ============================================================ */
+:root,
+.theme-light {
+  /* Brand */
+  --bb-primary: #6B4CE6;
+  --bb-primary-dark: #5638C7;
+  --bb-primary-light: #B5A4F0;
+  --bb-primary-tint-hover: rgba(107, 76, 230, 0.08);
+  --bb-primary-tint-pressed: rgba(107, 76, 230, 0.12);
+  --bb-primary-tint-bg: rgba(107, 76, 230, 0.06);
+
+  --bb-secondary: #FF6B6B;       /* destructive / error */
+  --bb-secondary-dark: #E14F4F;
+  --bb-secondary-tint: rgba(255, 107, 107, 0.10);
+
+  --bb-tertiary: #FFB84D;        /* accent / warning highlight */
+  --bb-tertiary-dark: #E69A28;
+  --bb-tertiary-tint: rgba(255, 184, 77, 0.16);
+
+  /* Semantic */
+  --bb-success: #2E7D5B;
+  --bb-success-tint: rgba(46, 125, 91, 0.12);
+  --bb-warning: #FFB84D;
+  --bb-warning-tint: rgba(255, 184, 77, 0.16);
+  --bb-error: #FF6B6B;
+  --bb-error-tint: rgba(255, 107, 107, 0.10);
+  --bb-info: #4A90D9;
+  --bb-info-tint: rgba(74, 144, 217, 0.12);
+
+  /* Booking status (semantic for calendar + cards) */
+  --bb-status-confirmed: #2E7D5B;
+  --bb-status-confirmed-bg: rgba(46, 125, 91, 0.12);
+  --bb-status-pending: #B7791F;          /* darker for AA contrast on tint */
+  --bb-status-pending-bg: rgba(255, 184, 77, 0.18);
+  --bb-status-cancelled: #4A5568;
+  --bb-status-cancelled-bg: rgba(113, 128, 150, 0.14);
+  --bb-status-completed: #6B4CE6;
+  --bb-status-completed-bg: rgba(107, 76, 230, 0.10);
+  --bb-status-imported: #4A90D9;
+  --bb-status-imported-bg: rgba(74, 144, 217, 0.12);
+
+  /* Surfaces */
+  --bb-bg: #FAFAFA;
+  --bb-surface: #FFFFFF;
+  --bb-surface-variant: #F5F5F5;
+  --bb-surface-elevated: #FFFFFF;
+  --bb-border: #E2E8F0;
+  --bb-border-subtle: #EDF2F7;
+  --bb-divider: #EDF2F7;
+
+  /* Premium console shell — layered: shell (L1) → floating panel (L2) → cards (L3).
+     Calm, low-chroma cool neutral (not an obvious tint). */
+  --bb-shell-bg: #F0F1F5;
+  --bb-panel-bg: #FBFBFD;
+  --bb-panel-border: rgba(20, 24, 45, 0.05);
+  --bb-panel-shadow: 0 1px 3px rgba(16,24,40,0.03), 0 2px 8px -2px rgba(16,24,40,0.04), 0 16px 36px -16px rgba(16,24,40,0.10);
+
+  /* Text */
+  --bb-text-primary: #2D3748;
+  --bb-text-secondary: #4A5568;
+  --bb-text-tertiary: #718096;
+  --bb-text-on-primary: #FFFFFF;
+  --bb-text-disabled: #A0AEC0;
+
+  /* Gradient stops (sidebar header, hero cards) */
+  --bb-gradient-primary: linear-gradient(135deg, #6B4CE6 0%, #8B6FFF 100%);
+  --bb-gradient-hero: linear-gradient(135deg, #6B4CE6 0%, #8B6FFF 60%, #A78BFF 100%);
+
+  /* Shadows */
+  /* Shadows — premium soft-layered ramp (cool-toned, multi-layer) */
+  --bb-shadow-sm: 0 1px 2px rgba(16,24,40,0.04), 0 2px 6px -1px rgba(16,24,40,0.06);
+  --bb-shadow-md: 0 1px 2px rgba(16,24,40,0.04), 0 6px 16px -4px rgba(16,24,40,0.08), 0 20px 40px -12px rgba(16,24,40,0.12);
+  --bb-shadow-lg: 0 2px 4px rgba(16,24,40,0.05), 0 12px 28px -6px rgba(16,24,40,0.14), 0 32px 64px -20px rgba(16,24,40,0.18);
+  --bb-shadow-card: 0 1px 2px rgba(16,24,40,0.04), 0 4px 10px -2px rgba(16,24,40,0.05), 0 18px 40px -16px rgba(16,24,40,0.10);
+  --bb-shadow-purple: 0 8px 24px rgba(107, 76, 230, 0.25);
+  --bb-shadow-purple-sm: 0 4px 12px rgba(107, 76, 230, 0.20);
+
+  /* Focus ring */
+  --bb-focus-ring: 0 0 0 3px rgba(107, 76, 230, 0.22);
+
+  /* Glass (hero cards only) */
+  --bb-glass-bg: rgba(255, 255, 255, 0.72);
+  --bb-glass-border: rgba(255, 255, 255, 0.5);
+  --bb-glass-blur: 20px;
+}
+
+/* ============================================================
+   Color tokens — DARK theme
+   ============================================================ */
+.theme-dark {
+  /* Brand (slightly lighter primary on dark for AA contrast) */
+  --bb-primary: #8B6FFF;
+  --bb-primary-dark: #6B4CE6;
+  --bb-primary-light: #B5A4F0;
+  --bb-primary-tint-hover: rgba(139, 111, 255, 0.12);
+  --bb-primary-tint-pressed: rgba(139, 111, 255, 0.20);
+  --bb-primary-tint-bg: rgba(139, 111, 255, 0.08);
+
+  --bb-secondary: #FF8080;
+  --bb-secondary-dark: #FF6B6B;
+  --bb-secondary-tint: rgba(255, 128, 128, 0.15);
+
+  --bb-tertiary: #FFC872;
+  --bb-tertiary-dark: #FFB84D;
+  --bb-tertiary-tint: rgba(255, 200, 114, 0.18);
+
+  /* Semantic */
+  --bb-success: #4FAE7F;
+  --bb-success-tint: rgba(79, 174, 127, 0.18);
+  --bb-warning: #FFC872;
+  --bb-warning-tint: rgba(255, 200, 114, 0.18);
+  --bb-error: #FF8080;
+  --bb-error-tint: rgba(255, 128, 128, 0.15);
+  --bb-info: #6BA8E8;
+  --bb-info-tint: rgba(107, 168, 232, 0.18);
+
+  /* Booking status */
+  --bb-status-confirmed: #4FAE7F;
+  --bb-status-confirmed-bg: rgba(79, 174, 127, 0.18);
+  --bb-status-pending: #FFC872;
+  --bb-status-pending-bg: rgba(255, 200, 114, 0.22);
+  --bb-status-cancelled: #A0AEC0;
+  --bb-status-cancelled-bg: rgba(160, 174, 192, 0.16);
+  --bb-status-completed: #8B6FFF;
+  --bb-status-completed-bg: rgba(139, 111, 255, 0.16);
+  --bb-status-imported: #6BA8E8;
+  --bb-status-imported-bg: rgba(107, 168, 232, 0.18);
+
+  /* Surfaces (OLED-friendly) */
+  --bb-bg: #000000;
+  --bb-surface: #121212;
+  --bb-surface-variant: #1E1E1E;
+  --bb-surface-elevated: #1A1A1A;
+  --bb-border: #2D3748;
+  --bb-border-subtle: #1F2937;
+  --bb-divider: #1F2937;
+
+  /* Premium console shell (dark: shell darkest → panel → cards lift via lightness) */
+  --bb-shell-bg: #000000;
+  --bb-panel-bg: #0B0B0D;
+  --bb-panel-border: rgba(255, 255, 255, 0.06);
+  --bb-panel-shadow: 0 1px 3px rgba(0,0,0,0.40), 0 2px 8px -2px rgba(0,0,0,0.30), 0 16px 36px -16px rgba(0,0,0,0.55);
+
+  /* Text */
+  --bb-text-primary: #E2E8F0;
+  --bb-text-secondary: #A0AEC0;
+  --bb-text-tertiary: #718096;
+  --bb-text-on-primary: #FFFFFF;
+  --bb-text-disabled: #4A5568;
+
+  /* Gradient (richer in dark) */
+  --bb-gradient-primary: linear-gradient(135deg, #6B4CE6 0%, #8B6FFF 100%);
+  --bb-gradient-hero: linear-gradient(135deg, #4A2BD1 0%, #6B4CE6 50%, #8B6FFF 100%);
+
+  /* Shadows — stronger to register on dark, layered */
+  --bb-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24), 0 2px 6px -1px rgba(0, 0, 0, 0.28);
+  --bb-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.30), 0 6px 16px -4px rgba(0, 0, 0, 0.40), 0 20px 40px -12px rgba(0, 0, 0, 0.50);
+  --bb-shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.36), 0 12px 28px -6px rgba(0, 0, 0, 0.48), 0 32px 64px -20px rgba(0, 0, 0, 0.58);
+  --bb-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.30), 0 4px 12px -2px rgba(0, 0, 0, 0.38), 0 20px 44px -16px rgba(0, 0, 0, 0.52);
+  --bb-shadow-purple: 0 8px 24px rgba(139, 111, 255, 0.35);
+  --bb-shadow-purple-sm: 0 4px 12px rgba(139, 111, 255, 0.30);
+
+  --bb-focus-ring: 0 0 0 3px rgba(139, 111, 255, 0.32);
+
+  --bb-glass-bg: rgba(30, 30, 30, 0.60);
+  --bb-glass-border: rgba(255, 255, 255, 0.08);
+  --bb-glass-blur: 20px;
+}
+
+/* ============================================================
+   Spacing — 8px grid (NO 12)
+   ============================================================ */
+:root {
+  --bb-space-xxs: 4px;
+  --bb-space-xs: 8px;
+  --bb-space-sm: 16px;
+  --bb-space-md: 24px;
+  --bb-space-lg: 32px;
+  --bb-space-xl: 48px;
+  --bb-space-xxl: 64px;
+}
+
+/* ============================================================
+   Radii
+   ============================================================ */
+:root {
+  --bb-radius-xs: 6px;
+  --bb-radius-sm: 12px;   /* CLAUDE.md mandate — buttons/inputs/chips */
+  --bb-radius-md: 20px;   /* cards */
+  --bb-radius-lg: 24px;   /* modals/sheets */
+  --bb-radius-xl: 32px;   /* hero cards */
+  --bb-radius-full: 999px;
+}
+
+/* ============================================================
+   Type — Inter scale w/ tabular figures on numerics
+   ============================================================ */
+:root {
+  --bb-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --bb-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+/* Base reset */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--bb-font-sans);
+  color: var(--bb-text-primary);
+  background: var(--bb-bg);
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Type classes */
+.bb-display   { font-size: 32px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; }
+.bb-display-lg { font-size: 48px; line-height: 1.05; font-weight: 800; letter-spacing: -0.03em; }
+.bb-h1        { font-size: 24px; line-height: 1.2; font-weight: 700; letter-spacing: -0.015em; }
+.bb-h2        { font-size: 20px; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; }
+.bb-h3        { font-size: 18px; line-height: 1.3; font-weight: 600; letter-spacing: -0.005em; }
+.bb-body-lg   { font-size: 16px; line-height: 1.5; font-weight: 400; }
+.bb-body      { font-size: 14px; line-height: 1.5; font-weight: 400; }
+.bb-caption   { font-size: 12px; line-height: 1.5; font-weight: 400; }
+.bb-label     { font-size: 13px; line-height: 1.4; font-weight: 500; letter-spacing: 0.01em; }
+.bb-mono      { font-family: var(--bb-font-mono); font-size: 13px; font-weight: 500; letter-spacing: 0; }
+.bb-eyebrow   { font-size: 11px; line-height: 1.4; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* Tabular figures on anything numeric */
+.bb-tnum { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' on; }
+
+/* Material Symbols base sizing */
+.material-symbols-rounded {
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
+  vertical-align: middle;
+}
+
+/* ============================================================
+   Reduced-motion baseline
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+  }
+}
+
+/* Helper: stop scroll on artboard bodies (artboards are static frames) */
+.bb-screen { overflow: hidden; }
+
+/* ============================================================
+   Interaction states (design polish pass)
+   ============================================================ */
+.bb-lift { transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease; }
+.bb-lift:hover { transform: translateY(-3px); box-shadow: var(--bb-shadow-lg); }
+.bb-lift:active { transform: translateY(-1px); }
+.bb-row-hover { transition: background-color .14s ease; cursor: pointer; }
+.bb-row-hover:hover { background-color: var(--bb-primary-tint-bg); }
+.bb-nav-item { transition: background-color .14s ease, box-shadow .14s ease; }
+.bb-nav-item:hover { background-color: var(--bb-surface-variant); }
+.adm-nav { transition: background-color .14s ease; }
+.adm-nav:hover { background-color: rgba(255,255,255,0.06); }
+.bb-press { transition: transform .1s ease; }
+.bb-press:active { transform: scale(0.98); }
+
+/* Chart entrance animations (premium dashboards) */
+@keyframes pv-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes pv-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.pv-draw { stroke-dasharray: 1; animation: pv-draw 1.2s cubic-bezier(.2,.8,.2,1) both; }
+.pv-fade-in { animation: pv-fade-in 1.1s ease both; }
+@media (prefers-reduced-motion: reduce) {
+  .pv-draw, .pv-fade-in { animation: none !important; }
+}
+
+/* ============================================================
+   Premium console shell — opt-in via .bb-shell on a screen root.
+   Paints the shared shell tone and dissolves the sidebar + app bar
+   into it so content floats on the shell. Color/border only — no
+   layout size change, so it's safe on fixed-height screens.
+   Auto-adapts to dark via the --bb-shell-* tokens.
+   ============================================================ */
+.bb-shell { background: var(--bb-shell-bg) !important; }
+.bb-shell > aside { background: transparent !important; border-right: none !important; }
+.bb-shell > div > header,
+.bb-shell > header { background: transparent !important; border-bottom: none !important; }

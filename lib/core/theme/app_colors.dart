@@ -243,6 +243,17 @@ class AppColors {
   static const Color authIllustration = Color(0xFF2C2C2C); // Dark Gray
 
   // ============================================================================
+  // WIDGET-SURFACE COLORS (mint accent, guest-facing booking widget only)
+  // ============================================================================
+
+  /// Mint widget accent (`#3DD9B0`) — selected dates, success, CTA on the
+  /// embeddable booking widget. NEVER used on owner or admin surfaces.
+  static const Color mintWidget = Color(0xFF3DD9B0);
+
+  /// Mint widget tint (10% opacity) for hover/fill backgrounds.
+  static const Color mintWidgetTint = Color(0x1A3DD9B0);
+
+  // ============================================================================
   // GRADIENT COLORS
   // ============================================================================
   //

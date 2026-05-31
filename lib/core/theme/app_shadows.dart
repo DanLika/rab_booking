@@ -119,6 +119,94 @@ class AppShadows {
     ),
   ];
 
+  // ============================================================================
+  // REDESIGN HANDOFF SHADOWS (premium console layered ramp)
+  // ============================================================================
+
+  /// Card-elevated ramp (handoff `--bb-shadow-card`).
+  /// Three-layer subtle float for default floating panels.
+  static const List<BoxShadow> cardElevated = [
+    BoxShadow(
+      color: Color(0x0A101828), // rgba(16,24,40,.04)
+      blurRadius: 2,
+      offset: Offset(0, 1),
+    ),
+    BoxShadow(
+      color: Color(0x0D101828), // rgba(16,24,40,.05)
+      blurRadius: 10,
+      offset: Offset(0, 4),
+      spreadRadius: -2,
+    ),
+    BoxShadow(
+      color: Color(0x1A101828), // rgba(16,24,40,.10)
+      blurRadius: 40,
+      offset: Offset(0, 18),
+      spreadRadius: -16,
+    ),
+  ];
+
+  /// Purple-glow small (handoff `--bb-shadow-purple-sm`).
+  /// Active nav tiles + primary CTAs ONLY — do not use for general cards.
+  static const List<BoxShadow> purpleSm = [
+    BoxShadow(
+      color: Color(0x336B4CE6), // rgba(107,76,230,.20)
+      blurRadius: 12,
+      offset: Offset(0, 4),
+    ),
+  ];
+
+  /// Purple-glow small (dark mode — lighter primary, ~30% alpha).
+  static const List<BoxShadow> purpleSmDark = [
+    BoxShadow(
+      color: Color(0x4D8B6FFF), // rgba(139,111,255,.30)
+      blurRadius: 12,
+      offset: Offset(0, 4),
+    ),
+  ];
+
+  /// Premium console panel-shadow (handoff `--bb-panel-shadow`).
+  /// Outer rounded panel that floats on the shell-bg.
+  static const List<BoxShadow> panelLight = [
+    BoxShadow(
+      color: Color(0x08101828), // rgba(16,24,40,.03)
+      blurRadius: 3,
+      offset: Offset(0, 1),
+    ),
+    BoxShadow(
+      color: Color(0x0A101828), // rgba(16,24,40,.04)
+      blurRadius: 8,
+      offset: Offset(0, 2),
+      spreadRadius: -2,
+    ),
+    BoxShadow(
+      color: Color(0x1A101828), // rgba(16,24,40,.10)
+      blurRadius: 36,
+      offset: Offset(0, 16),
+      spreadRadius: -16,
+    ),
+  ];
+
+  /// Premium console panel-shadow (dark variant).
+  static const List<BoxShadow> panelDark = [
+    BoxShadow(
+      color: Color(0x66000000), // rgba(0,0,0,.40)
+      blurRadius: 3,
+      offset: Offset(0, 1),
+    ),
+    BoxShadow(
+      color: Color(0x4D000000), // rgba(0,0,0,.30)
+      blurRadius: 8,
+      offset: Offset(0, 2),
+      spreadRadius: -2,
+    ),
+    BoxShadow(
+      color: Color(0x8C000000), // rgba(0,0,0,.55)
+      blurRadius: 36,
+      offset: Offset(0, 16),
+      spreadRadius: -16,
+    ),
+  ];
+
   /// Tertiary colored shadow (Golden Sand glow)
   static const List<BoxShadow> tertiaryShadow = [
     BoxShadow(

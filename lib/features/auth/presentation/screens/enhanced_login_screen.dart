@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/constants/auth_feature_flags.dart';
 import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
@@ -13,18 +17,22 @@ import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../../../shared/widgets/universal_loader.dart';
-import '../widgets/auth_background.dart';
-import '../widgets/auth_logo_icon.dart';
-import '../widgets/glass_card.dart';
-import '../widgets/gradient_auth_button.dart';
-import '../widgets/premium_input_field.dart';
 import '../widgets/social_login_button.dart';
 
-/// Enhanced Login Screen with Premium Design
+/// Enhanced Login Screen — refactored onto Bb* redesign primitives (Phase 2).
 ///
-/// Uses [AndroidKeyboardDismissFix] mixin to handle the Android Chrome
-/// keyboard dismiss bug (Flutter issue #175074).
+/// Visual layer rebuilt with [BbLogo], [BbInput], [BbButton] + glass card on
+/// hero-gradient (intentional hero exception per `design_handoff/README.md`).
+///
+/// FROZEN / preserved logic:
+///  - `firebase_auth.signInWithEmailAndPassword` via enhancedAuthProvider
+///  - Email-verification gate routing
+///  - SecureStorageService Remember Me
+///  - Programmatic shake AnimationController (per .claude/rules/ui-ux.md)
+///  - Form-key validation (BbInput wrapped in `FormField<String>`)
+///  - AndroidKeyboardDismissFixApproach1 mixin (per .claude/rules/keyboard-fix.md)
 class EnhancedLoginScreen extends ConsumerStatefulWidget {
   const EnhancedLoginScreen({super.key});
 
@@ -48,7 +56,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   String? _emailErrorFromServer;
   AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
-  // Shake animation controller
+  // Shake animation controller (per .claude/rules/ui-ux.md — stays on AnimationController)
   late AnimationController _shakeController;
   late Animation<double> _shakeAnimation;
 
@@ -58,7 +66,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     _passwordController.addListener(_clearServerError);
     _emailController.addListener(_clearServerError);
 
-    // Initialize shake animation
     _shakeController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -67,24 +74,21 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       CurvedAnimation(parent: _shakeController, curve: Curves.elasticIn),
     );
 
-    // Auto-fill saved credentials if "Remember Me" was enabled
     _loadSavedCredentials();
   }
 
-  /// Load saved email from secure storage
-  /// SECURITY FIX SF-007: Only loads email, not password
+  /// Load saved email from secure storage.
+  /// SECURITY FIX SF-007: Only loads email, not password.
   Future<void> _loadSavedCredentials() async {
     try {
       final email = await SecureStorageService().getEmail();
       if (email != null && mounted) {
         setState(() {
           _emailController.text = email;
-          // SF-007: Password is no longer stored/loaded
           _rememberMe = true;
         });
       }
     } catch (e) {
-      // Silently fail - secure storage might not be available
       debugPrint('[LOGIN_SCREEN] Failed to load saved email: $e');
     }
   }
@@ -97,7 +101,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     super.dispose();
   }
 
-  /// Trigger shake animation on validation error
   void _shakeForm() {
     _shakeController.reset();
     _shakeController.forward().then((_) => _shakeController.reverse());
@@ -116,7 +119,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     final l10n = AppLocalizations.of(context);
 
     if (!_formKey.currentState!.validate()) {
-      _shakeForm(); // Shake animation on validation error
+      _shakeForm();
       ErrorDisplayUtils.showErrorSnackBar(
         context,
         l10n.pleaseFixErrors,
@@ -125,7 +128,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return;
     }
 
-    // Store credentials before async operation (in case fields get cleared)
+    // Store credentials before async operation (in case fields get cleared).
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
@@ -142,7 +145,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
       if (!mounted) return;
 
-      // Give auth state a moment to fully update after sign in
       await Future.delayed(const Duration(milliseconds: 100));
 
       final authState = ref.read(enhancedAuthProvider);
@@ -171,7 +173,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 
         _shakeForm();
 
-        // Force form validation to show inline errors
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _formKey.currentState != null) {
             _formKey.currentState!.validate();
@@ -189,16 +190,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       if (authState.requiresEmailVerification) {
         if (!mounted) return;
         debugPrint('[LOGIN_SCREEN] Email verification required, redirecting');
-        // Keep loader visible during navigation (widget will dispose naturally)
         context.go(OwnerRoutes.emailVerification);
         return;
       }
 
-      // User is authenticated - redirect immediately to dashboard
       if (!mounted) return;
 
-      // Keep loader visible during navigation to dashboard
-      // (will be disposed when widget unmounts)
       debugPrint('[LOGIN_SCREEN] Login successful, navigating to dashboard');
       if (mounted) {
         context.go(OwnerRoutes.overview);
@@ -207,15 +204,11 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       debugPrint('[LOGIN_SCREEN] Caught exception: ${e.runtimeType} = $e');
       if (!mounted) return;
 
-      // Get error message from exception (prefer thrown message over state)
-      // When a string is thrown directly, toString() returns the string itself
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
       debugPrint(
         '[LOGIN_SCREEN] Error message after processing: $errorMessage',
       );
 
-      // IMMEDIATELY show snackbar BEFORE any state changes or delays
-      // This ensures snackbar displays before router can trigger redirects
       final localizedError = _getLocalizedError(errorMessage, l10n);
       ErrorDisplayUtils.showErrorSnackBar(
         context,
@@ -223,7 +216,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         duration: const Duration(seconds: 10),
       );
 
-      // Give auth state a moment to update after error
       await Future.delayed(const Duration(milliseconds: 100));
       if (!mounted) return;
 
@@ -233,7 +225,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         '[LOGIN_SCREEN] Is password error: $isPassError, Is email error: $isEmailErr',
       );
 
-      // Set appropriate field error and enable autovalidate mode
       setState(() {
         _isLoading = false;
         _autovalidateMode = AutovalidateMode.onUserInteraction;
@@ -244,10 +235,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         }
       });
 
-      // Shake animation on error
       _shakeForm();
 
-      // Force form validation to show inline errors
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -259,11 +248,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     }
   }
 
-  /// Map error messages to localized strings
+  /// Map error messages to localized strings.
   String _getLocalizedError(String error, AppLocalizations l10n) {
     final errorLower = error.toLowerCase();
 
-    // Authentication errors - use new auth-specific keys
     if (errorLower.contains('user-not-found') ||
         errorLower.contains('no account found')) {
       return l10n.authErrorUserNotFound;
@@ -281,7 +269,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         errorLower.contains('account has been disabled')) {
       return l10n.authErrorUserDisabled;
     }
-    // Handle coded rate limit message with seconds (from RateLimitService)
     if (error.startsWith('RATE_LIMIT_LOCKOUT:')) {
       final secondsStr = error.split(':')[1];
       final seconds = int.tryParse(secondsStr) ?? 60;
@@ -309,7 +296,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       return l10n.errorEmailInUse;
     }
 
-    // Fallback to generic auth error for unmapped errors
     return l10n.authErrorGeneric;
   }
 
@@ -356,24 +342,28 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
     final isCompact = Breakpoints.isCompactMobile(context);
     final isSmallHeight = MediaQuery.of(context).size.height < 700;
 
-    // PRISTUP 1: resizeToAvoidBottomInset: true - klasičan Flutter pristup
+    // PRISTUP 1 (keyboard-fix.md): resizeToAvoidBottomInset: true + mixin
     return KeyedSubtree(
       key: ValueKey('login_screen_$keyboardFixRebuildKey'),
       child: Scaffold(
-        resizeToAvoidBottomInset:
-            true, // PRISTUP 1: Omogući automatsko prilagođavanje
+        resizeToAvoidBottomInset: true,
         body: Stack(
-          alignment:
-              Alignment.topLeft, // Explicit to avoid TextDirection null check
+          alignment: Alignment.topLeft,
           children: [
-            AuthBackground(
+            // Soft auth backdrop (`BbRedesignTokens.softBg`) — pale lavender
+            // wash per `design_handoff/screens/15-owner.png`. Was previously
+            // `rd.heroGradient` (saturated brand purple); swapped per Phase 1.2
+            // (#615) review feedback.
+            Container(
+              decoration: BoxDecoration(gradient: rd.softBg),
               child: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // Get keyboard height to adjust padding dynamically (with null safety)
                     final mediaQuery = MediaQuery.maybeOf(context);
                     final keyboardHeight =
                         (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
@@ -382,7 +372,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                         );
                     final isKeyboardOpen = keyboardHeight > 0;
 
-                    // Calculate minHeight safely - ensure it's always finite and valid
                     double minHeight;
                     if (isKeyboardOpen &&
                         constraints.maxHeight.isFinite &&
@@ -394,7 +383,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                           ? constraints.maxHeight
                           : 0.0;
                     }
-                    // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
                     return GestureDetector(
@@ -403,7 +391,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: EdgeInsets.symmetric(
-                          // RESPONSIVE: Use smaller padding on very small screens (<340px)
                           horizontal: isCompact
                               ? (MediaQuery.of(context).size.width < 340
                                     ? 8
@@ -414,92 +401,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                         child: ConstrainedBox(
                           constraints: BoxConstraints(minHeight: minHeight),
                           child: Center(
-                            child: GlassCard(
-                              padding: isSmallHeight
-                                  ? const EdgeInsets.all(16)
-                                  : null,
-                              child: Form(
-                                key: _formKey,
-                                autovalidateMode: _autovalidateMode,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    _buildHeader(
-                                      theme,
-                                      l10n,
-                                      isCompact,
-                                      isSmallHeight,
-                                    ),
-                                    SizedBox(
-                                      height: isSmallHeight
-                                          ? 16
-                                          : (isCompact ? 24 : 32),
-                                    ),
-                                    _buildEmailField(l10n),
-                                    SizedBox(
-                                      height: isSmallHeight
-                                          ? 8
-                                          : (isCompact ? 12 : 14),
-                                    ),
-                                    _buildPasswordField(theme, l10n),
-                                    SizedBox(
-                                      height: isSmallHeight
-                                          ? 8
-                                          : (isCompact ? 12 : 14),
-                                    ),
-                                    _buildRememberMeRow(theme, l10n),
-                                    SizedBox(
-                                      height: isSmallHeight
-                                          ? 16
-                                          : (isCompact ? 20 : 24),
-                                    ),
-                                    AnimatedBuilder(
-                                      animation: _shakeAnimation,
-                                      builder: (context, child) {
-                                        return Transform.translate(
-                                          offset: Offset(
-                                            _shakeAnimation.value,
-                                            0,
-                                          ),
-                                          child: child,
-                                        );
-                                      },
-                                      child: GradientAuthButton(
-                                        key: const ValueKey('login_submit'),
-                                        text: l10n.login,
-                                        onPressed: _handleLogin,
-                                        isLoading: _isLoading,
-                                        icon: Icons.login_rounded,
-                                      ),
-                                    ),
-                                    if (AuthFeatureFlags
-                                            .isGoogleSignInEnabled ||
-                                        AuthFeatureFlags
-                                            .isAppleSignInEnabled) ...[
-                                      SizedBox(
-                                        height: isSmallHeight
-                                            ? 12
-                                            : (isCompact ? 16 : 20),
-                                      ),
-                                      _buildDivider(theme, l10n),
-                                      SizedBox(
-                                        height: isSmallHeight
-                                            ? 12
-                                            : (isCompact ? 16 : 20),
-                                      ),
-                                      _buildSocialButtons(l10n),
-                                    ],
-                                    SizedBox(
-                                      height: isSmallHeight
-                                          ? 16
-                                          : (isCompact ? 20 : 24),
-                                    ),
-                                    _buildRegisterLink(theme, l10n),
-                                  ],
-                                ),
-                              ),
+                            child: _buildGlassCard(
+                              context,
+                              theme,
+                              rd,
+                              c,
+                              l10n,
+                              isCompact,
+                              isSmallHeight,
                             ),
                           ),
                         ),
@@ -516,95 +425,194 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     );
   }
 
-  Widget _buildHeader(
+  /// Glass card surface (BackdropFilter + glassBg/glassBorder tokens).
+  Widget _buildGlassCard(
+    BuildContext context,
     ThemeData theme,
+    BbRedesignTokens rd,
+    BBColorSet c,
     AppLocalizations l10n,
     bool isCompact,
     bool isSmallHeight,
   ) {
-    return Column(
-      children: [
-        Center(
-          child: AuthLogoIcon(
-            size: isSmallHeight ? 60 : (isCompact ? 70 : 80),
-            isWhite: theme.brightness == Brightness.dark,
+    final cardPadding = isSmallHeight
+        ? const EdgeInsets.all(BBSpace.sm)
+        : EdgeInsets.all(isCompact ? BBSpace.md : 36);
+
+    final card = ClipRRect(
+      borderRadius: BBRadius.lgAll,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: rd.glassBg,
+            border: Border.all(color: rd.glassBorder),
+            borderRadius: BBRadius.lgAll,
+            boxShadow: rd.panelShadow,
+          ),
+          padding: cardPadding,
+          child: Form(
+            key: _formKey,
+            autovalidateMode: _autovalidateMode,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeader(theme, c, l10n, isCompact, isSmallHeight),
+                SizedBox(height: isSmallHeight ? 16 : (isCompact ? 24 : 28)),
+                _buildEmailField(l10n),
+                SizedBox(height: isSmallHeight ? 10 : (isCompact ? 12 : 14)),
+                _buildPasswordField(theme, c, l10n),
+                SizedBox(height: isSmallHeight ? 10 : (isCompact ? 12 : 16)),
+                _buildRememberMeRow(theme, c, l10n),
+                SizedBox(height: isSmallHeight ? 16 : (isCompact ? 20 : 24)),
+                AnimatedBuilder(
+                  animation: _shakeAnimation,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(_shakeAnimation.value, 0),
+                      child: child,
+                    );
+                  },
+                  child: BbButton(
+                    key: const ValueKey('login_submit'),
+                    label: l10n.login,
+                    iconLeft: 'login',
+                    size: BbButtonSize.lg,
+                    fullWidth: true,
+                    loading: _isLoading,
+                    onPressed: _handleLogin,
+                  ),
+                ),
+                if (AuthFeatureFlags.isGoogleSignInEnabled ||
+                    AuthFeatureFlags.isAppleSignInEnabled) ...[
+                  SizedBox(height: isSmallHeight ? 16 : (isCompact ? 20 : 24)),
+                  _buildDivider(theme, c, l10n),
+                  SizedBox(height: isSmallHeight ? 12 : (isCompact ? 16 : 16)),
+                  _buildSocialButtons(l10n),
+                ],
+                SizedBox(height: isSmallHeight ? 16 : (isCompact ? 20 : 24)),
+                _buildRegisterLink(theme, c, l10n),
+              ],
+            ),
           ),
         ),
-        SizedBox(height: isSmallHeight ? 10 : (isCompact ? 16 : 20)),
+      ),
+    );
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 440),
+      child: card,
+    );
+  }
+
+  Widget _buildHeader(
+    ThemeData theme,
+    BBColorSet c,
+    AppLocalizations l10n,
+    bool isCompact,
+    bool isSmallHeight,
+  ) {
+    final logoSize = isSmallHeight ? 56.0 : (isCompact ? 60.0 : 64.0);
+    return Column(
+      children: [
+        Center(child: BbLogo(size: logoSize, useGradient: false)),
+        SizedBox(height: isSmallHeight ? 12 : (isCompact ? 14 : 16)),
         Text(
           l10n.authOwnerLogin,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: isSmallHeight ? 20 : (isCompact ? 22 : 26),
-          ),
+          style: BBType.h1(context).copyWith(color: c.textPrimary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
         Text(
           l10n.authManageProperties,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontSize: isCompact ? 13 : 14,
-          ),
+          style: BBType.body(context).copyWith(color: c.textSecondary),
           textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
+  /// Email field — `BbInput` wrapped in `FormField<String>` so
+  /// `_formKey.validate()` still triggers (BbInput composes `TextField`,
+  /// not `TextFormField`).
   Widget _buildEmailField(AppLocalizations l10n) {
-    return PremiumInputField(
-      key: const ValueKey('login_email'),
-      controller: _emailController,
-      labelText: l10n.email,
-      prefixIcon: Icons.email_outlined,
-      keyboardType: TextInputType.emailAddress,
-      autofillHints: const [AutofillHints.email, AutofillHints.username],
-      validator: (value) {
-        // Show server error if present (e.g., "No account found with this email")
+    return FormField<String>(
+      initialValue: _emailController.text,
+      validator: (_) {
         if (_emailErrorFromServer != null) {
           return _emailErrorFromServer;
         }
-        return ProfileValidators.validateEmail(value);
+        return ProfileValidators.validateEmail(_emailController.text);
+      },
+      builder: (state) {
+        return BbInput(
+          key: const ValueKey('login_email'),
+          controller: _emailController,
+          label: l10n.email,
+          iconLeft: 'mail',
+          placeholder: 'ime@primjer.hr',
+          size: BbInputSize.lg,
+          keyboardType: TextInputType.emailAddress,
+          error: state.errorText,
+          onChanged: (v) => state.didChange(v),
+        );
       },
     );
   }
 
-  Widget _buildPasswordField(ThemeData theme, AppLocalizations l10n) {
-    return PremiumInputField(
-      key: const ValueKey('login_password'),
-      controller: _passwordController,
-      labelText: l10n.password,
-      prefixIcon: Icons.lock_outline,
-      obscureText: _obscurePassword,
-      autofillHints: const [AutofillHints.password],
-      // UX-019: Add tooltip for accessibility (screen readers)
-      suffixIcon: Tooltip(
-        message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
-        child: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            color: theme.colorScheme.onSurfaceVariant,
-            size: 20,
-          ),
-          onPressed: () {
-            // SF-013: Add haptic feedback for better UX on mobile
-            HapticFeedback.mediumImpact();
-            setState(() => _obscurePassword = !_obscurePassword);
-          },
-        ),
-      ),
-      validator: (value) {
+  Widget _buildPasswordField(
+    ThemeData theme,
+    BBColorSet c,
+    AppLocalizations l10n,
+  ) {
+    return FormField<String>(
+      initialValue: _passwordController.text,
+      validator: (_) {
         if (_passwordErrorFromServer != null) {
           return _passwordErrorFromServer;
         }
-        // For login, only validate length - Firebase Auth handles the rest
-        return PasswordValidator.validateLoginPassword(value);
+        return PasswordValidator.validateLoginPassword(
+          _passwordController.text,
+        );
+      },
+      builder: (state) {
+        return BbInput(
+          key: const ValueKey('login_password'),
+          controller: _passwordController,
+          label: l10n.password,
+          iconLeft: 'lock',
+          placeholder: '••••••••',
+          size: BbInputSize.lg,
+          obscureText: _obscurePassword,
+          error: state.errorText,
+          onChanged: (v) => state.didChange(v),
+          trailingAction: Tooltip(
+            message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: c.textTertiary,
+                size: 20,
+              ),
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
+            ),
+          ),
+        );
       },
     );
   }
 
-  Widget _buildRememberMeRow(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildRememberMeRow(
+    ThemeData theme,
+    BBColorSet c,
+    AppLocalizations l10n,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -613,7 +621,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
               onTap: () => setState(() => _rememberMe = !_rememberMe),
               borderRadius: BorderRadius.circular(4),
               child: Container(
-                constraints: const BoxConstraints(minHeight: 48),
+                constraints: const BoxConstraints(minHeight: 44),
                 child: Row(
                   children: [
                     SizedBox(
@@ -626,16 +634,16 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        activeColor: theme.colorScheme.primary,
+                        activeColor: c.primary,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
                         l10n.authRememberMe,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 13,
-                        ),
+                        style: BBType.caption(
+                          context,
+                        ).copyWith(color: c.textSecondary),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -645,42 +653,28 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
             ),
           ),
         ),
-        TextButton(
+        BbButton(
+          label: l10n.authForgotPassword,
+          variant: BbButtonVariant.tertiary,
+          size: BbButtonSize.sm,
           onPressed: () => context.push(OwnerRoutes.forgotPassword),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            l10n.authForgotPassword,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 13,
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
         ),
       ],
     );
   }
 
-  Widget _buildDivider(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildDivider(ThemeData theme, BBColorSet c, AppLocalizations l10n) {
     return Row(
       children: [
-        Expanded(child: Divider(color: theme.colorScheme.outline)),
+        Expanded(child: Divider(color: c.border, height: 1)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             l10n.authOrContinueWith,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: 12,
-            ),
+            style: BBType.caption(context).copyWith(color: c.textTertiary),
           ),
         ),
-        Expanded(child: Divider(color: theme.colorScheme.outline)),
+        Expanded(child: Divider(color: c.border, height: 1)),
       ],
     );
   }
@@ -690,7 +684,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     final isAppleEnabled = AuthFeatureFlags.isAppleSignInEnabled;
     final isGoogleEnabled = AuthFeatureFlags.isGoogleSignInEnabled;
 
-    // Hide entire section if no social logins are enabled
     if (!isGoogleEnabled && !isAppleEnabled) {
       return const SizedBox.shrink();
     }
@@ -709,18 +702,20 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
       onPressed: () => _handleOAuthSignIn(authNotifier.signInWithApple),
     );
 
-    // Android: Only Google (Apple Sign-In not supported on Android)
     if (isGoogleEnabled && !isAppleEnabled) {
       return googleButton;
     }
 
-    // iOS/Web: Both Google and Apple - stack vertically
     return Column(
       children: [googleButton, const SizedBox(height: 10), appleButton],
     );
   }
 
-  Widget _buildRegisterLink(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildRegisterLink(
+    ThemeData theme,
+    BBColorSet c,
+    AppLocalizations l10n,
+  ) {
     return Center(
       child: TextButton(
         onPressed: _isLoading ? null : () => context.go(OwnerRoutes.register),
@@ -729,11 +724,10 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         ),
         child: RichText(
           text: TextSpan(
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: 13,
+            style: BBType.caption(context).copyWith(
               color: _isLoading
-                  ? theme.colorScheme.onSurface.withAlpha(100)
-                  : null,
+                  ? c.textPrimary.withValues(alpha: 0.4)
+                  : c.textSecondary,
             ),
             children: [
               TextSpan(text: '${l10n.authNoAccount} '),
@@ -741,9 +735,9 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                 text: l10n.authCreateAccount,
                 style: TextStyle(
                   color: _isLoading
-                      ? theme.colorScheme.primary.withAlpha(100)
-                      : theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+                      ? c.primary.withValues(alpha: 0.4)
+                      : c.primary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],

@@ -451,7 +451,7 @@ service cloud.firestore {
     // docs can still be updated/deleted by owner (cleanup path). New writes
     // must go through the subcollection /properties/{p}/units/{u}.
     match /units/{unitId} {
-      allow read: if true;
+      allow read: if isResourceOwner();
       allow create: if false;
       allow update, delete: if isResourceOwner();
     }
@@ -470,7 +470,7 @@ service cloud.firestore {
     // DEPRECATED: Top-level daily_prices
     // F-NEW-07: lock create. Subcollection path is the only valid write.
     match /daily_prices/{priceId} {
-      allow read: if true;
+      allow read: if isResourceOwner();
       allow create: if false;
       allow update, delete: if isResourceOwner();
     }

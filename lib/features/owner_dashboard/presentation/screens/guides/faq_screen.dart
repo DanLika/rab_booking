@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../../l10n/app_localizations.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
-import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
-import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
-import '../../../../../shared/widgets/app_filter_chip.dart';
+import '../../../../../shared/widgets/redesign.dart';
 import '../../widgets/owner_app_drawer.dart';
 
 class FAQItem {
@@ -235,12 +234,26 @@ class _FAQScreenState extends State<FAQScreen> {
     return faqs;
   }
 
+  /// Material Symbols icon name for a category — mirrors handoff JSX
+  /// `FAQ_CAT_ICON` map. Used in both filter chips and accordion-row leading
+  /// tile so visual identity stays consistent.
+  String _categoryIconName(String categoryKey) => switch (categoryKey) {
+    'bookings' => 'receipt_long',
+    'payments' => 'payments',
+    'widget' => 'code',
+    'icalSync' => 'sync',
+    'support' => 'support_agent',
+    _ => 'apps',
+  };
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final c = BBColor.of(context);
     final filteredFAQs = _getFilteredFAQs(l10n);
+    final showResultsHeader =
+        _searchQuery.isNotEmpty || _selectedCategoryKey != 'all';
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -253,225 +266,262 @@ class _FAQScreenState extends State<FAQScreen> {
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
         child: SafeArea(
-          child: Column(
-            children: [
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Builder(
-                  builder: (ctx) => TextField(
-                    controller: _searchController,
-                    decoration:
-                        InputDecorationHelper.buildDecoration(
-                          labelText: l10n.ownerFaqSearchHint,
-                          prefixIcon: const Icon(Icons.search),
-                          context: ctx,
-                        ).copyWith(
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    setState(() {
-                                      _searchController.clear();
-                                      _searchQuery = '';
-                                    });
-                                  },
-                                )
-                              : null,
-                        ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                  ),
-                ),
-              ),
+          child: LayoutBuilder(
+            builder: (BuildContext _, BoxConstraints constraints) {
+              // Center body column on wider viewports (handoff: 800px column
+              // on desktop, 620px on tablet, edge-to-edge on mobile).
+              final double maxColumn = constraints.maxWidth >= 1024
+                  ? 800
+                  : constraints.maxWidth >= 600
+                  ? 620
+                  : double.infinity;
 
-              // Category Filter
-              SizedBox(
-                height: 50,
-                child: Center(
-                  child: SingleChildScrollView(
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxColumn),
+                  child: ListView(
                     physics: PlatformScrollPhysics.adaptive,
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Wrap(
-                      spacing: 8,
-                      children: _categoryKeys.map((categoryKey) {
-                        final isSelected = categoryKey == _selectedCategoryKey;
-                        return AppFilterChip(
-                          label: _getCategoryLabel(categoryKey, l10n),
-                          selected: isSelected,
-                          icon: _getCategoryIcon(categoryKey),
-                          onSelected: () {
-                            setState(() {
-                              _selectedCategoryKey = categoryKey;
-                            });
-                          },
-                        );
-                      }).toList(),
+                    padding: const EdgeInsets.fromLTRB(
+                      BBSpace.sm,
+                      BBSpace.sm,
+                      BBSpace.sm,
+                      BBSpace.lg,
                     ),
-                  ),
-                ),
-              ),
+                    children: [
+                      // Section header — page title repeated inside body per
+                      // handoff (CommonAppBar still owns the bar-level title).
+                      BbSectionHeader(
+                        title: l10n.ownerFaqTitle,
+                        level: BbSectionHeaderLevel.h1,
+                      ),
 
-              Divider(color: theme.dividerColor),
-
-              // Results Count
-              if (_searchQuery.isNotEmpty || _selectedCategoryKey != 'all')
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Text(
-                    l10n.ownerFaqResultsFound(filteredFAQs.length),
-                    style: TextStyle(
-                      color: isDark
-                          ? theme.colorScheme.onSurfaceVariant
-                          : Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-
-              // FAQ List
-              Expanded(
-                child: filteredFAQs.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        physics: PlatformScrollPhysics.adaptive,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: filteredFAQs.length,
-                        itemBuilder: (context, index) {
-                          final faq = filteredFAQs[index];
-                          return _buildFAQCard(faq, l10n);
+                      // Search box (NON-form, free-text filter).
+                      BbInput(
+                        controller: _searchController,
+                        iconLeft: 'search',
+                        placeholder: l10n.ownerFaqSearchHint,
+                        size: BbInputSize.lg,
+                        trailingAction: _searchQuery.isNotEmpty
+                            ? _ClearSearchButton(
+                                color: c.textTertiary,
+                                onTap: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    _searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
                         },
                       ),
-              ),
-            ],
+
+                      const SizedBox(height: BBSpace.sm),
+
+                      // Category filter chips.
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _categoryKeys.map((categoryKey) {
+                          final isSelected =
+                              categoryKey == _selectedCategoryKey;
+                          return BbChip(
+                            label: _getCategoryLabel(categoryKey, l10n),
+                            iconLeft: _categoryIconName(categoryKey),
+                            selected: isSelected,
+                            onTap: () {
+                              setState(() {
+                                _selectedCategoryKey = categoryKey;
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+
+                      // Results count line (when filter or search active).
+                      if (showResultsHeader) ...[
+                        const SizedBox(height: BBSpace.xs),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
+                          child: Text(
+                            l10n.ownerFaqResultsFound(filteredFAQs.length),
+                            style: BBType.caption(
+                              context,
+                            ).copyWith(color: c.textTertiary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: BBSpace.sm),
+
+                      // FAQ list or empty state.
+                      if (filteredFAQs.isEmpty)
+                        _buildEmptyState(l10n)
+                      else
+                        ...filteredFAQs.map(
+                          (faq) => Padding(
+                            padding: const EdgeInsets.only(bottom: BBSpace.xs),
+                            child: _buildFAQCard(faq, l10n, c, theme),
+                          ),
+                        ),
+
+                      // Contact-support card (handoff: bottom of body).
+                      const SizedBox(height: BBSpace.sm),
+                      _buildContactCard(l10n, c),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFAQCard(FAQItem faq, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+  Widget _buildFAQCard(
+    FAQItem faq,
+    AppLocalizations l10n,
+    BBColorSet c,
+    ThemeData theme,
+  ) {
     final categoryLabel = _getCategoryLabel(faq.categoryKey, l10n);
+    final iconName = _categoryIconName(faq.categoryKey);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
+    return BbCard(
+      // Per mandate: wrap EACH Q+A pair in its own card. (Handoff JSX wraps
+      // the whole list in one outer card with row dividers; mandate is
+      // explicit on per-item cards — recorded as INT drift in PR body.)
+      padding: EdgeInsets.zero,
       child: Theme(
+        // Strip Material's default divider above ExpansionTile children.
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          iconColor: theme.colorScheme.primary,
-          collapsedIconColor: theme.colorScheme.primary,
-          title: Text(
-            faq.question,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: BBSpace.sm,
+            vertical: 4,
           ),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            BBSpace.sm,
+            0,
+            BBSpace.sm,
+            BBSpace.sm,
+          ),
+          iconColor: c.primary,
+          collapsedIconColor: c.primary,
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: c.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(BBRadius.xs),
+            ),
+            child: Center(
+              child: BbIcon(name: iconName, size: 18, color: c.primary),
+            ),
+          ),
+          title: Text(faq.question, style: BBType.h3(context)),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               categoryLabel,
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark
-                    ? theme.colorScheme.onSurfaceVariant
-                    : Colors.grey.shade600,
-              ),
+              style: BBType.caption(context).copyWith(color: c.textTertiary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
               child: Text(
                 faq.answer,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDark
-                      ? theme.colorScheme.onSurface
-                      : Colors.grey.shade800,
-                  height: 1.5,
+                style: BBType.body(
+                  context,
+                ).copyWith(color: c.textSecondary, height: 1.6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(AppLocalizations l10n) {
+    return BbEmptyState(
+      icon: 'search_off',
+      title: l10n.ownerFaqNoResults,
+      body: l10n.ownerFaqNoResultsDesc,
+      compact: true,
+    );
+  }
+
+  Widget _buildContactCard(AppLocalizations l10n, BBColorSet c) {
+    return BbCard(
+      variant: BbCardVariant.accentLeft,
+      accentTone: BbCardAccentTone.info,
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: c.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(BBRadius.sm),
+            ),
+            child: Center(
+              child: BbIcon(name: 'support_agent', size: 26, color: c.primary),
+            ),
+          ),
+          const SizedBox(width: BBSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.contactSupport, style: BBType.h3(context)),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.contactSupportTeam,
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textSecondary),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildEmptyState() {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+/// Inline trailing icon button used to clear the search input.
+///
+/// Kept as a small private widget so the surrounding `BbInput` stays declarative
+/// — `BbInput.trailingAction` accepts any [Widget], and a stateful button needs
+/// its own hover/tap surface separate from the input chrome.
+class _ClearSearchButton extends StatelessWidget {
+  const _ClearSearchButton({required this.color, required this.onTap});
+  final Color color;
+  final VoidCallback onTap;
 
-    return Center(
+  @override
+  Widget build(BuildContext context) {
+    return InkResponse(
+      onTap: onTap,
+      radius: 18,
       child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: isDark
-                  ? theme.colorScheme.onSurfaceVariant
-                  : Colors.grey.shade400,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.ownerFaqNoResults,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDark
-                    ? theme.colorScheme.onSurface
-                    : Colors.grey.shade600,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.ownerFaqNoResultsDesc,
-              style: TextStyle(
-                color: isDark
-                    ? theme.colorScheme.onSurfaceVariant
-                    : Colors.grey.shade500,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
+        padding: const EdgeInsets.all(4),
+        child: BbIcon(name: 'close', size: 18, color: color),
       ),
     );
   }
-
-  IconData _getCategoryIcon(String categoryKey) => switch (categoryKey) {
-    'bookings' => Icons.event,
-    'payments' => Icons.payment,
-    'widget' => Icons.widgets,
-    'icalSync' => Icons.sync,
-    'support' => Icons.support,
-    _ => Icons.help_outline,
-  };
 }

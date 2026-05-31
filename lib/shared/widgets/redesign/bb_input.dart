@@ -12,6 +12,24 @@ enum BbInputSize { sm, md, lg }
 /// - error + helper text
 /// - char counter (`charLimit`)
 /// - size: sm 40 / md 48 / lg 56
+///
+/// **Form integration (Phase 1.1):** Pass [validator] (and optional
+/// [autovalidateMode]) to wire this input into a [Form] ancestor.
+/// `_formKey.currentState!.validate()` will then trigger validation
+/// correctly. The existing [error] parameter remains for manual error
+/// control outside Form contexts; if both are set, [error] takes precedence
+/// (explicit override wins).
+///
+/// Implementation: when [validator] is non-null the widget wraps its
+/// chrome in a [FormField<String>] (zero overhead when no validator is
+/// supplied — the inner widget stays a plain [TextField]). The validator
+/// receives the live controller text so server-side `controller.text = …`
+/// writes are validated correctly.
+///
+/// **Trailing slots:** [iconRight] takes a Material Symbol *name* (string)
+/// and renders a static decorative icon. For stateful interactive trailing
+/// content (password visibility toggle, clipboard button, etc.) use
+/// [trailingAction] which accepts a [Widget].
 class BbInput extends StatefulWidget {
   const BbInput({
     super.key,
@@ -31,6 +49,9 @@ class BbInput extends StatefulWidget {
     this.keyboardType,
     this.onChanged,
     this.onSubmitted,
+    this.onFieldSubmitted,
+    this.validator,
+    this.autovalidateMode,
   });
 
   final String? label;
@@ -49,6 +70,21 @@ class BbInput extends StatefulWidget {
   final TextInputType? keyboardType;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+
+  /// Form-aware submit callback. Fires when the user submits the field
+  /// (e.g. presses "done" on a soft keyboard). Use instead of (or in
+  /// addition to) [onSubmitted] when the input lives inside a [Form].
+  final ValueChanged<String>? onFieldSubmitted;
+
+  /// Validator wired into an internal [FormField<String>]. When non-null,
+  /// `Form.of(context).validate()` will invoke this and any returned error
+  /// string is rendered in the existing helper-text slot (unless [error]
+  /// is also set, in which case [error] wins).
+  final FormFieldValidator<String>? validator;
+
+  /// Optional autovalidate mode forwarded to the internal [FormField].
+  /// Defaults to `null` (Flutter falls back to [AutovalidateMode.disabled]).
+  final AutovalidateMode? autovalidateMode;
 
   @override
   State<BbInput> createState() => _BbInputState();
@@ -96,7 +132,55 @@ class _BbInputState extends State<BbInput> {
   Widget build(BuildContext context) {
     final BBColorSet c = BBColor.of(context);
     final BbRedesignTokens rd = BbRedesignTokens.of(context);
-    final bool hasError = widget.error != null && widget.error!.isNotEmpty;
+
+    // Only wrap in FormField when a validator is supplied — zero overhead
+    // for plain inputs, preserves backward compat for PR #611 callers
+    // and any caller that just wants a styled TextField.
+    if (widget.validator != null) {
+      return FormField<String>(
+        initialValue: _ctrl.text,
+        autovalidateMode: widget.autovalidateMode,
+        // Validate against the live controller text rather than the
+        // FormField's cached `state.value` — callers may write
+        // `controller.text = …` programmatically (server-side error clear,
+        // password fill, etc.) without routing through `didChange`.
+        validator: (_) => widget.validator!.call(_ctrl.text),
+        builder: (FormFieldState<String> state) {
+          return _buildChrome(
+            context,
+            c,
+            rd,
+            validatorError: state.errorText,
+            onChangedInner: (String v) {
+              state.didChange(v);
+              widget.onChanged?.call(v);
+            },
+          );
+        },
+      );
+    }
+
+    return _buildChrome(
+      context,
+      c,
+      rd,
+      validatorError: null,
+      onChangedInner: widget.onChanged,
+    );
+  }
+
+  Widget _buildChrome(
+    BuildContext context,
+    BBColorSet c,
+    BbRedesignTokens rd, {
+    required String? validatorError,
+    required ValueChanged<String>? onChangedInner,
+  }) {
+    // Error precedence: explicit `widget.error` always wins over validator
+    // output. This lets callers force a server-side error message
+    // regardless of client-side validator state.
+    final String? effectiveError = widget.error ?? validatorError;
+    final bool hasError = effectiveError != null && effectiveError.isNotEmpty;
 
     final Color borderColor = hasError
         ? c.error
@@ -142,8 +226,11 @@ class _BbInputState extends State<BbInput> {
                   obscureText: widget.obscureText,
                   enabled: !widget.disabled,
                   keyboardType: widget.keyboardType,
-                  onChanged: widget.onChanged,
-                  onSubmitted: widget.onSubmitted,
+                  onChanged: onChangedInner,
+                  onSubmitted: (String v) {
+                    widget.onSubmitted?.call(v);
+                    widget.onFieldSubmitted?.call(v);
+                  },
                   style: BBType.body(context).copyWith(color: c.textPrimary),
                   decoration: InputDecoration(
                     isCollapsed: true,
@@ -172,7 +259,7 @@ class _BbInputState extends State<BbInput> {
             ],
           ),
         ),
-        if (widget.error != null ||
+        if (effectiveError != null ||
             widget.helper != null ||
             widget.charLimit != null)
           Padding(
@@ -181,7 +268,7 @@ class _BbInputState extends State<BbInput> {
               children: <Widget>[
                 Expanded(
                   child: Text(
-                    widget.error ?? widget.helper ?? '',
+                    effectiveError ?? widget.helper ?? '',
                     style: BBType.caption(
                       context,
                     ).copyWith(color: hasError ? c.error : c.textTertiary),

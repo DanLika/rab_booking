@@ -99,7 +99,7 @@ No changes needed.
 | `bb_avatar.dart` | `BbAvatar` + `BbAvatarSize` + `BbAvatarTone` | `BBAvatar` | NEW — full handoff tone palette (primary/success/info/tertiary/neutral/on-gradient), 5 sizes (xs/sm/md/lg/xl) |
 | `bb_avatar_slot.dart` | `BbAvatarSlot` | `BBAvatarSlot` | NEW — onTap callback for `image_picker` wiring |
 | `bb_button.dart` | `BbButton` + 8 variants | `BBButton` | NEW — all handoff variants (incl. `destructiveSoft`, `success`, `onGradient`, `onGradientSolid`), `asIcon`, `active`, `loading` |
-| `bb_input.dart` | `BbInput` | `BBInput` | NEW — icon left/right, error/helper, charLimit counter (tabular), 3 sizes (40/48/56), focus ring |
+| `bb_input.dart` | `BbInput` | `BBInput` | NEW — icon left/right, error/helper, charLimit counter (tabular), 3 sizes (40/48/56), focus ring. Phase 1.1 (PR #<this PR>): added `validator` + `autovalidateMode` + `onFieldSubmitted` parameters; wraps in `FormField<String>` when `validator` is supplied (zero overhead otherwise; internal `TextField` retained). |
 | `bb_card.dart` | `BbCard` + 3 variants + 5 accent tones | `BBCard` | NEW — `defaultStyle`/`flat`/`accentLeft`, hoverable lift on web only |
 | `bb_chip.dart` | `BbChip` + 2 variants | `BBChip` | NEW — `filter`/`tab`, count badge, dot, leading/trailing icon |
 | `bb_status_badge.dart` | `BbStatusBadge` + `BbBookingStatus` | `BBStatusBadge` | NEW — pulls deep + tint hexes from `BbRedesignTokens` |
@@ -116,6 +116,8 @@ No changes needed.
 | `redesign.dart` (parent) | barrel | — | re-exports all `redesign/bb_*.dart` for one-line Phase 2 import |
 
 **WRAP strategy:** none used. Every widget is a NEW standalone implementation that mirrors the handoff JSX surface 1-to-1. The legacy `BB*` (double-cap) widgets at `lib/core/widgets/bb_*.dart` are not imported by any redesign file — Phase 2 callers will switch over to `Bb*` (single-cap) via the barrel. The exec plan called for `as legacy` wraps, but those would have inherited legacy parameter shapes (e.g., legacy `BBAvatar` has 3 sizes + `color`; handoff has 5 sizes + tone palette) and forced extra mapping logic per call. Reimplementing was cleaner and only ~40 LOC heavier overall.
+
+**BbInput Form integration (Phase 1.1):** `BbInput` exposes a `validator` parameter that wires it into a `Form` ancestor. Without `validator` it behaves exactly like a plain `TextField` (backward compat with PR #611 callers — zero new widgets in the tree). With `validator`, the chrome wraps in a `FormField<String>` whose `state.errorText` feeds the existing custom helper-text + border-color path; `_formKey.currentState!.validate()` triggers per-input validation correctly and a successful re-validate clears the error in one rebuild. The validator runs against the live `controller.text` rather than the cached `state.value`, so programmatic `controller.text = …` writes (server-side error clear, password fill, etc.) are validated correctly. Explicit `widget.error` always wins over validator output (server-side errors override client-side validation) — only one `Text` widget is ever in the tree for the error, so there's no double-render. `iconRight` is a static icon-name only; `trailingAction` accepts a stateful Widget (password toggle, clipboard, etc.).
 
 ## 4 · Shell architecture
 

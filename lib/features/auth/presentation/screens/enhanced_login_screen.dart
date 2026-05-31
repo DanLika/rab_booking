@@ -355,9 +355,12 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
         body: Stack(
           alignment: Alignment.topLeft,
           children: [
-            // Hero gradient backdrop (intentional hero exception per handoff).
+            // Soft auth backdrop (`BbRedesignTokens.softBg`) — pale lavender
+            // wash per `design_handoff/screens/15-owner.png`. Was previously
+            // `rd.heroGradient` (saturated brand purple); swapped per Phase 1.2
+            // (#615) review feedback.
             Container(
-              decoration: BoxDecoration(gradient: rd.heroGradient),
+              decoration: BoxDecoration(gradient: rd.softBg),
               child: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {

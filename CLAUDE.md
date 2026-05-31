@@ -67,10 +67,13 @@
 - [95-f93-bundle](./audit/95-f93-bundle.md) — SF numbering reconciliation + F-93 P3 bundle SF-071/072/073 (2026-05-30)
 - ✅ [89-f86-01-cors-fix](./audit/89-f86-01-cors-fix.md) — F-86-01 SF-062 closure; PR #565 8 callables (2026-05-29)
 - [89-audit-50-backlog](./audit/89-audit-50-backlog.md) — PR #567 closes 5 SFs; F-50-09/10/11/12 (2026-05-29)
-- [98-dev-cutover-smoke](./audit/98-dev-cutover-smoke.md) — bookbed-dev cutover dry-run; F-CUT-01 lockfile drift (PR #167e6353) (2026-05-30)
-- [99-security-audit](./audit/99-security-audit-2026-05-30.md) — multi-agent sweep; 1 HIGH (F-99-01) + 3 MED + 7 LOW + 4 INFO + 1 CONFIRM-OPEN audit/89 (2026-05-30)
+- [98-dev-cutover-smoke](./audit/98-dev-cutover-smoke.md) — bookbed-dev cutover dry-run; F-CUT-01 lockfile drift closed via commit `167e6353` (2026-05-30)
+- [99-coverage-gap-map](./audit/99-coverage-gap-map.md) — SF + CF coverage gap map; 6 CFs never smoke-tested (PR #608, 2026-05-30)
+- 🚨 [99-security-audit](./audit/99-security-audit-2026-05-30.md) — multi-agent sweep; F-99-01 HIGH bookings deny-list gap + 3 MED + 7 LOW + 4 INFO + 1 CONFIRM-OPEN audit/89 (2026-05-30)
 - 🟡 [100-audit99-high-bundle](./audit/100-audit99-high-bundle.md) — SF-078: F-99-01 bookings deny + H-1 host-only returnUrl + H-2 SF-073 localhost gate + H-3 17-callable CORS; PR #609 DEV-only (2026-05-31)
+- 🟡 [101-vibe-security-delta](./audit/101-vibe-security-delta-2026-05-31.md) — F-101-01/02 returnUrl `startsWith` boundary + SF-073 utils localhost regression (closed PR #609 parallel branch); F-101-03 MED in-memory rate-limit Map multi-instance bypass OPEN (2026-05-31)
 - ✅ [102-prod-cutover](./audit/102-prod-cutover-2026-05-31.md) — PROD cutover at HEAD `3a8b6b66`: CFs+regrant 35/35+OPTIONS 3/3, indexes no-drift, widget HTTP 200, rules+storage 4/4 smoke; **SF-067 PROD `datastore.viewer` IAM confirmed via owner upload+delete on `properties/…png`** (2026-05-31)
+- [cutover-dryrun-2026-05-30/runbook.md](./audit/cutover-dryrun-2026-05-30/runbook.md) — full ledger + 4a/4b/4c/4d phase logs + IAM re-grant script (2026-05-30)
 - [106-qa-visual-regression](./audit/106-qa-visual-regression-2026-06-01.md) — 12 Phase 2 screens, 0 UNINT drift, 1 BLOCKED (Widget Confirmation Navigator.push), 1 product Q (Pregled KPI tile content swap) (2026-06-01)
 
 ---

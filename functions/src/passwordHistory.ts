@@ -17,6 +17,7 @@ import * as admin from "firebase-admin";
 import * as bcrypt from "bcrypt";
 import {logInfo, logWarn} from "./logger";
 import {setUser} from "./sentry";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 const db = admin.firestore();
 
@@ -76,6 +77,7 @@ async function comparePassword(password: string, hash: string): Promise<boolean>
 export const checkPasswordHistory = onCall(
   {
     region: "europe-west1",
+    cors: getCorsAllowlist(),
   },
   async (request) => {
     // Require authentication
@@ -137,6 +139,7 @@ export const checkPasswordHistory = onCall(
 export const savePasswordToHistory = onCall(
   {
     region: "europe-west1",
+    cors: getCorsAllowlist(),
   },
   async (request) => {
     // Require authentication

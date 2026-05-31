@@ -30,101 +30,13 @@ import {
 } from "./utils/securityMonitoring";
 import {setUser, captureMessage} from "./sentry";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
+import {isAllowedReturnUrl, getAllowedReturnDomains} from "./utils/returnUrlValidation";
 
 // Define webhook secret
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 
-// Allowed domains for return URL (security whitelist)
-// DOMAIN STRUCTURE:
-// - bookbed.io = Marketing/Landing page (NOT for widget)
-// - app.bookbed.io = Owner Dashboard
-// - view.bookbed.io = Booking Widget (main domain)
-// - *.view.bookbed.io = Client subdomains (e.g., jasko-rab.view.bookbed.io)
-//
-// Per-env dev/staging hosts are appended at request time based on GCP_PROJECT
-// so the prod allowlist stays minimal. See getAllowedReturnDomains().
-function getAllowedReturnDomains(): string[] {
-  // F-93-01 (SF-073): localhost / 127.0.0.1 must NEVER appear in PROD's allowlist.
-  // They are appended below only when running under the Functions emulator. A PROD
-  // returnUrl pointing to localhost is an exfil vector (attacker-controlled host
-  // on the operator's network gets the success-redirect with session info).
-  const base = [
-    "https://bookbed.io", // Marketing site (for future use)
-    "https://app.bookbed.io", // Owner dashboard
-    "https://view.bookbed.io", // Booking widget (main domain)
-  ];
-  const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-  const isEmulator = process.env.FUNCTIONS_EMULATOR === "true";
-  if (projectId === "bookbed-dev" || isEmulator) {
-    base.push("https://bookbed-widget-dev.web.app");
-    base.push("https://bookbed-owner-dev.web.app");
-  }
-  if (projectId === "bookbed-staging") {
-    base.push("https://bookbed-widget-staging.web.app");
-    base.push("https://bookbed-owner-staging.web.app");
-  }
-  if (isEmulator) {
-    base.push("http://localhost");
-    base.push("http://127.0.0.1");
-  }
-  return base;
-}
-
-// Allowed wildcard domains for custom client subdomains
-// Widget uses view.bookbed.io subdomain structure: {client}.view.bookbed.io
-const ALLOWED_WILDCARD_DOMAINS = [
-  ".view.bookbed.io", // Client subdomains (e.g., jasko-rab.view.bookbed.io, villa-marija.view.bookbed.io)
-];
-
-/**
- * Validates if a return URL is allowed based on whitelist and wildcard rules
- * @param returnUrl - The full return URL to validate
- * @return true if URL is allowed, false otherwise
- *
- * SECURITY: Uses split-based validation to prevent attacks like "evil-bookbed.io"
- * which would pass endsWith() check but should be blocked
- */
-function isAllowedReturnUrl(returnUrl: string): boolean {
-  // Check exact domain matches first
-  const allowedDomains = getAllowedReturnDomains();
-  const exactMatch = allowedDomains.some((domain) =>
-    returnUrl.startsWith(domain)
-  );
-
-  if (exactMatch) return true;
-
-  // Check wildcard domain matches (e.g., *.view.bookbed.io)
-  try {
-    const url = new URL(returnUrl);
-    const hostname = url.hostname; // e.g., "jasko-rab.view.bookbed.io"
-
-    return ALLOWED_WILDCARD_DOMAINS.some((wildcardDomain) => {
-      // FIXED BUG #17: Secure wildcard validation using domain split
-      // wildcardDomain = ".view.bookbed.io" → domainWithoutDot = "view.bookbed.io"
-      const domainWithoutDot = wildcardDomain.slice(1); // Remove leading dot
-
-      // Split both into parts
-      const hostnameParts = hostname.split("."); // ["jasko-rab", "view", "bookbed", "io"]
-      const wildcardParts = domainWithoutDot.split("."); // ["view", "bookbed", "io"]
-
-      // SECURITY: Hostname must have MORE parts than wildcard domain
-      // This blocks: "evil-view.bookbed.io" (3 parts) vs "view.bookbed.io" (3 parts)
-      // This allows: "jasko-rab.view.bookbed.io" (4 parts) vs "view.bookbed.io" (3 parts)
-      if (hostnameParts.length <= wildcardParts.length) {
-        return false;
-      }
-
-      // Check if last N parts of hostname match wildcard domain
-      // ["jasko-rab", "view", "bookbed", "io"] → last 3 parts: ["view", "bookbed", "io"]
-      const lastParts = hostnameParts.slice(-wildcardParts.length);
-      const matches = lastParts.join(".") === domainWithoutDot;
-
-      return matches;
-    });
-  } catch {
-    return false;
-  }
-}
+// Return URL allowlist + validator live in ./utils/returnUrlValidation
+// (single source of truth across stripePayment + stripeConnect + stripeSubscription).
 
 /**
  * Cloud Function: Create Stripe Checkout Session
@@ -263,7 +175,6 @@ export const createStripeCheckoutSession = onCall({
       logError(`createStripeCheckoutSession: Invalid return URL (not in whitelist): ${returnUrl}`, null, {
         returnUrl: returnUrl,
         allowedDomains: getAllowedReturnDomains(),
-        allowedWildcards: ALLOWED_WILDCARD_DOMAINS,
       });
       logSecurityEvent(
         SecurityEventType.INVALID_RETURN_URL,

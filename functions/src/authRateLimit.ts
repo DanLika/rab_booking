@@ -16,6 +16,7 @@ import {checkRateLimit} from "./utils/rateLimit";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {logInfo, logWarn} from "./logger";
 import {getClientIp, hashIp} from "./utils/ipUtils";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Rate limit configuration for login attempts
@@ -52,6 +53,7 @@ const REGISTER_RATE_LIMIT = {
 export const checkLoginRateLimit = onCall(
   {
     region: "europe-west1",
+    cors: getCorsAllowlist(),
     // No authentication required - this is called BEFORE login
   },
   async (request) => {
@@ -110,6 +112,7 @@ export const checkLoginRateLimit = onCall(
 export const checkRegistrationRateLimit = onCall(
   {
     region: "europe-west1",
+    cors: getCorsAllowlist(),
     // No authentication required - this is called BEFORE registration
   },
   async (request) => {

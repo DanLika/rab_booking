@@ -5,6 +5,7 @@ import {setUser} from "./sentry";
 import {safeToDate, calculateBookingNights} from "./utils/dateValidation";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Cloud Function: Get Booking by Stripe Session ID
@@ -23,7 +24,7 @@ import {checkRateLimit} from "./utils/rateLimit";
  * legitimately knows it; anyone who guesses one cannot brute force the
  * `cs_xxx` keyspace at the IP-rate-limit ceiling.
  */
-export const getBookingByStripeSession = onCall(async (request) => {
+export const getBookingByStripeSession = onCall({cors: getCorsAllowlist()}, async (request) => {
   const clientIp = getClientIp(request);
   const ipHash = hashIp(clientIp);
   if (!checkRateLimit(`stripe_session_${ipHash}`, 60, 3600)) {

@@ -16,6 +16,7 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import {logInfo, logWarn} from "./logger";
 import {setUser} from "./sentry";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 const db = admin.firestore();
 
@@ -38,6 +39,7 @@ const db = admin.firestore();
 export const revokeAllRefreshTokens = onCall(
   {
     region: "europe-west1",
+    cors: getCorsAllowlist(),
   },
   async (request) => {
     // Require authentication

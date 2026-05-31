@@ -67,6 +67,9 @@
 - [95-f93-bundle](./audit/95-f93-bundle.md) — SF numbering reconciliation + F-93 P3 bundle SF-071/072/073 (2026-05-30)
 - ✅ [89-f86-01-cors-fix](./audit/89-f86-01-cors-fix.md) — F-86-01 SF-062 closure; PR #565 8 callables (2026-05-29)
 - [89-audit-50-backlog](./audit/89-audit-50-backlog.md) — PR #567 closes 5 SFs; F-50-09/10/11/12 (2026-05-29)
+- [98-dev-cutover-smoke](./audit/98-dev-cutover-smoke.md) — bookbed-dev cutover dry-run; F-CUT-01 lockfile drift (PR #167e6353) (2026-05-30)
+- [99-security-audit](./audit/99-security-audit-2026-05-30.md) — multi-agent sweep; 1 HIGH (F-99-01) + 3 MED + 7 LOW + 4 INFO + 1 CONFIRM-OPEN audit/89 (2026-05-30)
+- 🟡 [100-audit99-high-bundle](./audit/100-audit99-high-bundle.md) — SF-078: F-99-01 bookings deny + H-1 host-only returnUrl + H-2 SF-073 localhost gate + H-3 17-callable CORS; PR #609 DEV-only (2026-05-31)
 
 ---
 

@@ -6,13 +6,14 @@ import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
 import {logSecurityEvent, SecurityEventType} from "./utils/securityMonitoring";
 import {isAllowedReturnUrl} from "./utils/returnUrlValidation";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Cloud Function: Create or Get Stripe Connect Account
  *
  * Creates a Stripe Express account for the owner if they don't have one
  */
-export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, async (request) => {
+export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -141,7 +142,7 @@ export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey]}, a
  *
  * Returns the status of owner's Stripe account
  */
-export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async (request) => {
+export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");
@@ -228,7 +229,7 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey]}, async
  *
  * Disconnects owner's Stripe account from the platform
  */
-export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey]}, async (request) => {
+export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
   // Check authentication
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be authenticated");

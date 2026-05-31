@@ -5,6 +5,7 @@ import {logInfo, logError, logSuccess} from "./logger";
 import {checkRateLimit} from "./utils/rateLimit";
 import {isAllowedReturnUrl} from "./utils/returnUrlValidation";
 import * as admin from "firebase-admin";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Cloud Function: Create Subscription Checkout Session
@@ -17,7 +18,7 @@ import * as admin from "firebase-admin";
  * 3. Create Checkout Session with the selected Price ID.
  * 4. Return the session URL.
  */
-export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretKey]}, async (request) => {
+export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
   // 1. Rate Limiting
   const rawRequest = request.rawRequest as { ip?: string; headers?: Record<string, string> } | undefined;
   const clientIp = rawRequest?.ip ||
@@ -161,7 +162,7 @@ export const createSubscriptionCheckoutSession = onCall({secrets: [stripeSecretK
  * Cloud Function: Create Customer Portal Session
  * Allows users to manage their billing (cancel, update payment method)
  */
-export const createCustomerPortalSession = onCall({secrets: [stripeSecretKey]}, async (request) => {
+export const createCustomerPortalSession = onCall({secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "User must be logged in.");
   }

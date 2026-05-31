@@ -10,6 +10,7 @@ import {findBookingById} from "./utils/bookingLookup";
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
+import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
  * Helper to convert Firestore Timestamp or Date to Date object
@@ -41,7 +42,7 @@ function toDate(value: any): Date {
  * - Caller must be authenticated
  * - Caller must be the owner of the property
  */
-export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"]}, async (request) => {
+export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"], cors: getCorsAllowlist()}, async (request) => {
   // Verify authentication
   if (!request.auth) {
     throw new HttpsError(

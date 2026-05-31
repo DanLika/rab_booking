@@ -3,10 +3,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graphic/graphic.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/constants/app_dimensions.dart';
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
-import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../widgets/recent_activity_widget.dart';
@@ -16,6 +18,7 @@ import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../shared/widgets/app_filter_chip.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/unified_dashboard_provider.dart';
@@ -384,6 +387,19 @@ class DashboardOverviewTab extends ConsumerWidget {
   ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
+    final rd = BbRedesignTokens.of(context);
+
+    // Greeting userName (same derivation as build())
+    final authState = ref.watch(enhancedAuthProvider);
+    final fbUser = FirebaseAuth.instance.currentUser;
+    final userName =
+        authState.userModel?.firstName ?? fbUser?.displayName?.split(' ').first;
+
+    // Outer padding: shell-bg gutter around the floating panel (handoff inset).
+    // Mobile keeps edge-to-edge; tablet+desktop add gutter for the panel.
+    final EdgeInsets gutterPadding = isMobile
+        ? const EdgeInsets.fromLTRB(8, 4, 8, 16)
+        : EdgeInsets.fromLTRB(16, 4, isDesktop ? 28 : 18, 24);
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -399,59 +415,88 @@ class DashboardOverviewTab extends ConsumerWidget {
       color: theme.colorScheme.primary,
       child: ListView(
         physics: PlatformScrollPhysics.adaptive,
+        padding: EdgeInsets.zero,
         children: [
           // Trial status banner - shows only when trial is expiring or expired
           const TrialBanner(),
 
-          // Time period selector
-          _DateRangeSelector(dateRange: dateRange),
-
-          // Stats cards section
+          // Floating console panel (handoff `--bb-panel-bg` + radius 24 + 3-layer shadow).
+          // Wraps the populated dashboard body without touching the parent Scaffold.
           Padding(
-            padding: EdgeInsets.fromLTRB(
-              context.horizontalPadding,
-              0,
-              context.horizontalPadding,
-              isMobile ? 8 : 12,
-            ),
-            child: dashboardAsync.when(
-              data: (data) => _buildStatsCards(context: context, data: data),
-              loading: SkeletonLoader.analyticsMetricCards,
-              error: (e, s) => _buildErrorState(context, l10n, theme, e),
-            ),
-          ),
-
-          // Charts section - only show when there are bookings
-          dashboardAsync.when(
-            data: (data) => data.bookings == 0
-                ? const SizedBox.shrink()
-                : Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      context.horizontalPadding,
-                      isMobile ? 12 : 16,
-                      context.horizontalPadding,
-                      isMobile ? 12 : 16,
+            padding: gutterPadding,
+            child: Container(
+              decoration: BoxDecoration(
+                color: rd.panelBg,
+                borderRadius: BorderRadius.circular(
+                  isMobile ? BBRadius.lg : 28,
+                ),
+                border: Border.all(color: rd.panelBorder),
+                boxShadow: rd.panelShadow,
+              ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  isMobile ? 16 : (isDesktop ? 32 : 24),
+                  isMobile ? 16 : 22,
+                  isMobile ? 16 : (isDesktop ? 32 : 24),
+                  isMobile ? 20 : 28,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Greeting (eyebrow date + headline)
+                    _PregledGreetingHeader(
+                      userName: userName,
+                      isMobile: isMobile,
                     ),
-                    child: isDesktop
-                        ? _buildDesktopChartsRow(data, l10n)
-                        : _buildStackedCharts(data, isMobile, l10n),
-                  ),
-            loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
-          ),
+                    SizedBox(height: isMobile ? 14 : 18),
 
-          // Recent activity section
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              context.horizontalPadding,
-              isMobile ? 8 : 12,
-              context.horizontalPadding,
-              isMobile ? 16 : 20,
+                    // Time period selector
+                    _DateRangeSelector(dateRange: dateRange),
+                    SizedBox(height: isMobile ? 8 : 12),
+
+                    // KPI cards section
+                    const BbSectionHeader(
+                      // HR-only owner surface — handoff eyebrow copy.
+                      title: 'Ključni pokazatelji',
+                      level: BbSectionHeaderLevel.h3,
+                    ),
+                    dashboardAsync.when(
+                      data: (data) =>
+                          _buildStatsCards(context: context, data: data),
+                      loading: SkeletonLoader.analyticsMetricCards,
+                      error: (e, s) =>
+                          _buildErrorState(context, l10n, theme, e),
+                    ),
+
+                    // Charts section - only show when there are bookings
+                    dashboardAsync.when(
+                      data: (data) {
+                        if (data.bookings == 0) return const SizedBox.shrink();
+                        return Padding(
+                          padding: EdgeInsets.only(top: isMobile ? 16 : 20),
+                          child: isDesktop
+                              ? _buildDesktopChartsRow(data, l10n)
+                              : _buildStackedCharts(data, isMobile, l10n),
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
+                    ),
+
+                    SizedBox(height: isMobile ? 16 : 20),
+
+                    // Recent activity section
+                    BbSectionHeader(
+                      title: l10n.ownerRecentActivities,
+                      actionLabel: l10n.ownerViewAll,
+                      onActionTap: () => context.go(OwnerRoutes.bookings),
+                    ),
+                    _buildRecentActivity(context, ref),
+                  ],
+                ),
+              ),
             ),
-            child: _buildRecentActivity(context, ref),
           ),
-
-          const SizedBox(height: 24),
         ],
       ),
     );
@@ -543,39 +588,46 @@ class DashboardOverviewTab extends ConsumerWidget {
   }
 
   Widget _buildRecentActivity(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
     final recentBookingsAsync = ref.watch(recentOwnerBookingsProvider);
+    final c = BBColor.of(context);
 
     return recentBookingsAsync.when(
       data: (bookings) {
-        final activities = bookings
-            .map((b) => _convertBookingToActivity(b, l10n))
-            .toList();
-
-        return RecentActivityWidget(
-          activities: activities,
-          onViewAll: () => context.go(OwnerRoutes.bookings),
-          onActivityTap: (bookingId) {
-            if (bookings.isEmpty) return; // Safety check
-            final ownerBooking = bookings.firstWhere(
-              (b) => b.booking.id == bookingId,
-              orElse: () => bookings.first,
-            );
-            showDialog(
-              context: context,
-              builder: (context) =>
-                  BookingDetailsDialogV2(ownerBooking: ownerBooking),
-            );
-          },
+        if (bookings.isEmpty) {
+          // Keep the existing widget for the empty-state visual; it already
+          // renders a friendly empty animation per ui-ux.md guidance.
+          return RecentActivityWidget(
+            activities: const [],
+            onViewAll: () => context.go(OwnerRoutes.bookings),
+          );
+        }
+        // Inline rows on a single BbCard surface — handoff arrivals layout
+        // (avatar + name + property/unit + status badge).
+        return BbCard(
+          padded: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: List.generate(bookings.length, (i) {
+              final b = bookings[i];
+              return _PregledArrivalsRow(
+                ownerBooking: b,
+                isFirst: i == 0,
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => BookingDetailsDialogV2(ownerBooking: b),
+                  );
+                },
+              );
+            }),
+          ),
         );
       },
-      loading: () => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.spaceXL),
+      loading: () => Padding(
+        padding: const EdgeInsets.all(AppDimensions.spaceXL),
+        child: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(
-              Theme.of(context).colorScheme.primary,
-            ),
+            valueColor: AlwaysStoppedAnimation<Color>(c.primary),
           ),
         ),
       ),
@@ -586,60 +638,6 @@ class DashboardOverviewTab extends ConsumerWidget {
     );
   }
 
-  ActivityItem _convertBookingToActivity(
-    OwnerBooking ownerBooking,
-    AppLocalizations l10n,
-  ) {
-    final booking = ownerBooking.booking;
-    final property = ownerBooking.property;
-    final unit = ownerBooking.unit;
-
-    final (type, title) = switch (booking.status) {
-      BookingStatus.pending => (
-        ActivityType.booking,
-        l10n.ownerNewBookingReceived,
-      ),
-      BookingStatus.confirmed => (
-        ActivityType.confirmed,
-        l10n.ownerBookingConfirmedActivity,
-      ),
-      BookingStatus.cancelled => (
-        ActivityType.cancellation,
-        l10n.ownerBookingCancelledActivity,
-      ),
-      BookingStatus.completed => (
-        ActivityType.completed,
-        l10n.ownerBookingCompleted,
-      ),
-    };
-
-    return ActivityItem(
-      type: type,
-      title: title,
-      subtitle: '${property.name} - ${unit.name}',
-      timestamp: booking.createdAt,
-      bookingId: booking.id,
-    );
-  }
-
-  Color _getPurpleShade(BuildContext context, int level) => switch (level) {
-    1 => const Color(0xFF4A3A8C),
-    2 => const Color(0xFF5B4BA8),
-    3 => const Color(0xFF6B4CE6),
-    4 => const Color(0xFF8B6FF5),
-    5 => const Color(0xFFA08BFF),
-    6 => const Color(0xFFB8A8FF),
-    _ => const Color(0xFF6B4CE6),
-  };
-
-  Gradient _createThemeGradient(BuildContext context, Color baseColor) {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [baseColor, baseColor.withValues(alpha: 0.7)],
-    );
-  }
-
   Widget _buildStatsCards({
     required BuildContext context,
     required UnifiedDashboardData data,
@@ -647,77 +645,74 @@ class DashboardOverviewTab extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final isTablet = screenWidth >= 600 && screenWidth < 900;
+    final c = BBColor.of(context);
 
-    final cardSpacing = isMobile ? 10.0 : 12.0;
+    // Sparkline series sourced from existing provider data — never fabricated.
+    final List<double> revenueSpark = data.revenueHistory
+        .map((p) => p.amount)
+        .toList(growable: false);
+    final List<double> bookingsSpark = data.bookingHistory
+        .map((p) => p.count.toDouble())
+        .toList(growable: false);
 
-    // Build the 4 stat card widgets
-    final revenueCard = _buildStatCard(
-      context: context,
-      title: l10n.ownerDashboardRevenue,
+    final revenueCard = _PregledKpiCard(
+      icon: 'payments',
+      label: l10n.ownerDashboardRevenue,
       value: '€${data.revenue.toStringAsFixed(0)}',
-      icon: Icons.euro_rounded,
-      gradient: _createThemeGradient(context, _getPurpleShade(context, 3)),
+      tone: c.primary,
+      sparkData: revenueSpark,
       isMobile: isMobile,
-      isTablet: isTablet,
     );
 
-    final bookingsCard = _buildStatCard(
-      context: context,
-      title: l10n.ownerDashboardBookings,
+    final bookingsCard = _PregledKpiCard(
+      icon: 'receipt_long',
+      label: l10n.ownerDashboardBookings,
       value: '${data.bookings}',
-      icon: Icons.calendar_today_rounded,
-      gradient: _createThemeGradient(context, _getPurpleShade(context, 4)),
+      tone: c.info,
+      sparkData: bookingsSpark,
       isMobile: isMobile,
-      isTablet: isTablet,
-      animationDelay: 100,
     );
 
-    final checkInsCard = _buildStatCard(
-      context: context,
-      title: l10n.ownerUpcomingCheckIns,
+    final checkInsCard = _PregledKpiCard(
+      icon: 'flight_takeoff',
+      label: l10n.ownerUpcomingCheckIns,
       value: '${data.upcomingCheckIns}',
-      icon: Icons.schedule_rounded,
-      gradient: _createThemeGradient(context, _getPurpleShade(context, 5)),
+      tone: c.success,
+      sparkData: const [],
       isMobile: isMobile,
-      isTablet: isTablet,
-      animationDelay: 200,
     );
 
-    final occupancyCard = _buildStatCard(
-      context: context,
-      title: l10n.ownerOccupancyRate,
-      value: '${data.occupancyRate.toStringAsFixed(1)}%',
-      icon: Icons.analytics_rounded,
-      gradient: _createThemeGradient(context, _getPurpleShade(context, 2)),
+    final occupancyCard = _PregledKpiCard(
+      icon: 'donut_small',
+      label: l10n.ownerOccupancyRate,
+      value: '${data.occupancyRate.toStringAsFixed(0)}%',
+      tone: c.tertiary,
+      sparkData: const [],
       isMobile: isMobile,
-      isTablet: isTablet,
-      animationDelay: 300,
     );
 
-    // On mobile: explicit 2x2 grid
+    // Layout: explicit 2x2 on mobile; auto-grid on tablet+desktop. We keep
+    // explicit IntrinsicHeight rows so cards align even with varying content.
     if (isMobile) {
       return Column(
         children: [
-          // First row: Revenue + Bookings
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: revenueCard),
-                SizedBox(width: cardSpacing),
+                const SizedBox(width: 10),
                 Expanded(child: bookingsCard),
               ],
             ),
           ),
-          SizedBox(height: cardSpacing),
-          // Second row: Check-ins + Occupancy
+          const SizedBox(height: 10),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: checkInsCard),
-                SizedBox(width: cardSpacing),
+                const SizedBox(width: 10),
                 Expanded(child: occupancyCard),
               ],
             ),
@@ -726,125 +721,27 @@ class DashboardOverviewTab extends ConsumerWidget {
       );
     }
 
-    // On tablet/desktop: use Wrap for flexible layout
-    return Wrap(
-      spacing: cardSpacing,
-      runSpacing: cardSpacing,
-      alignment: WrapAlignment.center,
-      children: [revenueCard, bookingsCard, checkInsCard, occupancyCard],
-    );
-  }
-
-  Widget _buildStatCard({
-    required BuildContext context,
-    required String title,
-    required String value,
-    required IconData icon,
-    required Gradient gradient,
-    required bool isMobile,
-    required bool isTablet,
-    int animationDelay = 0,
-  }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final accentColor = gradient.colors.isNotEmpty
-        ? gradient.colors.first
-        : Theme.of(context).colorScheme.primary;
-    final cardBgColor = isDark ? const Color(0xFF1E1E28) : Colors.white;
-    final borderColor = isDark
-        ? const Color(0xFF3D3D4A)
-        : const Color(0xFFE8E8F0);
-    final valueColor = theme.colorScheme.onSurface;
-    final titleColor = theme.colorScheme.onSurface.withValues(alpha: 0.8);
-
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 600 + animationDelay),
-      tween: Tween(begin: 0.0, end: 1.0),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, 20 * (1 - value)),
-            child: child,
-          ),
+    return LayoutBuilder(
+      builder: (context, cs) {
+        // Always 4 columns on >900px; 2 columns on tablet 600-900.
+        final isWide = cs.maxWidth >= 900;
+        final cols = isWide ? 4 : 2;
+        final spacing = 12.0;
+        final w = (cs.maxWidth - (cols - 1) * spacing) / cols;
+        final children = [
+          revenueCard,
+          bookingsCard,
+          checkInsCard,
+          occupancyCard,
+        ];
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: children
+              .map((card) => SizedBox(width: w, child: card))
+              .toList(),
         );
       },
-      child: Container(
-        // On mobile, let Expanded handle width; on tablet/desktop, use fixed width
-        width: isMobile ? null : (isTablet ? 200.0 : 280.0),
-        height: isMobile ? 130 : 150,
-        constraints: isMobile ? null : const BoxConstraints(maxWidth: 280),
-        decoration: BoxDecoration(
-          color: cardBgColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDark ? accentColor.withValues(alpha: 0.2) : borderColor,
-            width: isDark ? 1.5 : 1,
-          ),
-          boxShadow: isDark
-              ? [
-                  BoxShadow(
-                    color: accentColor.withValues(alpha: 0.1),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(isMobile ? 12 : 14),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: EdgeInsets.all(isMobile ? 8 : 10),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: accentColor, size: isMobile ? 20 : 22),
-              ),
-              SizedBox(height: isMobile ? 6 : 8),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  value,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: valueColor,
-                    height: 1.0,
-                    letterSpacing: 0,
-                    fontSize: isMobile ? 24 : 28,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              SizedBox(height: isMobile ? 4 : 6),
-              Text(
-                title,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: titleColor,
-                  fontWeight: FontWeight.w500,
-                  height: 1.2,
-                  fontSize: isMobile ? 11 : 12,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -957,142 +854,108 @@ class _RevenueChart extends StatelessWidget {
 
         return SizedBox(
           height: chartHeight,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: AppShadows.getElevation(
-                1,
-                isDark: theme.brightness == Brightness.dark,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.gradients.cardBackground,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                    width: 1.5,
-                  ),
+          child: BbCard(
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildChartHeader(
+                  context,
+                  theme,
+                  Icons.show_chart,
+                  l10n.ownerAnalyticsRevenueTitle,
+                  l10n.ownerAnalyticsRevenueSubtitle,
                 ),
-                child: Padding(
-                  padding: EdgeInsets.all(isMobile ? 12 : 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildChartHeader(
-                        context,
-                        theme,
-                        Icons.show_chart,
-                        l10n.ownerAnalyticsRevenueTitle,
-                        l10n.ownerAnalyticsRevenueSubtitle,
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Chart(
+                    data: data
+                        .asMap()
+                        .entries
+                        .map(
+                          (e) => {
+                            'index': e.key,
+                            'label': e.value.label,
+                            'amount': e.value.amount,
+                          },
+                        )
+                        .toList(),
+                    variables: {
+                      'index': Variable(
+                        accessor: (Map map) => map['index'] as num,
                       ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: Chart(
-                          data: data
-                              .asMap()
-                              .entries
-                              .map(
-                                (e) => {
-                                  'index': e.key,
-                                  'label': e.value.label,
-                                  'amount': e.value.amount,
-                                },
-                              )
-                              .toList(),
-                          variables: {
-                            'index': Variable(
-                              accessor: (Map map) => map['index'] as num,
-                            ),
-                            'amount': Variable(
-                              accessor: (Map map) => map['amount'] as num,
-                              scale: LinearScale(min: 0),
-                            ),
-                            'label': Variable(
-                              accessor: (Map map) => map['label'] as String,
-                            ),
-                          },
-                          coord:
-                              RectCoord(), // Removed horizontalRangeUpdater to disable zoom
-                          marks: [
-                            AreaMark(
-                              shape: ShapeEncode(
-                                value: BasicAreaShape(smooth: true),
-                              ),
-                              color: ColorEncode(
-                                value: theme.colorScheme.primary.withValues(
-                                  alpha: 0.15,
+                      'amount': Variable(
+                        accessor: (Map map) => map['amount'] as num,
+                        scale: LinearScale(min: 0),
+                      ),
+                      'label': Variable(
+                        accessor: (Map map) => map['label'] as String,
+                      ),
+                    },
+                    coord:
+                        RectCoord(), // Removed horizontalRangeUpdater to disable zoom
+                    marks: [
+                      AreaMark(
+                        shape: ShapeEncode(value: BasicAreaShape(smooth: true)),
+                        color: ColorEncode(
+                          value: theme.colorScheme.primary.withValues(
+                            alpha: 0.15,
+                          ),
+                        ),
+                        entrance: {MarkEntrance.y},
+                      ),
+                      LineMark(
+                        shape: ShapeEncode(value: BasicLineShape(smooth: true)),
+                        size: SizeEncode(value: 3),
+                        color: ColorEncode(value: theme.colorScheme.primary),
+                        entrance: {MarkEntrance.y},
+                      ),
+                      PointMark(
+                        shape: ShapeEncode(value: CircleShape()),
+                        size: SizeEncode(value: 8),
+                        color: ColorEncode(value: theme.colorScheme.primary),
+                        entrance: {MarkEntrance.opacity},
+                        label: LabelEncode(
+                          encoder: (tuple) {
+                            final amount = tuple['amount'] as num;
+                            return Label(
+                              '€${amount.toStringAsFixed(0)}',
+                              LabelStyle(
+                                textStyle: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
+                                offset: const Offset(0, -12),
                               ),
-                              entrance: {MarkEntrance.y},
-                            ),
-                            LineMark(
-                              shape: ShapeEncode(
-                                value: BasicLineShape(smooth: true),
-                              ),
-                              size: SizeEncode(value: 3),
-                              color: ColorEncode(
-                                value: theme.colorScheme.primary,
-                              ),
-                              entrance: {MarkEntrance.y},
-                            ),
-                            PointMark(
-                              shape: ShapeEncode(value: CircleShape()),
-                              size: SizeEncode(value: 8),
-                              color: ColorEncode(
-                                value: theme.colorScheme.primary,
-                              ),
-                              entrance: {MarkEntrance.opacity},
-                              label: LabelEncode(
-                                encoder: (tuple) {
-                                  final amount = tuple['amount'] as num;
-                                  return Label(
-                                    '€${amount.toStringAsFixed(0)}',
-                                    LabelStyle(
-                                      textStyle: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.7),
-                                      ),
-                                      offset: const Offset(0, -12),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                          axes: [
-                            Defaults.horizontalAxis,
-                            Defaults.verticalAxis,
-                          ],
-                          selections: {
-                            'touchMove': PointSelection(
-                              on: {GestureType.hover},
-                              devices: {
-                                PointerDeviceKind.touch,
-                                PointerDeviceKind.mouse,
-                              },
-                            ),
+                            );
                           },
-                          tooltip: TooltipGuide(
-                            backgroundColor: theme.colorScheme.surface,
-                            elevation: 8,
-                            textStyle: AppTypography.bodySmall.copyWith(
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                          crosshair: CrosshairGuide(
-                            followPointer: [false, true],
-                          ),
                         ),
                       ),
                     ],
+                    axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
+                    selections: {
+                      'touchMove': PointSelection(
+                        on: {GestureType.hover},
+                        devices: {
+                          PointerDeviceKind.touch,
+                          PointerDeviceKind.mouse,
+                        },
+                      ),
+                    },
+                    tooltip: TooltipGuide(
+                      backgroundColor: theme.colorScheme.surface,
+                      elevation: 8,
+                      textStyle: AppTypography.bodySmall.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    crosshair: CrosshairGuide(followPointer: [false, true]),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         );
@@ -1136,132 +999,106 @@ class _BookingsChart extends StatelessWidget {
 
         return SizedBox(
           height: chartHeight,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: AppShadows.getElevation(
-                1,
-                isDark: theme.brightness == Brightness.dark,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.gradients.cardBackground,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                    width: 1.5,
-                  ),
+          child: BbCard(
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildChartHeader(
+                  context,
+                  theme,
+                  Icons.event,
+                  l10n.ownerAnalyticsBookingsTitle,
+                  l10n.ownerAnalyticsBookingsSubtitle,
                 ),
-                child: Padding(
-                  padding: EdgeInsets.all(isMobile ? 12 : 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildChartHeader(
-                        context,
-                        theme,
-                        Icons.event,
-                        l10n.ownerAnalyticsBookingsTitle,
-                        l10n.ownerAnalyticsBookingsSubtitle,
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Chart(
+                    data: data
+                        .asMap()
+                        .entries
+                        .map(
+                          (e) => {
+                            'index': e.key,
+                            'label': e.value.label,
+                            'count': e.value.count,
+                          },
+                        )
+                        .toList(),
+                    variables: {
+                      'index': Variable(
+                        accessor: (Map map) => map['index'] as num,
                       ),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: Chart(
-                          data: data
-                              .asMap()
-                              .entries
-                              .map(
-                                (e) => {
-                                  'index': e.key,
-                                  'label': e.value.label,
-                                  'count': e.value.count,
-                                },
-                              )
-                              .toList(),
-                          variables: {
-                            'index': Variable(
-                              accessor: (Map map) => map['index'] as num,
-                            ),
-                            'count': Variable(
-                              accessor: (Map map) => map['count'] as num,
-                              scale: LinearScale(min: 0),
-                            ),
-                            'label': Variable(
-                              accessor: (Map map) => map['label'] as String,
-                            ),
-                          },
-                          coord:
-                              RectCoord(), // Removed horizontalRangeUpdater to disable zoom
-                          marks: [
-                            IntervalMark(
-                              shape: ShapeEncode(
-                                value: RectShape(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              elevation: ElevationEncode(value: 2),
-                              gradient: GradientEncode(
-                                value: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    theme.colorScheme.primary,
-                                    theme.colorScheme.primary.withValues(
-                                      alpha: 0.7,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              entrance: {MarkEntrance.y},
-                              label: LabelEncode(
-                                encoder: (tuple) {
-                                  final count = tuple['count'] as num;
-                                  // Only show label if count > 0, otherwise show empty label
-                                  return Label(
-                                    count > 0 ? count.toString() : '',
-                                    LabelStyle(
-                                      textStyle: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.onSurface
-                                            .withValues(alpha: 0.7),
-                                      ),
-                                      offset: const Offset(0, -8),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                          axes: [
-                            Defaults.horizontalAxis,
-                            Defaults.verticalAxis,
-                          ],
-                          selections: {
-                            'touchMove': PointSelection(
-                              on: {GestureType.hover},
-                              devices: {
-                                PointerDeviceKind.touch,
-                                PointerDeviceKind.mouse,
-                              },
-                            ),
-                          },
-                          tooltip: TooltipGuide(
-                            backgroundColor: theme.colorScheme.surface,
-                            elevation: 8,
-                            textStyle: AppTypography.bodySmall.copyWith(
-                              color: theme.colorScheme.onSurface,
-                            ),
+                      'count': Variable(
+                        accessor: (Map map) => map['count'] as num,
+                        scale: LinearScale(min: 0),
+                      ),
+                      'label': Variable(
+                        accessor: (Map map) => map['label'] as String,
+                      ),
+                    },
+                    coord:
+                        RectCoord(), // Removed horizontalRangeUpdater to disable zoom
+                    marks: [
+                      IntervalMark(
+                        shape: ShapeEncode(
+                          value: RectShape(
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                        ),
+                        elevation: ElevationEncode(value: 2),
+                        gradient: GradientEncode(
+                          value: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
+                              theme.colorScheme.primary,
+                              theme.colorScheme.primary.withValues(alpha: 0.7),
+                            ],
+                          ),
+                        ),
+                        entrance: {MarkEntrance.y},
+                        label: LabelEncode(
+                          encoder: (tuple) {
+                            final count = tuple['count'] as num;
+                            // Only show label if count > 0, otherwise show empty label
+                            return Label(
+                              count > 0 ? count.toString() : '',
+                              LabelStyle(
+                                textStyle: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                ),
+                                offset: const Offset(0, -8),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
+                    axes: [Defaults.horizontalAxis, Defaults.verticalAxis],
+                    selections: {
+                      'touchMove': PointSelection(
+                        on: {GestureType.hover},
+                        devices: {
+                          PointerDeviceKind.touch,
+                          PointerDeviceKind.mouse,
+                        },
+                      ),
+                    },
+                    tooltip: TooltipGuide(
+                      backgroundColor: theme.colorScheme.surface,
+                      elevation: 8,
+                      textStyle: AppTypography.bodySmall.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         );
@@ -1547,6 +1384,258 @@ class _ActionStepCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Redesign helpers — Pregled refactor (Phase 2)
+// =============================================================================
+
+/// Eyebrow date + headline greeting (handoff PregledPremium header).
+class _PregledGreetingHeader extends StatelessWidget {
+  final String? userName;
+  final bool isMobile;
+
+  const _PregledGreetingHeader({
+    required this.userName,
+    required this.isMobile,
+  });
+
+  String _greetingForHour(int hour) {
+    if (hour < 11) return 'Dobro jutro';
+    if (hour < 18) return 'Dobar dan';
+    return 'Dobra večer';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final now = DateTime.now();
+    final locale = Localizations.localeOf(context).toString();
+    // Date eyebrow ("Subota · 30. svibnja 2026" on HR locale).
+    // Falls back to default-locale format if the locale data is missing
+    // (e.g. test envs without initializeDateFormatting).
+    String eyebrow;
+    try {
+      eyebrow = DateFormat('EEEE · d. MMMM y', locale).format(now);
+    } catch (_) {
+      eyebrow = DateFormat('EEEE · d. MMMM y').format(now);
+    }
+    eyebrow = eyebrow.replaceFirstMapped(
+      RegExp(r'^(\w)'),
+      (m) => m.group(1)!.toUpperCase(),
+    );
+    final greet = _greetingForHour(now.hour);
+    final headline = userName != null ? '$greet, $userName' : greet;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow,
+          style: BBType.eyebrow(context).copyWith(color: c.primary),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          headline,
+          style: (isMobile ? BBType.h1(context) : BBType.display(context))
+              .copyWith(letterSpacing: -0.6, fontWeight: FontWeight.w800),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 2,
+        ),
+      ],
+    );
+  }
+}
+
+/// KPI card on BbCard surface with tinted icon tile + tabular value + sparkline.
+class _PregledKpiCard extends StatelessWidget {
+  final String icon;
+  final String label;
+  final String value;
+  final Color tone;
+  final List<double> sparkData;
+  final bool isMobile;
+
+  const _PregledKpiCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.tone,
+    required this.sparkData,
+    required this.isMobile,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final iconBoxSize = isMobile ? 32.0 : 36.0;
+    final iconSize = isMobile ? 18.0 : 20.0;
+    final valueStyle =
+        (isMobile ? BBType.h1Num(context) : BBType.h2Num(context)).copyWith(
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.4,
+          color: c.textPrimary,
+          fontSize: isMobile ? 24 : 28,
+          height: 1.0,
+        );
+
+    return BbCard(
+      padding: EdgeInsets.all(isMobile ? 14 : 18),
+      hoverable: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: iconBoxSize,
+            height: iconBoxSize,
+            decoration: BoxDecoration(
+              color: tone.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: BbIcon(name: icon, size: iconSize, color: tone),
+          ),
+          SizedBox(height: isMobile ? 12 : 14),
+          Text(
+            label.toUpperCase(),
+            style: BBType.caption(context).copyWith(
+              color: c.textTertiary,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(value, style: valueStyle),
+                ),
+              ),
+              if (sparkData.length >= 2) ...[
+                const SizedBox(width: 8),
+                BbSparkline(
+                  data: sparkData,
+                  width: isMobile ? 56 : 84,
+                  height: isMobile ? 26 : 32,
+                  color: tone,
+                  fillColor: tone.withValues(alpha: 0.14),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Arrival row — guest avatar + name/unit + status badge (handoff PVArrivals row).
+class _PregledArrivalsRow extends StatelessWidget {
+  final OwnerBooking ownerBooking;
+  final bool isFirst;
+  final VoidCallback onTap;
+
+  const _PregledArrivalsRow({
+    required this.ownerBooking,
+    required this.isFirst,
+    required this.onTap,
+  });
+
+  BbBookingStatus _mapStatus(BookingStatus s) {
+    switch (s) {
+      case BookingStatus.pending:
+        return BbBookingStatus.pending;
+      case BookingStatus.confirmed:
+        return BbBookingStatus.confirmed;
+      case BookingStatus.cancelled:
+        return BbBookingStatus.cancelled;
+      case BookingStatus.completed:
+        return BbBookingStatus.completed;
+    }
+  }
+
+  BbAvatarTone _toneForStatus(BookingStatus s) {
+    switch (s) {
+      case BookingStatus.confirmed:
+        return BbAvatarTone.success;
+      case BookingStatus.pending:
+        return BbAvatarTone.tertiary;
+      case BookingStatus.cancelled:
+        return BbAvatarTone.neutral;
+      case BookingStatus.completed:
+        return BbAvatarTone.primary;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final booking = ownerBooking.booking;
+
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 14 : 20,
+          vertical: 12,
+        ),
+        decoration: BoxDecoration(
+          border: Border(
+            top: isFirst ? BorderSide.none : BorderSide(color: c.border),
+          ),
+        ),
+        child: Row(
+          children: [
+            BbAvatar(
+              name: ownerBooking.guestName,
+              size: BbAvatarSize.sm,
+              tone: _toneForStatus(booking.status),
+            ),
+            SizedBox(width: isMobile ? 10 : 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    ownerBooking.guestName,
+                    style: BBType.label(context).copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: c.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${ownerBooking.property.name} · ${ownerBooking.unit.name}',
+                    style: BBType.caption(
+                      context,
+                    ).copyWith(color: c.textTertiary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            BbStatusBadge(
+              status: _mapStatus(booking.status),
+              size: BbStatusBadgeSize.sm,
+            ),
+          ],
         ),
       ),
     );

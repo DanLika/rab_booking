@@ -108,6 +108,7 @@ dependencies:
   # Wired in MaterialApp.localizationsDelegates via SfGlobalLocalizations.delegate
   # in main.dart + admin_main*.dart + widget_main*.dart (audit/82).
   syncfusion_localizations: ^28.1.33
+  material_symbols_icons: ^4.2928.1
 
 dev_dependencies:
   flutter_test:

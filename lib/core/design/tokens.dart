@@ -380,6 +380,38 @@ class BBShadow {
   static const List<BoxShadow> e3 = AppShadows.elevation3;
   static const List<BoxShadow> e4 = AppShadows.elevation4;
   static const List<BoxShadow> e5 = AppShadows.elevation5;
+
+  // -------------------------------------------------------------------------
+  // Redesign handoff additions (delegated to AppShadows; theme-aware helpers
+  // resolve to dark variants where applicable).
+  // -------------------------------------------------------------------------
+
+  /// Card-elevated 3-layer ramp (`--bb-shadow-card`).
+  static const List<BoxShadow> cardElevated = AppShadows.cardElevated;
+
+  /// Purple-glow small (`--bb-shadow-purple-sm`) — active nav tiles + primary
+  /// CTAs ONLY. Use [purpleGlow] for theme-aware resolution.
+  static const List<BoxShadow> purpleSm = AppShadows.purpleSm;
+
+  /// Premium console panel-shadow (light variant).
+  static const List<BoxShadow> panelLight = AppShadows.panelLight;
+
+  /// Premium console panel-shadow (dark variant).
+  static const List<BoxShadow> panelDark = AppShadows.panelDark;
+
+  /// Theme-aware purple glow (active nav, primary CTA).
+  static List<BoxShadow> purpleGlow(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? AppShadows.purpleSmDark
+        : AppShadows.purpleSm;
+  }
+
+  /// Theme-aware floating panel shadow (the `BbScaffold` panel layer).
+  static List<BoxShadow> panel(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? AppShadows.panelDark
+        : AppShadows.panelLight;
+  }
 }
 
 // ===========================================================================
@@ -457,14 +489,35 @@ class BBType {
     color: BBColor.of(context).textPrimary,
   );
 
-  /// 13 / 500 / 1.5 — monospace-style ("mono" via tabular figures, not a
-  /// separate font; keeps bundle size flat)
-  static TextStyle mono(BuildContext context) => GoogleFonts.inter(
+  /// 13 / 500 — JetBrains Mono via google_fonts (handoff `--bb-font-mono`).
+  /// Use for IBAN, code blocks, copyable tokens. Network-loaded on first use.
+  static TextStyle mono(BuildContext context) => GoogleFonts.jetBrainsMono(
     fontSize: 13,
     fontWeight: FontWeight.w500,
     height: 1.5,
     color: BBColor.of(context).textPrimary,
     fontFeatures: _tabular,
+  );
+
+  /// 11 / 600 / 1.4 — UPPERCASE eyebrow label (`bb-eyebrow`).
+  /// Letter-spacing 0.08em ≈ 11 * 0.08 = 0.88. Pair with `.toUpperCase()`
+  /// on the displayed string — Flutter has no native text-transform.
+  static TextStyle eyebrow(BuildContext context) => GoogleFonts.inter(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    letterSpacing: 0.88,
+    color: BBColor.of(context).textSecondary,
+  );
+
+  /// 48 / 800 / 1.05 — hero display (`bb-display-lg`).
+  /// Premium pages only (Pregled north-star, hero sections).
+  static TextStyle displayLg(BuildContext context) => GoogleFonts.inter(
+    fontSize: 48,
+    fontWeight: FontWeight.w800,
+    height: 1.05,
+    letterSpacing: -1.44, // -0.03em × 48
+    color: BBColor.of(context).textPrimary,
   );
 
   // -------------------------------------------------------------------------
@@ -1064,5 +1117,30 @@ class BBGradient {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: <Color>[Color(0xFFF59E0B), Color(0xFFFBBF24)],
+  );
+
+  // -------------------------------------------------------------------------
+  // Redesign handoff additions
+  // -------------------------------------------------------------------------
+
+  /// Hero — 3-stop premium purple ramp (`--bb-gradient-hero` light).
+  /// Sidebar active tiles, hero cards, highlighted date chips.
+  static const LinearGradient hero = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[
+      Color(0xFF6B4CE6), // primary
+      Color(0xFF8B6FFF), // primary-light
+      Color(0xFFA78BFF), // hero highlight
+    ],
+    stops: <double>[0.0, 0.6, 1.0],
+  );
+
+  /// Hero — dark variant (richer entry stop).
+  static const LinearGradient heroDark = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: <Color>[Color(0xFF4A2BD1), Color(0xFF6B4CE6), Color(0xFF8B6FFF)],
+    stops: <double>[0.0, 0.5, 1.0],
   );
 }

@@ -5,6 +5,7 @@ import 'app_colors.dart';
 import 'app_gradients.dart';
 import 'app_typography.dart';
 import '../constants/app_dimensions.dart';
+import '../design/bb_redesign_tokens.dart';
 
 /// Application theme configuration
 /// Provides light and dark theme with consistent styling
@@ -34,8 +35,8 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
 
-      // Gradient extensions
-      extensions: const [AppGradients.light],
+      // Gradient extensions + redesign-handoff surfaces (Phase 1 additive).
+      extensions: const [AppGradients.light, BbRedesignTokens.light],
 
       // Color scheme
       colorScheme: const ColorScheme.light(
@@ -407,8 +408,8 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
 
-      // Gradient extensions
-      extensions: const [AppGradients.dark],
+      // Gradient extensions + redesign-handoff surfaces (Phase 1 additive).
+      extensions: const [AppGradients.dark, BbRedesignTokens.dark],
 
       // Color scheme
       colorScheme: const ColorScheme.dark(

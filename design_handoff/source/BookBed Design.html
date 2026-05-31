@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BookBed · Design System & Redesign</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <style>
+    /* Keyframes used by primitives */
+    @keyframes bb-spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes bb-shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      @keyframes bb-spin { to {} }
+      @keyframes bb-shimmer { 0%, 100% { background-position: 0 0; } }
+    }
+    /* Canvas root */
+    html, body, #root { height: 100%; margin: 0; }
+    body { background: #f0eee9; }
+    button { font-family: inherit; }
+    /* Classic↔Premium switcher: whichever variant is shown fills the artboard cleanly */
+    .bb-variant-frame > .theme-light { height: 100% !important; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- User-fillable image placeholders (plain web component) -->
+  <script src="image-slot.js"></script>
+
+  <!-- Design canvas + BookBed primitives + screens -->
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="primitives.jsx"></script>
+  <script type="text/babel" src="foundation.jsx"></script>
+  <script type="text/babel" src="screens.jsx"></script>
+  <script type="text/babel" src="pregled-premium.jsx"></script>
+  <script type="text/babel" src="rezervacije-premium.jsx"></script>
+  <script type="text/babel" src="calendar-timeline.jsx"></script>
+  <script type="text/babel" src="calendar-premium.jsx"></script>
+  <script type="text/babel" src="calendar-month.jsx"></script>
+  <script type="text/babel" src="profile.jsx"></script>
+  <script type="text/babel" src="profile-premium.jsx"></script>
+  <script type="text/babel" src="settings.jsx"></script>
+  <script type="text/babel" src="subscription.jsx"></script>
+  <script type="text/babel" src="faq.jsx"></script>
+  <script type="text/babel" src="dialogs.jsx"></script>
+  <script type="text/babel" src="filters-dialog.jsx"></script>
+  <script type="text/babel" src="booking-detail.jsx"></script>
+  <script type="text/babel" src="dialogs-misc.jsx"></script>
+  <script type="text/babel" src="units.jsx"></script>
+  <script type="text/babel" src="wizard.jsx"></script>
+  <script type="text/babel" src="auth.jsx"></script>
+  <script type="text/babel" src="admin-auth.jsx"></script>
+  <script type="text/babel" src="admin-shell.jsx"></script>
+  <script type="text/babel" src="admin-users.jsx"></script>
+  <script type="text/babel" src="admin-bookings.jsx"></script>
+  <script type="text/babel" src="admin-payments.jsx"></script>
+  <script type="text/babel" src="admin-sync.jsx"></script>
+  <script type="text/babel" src="admin-support.jsx"></script>
+  <script type="text/babel" src="admin-viz.jsx"></script>
+  <script type="text/babel" src="register.jsx"></script>
+  <script type="text/babel" src="recovery.jsx"></script>
+  <script type="text/babel" src="legal.jsx"></script>
+  <script type="text/babel" src="states.jsx"></script>
+  <script type="text/babel" src="dark.jsx"></script>
+  <script type="text/babel" src="cross-platform.jsx"></script>
+  <script type="text/babel" src="notifications.jsx"></script>
+  <script type="text/babel" src="ical.jsx"></script>
+  <script type="text/babel" src="payouts.jsx"></script>
+  <script type="text/babel" src="embed.jsx"></script>
+  <script type="text/babel" src="ai-assistant.jsx"></script>
+  <script type="text/babel" src="widget-calendar.jsx"></script>
+  <script type="text/babel" src="widget-guest-form.jsx"></script>
+  <script type="text/babel" src="widget-confirmation.jsx"></script>
+  <script type="text/babel" src="widget-error.jsx"></script>
+  <script type="text/babel" src="widget-pricing.jsx"></script>
+
+  <script type="text/babel" src="variants.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection
+            id="foundation"
+            title="Foundation"
+            subtitle="Design tokens + 10 BB primitives. Prompt 00 reference."
+          >
+            <DCArtboard id="ds-gallery" label="Design System · Light" width={1280}>
+              <FoundationGallery />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="pregled"
+            title="Owner App · Pregled (Dashboard)"
+            subtitle="Tier 2 · Prompt 05 — toggle Classic ↔ Premium 2026 ✦ in each artboard (defaults to Premium). Classic: revenue hero, pending nudge, secondary metrics, recent activity. Premium: north-star revenue, BookBed AI insight, dual-series chart, radial occupancy gauge, sparkline KPIs, channel breakdown, arrivals."
+          >
+            <DCArtboard id="pregled-desktop" label="Desktop · 1440" width={1440} height={1308}>
+              <VariantFrame w={1440} h={1308} classic={<PregledDesktop />} premium={<PregledPremiumDesktop />} />
+            </DCArtboard>
+            <DCArtboard id="pregled-tablet" label="Tablet · 768" width={768} height={1976}>
+              <VariantFrame w={768} h={1976} classic={<PregledTablet />} premium={<PregledPremiumTablet />} />
+            </DCArtboard>
+            <DCArtboard id="pregled-mobile" label="Mobile · 390" width={390} height={2208}>
+              <VariantFrame w={390} h={2208} classic={<PregledMobile />} premium={<PregledPremiumMobile />} />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="rezervacije"
+            title="Owner App · Rezervacije (Bookings)"
+            subtitle="Tier 2 · Prompt 06 — toggle Classic ↔ Premium 2026 ✦ in each artboard (defaults to Premium). Classic: pending-first tabs, card view, inline approve/reject. Premium: KPI summary strip, bookings AI nudge, pending priority queue (Odobri/Odbij + payment progress), and a bookings ledger table."
+          >
+            <DCArtboard id="rez-desktop" label="Desktop · 1440" width={1440} height={1660}>
+              <VariantFrame w={1440} h={1660} classic={<RezervacijeDesktop />} premium={<RezervacijePremiumDesktop />} />
+            </DCArtboard>
+            <DCArtboard id="rez-tablet" label="Tablet · 768" width={768} height={2116}>
+              <VariantFrame w={768} h={2116} classic={<RezervacijeTablet />} premium={<RezervacijePremiumTablet />} />
+            </DCArtboard>
+            <DCArtboard id="rez-mobile" label="Mobile · 390" width={390} height={2084}>
+              <VariantFrame w={390} h={2084} classic={<RezervacijeMobile />} premium={<RezervacijePremiumMobile />} />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="calendar-timeline"
+            title="Owner App · Kalendar — Timeline"
+            subtitle="Tier 2 · Prompt 07 — toggle Classic ↔ Premium 2026 ✦ chrome (defaults to Premium). FROZEN (both variants, identical): calendar grid + cell dims (50/42/100/60px) + parallelogram geometry + z-order — the premium variant reuses the same TimelineGrid verbatim and only restyles the surrounding chrome (eyebrow header, segmented view switch, occupancy KPI strip, refined legend, soft-shadow grid card)."
+          >
+            <DCArtboard id="cal-tl-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <VariantFrame w={1440} h={1100} classic={<CalendarTimelineDesktop />} premium={<CalendarPremiumDesktop />} />
+            </DCArtboard>
+            <DCArtboard id="cal-tl-tablet" label="Tablet · 768" width={768} height={1024}>
+              <VariantFrame w={768} h={1024} classic={<CalendarTimelineTablet />} premium={<CalendarPremiumTablet />} />
+            </DCArtboard>
+            <DCArtboard id="cal-tl-mobile" label="Mobile · 390" width={390} height={880}>
+              <VariantFrame w={390} h={880} classic={<CalendarTimelineMobile />} premium={<CalendarPremiumMobile />} />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="calendar-month"
+            title="Owner App · Kalendar — Mjesečni"
+            subtitle="Tier 2 · Prompt 08 — month view (sibling sub-tab to Timeline; NOT the frozen Timeline grid). Monday-start weeks, Google-Calendar-style spanning status bars (desktop/tablet) and dots + day-agenda (mobile). Shares Timeline chrome + booking data."
+          >
+            <DCArtboard id="cal-mo-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <CalendarMonthDesktop />
+            </DCArtboard>
+            <DCArtboard id="cal-mo-tablet" label="Tablet · 768" width={768} height={1024}>
+              <CalendarMonthTablet />
+            </DCArtboard>
+            <DCArtboard id="cal-mo-mobile" label="Mobile · 390" width={390} height={880}>
+              <CalendarMonthMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="profile"
+            title="Owner App · Profil"
+            subtitle="Tier 2 · Prompt 12 — toggle Classic ↔ Premium 2026 ✦ in each artboard (defaults to Premium). Classic: glass identity hero, grouped sections, slim Pro promo, destructive zone. Premium: identity card with completion radial + verified chips, host-trust KPI stats, richer Pro card, premium grouped settings."
+          >
+            <DCArtboard id="profile-desktop" label="Desktop · 1440" width={1440} height={1410}>
+              <VariantFrame w={1440} h={1410} classic={<ProfileDesktop />} premium={<ProfilePremiumDesktop />} />
+            </DCArtboard>
+            <DCArtboard id="profile-tablet" label="Tablet · 768" width={768} height={2200}>
+              <VariantFrame w={768} h={2200} classic={<ProfileTablet />} premium={<ProfilePremiumTablet />} />
+            </DCArtboard>
+            <DCArtboard id="profile-mobile" label="Mobile · 390" width={390} height={2340}>
+              <VariantFrame w={390} h={2340} classic={<ProfileMobile />} premium={<ProfilePremiumMobile />} />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="settings-edit-profile"
+            title="Owner App · Postavke — Uredi profil"
+            subtitle="Tier 3 · Prompt 13 — sub-screen from Profil → Račun. Photo block, personal details, verified email, public bio. Slim app-bar with back, save/cancel footer (sticky on mobile)."
+          >
+            <DCArtboard id="edit-profile-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <EditProfileDesktop />
+            </DCArtboard>
+            <DCArtboard id="edit-profile-tablet" label="Tablet · 768" width={768} height={1024}>
+              <EditProfileTablet />
+            </DCArtboard>
+            <DCArtboard id="edit-profile-mobile" label="Mobile · 390" width={390} height={880}>
+              <EditProfileMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="settings-password"
+            title="Owner App · Postavke — Promijeni lozinku"
+            subtitle="Tier 3 · Prompt 13 — current/new/confirm password fields with reveal toggle, live strength meter + requirement checklist, sign-out-everywhere switch."
+          >
+            <DCArtboard id="password-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <ChangePasswordDesktop />
+            </DCArtboard>
+            <DCArtboard id="password-tablet" label="Tablet · 768" width={768} height={1024}>
+              <ChangePasswordTablet />
+            </DCArtboard>
+            <DCArtboard id="password-mobile" label="Mobile · 390" width={390} height={880}>
+              <ChangePasswordMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="settings-notifications"
+            title="Owner App · Postavke — Obavijesti"
+            subtitle="Tier 3 · Prompt 13 — per-category Email/Push toggle matrix (desktop two-column, mobile stacked labelled toggles) + quiet-hours schedule. Critical payment alerts always emailed."
+          >
+            <DCArtboard id="notifset-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <NotificationSettingsDesktop />
+            </DCArtboard>
+            <DCArtboard id="notifset-tablet" label="Tablet · 768" width={768} height={1024}>
+              <NotificationSettingsTablet />
+            </DCArtboard>
+            <DCArtboard id="notifset-mobile" label="Mobile · 390" width={390} height={880}>
+              <NotificationSettingsMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="subscription"
+            title="Owner App · Pretplata (Subscription)"
+            subtitle="Tier 3 · Prompt 14 — reached from Profil → Pretplata. Trial-status hero (12/14 dana), Mjesečno/Godišnje billing toggle (−20% yearly), Besplatno vs Pro plan cards. Pro is recommended/highlighted."
+          >
+            <DCArtboard id="sub-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <SubscriptionDesktop />
+            </DCArtboard>
+            <DCArtboard id="sub-tablet" label="Tablet · 768" width={768} height={1024}>
+              <SubscriptionTablet />
+            </DCArtboard>
+            <DCArtboard id="sub-mobile" label="Mobile · 390" width={390} height={880}>
+              <SubscriptionMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="faq"
+            title="Owner App · FAQ (Pomoć)"
+            subtitle="Tier 3 · Prompt 16 — top-level help center. Search + category filter chips + interactive accordion (one open by default) + contact-support card. Genuine HR product answers."
+          >
+            <DCArtboard id="faq-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <FaqDesktop />
+            </DCArtboard>
+            <DCArtboard id="faq-tablet" label="Tablet · 768" width={768} height={1024}>
+              <FaqTablet />
+            </DCArtboard>
+            <DCArtboard id="faq-mobile" label="Mobile · 390" width={390} height={880}>
+              <FaqMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="payouts"
+            title="Owner App · Isplate (Stripe Connect + bank)"
+            subtitle="Tier 3 · Prompt 19 — payout setup from Profil. Stripe Connect status (connected + verified checks), balance tiles, payout bank account (IBAN), payout schedule, recent payouts. Stripe shown as a neutral indigo tile (not a logo reproduction)."
+          >
+            <DCArtboard id="payouts-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <PayoutsDesktop />
+            </DCArtboard>
+            <DCArtboard id="payouts-tablet" label="Tablet · 768" width={768} height={1024}>
+              <PayoutsTablet />
+            </DCArtboard>
+            <DCArtboard id="payouts-mobile" label="Mobile · 390" width={390} height={880}>
+              <PayoutsMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="embed-guide"
+            title="Owner App · Widget (Embed guide)"
+            subtitle="Tier 3 · Prompt 20 — Integracije → Widget developer screen. Copyable embed snippet (Ugrađeno/Skočni/Poveznica modes), live mint-widget preview, appearance customization (accent live-updates the code + preview), per-platform install steps (HTML/WordPress/Wix)."
+          >
+            <DCArtboard id="embed-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <EmbedDesktop />
+            </DCArtboard>
+            <DCArtboard id="embed-tablet" label="Tablet · 768" width={768} height={1024}>
+              <EmbedTablet />
+            </DCArtboard>
+            <DCArtboard id="embed-mobile" label="Mobile · 390" width={390} height={880}>
+              <EmbedMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="booking-dialogs"
+            title="Owner Dialogs · Booking actions"
+            subtitle="Tier 3 · Prompt 21 — 5 dialogs share one BBDialog base. All call deployed CFs (approve/reject/cancel/complete/delete). Mobile auto-converts to bottom-sheet."
+          >
+            <DCArtboard id="dialogs-desktop" label="Desktop · modals" width={1200}>
+              <DialogsDesktopGallery />
+            </DCArtboard>
+            <DCArtboard id="dialogs-mobile" label="Mobile · bottom-sheet" width={390} height={880}>
+              <DialogsMobileSheet />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="filters-dialog"
+            title="Owner Dialogs · Bookings filters"
+            subtitle="Tier 3 · Prompt 22 — opens from the Rezervacije „Filteri” button. Interactive chip groups (status / objekt / razdoblje / izvor / plaćanje / iznos), active-filter count, reset + apply-with-count footer. Modal auto-converts to bottom-sheet on mobile."
+          >
+            <DCArtboard id="filters-desktop" label="Desktop · modal" width={960} height={900}>
+              <FiltersDialogDesktop />
+            </DCArtboard>
+            <DCArtboard id="filters-mobile" label="Mobile · bottom-sheet" width={390} height={880}>
+              <FiltersDialogMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="booking-detail"
+            title="Owner App · Rezervacija — Detalji"
+            subtitle="Tier 2 · Prompt 23 — full booking record (reached from Rezervacije). Guest, stay, pricing (paid/remaining), guest note, activity timeline, and a status+actions panel (pending → Odobri/Odbij). Mobile uses a sticky action bar."
+          >
+            <DCArtboard id="bd-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <BookingDetailDesktop />
+            </DCArtboard>
+            <DCArtboard id="bd-tablet" label="Tablet · 768" width={768} height={1024}>
+              <BookingDetailTablet />
+            </DCArtboard>
+            <DCArtboard id="bd-mobile" label="Mobile · 390" width={390} height={880}>
+              <BookingDetailMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="booking-form"
+            title="Owner App · Rezervacija — Nova / Uredi"
+            subtitle="Tier 2 · Prompt 23 — shared create/edit form (gost, smještaj, termin, gosti, cijena, izvor, napomena). Create's confirm step reuses the existing (frozen) Navigator.push confirm dialog. Edit prefilled + delete affordance."
+          >
+            <DCArtboard id="bf-create-desktop" label="Nova · Desktop 1440" width={1440} height={1100}>
+              <BookingCreateDesktop />
+            </DCArtboard>
+            <DCArtboard id="bf-edit-desktop" label="Uredi · Desktop 1440" width={1440} height={1100}>
+              <BookingEditDesktop />
+            </DCArtboard>
+            <DCArtboard id="bf-create-mobile" label="Nova · Mobile 390" width={390} height={880}>
+              <BookingCreateMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="misc-dialogs"
+            title="Owner Dialogs · Misc + toasts"
+            subtitle="Tier 3 · Prompts 24–25 — Poruka gostu, Zatraži uplatu, Blokiraj datume, Izvezi rezervacije (all on the shared BBDialog base) + system toasts (success/error/info). Mobile shows the compose bottom-sheet with a success toast."
+          >
+            <DCArtboard id="misc-desktop" label="Desktop · gallery" width={1200}>
+              <MiscDialogsGallery />
+            </DCArtboard>
+            <DCArtboard id="misc-mobile" label="Mobile · sheet + toast" width={390} height={880}>
+              <MiscDialogsMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="admin-login"
+            title="Admin Console · Login"
+            subtitle="Tier 4 · Prompt 31 — separate ADMIN instance (internal staff tool). English „Welcome back”, purple-accented, deep-purple console backdrop, Google Workspace SSO + 2FA note. Web-only but responsive."
+          >
+            <DCArtboard id="admin-login-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AdminLoginDesktop />
+            </DCArtboard>
+            <DCArtboard id="admin-login-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AdminLoginTablet />
+            </DCArtboard>
+            <DCArtboard id="admin-login-mobile" label="Mobile-web · 390" width={390} height={880}>
+              <AdminLoginMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="admin-dashboard"
+            title="Admin Console · Overview (shell + dashboard)"
+            subtitle="Tier 4 · Prompt 32 — admin instance chrome (DARK console sidebar + topbar with global search + Production badge, distinct from owner app). Platform dashboard: owners/properties/GMV KPIs, bookings bar chart, channel sync-health, recent owner signups. English."
+          >
+            <DCArtboard id="admin-dash-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AdminDashboardDesktop />
+            </DCArtboard>
+            <DCArtboard id="admin-dash-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AdminDashboardTablet />
+            </DCArtboard>
+            <DCArtboard id="admin-dash-mobile" label="Mobile-web · 390" width={390} height={880}>
+              <AdminDashboardMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="admin-analytics"
+            title="Admin Console · Analytics"
+            subtitle="Platform growth & revenue health (reuses the admin shell, active=Analytics). Deep data-viz: growth KPIs (MRR / active owners / net revenue retention / logo churn), a real smooth area+line MRR trend (this year vs previous, with y-gridlines + axis labels + legend), a channel-mix donut (GMV by Booking.com / Airbnb / Direct widget / Custom iCal with value + %), and an owner-retention cohort heatmap (acquisition month × month-N). English, dark-console chrome. Tablet/mobile-web drop the cohort grid."
+          >
+            <DCArtboard id="admin-anl-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AdminAnalyticsDesktop />
+            </DCArtboard>
+            <DCArtboard id="admin-anl-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AdminAnalyticsTablet />
+            </DCArtboard>
+            <DCArtboard id="admin-anl-mobile" label="Mobile-web · 390" width={390} height={880}>
+              <AdminAnalyticsMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="admin-users"
+            title="Admin Console · Owners (users)"
+            subtitle="Tier 4 · Prompt 33 — platform owner management (reuses the admin shell, active=Owners). Filter tabs with counts, owners table, pagination, and a master-detail owner panel with actions (View as owner / Message / Reset password / Suspend). Mobile-web → owner cards."
+          >
+            <DCArtboard id="admin-users-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AdminUsersDesktop />
+            </DCArtboard>
+            <DCArtboard id="admin-users-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AdminUsersTablet />
+            </DCArtboard>
+            <DCArtboard id="admin-users-mobile" label="Mobile-web · 390" width={390} height={880}>
+              <AdminUsersMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="admin-bookings"
+            title="Admin Console · Bookings"
+            subtitle="Platform-wide booking oversight (reuses the admin shell, active=Bookings). Stats strip (today/GMV/pending/cancellations), status filter tabs, bookings table (ref / guest / property+owner / dates / channel / amount / status), pagination. Mobile-web → cards."
+          >
+            <DCArtboard id="admin-bk-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AdminBookingsDesktop />
+            </DCArtboard>
+            <DCArtboard id="admin-bk-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AdminBookingsTablet />
+            </DCArtboard>
+            <DCArtboard id="admin-bk-mobile" label="Mobile-web · 390" width={390} height={880}>
+              <AdminBookingsMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="admin-payments"
+            title="Admin Console · Payments"
+            subtitle="Platform-wide payment & payout oversight (reuses the admin shell, active=Payments). Money-movement stats (gross volume / platform fees / owner payouts / refunds & disputes), payment-volume chart + payout pipeline with Stripe Connect health, status filter tabs, and a transactions ledger (txn · owner · booking · method · gross · fee · net payout · status). Mobile-web → transaction cards. English."
+          >
+            <DCArtboard id="admin-pay-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AdminPaymentsDesktop />
+            </DCArtboard>
+            <DCArtboard id="admin-pay-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AdminPaymentsTablet />
+            </DCArtboard>
+            <DCArtboard id="admin-pay-mobile" label="Mobile-web · 390" width={390} height={880}>
+              <AdminPaymentsMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="admin-sync"
+            title="Admin Console · Sync health"
+            subtitle="Platform-wide channel-feed monitoring (reuses the admin shell, active=Sync health). Errors alert banner (14 feeds · 3 critical), sync stats (active feeds / healthy % / errors / avg latency), per-channel health cards (Booking.com · Airbnb · Direct widget · Custom iCal with uptime + error counts), and a feeds table with healthy/syncing/degraded/error states, last & next sync, latency, and inline retry. Mobile-web → errors-first feed cards. English."
+          >
+            <DCArtboard id="admin-sync-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AdminSyncDesktop />
+            </DCArtboard>
+            <DCArtboard id="admin-sync-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AdminSyncTablet />
+            </DCArtboard>
+            <DCArtboard id="admin-sync-mobile" label="Mobile-web · 390" width={390} height={880}>
+              <AdminSyncMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="admin-support"
+            title="Admin Console · Support"
+            subtitle="Staff helpdesk console (reuses the admin shell, active=Support). Ticket stats (open / awaiting reply / breaching SLA / resolved today), and a master-detail inbox: ticket queue (priority, category, SLA timers, unread) ↔ conversation thread with owner↔agent messages, an internal note, SLA + meta strip, and a reply composer. Chrome is English (staff tool) while the owner↔agent thread is Croatian (real HR-owner conversation). Tablet/mobile-web → ticket cards."
+          >
+            <DCArtboard id="admin-support-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AdminSupportDesktop />
+            </DCArtboard>
+            <DCArtboard id="admin-support-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AdminSupportTablet />
+            </DCArtboard>
+            <DCArtboard id="admin-support-mobile" label="Mobile-web · 390" width={390} height={880}>
+              <AdminSupportMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="auth-register"
+            title="Auth · Registracija vlasnika"
+            subtitle="Tier 4 · Prompt 35 — owner registration, mirrors the login split-screen glass card. Name/email/password with strength meter, terms acceptance, HR SSO, link back to login."
+          >
+            <DCArtboard id="register-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <RegisterDesktop />
+            </DCArtboard>
+            <DCArtboard id="register-tablet" label="Tablet · 768" width={768} height={1024}>
+              <RegisterTablet />
+            </DCArtboard>
+            <DCArtboard id="register-mobile" label="Mobile · 390" width={390} height={880}>
+              <RegisterMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="auth-recovery"
+            title="Auth · Oporavak računa (forgot / verify)"
+            subtitle="Tier 4 · Prompt 36 — forgot-password → reset-link-sent → email verification (6-digit code). Glass cards on the auth backdrop. HR."
+          >
+            <DCArtboard id="recovery-gallery" label="Flow · 3 koraka" width={1440} height={1100}>
+              <RecoveryGalleryDesktop />
+            </DCArtboard>
+            <DCArtboard id="recovery-forgot-mobile" label="Zaboravljena · Mobile" width={390} height={880}>
+              <RecoveryForgotMobile />
+            </DCArtboard>
+            <DCArtboard id="recovery-verify-mobile" label="Potvrda · Mobile" width={390} height={880}>
+              <RecoveryVerifyMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="legal"
+            title="Legal · Uvjeti / Privatnost / Kolačići"
+            subtitle="Tier 4 · Prompt 36 — legal document reader. Segmented switch + sticky TOC + document column with dated clauses. Standalone (works logged-in or out)."
+          >
+            <DCArtboard id="legal-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <LegalDesktop />
+            </DCArtboard>
+            <DCArtboard id="legal-mobile" label="Mobile · 390" width={390} height={880}>
+              <LegalMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="states"
+            title="QA · States (loading / empty / error)"
+            subtitle="Tier 5 · Prompt 37 — canonical state patterns reused across owner, admin & widget: skeleton loading, empty states (bookings/notifications/search), error (load-failed/404), offline banner, and inline button/input states."
+          >
+            <DCArtboard id="states-board" label="Reference board" width={1280}>
+              <StatesBoard />
+            </DCArtboard>
+            <DCArtboard id="states-mobile" label="Mobile · loading + empty" width={390} height={880}>
+              <StatesMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="dark-mode"
+            title="QA · Dark mode (.theme-dark)"
+            subtitle="Tier 5 · Prompt 38 — validates the dark token swap on real components: full owner dashboard, components board (buttons/inputs/badges/booking card/dialog), and a dark mobile bookings list. OLED-friendly surfaces, AA text, lighter dark primary."
+          >
+            <DCArtboard id="dark-dashboard" label="Owner dashboard · Dark 1440" width={1440} height={1100}>
+              <DarkDashboardDesktop />
+            </DCArtboard>
+            <DCArtboard id="dark-components" label="Components · Dark board" width={1280}>
+              <DarkComponentsBoard />
+            </DCArtboard>
+            <DCArtboard id="dark-mobile" label="Mobile · Dark 390" width={390} height={880}>
+              <DarkMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="cross-platform"
+            title="QA · Cross-platform parity"
+            subtitle="Tier 5 · Prompt 39 — breakpoint consistency: navigation adaptation (Sidebar 260 → Rail 72 → App-bar+drawer, real components), per-breakpoint specs, and a parity checklist (HR copy, tabular figures, 44px targets, 8px grid, status colors, light/dark, safe-area, reduced-motion)."
+          >
+            <DCArtboard id="cross-platform-board" label="Parity reference" width={1320}>
+              <CPBoard />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="units"
+            title="Owner App · Smještajne Jedinice (Units hub + Osnovno)"
+            subtitle="Tier 2 · Prompt 09 — property tree as left secondary panel on desktop, unit dropdown on tablet/mobile. Cjenovnik tab is FROZEN."
+          >
+            <DCArtboard id="units-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <UnitsDesktop />
+            </DCArtboard>
+            <DCArtboard id="units-tablet" label="Tablet · 768" width={768} height={1024}>
+              <UnitsTablet />
+            </DCArtboard>
+            <DCArtboard id="units-mobile" label="Mobile · 390" width={390} height={880}>
+              <UnitsMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="unit-wizard"
+            title="Owner App · Unit Wizard (Nova jedinica)"
+            subtitle="Tier 2 · Prompts 10–11 — focused full-screen creation flow (Navigator.push route, no sidebar). 4-step stepper: Osnovno → Kapacitet → Fotografije → Objava. Publish flow (Step 4) is FROZEN — marked on the stepper; only chrome restyled."
+          >
+            <DCArtboard id="wiz-s1-desktop" label="Korak 1 · Osnovno · 1440" width={1440} height={1100}>
+              <WizardStep1Desktop />
+            </DCArtboard>
+            <DCArtboard id="wiz-s2-desktop" label="Korak 2 · Kapacitet · 1440" width={1440} height={1100}>
+              <WizardStep2Desktop />
+            </DCArtboard>
+            <DCArtboard id="wiz-s3-desktop" label="Korak 3 · Fotografije · 1440" width={1440} height={1100}>
+              <WizardStep3Desktop />
+            </DCArtboard>
+            <DCArtboard id="wiz-s4-desktop" label="Korak 4 · Objava (FROZEN) · 1440" width={1440} height={1100}>
+              <WizardStep4Desktop />
+            </DCArtboard>
+            <DCArtboard id="wiz-s2-tablet" label="Korak 2 · Tablet · 768" width={768} height={1024}>
+              <WizardStep2Tablet />
+            </DCArtboard>
+            <DCArtboard id="wiz-s1-mobile" label="Korak 1 · Mobile · 390" width={390} height={880}>
+              <WizardStep1Mobile />
+            </DCArtboard>
+            <DCArtboard id="wiz-s4-mobile" label="Korak 4 · Mobile (FROZEN) · 390" width={390} height={880}>
+              <WizardStep4Mobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="auth-login"
+            title="Auth · Prijava vlasnika"
+            subtitle="Tier 4 · Prompt 34 — glass card on tinted gradient. HR-localized SSO buttons (Prijava preko Googlea / Applea)."
+          >
+            <DCArtboard id="auth-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AuthLoginDesktop />
+            </DCArtboard>
+            <DCArtboard id="auth-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AuthLoginTablet />
+            </DCArtboard>
+            <DCArtboard id="auth-mobile" label="Mobile · 390" width={390} height={880}>
+              <AuthLoginMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="notifications"
+            title="Owner App · Obavještenja"
+            subtitle="Tier 2 · Prompt 15 — typed category icons, inline actions for actionable rows, mark-all-read, empty + loading states."
+          >
+            <DCArtboard id="notif-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <NotificationsDesktop />
+            </DCArtboard>
+            <DCArtboard id="notif-tablet" label="Tablet · 768" width={768} height={1024}>
+              <NotificationsTablet />
+            </DCArtboard>
+            <DCArtboard id="notif-mobile" label="Mobile · 390" width={390} height={880}>
+              <NotificationsMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="ical"
+            title="Owner App · iCal Sinkronizacija"
+            subtitle="Tier 2 · Prompt 18 — populated feed list matches the gold-standard empty-state polish. Real brand icons (Booking.com, Airbnb)."
+          >
+            <DCArtboard id="ical-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <ICalDesktop />
+            </DCArtboard>
+            <DCArtboard id="ical-tablet" label="Tablet · 768" width={768} height={1024}>
+              <ICalTablet />
+            </DCArtboard>
+            <DCArtboard id="ical-mobile" label="Mobile · 390" width={390} height={880}>
+              <ICalMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="ai-assistant"
+            title="Owner App · AI Asistent"
+            subtitle="Tier 2 · Prompt 17 — consent onboarding + chat surface (split list/chat on desktop, single pane on mobile)."
+          >
+            <DCArtboard id="ai-consent" label="Consent (first-run)" width={1440} height={1100}>
+              <AIConsentDesktop />
+            </DCArtboard>
+            <DCArtboard id="ai-chat-desktop" label="Desktop · 1440" width={1440} height={1100}>
+              <AIChatDesktop />
+            </DCArtboard>
+            <DCArtboard id="ai-chat-tablet" label="Tablet · 768" width={768} height={1024}>
+              <AIChatTablet />
+            </DCArtboard>
+            <DCArtboard id="ai-chat-mobile" label="Mobile · 390" width={390} height={880}>
+              <AIChatMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="widget-calendar"
+            title="Booking Widget · Calendar (guest-facing)"
+            subtitle="Tier 4 · Prompt 26 — minimalist embeddable widget. Distinct mint accent, self-contained theme so it embeds on any third-party site. Subtle BookBed brand hint via footer."
+          >
+            <DCArtboard id="widget-cal-desktop" label="Embedded · 1080" width={1080}>
+              <WidgetCalendarDesktop />
+            </DCArtboard>
+            <DCArtboard id="widget-cal-tablet" label="Tablet · 768" width={768} height={1024}>
+              <WidgetCalendarTablet />
+            </DCArtboard>
+            <DCArtboard id="widget-cal-mobile" label="Mobile · 390" width={390} height={880}>
+              <WidgetCalendarMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="widget-guest-form"
+            title="Booking Widget · Guest form"
+            subtitle="Tier 4 · Prompt 28 — final step of guest booking flow. Localized HR CTA (Plati € depozit, not 'Pay with Stripe'). Note for Flutter: F-67-03 — NO localStorage persistence of form fields."
+          >
+            <DCArtboard id="widget-form-desktop" label="Embedded · 1080" width={1080}>
+              <WidgetGuestFormDesktop />
+            </DCArtboard>
+            <DCArtboard id="widget-form-tablet" label="Tablet · 768" width={768}>
+              <WidgetGuestFormTablet />
+            </DCArtboard>
+            <DCArtboard id="widget-form-mobile" label="Mobile · 390" width={390}>
+              <WidgetGuestFormMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="widget-confirmation"
+            title="Booking Widget · Potvrda (success)"
+            subtitle="Tier 4 · Prompt 29 — deposit paid, request sent to owner. Continues the guest-form booking (Marko Horvat · Studio · 29.05–30.05 · €130 / €26 polog). Mint success mark, what's-next steps, add-to-calendar + receipt."
+          >
+            <DCArtboard id="widget-conf-desktop" label="Embedded · 1080" width={1080}>
+              <WidgetConfirmationDesktop />
+            </DCArtboard>
+            <DCArtboard id="widget-conf-tablet" label="Tablet · 768" width={768} height={1024}>
+              <WidgetConfirmationTablet />
+            </DCArtboard>
+            <DCArtboard id="widget-conf-mobile" label="Mobile · 390" width={390} height={880}>
+              <WidgetConfirmationMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="widget-error"
+            title="Booking Widget · Error & Not-found states"
+            subtitle="Tier 4 · Prompt 30 — three guest-facing failure states share one shell. Payment-declined (card NOT charged, hold timer), 404 invalid/expired link, and dates-taken race. Tone-coded marks (coral / neutral / amber)."
+          >
+            <DCArtboard id="widget-err-payment" label="Plaćanje nije uspjelo · 1080" width={1080}>
+              <WidgetErrorPayment />
+            </DCArtboard>
+            <DCArtboard id="widget-err-notfound" label="404 — Nije pronađeno · 1080" width={1080}>
+              <WidgetNotFound />
+            </DCArtboard>
+            <DCArtboard id="widget-err-unavailable" label="Termin zauzet · 1080" width={1080}>
+              <WidgetUnavailable />
+            </DCArtboard>
+            <DCArtboard id="widget-err-mobile" label="Mobile · Greška · 390" width={390} height={880}>
+              <WidgetErrorMobile />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="widget-pricing"
+            title="Booking Widget · Cijena (panel + razrada modal)"
+            subtitle="Tier 4 · Prompt 27 — sticky pricing panel + full breakdown modal. Anchored to BB-2402 (Studio · 08.07–11.07 · 3 noći · €360 / €72 polog). Per-night rates, weekend night, length-of-stay discount, on-site tourist tax. Mobile modal converts to bottom-sheet."
+          >
+            <DCArtboard id="widget-price-panel" label="Panel · Embedded 1080" width={1080}>
+              <WidgetPricingPanelEmbedded />
+            </DCArtboard>
+            <DCArtboard id="widget-price-modal" label="Razrada · Modal (Desktop)" width={960} height={760}>
+              <WidgetPricingModalDesktop />
+            </DCArtboard>
+            <DCArtboard id="widget-price-sheet" label="Razrada · Bottom-sheet (Mobile)" width={390} height={880}>
+              <WidgetPricingModalMobile />
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    root.render(<App />);
+  </script>
+</body>
+</html>

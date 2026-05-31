@@ -36,6 +36,7 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
     required this.focusRingColor,
     required this.glassBg,
     required this.glassBorder,
+    required this.softBg,
   });
 
   /// Outer console background (`--bb-shell-bg`). Light `#F0F1F5` / dark `#000000`.
@@ -81,6 +82,12 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
   final Color glassBg;
   final Color glassBorder;
 
+  /// Soft auth/hero backdrop (pale lavender wash). Use as `BoxDecoration.gradient`
+  /// behind glass-card auth screens; distinct from [heroGradient] which is the
+  /// saturated brand purple used for sidebar active tiles and hero CTAs. See
+  /// `design_handoff/screens/15-owner.png`.
+  final LinearGradient softBg;
+
   // ----- Theme presets -------------------------------------------------------
 
   static const BbRedesignTokens light = BbRedesignTokens(
@@ -103,6 +110,12 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
     focusRingColor: Color(0x386B4CE6), // rgba(107,76,230,.22)
     glassBg: Color(0xB8FFFFFF), // rgba(255,255,255,.72)
     glassBorder: Color(0x80FFFFFF), // rgba(255,255,255,.50)
+    softBg: LinearGradient(
+      // Pale lavender wash for auth/hero screens — handoff screens/15-owner.png
+      colors: <Color>[Color(0xFFFAFAFA), Color(0xFFF4F1FF)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
   );
 
   static const BbRedesignTokens dark = BbRedesignTokens(
@@ -125,6 +138,12 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
     focusRingColor: Color(0x528B6FFF), // rgba(139,111,255,.32)
     glassBg: Color(0x991E1E1E), // rgba(30,30,30,.60)
     glassBorder: Color(0x14FFFFFF), // rgba(255,255,255,.08)
+    softBg: LinearGradient(
+      // OLED-friendly near-black with subtle purple tint
+      colors: <Color>[Color(0xFF0B0813), Color(0xFF14101F)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
   );
 
   /// Resolve via the current theme; falls back to [light] if not wired in.
@@ -153,6 +172,7 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
     Color? focusRingColor,
     Color? glassBg,
     Color? glassBorder,
+    LinearGradient? softBg,
   }) {
     return BbRedesignTokens(
       shellBg: shellBg ?? this.shellBg,
@@ -174,6 +194,7 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
       focusRingColor: focusRingColor ?? this.focusRingColor,
       glassBg: glassBg ?? this.glassBg,
       glassBorder: glassBorder ?? this.glassBorder,
+      softBg: softBg ?? this.softBg,
     );
   }
 
@@ -225,6 +246,7 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
           Color.lerp(focusRingColor, other.focusRingColor, t) ?? focusRingColor,
       glassBg: Color.lerp(glassBg, other.glassBg, t) ?? glassBg,
       glassBorder: Color.lerp(glassBorder, other.glassBorder, t) ?? glassBorder,
+      softBg: LinearGradient.lerp(softBg, other.softBg, t) ?? softBg,
     );
   }
 }

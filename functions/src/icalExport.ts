@@ -1,10 +1,10 @@
-import { onRequest } from "firebase-functions/v2/https";
+import {onRequest} from "firebase-functions/v2/https";
 import * as crypto from "crypto";
-import { Timestamp } from "firebase-admin/firestore";
-import { db } from "./firebase";
-import { logInfo, logError } from "./logger";
-import { getClientIp, hashIp } from "./utils/ipUtils";
-import { checkRateLimit } from "./utils/rateLimit";
+import {Timestamp} from "firebase-admin/firestore";
+import {db} from "./firebase";
+import {logInfo, logError} from "./logger";
+import {getClientIp, hashIp} from "./utils/ipUtils";
+import {checkRateLimit} from "./utils/rateLimit";
 
 // =============================================================================
 // CONFIGURATION
@@ -146,7 +146,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     // This prevents re-importing same events back to the origin platform
     const excludeSource = (request.query.exclude as string)?.toLowerCase() || null;
 
-    logInfo("[iCal Feed] Request received", { propertyId, unitId, excludeSource });
+    logInfo("[iCal Feed] Request received", {propertyId, unitId, excludeSource});
 
     // 1. Verify token against widget_secrets (private) — falls back to legacy
     //    widget_settings.ical_export_token during the migration window.
@@ -158,7 +158,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     ]);
 
     if (!widgetSettingsDoc.exists) {
-      logError("[iCal Feed] Widget settings not found", { propertyId, unitId });
+      logError("[iCal Feed] Widget settings not found", {propertyId, unitId});
       response.status(404).send("Unit not found");
       return;
     }
@@ -167,7 +167,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 
     // Check if iCal export is enabled
     if (!widgetSettings?.ical_export_enabled) {
-      logError("[iCal Feed] iCal export disabled", { propertyId, unitId });
+      logError("[iCal Feed] iCal export disabled", {propertyId, unitId});
       response.status(403).send("iCal export is disabled for this unit");
       return;
     }
@@ -183,7 +183,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
 
     // Verify token using timing-safe comparison (prevents timing attacks)
     if (!verifyIcalToken(token, tokenToCompare)) {
-      logError("[iCal Feed] Invalid token", { propertyId, unitId });
+      logError("[iCal Feed] Invalid token", {propertyId, unitId});
       response.status(403).send("Invalid token");
       return;
     }
@@ -202,7 +202,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     // 3. Handle ETag/If-None-Match for bandwidth optimization
     const clientETag = request.headers["if-none-match"];
     if (cacheValid && clientETag && clientETag === cachedETag) {
-      logInfo("[iCal Feed] 304 Not Modified (ETag match)", { propertyId, unitId });
+      logInfo("[iCal Feed] 304 Not Modified (ETag match)", {propertyId, unitId});
       response.status(304).send("");
       return;
     }
@@ -210,7 +210,7 @@ export const getUnitIcalFeed = onRequest(async (request, response) => {
     // 4. Return cached content if still valid
     // IMPORTANT: Skip cache when excludeSource is specified - each platform needs different filtered content
     if (cacheValid && cachedContent && !excludeSource) {
-      logInfo("[iCal Feed] Serving cached content", { propertyId, unitId });
+      logInfo("[iCal Feed] Serving cached content", {propertyId, unitId});
       setCacheHeaders(response, cachedETag, ICAL_CONFIG.CACHE_TTL_SECONDS);
       response.set("Content-Type", "text/calendar; charset=utf-8");
       const unitName = widgetSettings.ical_cache_unit_name || "Unit";
@@ -407,14 +407,14 @@ function groupConsecutiveBlockedDays(dates: Date[]): BlockedRange[] {
       rangeEnd = currentDate;
     } else {
       // Gap found - save current range and start new one
-      ranges.push({ startDate: rangeStart, endDate: rangeEnd });
+      ranges.push({startDate: rangeStart, endDate: rangeEnd});
       rangeStart = currentDate;
       rangeEnd = currentDate;
     }
   }
 
   // Don't forget the last range
-  ranges.push({ startDate: rangeStart, endDate: rangeEnd });
+  ranges.push({startDate: rangeStart, endDate: rangeEnd});
 
   return ranges;
 }
@@ -773,11 +773,11 @@ function generatePlaceholderEvent(unitName: string): string[] {
  */
 function mapBookingStatus(status: string): string {
   switch (status) {
-    case "confirmed": return "CONFIRMED";
-    case "pending": return "CONFIRMED";
-    case "cancelled": return "CANCELLED";
-    case "completed": return "CONFIRMED";
-    default: return "CONFIRMED";
+  case "confirmed": return "CONFIRMED";
+  case "pending": return "CONFIRMED";
+  case "cancelled": return "CANCELLED";
+  case "completed": return "CONFIRMED";
+  default: return "CONFIRMED";
   }
 }
 

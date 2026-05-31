@@ -33,7 +33,7 @@ export type RecommendedAction = "auto_skip" | "flag_review" | "save_unique" | "s
 export interface EchoMatchResult {
   isProbableEcho: boolean;
   confidence: number;
-  containmentRatio?: number;         // % of nights already blocked (0-1), only for aggregators
+  containmentRatio?: number; // % of nights already blocked (0-1), only for aggregators
   matchedEventId?: string;
   matchedBookingId?: string;
   reasons: string[];

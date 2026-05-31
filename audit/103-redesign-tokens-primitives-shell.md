@@ -40,6 +40,7 @@ Handoff source: `design_handoff/source/tokens.css` (read verbatim during executi
 | `--bb-focus-ring` | `rgba(107,76,230,.22)` | `rgba(139,111,255,.32)` | `…focusRingColor` |
 | `--bb-glass-bg` / `--bb-glass-border` | `rgba(255,255,255,.72)` / `.50` | `rgba(30,30,30,.60)` / `.08` | `…glassBg` / `…glassBorder` |
 | widget mint `#3DD9B0` (widget only) | static | static | `AppColors.mintWidget`, `…mintWidget` |
+| soft auth/hero backdrop (Phase 1.2) | `LinearGradient(#FAFAFA → #F4F1FF)` 135° | `LinearGradient(#0B0813 → #14101F)` 135° | `…softBg` |
 
 ### 2.2 Status — handoff "deep" hexes via redesign tokens
 

@@ -31,7 +31,7 @@ import '../widgets/social_login_button.dart';
 ///  - Email-verification gate routing
 ///  - SecureStorageService Remember Me
 ///  - Programmatic shake AnimationController (per .claude/rules/ui-ux.md)
-///  - Form-key validation (BbInput wrapped in `FormField<String>`)
+///  - Form-key validation (BbInput's native `validator:` — Phase 1.1 PR #616)
 ///  - AndroidKeyboardDismissFixApproach1 mixin (per .claude/rules/keyboard-fix.md)
 class EnhancedLoginScreen extends ConsumerStatefulWidget {
   const EnhancedLoginScreen({super.key});
@@ -533,30 +533,23 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     );
   }
 
-  /// Email field — `BbInput` wrapped in `FormField<String>` so
-  /// `_formKey.validate()` still triggers (BbInput composes `TextField`,
-  /// not `TextFormField`).
+  /// Email field — uses BbInput's native `validator:` (Phase 1.1 PR #616)
+  /// so `_formKey.validate()` triggers through BbInput's internal
+  /// `FormField<String>` wrap.
   Widget _buildEmailField(AppLocalizations l10n) {
-    return FormField<String>(
-      initialValue: _emailController.text,
+    return BbInput(
+      key: const ValueKey('login_email'),
+      controller: _emailController,
+      label: l10n.email,
+      iconLeft: 'mail',
+      placeholder: 'ime@primjer.hr',
+      size: BbInputSize.lg,
+      keyboardType: TextInputType.emailAddress,
       validator: (_) {
         if (_emailErrorFromServer != null) {
           return _emailErrorFromServer;
         }
         return ProfileValidators.validateEmail(_emailController.text);
-      },
-      builder: (state) {
-        return BbInput(
-          key: const ValueKey('login_email'),
-          controller: _emailController,
-          label: l10n.email,
-          iconLeft: 'mail',
-          placeholder: 'ime@primjer.hr',
-          size: BbInputSize.lg,
-          keyboardType: TextInputType.emailAddress,
-          error: state.errorText,
-          onChanged: (v) => state.didChange(v),
-        );
       },
     );
   }
@@ -566,8 +559,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
     BBColorSet c,
     AppLocalizations l10n,
   ) {
-    return FormField<String>(
-      initialValue: _passwordController.text,
+    return BbInput(
+      key: const ValueKey('login_password'),
+      controller: _passwordController,
+      label: l10n.password,
+      iconLeft: 'lock',
+      placeholder: '••••••••',
+      size: BbInputSize.lg,
+      obscureText: _obscurePassword,
       validator: (_) {
         if (_passwordErrorFromServer != null) {
           return _passwordErrorFromServer;
@@ -576,35 +575,22 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
           _passwordController.text,
         );
       },
-      builder: (state) {
-        return BbInput(
-          key: const ValueKey('login_password'),
-          controller: _passwordController,
-          label: l10n.password,
-          iconLeft: 'lock',
-          placeholder: '••••••••',
-          size: BbInputSize.lg,
-          obscureText: _obscurePassword,
-          error: state.errorText,
-          onChanged: (v) => state.didChange(v),
-          trailingAction: Tooltip(
-            message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: c.textTertiary,
-                size: 20,
-              ),
-              onPressed: () {
-                HapticFeedback.mediumImpact();
-                setState(() => _obscurePassword = !_obscurePassword);
-              },
-            ),
+      trailingAction: Tooltip(
+        message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          icon: Icon(
+            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: c.textTertiary,
+            size: 20,
           ),
-        );
-      },
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            setState(() => _obscurePassword = !_obscurePassword);
+          },
+        ),
+      ),
     );
   }
 

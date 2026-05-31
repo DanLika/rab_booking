@@ -6,14 +6,14 @@ import '../providers/theme_provider.dart';
 import '../mixins/theme_detection_mixin.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/design/tokens.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/utils/web_utils.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../shared/models/booking_model.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../domain/models/widget_settings.dart';
 import '../widgets/common/info_card_widget.dart';
 import '../widgets/confirmation/confirmation_header.dart';
-import '../widgets/confirmation/booking_reference_card.dart';
-import '../widgets/confirmation/email_spam_warning_card.dart';
 import '../widgets/confirmation/booking_summary_card.dart';
 import '../widgets/confirmation/calendar_export_button.dart';
 import '../widgets/confirmation/bank_transfer_instructions_card.dart';
@@ -277,6 +277,8 @@ class _BookingConfirmationScreenState
     final isDarkMode = ref.watch(themeProvider);
     final colors = isDarkMode ? ColorTokens.dark : ColorTokens.light;
     final tr = WidgetTranslations.of(context, ref);
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
 
     // Extract widget settings values safely to avoid null check operator errors
     final widgetSettings = widget.widgetSettings;
@@ -286,161 +288,198 @@ class _BookingConfirmationScreenState
     final allowGuestCancellation =
         widgetSettings?.allowGuestCancellation == true;
 
-    // Use pure black background for dark theme in widget
-    final backgroundColor = isDarkMode
-        ? Colors.black
-        : colors.backgroundPrimary;
+    // Mint surface validates BbRedesignTokens.mintWidget end-to-end (handoff #3DD9B0).
+    // In dark mode we keep pure black to preserve the original screen's design intent
+    // so the mint accent stays a success cue rather than a page wash.
+    final backgroundColor = isDarkMode ? Colors.black : rd.mintWidget;
 
     return Scaffold(
       backgroundColor: backgroundColor,
+      appBar: BbAppBar(
+        surfaceColor: Colors.transparent,
+        title: tr.bookingConfirmation,
+        showBack: true,
+        onBack: _navigateToCleanCalendar,
+      ),
       body:
           SafeArea(
+            top: false,
             left: false,
             right: false,
-            child: Column(
-              children: [
-                // Custom header with centered title and back button
-                _buildHeader(colors),
-                Divider(height: 1, thickness: 1, color: colors.borderDefault),
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(BBSpace.md),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 600),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                BBSpace.sm,
+                BBSpace.xs,
+                BBSpace.sm,
+                BBSpace.lg,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Animated header with success icon + message
+                      // (kept — encapsulates motion + custom-logo support).
+                      ConfirmationHeader(
+                        paymentMethod: widget.paymentMethod,
+                        colors: colors,
+                        customLogoUrl:
+                            widget.widgetSettings?.themeOptions?.customLogoUrl,
+                      ),
+
+                      const SizedBox(height: BBSpace.sm),
+
+                      // Payment verification warning (Stripe pending)
+                      if (_shouldShowPaymentVerificationWarning)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: BBSpace.sm),
+                          child: InfoCardWidget(
+                            title: tr.paymentVerificationInProgress,
+                            message: tr.paymentVerificationMessage,
+                            isDarkMode: isDarkMode,
+                          ),
+                        ),
+
+                      // Reference pill — handoff "Broj rezervacije" pattern.
+                      _BookingReferencePill(
+                        reference: widget.bookingReference,
+                        tr: tr,
+                      ),
+
+                      const SizedBox(height: BBSpace.sm),
+
+                      // Email spam note — handoff WCEmailNote inline card.
+                      BbCard(
+                        padded: false,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        variant: BbCardVariant.flat,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Animated header with icon and message
-                            ConfirmationHeader(
-                              paymentMethod: widget.paymentMethod,
-                              colors: colors,
-                              customLogoUrl: widget
-                                  .widgetSettings
-                                  ?.themeOptions
-                                  ?.customLogoUrl,
+                            BbIcon(
+                              name: 'mail',
+                              size: 18,
+                              color: c.textTertiary,
                             ),
-
-                            const SizedBox(height: BBSpace.sm),
-
-                            // Payment verification warning (Stripe pending)
-                            if (_shouldShowPaymentVerificationWarning)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: BBSpace.sm,
-                                ),
-                                child: InfoCardWidget(
-                                  title: tr.paymentVerificationInProgress,
-                                  message: tr.paymentVerificationMessage,
-                                  isDarkMode: isDarkMode,
-                                ),
-                              ),
-
-                            // Booking reference card
-                            BookingReferenceCard(
-                              bookingReference: widget.bookingReference,
-                              colors: colors,
-                            ),
-
-                            const SizedBox(height: BBSpace.sm),
-
-                            // Email spam folder warning
-                            EmailSpamWarningCard(colors: colors),
-
-                            const SizedBox(height: BBSpace.md),
-
-                            // Booking summary card
-                            BookingSummaryCard(
-                              propertyName: widget.propertyName,
-                              unitName: widget.unitName,
-                              guestName: widget.guestName,
-                              guestEmail: widget.guestEmail,
-                              checkIn: widget.checkIn,
-                              checkOut: widget.checkOut,
-                              nights: widget.nights,
-                              guests: widget.guests,
-                              totalPrice: widget.totalPrice,
-                              roomPrice: widget.roomPrice,
-                              extraGuestFees: widget.extraGuestFees,
-                              petFees: widget.petFees,
-                              additionalServicesTotal:
-                                  widget.additionalServicesTotal,
-                              isDarkMode: isDarkMode,
-                              colors: colors,
-                            ),
-
-                            const SizedBox(height: BBSpace.md),
-
-                            // Calendar export button (always enabled)
-                            if (widget.booking != null)
-                              CalendarExportButton(
-                                booking: widget.booking!,
-                                unitName:
-                                    widget.unitName ?? widget.propertyName,
-                                bookingReference: widget.bookingReference,
-                                colors: colors,
-                              ),
-
-                            // Bank transfer instructions
-                            if (widget.paymentMethod == 'bank_transfer' &&
-                                hasBankTransferDetails &&
-                                bankConfig != null)
-                              BankTransferInstructionsCard(
-                                bankConfig: bankConfig,
-                                bookingReference: widget.bookingReference,
-                                colors: colors,
-                              ),
-
-                            // Email confirmation with resend option
-                            // Uses Cloud Function for resend - no owner API key needed
-                            EmailConfirmationCard(
-                              guestEmail: widget.guestEmail,
-                              bookingReference: widget.bookingReference,
-                              colors: colors,
-                            ),
-
-                            // Cancellation policy
-                            if (allowGuestCancellation &&
-                                cancellationDeadlineHours != null)
-                              CancellationPolicySection(
-                                isDarkMode: isDarkMode,
-                                deadlineHours: cancellationDeadlineHours,
-                                bookingReference: widget.bookingReference,
-                                fromEmail: widget.emailConfig?.fromEmail,
-                              ),
-
-                            // Next steps section
-                            NextStepsSection(
-                              isDarkMode: isDarkMode,
-                              paymentMethod: widget.paymentMethod,
-                            ),
-
-                            const SizedBox(height: BBSpace.lg),
-
-                            const SizedBox(height: BBSpace.sm),
-
-                            // Close button - always show for same-tab navigation
-                            _buildCloseButton(colors, isDark: isDarkMode),
-                            const SizedBox(height: BBSpace.lg),
-
-                            // Helpful info
-                            Text(
-                              tr.saveBookingReference,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: BBTypeBridges.fontSizeS,
-                                color: colors.textSecondary,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                tr.checkSpamFolder,
+                                style: BBType.caption(
+                                  context,
+                                ).copyWith(color: c.textSecondary, height: 1.5),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
+
+                      const SizedBox(height: BBSpace.md),
+
+                      // Booking summary card
+                      BookingSummaryCard(
+                        propertyName: widget.propertyName,
+                        unitName: widget.unitName,
+                        guestName: widget.guestName,
+                        guestEmail: widget.guestEmail,
+                        checkIn: widget.checkIn,
+                        checkOut: widget.checkOut,
+                        nights: widget.nights,
+                        guests: widget.guests,
+                        totalPrice: widget.totalPrice,
+                        roomPrice: widget.roomPrice,
+                        extraGuestFees: widget.extraGuestFees,
+                        petFees: widget.petFees,
+                        additionalServicesTotal: widget.additionalServicesTotal,
+                        isDarkMode: isDarkMode,
+                        colors: colors,
+                      ),
+
+                      const SizedBox(height: BBSpace.md),
+
+                      // Calendar export (.ics download) — behavioral widget kept verbatim.
+                      if (widget.booking != null)
+                        CalendarExportButton(
+                          booking: widget.booking!,
+                          unitName: widget.unitName ?? widget.propertyName,
+                          bookingReference: widget.bookingReference,
+                          colors: colors,
+                        ),
+
+                      // Bank transfer instructions
+                      if (widget.paymentMethod == 'bank_transfer' &&
+                          hasBankTransferDetails &&
+                          bankConfig != null)
+                        BankTransferInstructionsCard(
+                          bankConfig: bankConfig,
+                          bookingReference: widget.bookingReference,
+                          colors: colors,
+                        ),
+
+                      // Email confirmation with resend option (CF-backed).
+                      EmailConfirmationCard(
+                        guestEmail: widget.guestEmail,
+                        bookingReference: widget.bookingReference,
+                        colors: colors,
+                      ),
+
+                      // Cancellation policy
+                      if (allowGuestCancellation &&
+                          cancellationDeadlineHours != null)
+                        CancellationPolicySection(
+                          isDarkMode: isDarkMode,
+                          deadlineHours: cancellationDeadlineHours,
+                          bookingReference: widget.bookingReference,
+                          fromEmail: widget.emailConfig?.fromEmail,
+                        ),
+
+                      // Next steps section
+                      NextStepsSection(
+                        isDarkMode: isDarkMode,
+                        paymentMethod: widget.paymentMethod,
+                      ),
+
+                      const SizedBox(height: BBSpace.lg),
+
+                      // Primary CTA — success variant per task spec (mint-surface validation).
+                      BbButton(
+                        label: tr.close,
+                        variant: BbButtonVariant.success,
+                        size: BbButtonSize.lg,
+                        fullWidth: true,
+                        onPressed: _navigateToCleanCalendar,
+                      ),
+
+                      const SizedBox(height: BBSpace.md),
+
+                      // Helpful info
+                      Text(
+                        tr.saveBookingReference,
+                        textAlign: TextAlign.center,
+                        style: BBType.caption(
+                          context,
+                        ).copyWith(color: c.textTertiary),
+                      ),
+
+                      const SizedBox(height: BBSpace.sm),
+
+                      // Powered-by footer (handoff WCPoweredBy).
+                      Text(
+                        tr.poweredByBookBed,
+                        textAlign: TextAlign.center,
+                        style: BBType.caption(
+                          context,
+                        ).copyWith(color: c.textTertiary, fontSize: 11),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ).animate().fadeIn(
             duration: const Duration(milliseconds: 600),
@@ -460,63 +499,69 @@ class _BookingConfirmationScreenState
     final bookingStatus = booking.status.value;
     return paymentStatus == 'pending' || bookingStatus == 'pending';
   }
+}
 
-  Widget _buildHeader(WidgetColorScheme colors) {
-    final tr = WidgetTranslations.of(context, ref);
+/// Handoff "Broj rezervacije" pill — label + mono ref + content_copy affordance.
+///
+/// Visual-only here (mirrors handoff WCRefPill). The standalone
+/// `BookingReferenceCard` at `widgets/confirmation/booking_reference_card.dart`
+/// remains available for any other call-site that needs the full
+/// clipboard-copy behavior.
+class _BookingReferencePill extends StatelessWidget {
+  const _BookingReferencePill({required this.reference, required this.tr});
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: BBSpace.sm,
-        vertical: BBSpace.xs,
-      ),
-      child: Row(
-        children: [
-          // Back button - always show for same-tab navigation
-          IconButton(
-            icon: Icon(Icons.arrow_back, color: colors.textPrimary),
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            onPressed: _navigateToCleanCalendar,
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                tr.bookingConfirmation,
-                style: TextStyle(
-                  fontSize: BBTypeBridges.fontSizeXL,
-                  fontWeight: BBTypeBridges.weightBold,
-                  color: colors.textPrimary,
+  final String reference;
+  final WidgetTranslations tr;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        decoration: BoxDecoration(
+          color: c.surface,
+          borderRadius: BBRadius.fullAll,
+          border: Border.all(color: c.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              tr.bookingReference,
+              style: BBType.caption(
+                context,
+              ).copyWith(color: c.textTertiary, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              '#$reference',
+              style: BBType.mono(context).copyWith(
+                color: c.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Material(
+              color: c.surface,
+              shape: const CircleBorder(),
+              elevation: 1,
+              shadowColor: const Color(0x14000000),
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: Center(
+                  child: BbIcon(
+                    name: 'content_copy',
+                    size: 15,
+                    fill: 0,
+                    color: c.textPrimary,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 48), // Balance back button
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCloseButton(WidgetColorScheme colors, {required bool isDark}) {
-    final tr = WidgetTranslations.of(context, ref);
-    // Use white button with black text for dark theme
-    final buttonBg = isDark ? Colors.white : colors.buttonPrimary;
-    final buttonText = isDark ? Colors.black : colors.buttonPrimaryText;
-
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _navigateToCleanCalendar,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: buttonBg,
-          foregroundColor: buttonText,
-          padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
-          shape: const RoundedRectangleBorder(borderRadius: BBRadius.smAll),
-        ),
-        child: Text(
-          tr.close,
-          style: const TextStyle(
-            fontSize: BBTypeBridges.fontSizeL,
-            fontWeight: BBTypeBridges.weightBold,
-          ),
+          ],
         ),
       ),
     );

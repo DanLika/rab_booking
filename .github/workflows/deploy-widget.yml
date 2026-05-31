@@ -36,9 +36,12 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        # `--no-tree-shake-icons` required by Bb* redesign primitives
+        # (audit/103 §3): bb_icon.dart resolves IconData by name at runtime.
         run: |
           flutter build web \
             --release \
+            --no-tree-shake-icons \
             --target lib/widget_main.dart \
             --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
             -o build/web_widget \

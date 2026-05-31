@@ -114,8 +114,11 @@ echo
 
 # Build
 info "Building Flutter web ($SURFACE) with $ENTRY ..."
+# `--no-tree-shake-icons` required by Bb* redesign primitives — see
+# audit/103 §3 (bb_icon.dart resolves IconData by name at runtime).
 flutter build web \
   --release \
+  --no-tree-shake-icons \
   --target "$ENTRY" \
   -o "$OUTDIR"
 ok "Build complete: $OUTDIR"

@@ -123,7 +123,10 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build web
-        run: flutter build web --release
+        # `--no-tree-shake-icons` required by Bb* redesign primitives — see
+        # audit/103 §3 (bb_icon.dart resolves IconData at runtime via name
+        # lookup; tree-shaker cannot prove which glyphs are needed).
+        run: flutter build web --release --no-tree-shake-icons
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7

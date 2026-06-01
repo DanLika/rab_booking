@@ -3,11 +3,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../../../../core/theme/gradient_extensions.dart';
-import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
+import '../../../../shared/widgets/redesign.dart';
 
-/// Cookies Policy Screen
-/// Short version that links to Privacy Policy for full details
 class CookiesPolicyScreen extends StatefulWidget {
   const CookiesPolicyScreen({super.key});
 
@@ -19,7 +18,6 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _showScrollToTop = false;
 
-  // Section keys for scrolling
   final Map<String, GlobalKey> _sectionKeys = {
     'what': GlobalKey(),
     'how': GlobalKey(),
@@ -52,10 +50,10 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
   }
 
   void _scrollToSection(String key) {
-    final context = _sectionKeys[key]?.currentContext;
-    if (context != null) {
+    final ctx = _sectionKeys[key]?.currentContext;
+    if (ctx != null) {
       Scrollable.ensureVisible(
-        context,
+        ctx,
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
@@ -73,6 +71,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final rd = BbRedesignTokens.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final horizontalPadding = isMobile
@@ -84,6 +83,7 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      backgroundColor: rd.shellBg,
       appBar: CommonAppBar(
         title: l10n.cookiesScreenTitle,
         leadingIcon: Icons.arrow_back,
@@ -95,330 +95,288 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
           }
         },
       ),
-      body: Container(
-        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: SafeArea(
-          child: Stack(
-            alignment:
-                Alignment.topLeft, // Explicit to avoid TextDirection null check
-            children: [
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                      vertical: isMobile ? 16 : 24,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header
-                        _buildHeader(),
-                        SizedBox(height: isMobile ? 24 : 32),
-
-                        // Table of Contents
-                        _buildTableOfContents(),
-                        SizedBox(height: isMobile ? 24 : 40),
-
-                        // Sections
-                        _buildSection(
-                          l10n.cookiesScreenSection1Title,
-                          l10n.cookiesScreenSection1Body,
-                          _sectionKeys['what']!,
+      body: SafeArea(
+        child: Stack(
+          alignment:
+              Alignment.topLeft, // Explicit to avoid TextDirection null check
+          children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: isMobile ? 16 : 24,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _LegalHeaderCard(
+                        eyebrow: 'PRAVNO · KOLAČIĆI',
+                        title: l10n.cookiesScreenHeaderTitle,
+                        lastUpdated: l10n.cookiesScreenLastUpdated(
+                          DateTime.now().toString().split(' ')[0],
                         ),
-                        _buildSection(
-                          l10n.cookiesScreenSection2Title,
-                          l10n.cookiesScreenSection2Body,
-                          _sectionKeys['how']!,
-                        ),
-                        _buildSection(
-                          l10n.cookiesScreenSection3Title,
-                          l10n.cookiesScreenSection3Body,
-                          _sectionKeys['types']!,
-                        ),
-                        _buildSection(
-                          l10n.cookiesScreenSection4Title,
-                          l10n.cookiesScreenSection4Body,
-                          _sectionKeys['choices']!,
-                        ),
-                        _buildSection(
-                          l10n.cookiesScreenSection5Title,
-                          l10n.cookiesScreenSection5Body,
-                          _sectionKeys['thirdparty']!,
-                        ),
-                        _buildSection(
-                          l10n.cookiesScreenSection6Title,
-                          l10n.cookiesScreenSection6Body,
-                          _sectionKeys['updates']!,
-                        ),
-                        _buildSection(
-                          l10n.cookiesScreenSection7Title,
-                          l10n.cookiesScreenSection7Body,
-                          _sectionKeys['more']!,
-                        ),
-
-                        SizedBox(height: isMobile ? 20 : 32),
-
-                        // Link to Privacy Policy
-                        _buildPrivacyPolicyLink(),
-
-                        SizedBox(height: isMobile ? 20 : 32),
-
-                        // Warning Banner
-                        _buildLegalNotice(),
-                        SizedBox(height: isMobile ? 16 : 24),
-                      ],
-                    ),
+                        isMobile: isMobile,
+                      ),
+                      SizedBox(height: isMobile ? 16 : 24),
+                      _LegalTocCard(
+                        title: l10n.cookiesScreenToc,
+                        items: [
+                          ('1. ${l10n.cookiesScreenSection1Title}', 'what'),
+                          ('2. ${l10n.cookiesScreenSection2Title}', 'how'),
+                          ('3. ${l10n.cookiesScreenSection3Title}', 'types'),
+                          ('4. ${l10n.cookiesScreenSection4Title}', 'choices'),
+                          (
+                            '5. ${l10n.cookiesScreenSection5Title}',
+                            'thirdparty',
+                          ),
+                          ('6. ${l10n.cookiesScreenSection6Title}', 'updates'),
+                          ('7. ${l10n.cookiesScreenSection7Title}', 'more'),
+                        ],
+                        onTapKey: _scrollToSection,
+                        isMobile: isMobile,
+                      ),
+                      SizedBox(height: isMobile ? 16 : 24),
+                      _LegalSectionCard(
+                        sectionKey: _sectionKeys['what']!,
+                        title: l10n.cookiesScreenSection1Title,
+                        body: l10n.cookiesScreenSection1Body,
+                        isMobile: isMobile,
+                      ),
+                      _LegalSectionCard(
+                        sectionKey: _sectionKeys['how']!,
+                        title: l10n.cookiesScreenSection2Title,
+                        body: l10n.cookiesScreenSection2Body,
+                        isMobile: isMobile,
+                      ),
+                      _LegalSectionCard(
+                        sectionKey: _sectionKeys['types']!,
+                        title: l10n.cookiesScreenSection3Title,
+                        body: l10n.cookiesScreenSection3Body,
+                        isMobile: isMobile,
+                      ),
+                      _LegalSectionCard(
+                        sectionKey: _sectionKeys['choices']!,
+                        title: l10n.cookiesScreenSection4Title,
+                        body: l10n.cookiesScreenSection4Body,
+                        isMobile: isMobile,
+                      ),
+                      _LegalSectionCard(
+                        sectionKey: _sectionKeys['thirdparty']!,
+                        title: l10n.cookiesScreenSection5Title,
+                        body: l10n.cookiesScreenSection5Body,
+                        isMobile: isMobile,
+                      ),
+                      _LegalSectionCard(
+                        sectionKey: _sectionKeys['updates']!,
+                        title: l10n.cookiesScreenSection6Title,
+                        body: l10n.cookiesScreenSection6Body,
+                        isMobile: isMobile,
+                      ),
+                      _LegalSectionCard(
+                        sectionKey: _sectionKeys['more']!,
+                        title: l10n.cookiesScreenSection7Title,
+                        body: l10n.cookiesScreenSection7Body,
+                        isMobile: isMobile,
+                      ),
+                      SizedBox(height: isMobile ? 8 : 16),
+                      _PrivacyLinkCard(
+                        title: l10n.cookiesScreenPrivacyLinkTitle,
+                        body: l10n.cookiesScreenPrivacyLinkBody,
+                        buttonLabel: l10n.cookiesScreenPrivacyLinkButton,
+                        onPressed: () => context.go(OwnerRoutes.privacyPolicy),
+                        isMobile: isMobile,
+                      ),
+                      SizedBox(height: isMobile ? 16 : 24),
+                      _LegalNoticeCard(
+                        icon: 'info',
+                        title: l10n.cookiesScreenLegalNotice,
+                        body: l10n.cookiesScreenLegalNoticeBody,
+                        isMobile: isMobile,
+                      ),
+                      SizedBox(height: isMobile ? 16 : 24),
+                    ],
                   ),
                 ),
               ),
-
-              // Scroll to top button
-              if (_showScrollToTop)
-                Positioned(
-                  bottom: isMobile ? 16 : 24,
-                  right: isMobile ? 16 : 24,
-                  child: FloatingActionButton(
-                    onPressed: _scrollToTop,
-                    backgroundColor: theme.colorScheme.primary,
-                    child: const Icon(Icons.arrow_upward, color: Colors.white),
-                  ),
+            ),
+            if (_showScrollToTop)
+              Positioned(
+                bottom: isMobile ? 16 : 24,
+                right: isMobile ? 16 : 24,
+                child: FloatingActionButton(
+                  onPressed: _scrollToTop,
+                  backgroundColor: theme.colorScheme.primary,
+                  child: const Icon(Icons.arrow_upward, color: Colors.white),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildHeader() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final l10n = AppLocalizations.of(context);
+class _LegalHeaderCard extends StatelessWidget {
+  const _LegalHeaderCard({
+    required this.eyebrow,
+    required this.title,
+    required this.lastUpdated,
+    required this.isMobile,
+  });
 
-    return Container(
+  final String eyebrow;
+  final String title;
+  final String lastUpdated;
+  final bool isMobile;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return BbCard(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: EdgeInsets.all(isMobile ? 10 : 12),
-            decoration: BoxDecoration(
-              gradient: context.gradients.brandPrimary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.cookie,
-              color: Colors.white,
-              size: isMobile ? 28 : 32,
-            ),
+          Text(
+            eyebrow,
+            style: BBType.eyebrow(context).copyWith(color: c.primary),
           ),
-          SizedBox(width: isMobile ? 12 : 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.cookiesScreenHeaderTitle,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                    fontSize: isMobile ? 20 : 24,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.cookiesScreenLastUpdated(
-                    DateTime.now().toString().split(' ')[0],
-                  ),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    fontSize: isMobile ? 11 : 12,
-                  ),
-                ),
-              ],
-            ),
+          SizedBox(height: isMobile ? 8 : 12),
+          Text(
+            title,
+            style: isMobile ? BBType.h1(context) : BBType.display(context),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            lastUpdated,
+            style: BBType.bodyNum(context).copyWith(color: c.textTertiary),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildTableOfContents() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final l10n = AppLocalizations.of(context);
+class _LegalTocCard extends StatelessWidget {
+  const _LegalTocCard({
+    required this.title,
+    required this.items,
+    required this.onTapKey,
+    required this.isMobile,
+  });
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
+  final String title;
+  final List<(String, String)> items;
+  final void Function(String) onTapKey;
+  final bool isMobile;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return BbCard(
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BbSectionHeader(title: title, level: BbSectionHeaderLevel.h3),
+          for (final item in items)
+            InkWell(
+              onTap: () => onTapKey(item.$2),
+              borderRadius: BBRadius.smAll,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: isMobile ? 8 : 10,
+                  horizontal: 8,
+                ),
+                child: Row(
+                  children: [
+                    BbIcon(name: 'chevron_right', size: 18, color: c.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        item.$1,
+                        style: BBType.body(
+                          context,
+                        ).copyWith(color: c.textPrimary),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
-      child: Padding(
+    );
+  }
+}
+
+class _LegalSectionCard extends StatelessWidget {
+  const _LegalSectionCard({
+    required this.sectionKey,
+    required this.title,
+    required this.body,
+    required this.isMobile,
+  });
+
+  final GlobalKey sectionKey;
+  final String title;
+  final String body;
+  final bool isMobile;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Padding(
+      key: sectionKey,
+      padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
+      child: BbCard(
         padding: EdgeInsets.all(isMobile ? 16 : 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withAlpha(
-                      (0.12 * 255).toInt(),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.list_alt,
-                    color: theme.colorScheme.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    l10n.cookiesScreenToc,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontSize: isMobile ? 16 : 18,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: isMobile ? 12 : 16),
-            _buildTocItem('1. ${l10n.cookiesScreenSection1Title}', 'what'),
-            _buildTocItem('2. ${l10n.cookiesScreenSection2Title}', 'how'),
-            _buildTocItem('3. ${l10n.cookiesScreenSection3Title}', 'types'),
-            _buildTocItem('4. ${l10n.cookiesScreenSection4Title}', 'choices'),
-            _buildTocItem(
-              '5. ${l10n.cookiesScreenSection5Title}',
-              'thirdparty',
-            ),
-            _buildTocItem('6. ${l10n.cookiesScreenSection6Title}', 'updates'),
-            _buildTocItem('7. ${l10n.cookiesScreenSection7Title}', 'more'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTocItem(String title, String key) {
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    return InkWell(
-      onTap: () => _scrollToSection(key),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: isMobile ? 8 : 10,
-          horizontal: 8,
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.arrow_right, color: theme.colorScheme.primary, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: isMobile ? 13 : 14,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.87),
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+            BbSectionHeader(title: title, level: BbSectionHeaderLevel.h3),
+            Text(
+              body,
+              style: BBType.body(
+                context,
+              ).copyWith(height: 1.7, color: c.textSecondary),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildSection(String title, String content, GlobalKey key) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+class _PrivacyLinkCard extends StatelessWidget {
+  const _PrivacyLinkCard({
+    required this.title,
+    required this.body,
+    required this.buttonLabel,
+    required this.onPressed,
+    required this.isMobile,
+  });
 
-    return Padding(
-      key: key,
-      padding: EdgeInsets.only(bottom: isMobile ? 20 : 24),
-      child: Container(
-        decoration: BoxDecoration(
-          color: context.gradients.cardBackground,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.gradients.sectionBorder),
-          boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(isMobile ? 16 : 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                  fontSize: isMobile ? 18 : 20,
-                ),
-              ),
-              SizedBox(height: isMobile ? 10 : 12),
-              Text(
-                content,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.7,
-                  fontSize: isMobile ? 14 : 15,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.87),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  final String title;
+  final String body;
+  final String buttonLabel;
+  final VoidCallback onPressed;
+  final bool isMobile;
 
-  Widget _buildPrivacyPolicyLink() {
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final l10n = AppLocalizations.of(context);
-
-    return Container(
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return BbCard(
+      variant: BbCardVariant.accentLeft,
+      accentTone: BbCardAccentTone.primary,
       padding: EdgeInsets.all(isMobile ? 16 : 20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
-          (0.3 * 255).toInt(),
-        ),
-        border: Border.all(
-          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -428,88 +386,65 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(
-                    (0.12 * 255).toInt(),
-                  ),
-                  borderRadius: BorderRadius.circular(8),
+                  color: c.primary.withValues(alpha: 0.12),
+                  borderRadius: BBRadius.smAll,
                 ),
-                child: Icon(
-                  Icons.privacy_tip_outlined,
-                  color: theme.colorScheme.primary,
+                child: BbIcon(
+                  name: 'privacy_tip',
                   size: isMobile ? 20 : 24,
+                  color: c.primary,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  l10n.cookiesScreenPrivacyLinkTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: isMobile ? 16 : 18,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(title, style: BBType.h3(context)),
                 ),
               ),
             ],
           ),
           SizedBox(height: isMobile ? 10 : 12),
           Text(
-            l10n.cookiesScreenPrivacyLinkBody,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: isMobile ? 13 : 14,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-              height: 1.6,
-            ),
+            body,
+            style: BBType.body(
+              context,
+            ).copyWith(height: 1.6, color: c.textSecondary),
           ),
           SizedBox(height: isMobile ? 14 : 16),
-          SizedBox(
-            width: double.infinity,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  context.go(OwnerRoutes.privacyPolicy);
-                },
-                icon: const Icon(Icons.arrow_forward),
-                label: Text(l10n.cookiesScreenPrivacyLinkButton),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                  padding: EdgeInsets.symmetric(vertical: isMobile ? 12 : 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ),
+          BbButton(
+            label: buttonLabel,
+            iconRight: 'arrow_forward',
+            onPressed: onPressed,
+            fullWidth: true,
+            size: isMobile ? BbButtonSize.md : BbButtonSize.lg,
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildLegalNotice() {
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final l10n = AppLocalizations.of(context);
+class _LegalNoticeCard extends StatelessWidget {
+  const _LegalNoticeCard({
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.isMobile,
+  });
 
-    return Container(
+  final String icon;
+  final String title;
+  final String body;
+  final bool isMobile;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return BbCard(
+      variant: BbCardVariant.accentLeft,
+      accentTone: BbCardAccentTone.primary,
       padding: EdgeInsets.all(isMobile ? 16 : 20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
-          (0.3 * 255).toInt(),
-        ),
-        border: Border.all(
-          color: theme.colorScheme.outline.withAlpha((0.3 * 255).toInt()),
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -519,38 +454,30 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(
-                    (0.12 * 255).toInt(),
-                  ),
-                  borderRadius: BorderRadius.circular(8),
+                  color: c.primary.withValues(alpha: 0.12),
+                  borderRadius: BBRadius.smAll,
                 ),
-                child: Icon(
-                  Icons.info_outline,
-                  color: theme.colorScheme.primary,
+                child: BbIcon(
+                  name: icon,
                   size: isMobile ? 20 : 24,
+                  color: c.primary,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  l10n.cookiesScreenLegalNotice,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: isMobile ? 16 : 18,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(title, style: BBType.h3(context)),
                 ),
               ),
             ],
           ),
           SizedBox(height: isMobile ? 10 : 12),
           Text(
-            l10n.cookiesScreenLegalNoticeBody,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: isMobile ? 13 : 14,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-              height: 1.6,
-            ),
+            body,
+            style: BBType.body(
+              context,
+            ).copyWith(height: 1.6, color: c.textSecondary),
           ),
         ],
       ),

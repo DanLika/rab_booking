@@ -21,9 +21,9 @@ import '../../domain/models/unified_booking_item.dart';
 import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../utils/scroll_direction_tracker.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
-import '../../../../core/theme/theme_extensions.dart';
+import '../../../../shared/widgets/redesign.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/gradient_extensions.dart';
-import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings/bookings_table_view.dart';
@@ -654,35 +654,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                   // Show error state (status filter active)
                   else if (windowedState.error != null && bookings.isEmpty)
                     SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(context.horizontalPadding),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: AppDimensions.iconSizeXL,
-                                color: theme.colorScheme.error,
-                              ),
-                              const SizedBox(height: AppDimensions.spaceS),
-                              Text(
-                                l10n.ownerBookingsErrorLoading,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: AppDimensions.spaceXS),
-                              Text(
-                                windowedState.error!,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: context.textColorSecondary,
-                                    ),
-                                textAlign: TextAlign.center,
-                                maxLines: 5,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                      child: Padding(
+                        padding: EdgeInsets.all(context.horizontalPadding),
+                        child: BbEmptyState(
+                          icon: 'error',
+                          title: l10n.ownerBookingsErrorLoading,
+                          body: windowedState.error,
+                          compact: true,
                         ),
                       ),
                     )
@@ -945,270 +923,259 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       activeFilterCount++;
     }
 
-    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
     // Get overbooking conflict count
     final conflictCount = ref.watch(overbookingConflictCountProvider);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-        ),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(isMobile ? 16 : 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Top row: Title + View mode
-            Row(
-              children: [
-                // Filter Icon
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.filter_list,
-                    color: theme.colorScheme.primary,
-                    size: 18,
-                  ),
+    return BbCard(
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Top row: Title + View mode
+          Row(
+            children: [
+              // Filter Icon
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    l10n.ownerBookingsFiltersAndView,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const Spacer(),
-
-                // View mode toggle button
-                Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.5,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _ViewModeButton(
-                        icon: Icons.view_agenda_outlined,
-                        isSelected: viewMode == BookingsViewMode.card,
-                        onTap: () {
-                          ref
-                              .read(ownerBookingsViewProvider.notifier)
-                              .setView(BookingsViewMode.card);
-                          ref
-                              .read(windowedBookingsNotifierProvider.notifier)
-                              .setViewMode(isTableView: false);
-                        },
-                        tooltip: l10n.ownerBookingsCardView,
-                      ),
-                      _ViewModeButton(
-                        icon: Icons.table_rows_outlined,
-                        isSelected: viewMode == BookingsViewMode.table,
-                        onTap: () {
-                          ref
-                              .read(ownerBookingsViewProvider.notifier)
-                              .setView(BookingsViewMode.table);
-                          ref
-                              .read(windowedBookingsNotifierProvider.notifier)
-                              .setViewMode(isTableView: true);
-                        },
-                        tooltip: l10n.ownerBookingsTableView,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            // Overbooking conflict badge - moved below title row
-            if (conflictCount > 0) ...[
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () => _handleOverbookingBadgeTap(ref),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.shade300),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.red.shade700,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        conflictCount == 1
-                            ? '1 conflict'
-                            : '$conflictCount conflicts',
-                        style: TextStyle(
-                          color: Colors.red.shade700,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+                child: Icon(
+                  Icons.filter_list,
+                  color: theme.colorScheme.primary,
+                  size: 18,
                 ),
               ),
-            ],
+              const SizedBox(width: 12),
+              Flexible(
+                child: Text(
+                  l10n.ownerBookingsFiltersAndView,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Spacer(),
 
-            const SizedBox(height: 16),
-
-            // Advanced filters button with gradient
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.08),
-                    theme.colorScheme.primary.withValues(alpha: 0.04),
+              // View mode toggle button
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _ViewModeButton(
+                      icon: Icons.view_agenda_outlined,
+                      isSelected: viewMode == BookingsViewMode.card,
+                      onTap: () {
+                        ref
+                            .read(ownerBookingsViewProvider.notifier)
+                            .setView(BookingsViewMode.card);
+                        ref
+                            .read(windowedBookingsNotifierProvider.notifier)
+                            .setViewMode(isTableView: false);
+                      },
+                      tooltip: l10n.ownerBookingsCardView,
+                    ),
+                    _ViewModeButton(
+                      icon: Icons.table_rows_outlined,
+                      isSelected: viewMode == BookingsViewMode.table,
+                      onTap: () {
+                        ref
+                            .read(ownerBookingsViewProvider.notifier)
+                            .setView(BookingsViewMode.table);
+                        ref
+                            .read(windowedBookingsNotifierProvider.notifier)
+                            .setViewMode(isTableView: true);
+                      },
+                      tooltip: l10n.ownerBookingsTableView,
+                    ),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+              ),
+            ],
+          ),
+
+          // Overbooking conflict badge - moved below title row
+          if (conflictCount > 0) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => _handleOverbookingBadgeTap(ref),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.shade300),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.red.shade700,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      conflictCount == 1
+                          ? '1 conflict'
+                          : '$conflictCount conflicts',
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => const BookingsFiltersDialog(),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.tune,
-                          color: theme.colorScheme.primary,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.ownerBookingsAdvancedFiltering,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                activeFilterCount > 0
-                                    ? '$activeFilterCount ${activeFilterCount == 1 ? l10n.ownerFilterActiveFilter : l10n.ownerFilterActiveFilters}'
-                                    : l10n.ownerBookingsFilterByStatusPropertyDate,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: activeFilterCount > 0
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: activeFilterCount > 0
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        if (activeFilterCount > 0) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.15,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '$activeFilterCount',
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                color: theme.colorScheme.primary,
+            ),
+          ],
+
+          const SizedBox(height: 16),
+
+          // Advanced filters button with gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.08),
+                  theme.colorScheme.primary.withValues(alpha: 0.04),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const BookingsFiltersDialog(),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.tune,
+                        color: theme.colorScheme.primary,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.ownerBookingsAdvancedFiltering,
+                              style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: theme.colorScheme.onSurfaceVariant,
+                            const SizedBox(height: 4),
+                            Text(
+                              activeFilterCount > 0
+                                  ? '$activeFilterCount ${activeFilterCount == 1 ? l10n.ownerFilterActiveFilter : l10n.ownerFilterActiveFilters}'
+                                  : l10n.ownerBookingsFilterByStatusPropertyDate,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: activeFilterCount > 0
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurfaceVariant,
+                                fontWeight: activeFilterCount > 0
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
                         ),
+                      ),
+                      const SizedBox(width: 12),
+                      if (activeFilterCount > 0) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.15,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '$activeFilterCount',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                       ],
-                    ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
 
-            // Clear filters button (only if filters active)
-            if (filters.hasActiveFilters) ...[
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  ref
-                      .read(bookingsFiltersNotifierProvider.notifier)
-                      .clearFilters();
-                },
-                icon: const Icon(Icons.clear_all, size: 18),
-                label: Text(l10n.ownerBookingsClearAllFilters),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  side: BorderSide(
-                    color: theme.colorScheme.error.withValues(alpha: 0.3),
-                  ),
-                  foregroundColor: theme.colorScheme.error,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+          // Clear filters button (only if filters active)
+          if (filters.hasActiveFilters) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () {
+                ref
+                    .read(bookingsFiltersNotifierProvider.notifier)
+                    .clearFilters();
+              },
+              icon: const Icon(Icons.clear_all, size: 18),
+              label: Text(l10n.ownerBookingsClearAllFilters),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                side: BorderSide(
+                  color: theme.colorScheme.error.withValues(alpha: 0.3),
+                ),
+                foregroundColor: theme.colorScheme.error,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -1256,34 +1223,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     // Error state
     if (error != null) {
       return SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(context.horizontalPadding),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: AppDimensions.iconSizeXL,
-                  color: theme.colorScheme.error,
-                ),
-                const SizedBox(height: AppDimensions.spaceS),
-                Text(
-                  l10n.ownerBookingsErrorLoading,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: AppDimensions.spaceXS),
-                Text(
-                  error,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.textColorSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 5,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+        child: Padding(
+          padding: EdgeInsets.all(context.horizontalPadding),
+          child: BbEmptyState(
+            icon: 'error',
+            title: l10n.ownerBookingsErrorLoading,
+            body: error,
+            compact: true,
           ),
         ),
       );
@@ -1488,18 +1434,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
   ) {
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
+    return BbCard(
+      padded: false,
       child: Column(
         children: [
           InkWell(
             onTap: () => setState(() => _showSync = !_showSync),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BBRadius.mdAll,
             child: Padding(
               padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Row(
@@ -1590,18 +1531,13 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       (l10n.ownerFaqBookings5Q, l10n.ownerFaqBookings5A),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
+    return BbCard(
+      padded: false,
       child: Column(
         children: [
           InkWell(
             onTap: () => setState(() => _showFaq = !_showFaq),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BBRadius.mdAll,
             child: Padding(
               padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Row(
@@ -1696,24 +1632,13 @@ class _BookingCard extends ConsumerWidget {
     // Check if booking is in conflict
     final hasConflict = ref.watch(isBookingInConflictProvider(booking.id));
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16), // Modernized: 16px
-        border: Border.all(
-          color: hasConflict
-              ? Colors.red
-              : isDark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.black.withValues(alpha: 0.08),
-          width: hasConflict ? 2 : 1,
-        ),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
+    return BbCard(
+      padded: false,
+      selected: hasConflict,
       child: Stack(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(16), // Match container
+            borderRadius: BBRadius.mdAll,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

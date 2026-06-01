@@ -3,6 +3,7 @@ import '../../../../../../core/constants/enums.dart';
 import '../../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../../shared/models/booking_model.dart';
 import '../../../../../../shared/widgets/platform_icon.dart';
+import '../../../../../../shared/widgets/redesign.dart';
 import '../../../../../../l10n/app_localizations.dart';
 
 /// Header section for booking card showing status badge and booking ID
@@ -102,45 +103,10 @@ class BookingCardHeader extends StatelessWidget {
               ),
             ),
           ] else ...[
-            // Status badge - shrinks text slightly if needed, never truncates
-            Flexible(
-              flex: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: booking!.status.color,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: booking!.status.color.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _getStatusIcon(booking!.status),
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      booking!.status.displayNameLocalized(context),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            // Status badge
+            BbStatusBadge(
+              status: _mapStatus(booking!.status),
+              label: booking!.status.displayNameLocalized(context),
             ),
             const SizedBox(width: 8),
             // Booking Reference - takes remaining space, truncates if truly needed
@@ -195,12 +161,11 @@ class BookingCardHeader extends StatelessWidget {
     );
   }
 
-  /// Get icon for booking status
-  static IconData _getStatusIcon(BookingStatus status) => switch (status) {
-    BookingStatus.pending => Icons.schedule,
-    BookingStatus.confirmed => Icons.check_circle,
-    BookingStatus.cancelled => Icons.cancel,
-    BookingStatus.completed => Icons.task_alt,
+  static BbBookingStatus _mapStatus(BookingStatus s) => switch (s) {
+    BookingStatus.pending => BbBookingStatus.pending,
+    BookingStatus.confirmed => BbBookingStatus.confirmed,
+    BookingStatus.cancelled => BbBookingStatus.cancelled,
+    BookingStatus.completed => BbBookingStatus.completed,
   };
 
   String _getPlatformName(String source) {

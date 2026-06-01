@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../../shared/widgets/redesign.dart';
 import '../../../../data/firebase/firebase_owner_bookings_repository.dart';
 
 /// Guest information section for booking card
@@ -21,19 +22,7 @@ class BookingCardGuestInfo extends StatelessWidget {
 
     return Row(
       children: [
-        // Avatar circle
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withAlpha((0.08 * 255).toInt()),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.person_outline,
-            color: theme.colorScheme.primary,
-            size: 20,
-          ),
-        ),
+        BbAvatar(name: ownerBooking.guestName),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

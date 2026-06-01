@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +8,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -13,20 +17,43 @@ import '../../../../core/utils/password_validator.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../shared/utils/validators/input_sanitizer.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../../../shared/widgets/universal_loader.dart';
-import '../widgets/auth_logo_icon.dart';
-import '../widgets/auth_background.dart';
-import '../widgets/glass_card.dart';
-import '../widgets/gradient_auth_button.dart';
-import '../widgets/premium_input_field.dart';
 import '../widgets/profile_image_picker.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_conditions_screen.dart';
 
-/// Enhanced Registration Screen with Premium Design
+/// Enhanced Registration Screen — refactored onto Bb* redesign primitives
+/// (Phase 2B, sibling of [EnhancedLoginScreen] post-#618 + ForgotPassword #622).
 ///
-/// Uses [AndroidKeyboardDismissFixApproach1] mixin to handle the Android Chrome
-/// keyboard dismiss bug (Flutter issue #175074).
+/// Visual layer rebuilt with [BbLogo], [BbInput], [BbButton] + glass card on
+/// auth `softBg` (pale lavender wash). Auth-family chrome consistent with the
+/// design handoff (`design_handoff/source/register.jsx`).
+///
+/// Second consumer of Phase 1.1 native [BbInput.validator] (PR #616) — first
+/// MULTI-field stress test of the foundation. Five inputs (name / email /
+/// phone / password / confirm) each pass their own validator; cross-field
+/// confirm-password rule reads the live `_passwordController.text`.
+///
+/// FROZEN / preserved logic:
+///  - `enhancedAuthProvider.registerWithEmail` invocation (Firebase Auth
+///    `createUserWithEmailAndPassword` chain + display-name update +
+///    profile image upload).
+///  - Email verification gate (`requiresEmailVerification` →
+///    `OwnerRoutes.emailVerification`).
+///  - Display-name digit-strip preservation logic (per audit/35 / CLAUDE.md
+///    auth.md): `InputSanitizer.sanitizeName` keeps digits in `sanitizeName`.
+///  - Server-side email error surfacing (`_emailErrorFromServer` overrides
+///    client validator output via [BbInput]'s explicit `error:` param —
+///    audit/103 §3 "Explicit `widget.error` always wins over validator").
+///  - `_canAttemptSubmit` UX gating (button disabled until all required
+///    fields non-empty + both legal checkboxes checked).
+///  - `_formKey` validation, [AndroidKeyboardDismissFixApproach1] mixin,
+///    `resizeToAvoidBottomInset: true`.
+///  - [AuthFeatureFlags]-style gating: register screen has no social
+///    sign-in row in current implementation (handoff shows it; not
+///    surfaced here — preserved as-is).
+///  - Legal links (`Navigator.push` to PrivacyPolicyScreen / TermsConditionsScreen).
 class EnhancedRegisterScreen extends ConsumerStatefulWidget {
   const EnhancedRegisterScreen({super.key});
 
@@ -50,9 +77,9 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   bool _acceptedTerms = false;
   bool _acceptedPrivacy = false;
   bool _newsletterOptIn = false;
-  // UX FIX: Button enabled when fields are non-empty and checkboxes checked
-  // Validation errors are shown AFTER clicking submit, not while typing
-  // This gives users a chance to finish typing before seeing errors
+  // UX FIX: Button enabled when fields are non-empty and checkboxes checked.
+  // Validation errors are shown AFTER clicking submit (or on user interaction
+  // via `AutovalidateMode.onUserInteraction`), not while typing the first time.
   bool _canAttemptSubmit = false;
   String? _emailErrorFromServer;
 
@@ -88,10 +115,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   }
 
   /// UX FIX: Check if user CAN attempt to submit (fields non-empty + checkboxes)
-  /// This doesn't validate content - validation happens on submit click
+  /// This doesn't validate content - validation happens on submit click.
   void _updateCanAttemptSubmit() {
-    // Button enabled when all required fields have SOME content
-    // We don't check if content is VALID here - that happens on submit
     final hasName = _fullNameController.text.trim().isNotEmpty;
     final hasEmail = _emailController.text.trim().isNotEmpty;
     final hasPassword = _passwordController.text.isNotEmpty;
@@ -113,21 +138,21 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   Future<void> _handleRegister() async {
     final l10n = AppLocalizations.of(context);
 
-    // Trigger validation - errors will show in input fields
+    // Trigger validation - errors will show in input fields via BbInput's
+    // native validator path (Phase 1.1).
     if (!_formKey.currentState!.validate()) {
       ErrorDisplayUtils.showErrorSnackBar(context, l10n.pleaseFixErrors);
       return;
     }
-
-    // Note: Checkbox check removed - _canAttemptSubmit already guarantees
-    // both _acceptedTerms && _acceptedPrivacy are true (button disabled otherwise)
 
     setState(() => _isLoading = true);
 
     try {
       final (firstName, lastName) = _parseFullName(_fullNameController.text);
 
-      // SECURITY: Sanitize all inputs before sending to backend
+      // SECURITY: Sanitize all inputs before sending to backend.
+      // sanitizeName intentionally PRESERVES digits (audit/35 / CLAUDE.md
+      // auth.md PR #470 closure — digits in display names are allowed).
       final sanitizedEmail =
           InputSanitizer.sanitizeEmail(_emailController.text.trim()) ??
           _emailController.text.trim();
@@ -190,6 +215,8 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
               : l10n.authErrorInvalidEmail;
           _isLoading = false;
         });
+        // BbInput's `error:` param surfaces the server message; calling
+        // validate() also re-triggers per-input validator path.
         _formKey.currentState!.validate();
       } else {
         setState(() => _isLoading = false);
@@ -230,12 +257,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
     final isCompact = Breakpoints.isCompactMobile(context);
     final isSmallHeight = MediaQuery.of(context).size.height < 700;
 
-    // Isti pristup kao Login: resizeToAvoidBottomInset: true
+    // PRISTUP 1 (keyboard-fix.md): resizeToAvoidBottomInset: true + mixin
     return KeyedSubtree(
       key: ValueKey('register_screen_$keyboardFixRebuildKey'),
       child: Scaffold(
@@ -244,11 +272,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           alignment:
               Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
-            AuthBackground(
+            // Soft auth backdrop (`BbRedesignTokens.softBg`) — pale lavender
+            // wash matching the auth-family convention established by Login
+            // (PR #613/#618) + Forgot Password (PR #622).
+            Container(
+              decoration: BoxDecoration(gradient: rd.softBg),
               child: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // Get keyboard height to adjust padding dynamically (with null safety)
                     final mediaQuery = MediaQuery.maybeOf(context);
                     final keyboardHeight =
                         (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
@@ -257,7 +288,6 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                         );
                     final isKeyboardOpen = keyboardHeight > 0;
 
-                    // Calculate minHeight safely - ensure it's always finite and valid
                     double minHeight;
                     if (isKeyboardOpen &&
                         constraints.maxHeight.isFinite &&
@@ -269,7 +299,6 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                           ? constraints.maxHeight
                           : 0.0;
                     }
-                    // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
                     return SingleChildScrollView(
@@ -284,58 +313,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minHeight: minHeight),
                         child: Center(
-                          child: GlassCard(
-                            padding: isSmallHeight
-                                ? const EdgeInsets.all(16)
-                                : null,
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _buildHeader(
-                                    theme,
-                                    l10n,
-                                    isCompact,
-                                    isSmallHeight,
-                                  ),
-                                  SizedBox(
-                                    height: isSmallHeight
-                                        ? 16
-                                        : (isCompact ? 20 : 24),
-                                  ),
-                                  _buildFormFields(
-                                    theme,
-                                    l10n,
-                                    isCompact,
-                                    isSmallHeight,
-                                  ),
-                                  SizedBox(
-                                    height: isSmallHeight
-                                        ? 8
-                                        : (isCompact ? 12 : 14),
-                                  ),
-                                  _buildCheckboxes(theme, l10n),
-                                  SizedBox(
-                                    height: isSmallHeight
-                                        ? 16
-                                        : (isCompact ? 20 : 24),
-                                  ),
-                                  GradientAuthButton(
-                                    key: const ValueKey('register_submit'),
-                                    text: l10n.authCreateAccount,
-                                    onPressed: _canAttemptSubmit
-                                        ? _handleRegister
-                                        : null,
-                                    isLoading: _isLoading,
-                                    icon: Icons.person_add_rounded,
-                                  ),
-                                  SizedBox(height: isCompact ? 16 : 20),
-                                  _buildLoginLink(theme, l10n),
-                                ],
-                              ),
-                            ),
+                          child: _buildGlassCard(
+                            context,
+                            rd,
+                            c,
+                            l10n,
+                            isCompact,
+                            isSmallHeight,
                           ),
                         ),
                       ),
@@ -352,21 +336,83 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     );
   }
 
-  Widget _buildHeader(
-    ThemeData theme,
+  /// Glass card surface (BackdropFilter + glassBg/glassBorder tokens).
+  /// `ClipRRect` wraps the blur so the radius clips correctly.
+  Widget _buildGlassCard(
+    BuildContext context,
+    BbRedesignTokens rd,
+    BBColorSet c,
     AppLocalizations l10n,
     bool isCompact,
     bool isSmallHeight,
   ) {
+    final cardPadding = isSmallHeight
+        ? const EdgeInsets.all(BBSpace.sm)
+        : EdgeInsets.all(isCompact ? BBSpace.md : 36);
+
+    final card = ClipRRect(
+      borderRadius: BBRadius.lgAll,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: rd.glassBg,
+            border: Border.all(color: rd.glassBorder),
+            borderRadius: BBRadius.lgAll,
+            boxShadow: rd.panelShadow,
+          ),
+          padding: cardPadding,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeader(c, l10n, isCompact, isSmallHeight),
+                SizedBox(height: isSmallHeight ? 16 : (isCompact ? 20 : 24)),
+                _buildFormFields(c, l10n, isCompact, isSmallHeight),
+                SizedBox(height: isSmallHeight ? 8 : (isCompact ? 12 : 14)),
+                _buildCheckboxes(c, l10n),
+                SizedBox(height: isSmallHeight ? 16 : (isCompact ? 20 : 24)),
+                BbButton(
+                  key: const ValueKey('register_submit'),
+                  label: l10n.authCreateAccount,
+                  iconLeft: 'person_add',
+                  size: BbButtonSize.lg,
+                  fullWidth: true,
+                  loading: _isLoading,
+                  onPressed: _canAttemptSubmit ? _handleRegister : null,
+                ),
+                SizedBox(height: isCompact ? 16 : 20),
+                _buildLoginLink(c, l10n),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 440),
+      child: card,
+    );
+  }
+
+  Widget _buildHeader(
+    BBColorSet c,
+    AppLocalizations l10n,
+    bool isCompact,
+    bool isSmallHeight,
+  ) {
+    final logoSize = isSmallHeight ? 50.0 : (isCompact ? 56.0 : 64.0);
+    final avatarSize = isSmallHeight ? 70.0 : (isCompact ? 80.0 : 90.0);
+
     return Column(
       children: [
-        AuthLogoIcon(
-          size: isSmallHeight ? 50 : (isCompact ? 60 : 70),
-          isWhite: theme.brightness == Brightness.dark,
-        ),
+        BbLogo(size: logoSize, useGradient: false),
         SizedBox(height: isSmallHeight ? 12 : (isCompact ? 16 : 24)),
         ProfileImagePicker(
-          size: isSmallHeight ? 70 : (isCompact ? 80 : 90),
+          size: avatarSize,
           initials: _fullNameController.text.trim().isNotEmpty
               ? _fullNameController.text.trim().substring(0, 1).toUpperCase()
               : null,
@@ -380,11 +426,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         SizedBox(height: isSmallHeight ? 12 : (isCompact ? 16 : 20)),
         Text(
           l10n.authCreateAccount,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: isSmallHeight ? 20 : (isCompact ? 22 : 26),
-            color: theme.colorScheme.onSurface,
-          ),
+          style: BBType.h1(context).copyWith(color: c.textPrimary),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -392,10 +434,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         const SizedBox(height: 6),
         Text(
           l10n.authStartManaging,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontSize: isCompact ? 13 : 14,
-          ),
+          style: BBType.body(context).copyWith(color: c.textSecondary),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -405,7 +444,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
   }
 
   Widget _buildFormFields(
-    ThemeData theme,
+    BBColorSet c,
     AppLocalizations l10n,
     bool isCompact,
     bool isSmallHeight,
@@ -416,11 +455,14 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
 
     return Column(
       children: [
-        PremiumInputField(
+        // Name — Phase 1.1 native `validator:` (audit/103 §3).
+        BbInput(
           key: const ValueKey('register_name'),
           controller: _fullNameController,
-          labelText: l10n.authFullName,
-          prefixIcon: Icons.person_outline,
+          label: l10n.authFullName,
+          iconLeft: 'person',
+          size: BbInputSize.lg,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return l10n.authEnterFullName;
@@ -437,42 +479,49 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           },
         ),
         fieldSpacing,
-        PremiumInputField(
+        // Email — server-side error takes precedence over validator output
+        // via BbInput's explicit `error:` param (audit/103 §3 "Explicit
+        // `widget.error` always wins over validator output").
+        BbInput(
           key: const ValueKey('register_email'),
           controller: _emailController,
-          labelText: l10n.email,
-          prefixIcon: Icons.email_outlined,
+          label: l10n.email,
+          iconLeft: 'mail',
+          size: BbInputSize.lg,
           keyboardType: TextInputType.emailAddress,
-          validator: (value) {
-            if (_emailErrorFromServer != null) {
-              return _emailErrorFromServer;
-            }
-            return ProfileValidators.validateEmail(value);
-          },
+          error: _emailErrorFromServer,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          validator: ProfileValidators.validateEmail,
         ),
         fieldSpacing,
-        PremiumInputField(
+        // Phone — optional field; validator allows empty (per ProfileValidators).
+        BbInput(
           key: const ValueKey('register_phone'),
           controller: _phoneController,
-          labelText: l10n.authPhone,
-          prefixIcon: Icons.phone_outlined,
+          label: l10n.authPhone,
+          iconLeft: 'phone',
+          size: BbInputSize.lg,
           keyboardType: TextInputType.phone,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: ProfileValidators.validatePhone,
         ),
         fieldSpacing,
-        PremiumInputField(
+        // Password — trailingAction holds the visibility-toggle IconButton
+        // (stateful Widget, per BbInput contract).
+        BbInput(
           key: const ValueKey('register_password'),
           controller: _passwordController,
-          labelText: l10n.password,
-          prefixIcon: Icons.lock_outline,
+          label: l10n.password,
+          iconLeft: 'lock',
+          size: BbInputSize.lg,
           obscureText: _obscurePassword,
-          // UX-019: Add tooltip for accessibility (screen readers)
-          suffixIcon: Tooltip(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          trailingAction: Tooltip(
             message: _obscurePassword ? l10n.showPassword : l10n.hidePassword,
             child: IconButton(
               icon: Icon(
                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: theme.colorScheme.onSurfaceVariant,
+                color: c.textSecondary,
                 size: 20,
               ),
               onPressed: () {
@@ -484,14 +533,18 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           validator: PasswordValidator.validateMinimumLength,
         ),
         fieldSpacing,
-        PremiumInputField(
+        // Confirm password — cross-field validator reads live
+        // `_passwordController.text` (audit/103 §3: validator runs against
+        // live controller.text rather than cached state.value).
+        BbInput(
           key: const ValueKey('register_confirm'),
           controller: _confirmPasswordController,
-          labelText: l10n.authConfirmPassword,
-          prefixIcon: Icons.lock_outline,
+          label: l10n.authConfirmPassword,
+          iconLeft: 'lock',
+          size: BbInputSize.lg,
           obscureText: _obscureConfirmPassword,
-          // UX-019: Add tooltip for accessibility (screen readers)
-          suffixIcon: Tooltip(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          trailingAction: Tooltip(
             message: _obscureConfirmPassword
                 ? l10n.showPassword
                 : l10n.hidePassword,
@@ -500,7 +553,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
                 _obscureConfirmPassword
                     ? Icons.visibility_off
                     : Icons.visibility,
-                color: theme.colorScheme.onSurfaceVariant,
+                color: c.textSecondary,
                 size: 20,
               ),
               onPressed: () {
@@ -520,7 +573,11 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     );
   }
 
-  Widget _buildCheckboxes(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildCheckboxes(BBColorSet c, AppLocalizations l10n) {
+    // NOTE: No native BbCheckbox primitive exists in the redesign barrel
+    // (audit/103 §3 — checkboxes are not in the Phase 1 inventory). Keep
+    // the existing Material `Checkbox` widget; recolor with `c.primary`
+    // from the redesign token set so the visual still matches the family.
     return Column(
       children: [
         _buildLegalCheckbox(
@@ -534,7 +591,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           onLinkTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const TermsConditionsScreen()),
           ),
-          theme: theme,
+          c: c,
           checkboxKey: const ValueKey('register_tos_checkbox'),
         ),
         const SizedBox(height: 6),
@@ -549,23 +606,20 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
           onLinkTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
           ),
-          theme: theme,
+          c: c,
           checkboxKey: const ValueKey('register_privacy_checkbox'),
         ),
         const SizedBox(height: 6),
         _buildCheckboxRow(
           value: _newsletterOptIn,
           onChanged: (value) => setState(() => _newsletterOptIn = value!),
+          c: c,
           child: Text(
             l10n.authNewsletterOptIn,
-            style: TextStyle(
-              fontSize: 12,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: BBType.caption(context).copyWith(color: c.textSecondary),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          theme: theme,
         ),
       ],
     );
@@ -577,25 +631,23 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     required String linkText,
     required String prefixText,
     required VoidCallback onLinkTap,
-    required ThemeData theme,
+    required BBColorSet c,
     Key? checkboxKey,
   }) {
     return _buildCheckboxRow(
       value: value,
       onChanged: onChanged,
       checkboxKey: checkboxKey,
+      c: c,
       child: RichText(
         text: TextSpan(
-          style: TextStyle(
-            fontSize: 12,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: BBType.caption(context).copyWith(color: c.textSecondary),
           children: [
             TextSpan(text: prefixText),
             TextSpan(
               text: linkText,
               style: TextStyle(
-                color: theme.colorScheme.primary,
+                color: c.primary,
                 fontWeight: FontWeight.w600,
                 decoration: TextDecoration.underline,
               ),
@@ -607,7 +659,6 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
         maxLines: 3,
         overflow: TextOverflow.ellipsis,
       ),
-      theme: theme,
     );
   }
 
@@ -615,7 +666,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     required bool value,
     required ValueChanged<bool?> onChanged,
     required Widget child,
-    required ThemeData theme,
+    required BBColorSet c,
     Key? checkboxKey,
   }) {
     return Row(
@@ -631,7 +682,7 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
             ),
-            activeColor: theme.colorScheme.primary,
+            activeColor: c.primary,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
@@ -643,31 +694,13 @@ class _EnhancedRegisterScreenState extends ConsumerState<EnhancedRegisterScreen>
     );
   }
 
-  Widget _buildLoginLink(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildLoginLink(BBColorSet c, AppLocalizations l10n) {
     return Center(
-      child: TextButton(
+      child: BbButton(
+        key: const ValueKey('register_login_link'),
+        label: '${l10n.authHaveAccount} ${l10n.login}',
+        variant: BbButtonVariant.tertiary,
         onPressed: () => context.go(OwnerRoutes.login),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        ),
-        child: RichText(
-          text: TextSpan(
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            children: [
-              TextSpan(text: '${l10n.authHaveAccount} '),
-              TextSpan(
-                text: l10n.login,
-                style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

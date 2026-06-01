@@ -71,6 +71,7 @@
 - [99-security-audit](./audit/99-security-audit-2026-05-30.md) — multi-agent sweep; 1 HIGH (F-99-01) + 3 MED + 7 LOW + 4 INFO + 1 CONFIRM-OPEN audit/89 (2026-05-30)
 - 🟡 [100-audit99-high-bundle](./audit/100-audit99-high-bundle.md) — SF-078: F-99-01 bookings deny + H-1 host-only returnUrl + H-2 SF-073 localhost gate + H-3 17-callable CORS; PR #609 DEV-only (2026-05-31)
 - ✅ [102-prod-cutover](./audit/102-prod-cutover-2026-05-31.md) — PROD cutover at HEAD `3a8b6b66`: CFs+regrant 35/35+OPTIONS 3/3, indexes no-drift, widget HTTP 200, rules+storage 4/4 smoke; **SF-067 PROD `datastore.viewer` IAM confirmed via owner upload+delete on `properties/…png`** (2026-05-31)
+- [106-qa-visual-regression](./audit/106-qa-visual-regression-2026-06-01.md) — 12 Phase 2 screens, 0 UNINT drift, 1 BLOCKED (Widget Confirmation Navigator.push), 1 product Q (Pregled KPI tile content swap) (2026-06-01)
 
 ---
 

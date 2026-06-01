@@ -110,6 +110,7 @@ No changes needed.
 | `bb_skeleton.dart` | `BbSkeleton` | `BBSkeleton` | NEW — minimal w/h/radius API (handoff), reduced-motion fallback |
 | `bb_section_header.dart` | `BbSectionHeader` + level enum | `BBSectionHeader` | NEW — title + count + trailing action link with `arrow_forward` icon |
 | `bb_dialog.dart` | `BbDialog` + `BbDialogAction` | `BBDialog` | NEW — `showDialog` shell, destructive flag |
+| `bb_dropdown.dart` | `BbDropdown<T>` + `BbDropdownItem<T>` | `DropdownButtonFormField` call-sites (no direct JSX) | **NEW Phase 1.6** — wraps `DropdownButton<T>` inside [BbInput]-parity chrome (label / helper / error / iconLeft / size sm 40 / md 48 / lg 56). Per-item `icon` (Material Symbol name) renders inside menu rows; widget-level `iconLeft` decorates the trigger row. Form integration via conditional `FormField<T>` wrap when `validator` present (mirrors BbInput #616 + BbCheckbox / BbRadioGroup #625 pattern). `error` parameter wins over validator output (explicit override). Menu surface uses `BbRedesignTokens.panelBg`; menu corner radius is theme-level (Flutter limitation — documented in dart-doc). `tabular: true` opt-in for numeric content (years, codes). |
 | `bb_bottom_sheet.dart` | `BbBottomSheet` | `BBBottomSheet` | NEW — drag-handle + title + footer slots |
 | `bb_empty_state.dart` | `BbEmptyState` + benefit/action types | `BBEmptyState` | NEW — illustration override + 3-col benefits grid (collapses to 1 col <480px) |
 | `bb_sparkline.dart` | `BbSparkline` | `BBSparkline` | NEW — `CustomPainter` line + area fill + final-point dot |

@@ -20,6 +20,7 @@ export 'redesign/bb_card.dart';
 export 'redesign/bb_checkbox.dart';
 export 'redesign/bb_chip.dart';
 export 'redesign/bb_dialog.dart';
+export 'redesign/bb_dropdown.dart';
 export 'redesign/bb_empty_state.dart';
 export 'redesign/bb_icon.dart';
 export 'redesign/bb_input.dart';

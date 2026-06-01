@@ -1,26 +1,37 @@
 import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../../core/theme/app_shadows.dart';
-import '../../../../core/theme/gradient_extensions.dart';
+
+import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/profile_validators.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/user_profile_model.dart';
-import '../../../auth/presentation/widgets/auth_background.dart';
-import '../../../auth/presentation/widgets/glass_card.dart';
-import '../../../auth/presentation/widgets/premium_input_field.dart';
-import '../../../auth/presentation/widgets/profile_image_picker.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../providers/user_profile_provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Premium Edit Profile Screen with Auth Style Design
+/// Edit Profile screen — refactored onto Bb* redesign primitives
+/// (PR redesign/r3-edit-profile). Mirrors the Bank Account + Change Password
+/// settings-form pattern: bare Scaffold + floating BbCard sections + Phase 1.1
+/// native [BbInput.validator] wiring + [BbAvatarUpload] hero (PR #629).
+///
+/// FROZEN / preserved logic:
+///  - `updateProfileAndCompany` / `completeProfile` Firestore writes
+///  - display-name first/last split + `users/{uid}` merge write
+///    (`audit/35` digit-strip + cooldown semantics intact)
+///  - Avatar upload via `StorageService.uploadProfileImage` + Firebase Auth
+///    `updatePhotoURL` + `users/{uid}.avatar_url` merge
+///  - `_isDirty` dirty tracking, `PopScope` discard dialog, `_formKey`,
+///    autovalidate-on-user-interaction
+///  - [AndroidKeyboardDismissFixApproach1] mixin + `KeyedSubtree(ValueKey(...))`
+///  - `resizeToAvoidBottomInset: true`
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -34,7 +45,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   bool _isDirty = false;
   bool _isSaving = false;
 
-  // Controllers - Personal Info
+  // Personal Info
   final _displayNameController = TextEditingController();
   final _emailContactController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -43,12 +54,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   final _streetController = TextEditingController();
   final _postalCodeController = TextEditingController();
 
-  // Controllers - Social & Business
+  // Social & Business
   final _websiteController = TextEditingController();
   final _facebookController = TextEditingController();
   final _propertyTypeController = TextEditingController();
 
-  // Controllers - Company Details (Bank details moved to dedicated Bank Account screen)
+  // Company Details (bank fields live in dedicated Bank Account screen)
   final _companyNameController = TextEditingController();
   final _taxIdController = TextEditingController();
   final _vatIdController = TextEditingController();
@@ -66,7 +77,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
 
   @override
   void dispose() {
-    // Personal Info
     _displayNameController.dispose();
     _emailContactController.dispose();
     _phoneController.dispose();
@@ -75,12 +85,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     _streetController.dispose();
     _postalCodeController.dispose();
 
-    // Social & Business
     _websiteController.dispose();
     _facebookController.dispose();
     _propertyTypeController.dispose();
 
-    // Company Details (Bank details moved to dedicated Bank Account screen)
     _companyNameController.dispose();
     _taxIdController.dispose();
     _vatIdController.dispose();
@@ -99,7 +107,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     final profile = userData.profile;
     final company = userData.company;
 
-    // Personal Info
     _displayNameController.text = profile.displayName;
     _emailContactController.text = profile.emailContact;
     _phoneController.text = profile.phoneE164;
@@ -108,12 +115,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     _streetController.text = profile.address.street;
     _postalCodeController.text = profile.address.postalCode;
 
-    // Social & Business
     _websiteController.text = profile.social.website;
     _facebookController.text = profile.social.facebook;
     _propertyTypeController.text = profile.propertyType;
 
-    // Company Details (Bank details managed in dedicated Bank Account screen)
     _companyNameController.text = company.companyName;
     _taxIdController.text = company.taxId;
     _vatIdController.text = company.vatId;
@@ -122,7 +127,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     _companyStreetController.text = company.address.street;
     _companyPostalCodeController.text = company.address.postalCode;
 
-    // Add listeners after loading
     _displayNameController.addListener(_markDirty);
     _emailContactController.addListener(_markDirty);
     _phoneController.addListener(_markDirty);
@@ -155,7 +159,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   Future<void> _saveProfile() async {
     final l10n = AppLocalizations.of(context);
 
-    // Validate form and show error if validation fails
     if (!_formKey.currentState!.validate()) {
       if (mounted) {
         ErrorDisplayUtils.showErrorSnackBar(
@@ -174,7 +177,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     try {
       String? avatarUrl = _currentAvatarUrl;
 
-      // Upload new profile image if selected
       if (_profileImageBytes != null && _profileImageName != null) {
         final storageService = StorageService();
         avatarUrl = await storageService.uploadProfileImage(
@@ -183,17 +185,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           fileName: _profileImageName!,
         );
 
-        // Update avatarUrl in Firebase Auth user profile
         await FirebaseAuth.instance.currentUser?.updatePhotoURL(avatarUrl);
 
-        // Update avatarUrl in Firestore users collection
-        // Use set with merge to handle case where document doesn't exist
         await FirebaseFirestore.instance.collection('users').doc(userId).set({
           'avatar_url': avatarUrl,
         }, SetOptions(merge: true));
       }
 
-      // Create updated profile
       final updatedProfile = UserProfile(
         userId: userId,
         displayName: _displayNameController.text.trim(),
@@ -213,7 +211,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         logoUrl: _originalProfile?.logoUrl ?? '',
       );
 
-      // Create updated company details (preserve bank data from original - managed in Bank Account screen)
       final userData = ref.read(userDataProvider).value;
       final existingCompany = userData?.company;
       final updatedCompany = CompanyDetails(
@@ -232,13 +229,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         ),
       );
 
-      // Save profile and company details to Firestore (combined to avoid state race condition)
       await ref
           .read(userProfileNotifierProvider.notifier)
           .updateProfileAndCompany(updatedProfile, updatedCompany);
 
-      // Also update first_name/last_name in root users document
-      // (enhancedAuthProvider reads from there for dashboard display)
       final displayName = _displayNameController.text.trim();
       final nameParts = displayName.split(' ');
       final firstName = nameParts.isNotEmpty ? nameParts.first : '';
@@ -255,7 +249,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      // Mark profile as completed for social sign-in users
       final authState = ref.read(enhancedAuthProvider);
       if (authState.requiresProfileCompletion) {
         await ref.read(enhancedAuthProvider.notifier).completeProfile();
@@ -267,7 +260,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           _isSaving = false;
         });
 
-        // Refresh auth provider to update name and avatarUrl
         ref.invalidate(enhancedAuthProvider);
 
         ErrorDisplayUtils.showSuccessSnackBar(
@@ -275,7 +267,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
           l10n.editProfileSaveSuccess,
         );
 
-        // Use canPop check - page may be accessed directly via URL
         if (context.canPop()) {
           context.pop();
         } else {
@@ -283,7 +274,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         }
       }
     } catch (e, stackTrace) {
-      // Log the actual error for debugging
       LoggingService.log('Error saving profile: $e', tag: 'EditProfileScreen');
       await LoggingService.logError('Failed to save profile', e, stackTrace);
 
@@ -299,199 +289,47 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     }
   }
 
-  // ========== HELPER METHODS ==========
-
-  bool _hasAddressData() {
-    return _countryController.text.isNotEmpty ||
-        _streetController.text.isNotEmpty ||
-        _cityController.text.isNotEmpty ||
-        _postalCodeController.text.isNotEmpty;
+  void _exit() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/owner/profile');
+    }
   }
 
-  Widget _buildProfileCard({
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-    bool initiallyExpanded = false,
-    bool isOptional = false,
-    String? subtitle,
-  }) {
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: AppShadows.getElevation(
-          1,
-          isDark: theme.brightness == Brightness.dark,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: theme.dividerColor.withAlpha((0.4 * 255).toInt()),
-              width: 1.5,
-            ),
-          ),
-          child: Theme(
-            data: theme.copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              initiallyExpanded: initiallyExpanded,
-              iconColor: theme.colorScheme.primary,
-              collapsedIconColor: theme.colorScheme.primary,
-              tilePadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
-              childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(
-                    (0.12 * 255).toInt(),
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: theme.colorScheme.primary, size: 18),
-              ),
-              title: Row(
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (isOptional) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Builder(
-                        builder: (context) {
-                          final l10n = AppLocalizations.of(context);
-                          return Text(
-                            l10n.editProfileOptional,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              subtitle: subtitle != null
-                  ? Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    )
-                  : null,
-              children: children,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionDivider(String title) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+  Widget _buildWelcomeBanner(AppLocalizations l10n, BBColorSet c) {
+    return BbCard(
+      variant: BbCardVariant.accentLeft,
+      accentTone: BbCardAccentTone.primary,
       child: Row(
         children: [
           Container(
-            width: 3,
-            height: 16,
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Build first-time profile completion banner for social sign-in users
-  Widget _buildFirstTimeCompletionBanner(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary.withAlpha((0.15 * 255).toInt()),
-            theme.colorScheme.secondary.withAlpha((0.1 * 255).toInt()),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.primary.withAlpha((0.3 * 255).toInt()),
-          width: 1.5,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha((0.2 * 255).toInt()),
+              color: c.primary.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.celebration_rounded,
-              color: theme.colorScheme.primary,
-              size: 24,
-            ),
+            child: BbIcon(name: 'celebration', size: 22, color: c.primary),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: BBSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.editProfileWelcomeTitle,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                  style: BBType.label(
+                    context,
+                  ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   l10n.editProfileWelcomeMessage,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textSecondary),
                 ),
               ],
             ),
@@ -501,98 +339,285 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
     );
   }
 
-  Widget _buildActionButtons() {
-    final theme = Theme.of(context);
-
-    return Column(
-      children: [
-        // Save Button - sa app bar gradient
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: (_isDirty && !_isSaving)
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withValues(alpha: 0.7),
-                      ],
-                    )
-                  : null,
-              color: (_isDirty && !_isSaving)
-                  ? null
-                  : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
-              borderRadius: BorderRadius.circular(12),
+  Widget _buildPersonalCard(AppLocalizations l10n, BBColorSet c) {
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BbSectionHeader(
+            title: l10n.editProfilePersonalData,
+            level: BbSectionHeaderLevel.h3,
+          ),
+          if (l10n.editProfilePersonalDataSubtitle.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: BBSpace.sm),
+              child: Text(
+                l10n.editProfilePersonalDataSubtitle,
+                style: BBType.caption(context).copyWith(color: c.textTertiary),
+              ),
             ),
-            child: ElevatedButton.icon(
-              onPressed: (_isDirty && !_isSaving) ? _saveProfile : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                shadowColor: Colors.transparent,
-                disabledBackgroundColor: Colors.transparent,
-                disabledForegroundColor: theme.disabledColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          BbInput(
+            key: const ValueKey('edit_profile_display_name'),
+            controller: _displayNameController,
+            label: l10n.editProfileFullName,
+            iconLeft: 'person',
+            size: BbInputSize.lg,
+            validator: ProfileValidators.validateName,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('edit_profile_email'),
+            controller: _emailContactController,
+            label: l10n.editProfileEmail,
+            iconLeft: 'mail',
+            size: BbInputSize.lg,
+            keyboardType: TextInputType.emailAddress,
+            validator: ProfileValidators.validateEmail,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('edit_profile_phone'),
+            controller: _phoneController,
+            label: l10n.editProfilePhone,
+            iconLeft: 'phone',
+            size: BbInputSize.lg,
+            keyboardType: TextInputType.phone,
+            validator: ProfileValidators.validatePhone,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressCard(AppLocalizations l10n, BBColorSet c) {
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BbSectionHeader(
+            title: l10n.editProfileAddress,
+            level: BbSectionHeaderLevel.h3,
+          ),
+          if (l10n.editProfileAddressSubtitle.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: BBSpace.sm),
+              child: Text(
+                l10n.editProfileAddressSubtitle,
+                style: BBType.caption(context).copyWith(color: c.textTertiary),
+              ),
+            ),
+          BbInput(
+            key: const ValueKey('edit_profile_country'),
+            controller: _countryController,
+            label: l10n.editProfileCountry,
+            iconLeft: 'public',
+            size: BbInputSize.lg,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('edit_profile_street'),
+            controller: _streetController,
+            label: l10n.editProfileStreet,
+            iconLeft: 'location_on',
+            size: BbInputSize.lg,
+          ),
+          const SizedBox(height: BBSpace.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: BbInput(
+                  key: const ValueKey('edit_profile_city'),
+                  controller: _cityController,
+                  label: l10n.editProfileCity,
+                  iconLeft: 'location_city',
+                  size: BbInputSize.lg,
                 ),
               ),
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.save_rounded),
-              label: Builder(
-                builder: (context) {
-                  final l10n = AppLocalizations.of(context);
-                  return Text(
-                    _isSaving
-                        ? l10n.editProfileSaving
-                        : l10n.editProfileSaveChanges,
-                  );
-                },
+              const SizedBox(width: BBSpace.sm),
+              Expanded(
+                child: BbInput(
+                  key: const ValueKey('edit_profile_postal_code'),
+                  controller: _postalCodeController,
+                  label: l10n.editProfilePostalCode,
+                  iconLeft: 'markunread_mailbox',
+                  size: BbInputSize.lg,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompanyCard(AppLocalizations l10n, BBColorSet c) {
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BbSectionHeader(
+            title: l10n.editProfileCompany,
+            level: BbSectionHeaderLevel.h3,
+          ),
+          if (l10n.editProfileCompanySubtitle.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: BBSpace.sm),
+              child: Text(
+                l10n.editProfileCompanySubtitle,
+                style: BBType.caption(context).copyWith(color: c.textTertiary),
               ),
             ),
+          BbInput(
+            key: const ValueKey('edit_profile_company_name'),
+            controller: _companyNameController,
+            label: l10n.editProfileCompanyName,
+            iconLeft: 'business',
+            size: BbInputSize.lg,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('edit_profile_tax_id'),
+            controller: _taxIdController,
+            label: l10n.editProfileTaxId,
+            iconLeft: 'receipt_long',
+            size: BbInputSize.lg,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('edit_profile_vat_id'),
+            controller: _vatIdController,
+            label: l10n.editProfileVatId,
+            iconLeft: 'account_balance',
+            size: BbInputSize.lg,
+          ),
+          const SizedBox(height: BBSpace.md),
+          _buildSubSectionLabel(l10n.editProfileCompanyAddress, c),
+          const SizedBox(height: BBSpace.sm),
+          BbInput(
+            key: const ValueKey('edit_profile_company_country'),
+            controller: _companyCountryController,
+            label: l10n.editProfileCountry,
+            iconLeft: 'public',
+            size: BbInputSize.lg,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('edit_profile_company_street'),
+            controller: _companyStreetController,
+            label: l10n.editProfileStreet,
+            iconLeft: 'location_on',
+            size: BbInputSize.lg,
+          ),
+          const SizedBox(height: BBSpace.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: BbInput(
+                  key: const ValueKey('edit_profile_company_city'),
+                  controller: _companyCityController,
+                  label: l10n.editProfileCity,
+                  iconLeft: 'location_city',
+                  size: BbInputSize.lg,
+                ),
+              ),
+              const SizedBox(width: BBSpace.sm),
+              Expanded(
+                child: BbInput(
+                  key: const ValueKey('edit_profile_company_postal_code'),
+                  controller: _companyPostalCodeController,
+                  label: l10n.editProfilePostalCode,
+                  iconLeft: 'markunread_mailbox',
+                  size: BbInputSize.lg,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: BBSpace.md),
+          _buildSubSectionLabel(l10n.editProfileOnlinePresence, c),
+          const SizedBox(height: BBSpace.sm),
+          BbInput(
+            key: const ValueKey('edit_profile_website'),
+            controller: _websiteController,
+            label: l10n.editProfileWebsite,
+            iconLeft: 'language',
+            size: BbInputSize.lg,
+            keyboardType: TextInputType.url,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('edit_profile_facebook'),
+            controller: _facebookController,
+            label: l10n.editProfileFacebook,
+            // 'facebook' brand glyph not shipped in material_symbols_icons map;
+            // 'link' renders as a generic chain icon (works for any social URL).
+            iconLeft: 'link',
+            size: BbInputSize.lg,
+            keyboardType: TextInputType.url,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('edit_profile_property_type'),
+            controller: _propertyTypeController,
+            label: l10n.editProfilePropertyType,
+            iconLeft: 'home_work',
+            size: BbInputSize.lg,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubSectionLabel(String title, BBColorSet c) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: c.primary,
+            borderRadius: BorderRadius.circular(2),
           ),
         ),
+        const SizedBox(width: BBSpace.xs),
+        Text(
+          title,
+          style: BBType.label(
+            context,
+          ).copyWith(color: c.textSecondary, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
 
-        const SizedBox(height: 12),
-
-        // Cancel Button - veći height
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: TextButton(
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/owner/profile');
-              }
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface.withAlpha(
-                (0.7 * 255).toInt(),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: theme.dividerColor),
-              ),
-            ),
-            child: Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context);
-                return Text(l10n.cancel);
-              },
-            ),
-          ),
+  Widget _buildActionButtons(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        BbButton(
+          key: const ValueKey('edit_profile_save'),
+          label: _isSaving
+              ? l10n.editProfileSaving
+              : l10n.editProfileSaveChanges,
+          iconLeft: _isSaving ? null : 'save',
+          size: BbButtonSize.lg,
+          fullWidth: true,
+          loading: _isSaving,
+          disabled: !_isDirty,
+          onPressed: (_isDirty && !_isSaving) ? _saveProfile : null,
+        ),
+        const SizedBox(height: BBSpace.sm),
+        BbButton(
+          key: const ValueKey('edit_profile_cancel'),
+          label: l10n.cancel,
+          variant: BbButtonVariant.secondary,
+          size: BbButtonSize.lg,
+          fullWidth: true,
+          onPressed: _exit,
         ),
       ],
     );
@@ -602,12 +627,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   Widget build(BuildContext context) {
     final userDataAsync = ref.watch(userDataProvider);
     final authState = ref.watch(enhancedAuthProvider);
+    final l10n = AppLocalizations.of(context);
+    final c = BBColor.of(context);
 
     return PopScope(
       canPop: !_isDirty,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop && _isDirty) {
-          final l10n = AppLocalizations.of(context);
           final shouldPop = await showDialog<bool>(
             context: context,
             builder: (dialogContext) => AlertDialog(
@@ -627,12 +653,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             ),
           );
           if (shouldPop == true && context.mounted) {
-            // Use canPop check - page may be accessed directly via URL
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/owner/profile');
-            }
+            _exit();
           }
         }
       },
@@ -640,96 +661,83 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
         key: ValueKey('edit_profile_$keyboardFixRebuildKey'),
         child: Scaffold(
           resizeToAvoidBottomInset: true,
-          body: AuthBackground(
-            child: SafeArea(
-              child: userDataAsync.when(
-                data: (userData) {
-                  // Create default userData if null
-                  final effectiveUserData =
-                      userData ??
-                      UserData(
-                        profile: UserProfile(
-                          userId: FirebaseAuth.instance.currentUser!.uid,
-                          displayName: authState.userModel?.fullName ?? '',
-                          emailContact: authState.userModel?.email ?? '',
-                          phoneE164: authState.userModel?.phone ?? '',
-                        ),
-                      );
+          backgroundColor: c.bg,
+          body: SafeArea(
+            child: userDataAsync.when(
+              data: (userData) {
+                final effectiveUserData =
+                    userData ??
+                    UserData(
+                      profile: UserProfile(
+                        userId: FirebaseAuth.instance.currentUser!.uid,
+                        displayName: authState.userModel?.fullName ?? '',
+                        emailContact: authState.userModel?.email ?? '',
+                        phoneE164: authState.userModel?.phone ?? '',
+                      ),
+                    );
 
-                  _loadData(effectiveUserData);
-                  _currentAvatarUrl = authState.userModel?.avatarUrl;
-                  final l10n = AppLocalizations.of(context);
-                  final isCompact = MediaQuery.of(context).size.width < 400;
+                _loadData(effectiveUserData);
+                _currentAvatarUrl = authState.userModel?.avatarUrl;
 
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      // Get keyboard height to adjust padding dynamically (with null safety)
-                      final mediaQuery = MediaQuery.maybeOf(context);
-                      final keyboardHeight =
-                          (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
-                            0.0,
-                            double.infinity,
-                          );
-                      final isKeyboardOpen = keyboardHeight > 0;
-
-                      // Calculate minHeight safely - ensure it's always finite and valid
-                      double minHeight;
-                      if (isKeyboardOpen &&
-                          constraints.maxHeight.isFinite &&
-                          constraints.maxHeight > 0) {
-                        final calculated =
-                            constraints.maxHeight - keyboardHeight;
-                        minHeight = calculated.clamp(
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final mediaQuery = MediaQuery.maybeOf(context);
+                    final keyboardHeight =
+                        (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
                           0.0,
-                          constraints.maxHeight,
+                          double.infinity,
                         );
-                      } else {
-                        minHeight = constraints.maxHeight.isFinite
-                            ? constraints.maxHeight
-                            : 0.0;
-                      }
-                      // Ensure minHeight is always finite (never infinity)
-                      minHeight = minHeight.isFinite ? minHeight : 0.0;
+                    final isKeyboardOpen = keyboardHeight > 0;
 
-                      return SingleChildScrollView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: EdgeInsets.all(isCompact ? 16 : 24),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minHeight: minHeight),
-                          child: Center(
-                            child: GlassCard(
-                              maxWidth: 600,
-                              child: Form(
-                                key: _formKey,
-                                autovalidateMode:
-                                    AutovalidateMode.onUserInteraction,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    // Back Button
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: IconButton(
-                                        onPressed: () {
-                                          if (context.canPop()) {
-                                            context.pop();
-                                          } else {
-                                            context.go('/owner/profile');
-                                          }
-                                        },
-                                        icon: const Icon(Icons.arrow_back),
-                                        tooltip: l10n.back,
-                                      ),
+                    double minHeight;
+                    if (isKeyboardOpen &&
+                        constraints.maxHeight.isFinite &&
+                        constraints.maxHeight > 0) {
+                      final calculated = constraints.maxHeight - keyboardHeight;
+                      minHeight = calculated.clamp(0.0, constraints.maxHeight);
+                    } else {
+                      minHeight = constraints.maxHeight.isFinite
+                          ? constraints.maxHeight
+                          : 0.0;
+                    }
+                    minHeight = minHeight.isFinite ? minHeight : 0.0;
+
+                    return SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.all(BBSpace.sm),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: minHeight),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 680),
+                            child: Form(
+                              key: _formKey,
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: IconButton(
+                                      onPressed: _exit,
+                                      icon: const Icon(Icons.arrow_back),
+                                      tooltip: l10n.back,
                                     ),
-                                    const SizedBox(height: 8),
-
-                                    // Profile Image Picker
-                                    ProfileImagePicker(
+                                  ),
+                                  const SizedBox(height: BBSpace.xs),
+                                  Center(
+                                    child: BbAvatarUpload(
+                                      key: const ValueKey(
+                                        'edit_profile_avatar',
+                                      ),
                                       imageUrl: _currentAvatarUrl,
                                       initials: authState.userModel?.initials,
+                                      size: BbAvatarSize.xl,
+                                      isUploading: _isSaving,
+                                      ring: false,
                                       onImageSelected: (bytes, name) {
                                         setState(() {
                                           _profileImageBytes = bytes;
@@ -738,255 +746,54 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                         });
                                       },
                                     ),
-                                    const SizedBox(height: 32),
-
-                                    // Title
-                                    Text(
-                                      l10n.editProfileTitle,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 28,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface,
-                                          ),
-                                      textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: BBSpace.md),
+                                  Text(
+                                    l10n.editProfileTitle,
+                                    textAlign: TextAlign.center,
+                                    style: BBType.h2(context).copyWith(
+                                      color: c.textPrimary,
+                                      fontWeight: FontWeight.w700,
                                     ),
-                                    const SizedBox(height: 8),
-
-                                    // Subtitle
-                                    Text(
-                                      l10n.editProfileSubtitle,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant,
-                                            fontSize: 15,
-                                          ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 32),
-
-                                    // Show welcome banner for first-time social sign-in users
-                                    if (authState.requiresProfileCompletion)
-                                      _buildFirstTimeCompletionBanner(l10n),
-
-                                    // ========== KARTICA 1: LIČNI PODACI ==========
-                                    _buildProfileCard(
-                                      title: l10n.editProfilePersonalData,
-                                      icon: Icons.person_outline,
-                                      initiallyExpanded: true,
-                                      subtitle:
-                                          l10n.editProfilePersonalDataSubtitle,
-                                      children: [
-                                        PremiumInputField(
-                                          controller: _displayNameController,
-                                          labelText: l10n.editProfileFullName,
-                                          prefixIcon: Icons.person_outline,
-                                          validator:
-                                              ProfileValidators.validateName,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        PremiumInputField(
-                                          controller: _emailContactController,
-                                          labelText: l10n.editProfileEmail,
-                                          prefixIcon: Icons.email_outlined,
-                                          keyboardType:
-                                              TextInputType.emailAddress,
-                                          validator:
-                                              ProfileValidators.validateEmail,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        PremiumInputField(
-                                          controller: _phoneController,
-                                          labelText: l10n.editProfilePhone,
-                                          prefixIcon: Icons.phone_outlined,
-                                          keyboardType: TextInputType.phone,
-                                          validator:
-                                              ProfileValidators.validatePhone,
-                                        ),
-                                      ],
-                                    ),
-
-                                    // ========== KARTICA 2: ADRESA ==========
-                                    _buildProfileCard(
-                                      title: l10n.editProfileAddress,
-                                      icon: Icons.location_on_outlined,
-                                      initiallyExpanded: _hasAddressData(),
-                                      isOptional: true,
-                                      subtitle: l10n.editProfileAddressSubtitle,
-                                      children: [
-                                        PremiumInputField(
-                                          controller: _countryController,
-                                          labelText: l10n.editProfileCountry,
-                                          prefixIcon: Icons.public,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        PremiumInputField(
-                                          controller: _streetController,
-                                          labelText: l10n.editProfileStreet,
-                                          prefixIcon:
-                                              Icons.location_on_outlined,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: PremiumInputField(
-                                                controller: _cityController,
-                                                labelText: l10n.editProfileCity,
-                                                prefixIcon: Icons.location_city,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: PremiumInputField(
-                                                controller:
-                                                    _postalCodeController,
-                                                labelText:
-                                                    l10n.editProfilePostalCode,
-                                                prefixIcon:
-                                                    Icons.markunread_mailbox,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-
-                                    // ========== KARTICA 3: KOMPANIJA ==========
-                                    // Note: Bankovni Podaci moved to dedicated Bank Account screen
-                                    // in Integracije → Plaćanja → Bankovni Račun
-                                    _buildProfileCard(
-                                      title: l10n.editProfileCompany,
-                                      icon: Icons.business_outlined,
-                                      isOptional: true,
-                                      subtitle: l10n.editProfileCompanySubtitle,
-                                      children: [
-                                        // Company Info
-                                        PremiumInputField(
-                                          controller: _companyNameController,
-                                          labelText:
-                                              l10n.editProfileCompanyName,
-                                          prefixIcon: Icons.business,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        PremiumInputField(
-                                          controller: _taxIdController,
-                                          labelText: l10n.editProfileTaxId,
-                                          prefixIcon: Icons.receipt_long,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        PremiumInputField(
-                                          controller: _vatIdController,
-                                          labelText: l10n.editProfileVatId,
-                                          prefixIcon: Icons.account_balance,
-                                        ),
-                                        const SizedBox(height: 20),
-
-                                        // Company Address
-                                        _buildSectionDivider(
-                                          l10n.editProfileCompanyAddress,
-                                        ),
-                                        PremiumInputField(
-                                          controller: _companyCountryController,
-                                          labelText: l10n.editProfileCountry,
-                                          prefixIcon: Icons.public,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        PremiumInputField(
-                                          controller: _companyStreetController,
-                                          labelText: l10n.editProfileStreet,
-                                          prefixIcon:
-                                              Icons.location_on_outlined,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: PremiumInputField(
-                                                controller:
-                                                    _companyCityController,
-                                                labelText: l10n.editProfileCity,
-                                                prefixIcon: Icons.location_city,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: PremiumInputField(
-                                                controller:
-                                                    _companyPostalCodeController,
-                                                labelText:
-                                                    l10n.editProfilePostalCode,
-                                                prefixIcon:
-                                                    Icons.markunread_mailbox,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 20),
-
-                                        // Online Presence
-                                        _buildSectionDivider(
-                                          l10n.editProfileOnlinePresence,
-                                        ),
-                                        PremiumInputField(
-                                          controller: _websiteController,
-                                          labelText: l10n.editProfileWebsite,
-                                          prefixIcon: Icons.language_outlined,
-                                          keyboardType: TextInputType.url,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        PremiumInputField(
-                                          controller: _facebookController,
-                                          labelText: l10n.editProfileFacebook,
-                                          prefixIcon: Icons.facebook,
-                                          keyboardType: TextInputType.url,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        PremiumInputField(
-                                          controller: _propertyTypeController,
-                                          labelText:
-                                              l10n.editProfilePropertyType,
-                                          prefixIcon: Icons.home_work_outlined,
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 8),
-
-                                    // ========== ACTION BUTTONS ==========
-                                    _buildActionButtons(),
+                                  ),
+                                  const SizedBox(height: BBSpace.xs),
+                                  Text(
+                                    l10n.editProfileSubtitle,
+                                    textAlign: TextAlign.center,
+                                    style: BBType.body(
+                                      context,
+                                    ).copyWith(color: c.textSecondary),
+                                  ),
+                                  const SizedBox(height: BBSpace.md),
+                                  if (authState.requiresProfileCompletion) ...[
+                                    _buildWelcomeBanner(l10n, c),
+                                    const SizedBox(height: BBSpace.md),
                                   ],
-                                ),
+                                  _buildPersonalCard(l10n, c),
+                                  const SizedBox(height: BBSpace.md),
+                                  _buildAddressCard(l10n, c),
+                                  const SizedBox(height: BBSpace.md),
+                                  _buildCompanyCard(l10n, c),
+                                  const SizedBox(height: BBSpace.md),
+                                  _buildActionButtons(l10n),
+                                  const SizedBox(height: BBSpace.md),
+                                ],
                               ),
                             ),
                           ),
                         ),
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) {
-                  final l10n = AppLocalizations.of(context);
-                  return Center(
-                    child: Text(l10n.errorWithMessage(error.toString())),
-                  );
-                },
-              ),
+                      ),
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) =>
+                  Center(child: Text(l10n.errorWithMessage(error.toString()))),
             ),
           ),
         ),
       ),
     );
   }
-
-  // Helper method for building profile cards
 }

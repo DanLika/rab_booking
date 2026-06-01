@@ -3,20 +3,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
-import '../../../../l10n/app_localizations.dart';
-import '../../../../core/theme/app_shadows.dart';
-import '../../../../core/theme/gradient_extensions.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../core/utils/profile_validators.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/user_profile_model.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../../../../shared/widgets/message_box.dart';
-import '../../../auth/presentation/widgets/premium_input_field.dart';
+import '../../../../shared/widgets/redesign.dart';
+import '../../../../shared/widgets/universal_loader.dart';
 import '../providers/user_profile_provider.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../../../../shared/widgets/universal_loader.dart';
 
-/// Dedicated Bank Account Screen for bank transfer payment settings
+/// Dedicated Bank Account screen — refactored onto Bb* redesign primitives
+/// (PR redesign/r2c-bank-account). Settings-screen pattern: floating panel
+/// inside `OwnerAppDrawer` shell, info banner via `BbCard(variant: accentLeft,
+/// info)`, single form card with [BbSectionHeader] + four [BbInput]s.
+///
+/// Consumer of Phase 1.1 native [BbInput.validator] — IBAN + SWIFT/BIC
+/// validators from [ProfileValidators] are wired directly. NOTE: legacy
+/// implementation used [PremiumInputField] which accepted no validator, so
+/// `_formKey.currentState!.validate()` was effectively a no-op tautology.
+/// This refactor makes form validation actually run for the first time
+/// (consistent with task mandate "only wire validator into BbInput.validator").
+///
+/// FROZEN / preserved logic:
+///  - `userProfileNotifierProvider.updateCompany` Firestore write path
+///  - `companyDetailsProvider` watch + invalidation after save
+///  - `_isDirty` dirty-tracking, `PopScope` discard dialog, `_formKey`
+///  - Stripe Connect onboarding flow + Stripe API calls — UNTOUCHED
+///    (this screen handles legacy bank-transfer fields only; payouts.jsx
+///    StripeStatusCard / BalanceTiles / PayoutScheduleCard / RecentPayouts
+///    are out of scope, future separate screen.)
+///  - [AndroidKeyboardDismissFixApproach1] mixin (per
+///    `.claude/rules/keyboard-fix.md`) + `KeyedSubtree(ValueKey('bank_account_…'))`
+///  - `resizeToAvoidBottomInset: true`
+///  - Parent [Scaffold] + [CommonAppBar] + [OwnerAppDrawer] — NOT swapped
+///    (deferred to shell-swap PR per audit/104 §3).
 class BankAccountScreen extends ConsumerStatefulWidget {
   const BankAccountScreen({super.key});
 
@@ -144,185 +168,142 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
     }
   }
 
-  Widget _buildBankCard(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.gradients.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: context.gradients.sectionBorder),
+  /// Info banner — replaces legacy [MessageBox.info] with
+  /// `BbCard(variant: accentLeft, accentTone: info)` per Phase 2 settings
+  /// pattern.
+  Widget _buildInfoBanner(AppLocalizations l10n, BBColorSet c) {
+    return BbCard(
+      variant: BbCardVariant.accentLeft,
+      accentTone: BbCardAccentTone.info,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              BbIcon(name: 'info', size: 18, color: c.info),
+              const SizedBox(width: BBSpace.xs),
+              Expanded(
+                child: Text(
+                  l10n.bankAccountInfoTitle,
+                  style: BBType.label(
+                    context,
+                  ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ),
-          child: Theme(
-            data: theme.copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              initiallyExpanded: true,
-              iconColor: theme.colorScheme.primary,
-              collapsedIconColor: theme.colorScheme.primary,
-              tilePadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
-              childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(
-                    (0.12 * 255).toInt(),
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.account_balance_outlined,
-                  color: theme.colorScheme.primary,
-                  size: 18,
-                ),
-              ),
-              title: Text(
-                l10n.bankAccountBankDetails,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Text(
-                l10n.bankAccountBankDetailsSubtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              children: [
-                PremiumInputField(
-                  controller: _ibanController,
-                  labelText: l10n.bankAccountIban,
-                  prefixIcon: Icons.credit_card,
-                ),
-                const SizedBox(height: 16),
-                PremiumInputField(
-                  controller: _swiftController,
-                  labelText: l10n.bankAccountSwift,
-                  prefixIcon: Icons.code,
-                ),
-                const SizedBox(height: 16),
-                PremiumInputField(
-                  controller: _bankNameController,
-                  labelText: l10n.bankAccountBankName,
-                  prefixIcon: Icons.account_balance,
-                ),
-                const SizedBox(height: 16),
-                PremiumInputField(
-                  controller: _accountHolderController,
-                  labelText: l10n.bankAccountHolder,
-                  prefixIcon: Icons.person,
-                ),
-              ],
-            ),
+          const SizedBox(height: BBSpace.xs),
+          Text(
+            l10n.bankAccountInfoDesc,
+            style: BBType.body(context).copyWith(color: c.textSecondary),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoCard(AppLocalizations l10n) {
-    return MessageBox.info(
-      title: l10n.bankAccountInfoTitle,
-      message: l10n.bankAccountInfoDesc,
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(16),
+  /// Form card — section header + 4× [BbInput] with native `validator:`.
+  /// Drops the legacy `ExpansionTile` chrome (decorative; redesign uses flat
+  /// cards per payouts.jsx `BankCard`).
+  Widget _buildFormCard(AppLocalizations l10n, BBColorSet c) {
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BbSectionHeader(
+            title: l10n.bankAccountBankDetails,
+            level: BbSectionHeaderLevel.h3,
+          ),
+          // Phase 1.1 native validator — formerly PremiumInputField w/ no
+          // validator (silent no-op on validate()). Validators per
+          // ProfileValidators.validateIban / validateSwift; both allow empty
+          // (fields are optional) but reject malformed input.
+          BbInput(
+            key: const ValueKey('bank_account_iban'),
+            controller: _ibanController,
+            label: l10n.bankAccountIban,
+            iconLeft: 'credit_card',
+            size: BbInputSize.lg,
+            keyboardType: TextInputType.text,
+            validator: ProfileValidators.validateIban,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('bank_account_swift'),
+            controller: _swiftController,
+            label: l10n.bankAccountSwift,
+            iconLeft: 'code',
+            size: BbInputSize.lg,
+            keyboardType: TextInputType.text,
+            validator: ProfileValidators.validateSwift,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('bank_account_bank_name'),
+            controller: _bankNameController,
+            label: l10n.bankAccountBankName,
+            iconLeft: 'account_balance',
+            size: BbInputSize.lg,
+            keyboardType: TextInputType.text,
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbInput(
+            key: const ValueKey('bank_account_holder'),
+            controller: _accountHolderController,
+            label: l10n.bankAccountHolder,
+            iconLeft: 'person',
+            size: BbInputSize.lg,
+            keyboardType: TextInputType.name,
+          ),
+          if (l10n.bankAccountBankDetailsSubtitle.isNotEmpty) ...[
+            const SizedBox(height: BBSpace.sm),
+            Text(
+              l10n.bankAccountBankDetailsSubtitle,
+              style: BBType.caption(context).copyWith(color: c.textTertiary),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
   Widget _buildActionButtons(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Save Button - sa app bar gradient
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: (_isDirty && !_isSaving)
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withValues(alpha: 0.7),
-                      ],
-                    )
-                  : null,
-              color: (_isDirty && !_isSaving)
-                  ? null
-                  : theme.disabledColor.withAlpha((0.3 * 255).toInt()),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ElevatedButton.icon(
-              onPressed: (_isDirty && !_isSaving) ? _saveBankDetails : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                shadowColor: Colors.transparent,
-                disabledBackgroundColor: Colors.transparent,
-                disabledForegroundColor: theme.disabledColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.save_rounded),
-              label: Text(
-                _isSaving
-                    ? l10n.bankAccountSaving
-                    : l10n.bankAccountSaveChanges,
-              ),
-            ),
-          ),
+        // Save Button — primary, full-width, lg per Phase 2 settings pattern.
+        // Preserves _isDirty enabled-gating; loading state during save.
+        BbButton(
+          key: const ValueKey('bank_account_save'),
+          label: _isSaving
+              ? l10n.bankAccountSaving
+              : l10n.bankAccountSaveChanges,
+          iconLeft: _isSaving ? null : 'save',
+          size: BbButtonSize.lg,
+          fullWidth: true,
+          loading: _isSaving,
+          disabled: !_isDirty,
+          onPressed: (_isDirty && !_isSaving) ? _saveBankDetails : null,
         ),
-
-        const SizedBox(height: 12),
-
-        // Cancel Button
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: TextButton(
-            onPressed: () {
-              // Navigate back to previous page (widget settings embedded in unit-hub)
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go(OwnerRoutes.unitHub);
-              }
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface.withAlpha(
-                (0.7 * 255).toInt(),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: theme.dividerColor),
-              ),
-            ),
-            child: Text(l10n.bankAccountCancel),
-          ),
+        const SizedBox(height: BBSpace.sm),
+        // Cancel — secondary (outlined). No delete affordance exists in the
+        // legacy implementation; not invented here.
+        BbButton(
+          key: const ValueKey('bank_account_cancel'),
+          label: l10n.bankAccountCancel,
+          variant: BbButtonVariant.secondary,
+          size: BbButtonSize.lg,
+          fullWidth: true,
+          onPressed: () {
+            // Navigate back to previous page (widget settings embedded in unit-hub)
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(OwnerRoutes.unitHub);
+            }
+          },
         ),
       ],
     );
@@ -334,6 +315,8 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
     // This reduces Firestore reads from 2 (profile + company) to 1 (company only)
     final companyDetailsAsync = ref.watch(companyDetailsProvider);
     final l10n = AppLocalizations.of(context);
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
 
     return PopScope(
       canPop: !_isDirty,
@@ -380,9 +363,7 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
             onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
           ),
           body: Container(
-            decoration: BoxDecoration(
-              gradient: context.gradients.pageBackground,
-            ),
+            color: rd.shellBg,
             child: companyDetailsAsync.when(
               data: (companyDetails) {
                 // Create default company if null
@@ -391,11 +372,20 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
 
                 _loadData(effectiveCompany);
 
-                final isCompact = MediaQuery.of(context).size.width < 400;
+                final screenWidth = MediaQuery.of(context).size.width;
+                final isMobile = screenWidth < 600;
+                final isDesktop = screenWidth >= 1024;
+
+                // Outer panel gutter — handoff floating console pattern
+                // (mirrors profile_screen.dart layout).
+                final EdgeInsets gutterPadding = isMobile
+                    ? const EdgeInsets.fromLTRB(8, 4, 8, 16)
+                    : EdgeInsets.fromLTRB(16, 4, isDesktop ? 28 : 18, 24);
 
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    // Get keyboard height to adjust padding dynamically (with null safety)
+                    // Keyboard-aware minHeight (legacy behaviour preserved
+                    // for Android Chrome keyboard mixin co-operation).
                     final mediaQuery = MediaQuery.maybeOf(context);
                     final keyboardHeight =
                         (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
@@ -404,7 +394,6 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                         );
                     final isKeyboardOpen = keyboardHeight > 0;
 
-                    // Calculate minHeight safely - ensure it's always finite and valid
                     double minHeight;
                     if (isKeyboardOpen &&
                         constraints.maxHeight.isFinite &&
@@ -416,43 +405,49 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                           ? constraints.maxHeight
                           : 0.0;
                     }
-                    // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
                     return SingleChildScrollView(
                       keyboardDismissBehavior:
                           ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.all(isCompact ? 16 : 24),
+                      padding: gutterPadding,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(minHeight: minHeight),
                         child: Center(
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 600),
-                            child: Form(
-                              key: _formKey,
-                              autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  // Top content
-                                  Column(
+                            constraints: const BoxConstraints(maxWidth: 760),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: rd.panelBg,
+                                borderRadius: BorderRadius.circular(
+                                  isMobile ? BBRadius.lg : 28,
+                                ),
+                                border: Border.all(color: rd.panelBorder),
+                                boxShadow: rd.panelShadow,
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  isMobile ? 16 : (isDesktop ? 28 : 22),
+                                  isMobile ? 16 : 22,
+                                  isMobile ? 16 : (isDesktop ? 28 : 22),
+                                  isMobile ? 20 : 28,
+                                ),
+                                child: Form(
+                                  key: _formKey,
+                                  autovalidateMode:
+                                      AutovalidateMode.onUserInteraction,
+                                  child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: [
-                                      // Info Card
-                                      _buildInfoCard(l10n),
-
-                                      // Bank Details Card
-                                      _buildBankCard(l10n),
+                                      _buildInfoBanner(l10n, c),
+                                      const SizedBox(height: BBSpace.md),
+                                      _buildFormCard(l10n, c),
+                                      const SizedBox(height: BBSpace.lg),
+                                      _buildActionButtons(l10n),
                                     ],
                                   ),
-
-                                  // Action Buttons (pushed to bottom)
-                                  _buildActionButtons(l10n),
-                                ],
+                                ),
                               ),
                             ),
                           ),

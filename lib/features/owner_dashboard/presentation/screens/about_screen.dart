@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../../../../core/theme/gradient_extensions.dart';
-import '../../../../core/theme/app_shadows.dart';
+import '../../../../shared/widgets/redesign.dart';
 
-/// About screen - App information, version, and credits
+/// About screen — App info, key features, contact & support.
+/// Refactored onto Bb* foundation (PR redesign/r4-about).
+/// Mirrors Profil #621 settings-family pattern: shell-bg + floating panel
+/// + eyebrow header + BbCard sections via BbSectionHeader. AppBar/Scaffold
+/// stay legacy per audit/103 §4 (deferred to shell-swap PR).
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -22,299 +25,326 @@ class AboutScreen extends StatelessWidget {
         leadingIcon: Icons.arrow_back,
         onLeadingIconTap: (context) => Navigator.of(context).pop(),
       ),
-      body: Container(
-        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // App Logo & Name Card
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: context.gradients.brandPrimary,
-                  borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
-                  boxShadow: isDark
-                      ? AppShadows.elevation4Dark
-                      : AppShadows.elevation4,
-                ),
-                padding: EdgeInsets.all(isMobile ? 32 : 48),
-                child: Column(
-                  children: [
-                    // App Icon - High resolution non-transparent image
-                    Container(
-                      width: isMobile ? 80 : 100,
-                      height: isMobile ? 80 : 100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(isMobile ? 20 : 24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+      body: Builder(
+        builder: (context) {
+          final rd = BbRedesignTokens.of(context);
+          final screenWidth = MediaQuery.of(context).size.width;
+          final isMobile = screenWidth < 600;
+          final isDesktop = screenWidth >= 1024;
+
+          // Floating-panel gutter — matches Profil #621.
+          final EdgeInsets gutterPadding = isMobile
+              ? const EdgeInsets.fromLTRB(8, 4, 8, 16)
+              : EdgeInsets.fromLTRB(16, 4, isDesktop ? 28 : 18, 24);
+
+          return Container(
+            color: rd.shellBg,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                Padding(
+                  padding: gutterPadding,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: rd.panelBg,
+                      borderRadius: BorderRadius.circular(
+                        isMobile ? BBRadius.lg : 28,
+                      ),
+                      border: Border.all(color: rd.panelBorder),
+                      boxShadow: rd.panelShadow,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        isMobile ? 16 : (isDesktop ? 28 : 22),
+                        isMobile ? 16 : 22,
+                        isMobile ? 16 : (isDesktop ? 28 : 22),
+                        isMobile ? 20 : 28,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _AboutHeader(l10n: l10n, isMobile: isMobile),
+                          SizedBox(height: isMobile ? 14 : 18),
+                          _AboutIdentityCard(l10n: l10n, isMobile: isMobile),
+                          SizedBox(height: isMobile ? 14 : 18),
+                          _AboutLayout(
+                            isDesktop: isDesktop,
+                            description: _AboutDescriptionCard(l10n: l10n),
+                            features: _AboutFeaturesCard(l10n: l10n),
+                            contact: _AboutContactCard(l10n: l10n),
                           ),
+                          SizedBox(height: isMobile ? 18 : 24),
+                          _AboutFooter(l10n: l10n),
                         ],
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(isMobile ? 20 : 24),
-                        child: Image.asset(
-                          'assets/images/Apple_App_Icon.png',
-                          width: isMobile ? 80 : 100,
-                          height: isMobile ? 80 : 100,
-                          fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// Header — eyebrow + h1 (matches Profil #621 _ProfilHeader).
+// ============================================================================
+class _AboutHeader extends StatelessWidget {
+  final AppLocalizations l10n;
+  final bool isMobile;
+
+  const _AboutHeader({required this.l10n, required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final headlineStyle =
+        (isMobile ? BBType.h1(context) : BBType.display(context)).copyWith(
+          letterSpacing: -0.6,
+          fontWeight: FontWeight.w800,
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'INFO · APLIKACIJA',
+          style: BBType.eyebrow(context).copyWith(color: c.primary),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.aboutTitle,
+          style: headlineStyle,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// Identity card — BbLogo + app name + tagline. Hero accent strip mirrors
+// Profil identity-card pattern (handoff §131).
+// ============================================================================
+class _AboutIdentityCard extends StatelessWidget {
+  final AppLocalizations l10n;
+  final bool isMobile;
+
+  const _AboutIdentityCard({required this.l10n, required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final rd = BbRedesignTokens.of(context);
+    final nameStyle = (isMobile ? BBType.h1(context) : BBType.display(context))
+        .copyWith(
+          color: c.textPrimary,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.6,
+        );
+
+    return BbCard(
+      padded: false,
+      child: ClipRRect(
+        borderRadius: BBRadius.mdAll,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              height: 6,
+              decoration: BoxDecoration(gradient: rd.heroGradient),
+            ),
+            Padding(
+              padding: EdgeInsets.all(isMobile ? 18 : 24),
+              child: isMobile
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const BbLogo(size: 56),
+                        const SizedBox(height: 14),
+                        Text(l10n.aboutAppName, style: nameStyle),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.aboutTagline,
+                          style: BBType.bodyLg(
+                            context,
+                          ).copyWith(color: c.textSecondary, height: 1.45),
                         ),
-                      ),
+                      ],
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const BbLogo(size: 72),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.aboutAppName, style: nameStyle),
+                              const SizedBox(height: 6),
+                              Text(
+                                l10n.aboutTagline,
+                                style: BBType.bodyLg(context).copyWith(
+                                  color: c.textSecondary,
+                                  height: 1.45,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: isMobile ? 20 : 24),
-
-                    // App Name
-                    Text(
-                      l10n.aboutAppName,
-                      style: TextStyle(
-                        fontSize: isMobile ? 28 : 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: isMobile ? 8 : 12),
-
-                    // App Tagline - centered
-                    Text(
-                      l10n.aboutTagline,
-                      style: TextStyle(
-                        fontSize: isMobile ? 15 : 17,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: isMobile ? 24 : 32),
-
-              // What is BookBed
-              _InfoCard(
-                title: l10n.aboutWhatIs,
-                icon: Icons.info_outline,
-                isDark: isDark,
-                isMobile: isMobile,
-                child: Text(
-                  l10n.aboutDescription,
-                  style: TextStyle(
-                    fontSize: isMobile ? 14 : 16,
-                    height: 1.6,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                  ),
-                ),
-              ),
-              SizedBox(height: isMobile ? 16 : 20),
-
-              // Key Features
-              _InfoCard(
-                title: l10n.aboutKeyFeatures,
-                icon: Icons.star_outline,
-                isDark: isDark,
-                isMobile: isMobile,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _FeatureItem(
-                      icon: Icons.calendar_today,
-                      title: l10n.aboutFeatureCalendar,
-                      description: l10n.aboutFeatureCalendarDesc,
-                      isMobile: isMobile,
-                    ),
-                    const SizedBox(height: 12),
-                    _FeatureItem(
-                      icon: Icons.book_online,
-                      title: l10n.aboutFeatureBookings,
-                      description: l10n.aboutFeatureBookingsDesc,
-                      isMobile: isMobile,
-                    ),
-                    const SizedBox(height: 12),
-                    _FeatureItem(
-                      icon: Icons.sync,
-                      title: l10n.aboutFeatureIcal,
-                      description: l10n.aboutFeatureIcalDesc,
-                      isMobile: isMobile,
-                    ),
-                    const SizedBox(height: 12),
-                    _FeatureItem(
-                      icon: Icons.payment,
-                      title: l10n.aboutFeaturePayments,
-                      description: l10n.aboutFeaturePaymentsDesc,
-                      isMobile: isMobile,
-                    ),
-                    const SizedBox(height: 12),
-                    _FeatureItem(
-                      icon: Icons.analytics,
-                      title: l10n.aboutFeatureAnalytics,
-                      description: l10n.aboutFeatureAnalyticsDesc,
-                      isMobile: isMobile,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: isMobile ? 16 : 20),
-
-              // Contact & Support
-              _InfoCard(
-                title: l10n.aboutContactSupport,
-                icon: Icons.contact_support_outlined,
-                isDark: isDark,
-                isMobile: isMobile,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _ContactItem(
-                      icon: Icons.email_outlined,
-                      label: l10n.aboutEmailLabel,
-                      value: 'info@bookbed.io',
-                      isMobile: isMobile,
-                    ),
-                    const SizedBox(height: 12),
-                    _ContactItem(
-                      icon: Icons.language,
-                      label: l10n.aboutWebsiteLabel,
-                      value: 'bookbed.io',
-                      isMobile: isMobile,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: isMobile ? 24 : 32),
-
-              // Copyright
-              Center(
-                child: Text(
-                  l10n.aboutCopyright,
-                  style: TextStyle(
-                    fontSize: isMobile ? 12 : 14,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// Info Card Widget
-class _InfoCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final bool isDark;
-  final bool isMobile;
-  final Widget child;
+// ============================================================================
+// "Što je BookBed" — description prose in a BbCard.
+// ============================================================================
+class _AboutDescriptionCard extends StatelessWidget {
+  final AppLocalizations l10n;
 
-  const _InfoCard({
-    required this.title,
-    required this.icon,
-    required this.isDark,
-    required this.isMobile,
-    required this.child,
-  });
+  const _AboutDescriptionCard({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
-        border: Border.all(
-          color: context.gradients.sectionBorder.withAlpha((0.5 * 255).toInt()),
-        ),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      padding: EdgeInsets.all(isMobile ? 16 : 20),
+    final c = BBColor.of(context);
+    return BbCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(isMobile ? 8 : 10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  icon,
-                  color: theme.colorScheme.primary,
-                  size: isMobile ? 20 : 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
+          BbSectionHeader(
+            title: l10n.aboutWhatIs,
+            level: BbSectionHeaderLevel.h3,
           ),
-          SizedBox(height: isMobile ? 12 : 16),
-          child,
+          Text(
+            l10n.aboutDescription,
+            style: BBType.body(
+              context,
+            ).copyWith(color: c.textSecondary, height: 1.6),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Feature Item Widget
-class _FeatureItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-  final bool isMobile;
+// ============================================================================
+// "Ključne značajke" — feature rows with BbIcon + title + description.
+// ============================================================================
+class _AboutFeaturesCard extends StatelessWidget {
+  final AppLocalizations l10n;
 
-  const _FeatureItem({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.isMobile,
-  });
+  const _AboutFeaturesCard({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final features = <_FeatureSpec>[
+      _FeatureSpec(
+        icon: 'calendar_today',
+        title: l10n.aboutFeatureCalendar,
+        description: l10n.aboutFeatureCalendarDesc,
+      ),
+      _FeatureSpec(
+        icon: 'book_online',
+        title: l10n.aboutFeatureBookings,
+        description: l10n.aboutFeatureBookingsDesc,
+      ),
+      _FeatureSpec(
+        icon: 'sync',
+        title: l10n.aboutFeatureIcal,
+        description: l10n.aboutFeatureIcalDesc,
+      ),
+      _FeatureSpec(
+        icon: 'payments',
+        title: l10n.aboutFeaturePayments,
+        description: l10n.aboutFeaturePaymentsDesc,
+      ),
+      _FeatureSpec(
+        icon: 'analytics',
+        title: l10n.aboutFeatureAnalytics,
+        description: l10n.aboutFeatureAnalyticsDesc,
+      ),
+    ];
+
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BbSectionHeader(
+            title: l10n.aboutKeyFeatures,
+            level: BbSectionHeaderLevel.h3,
+          ),
+          for (int i = 0; i < features.length; i++) ...[
+            if (i > 0) const SizedBox(height: BBSpace.sm),
+            _FeatureRow(spec: features[i]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureSpec {
+  final String icon;
+  final String title;
+  final String description;
+
+  const _FeatureSpec({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+}
+
+class _FeatureRow extends StatelessWidget {
+  final _FeatureSpec spec;
+
+  const _FeatureRow({required this.spec});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: isMobile ? 20 : 22, color: theme.colorScheme.primary),
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: c.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(BBRadius.sm),
+          ),
+          alignment: Alignment.center,
+          child: BbIcon(name: spec.icon, size: 18, color: c.primary),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
-                style: TextStyle(
-                  fontSize: isMobile ? 14 : 15,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface,
-                ),
+                spec.title,
+                style: BBType.label(
+                  context,
+                ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 2),
               Text(
-                description,
-                style: TextStyle(
-                  fontSize: isMobile ? 13 : 14,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                ),
+                spec.description,
+                style: BBType.caption(
+                  context,
+                ).copyWith(color: c.textSecondary, height: 1.5),
               ),
             ],
           ),
@@ -324,52 +354,176 @@ class _FeatureItem extends StatelessWidget {
   }
 }
 
-/// Contact Item Widget
-class _ContactItem extends StatelessWidget {
-  final IconData icon;
+// ============================================================================
+// "Kontakt i podrška" — email + website as BbButton(tertiary) + BbIcon.
+// External-link launching via existing url_launcher API.
+// ============================================================================
+class _AboutContactCard extends StatelessWidget {
+  final AppLocalizations l10n;
+
+  const _AboutContactCard({required this.l10n});
+
+  Future<void> _launch(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BbSectionHeader(
+            title: l10n.aboutContactSupport,
+            level: BbSectionHeaderLevel.h3,
+          ),
+          _ContactRow(
+            label: l10n.aboutEmailLabel,
+            value: 'info@bookbed.io',
+            icon: 'mail',
+            actionIcon: 'open_in_new',
+            onTap: () => _launch('mailto:info@bookbed.io'),
+          ),
+          const SizedBox(height: BBSpace.xs),
+          Divider(height: 1, color: c.border.withValues(alpha: 0.6)),
+          const SizedBox(height: BBSpace.xs),
+          _ContactRow(
+            label: l10n.aboutWebsiteLabel,
+            value: 'bookbed.io',
+            icon: 'language',
+            actionIcon: 'open_in_new',
+            onTap: () => _launch('https://bookbed.io'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactRow extends StatelessWidget {
   final String label;
   final String value;
-  final bool isMobile;
+  final String icon;
+  final String actionIcon;
+  final VoidCallback onTap;
 
-  const _ContactItem({
-    required this.icon,
+  const _ContactRow({
     required this.label,
     required this.value,
-    required this.isMobile,
+    required this.icon,
+    required this.actionIcon,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = BBColor.of(context);
     return Row(
       children: [
-        Icon(
-          icon,
-          size: isMobile ? 18 : 20,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-        ),
+        BbIcon(name: icon, size: 18, color: c.textTertiary),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: isMobile ? 12 : 13,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: BBType.caption(context).copyWith(color: c.textTertiary),
               ),
-            ),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: isMobile ? 14 : 15,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: BBType.body(
+                  context,
+                ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+        BbButton(
+          variant: BbButtonVariant.tertiary,
+          size: BbButtonSize.sm,
+          asIcon: true,
+          iconLeft: actionIcon,
+          onPressed: onTap,
+          semanticLabel: '$label · $value',
         ),
       ],
+    );
+  }
+}
+
+// ============================================================================
+// Layout — desktop: 2-col (description + features | contact);
+//          mobile/tablet: single column.
+// ============================================================================
+class _AboutLayout extends StatelessWidget {
+  final bool isDesktop;
+  final Widget description;
+  final Widget features;
+  final Widget contact;
+
+  const _AboutLayout({
+    required this.isDesktop,
+    required this.description,
+    required this.features,
+    required this.contact,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isDesktop) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [description, const SizedBox(height: 18), features],
+            ),
+          ),
+          const SizedBox(width: 24),
+          Expanded(child: contact),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        description,
+        const SizedBox(height: 16),
+        features,
+        const SizedBox(height: 16),
+        contact,
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// Footer — copyright with tabular figures so the year aligns cleanly.
+// ============================================================================
+class _AboutFooter extends StatelessWidget {
+  final AppLocalizations l10n;
+
+  const _AboutFooter({required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Center(
+      child: Text(
+        l10n.aboutCopyright,
+        style: BBType.bodyNum(
+          context,
+        ).copyWith(color: c.textTertiary, fontSize: 12),
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }

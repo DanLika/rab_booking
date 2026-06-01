@@ -76,6 +76,7 @@
 - [cutover-dryrun-2026-05-30/runbook.md](./audit/cutover-dryrun-2026-05-30/runbook.md) — full ledger + 4a/4b/4c/4d phase logs + IAM re-grant script (2026-05-30)
 - [103-redesign-tokens-primitives-shell](./audit/103-redesign-tokens-primitives-shell.md) — Phase 1 foundation (PR #611) + §Amendment Phase 1.7 `BbAdminDarkTokens` deep-purple admin shellBg `#1E1A33` ThemeExtension (PR #643, additive — owner light+dark untouched, isolation-guard tests enforce, 2026-06-01)
 - [106-qa-visual-regression](./audit/106-qa-visual-regression-2026-06-01.md) — 12 Phase 2 screens, 0 UNINT drift, 1 BLOCKED (Widget Confirmation Navigator.push), 1 product Q (Pregled KPI tile content swap) (2026-06-01)
+- 🟡 [107-security-audit](./audit/107-security-audit-2026-06-01.md) — multi-agent sweep on `main @ 866cc823`; F-107-01 HIGH `widget_secrets` `affectedKeys` gap + F-107-02 MED CORS 5 callables (audit/89 follow-up) + F-107-03 MED widget surface minimal CSP; 9 NEW + 4 KNOWN-OPEN + 25 verified-closed (2026-06-01)
 
 ---
 

@@ -16,6 +16,7 @@ import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../widgets/owner_app_drawer.dart';
 
 /// Stripe Connect setup screen for property owners
@@ -362,32 +363,36 @@ class _StripeConnectSetupScreenState
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Status-based styling
-    Color statusColor;
+    // Status-based composition — semantic mapping into BbBookingStatus
+    // (Stripe Connect lifecycle ≅ booking lifecycle for badge tone)
     IconData statusIcon;
+    BbBookingStatus badgeStatus;
     String statusTitle;
     String statusDescription;
     String? actionLabel;
+    String? actionIcon;
     VoidCallback? actionOnPressed;
 
     if (_isConnected) {
-      statusColor = const Color(0xFF4CAF50);
       statusIcon = Icons.check_circle;
+      badgeStatus = BbBookingStatus.confirmed;
       statusTitle = l10n.stripeActive;
       statusDescription = l10n.stripeActiveDesc;
     } else if (_isIncomplete) {
-      statusColor = const Color(0xFFFFA726);
       statusIcon = Icons.pending;
+      badgeStatus = BbBookingStatus.pending;
       statusTitle = l10n.stripeSetupInProgress;
       statusDescription = l10n.stripeSetupInProgressDesc;
       actionLabel = l10n.stripeFinishSetup;
+      actionIcon = 'arrow_forward';
       actionOnPressed = _isConnecting ? null : _connectStripeAccount;
     } else {
-      statusColor = theme.colorScheme.primary;
       statusIcon = Icons.payment;
+      badgeStatus = BbBookingStatus.cancelled;
       statusTitle = l10n.stripeNotConnected;
       statusDescription = l10n.stripeNotConnectedDesc;
       actionLabel = l10n.stripeConnectAccount;
+      actionIcon = 'link';
       actionOnPressed = _isConnecting ? null : _connectStripeAccount;
     }
 
@@ -418,27 +423,12 @@ class _StripeConnectSetupScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withAlpha((0.9 * 255).toInt()),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              statusTitle,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: BbStatusBadge(
+                          status: badgeStatus,
+                          label: statusTitle,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -491,70 +481,30 @@ class _StripeConnectSetupScreenState
             // Action buttons
             if (actionLabel != null) ...[
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: actionOnPressed,
-                  icon: _isConnecting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Icon(
-                          _isIncomplete ? Icons.arrow_forward : Icons.link,
-                          size: 20,
-                        ),
-                  label: Text(
-                    actionLabel,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: theme.colorScheme.primary,
-                    // Keep same colors when disabled (loading state)
-                    disabledBackgroundColor: Colors.white,
-                    disabledForegroundColor: theme.colorScheme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
+              BbButton(
+                label: actionLabel,
+                iconLeft: actionIcon,
+                onPressed: actionOnPressed,
+                variant: BbButtonVariant.onGradientSolid,
+                size: BbButtonSize.lg,
+                fullWidth: true,
+                loading: _isConnecting,
               ),
             ],
 
             // Disconnect button (when connected)
             if (_isConnected) ...[
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _isConnecting
-                      ? null
-                      : () => _confirmDisconnect(context),
-                  icon: const Icon(Icons.link_off, size: 20),
-                  label: Text(
-                    l10n.stripeDisconnect,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    // Keep same color when disabled (loading state)
-                    disabledForegroundColor: Colors.white,
-                    side: BorderSide(
-                      color: Colors.white.withAlpha((0.5 * 255).toInt()),
-                      width: 2,
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
+              BbButton(
+                label: l10n.stripeDisconnect,
+                iconLeft: 'link_off',
+                onPressed: _isConnecting
+                    ? null
+                    : () => _confirmDisconnect(context),
+                variant: BbButtonVariant.onGradient,
+                size: BbButtonSize.lg,
+                fullWidth: true,
+                loading: _isConnecting,
               ),
             ],
           ],
@@ -565,48 +515,31 @@ class _StripeConnectSetupScreenState
 
   Widget _buildBenefitsSection(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final benefits = [
       (
-        Icons.credit_card,
+        'credit_card',
         l10n.stripeReceivePayments,
         l10n.stripeReceivePaymentsDesc,
       ),
-      (Icons.security, l10n.stripeSecurity, l10n.stripeSecurityDesc),
+      ('security', l10n.stripeSecurity, l10n.stripeSecurityDesc),
       (
-        Icons.flash_on,
+        'flash_on',
         l10n.stripeInstantConfirmations,
         l10n.stripeInstantConfirmationsDesc,
       ),
-      (Icons.money_off, l10n.stripeNoHiddenFees, l10n.stripeNoHiddenFeesDesc),
+      ('money_off', l10n.stripeNoHiddenFees, l10n.stripeNoHiddenFeesDesc),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      padding: const EdgeInsets.all(20),
+    return BbCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.star, color: theme.colorScheme.primary, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                l10n.stripeWhyConnect,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          BbSectionHeader(
+            title: l10n.stripeWhyConnect,
+            level: BbSectionHeaderLevel.h3,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           ...benefits.map((b) => _buildBenefitItem(context, b.$1, b.$2, b.$3)),
         ],
       ),
@@ -615,7 +548,7 @@ class _StripeConnectSetupScreenState
 
   Widget _buildBenefitItem(
     BuildContext context,
-    IconData icon,
+    String iconName,
     String title,
     String description,
   ) {
@@ -632,7 +565,7 @@ class _StripeConnectSetupScreenState
               color: theme.colorScheme.primary.withAlpha((0.1 * 255).toInt()),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+            child: BbIcon(name: iconName, color: theme.colorScheme.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -670,54 +603,29 @@ class _StripeConnectSetupScreenState
     final steps = [
       (
         1,
-        Icons.account_circle,
+        'account_circle',
         l10n.stripeGuideStep1Title,
         l10n.stripeGuideStep1Desc,
       ),
       (
         2,
-        Icons.assignment_turned_in,
+        'assignment_turned_in',
         l10n.stripeGuideStep2Title,
         l10n.stripeGuideStep2Desc,
       ),
-      (3, Icons.link, l10n.stripeGuideStep3Title, l10n.stripeGuideStep3Desc),
-      (
-        4,
-        Icons.settings,
-        l10n.stripeGuideStep4Title,
-        l10n.stripeGuideStep4Desc,
-      ),
+      (3, 'link', l10n.stripeGuideStep3Title, l10n.stripeGuideStep3Desc),
+      (4, 'settings', l10n.stripeGuideStep4Title, l10n.stripeGuideStep4Desc),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
+    return BbCard(
+      padded: false,
       child: Column(
         children: [
-          // Header
           Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.checklist,
-                  color: theme.colorScheme.primary,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.stripeGuideHeaderTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: BbSectionHeader(
+              title: l10n.stripeGuideHeaderTitle,
+              level: BbSectionHeaderLevel.h3,
             ),
           ),
           Divider(
@@ -726,7 +634,6 @@ class _StripeConnectSetupScreenState
                 ? AppColors.sectionDividerDark
                 : AppColors.sectionDividerLight,
           ),
-          // Steps
           ...steps.map((s) => _buildStepItem(context, s.$1, s.$2, s.$3, s.$4)),
         ],
       ),
@@ -736,7 +643,7 @@ class _StripeConnectSetupScreenState
   Widget _buildStepItem(
     BuildContext context,
     int number,
-    IconData icon,
+    String iconName,
     String title,
     String description,
   ) {
@@ -776,7 +683,7 @@ class _StripeConnectSetupScreenState
                   ),
                 ),
                 const SizedBox(width: 12),
-                Icon(icon, size: 20, color: theme.colorScheme.primary),
+                BbIcon(name: iconName, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -786,8 +693,8 @@ class _StripeConnectSetupScreenState
                     ),
                   ),
                 ),
-                Icon(
-                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                BbIcon(
+                  name: isExpanded ? 'expand_less' : 'expand_more',
                   color: theme.colorScheme.onSurface.withAlpha(
                     (0.5 * 255).toInt(),
                   ),
@@ -836,27 +743,21 @@ class _StripeConnectSetupScreenState
       (l10n.stripeGuideFaq5Q, l10n.stripeGuideFaq5A),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
+    return BbCard(
+      padded: false,
       child: Column(
         children: [
-          // Header (clickable)
           InkWell(
             onTap: () => setState(() => _showFaq = !_showFaq),
             borderRadius: BorderRadius.circular(16),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.question_answer,
-                    color: theme.colorScheme.primary,
+                  BbIcon(
+                    name: 'question_answer',
                     size: 22,
+                    color: theme.colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -867,15 +768,15 @@ class _StripeConnectSetupScreenState
                       ),
                     ),
                   ),
-                  Icon(
-                    _showFaq ? Icons.expand_less : Icons.expand_more,
+                  BbIcon(
+                    name: _showFaq ? 'expand_less' : 'expand_more',
+                    size: 22,
                     color: theme.colorScheme.primary,
                   ),
                 ],
               ),
             ),
           ),
-          // FAQ items
           if (_showFaq) ...[
             Divider(
               height: 1,

@@ -74,6 +74,7 @@
 - 🟡 [101-vibe-security-delta](./audit/101-vibe-security-delta-2026-05-31.md) — F-101-01/02 returnUrl `startsWith` boundary + SF-073 utils localhost regression (closed PR #609 parallel branch); F-101-03 MED in-memory rate-limit Map multi-instance bypass OPEN (2026-05-31)
 - ✅ [102-prod-cutover](./audit/102-prod-cutover-2026-05-31.md) — PROD cutover at HEAD `3a8b6b66`: CFs+regrant 35/35+OPTIONS 3/3, indexes no-drift, widget HTTP 200, rules+storage 4/4 smoke; **SF-067 PROD `datastore.viewer` IAM confirmed via owner upload+delete on `properties/…png`** (2026-05-31)
 - [cutover-dryrun-2026-05-30/runbook.md](./audit/cutover-dryrun-2026-05-30/runbook.md) — full ledger + 4a/4b/4c/4d phase logs + IAM re-grant script (2026-05-30)
+- [103-redesign-tokens-primitives-shell](./audit/103-redesign-tokens-primitives-shell.md) — Phase 1 foundation (PR #611) + §Amendment Phase 1.7 `BbAdminDarkTokens` deep-purple admin shellBg `#1E1A33` ThemeExtension (PR #643, additive — owner light+dark untouched, isolation-guard tests enforce, 2026-06-01)
 - [106-qa-visual-regression](./audit/106-qa-visual-regression-2026-06-01.md) — 12 Phase 2 screens, 0 UNINT drift, 1 BLOCKED (Widget Confirmation Navigator.push), 1 product Q (Pregled KPI tile content swap) (2026-06-01)
 
 ---

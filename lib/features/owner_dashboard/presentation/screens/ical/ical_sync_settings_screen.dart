@@ -1,42 +1,57 @@
 import 'dart:async';
 
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:auto_size_text/auto_size_text.dart';
+
+import '../../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../../../../../core/utils/async_utils.dart';
-import '../../../../../l10n/app_localizations.dart';
-import '../../../../../core/utils/platform_scroll_physics.dart';
-import '../../../../../shared/providers/repository_providers.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_shadows.dart';
-import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/error_display_utils.dart';
-import '../../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
+import '../../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
+import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/utils/responsive_spacing_helper.dart';
+import '../../../../../l10n/app_localizations.dart';
+import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../../../../shared/widgets/redesign.dart';
 import '../../../domain/models/ical_feed.dart';
 import '../../providers/ical_feeds_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
 import '../../providers/owner_properties_provider.dart';
-
-import '../../widgets/owner_app_drawer.dart';
 import '../../widgets/ical/ical_feed_delete_dialog.dart';
+import '../../widgets/owner_app_drawer.dart';
 
-/// Status indicator colors
-const Color _kStatusActiveColor = Color(0xFF66BB6A);
-const Color _kStatusPausedColor = Color(0xFFFFA726);
-const Color _kStatusErrorColor = Color(0xFFEF5350);
-
-/// Dialog width constraints
 const double _kDialogMaxWidth = 500.0;
 const double _kDialogWidthFactor = 0.9;
 
-/// Screen for managing iCal calendar sync feeds
-/// Redesigned: Premium feel with consistent theme support
+/// iCal import sync — manages external calendar feeds (Booking.com, Airbnb, …).
+///
+/// Refactored onto the redesign Bb* foundation (PR redesign/r3-embed-ical).
+/// Hero card uses the brand-primary gradient + `rd.purpleGlow`; sections use
+/// [BbCard] with [BbSectionHeader]; dialog form swaps to [BbInput] +
+/// [BbSwitch] + [BbButton]. Parent [Scaffold] + [CommonAppBar] +
+/// [OwnerAppDrawer] are deliberately not swapped (deferred to the shell-swap
+/// PR per audit/104).
+///
+/// FROZEN / preserved (per CLAUDE.md NIKADA NE MIJENJAJ + task guard):
+///  - All iCal token logic, RFC 5545 parsing, feed subscription, Adriagate
+///    re-export, token rotation lives in `functions/src/icalSync.ts` and the
+///    `IcalRepository` — UNTOUCHED.
+///  - `icalRepositoryProvider`, `icalFeedsStreamProvider`,
+///    `icalStatisticsProvider`, `ownerUnitsProvider`,
+///    `calendarBookingsProvider` — provider chain preserved verbatim.
+///  - `syncIcalFeedNow` callable invocation + auto-sync ScaffoldMessenger
+///    capture-before-pop pattern — preserved (otherwise snackbar disappears).
+///  - [AndroidKeyboardDismissFixApproach1] mixin + `keyboardFixRebuildKey`
+///    + `KeyedSubtree(ValueKey('ical_sync_settings_screen_$…'))`.
+///  - `PopScope` browser-back handler routing to `/owner/integrations`.
+///  - `IcalFeedDeleteDialog` (separate file) reused for destructive confirm.
+///  - `_checkPlatformMismatch` URL → platform detection logic.
 class IcalSyncSettingsScreen extends ConsumerStatefulWidget {
   const IcalSyncSettingsScreen({super.key});
 
@@ -53,13 +68,13 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   Widget build(BuildContext context) {
     final feedsAsync = ref.watch(icalFeedsStreamProvider);
     final statsAsync = ref.watch(icalStatisticsProvider);
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
 
     return PopScope(
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop) {
-          // Handle browser back button on Chrome Android
           if (context.canPop()) {
             context.pop();
           } else {
@@ -80,24 +95,21 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             currentRoute: 'integrations/ical/import',
           ),
           body: Container(
-            constraints: const BoxConstraints.expand(),
-            decoration: BoxDecoration(
-              gradient: context.gradients.pageBackground,
-            ),
+            color: rd.shellBg,
             child: SafeArea(
               child: RefreshIndicator(
                 onRefresh: () async {
                   ref.invalidate(icalFeedsStreamProvider);
                   ref.invalidate(icalStatisticsProvider);
                 },
-                color: theme.colorScheme.primary,
+                color: c.primary,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final isDesktop = constraints.maxWidth > 900;
                     final isTablet = constraints.maxWidth > 600;
                     final horizontalPadding = isDesktop
                         ? 48.0
-                        : (isTablet ? 32.0 : 16.0);
+                        : (isTablet ? 32.0 : BBSpace.sm);
 
                     return SingleChildScrollView(
                       keyboardDismissBehavior:
@@ -117,140 +129,27 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                               final totalFeeds =
                                   stats['total_feeds'] as int? ?? 0;
                               final hasFeeds = totalFeeds > 0;
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  // Hero Status Card
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      maxWidth: isDesktop
-                                          ? 800.0
-                                          : double.infinity,
-                                    ),
-                                    child: _buildHeroCard(context, stats),
-                                  ),
-                                  const SizedBox(height: 24),
-
-                                  // Desktop: Benefits + FAQ side by side, Feeds below
-                                  if (isDesktop) ...[
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: _buildBenefitsSection(context),
-                                        ),
-                                        const SizedBox(width: 24),
-                                        Expanded(
-                                          child: _buildPlatformInstructions(
-                                            context,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 24),
-                                    if (hasFeeds)
-                                      feedsAsync.when(
-                                        data: (feeds) =>
-                                            _buildFeedsSection(context, feeds),
-                                        loading: () =>
-                                            _buildFeedsLoading(context),
-                                        error: (_, _) =>
-                                            _buildFeedsError(context),
-                                      ),
-                                  ] else ...[
-                                    // Mobile/Tablet: Stack vertically
-                                    _buildBenefitsSection(context),
-                                    const SizedBox(height: 24),
-                                    if (hasFeeds) ...[
-                                      feedsAsync.when(
-                                        data: (feeds) =>
-                                            _buildFeedsSection(context, feeds),
-                                        loading: () =>
-                                            _buildFeedsLoading(context),
-                                        error: (_, _) =>
-                                            _buildFeedsError(context),
-                                      ),
-                                      const SizedBox(height: 24),
-                                    ],
-                                    _buildPlatformInstructions(context),
-                                  ],
-                                  const SizedBox(height: 32),
-                                ],
+                              return _layoutBody(
+                                context: context,
+                                isDesktop: isDesktop,
+                                stats: stats,
+                                hasFeeds: hasFeeds,
+                                feedsAsync: feedsAsync,
                               );
                             },
-                            loading: () => Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: isDesktop
-                                        ? 800.0
-                                        : double.infinity,
-                                  ),
-                                  child: _buildHeroCard(context, null),
-                                ),
-                                const SizedBox(height: 24),
-                                if (isDesktop) ...[
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: _buildBenefitsSection(context),
-                                      ),
-                                      const SizedBox(width: 24),
-                                      Expanded(
-                                        child: _buildPlatformInstructions(
-                                          context,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ] else ...[
-                                  _buildBenefitsSection(context),
-                                  const SizedBox(height: 24),
-                                  _buildPlatformInstructions(context),
-                                ],
-                                const SizedBox(height: 32),
-                              ],
+                            loading: () => _layoutBody(
+                              context: context,
+                              isDesktop: isDesktop,
+                              stats: null,
+                              hasFeeds: false,
+                              feedsAsync: feedsAsync,
                             ),
-                            error: (_, _) => Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth: isDesktop
-                                        ? 800.0
-                                        : double.infinity,
-                                  ),
-                                  child: _buildHeroCard(context, null),
-                                ),
-                                const SizedBox(height: 24),
-                                if (isDesktop) ...[
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: _buildBenefitsSection(context),
-                                      ),
-                                      const SizedBox(width: 24),
-                                      Expanded(
-                                        child: _buildPlatformInstructions(
-                                          context,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ] else ...[
-                                  _buildBenefitsSection(context),
-                                  const SizedBox(height: 24),
-                                  _buildPlatformInstructions(context),
-                                ],
-                                const SizedBox(height: 32),
-                              ],
+                            error: (_, _) => _layoutBody(
+                              context: context,
+                              isDesktop: isDesktop,
+                              stats: null,
+                              hasFeeds: false,
+                              feedsAsync: feedsAsync,
                             ),
                           ),
                         ),
@@ -266,124 +165,147 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     );
   }
 
+  Widget _layoutBody({
+    required BuildContext context,
+    required bool isDesktop,
+    required Map<String, dynamic>? stats,
+    required bool hasFeeds,
+    required AsyncValue<List<IcalFeed>> feedsAsync,
+  }) {
+    final hero = ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: isDesktop ? 800.0 : double.infinity,
+      ),
+      child: _buildHeroCard(context, stats),
+    );
+    final benefits = _buildBenefitsSection(context);
+    final platforms = _buildPlatformInstructions(context);
+    final Widget? feeds = hasFeeds
+        ? feedsAsync.when(
+            data: (feeds) => _buildFeedsSection(context, feeds),
+            loading: () => _buildFeedsLoading(context),
+            error: (_, _) => _buildFeedsError(context),
+          )
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        hero,
+        const SizedBox(height: BBSpace.md),
+        if (isDesktop) ...[
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: benefits),
+                const SizedBox(width: BBSpace.md),
+                Expanded(child: platforms),
+              ],
+            ),
+          ),
+          if (feeds != null) ...[const SizedBox(height: BBSpace.md), feeds],
+        ] else ...[
+          benefits,
+          const SizedBox(height: BBSpace.md),
+          if (feeds != null) ...[feeds, const SizedBox(height: BBSpace.md)],
+          platforms,
+        ],
+        const SizedBox(height: BBSpace.lg),
+      ],
+    );
+  }
+
+  /// Hero — brand-primary gradient surface with status pill, description and
+  /// CTA. Uses [BbRedesignTokens.brandPrimaryGradient] + `rd.purpleGlow` for
+  /// the floating console feel; CTA is a `BbButton(onGradientSolid)`.
   Widget _buildHeroCard(BuildContext context, Map<String, dynamic>? stats) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
 
     final activeFeeds = (stats?['active_feeds'] as int?) ?? 0;
     final errorFeeds = (stats?['error_feeds'] as int?) ?? 0;
     final totalFeeds = (stats?['total_feeds'] as int?) ?? 0;
 
-    Color statusColor;
-    IconData statusIcon;
-    String statusTitle;
-    String statusDescription;
-
-    if (totalFeeds == 0) {
-      statusColor = theme.colorScheme.outline;
-      statusIcon = Icons.sync_disabled;
-      statusTitle = l10n.icalNoFeeds;
-      statusDescription = l10n.icalNoFeedsDescription;
-    } else if (errorFeeds > 0) {
-      statusColor = _kStatusErrorColor;
-      statusIcon = Icons.error;
-      statusTitle = l10n.icalSyncError;
-      statusDescription = l10n.icalSyncErrorCount(errorFeeds, totalFeeds);
-    } else if (activeFeeds > 0) {
-      statusColor = _kStatusActiveColor;
-      statusIcon = Icons.check_circle;
-      statusTitle = l10n.icalSyncActive;
-      statusDescription = l10n.icalSyncActiveCount(activeFeeds);
-    } else {
-      statusColor = _kStatusPausedColor;
-      statusIcon = Icons.pause_circle;
-      statusTitle = l10n.icalAllFeedsPaused;
-      statusDescription = l10n.icalNoActiveFeeds;
-    }
+    final _HeroStatus status = _resolveHeroStatus(
+      totalFeeds: totalFeeds,
+      errorFeeds: errorFeeds,
+      activeFeeds: activeFeeds,
+      l10n: l10n,
+      c: c,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth > 700;
 
+        final iconBackplate = Container(
+          padding: const EdgeInsets.all(BBSpace.sm),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BBRadius.smAll,
+          ),
+          child: Icon(
+            status.icon,
+            size: isDesktop ? 24 : 32,
+            color: Colors.white,
+          ),
+        );
+
+        final statusPill = Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: status.tint.withValues(alpha: 0.9),
+            borderRadius: BBRadius.fullAll,
+          ),
+          child: Text(
+            status.title,
+            style: BBType.caption(
+              context,
+            ).copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
+        );
+
+        final statusBlock = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            statusPill,
+            const SizedBox(height: BBSpace.xs),
+            Text(
+              status.description,
+              style: BBType.body(
+                context,
+              ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
+            ),
+          ],
+        );
+
+        final cta = BbButton(
+          key: const ValueKey('ical_add_feed_button'),
+          label: l10n.icalAddFeedButton,
+          iconLeft: 'add',
+          variant: BbButtonVariant.onGradientSolid,
+          fullWidth: !isDesktop,
+          onPressed: () => _showAddFeedDialog(context),
+        );
+
         return Container(
           decoration: BoxDecoration(
-            gradient: context.gradients.brandPrimary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: isDark
-                ? AppShadows.elevation3Dark
-                : AppShadows.elevation3,
+            gradient: rd.brandPrimaryGradient,
+            borderRadius: BBRadius.mdAll,
+            boxShadow: rd.purpleGlow,
           ),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(BBSpace.md),
           child: isDesktop
               ? Row(
                   children: [
-                    // Status icon
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(statusIcon, size: 24, color: Colors.white),
-                    ),
-                    const SizedBox(width: 16),
-                    // Status info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              statusTitle,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            statusDescription,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // CTA Button - fixed width on desktop
-                    SizedBox(
-                      width: 200,
-                      child: FilledButton.icon(
-                        onPressed: () => _showAddFeedDialog(context),
-                        icon: const Icon(Icons.add, size: 20),
-                        label: Text(
-                          l10n.icalAddFeedButton,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: theme.colorScheme.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
+                    iconBackplate,
+                    const SizedBox(width: BBSpace.sm),
+                    Expanded(child: statusBlock),
+                    const SizedBox(width: BBSpace.sm),
+                    SizedBox(width: 200, child: cta),
                   ],
                 )
               : Column(
@@ -391,74 +313,13 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                   children: [
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            statusIcon,
-                            size: 32,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withValues(alpha: 0.9),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  statusTitle,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                statusDescription,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        iconBackplate,
+                        const SizedBox(width: BBSpace.sm),
+                        Expanded(child: statusBlock),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: () => _showAddFeedDialog(context),
-                        icon: const Icon(Icons.add, size: 20),
-                        label: Text(
-                          l10n.icalAddFeedButton,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: theme.colorScheme.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: BBSpace.sm),
+                    cta,
                   ],
                 ),
         );
@@ -466,94 +327,109 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     );
   }
 
+  _HeroStatus _resolveHeroStatus({
+    required int totalFeeds,
+    required int errorFeeds,
+    required int activeFeeds,
+    required AppLocalizations l10n,
+    required BBColorSet c,
+  }) {
+    if (totalFeeds == 0) {
+      return _HeroStatus(
+        icon: Icons.sync_disabled,
+        tint: c.textTertiary,
+        title: l10n.icalNoFeeds,
+        description: l10n.icalNoFeedsDescription,
+      );
+    }
+    if (errorFeeds > 0) {
+      return _HeroStatus(
+        icon: Icons.error,
+        tint: c.error,
+        title: l10n.icalSyncError,
+        description: l10n.icalSyncErrorCount(errorFeeds, totalFeeds),
+      );
+    }
+    if (activeFeeds > 0) {
+      return _HeroStatus(
+        icon: Icons.check_circle,
+        tint: c.success,
+        title: l10n.icalSyncActive,
+        description: l10n.icalSyncActiveCount(activeFeeds),
+      );
+    }
+    return _HeroStatus(
+      icon: Icons.pause_circle,
+      tint: c.warning,
+      title: l10n.icalAllFeedsPaused,
+      description: l10n.icalNoActiveFeeds,
+    );
+  }
+
   Widget _buildBenefitsSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
-    final benefits = [
-      (Icons.sync_rounded, l10n.icalAutoSync, l10n.icalAutoSyncDesc),
-      (
-        Icons.calendar_today_rounded,
+    final benefits = <_BenefitItem>[
+      _BenefitItem('sync', l10n.icalAutoSync, l10n.icalAutoSyncDesc),
+      _BenefitItem(
+        'calendar_today',
         l10n.icalPreventDoubleBooking,
         l10n.icalPreventDoubleBookingDesc,
       ),
-      (
-        Icons.check_circle_outline_rounded,
+      _BenefitItem(
+        'check_circle',
         l10n.icalCompatibility,
         l10n.icalCompatibilityDesc,
       ),
-      (Icons.security_rounded, l10n.icalSecure, l10n.icalSecureDesc),
+      _BenefitItem('security', l10n.icalSecure, l10n.icalSecureDesc),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
-      padding: const EdgeInsets.all(20),
+    return BbCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.star, color: theme.colorScheme.primary, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                l10n.icalWhySync,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          BbSectionHeader(
+            title: l10n.icalWhySync,
+            level: BbSectionHeaderLevel.h3,
           ),
-          const SizedBox(height: 16),
-          ...benefits.map((b) => _buildBenefitItem(context, b.$1, b.$2, b.$3)),
+          ...benefits.map((b) => _buildBenefitRow(context, b)),
         ],
       ),
     );
   }
 
-  Widget _buildBenefitItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String description,
-  ) {
-    final theme = Theme.of(context);
-
+  Widget _buildBenefitRow(BuildContext context, _BenefitItem item) {
+    final c = BBColor.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: BBSpace.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(BBSpace.xs),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: c.primary.withValues(alpha: 0.1),
+              borderRadius: BBRadius.xsAll,
             ),
-            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+            child: BbIcon(name: item.icon, color: c.primary),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: BBSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  item.title,
+                  style: BBType.body(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  description,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
+                  item.description,
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textSecondary),
                 ),
               ],
             ),
@@ -564,148 +440,81 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 
   Widget _buildFeedsSection(BuildContext context, List<IcalFeed> feeds) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
+    return BbCard(
+      padded: false,
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.rss_feed,
-                  color: theme.colorScheme.primary,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.icalYourFeeds,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${feeds.length}',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.fromLTRB(
+              BBSpace.md,
+              BBSpace.md,
+              BBSpace.md,
+              BBSpace.sm,
+            ),
+            child: BbSectionHeader(
+              title: l10n.icalYourFeeds,
+              level: BbSectionHeaderLevel.h3,
+              count: feeds.length,
             ),
           ),
           if (feeds.isEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.black.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.06),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.rss_feed_rounded,
-                        size: 32,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.icalNoFeedsTitle,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l10n.icalNoFeedsSubtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.6)
-                            : Colors.black.withValues(alpha: 0.55),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+              padding: const EdgeInsets.fromLTRB(
+                BBSpace.md,
+                0,
+                BBSpace.md,
+                BBSpace.md,
+              ),
+              child: BbEmptyState(
+                icon: 'rss_feed',
+                title: l10n.icalNoFeedsTitle,
+                body: l10n.icalNoFeedsSubtitle,
+                compact: true,
               ),
             )
           else ...[
-            Divider(
-              height: 1,
-              color: isDark
-                  ? AppColors.sectionDividerDark
-                  : AppColors.sectionDividerLight,
-            ),
-            ...feeds.map((feed) => _buildFeedItem(context, feed)),
+            Divider(height: 1, color: c.border),
+            ...feeds.map((feed) => _buildFeedRow(context, feed)),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildFeedItem(BuildContext context, IcalFeed feed) {
-    final theme = Theme.of(context);
+  Widget _buildFeedRow(BuildContext context, IcalFeed feed) {
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
-    final statusColor = _getStatusColor(feed.status, theme);
+    final statusColor = _getStatusColor(feed.status, c);
 
     return Column(
       children: [
         ListTile(
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 8,
+            horizontal: BBSpace.md,
+            vertical: BBSpace.xs,
           ),
           leading: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BBRadius.smAll,
             child: Image.asset(
               _getPlatformIconPath(feed.platform),
               width: 50,
               height: 50,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                // Fallback to letter icon
                 return Container(
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BBRadius.smAll,
                   ),
                   child: Center(
                     child: Text(
                       feed.platformDisplayName[0],
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: BBType.h3(context).copyWith(color: statusColor),
                     ),
                   ),
                 );
@@ -716,9 +525,11 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             children: [
               Text(
                 feed.platformDisplayName,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: BBType.body(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: BBSpace.xs),
               Container(
                 width: 8,
                 height: 8,
@@ -730,11 +541,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               const SizedBox(width: 6),
               Text(
                 _getStatusLabel(feed.status, l10n),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: statusColor,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: BBType.caption(
+                  context,
+                ).copyWith(color: statusColor, fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -744,22 +553,18 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               const SizedBox(height: 4),
               Text(
                 l10n.icalLastSynced(feed.getTimeSinceLastSync()),
-                style: theme.textTheme.bodySmall,
+                style: BBType.caption(context).copyWith(color: c.textSecondary),
               ),
               if (!feed.importEnabled)
                 Row(
                   children: [
-                    Icon(
-                      Icons.upload_outlined,
-                      size: 14,
-                      color: Colors.orange.shade600,
-                    ),
+                    BbIcon(name: 'upload', size: 14, color: c.warning),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         l10n.icalImportDisabledWarning,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.orange.shade600,
+                        style: BBType.caption(context).copyWith(
+                          color: c.warning,
                           fontStyle: FontStyle.italic,
                         ),
                         maxLines: 1,
@@ -771,9 +576,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
               if (feed.hasError && feed.lastError != null)
                 Text(
                   l10n.icalErrorPrefix(feed.lastError!),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: _kStatusErrorColor,
-                  ),
+                  style: BBType.caption(context).copyWith(color: c.error),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -820,12 +623,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 value: 'delete',
                 child: Row(
                   children: [
-                    const Icon(Icons.delete, size: 18, color: AppColors.error),
+                    Icon(Icons.delete, size: 18, color: c.error),
                     const SizedBox(width: 8),
-                    Text(
-                      l10n.delete,
-                      style: const TextStyle(color: AppColors.error),
-                    ),
+                    Text(l10n.delete, style: TextStyle(color: c.error)),
                   ],
                 ),
               ),
@@ -834,24 +634,20 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         ),
         Divider(
           height: 1,
-          indent: 20,
-          endIndent: 20,
-          color: theme.brightness == Brightness.dark
-              ? AppColors.sectionDividerDark
-              : AppColors.sectionDividerLight,
+          indent: BBSpace.md,
+          endIndent: BBSpace.md,
+          color: c.border,
         ),
       ],
     );
   }
 
-  /// Get asset path for platform illustrated icon
   String _getPlatformIconPath(IcalPlatform platform) => switch (platform) {
     IcalPlatform.bookingCom => 'assets/images/platforms/booking_icon.png',
     IcalPlatform.airbnb => 'assets/images/platforms/airbnb_icon.png',
     IcalPlatform.other => 'assets/images/platforms/other_sync_icon.png',
   };
 
-  /// Get localized status label
   String _getStatusLabel(IcalStatus status, AppLocalizations l10n) =>
       switch (status) {
         IcalStatus.active => 'Aktivan',
@@ -859,81 +655,55 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         IcalStatus.error => 'Greška',
       };
 
+  Color _getStatusColor(IcalStatus status, BBColorSet c) => switch (status) {
+    IcalStatus.active => c.success,
+    IcalStatus.error => c.error,
+    IcalStatus.paused => c.warning,
+  };
+
   Widget _buildFeedsLoading(BuildContext context) {
-    final theme = Theme.of(context);
-    // Minimalistic: Use black in light mode, white in dark mode
-    final loaderColor = theme.brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black;
-    return Container(
-      padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
+    return const BbCard(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: BBSpace.md),
+        child: Center(child: BbSpinner()),
       ),
-      child: Center(child: CircularProgressIndicator(color: loaderColor)),
     );
   }
 
   Widget _buildFeedsError(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return BbCard(
       child: Center(
         child: Text(
           l10n.icalErrorLoadingFeeds,
-          style: TextStyle(color: theme.colorScheme.error),
+          style: BBType.body(context).copyWith(color: c.error),
         ),
       ),
     );
   }
 
   Widget _buildPlatformInstructions(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final c = BBColor.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: context.gradients.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.gradients.sectionBorder),
-        boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
-      ),
+    return BbCard(
+      padded: false,
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.help_outline,
-                  color: theme.colorScheme.primary,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.icalGuideHeaderTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.fromLTRB(
+              BBSpace.md,
+              BBSpace.md,
+              BBSpace.md,
+              BBSpace.sm,
+            ),
+            child: BbSectionHeader(
+              title: l10n.icalGuideHeaderTitle,
+              level: BbSectionHeaderLevel.h3,
             ),
           ),
-          Divider(
-            height: 1,
-            color: isDark
-                ? AppColors.sectionDividerDark
-                : AppColors.sectionDividerLight,
-          ),
+          Divider(height: 1, color: c.border),
           _buildPlatformItem(
             context,
             0,
@@ -948,11 +718,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           ),
           Divider(
             height: 1,
-            indent: 20,
-            endIndent: 20,
-            color: isDark
-                ? AppColors.sectionDividerDark
-                : AppColors.sectionDividerLight,
+            indent: BBSpace.md,
+            endIndent: BBSpace.md,
+            color: c.border,
           ),
           _buildPlatformItem(context, 1, 'Airbnb', IcalPlatform.airbnb, [
             l10n.icalGuideAirbnb1,
@@ -973,7 +741,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     IcalPlatform platform,
     List<String> steps,
   ) {
-    final theme = Theme.of(context);
+    final c = BBColor.of(context);
     final isExpanded = _expandedPlatform == index;
 
     return Column(
@@ -982,7 +750,10 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           onTap: () =>
               setState(() => _expandedPlatform = isExpanded ? null : index),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: BBSpace.md,
+              vertical: BBSpace.sm,
+            ),
             child: Row(
               children: [
                 ClipOval(
@@ -992,27 +763,23 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                     height: 24,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
-                      // Fallback to generic icon if image fails to load
-                      return Icon(
-                        Icons.sync,
-                        size: 24,
-                        color: theme.colorScheme.primary,
-                      );
+                      return BbIcon(name: 'sync', size: 24, color: c.primary);
                     },
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: BBSpace.sm),
                 Expanded(
                   child: Text(
                     name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: BBType.body(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                Icon(
-                  isExpanded ? Icons.expand_less : Icons.expand_more,
-                  color: theme.colorScheme.primary,
+                BbIcon(
+                  name: isExpanded ? 'expand_less' : 'expand_more',
+                  size: 24,
+                  color: c.primary,
                 ),
               ],
             ),
@@ -1020,7 +787,12 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         ),
         if (isExpanded)
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            padding: const EdgeInsets.fromLTRB(
+              BBSpace.md,
+              0,
+              BBSpace.md,
+              BBSpace.sm,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: steps
@@ -1028,29 +800,28 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                   .entries
                   .map(
                     (e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(bottom: BBSpace.xs),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           CircleAvatar(
                             radius: 10,
-                            backgroundColor: theme.colorScheme.primary,
+                            backgroundColor: c.primary,
                             child: Text(
                               '${e.key + 1}',
-                              style: const TextStyle(
+                              style: BBType.caption(context).copyWith(
                                 color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: BBSpace.xs),
                           Expanded(
                             child: Text(
                               e.value,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                height: 1.4,
-                              ),
+                              style: BBType.caption(
+                                context,
+                              ).copyWith(color: c.textPrimary, height: 1.4),
                             ),
                           ),
                         ],
@@ -1063,12 +834,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
       ],
     );
   }
-
-  Color _getStatusColor(IcalStatus status, ThemeData theme) => switch (status) {
-    IcalStatus.active => _kStatusActiveColor,
-    IcalStatus.error => _kStatusErrorColor,
-    IcalStatus.paused => _kStatusPausedColor,
-  };
 
   void _handleFeedAction(String action, IcalFeed feed) {
     switch (action) {
@@ -1093,7 +858,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   void _syncFeedNow(IcalFeed feed) async {
     final l10n = AppLocalizations.of(context);
 
-    // Check if import is disabled - show warning and skip
     if (!feed.importEnabled) {
       ErrorDisplayUtils.showWarningSnackBar(
         context,
@@ -1118,10 +882,8 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           .call({'feedId': feed.id, 'propertyId': feed.propertyId})
           .withCloudFunctionTimeout('syncIcalFeedNow');
 
-      // FIXED: Check mounted before using ref (widget may be disposed during async call)
       if (!mounted) return;
 
-      // Invalidate providers to refresh UI after sync
       ref.invalidate(icalFeedsStreamProvider);
       ref.invalidate(icalStatisticsProvider);
 
@@ -1166,9 +928,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         feed.propertyId,
         IcalStatus.paused,
       );
-      // FIXED: Check mounted before using ref (widget may be disposed during async call)
       if (mounted) {
-        // Invalidate providers to refresh UI immediately
         ref.invalidate(icalFeedsStreamProvider);
         ref.invalidate(icalStatisticsProvider);
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedPaused);
@@ -1197,9 +957,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         feed.propertyId,
         IcalStatus.active,
       );
-      // FIXED: Check mounted before using ref (widget may be disposed during async call)
       if (mounted) {
-        // Invalidate providers to refresh UI immediately
         ref.invalidate(icalFeedsStreamProvider);
         ref.invalidate(icalStatisticsProvider);
         ErrorDisplayUtils.showSuccessSnackBar(context, l10n.icalFeedResumed);
@@ -1217,7 +975,6 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
 
   void _confirmDeleteFeed(BuildContext context, IcalFeed feed) {
     final l10n = AppLocalizations.of(context);
-    // Use custom styled dialog for deletion confirmation
     showDialog<bool>(
       context: context,
       builder: (dialogContext) => IcalFeedDeleteDialog(
@@ -1232,11 +989,9 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
         );
         try {
           final repository = ref.read(icalRepositoryProvider);
-          // Delete feed and all associated events
           await repository.deleteIcalFeed(feed.id, feed.propertyId);
 
           if (mounted && context.mounted) {
-            // Invalidate providers to refresh UI immediately
             ref.invalidate(icalFeedsStreamProvider);
             ref.invalidate(icalStatisticsProvider);
             ErrorDisplayUtils.showSuccessSnackBar(
@@ -1272,7 +1027,30 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }
 }
 
-/// Dialog for adding/editing iCal feed
+class _HeroStatus {
+  const _HeroStatus({
+    required this.icon,
+    required this.tint,
+    required this.title,
+    required this.description,
+  });
+  final IconData icon;
+  final Color tint;
+  final String title;
+  final String description;
+}
+
+class _BenefitItem {
+  const _BenefitItem(this.icon, this.title, this.description);
+  final String icon;
+  final String title;
+  final String description;
+}
+
+/// Add / edit dialog — refactored chrome (panel surface via
+/// [BbRedesignTokens] + [BbInput] / [BbSwitch] / [BbButton]) while preserving
+/// the dialog flow (centered modal, capture-before-pop snackbar pattern,
+/// `_checkPlatformMismatch` URL detection, repository create/update calls).
 class AddIcalFeedDialog extends ConsumerStatefulWidget {
   final IcalFeed? existingFeed;
   const AddIcalFeedDialog({super.key, this.existingFeed});
@@ -1286,10 +1064,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
   late TextEditingController _icalUrlController;
   late TextEditingController _customPlatformNameController;
   String? _selectedUnitId;
-  String?
-  _selectedPropertyId; // OPTIMIZED: Store property ID to avoid re-reading provider
+  String? _selectedPropertyId;
   IcalPlatform _selectedPlatform = IcalPlatform.bookingCom;
-  bool _importEnabled = true; // Phase 0: Toggle for import/export-only mode
+  bool _importEnabled = true;
   bool _isSaving = false;
   String? _platformMismatchWarning;
 
@@ -1308,14 +1085,12 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
       _selectedPlatform = widget.existingFeed!.platform;
       _importEnabled = widget.existingFeed!.importEnabled;
     }
-    // Check initial URL for platform mismatch AFTER first frame
-    // (context is not ready during initState)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _checkPlatformMismatch();
     });
   }
 
-  /// Check if URL matches selected platform and show warning if not
+  /// Detect platform from URL and warn if it disagrees with the selection.
   void _checkPlatformMismatch() {
     final url = _icalUrlController.text.trim();
     if (url.isEmpty) {
@@ -1324,13 +1099,11 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     }
 
     final detectedPlatform = IcalPlatform.detectFromUrl(url);
-    // No warning if we can't detect the platform or if "other" is selected
     if (detectedPlatform == null || _selectedPlatform == IcalPlatform.other) {
       setState(() => _platformMismatchWarning = null);
       return;
     }
 
-    // Warn if detected platform doesn't match selected platform
     if (detectedPlatform != _selectedPlatform) {
       final l10n = AppLocalizations.of(context);
       setState(() {
@@ -1360,18 +1133,18 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         ? _kDialogMaxWidth
         : screenWidth * _kDialogWidthFactor;
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: const RoundedRectangleBorder(borderRadius: BBRadius.lgAll),
       child: Container(
         decoration: BoxDecoration(
-          color: context.gradients.cardBackground,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: context.gradients.sectionBorder),
-          boxShadow: isDark ? AppShadows.elevation4Dark : AppShadows.elevation4,
+          color: rd.panelBg,
+          borderRadius: BBRadius.lgAll,
+          border: Border.all(color: rd.panelBorder),
+          boxShadow: rd.panelShadow,
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
@@ -1383,156 +1156,27 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.sync,
-                        color: theme.colorScheme.primary,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: AutoSizeText(
-                        widget.existingFeed == null
-                            ? l10n.icalAddFeedTitle
-                            : l10n.icalEditFeedTitle,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        minFontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ),
-              Divider(
-                height: 1,
-                color: isDark
-                    ? AppColors.sectionDividerDark
-                    : AppColors.sectionDividerLight,
-              ),
-              // Content
+              _buildHeader(context, l10n, c),
+              Divider(height: 1, color: c.border),
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(BBSpace.md),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        unitsAsync.when(
-                          data: (units) {
-                            if (units.isEmpty) {
-                              return Text(
-                                l10n.icalNoUnitsCreated,
-                                style: const TextStyle(color: AppColors.error),
-                              );
-                            }
-                            final validUnitId =
-                                units.any((u) => u.id == _selectedUnitId)
-                                ? _selectedUnitId
-                                : null;
-                            return DropdownButtonFormField<String>(
-                              initialValue: validUnitId,
-                              isExpanded: true,
-                              dropdownColor:
-                                  InputDecorationHelper.getDropdownColor(
-                                    context,
-                                  ),
-                              decoration: InputDecorationHelper.buildDecoration(
-                                labelText: l10n.icalSelectUnit,
-                                context: context,
-                              ),
-                              items: units
-                                  .map(
-                                    (unit) => DropdownMenuItem(
-                                      value: unit.id,
-                                      child: Text(
-                                        unit.name,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                final unit = units.firstWhere(
-                                  (u) => u.id == value,
-                                  orElse: () => units
-                                      .first, // Fallback (value always comes from dropdown items)
-                                );
-                                setState(() {
-                                  _selectedUnitId = value;
-                                  _selectedPropertyId = unit.propertyId;
-                                });
-                              },
-                              validator: (value) =>
-                                  (value == null || value.isEmpty)
-                                  ? l10n.icalSelectUnitRequired
-                                  : null,
-                            );
-                          },
-                          loading: () => const CircularProgressIndicator(),
-                          error: (_, _) => Text(l10n.icalErrorLoadingUnits),
-                        ),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<IcalPlatform>(
-                          initialValue: _selectedPlatform,
-                          isExpanded: true,
-                          dropdownColor: InputDecorationHelper.getDropdownColor(
-                            context,
-                          ),
-                          decoration: InputDecorationHelper.buildDecoration(
-                            labelText: l10n.icalPlatform,
-                            context: context,
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: IcalPlatform.bookingCom,
-                              child: Text(l10n.icalPlatformBookingCom),
-                            ),
-                            DropdownMenuItem(
-                              value: IcalPlatform.airbnb,
-                              child: Text(l10n.icalPlatformAirbnb),
-                            ),
-                            DropdownMenuItem(
-                              value: IcalPlatform.other,
-                              child: Text(l10n.icalPlatformOther),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            setState(() => _selectedPlatform = value!);
-                            _checkPlatformMismatch();
-                          },
-                        ),
-                        // Custom platform name field - shown when "Other" is selected
+                        _buildUnitDropdown(context, l10n, unitsAsync),
+                        const SizedBox(height: BBSpace.sm),
+                        _buildPlatformDropdown(context, l10n),
                         if (_selectedPlatform == IcalPlatform.other) ...[
-                          const SizedBox(height: 12),
-                          TextFormField(
+                          const SizedBox(height: BBSpace.sm),
+                          BbInput(
+                            key: const ValueKey('ical_custom_platform_name'),
                             controller: _customPlatformNameController,
-                            decoration: InputDecorationHelper.buildDecoration(
-                              labelText: l10n.icalCustomPlatformName,
-                              hintText: l10n.icalCustomPlatformNameHint,
-                              context: context,
-                            ),
+                            label: l10n.icalCustomPlatformName,
+                            placeholder: l10n.icalCustomPlatformNameHint,
                             validator: (value) {
                               if (_selectedPlatform == IcalPlatform.other &&
                                   (value == null || value.trim().isEmpty)) {
@@ -1542,15 +1186,14 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                             },
                           ),
                         ],
-                        const SizedBox(height: 16),
-                        TextFormField(
+                        const SizedBox(height: BBSpace.sm),
+                        BbInput(
+                          key: const ValueKey('ical_url'),
                           controller: _icalUrlController,
-                          decoration: InputDecorationHelper.buildDecoration(
-                            labelText: l10n.icalUrlLabel,
-                            hintText: l10n.icalUrlHint,
-                            context: context,
-                          ),
-                          maxLines: 2,
+                          label: l10n.icalUrlLabel,
+                          placeholder: l10n.icalUrlHint,
+                          iconLeft: 'link',
+                          keyboardType: TextInputType.url,
                           onChanged: (_) => _checkPlatformMismatch(),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -1563,240 +1206,257 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
                             return null;
                           },
                         ),
-                        // Platform mismatch warning
                         if (_platformMismatchWarning != null) ...[
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: Colors.amber.withValues(alpha: 0.5),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.warning_amber_rounded,
-                                  color: Colors.amber,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _platformMismatchWarning!,
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.amber.shade200
-                                          : Colors.amber.shade900,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          const SizedBox(height: BBSpace.xs),
+                          _buildMismatchBanner(context),
                         ],
-                        // Import enabled toggle (Phase 0: echo loop prevention)
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.black.withValues(alpha: 0.03),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.1)
-                                  : Colors.black.withValues(alpha: 0.08),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          l10n.icalImportEnabled,
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          l10n.icalImportEnabledDescription,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withValues(alpha: 0.7),
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Switch(
-                                    value: _importEnabled,
-                                    onChanged: (value) {
-                                      setState(() => _importEnabled = value);
-                                    },
-                                    activeTrackColor: theme.colorScheme.primary,
-                                    activeThumbColor: Colors.white,
-                                  ),
-                                ],
-                              ),
-                              // Show note when import is disabled
-                              if (!_importEnabled) ...[
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.withValues(
-                                      alpha: 0.15,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(
-                                        Icons.info_outline,
-                                        size: 18,
-                                        color: isDark
-                                            ? Colors.orange.shade300
-                                            : Colors.orange.shade700,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          l10n.icalImportDisabledNote,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: isDark
-                                                ? Colors.orange.shade200
-                                                : Colors.orange.shade900,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
+                        const SizedBox(height: BBSpace.sm),
+                        _buildImportToggle(context, l10n),
                       ],
                     ),
                   ),
                 ),
               ),
-              // Footer
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.dialogFooterDark
-                      : AppColors.dialogFooterLight,
-                  border: Border(
-                    top: BorderSide(
-                      color: isDark
-                          ? AppColors.sectionDividerDark
-                          : AppColors.sectionDividerLight,
-                    ),
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(19),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                          side: BorderSide(
-                            color: isDark
-                                ? AppColors.sectionDividerDark
-                                : AppColors.sectionDividerLight,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: AutoSizeText(
-                          l10n.cancel,
-                          maxLines: 1,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: context.gradients.brandPrimary,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: ElevatedButton(
-                          onPressed: _isSaving ? null : _saveFeed,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            // Keep same colors when disabled (loading state)
-                            disabledBackgroundColor: Colors.transparent,
-                            disabledForegroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : AutoSizeText(
-                                  widget.existingFeed == null
-                                      ? l10n.icalAddFeedButton
-                                      : l10n.save,
-                                  maxLines: 1,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildFooter(context, l10n),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+    BuildContext context,
+    AppLocalizations l10n,
+    BBColorSet c,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(BBSpace.md),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: c.primary.withValues(alpha: 0.1),
+              borderRadius: BBRadius.xsAll,
+            ),
+            child: BbIcon(name: 'sync', color: c.primary),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: AutoSizeText(
+              widget.existingFeed == null
+                  ? l10n.icalAddFeedTitle
+                  : l10n.icalEditFeedTitle,
+              style: BBType.h3(context),
+              maxLines: 1,
+              minFontSize: 14,
+            ),
+          ),
+          const SizedBox(width: BBSpace.xs),
+          BbButton(
+            key: const ValueKey('ical_dialog_close'),
+            iconLeft: 'close',
+            variant: BbButtonVariant.tertiary,
+            size: BbButtonSize.sm,
+            asIcon: true,
+            onPressed: () => Navigator.pop(context),
+            semanticLabel: l10n.cancel,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnitDropdown(
+    BuildContext context,
+    AppLocalizations l10n,
+    AsyncValue<List<dynamic>> unitsAsync,
+  ) {
+    final c = BBColor.of(context);
+    return unitsAsync.when(
+      data: (units) {
+        if (units.isEmpty) {
+          return Text(
+            l10n.icalNoUnitsCreated,
+            style: BBType.body(context).copyWith(color: c.error),
+          );
+        }
+        final validUnitId = units.any((u) => u.id == _selectedUnitId)
+            ? _selectedUnitId
+            : null;
+        return DropdownButtonFormField<String>(
+          initialValue: validUnitId,
+          isExpanded: true,
+          dropdownColor: InputDecorationHelper.getDropdownColor(context),
+          decoration: InputDecorationHelper.buildDecoration(
+            labelText: l10n.icalSelectUnit,
+            context: context,
+          ),
+          items: units
+              .map<DropdownMenuItem<String>>(
+                (unit) => DropdownMenuItem<String>(
+                  value: unit.id as String,
+                  child: Text(
+                    unit.name as String,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            final unit = units.firstWhere(
+              (u) => u.id == value,
+              orElse: () => units.first,
+            );
+            setState(() {
+              _selectedUnitId = value;
+              _selectedPropertyId = unit.propertyId as String;
+            });
+          },
+          validator: (value) => (value == null || value.isEmpty)
+              ? l10n.icalSelectUnitRequired
+              : null,
+        );
+      },
+      loading: () => const Center(child: BbSpinner()),
+      error: (_, _) => Text(l10n.icalErrorLoadingUnits),
+    );
+  }
+
+  Widget _buildPlatformDropdown(BuildContext context, AppLocalizations l10n) {
+    return DropdownButtonFormField<IcalPlatform>(
+      initialValue: _selectedPlatform,
+      isExpanded: true,
+      dropdownColor: InputDecorationHelper.getDropdownColor(context),
+      decoration: InputDecorationHelper.buildDecoration(
+        labelText: l10n.icalPlatform,
+        context: context,
+      ),
+      items: [
+        DropdownMenuItem(
+          value: IcalPlatform.bookingCom,
+          child: Text(l10n.icalPlatformBookingCom),
+        ),
+        DropdownMenuItem(
+          value: IcalPlatform.airbnb,
+          child: Text(l10n.icalPlatformAirbnb),
+        ),
+        DropdownMenuItem(
+          value: IcalPlatform.other,
+          child: Text(l10n.icalPlatformOther),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() => _selectedPlatform = value!);
+        _checkPlatformMismatch();
+      },
+    );
+  }
+
+  Widget _buildMismatchBanner(BuildContext context) {
+    final c = BBColor.of(context);
+    return BbCard(
+      variant: BbCardVariant.accentLeft,
+      accentTone: BbCardAccentTone.error,
+      padding: const EdgeInsets.all(BBSpace.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BbIcon(name: 'warning', color: c.warning),
+          const SizedBox(width: BBSpace.xs),
+          Expanded(
+            child: Text(
+              _platformMismatchWarning!,
+              style: BBType.caption(context).copyWith(color: c.textPrimary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImportToggle(BuildContext context, AppLocalizations l10n) {
+    return BbCard(
+      padding: const EdgeInsets.all(BBSpace.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BbSwitch(
+            value: _importEnabled,
+            onChanged: (value) => setState(() => _importEnabled = value),
+            label: l10n.icalImportEnabled,
+            subtitle: l10n.icalImportEnabledDescription,
+          ),
+          if (!_importEnabled) ...[
+            const SizedBox(height: BBSpace.xs),
+            _buildImportDisabledNote(context, l10n),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImportDisabledNote(BuildContext context, AppLocalizations l10n) {
+    final c = BBColor.of(context);
+    return BbCard(
+      variant: BbCardVariant.accentLeft,
+      accentTone: BbCardAccentTone.info,
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BbIcon(name: 'info', size: 18, color: c.warning),
+          const SizedBox(width: BBSpace.xs),
+          Expanded(
+            child: Text(
+              l10n.icalImportDisabledNote,
+              style: BBType.caption(context).copyWith(color: c.textPrimary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter(BuildContext context, AppLocalizations l10n) {
+    final c = BBColor.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: BBSpace.sm,
+        vertical: BBSpace.sm,
+      ),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: c.border)),
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(BBRadius.lg),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: BbButton(
+              key: const ValueKey('ical_dialog_cancel'),
+              label: l10n.cancel,
+              variant: BbButtonVariant.secondary,
+              fullWidth: true,
+              onPressed: _isSaving ? null : () => Navigator.pop(context),
+            ),
+          ),
+          const SizedBox(width: BBSpace.sm),
+          Expanded(
+            child: BbButton(
+              key: const ValueKey('ical_dialog_save'),
+              label: widget.existingFeed == null
+                  ? l10n.icalAddFeedButton
+                  : l10n.save,
+              iconLeft: _isSaving ? null : 'save',
+              fullWidth: true,
+              loading: _isSaving,
+              onPressed: _isSaving ? null : _saveFeed,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1821,14 +1481,12 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     try {
       final repository = ref.read(icalRepositoryProvider);
 
-      // OPTIMIZED: Use stored _selectedPropertyId instead of re-reading provider
       if (_selectedPropertyId == null) {
         throw StateError('Property ID not set - unit must be selected first');
       }
 
       String feedIdForSync;
 
-      // Get custom platform name only when "other" is selected
       final customName = _selectedPlatform == IcalPlatform.other
           ? _customPlatformNameController.text.trim()
           : null;
@@ -1845,7 +1503,6 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-        // FIX: Capture the created feed ID for auto-sync
         feedIdForSync = await repository.createIcalFeed(newFeed);
       } else {
         final updatedFeed = widget.existingFeed!.copyWith(
@@ -1858,17 +1515,15 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         feedIdForSync = widget.existingFeed!.id;
       }
 
-      // FIXED: Check mounted before using ref (widget may be disposed during async call)
       if (mounted) {
         ref.invalidate(icalFeedsStreamProvider);
         ref.invalidate(icalStatisticsProvider);
 
-        // CRITICAL: Capture l10n and trigger sync BEFORE Navigator.pop()
-        // After pop(), the widget context becomes invalid and _triggerAutoSync fails silently
+        // Capture before pop — context becomes invalid after Navigator.pop(),
+        // so the auto-sync snackbar would silently fail if read post-pop.
         final syncPlatform = _selectedPlatform;
         final syncPropertyId = _selectedPropertyId!;
 
-        // Show success and pop the dialog
         ErrorDisplayUtils.showSuccessSnackBar(
           context,
           widget.existingFeed == null
@@ -1876,14 +1531,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
               : l10n.icalFeedUpdated,
         );
 
-        // FIX: Auto-trigger sync BEFORE Navigator.pop() while context is still valid
-        // This runs in the background - user doesn't need to wait
-        // Skip auto-sync if import is disabled (export-only mode)
         if (_importEnabled) {
           _triggerAutoSync(feedIdForSync, syncPropertyId, syncPlatform);
         }
 
-        // Pop AFTER triggering sync (gives time for snackbar to appear)
         Navigator.pop(context);
       }
     } catch (e) {
@@ -1898,11 +1549,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
     }
   }
 
-  /// Trigger automatic sync after saving a feed (fire-and-forget)
-  /// Shows info snackbar when sync completes or fails
-  ///
-  /// IMPORTANT: Captures ScaffoldMessenger before async to allow snackbars
-  /// even after Navigator.pop() disposes this widget
+  /// Fire-and-forget auto-sync after save. ScaffoldMessenger is captured
+  /// before any await + before [Navigator.pop] so snackbars still surface
+  /// after this widget is disposed.
   void _triggerAutoSync(
     String feedId,
     String propertyId,
@@ -1913,13 +1562,10 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
       tag: 'ICAL_SYNC',
     );
 
-    // CRITICAL: Capture these BEFORE any async/await operations
-    // After Navigator.pop(), context becomes invalid but messenger still works
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
 
-    // Show sync started notification (immediate, before pop)
     messenger.showSnackBar(
       SnackBar(
         content: Text(l10n.icalSyncStarted(platform.displayName)),
@@ -1944,12 +1590,9 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         tag: 'ICAL_SYNC',
       );
 
-      // Invalidate providers to refresh UI after sync
-      // FIXED: Check mounted before using ref (widget may be disposed during async call)
       if (mounted) {
         ref.invalidate(icalFeedsStreamProvider);
         ref.invalidate(icalStatisticsProvider);
-        // Also refresh calendar to show new bookings
         ref.invalidate(calendarBookingsProvider);
       }
 
@@ -1963,7 +1606,6 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         tag: 'ICAL_SYNC',
       );
 
-      // Use captured messenger - works even after widget disposed
       if (success) {
         messenger.showSnackBar(
           SnackBar(
@@ -1985,7 +1627,6 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
       unawaited(
         LoggingService.logError('Auto-sync failed for feed: $feedId', e, stack),
       );
-      // Use captured messenger for error display
       messenger.showSnackBar(
         SnackBar(
           content: Text(l10n.icalSyncErrorMessage),

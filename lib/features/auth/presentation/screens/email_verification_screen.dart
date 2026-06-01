@@ -1,15 +1,35 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../l10n/app_localizations.dart';
+
 import '../../../../core/config/router_owner.dart';
+import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/input_decoration_helper.dart';
-import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/redesign.dart';
 
-/// Email Verification Screen with resend functionality
+/// Email verification screen — refactored onto Bb* redesign primitives (Phase 2 R4-C).
+///
+/// Visual layer rebuilt with [BbLogo], [BbButton] + mail-icon state-mark disc
+/// on a glass card with `BbRedesignTokens.softBg` backdrop — matches the
+/// auth-family pattern established by [ForgotPasswordScreen] (PR #622) and
+/// [EnhancedLoginScreen] (PR #613).
+///
+/// FROZEN / preserved logic:
+///  - `sendEmailVerification` via `enhancedAuthProvider`
+///  - Auto verification-poll `_refreshTimer` (3s)
+///  - Initial 60s `_startInitialCooldown` (Firebase rate limit guard)
+///  - Resend `_startCooldown` (60s post-send)
+///  - Auto-redirect on verified → `OwnerRoutes.overview`
+///  - Email-change dialog flow (`_showResendPasswordDialog`, `_showChangeEmailDialog`)
+///  - `firebase_auth`, network-error suppression, app-lifecycle re-check
 class EmailVerificationScreen extends ConsumerStatefulWidget {
   const EmailVerificationScreen({super.key});
 
@@ -462,6 +482,17 @@ class _EmailVerificationScreenState
     }
   }
 
+  Future<void> _signOutAndReturnToLogin() async {
+    try {
+      await ref.read(enhancedAuthProvider.notifier).signOut();
+    } catch (_) {
+      // Ignore sign out errors
+    }
+    if (mounted) {
+      context.go(OwnerRoutes.login);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(enhancedAuthProvider);
@@ -469,231 +500,238 @@ class _EmailVerificationScreenState
         authState.userModel?.email ??
         authState.firebaseUser?.email ??
         'your email';
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
+    final isCompact = Breakpoints.isCompactMobile(context);
+    final isSmallHeight = MediaQuery.of(context).size.height < 700;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: CommonAppBar(
-        title: AppLocalizations.of(context).authEmailVerificationTitle,
-        leadingIcon: Icons.arrow_back,
-        onLeadingIconTap: (_) async {
-          try {
-            await ref.read(enhancedAuthProvider.notifier).signOut();
-          } catch (e) {
-            // Ignore sign out errors
-          }
-          if (mounted) {
-            this.context.go(OwnerRoutes.login);
-          }
-        },
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // 1. Hero Icon
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.mark_email_unread_outlined,
-                    size: 64,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // 2. Title
-                Text(
-                  AppLocalizations.of(context).authCheckInbox,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-
-                // 3. Description
-                Text(
-                  AppLocalizations.of(context).authEmailVerificationSentTo,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-
-                // 4. Email Chip
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Text(
-                    email,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // 5. Info / Tip Container
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        color: theme.colorScheme.primary,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppLocalizations.of(
-                                context,
-                              ).authClickLinkToVerify,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              AppLocalizations.of(context).authEmailArrivalHint,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // 6. Resend Button (Prominent)
-                SizedBox(
-                  width: 250, // Reduced width
-                  height: 50,
-                  child: FilledButton(
-                    onPressed: _resendCooldown > 0 || _isResending
-                        ? null
-                        : _resendVerificationEmail,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: theme
-                          .colorScheme
-                          .primary, // Explicitly use primary color
-                      foregroundColor: Colors.white, // Explicitly white text
-                      elevation: 2,
-                      shadowColor: theme.colorScheme.primary.withValues(
-                        alpha: 0.3,
-                      ),
-                    ),
-                    child: _isResending
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_resendCooldown > 0)
-                                const Padding(
-                                  padding: EdgeInsets.only(right: 8.0),
-                                  child: Icon(Icons.timer_outlined, size: 18),
-                                ),
-                              Text(
-                                _resendCooldown > 0
-                                    ? AppLocalizations.of(
-                                        context,
-                                      ).authResendInSeconds(_resendCooldown)
-                                    : AppLocalizations.of(
-                                        context,
-                                      ).authResendVerificationEmail,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // 7. Secondary Actions
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: _showChangeEmailDialog,
-                      child: Text(AppLocalizations.of(context).authWrongEmail),
-                    ),
-                    Text(
-                      '•',
-                      style: TextStyle(color: theme.colorScheme.outline),
-                    ),
-                    TextButton(
-                      onPressed: () async {
-                        await ref.read(enhancedAuthProvider.notifier).signOut();
-                        if (mounted) {
-                          this.context.go(OwnerRoutes.login);
-                        }
-                      },
-                      child: Text(AppLocalizations.of(context).authBackToLogin),
-                    ),
-                  ],
-                ),
-              ],
+      body: DecoratedBox(
+        decoration: BoxDecoration(gradient: rd.softBg),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 16 : 24,
+              vertical: 24,
+            ),
+            child: Center(
+              child: _buildGlassCard(
+                context,
+                rd,
+                c,
+                l10n,
+                email,
+                isCompact,
+                isSmallHeight,
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  /// Glass card surface (BackdropFilter + glassBg/glassBorder tokens) —
+  /// mirrors [ForgotPasswordScreen._buildGlassCard].
+  Widget _buildGlassCard(
+    BuildContext context,
+    BbRedesignTokens rd,
+    BBColorSet c,
+    AppLocalizations l10n,
+    String email,
+    bool isCompact,
+    bool isSmallHeight,
+  ) {
+    final cardPadding = isSmallHeight
+        ? const EdgeInsets.all(BBSpace.sm)
+        : EdgeInsets.all(isCompact ? BBSpace.md : 36);
+
+    final card = ClipRRect(
+      borderRadius: BBRadius.lgAll,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: rd.glassBg,
+            border: Border.all(color: rd.glassBorder),
+            borderRadius: BBRadius.lgAll,
+            boxShadow: rd.panelShadow,
+          ),
+          padding: cardPadding,
+          child: _buildContent(c, l10n, email, isCompact, isSmallHeight),
+        ),
+      ),
+    );
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 440),
+      child: card,
+    );
+  }
+
+  Widget _buildContent(
+    BBColorSet c,
+    AppLocalizations l10n,
+    String email,
+    bool isCompact,
+    bool isSmallHeight,
+  ) {
+    final logoSize = isSmallHeight ? 48.0 : (isCompact ? 52.0 : 56.0);
+    final discSize = isSmallHeight ? 56.0 : 64.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 1. Auth-family branding — BbLogo
+        Center(child: BbLogo(size: logoSize, useGradient: false)),
+        SizedBox(height: isSmallHeight ? 12 : 16),
+
+        // 2. Mail-icon state-mark disc (primary tint)
+        Center(
+          child: Container(
+            width: discSize,
+            height: discSize,
+            decoration: BoxDecoration(
+              color: c.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.mark_email_unread_outlined,
+              size: discSize * 0.5,
+              color: c.primary,
+            ),
+          ),
+        ),
+        SizedBox(height: isSmallHeight ? 14 : 18),
+
+        // 3. h1 title
+        Text(
+          l10n.authCheckInbox,
+          style: BBType.h1(context).copyWith(color: c.textPrimary),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 6),
+
+        // 4. body subtitle
+        Text(
+          l10n.authEmailVerificationSentTo,
+          style: BBType.body(
+            context,
+          ).copyWith(color: c.textSecondary, height: 1.55),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 12),
+
+        // 5. Email chip
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: c.surfaceVariant,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: c.border),
+            ),
+            child: Text(
+              email,
+              style: BBType.body(
+                context,
+              ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+        SizedBox(height: isSmallHeight ? 18 : 24),
+
+        // 6. Info tip — click-link + arrival hint
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: c.surface,
+            borderRadius: BBRadius.smAll,
+            border: Border.all(color: c.border),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline_rounded, color: c.primary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.authClickLinkToVerify,
+                      style: BBType.label(
+                        context,
+                      ).copyWith(color: c.textPrimary),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.authEmailArrivalHint,
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: c.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: isSmallHeight ? 18 : 24),
+
+        // 7. Resend button (primary, full-width)
+        BbButton(
+          key: const ValueKey('email_verification_resend'),
+          label: l10n.authResendVerificationEmail,
+          iconLeft: 'send',
+          size: BbButtonSize.lg,
+          fullWidth: true,
+          loading: _isResending,
+          disabled: _resendCooldown > 0,
+          onPressed: _resendVerificationEmail,
+        ),
+
+        // 8. Cooldown countdown — BBType.bodyNum (tabular)
+        if (_resendCooldown > 0) ...[
+          const SizedBox(height: 10),
+          Center(
+            child: Text(
+              l10n.authResendInSeconds(_resendCooldown),
+              style: BBType.bodyNum(
+                context,
+              ).copyWith(color: c.textTertiary, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+        SizedBox(height: isSmallHeight ? 12 : 16),
+
+        // 9. Wrong-email — tertiary
+        Center(
+          child: BbButton(
+            key: const ValueKey('email_verification_change_email'),
+            label: l10n.authWrongEmail,
+            variant: BbButtonVariant.tertiary,
+            onPressed: _showChangeEmailDialog,
+          ),
+        ),
+        const SizedBox(height: 2),
+
+        // 10. Back to login — tertiary
+        Center(
+          child: BbButton(
+            key: const ValueKey('email_verification_back_to_login'),
+            label: l10n.authBackToLogin,
+            iconLeft: 'arrow_back',
+            variant: BbButtonVariant.tertiary,
+            onPressed: _signOutAndReturnToLogin,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-
-import '../../../../core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../data/admin_users_repository.dart';
+import 'admin_shell_screen.dart';
+import 'package:bookbed/shared/widgets/redesign.dart';
 
-/// Responsive breakpoint for mobile layout
 const double _mobileBreakpoint = 800.0;
 const double _tabletBreakpoint = 1100.0;
 
-/// Admin dashboard with stats overview
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
 
@@ -20,6 +21,7 @@ class AdminDashboardScreen extends ConsumerWidget {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < _mobileBreakpoint;
     final isTablet = width >= _mobileBreakpoint && width < _tabletBreakpoint;
+    final palette = _DashboardPalette.of(context, ref);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -28,24 +30,15 @@ class AdminDashboardScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Section
-            Text(
-              'Dashboard Overview',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
+            const BbSectionHeader(title: 'Dashboard Overview'),
+            const SizedBox(height: 4),
             Text(
               'Welcome back! Here is what\'s happening with your platform.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+              style: BBType.body(
+                context,
+              ).copyWith(color: palette.textSecondary),
             ),
-
             const SizedBox(height: 32),
-
-            // Stats Grid
             statsAsync.when(
               data: (stats) {
                 final totalOwners = stats['totalOwners'] ?? 0;
@@ -53,40 +46,38 @@ class AdminDashboardScreen extends ConsumerWidget {
                 final premiumUsers = stats['premiumUsers'] ?? 0;
                 final lifetimeUsers = stats['lifetimeUsers'] ?? 0;
 
-                final statsItems = [
+                final statsItems = <_StatItem>[
                   _StatItem(
                     title: 'Total Owners',
                     value: totalOwners.toString(),
                     icon: Icons.people,
-                    color: Colors.blue,
+                    color: AppColors.info,
                   ),
                   _StatItem(
                     title: 'Trial Users',
                     value: trialUsers.toString(),
                     icon: Icons.timer,
-                    color: Colors.orange,
+                    color: AppColors.warning,
                   ),
                   _StatItem(
                     title: 'Premium Users',
                     value: premiumUsers.toString(),
                     icon: Icons.star,
-                    color: Colors.green,
+                    color: AppColors.success,
                   ),
                   _StatItem(
                     title: 'Lifetime Licenses',
                     value: lifetimeUsers.toString(),
                     icon: Icons.verified,
-                    color: Colors.purple,
+                    color: AppColors.primary,
                   ),
                 ];
 
-                // Responsive grid: 2 cols mobile/tablet, 4 cols desktop
                 final availableWidth = width - 48;
                 final columns = (isMobile || isTablet) ? 2 : 4;
                 final totalSpacing = (columns - 1) * 16.0;
                 final itemWidth = (availableWidth - totalSpacing) / columns;
 
-                // Conversion rate
                 final paidUsers = premiumUsers + lifetimeUsers;
                 final conversionRate = totalOwners > 0
                     ? (paidUsers / totalOwners * 100)
@@ -98,28 +89,22 @@ class AdminDashboardScreen extends ConsumerWidget {
                     Wrap(
                       spacing: 16,
                       runSpacing: 16,
-                      children: statsItems.map((item) {
-                        return SizedBox(
-                          width: itemWidth < 140 ? 140 : itemWidth,
-                          child: _StatsCard(item: item),
-                        );
-                      }).toList(),
+                      children: statsItems
+                          .map(
+                            (item) => SizedBox(
+                              width: itemWidth < 140 ? 140 : itemWidth,
+                              child: _StatsCard(item: item, palette: palette),
+                            ),
+                          )
+                          .toList(),
                     ),
                     const SizedBox(height: 32),
-
-                    // Analytics Section
-                    Text(
-                      'Analytics',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    const BbSectionHeader(title: 'Analytics'),
                     const SizedBox(height: 16),
                     Wrap(
                       spacing: 16,
                       runSpacing: 16,
                       children: [
-                        // Conversion rate card
                         SizedBox(
                           width: isMobile ? availableWidth : 280,
                           child: _AnalyticsCard(
@@ -128,10 +113,10 @@ class AdminDashboardScreen extends ConsumerWidget {
                             value: '${conversionRate.toStringAsFixed(1)}%',
                             detail: '$paidUsers of $totalOwners owners',
                             icon: Icons.trending_up,
-                            color: Colors.teal,
+                            color: const Color(0xFF4A90D9),
+                            palette: palette,
                           ),
                         ),
-                        // Recent signups
                         signupsAsync.when(
                           data: (signups) => SizedBox(
                             width: isMobile ? availableWidth : 280,
@@ -142,19 +127,17 @@ class AdminDashboardScreen extends ConsumerWidget {
                               detail:
                                   '${signups['last30Days'] ?? 0} in last 30 days',
                               icon: Icons.person_add,
-                              color: Colors.indigo,
+                              color: AppColors.primary,
+                              palette: palette,
                             ),
                           ),
                           loading: () => SizedBox(
                             width: isMobile ? availableWidth : 280,
                             height: 140,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
+                            child: const Center(child: BbSpinner()),
                           ),
                           error: (_, _) => const SizedBox.shrink(),
                         ),
-                        // Account type distribution
                         SizedBox(
                           width: isMobile ? availableWidth : 280,
                           child: _DistributionCard(
@@ -162,6 +145,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                             trialUsers: trialUsers,
                             premiumUsers: premiumUsers,
                             lifetimeUsers: lifetimeUsers,
+                            palette: palette,
                           ),
                         ),
                       ],
@@ -182,6 +166,45 @@ class AdminDashboardScreen extends ConsumerWidget {
   }
 }
 
+/// Resolves text-tier colors that read correctly in both admin-light and
+/// admin-dark shell modes. Admin shell wraps its child in a [Theme] whose
+/// `colorScheme` follows the `adminDarkModeProvider` toggle. In dark mode we
+/// pull from canonical [BbAdminDarkTokens]; in light mode we fall back to the
+/// shell-provided MD3 `onSurface`/`onSurfaceVariant`.
+class _DashboardPalette {
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textTertiary;
+  final bool isDark;
+
+  const _DashboardPalette({
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textTertiary,
+    required this.isDark,
+  });
+
+  static _DashboardPalette of(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(adminDarkModeProvider);
+    if (isDark) {
+      final t = BbAdminDarkTokens.of(context);
+      return _DashboardPalette(
+        textPrimary: t.textPrimary,
+        textSecondary: t.textSecondary,
+        textTertiary: t.textTertiary,
+        isDark: true,
+      );
+    }
+    final scheme = Theme.of(context).colorScheme;
+    return _DashboardPalette(
+      textPrimary: scheme.onSurface,
+      textSecondary: scheme.onSurfaceVariant,
+      textTertiary: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+      isDark: false,
+    );
+  }
+}
+
 class _StatItem {
   final String title;
   final String value;
@@ -198,27 +221,13 @@ class _StatItem {
 
 class _StatsCard extends StatelessWidget {
   final _StatItem item;
+  final _DashboardPalette palette;
 
-  const _StatsCard({required this.item});
+  const _StatsCard({required this.item, required this.palette});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return BbCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -233,7 +242,8 @@ class _StatsCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             item.value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            style: BBType.h1Num(context).copyWith(
+              color: palette.textPrimary,
               fontWeight: FontWeight.bold,
               height: 1.0,
             ),
@@ -241,8 +251,8 @@ class _StatsCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             item.title,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: BBType.body(context).copyWith(
+              color: palette.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -259,6 +269,7 @@ class _AnalyticsCard extends StatelessWidget {
   final String detail;
   final IconData icon;
   final Color color;
+  final _DashboardPalette palette;
 
   const _AnalyticsCard({
     required this.title,
@@ -267,19 +278,12 @@ class _AnalyticsCard extends StatelessWidget {
     required this.detail,
     required this.icon,
     required this.color,
+    required this.palette,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
-        ),
-      ),
+    return BbCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -300,15 +304,16 @@ class _AnalyticsCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      style: BBType.body(context).copyWith(
+                        color: palette.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: palette.textTertiary),
                     ),
                   ],
                 ),
@@ -318,7 +323,8 @@ class _AnalyticsCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            style: BBType.h1Num(context).copyWith(
+              color: palette.textPrimary,
               fontWeight: FontWeight.bold,
               height: 1.0,
             ),
@@ -326,9 +332,9 @@ class _AnalyticsCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             detail,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: BBType.caption(
+              context,
+            ).copyWith(color: palette.textTertiary),
           ),
         ],
       ),
@@ -341,25 +347,19 @@ class _DistributionCard extends StatelessWidget {
   final int trialUsers;
   final int premiumUsers;
   final int lifetimeUsers;
+  final _DashboardPalette palette;
 
   const _DistributionCard({
     required this.totalOwners,
     required this.trialUsers,
     required this.premiumUsers,
     required this.lifetimeUsers,
+    required this.palette,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
-        ),
-      ),
+    return BbCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -368,26 +368,26 @@ class _DistributionCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  color: AppColors.info.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.pie_chart,
-                  color: Colors.blue,
+                  color: AppColors.info,
                   size: 20,
                 ),
               ),
               const SizedBox(width: 12),
               Text(
                 'Account Distribution',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: BBType.body(context).copyWith(
+                  color: palette.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          // Distribution bar
           if (totalOwners > 0)
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
@@ -398,43 +398,45 @@ class _DistributionCard extends StatelessWidget {
                     if (trialUsers > 0)
                       Expanded(
                         flex: trialUsers,
-                        child: Container(color: Colors.orange),
+                        child: Container(color: AppColors.warning),
                       ),
                     if (premiumUsers > 0)
                       Expanded(
                         flex: premiumUsers,
-                        child: Container(color: Colors.green),
+                        child: Container(color: AppColors.success),
                       ),
                     if (lifetimeUsers > 0)
                       Expanded(
                         flex: lifetimeUsers,
-                        child: Container(color: Colors.purple),
+                        child: Container(color: AppColors.primary),
                       ),
                   ],
                 ),
               ),
             ),
           const SizedBox(height: 12),
-          // Legend
           _DistLegendRow(
-            color: Colors.orange,
+            color: AppColors.warning,
             label: 'Trial',
             count: trialUsers,
             total: totalOwners,
+            palette: palette,
           ),
           const SizedBox(height: 4),
           _DistLegendRow(
-            color: Colors.green,
+            color: AppColors.success,
             label: 'Premium',
             count: premiumUsers,
             total: totalOwners,
+            palette: palette,
           ),
           const SizedBox(height: 4),
           _DistLegendRow(
-            color: Colors.purple,
+            color: AppColors.primary,
             label: 'Lifetime',
             count: lifetimeUsers,
             total: totalOwners,
+            palette: palette,
           ),
         ],
       ),
@@ -447,12 +449,14 @@ class _DistLegendRow extends StatelessWidget {
   final String label;
   final int count;
   final int total;
+  final _DashboardPalette palette;
 
   const _DistLegendRow({
     required this.color,
     required this.label,
     required this.count,
     required this.total,
+    required this.palette,
   });
 
   @override
@@ -469,13 +473,16 @@ class _DistLegendRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          label,
+          style: BBType.caption(context).copyWith(color: palette.textSecondary),
+        ),
         const Spacer(),
         Text(
           '$count ($pct%)',
-          style: Theme.of(
+          style: BBType.caption(
             context,
-          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+          ).copyWith(color: palette.textPrimary, fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -492,16 +499,10 @@ class _StatsLoading extends StatelessWidget {
       runSpacing: 16,
       children: List.generate(
         4,
-        (index) => Container(
+        (index) => const SizedBox(
           width: 240,
           height: 140,
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainer.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Center(child: CircularProgressIndicator()),
+          child: BbSkeleton(width: 240, height: 140),
         ),
       ),
     );
@@ -517,38 +518,28 @@ class _StatsError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.error.withValues(alpha: 0.1)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading stats',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            ),
-          ],
+      child: SizedBox(
+        width: 420,
+        child: BbCard(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading stats',
+                style: BBType.h2(context).copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error,
+                style: BBType.caption(context),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              BbButton(label: 'Retry', iconLeft: 'refresh', onPressed: onRetry),
+            ],
+          ),
         ),
       ),
     );

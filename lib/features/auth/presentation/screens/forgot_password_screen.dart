@@ -1,25 +1,36 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/breakpoints.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
 import '../../../../core/utils/profile_validators.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../widgets/auth_background.dart';
-import '../widgets/auth_logo_icon.dart';
-import '../widgets/glass_card.dart';
-import '../widgets/gradient_auth_button.dart';
-import '../widgets/premium_input_field.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../../../shared/widgets/universal_loader.dart';
 
-/// Forgot password screen
+/// Forgot password screen — refactored onto Bb* redesign primitives (Phase 2B).
 ///
-/// Uses [AndroidKeyboardDismissFixApproach1] mixin to handle the Android Chrome
-/// keyboard dismiss bug (Flutter issue #175074).
+/// Visual layer rebuilt with [BbLogo], [BbInput], [BbButton], [BbEmptyState] +
+/// glass card on auth `softBg` (pale lavender wash) — matches the auth-family
+/// pattern established by [EnhancedLoginScreen] (PR #613 + cleanup #618).
+///
+/// First consumer of Phase 1.1 native [BbInput.validator] (PR #616). The
+/// validator is passed directly; no per-input `FormField<String>` wrap.
+///
+/// FROZEN / preserved logic:
+///  - `sendPasswordResetEmail` via `enhancedAuthProvider.resetPassword`
+///  - Security mask: same response regardless of whether email exists
+///    (Firebase enumeration-resistant behaviour preserved)
+///  - Form-key validation (BbInput's native `validator:` — Phase 1.1)
+///  - [AndroidKeyboardDismissFixApproach1] mixin (per .claude/rules/keyboard-fix.md)
+///  - `resizeToAvoidBottomInset: true`
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -43,11 +54,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
   }
 
   Future<void> _handleResetPassword() async {
+    final l10n = AppLocalizations.of(context);
+
     if (!_formKey.currentState!.validate()) {
-      ErrorDisplayUtils.showErrorSnackBar(
-        context,
-        'Please enter a valid email address',
-      );
+      ErrorDisplayUtils.showErrorSnackBar(context, l10n.authErrorInvalidEmail);
       return;
     }
 
@@ -59,7 +69,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
           .resetPassword(_emailController.text.trim());
 
       // SECURITY: Firebase sendPasswordResetEmail already returns success
-      // regardless of whether email exists (prevents user enumeration)
+      // regardless of whether email exists (prevents user enumeration).
+      // We mirror that — same success view shown for every submission.
       if (mounted) {
         setState(() {
           _emailSent = true;
@@ -76,9 +87,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
     final isCompact = Breakpoints.isCompactMobile(context);
+    final isSmallHeight = MediaQuery.of(context).size.height < 700;
 
-    // Isti pristup kao Login: resizeToAvoidBottomInset: true
+    // PRISTUP 1 (keyboard-fix.md): resizeToAvoidBottomInset: true + mixin
     return KeyedSubtree(
       key: ValueKey('forgot_password_screen_$keyboardFixRebuildKey'),
       child: Scaffold(
@@ -87,11 +102,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
           alignment:
               Alignment.topLeft, // Explicit to avoid TextDirection null check
           children: [
-            AuthBackground(
+            // Soft auth backdrop (`BbRedesignTokens.softBg`) — pale lavender
+            // wash matching the auth-family convention established by Login
+            // (PR #613 fixup that swapped heroGradient → softBg).
+            Container(
+              decoration: BoxDecoration(gradient: rd.softBg),
               child: SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // Get keyboard height to adjust padding dynamically (with null safety)
                     final mediaQuery = MediaQuery.maybeOf(context);
                     final keyboardHeight =
                         (mediaQuery?.viewInsets.bottom ?? 0.0).clamp(
@@ -100,7 +118,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                         );
                     final isKeyboardOpen = keyboardHeight > 0;
 
-                    // Calculate minHeight safely - ensure it's always finite and valid
                     double minHeight;
                     if (isKeyboardOpen &&
                         constraints.maxHeight.isFinite &&
@@ -112,25 +129,30 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                           ? constraints.maxHeight
                           : 0.0;
                     }
-                    // Ensure minHeight is always finite (never infinity)
                     minHeight = minHeight.isFinite ? minHeight : 0.0;
 
-                    return SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.only(
-                        left: isCompact ? 16 : 24,
-                        right: isCompact ? 16 : 24,
-                        top: 24,
-                        bottom: 24,
-                      ),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: minHeight),
-                        child: Center(
-                          child: GlassCard(
-                            child: _emailSent
-                                ? _buildSuccessView()
-                                : _buildFormView(),
+                    return GestureDetector(
+                      onTap: () => FocusScope.of(context).unfocus(),
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: EdgeInsets.only(
+                          left: isCompact ? 16 : 24,
+                          right: isCompact ? 16 : 24,
+                          top: 24,
+                          bottom: 24,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: minHeight),
+                          child: Center(
+                            child: _buildGlassCard(
+                              context,
+                              rd,
+                              c,
+                              l10n,
+                              isCompact,
+                              isSmallHeight,
+                            ),
                           ),
                         ),
                       ),
@@ -140,179 +162,139 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
               ),
             ),
             if (_isLoading)
-              UniversalLoader.forAuth(message: 'Sending reset link...'),
+              UniversalLoader.forAuth(message: l10n.authSendResetLink),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFormView() {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isCompact = Breakpoints.isCompactMobile(context);
+  /// Glass card surface (BackdropFilter + glassBg/glassBorder tokens).
+  /// `ClipRRect` wraps the blur so the radius clips correctly.
+  Widget _buildGlassCard(
+    BuildContext context,
+    BbRedesignTokens rd,
+    BBColorSet c,
+    AppLocalizations l10n,
+    bool isCompact,
+    bool isSmallHeight,
+  ) {
+    final cardPadding = isSmallHeight
+        ? const EdgeInsets.all(BBSpace.sm)
+        : EdgeInsets.all(isCompact ? BBSpace.md : 36);
+
+    final card = ClipRRect(
+      borderRadius: BBRadius.lgAll,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: rd.glassBg,
+            border: Border.all(color: rd.glassBorder),
+            borderRadius: BBRadius.lgAll,
+            boxShadow: rd.panelShadow,
+          ),
+          padding: cardPadding,
+          child: _emailSent
+              ? _buildSuccessView(c, l10n)
+              : _buildFormView(c, l10n, isCompact, isSmallHeight),
+        ),
+      ),
+    );
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 440),
+      child: card,
+    );
+  }
+
+  Widget _buildFormView(
+    BBColorSet c,
+    AppLocalizations l10n,
+    bool isCompact,
+    bool isSmallHeight,
+  ) {
+    final logoSize = isSmallHeight ? 56.0 : (isCompact ? 60.0 : 64.0);
 
     return Form(
       key: _formKey,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: AuthLogoIcon(
-              size: isCompact ? 70 : 80,
-              isWhite: theme.brightness == Brightness.dark,
-            ),
-          ),
-          SizedBox(height: isCompact ? 16 : 20),
+          Center(child: BbLogo(size: logoSize, useGradient: false)),
+          SizedBox(height: isSmallHeight ? 12 : (isCompact ? 14 : 16)),
           Text(
             l10n.authResetPassword,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: isCompact ? 22 : 26,
-              color: theme.colorScheme.onSurface,
-            ),
+            style: BBType.h1(context).copyWith(color: c.textPrimary),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
           Text(
             l10n.authResetPasswordDesc,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontSize: isCompact ? 13 : 14,
-            ),
+            style: BBType.body(context).copyWith(color: c.textSecondary),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: isCompact ? 24 : 32),
-          PremiumInputField(
+          SizedBox(height: isSmallHeight ? 20 : (isCompact ? 24 : 28)),
+          // Phase 1.1 native `validator:` — NO `FormField<String>` wrap.
+          // Validator runs against live controller text via BbInput's
+          // internal FormField (audit/103 §3).
+          BbInput(
+            key: const ValueKey('forgot_password_email'),
             controller: _emailController,
-            labelText: l10n.email,
-            prefixIcon: Icons.email_outlined,
+            label: l10n.email,
+            iconLeft: 'mail',
+            placeholder: 'ime@primjer.hr',
+            size: BbInputSize.lg,
             keyboardType: TextInputType.emailAddress,
             validator: ProfileValidators.validateEmail,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
-          SizedBox(height: isCompact ? 20 : 24),
-          GradientAuthButton(
-            text: l10n.authSendResetLink,
+          SizedBox(height: isSmallHeight ? 16 : (isCompact ? 20 : 24)),
+          BbButton(
+            key: const ValueKey('forgot_password_submit'),
+            label: l10n.authSendResetLink,
+            iconLeft: 'send',
+            size: BbButtonSize.lg,
+            fullWidth: true,
+            loading: _isLoading,
             onPressed: _handleResetPassword,
-            isLoading: _isLoading,
-            icon: Icons.email_outlined,
           ),
-          SizedBox(height: isCompact ? 16 : 20),
-          _buildBackToLogin(theme, l10n),
+          SizedBox(height: isSmallHeight ? 12 : (isCompact ? 16 : 18)),
+          Center(
+            child: BbButton(
+              key: const ValueKey('forgot_password_back_to_login'),
+              label: l10n.authBackToLogin,
+              iconLeft: 'arrow_back',
+              variant: BbButtonVariant.tertiary,
+              onPressed: () => context.go('/login'),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSuccessView() {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isCompact = Breakpoints.isCompactMobile(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Center(
-          child: Container(
-            width: isCompact ? 72 : 88,
-            height: isCompact ? 72 : 88,
-            decoration: BoxDecoration(
-              color: AppColors.success,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.success.withAlpha(64),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.check_circle_outline,
-              size: isCompact ? 36 : 44,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        SizedBox(height: isCompact ? 20 : 24),
-        Text(
-          l10n.authEmailSent,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: isCompact ? 22 : 26,
-            color: theme.colorScheme.onSurface,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          l10n.authResetEmailSentTo,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontSize: isCompact ? 13 : 14,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          _emailController.text,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.primary,
-            fontSize: isCompact ? 14 : 15,
-            fontWeight: FontWeight.w600,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        SizedBox(height: isCompact ? 24 : 32),
-        GradientAuthButton(
-          text: l10n.authReturnToLogin,
-          onPressed: () => context.go('/login'),
-          icon: Icons.arrow_forward,
-        ),
-        SizedBox(height: isCompact ? 12 : 14),
-        Center(
-          child: TextButton(
-            onPressed: () => setState(() => _emailSent = false),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-            ),
-            child: Text(
-              l10n.authResendEmail,
-              style: TextStyle(
-                fontSize: 13,
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBackToLogin(ThemeData theme, AppLocalizations l10n) {
-    return Center(
-      child: TextButton(
+  /// Success view — `BbEmptyState` with check_circle icon.
+  /// Security mask: shown identically for every submission regardless of
+  /// whether the email exists (Firebase enumeration-resistant).
+  Widget _buildSuccessView(BBColorSet c, AppLocalizations l10n) {
+    return BbEmptyState(
+      icon: 'check_circle',
+      title: l10n.authEmailSent,
+      // Composite body: "We've sent password reset instructions to: <email>".
+      // Inline `_emailController.text` reflects what the user submitted.
+      body: '${l10n.authResetEmailSentTo} ${_emailController.text}',
+      primary: BbEmptyStateAction(
+        label: l10n.authReturnToLogin,
+        iconLeft: 'arrow_forward',
         onPressed: () => context.go('/login'),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.arrow_back, size: 16, color: theme.colorScheme.primary),
-            const SizedBox(width: 6),
-            Text(
-              l10n.authBackToLogin,
-              style: TextStyle(
-                fontSize: 13,
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
       ),
+      secondary: BbEmptyStateAction(
+        label: l10n.authResendEmail,
+        onPressed: () => setState(() => _emailSent = false),
+      ),
+      compact: true,
     );
   }
 }

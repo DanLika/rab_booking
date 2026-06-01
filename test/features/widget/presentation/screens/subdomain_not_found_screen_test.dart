@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bookbed/features/widget/presentation/screens/subdomain_not_found_screen.dart';
+import 'package:bookbed/shared/widgets/redesign.dart';
 import '../../../../helpers/widget_test_helpers.dart';
 
 void main() {
@@ -28,8 +29,12 @@ void main() {
         ),
       );
 
-      // Check for error icon
-      expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+      // Check for error icon (Material Symbols Rounded `search_off`
+      // rendered via BbIcon — see widget-error.jsx 404 state mark).
+      expect(
+        find.byWidgetPredicate((w) => w is BbIcon && w.name == 'search_off'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('displays help section', (tester) async {
@@ -41,7 +46,10 @@ void main() {
 
       // Check for help section
       expect(find.text('Need Help?'), findsOneWidget);
-      expect(find.byIcon(Icons.help_outline_rounded), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((w) => w is BbIcon && w.name == 'help_outline'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('displays explanation text', (tester) async {

@@ -250,3 +250,192 @@ class BbRedesignTokens extends ThemeExtension<BbRedesignTokens> {
     );
   }
 }
+
+/// Admin-console dark deep-purple surfaces (`#1E1A33` family per
+/// `design_handoff/README.md` §148 + `design_handoff/source/admin-shell.jsx`).
+///
+/// Admin chrome is a hybrid: dark deep-purple sidebar over a light body. This
+/// extension carries only the **dark surface** tokens (sidebar, rail, profile
+/// row, ADMIN tag, active nav glow). The light topbar + content surfaces still
+/// resolve via the standard light [ThemeData] / [BbRedesignTokens.light].
+///
+/// **NOT wired into [AppTheme.darkTheme]** — owner dark mode keeps
+/// [BbRedesignTokens.dark]. Admin shells consume this directly via
+/// [BbAdminDarkTokens.preset] or via [BbAdminDarkTokens.of] when the admin
+/// shell wraps a subtree in its own [Theme] that registers this extension.
+@immutable
+class BbAdminDarkTokens extends ThemeExtension<BbAdminDarkTokens> {
+  const BbAdminDarkTokens({
+    required this.shellBg,
+    required this.panelBg,
+    required this.divider,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textTertiary,
+    required this.navTileIdleBg,
+    required this.navTileActiveBg,
+    required this.navTileActiveBorder,
+    required this.navIconActiveGradient,
+    required this.navActiveGlow,
+    required this.adminBadgeBg,
+    required this.adminBadgeFg,
+    required this.profileSecondaryText,
+  });
+
+  /// Deep-purple console surface (`ADM_SB_BG = '#1E1A33'`). Used by sidebar +
+  /// rail. Also the canonical "shell" surface for any future fully-dark admin
+  /// subscreens.
+  final Color shellBg;
+
+  /// Slightly elevated dark surface for cards / panels that sit on [shellBg]
+  /// in a fully-dark admin subscreen. Mirrors the shell↔panel layering in
+  /// [BbRedesignTokens]. Derived as shellBg lifted ~+5% white toward purple.
+  final Color panelBg;
+
+  /// Hairline divider on dark (`ADM_SB_BORDER = 'rgba(255,255,255,0.08)'`).
+  final Color divider;
+
+  /// Primary on-dark text (`#FFFFFF`). Active nav label, sidebar brand title.
+  final Color textPrimary;
+
+  /// Idle on-dark text (`ADM_SB_TXT = 'rgba(255,255,255,0.72)'`). Idle nav
+  /// label, profile name.
+  final Color textSecondary;
+
+  /// Tertiary on-dark text (`rgba(255,255,255,0.40)`). Nav-group uppercase
+  /// labels.
+  final Color textTertiary;
+
+  /// Nav tile idle fill (`rgba(255,255,255,0.06)` full / `0.05` rail).
+  final Color navTileIdleBg;
+
+  /// Nav tile active fill (`rgba(255,255,255,0.08)`).
+  final Color navTileActiveBg;
+
+  /// Nav tile active border (`rgba(255,255,255,0.10)`).
+  final Color navTileActiveBorder;
+
+  /// Active nav icon-tile gradient (`var(--bb-gradient-hero)` — reuses the
+  /// owner brand hero gradient on a dark surface).
+  final LinearGradient navIconActiveGradient;
+
+  /// Purple glow under active nav tile
+  /// (`0 4px 12px / 0 6px 14px rgba(139,111,255,0.40)`).
+  final List<BoxShadow> navActiveGlow;
+
+  /// ADMIN tag pill fill (`rgba(139,111,255,0.28)`).
+  final Color adminBadgeBg;
+
+  /// ADMIN tag pill text (`#C9BBFF`).
+  final Color adminBadgeFg;
+
+  /// Secondary profile-row text (`rgba(255,255,255,0.5)`). Email, role.
+  final Color profileSecondaryText;
+
+  // ----- Preset --------------------------------------------------------------
+
+  /// Canonical admin dark surface set. Hex values transcribed verbatim from
+  /// `design_handoff/source/admin-shell.jsx`.
+  static const BbAdminDarkTokens preset = BbAdminDarkTokens(
+    shellBg: Color(0xFF1E1A33),
+    panelBg: Color(0xFF2A2342), // shellBg lifted ~+5% white (elevated panel)
+    divider: Color(0x14FFFFFF), // rgba(255,255,255,0.08)
+    textPrimary: Color(0xFFFFFFFF),
+    textSecondary: Color(0xB8FFFFFF), // rgba(255,255,255,0.72)
+    textTertiary: Color(0x66FFFFFF), // rgba(255,255,255,0.40)
+    navTileIdleBg: Color(0x0FFFFFFF), // rgba(255,255,255,0.06)
+    navTileActiveBg: Color(0x14FFFFFF), // rgba(255,255,255,0.08)
+    navTileActiveBorder: Color(0x1AFFFFFF), // rgba(255,255,255,0.10)
+    navIconActiveGradient: BBGradient.hero,
+    navActiveGlow: <BoxShadow>[
+      BoxShadow(
+        color: Color(0x668B6FFF), // rgba(139,111,255,0.40)
+        blurRadius: 12,
+        offset: Offset(0, 4),
+      ),
+    ],
+    adminBadgeBg: Color(0x478B6FFF), // rgba(139,111,255,0.28)
+    adminBadgeFg: Color(0xFFC9BBFF),
+    profileSecondaryText: Color(0x80FFFFFF), // rgba(255,255,255,0.5)
+  );
+
+  /// Resolve via the current theme; falls back to [preset] when no admin
+  /// theme is wired (the common case — admin shell is the only consumer).
+  static BbAdminDarkTokens of(BuildContext context) {
+    return Theme.of(context).extension<BbAdminDarkTokens>() ?? preset;
+  }
+
+  @override
+  BbAdminDarkTokens copyWith({
+    Color? shellBg,
+    Color? panelBg,
+    Color? divider,
+    Color? textPrimary,
+    Color? textSecondary,
+    Color? textTertiary,
+    Color? navTileIdleBg,
+    Color? navTileActiveBg,
+    Color? navTileActiveBorder,
+    LinearGradient? navIconActiveGradient,
+    List<BoxShadow>? navActiveGlow,
+    Color? adminBadgeBg,
+    Color? adminBadgeFg,
+    Color? profileSecondaryText,
+  }) {
+    return BbAdminDarkTokens(
+      shellBg: shellBg ?? this.shellBg,
+      panelBg: panelBg ?? this.panelBg,
+      divider: divider ?? this.divider,
+      textPrimary: textPrimary ?? this.textPrimary,
+      textSecondary: textSecondary ?? this.textSecondary,
+      textTertiary: textTertiary ?? this.textTertiary,
+      navTileIdleBg: navTileIdleBg ?? this.navTileIdleBg,
+      navTileActiveBg: navTileActiveBg ?? this.navTileActiveBg,
+      navTileActiveBorder: navTileActiveBorder ?? this.navTileActiveBorder,
+      navIconActiveGradient:
+          navIconActiveGradient ?? this.navIconActiveGradient,
+      navActiveGlow: navActiveGlow ?? this.navActiveGlow,
+      adminBadgeBg: adminBadgeBg ?? this.adminBadgeBg,
+      adminBadgeFg: adminBadgeFg ?? this.adminBadgeFg,
+      profileSecondaryText: profileSecondaryText ?? this.profileSecondaryText,
+    );
+  }
+
+  @override
+  BbAdminDarkTokens lerp(ThemeExtension<BbAdminDarkTokens>? other, double t) {
+    if (other is! BbAdminDarkTokens) return this;
+    return BbAdminDarkTokens(
+      shellBg: Color.lerp(shellBg, other.shellBg, t) ?? shellBg,
+      panelBg: Color.lerp(panelBg, other.panelBg, t) ?? panelBg,
+      divider: Color.lerp(divider, other.divider, t) ?? divider,
+      textPrimary: Color.lerp(textPrimary, other.textPrimary, t) ?? textPrimary,
+      textSecondary:
+          Color.lerp(textSecondary, other.textSecondary, t) ?? textSecondary,
+      textTertiary:
+          Color.lerp(textTertiary, other.textTertiary, t) ?? textTertiary,
+      navTileIdleBg:
+          Color.lerp(navTileIdleBg, other.navTileIdleBg, t) ?? navTileIdleBg,
+      navTileActiveBg:
+          Color.lerp(navTileActiveBg, other.navTileActiveBg, t) ??
+          navTileActiveBg,
+      navTileActiveBorder:
+          Color.lerp(navTileActiveBorder, other.navTileActiveBorder, t) ??
+          navTileActiveBorder,
+      navIconActiveGradient:
+          LinearGradient.lerp(
+            navIconActiveGradient,
+            other.navIconActiveGradient,
+            t,
+          ) ??
+          navIconActiveGradient,
+      navActiveGlow: t < 0.5 ? navActiveGlow : other.navActiveGlow,
+      adminBadgeBg:
+          Color.lerp(adminBadgeBg, other.adminBadgeBg, t) ?? adminBadgeBg,
+      adminBadgeFg:
+          Color.lerp(adminBadgeFg, other.adminBadgeFg, t) ?? adminBadgeFg,
+      profileSecondaryText:
+          Color.lerp(profileSecondaryText, other.profileSecondaryText, t) ??
+          profileSecondaryText,
+    );
+  }
+}

@@ -236,3 +236,68 @@ audit/103-redesign-tokens-primitives-shell.md                    (this file)
 - No `AppTheme` component theme rewritten (only `extensions:` grew by one)
 - `dart format` clean
 - Branch-guard verified before commit (per memory [[multi-agent-git-race]])
+
+---
+
+## Amendment — Phase 1.7 · adminDark token foundation (2026-06-01)
+
+**Branch:** `foundation/phase-1.7-admin-dark`
+**Scope:** Additive token layer only. Zero screen migrations, zero existing-theme mutations.
+
+### Why this amendment
+
+Phase 1 (this audit, §1) deliberately deferred the admin console's dark deep-purple identity (`#1E1A33` per `design_handoff/README.md` §148) so the foundation PR stayed scoped to owner-app surfaces. Phase 2 admin-screen refactors cannot proceed until the dark token surface exists — otherwise each admin screen PR would re-derive the same `ADM_SB_*` hex constants from `design_handoff/source/admin-shell.jsx`, exactly the drift Phase 1 was designed to prevent (§1).
+
+### What landed
+
+- New `BbAdminDarkTokens extends ThemeExtension<BbAdminDarkTokens>` appended to `lib/core/design/bb_redesign_tokens.dart` (same file — keeps all redesign tokens centrally addressable).
+- 14 fields, all hex transcribed verbatim from `design_handoff/source/admin-shell.jsx`:
+  - `shellBg` `#1E1A33` (`ADM_SB_BG`)
+  - `panelBg` `#2A2342` (shellBg lifted ~+5% white — elevated panel layer for future fully-dark admin subscreens)
+  - `divider` `rgba(255,255,255,0.08)` (`ADM_SB_BORDER`)
+  - `textPrimary` `#FFFFFF` / `textSecondary` `rgba(255,255,255,0.72)` (`ADM_SB_TXT`) / `textTertiary` `rgba(255,255,255,0.40)` (nav-group eyebrow)
+  - `navTileIdleBg` / `navTileActiveBg` / `navTileActiveBorder` (`rgba(255,255,255,0.06|0.08|0.10)`)
+  - `navIconActiveGradient` = `BBGradient.hero` (reuses owner purple hero on dark surface)
+  - `navActiveGlow` `[BoxShadow(rgba(139,111,255,0.40), blur 12, dy 4)]`
+  - `adminBadgeBg` `rgba(139,111,255,0.28)` / `adminBadgeFg` `#C9BBFF`
+  - `profileSecondaryText` `rgba(255,255,255,0.5)`
+- Static const `BbAdminDarkTokens.preset` — canonical instance for admin shells to consume.
+- `BbAdminDarkTokens.of(BuildContext)` — Theme-extension resolver with fallback to `preset` (matches `BbRedesignTokens.of` pattern).
+
+### Strictly additive — what was NOT touched
+
+- `AppTheme.lightTheme` extensions list — unchanged.
+- `AppTheme.darkTheme` extensions list — unchanged. Owner dark mode continues to resolve `BbRedesignTokens.dark` (OLED `#000000` shellBg). Admin's deep-purple `#1E1A33` is **not** wired into owner dark — proven by a regression test (`bb_admin_dark_tokens_test.dart` → "AppTheme.darkTheme (owner) does NOT register BbAdminDarkTokens — isolation guard").
+- `BbRedesignTokens` light/dark presets — unchanged. No field added, no field renamed, no value changed.
+- All migrated owner / widget screens — unchanged (full test suite must remain green).
+- No admin shell refactor in this PR. Admin chrome refactor is a separate Phase 2 PR that imports `BbAdminDarkTokens.preset` directly.
+
+### Wiring contract (consumer side)
+
+Admin shell, when built, wraps its dark sidebar / rail subtree in a `Theme(data: ..., extensions: [BbAdminDarkTokens.preset, ...])` so `BbAdminDarkTokens.of(context)` resolves in that subtree. The light topbar + body continue to resolve the outer light theme + `BbRedesignTokens.light`. This mirrors the `theme-light bb-screen` + dark sidebar hybrid shipped in `design_handoff/source/admin-shell.jsx` line 145.
+
+### Test coverage
+
+`test/core/design/bb_admin_dark_tokens_test.dart` covers:
+
+1. `preset.shellBg == #1E1A33` (handoff-verbatim hex)
+2. on-dark contrast tokens (`textPrimary` / `textSecondary` / `textTertiary` / `divider` / `adminBadgeFg`)
+3. `navActiveGlow` is non-empty + carries the purple color
+4. `of(context)` fallback returns `preset` when no admin theme is wired (the default case)
+5. `of(context)` returns the wired instance when a `Theme.extensions` registers one
+6. `copyWith` overrides only the named field; sibling fields unchanged
+7. `lerp` at `t=0` / `t=1` / `t=0.5` — no null deref; non-`BbAdminDarkTokens` other returns `this`
+8. Isolation guard: `AppTheme.darkTheme` MUST NOT register `BbAdminDarkTokens` (would recolor owner dark)
+
+### Verification
+
+- `dart format` on the two touched files — clean
+- `flutter analyze --no-fatal-infos` — 0 errors
+- `flutter test` — full suite green; owner / widget screens MUST NOT recolor (regression-checked by the isolation guard test above)
+
+### Out of scope (deferred to later phases)
+
+- Admin shell composition (`AdminScaffold` / `AdminSidebar` / `AdminRail` / `AdminTopbar`) — Phase 2 admin-shell PR
+- Admin dashboard / users / bookings / payments / sync / support screen refactors — Phase 2 per-screen PRs
+- Admin login (`admin-auth.jsx`) — Phase 2 admin-auth PR
+- Migrating the existing admin chrome (`lib/admin*`) onto these tokens — Phase 2 lift-and-shift PR

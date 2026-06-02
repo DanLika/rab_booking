@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/design/bb_redesign_tokens.dart';
 import '../../../core/design/tokens.dart';
 
 enum BbCardVariant { defaultStyle, flat, accentLeft }
@@ -66,6 +67,10 @@ class _BbCardState extends State<BbCard> {
   @override
   Widget build(BuildContext context) {
     final BBColorSet c = BBColor.of(context);
+    final BbAdminDarkTokens? admin = Theme.of(
+      context,
+    ).extension<BbAdminDarkTokens>();
+    final Color cardSurface = admin?.panelBg ?? c.surface;
     final bool elevated = _hover && _liftEnabled;
     final EdgeInsetsGeometry padding =
         widget.padding ??
@@ -77,7 +82,7 @@ class _BbCardState extends State<BbCard> {
     Widget inner = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: c.surface,
+        color: cardSurface,
         borderRadius: BBRadius.mdAll,
         border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: widget.variant == BbCardVariant.flat

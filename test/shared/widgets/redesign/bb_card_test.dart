@@ -1,3 +1,5 @@
+import 'package:bookbed/core/design/bb_redesign_tokens.dart';
+import 'package:bookbed/core/design/tokens.dart';
 import 'package:bookbed/shared/widgets/redesign/bb_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +10,31 @@ Widget _scaffold(Widget child) {
       body: Padding(padding: const EdgeInsets.all(16), child: child),
     ),
   );
+}
+
+Widget _scaffoldWithTheme(ThemeData theme, Widget child) {
+  return MaterialApp(
+    theme: theme,
+    home: Scaffold(
+      body: Padding(padding: const EdgeInsets.all(16), child: child),
+    ),
+  );
+}
+
+Color _bbCardInnerColor(WidgetTester tester) {
+  final Container card = tester
+      .widgetList<Container>(
+        find.descendant(
+          of: find.byType(BbCard),
+          matching: find.byType(Container),
+        ),
+      )
+      .firstWhere(
+        (Container c) => c.padding == const EdgeInsets.all(20),
+        orElse: () => throw StateError('Padded BbCard container not found'),
+      );
+  final BoxDecoration deco = card.decoration! as BoxDecoration;
+  return deco.color!;
 }
 
 void main() {
@@ -136,6 +163,52 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+  });
+
+  group('BbCard surface resolution (admin/owner discrimination)', () {
+    testWidgets('owner dark context (no BbAdminDarkTokens extension) renders '
+        'BBColor.dark.surface (#121212)', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        _scaffoldWithTheme(
+          ThemeData.dark(useMaterial3: true),
+          const BbCard(child: Text('owner-dark')),
+        ),
+      );
+      expect(_bbCardInnerColor(tester), BBColor.surfaceDark);
+      expect(_bbCardInnerColor(tester), const Color(0xFF121212));
+    });
+
+    testWidgets(
+      'owner light context (no BbAdminDarkTokens extension) renders '
+      'BBColor.light.surface (#FFFFFF) — extension absence keeps owner path',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          _scaffoldWithTheme(
+            ThemeData.light(useMaterial3: true),
+            const BbCard(child: Text('owner-light')),
+          ),
+        );
+        expect(_bbCardInnerColor(tester), BBColor.surfaceLight);
+      },
+    );
+
+    testWidgets('admin context (BbAdminDarkTokens extension wired) renders '
+        'BbAdminDarkTokens.preset.panelBg (#2A2342)', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        _scaffoldWithTheme(
+          ThemeData.dark(useMaterial3: true).copyWith(
+            extensions: const <ThemeExtension<dynamic>>[
+              BbAdminDarkTokens.preset,
+            ],
+          ),
+          const BbCard(child: Text('admin-dark')),
+        ),
+      );
+      expect(_bbCardInnerColor(tester), BbAdminDarkTokens.preset.panelBg);
+      expect(_bbCardInnerColor(tester), const Color(0xFF2A2342));
     });
   });
 }

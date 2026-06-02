@@ -729,21 +729,28 @@ mixin _$UserModel {
   /// User ID (UUID from Firebase Auth)
   String get id => throw _privateConstructorUsedError;
 
-  /// User email address
+  /// User email address.
+  /// Default empty for Firestore docs missing the field (e.g. legacy seed
+  /// rows pre-dating the auth-trigger backfill). Surfaces as a blank email
+  /// in admin UIs rather than crashing the whole list. F-108-01.
   String get email => throw _privateConstructorUsedError;
 
-  /// User's first name
+  /// User's first name. Default empty for legacy docs missing the field.
   @JsonKey(name: 'first_name')
   String get firstName => throw _privateConstructorUsedError;
 
-  /// User's last name
+  /// User's last name. Default empty for legacy docs missing the field.
   @JsonKey(name: 'last_name')
   String get lastName => throw _privateConstructorUsedError;
 
   /// User role (guest, owner, admin)
   UserRole get role => throw _privateConstructorUsedError;
 
-  /// Account type (trial, premium, enterprise)
+  /// Account type (trial, premium, enterprise, lifetime).
+  /// Fail-open decode via [AccountType.fromJson] — unrecognised Firestore
+  /// values fall back to [AccountType.trial] (lowest tier) and are logged
+  /// to Sentry rather than crashing the whole list paint. F-108-04.
+  @JsonKey(fromJson: AccountType.fromJson)
   AccountType get accountType => throw _privateConstructorUsedError;
 
   /// Email verification status
@@ -809,9 +816,14 @@ mixin _$UserModel {
   @JsonKey(name: 'hide_subscription')
   bool get hideSubscription => throw _privateConstructorUsedError;
 
-  /// Admin-controlled: Override account type
-  /// null = use calculated status, otherwise use this value
-  @JsonKey(name: 'admin_override_account_type')
+  /// Admin-controlled: Override account type.
+  /// null = use calculated status, otherwise use this value.
+  /// Fail-open decode (F-108-04): missing/null stays null; an explicit
+  /// unknown value falls back to [AccountType.trial] and logs to Sentry.
+  @JsonKey(
+    name: 'admin_override_account_type',
+    fromJson: AccountType.fromJsonNullable,
+  )
   AccountType? get adminOverrideAccountType =>
       throw _privateConstructorUsedError;
 
@@ -861,7 +873,7 @@ abstract class $UserModelCopyWith<$Res> {
     @JsonKey(name: 'first_name') String firstName,
     @JsonKey(name: 'last_name') String lastName,
     UserRole role,
-    AccountType accountType,
+    @JsonKey(fromJson: AccountType.fromJson) AccountType accountType,
     bool emailVerified,
     String? phone,
     @JsonKey(name: 'avatar_url') String? avatarUrl,
@@ -886,7 +898,10 @@ abstract class $UserModelCopyWith<$Res> {
     List<DeviceInfo> devices,
     List<SecurityEvent> recentSecurityEvents,
     @JsonKey(name: 'hide_subscription') bool hideSubscription,
-    @JsonKey(name: 'admin_override_account_type')
+    @JsonKey(
+      name: 'admin_override_account_type',
+      fromJson: AccountType.fromJsonNullable,
+    )
     AccountType? adminOverrideAccountType,
     Map<String, bool> featureFlags,
     @JsonKey(name: 'profile_completed') bool profileCompleted,
@@ -1094,7 +1109,7 @@ abstract class _$$UserModelImplCopyWith<$Res>
     @JsonKey(name: 'first_name') String firstName,
     @JsonKey(name: 'last_name') String lastName,
     UserRole role,
-    AccountType accountType,
+    @JsonKey(fromJson: AccountType.fromJson) AccountType accountType,
     bool emailVerified,
     String? phone,
     @JsonKey(name: 'avatar_url') String? avatarUrl,
@@ -1119,7 +1134,10 @@ abstract class _$$UserModelImplCopyWith<$Res>
     List<DeviceInfo> devices,
     List<SecurityEvent> recentSecurityEvents,
     @JsonKey(name: 'hide_subscription') bool hideSubscription,
-    @JsonKey(name: 'admin_override_account_type')
+    @JsonKey(
+      name: 'admin_override_account_type',
+      fromJson: AccountType.fromJsonNullable,
+    )
     AccountType? adminOverrideAccountType,
     Map<String, bool> featureFlags,
     @JsonKey(name: 'profile_completed') bool profileCompleted,
@@ -1302,10 +1320,11 @@ class __$$UserModelImplCopyWithImpl<$Res>
 class _$UserModelImpl extends _UserModel {
   const _$UserModelImpl({
     required this.id,
-    required this.email,
-    @JsonKey(name: 'first_name') required this.firstName,
-    @JsonKey(name: 'last_name') required this.lastName,
+    this.email = '',
+    @JsonKey(name: 'first_name') this.firstName = '',
+    @JsonKey(name: 'last_name') this.lastName = '',
     required this.role,
+    @JsonKey(fromJson: AccountType.fromJson)
     this.accountType = AccountType.trial,
     this.emailVerified = false,
     this.phone,
@@ -1327,7 +1346,11 @@ class _$UserModelImpl extends _UserModel {
     final List<DeviceInfo> devices = const [],
     final List<SecurityEvent> recentSecurityEvents = const [],
     @JsonKey(name: 'hide_subscription') this.hideSubscription = false,
-    @JsonKey(name: 'admin_override_account_type') this.adminOverrideAccountType,
+    @JsonKey(
+      name: 'admin_override_account_type',
+      fromJson: AccountType.fromJsonNullable,
+    )
+    this.adminOverrideAccountType,
     final Map<String, bool> featureFlags = const {},
     @JsonKey(name: 'profile_completed') this.profileCompleted = true,
     @JsonKey(name: 'last_provider') this.lastProvider,
@@ -1347,16 +1370,20 @@ class _$UserModelImpl extends _UserModel {
   @override
   final String id;
 
-  /// User email address
+  /// User email address.
+  /// Default empty for Firestore docs missing the field (e.g. legacy seed
+  /// rows pre-dating the auth-trigger backfill). Surfaces as a blank email
+  /// in admin UIs rather than crashing the whole list. F-108-01.
   @override
+  @JsonKey()
   final String email;
 
-  /// User's first name
+  /// User's first name. Default empty for legacy docs missing the field.
   @override
   @JsonKey(name: 'first_name')
   final String firstName;
 
-  /// User's last name
+  /// User's last name. Default empty for legacy docs missing the field.
   @override
   @JsonKey(name: 'last_name')
   final String lastName;
@@ -1365,9 +1392,12 @@ class _$UserModelImpl extends _UserModel {
   @override
   final UserRole role;
 
-  /// Account type (trial, premium, enterprise)
+  /// Account type (trial, premium, enterprise, lifetime).
+  /// Fail-open decode via [AccountType.fromJson] — unrecognised Firestore
+  /// values fall back to [AccountType.trial] (lowest tier) and are logged
+  /// to Sentry rather than crashing the whole list paint. F-108-04.
   @override
-  @JsonKey()
+  @JsonKey(fromJson: AccountType.fromJson)
   final AccountType accountType;
 
   /// Email verification status
@@ -1467,10 +1497,15 @@ class _$UserModelImpl extends _UserModel {
   @JsonKey(name: 'hide_subscription')
   final bool hideSubscription;
 
-  /// Admin-controlled: Override account type
-  /// null = use calculated status, otherwise use this value
+  /// Admin-controlled: Override account type.
+  /// null = use calculated status, otherwise use this value.
+  /// Fail-open decode (F-108-04): missing/null stays null; an explicit
+  /// unknown value falls back to [AccountType.trial] and logs to Sentry.
   @override
-  @JsonKey(name: 'admin_override_account_type')
+  @JsonKey(
+    name: 'admin_override_account_type',
+    fromJson: AccountType.fromJsonNullable,
+  )
   final AccountType? adminOverrideAccountType;
 
   /// Feature discovery flags (track which features the user has seen)
@@ -1639,11 +1674,11 @@ class _$UserModelImpl extends _UserModel {
 abstract class _UserModel extends UserModel {
   const factory _UserModel({
     required final String id,
-    required final String email,
-    @JsonKey(name: 'first_name') required final String firstName,
-    @JsonKey(name: 'last_name') required final String lastName,
+    final String email,
+    @JsonKey(name: 'first_name') final String firstName,
+    @JsonKey(name: 'last_name') final String lastName,
     required final UserRole role,
-    final AccountType accountType,
+    @JsonKey(fromJson: AccountType.fromJson) final AccountType accountType,
     final bool emailVerified,
     final String? phone,
     @JsonKey(name: 'avatar_url') final String? avatarUrl,
@@ -1668,7 +1703,10 @@ abstract class _UserModel extends UserModel {
     final List<DeviceInfo> devices,
     final List<SecurityEvent> recentSecurityEvents,
     @JsonKey(name: 'hide_subscription') final bool hideSubscription,
-    @JsonKey(name: 'admin_override_account_type')
+    @JsonKey(
+      name: 'admin_override_account_type',
+      fromJson: AccountType.fromJsonNullable,
+    )
     final AccountType? adminOverrideAccountType,
     final Map<String, bool> featureFlags,
     @JsonKey(name: 'profile_completed') final bool profileCompleted,
@@ -1688,16 +1726,19 @@ abstract class _UserModel extends UserModel {
   @override
   String get id;
 
-  /// User email address
+  /// User email address.
+  /// Default empty for Firestore docs missing the field (e.g. legacy seed
+  /// rows pre-dating the auth-trigger backfill). Surfaces as a blank email
+  /// in admin UIs rather than crashing the whole list. F-108-01.
   @override
   String get email;
 
-  /// User's first name
+  /// User's first name. Default empty for legacy docs missing the field.
   @override
   @JsonKey(name: 'first_name')
   String get firstName;
 
-  /// User's last name
+  /// User's last name. Default empty for legacy docs missing the field.
   @override
   @JsonKey(name: 'last_name')
   String get lastName;
@@ -1706,8 +1747,12 @@ abstract class _UserModel extends UserModel {
   @override
   UserRole get role;
 
-  /// Account type (trial, premium, enterprise)
+  /// Account type (trial, premium, enterprise, lifetime).
+  /// Fail-open decode via [AccountType.fromJson] — unrecognised Firestore
+  /// values fall back to [AccountType.trial] (lowest tier) and are logged
+  /// to Sentry rather than crashing the whole list paint. F-108-04.
   @override
+  @JsonKey(fromJson: AccountType.fromJson)
   AccountType get accountType;
 
   /// Email verification status
@@ -1788,10 +1833,15 @@ abstract class _UserModel extends UserModel {
   @JsonKey(name: 'hide_subscription')
   bool get hideSubscription;
 
-  /// Admin-controlled: Override account type
-  /// null = use calculated status, otherwise use this value
+  /// Admin-controlled: Override account type.
+  /// null = use calculated status, otherwise use this value.
+  /// Fail-open decode (F-108-04): missing/null stays null; an explicit
+  /// unknown value falls back to [AccountType.trial] and logs to Sentry.
   @override
-  @JsonKey(name: 'admin_override_account_type')
+  @JsonKey(
+    name: 'admin_override_account_type',
+    fromJson: AccountType.fromJsonNullable,
+  )
   AccountType? get adminOverrideAccountType;
 
   /// Feature discovery flags (track which features the user has seen)

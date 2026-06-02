@@ -96,14 +96,17 @@ class UserModel with _$UserModel {
     /// User ID (UUID from Firebase Auth)
     required String id,
 
-    /// User email address
-    required String email,
+    /// User email address.
+    /// Default empty for Firestore docs missing the field (e.g. legacy seed
+    /// rows pre-dating the auth-trigger backfill). Surfaces as a blank email
+    /// in admin UIs rather than crashing the whole list. F-108-01.
+    @Default('') String email,
 
-    /// User's first name
-    @JsonKey(name: 'first_name') required String firstName,
+    /// User's first name. Default empty for legacy docs missing the field.
+    @JsonKey(name: 'first_name') @Default('') String firstName,
 
-    /// User's last name
-    @JsonKey(name: 'last_name') required String lastName,
+    /// User's last name. Default empty for legacy docs missing the field.
+    @JsonKey(name: 'last_name') @Default('') String lastName,
 
     /// User role (guest, owner, admin)
     required UserRole role,

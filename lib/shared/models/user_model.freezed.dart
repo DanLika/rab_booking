@@ -729,14 +729,17 @@ mixin _$UserModel {
   /// User ID (UUID from Firebase Auth)
   String get id => throw _privateConstructorUsedError;
 
-  /// User email address
+  /// User email address.
+  /// Default empty for Firestore docs missing the field (e.g. legacy seed
+  /// rows pre-dating the auth-trigger backfill). Surfaces as a blank email
+  /// in admin UIs rather than crashing the whole list. F-108-01.
   String get email => throw _privateConstructorUsedError;
 
-  /// User's first name
+  /// User's first name. Default empty for legacy docs missing the field.
   @JsonKey(name: 'first_name')
   String get firstName => throw _privateConstructorUsedError;
 
-  /// User's last name
+  /// User's last name. Default empty for legacy docs missing the field.
   @JsonKey(name: 'last_name')
   String get lastName => throw _privateConstructorUsedError;
 
@@ -1302,9 +1305,9 @@ class __$$UserModelImplCopyWithImpl<$Res>
 class _$UserModelImpl extends _UserModel {
   const _$UserModelImpl({
     required this.id,
-    required this.email,
-    @JsonKey(name: 'first_name') required this.firstName,
-    @JsonKey(name: 'last_name') required this.lastName,
+    this.email = '',
+    @JsonKey(name: 'first_name') this.firstName = '',
+    @JsonKey(name: 'last_name') this.lastName = '',
     required this.role,
     this.accountType = AccountType.trial,
     this.emailVerified = false,
@@ -1347,16 +1350,20 @@ class _$UserModelImpl extends _UserModel {
   @override
   final String id;
 
-  /// User email address
+  /// User email address.
+  /// Default empty for Firestore docs missing the field (e.g. legacy seed
+  /// rows pre-dating the auth-trigger backfill). Surfaces as a blank email
+  /// in admin UIs rather than crashing the whole list. F-108-01.
   @override
+  @JsonKey()
   final String email;
 
-  /// User's first name
+  /// User's first name. Default empty for legacy docs missing the field.
   @override
   @JsonKey(name: 'first_name')
   final String firstName;
 
-  /// User's last name
+  /// User's last name. Default empty for legacy docs missing the field.
   @override
   @JsonKey(name: 'last_name')
   final String lastName;
@@ -1639,9 +1646,9 @@ class _$UserModelImpl extends _UserModel {
 abstract class _UserModel extends UserModel {
   const factory _UserModel({
     required final String id,
-    required final String email,
-    @JsonKey(name: 'first_name') required final String firstName,
-    @JsonKey(name: 'last_name') required final String lastName,
+    final String email,
+    @JsonKey(name: 'first_name') final String firstName,
+    @JsonKey(name: 'last_name') final String lastName,
     required final UserRole role,
     final AccountType accountType,
     final bool emailVerified,
@@ -1688,16 +1695,19 @@ abstract class _UserModel extends UserModel {
   @override
   String get id;
 
-  /// User email address
+  /// User email address.
+  /// Default empty for Firestore docs missing the field (e.g. legacy seed
+  /// rows pre-dating the auth-trigger backfill). Surfaces as a blank email
+  /// in admin UIs rather than crashing the whole list. F-108-01.
   @override
   String get email;
 
-  /// User's first name
+  /// User's first name. Default empty for legacy docs missing the field.
   @override
   @JsonKey(name: 'first_name')
   String get firstName;
 
-  /// User's last name
+  /// User's last name. Default empty for legacy docs missing the field.
   @override
   @JsonKey(name: 'last_name')
   String get lastName;

@@ -80,9 +80,9 @@ _$UserModelImpl _$$UserModelImplFromJson(
   Map<String, dynamic> json,
 ) => _$UserModelImpl(
   id: json['id'] as String,
-  email: json['email'] as String,
-  firstName: json['first_name'] as String,
-  lastName: json['last_name'] as String,
+  email: json['email'] as String? ?? '',
+  firstName: json['first_name'] as String? ?? '',
+  lastName: json['last_name'] as String? ?? '',
   role: $enumDecode(_$UserRoleEnumMap, json['role']),
   accountType:
       $enumDecodeNullable(_$AccountTypeEnumMap, json['accountType']) ??

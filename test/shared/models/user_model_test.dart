@@ -217,6 +217,43 @@ void main() {
         expect(user.isLifetimeLicense, isFalse);
       });
     });
+
+    group('fromJson null-safety (F-108-01)', () {
+      test('parses doc missing email field', () {
+        final user = UserModel.fromJson(<String, dynamic>{
+          'id': 'legacy-uid',
+          'first_name': 'Legacy',
+          'last_name': 'Owner',
+          'role': 'owner',
+        });
+        expect(user.id, 'legacy-uid');
+        expect(user.email, '');
+        expect(user.firstName, 'Legacy');
+        expect(user.lastName, 'Owner');
+      });
+
+      test('parses doc with email explicitly null', () {
+        final user = UserModel.fromJson(<String, dynamic>{
+          'id': 'null-email-uid',
+          'email': null,
+          'first_name': 'Null',
+          'last_name': 'Email',
+          'role': 'owner',
+        });
+        expect(user.email, '');
+      });
+
+      test('parses doc missing first_name + last_name', () {
+        final user = UserModel.fromJson(<String, dynamic>{
+          'id': 'nameless-uid',
+          'email': 'nameless@example.com',
+          'role': 'owner',
+        });
+        expect(user.firstName, '');
+        expect(user.lastName, '');
+        expect(user.fullName, ' ');
+      });
+    });
   });
 
   group('UserRole', () {

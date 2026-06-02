@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/design/bb_redesign_tokens.dart';
 import '../../../core/providers/enhanced_auth_provider.dart';
 import '../presentation/screens/activity_log_screen.dart';
 import '../presentation/screens/admin_dashboard_screen.dart';
@@ -68,7 +69,20 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         path: '/login',
         pageBuilder: (context, state) => _fadePage(
           state.pageKey,
-          AdminLoginScreen(errorMessage: state.uri.queryParameters['error']),
+          // Pre-auth login route is OUTSIDE the AdminShellScreen subtree, so
+          // [BbAdminDarkTokens] is not inherited from the shell. Inject it
+          // here scoped to this route only — admin login renders with the
+          // canonical admin-dark palette regardless of system brightness.
+          Theme(
+            data: ThemeData.dark(useMaterial3: true).copyWith(
+              extensions: const <ThemeExtension<dynamic>>[
+                BbAdminDarkTokens.preset,
+              ],
+            ),
+            child: AdminLoginScreen(
+              errorMessage: state.uri.queryParameters['error'],
+            ),
+          ),
         ),
       ),
       ShellRoute(

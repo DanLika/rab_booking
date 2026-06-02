@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../core/constants/enums.dart';
+import '../../core/services/logging_service.dart';
 import '../../core/utils/timestamp_converter.dart';
 
 part 'user_model.freezed.dart';
@@ -11,7 +12,46 @@ part 'user_model.g.dart';
 /// - premium: Paid subscription via Stripe
 /// - enterprise: Business tier (future use)
 /// - lifetime: Admin-granted permanent premium access
-enum AccountType { trial, premium, enterprise, lifetime }
+enum AccountType {
+  trial,
+  premium,
+  enterprise,
+  lifetime;
+
+  /// Fail-open decoder for Firestore docs that carry an unrecognised value
+  /// (e.g. legacy doc with `accountType: 'active'` — a leaked status value).
+  /// Returns [AccountType.trial] (lowest tier — NEVER paid) on unknown and
+  /// surfaces the bad value to Sentry as a warning. F-108-04.
+  ///
+  /// Security note: the fallback MUST stay at the lowest tier so a garbage
+  /// or attacker-supplied value cannot accidentally grant paid features.
+  static AccountType fromJson(Object? raw) {
+    final String? value = raw is String ? raw : null;
+    if (value != null) {
+      for (final t in AccountType.values) {
+        if (t.name == value) return t;
+      }
+    }
+    // Unknown / null / non-string → log + safe default.
+    LoggingService.logWarningToSentry(
+      'UserModel.accountType: unrecognised value, defaulting to trial',
+      data: <String, dynamic>{
+        'finding': 'F-108-04',
+        'raw': value ?? raw?.toString() ?? 'null',
+        'rawType': raw?.runtimeType.toString() ?? 'Null',
+      },
+    );
+    return AccountType.trial;
+  }
+
+  /// Nullable variant for fields where missing = unset (e.g.
+  /// `adminOverrideAccountType`). Null/missing → null (NOT trial). An
+  /// explicitly-present unknown value still falls open to trial + logs.
+  static AccountType? fromJsonNullable(Object? raw) {
+    if (raw == null) return null;
+    return fromJson(raw);
+  }
+}
 
 /// Employee permission roles
 enum EmployeeRole {
@@ -111,8 +151,13 @@ class UserModel with _$UserModel {
     /// User role (guest, owner, admin)
     required UserRole role,
 
-    /// Account type (trial, premium, enterprise)
-    @Default(AccountType.trial) AccountType accountType,
+    /// Account type (trial, premium, enterprise, lifetime).
+    /// Fail-open decode via [AccountType.fromJson] — unrecognised Firestore
+    /// values fall back to [AccountType.trial] (lowest tier) and are logged
+    /// to Sentry rather than crashing the whole list paint. F-108-04.
+    @JsonKey(fromJson: AccountType.fromJson)
+    @Default(AccountType.trial)
+    AccountType accountType,
 
     /// Email verification status
     @Default(false) bool emailVerified,
@@ -172,9 +217,14 @@ class UserModel with _$UserModel {
     /// Admin-controlled: Hide subscription page from this user
     @JsonKey(name: 'hide_subscription') @Default(false) bool hideSubscription,
 
-    /// Admin-controlled: Override account type
-    /// null = use calculated status, otherwise use this value
-    @JsonKey(name: 'admin_override_account_type')
+    /// Admin-controlled: Override account type.
+    /// null = use calculated status, otherwise use this value.
+    /// Fail-open decode (F-108-04): missing/null stays null; an explicit
+    /// unknown value falls back to [AccountType.trial] and logs to Sentry.
+    @JsonKey(
+      name: 'admin_override_account_type',
+      fromJson: AccountType.fromJsonNullable,
+    )
     AccountType? adminOverrideAccountType,
 
     /// Feature discovery flags (track which features the user has seen)

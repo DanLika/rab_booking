@@ -254,6 +254,64 @@ void main() {
         expect(user.fullName, ' ');
       });
     });
+
+    group('AccountType.fromJson fail-open (F-108-04)', () {
+      test('known values round-trip unchanged', () {
+        expect(AccountType.fromJson('trial'), AccountType.trial);
+        expect(AccountType.fromJson('premium'), AccountType.premium);
+        expect(AccountType.fromJson('enterprise'), AccountType.enterprise);
+        expect(AccountType.fromJson('lifetime'), AccountType.lifetime);
+      });
+
+      test('legacy status value "active" falls back to trial (NOT paid)', () {
+        // F-108-04: bookbed-dev owner doc Zo01...UWG2 carried
+        // `accountType: "active"` (status leaked into account_type field).
+        // Must fall back to the lowest tier — never premium/lifetime.
+        expect(AccountType.fromJson('active'), AccountType.trial);
+      });
+
+      test('arbitrary garbage falls back to trial', () {
+        expect(AccountType.fromJson('garbage'), AccountType.trial);
+        expect(AccountType.fromJson(''), AccountType.trial);
+        expect(AccountType.fromJson(42), AccountType.trial);
+        expect(AccountType.fromJson(<String, dynamic>{}), AccountType.trial);
+        expect(AccountType.fromJson(null), AccountType.trial);
+      });
+
+      test('nullable variant preserves null/missing', () {
+        expect(AccountType.fromJsonNullable(null), isNull);
+      });
+
+      test('nullable variant falls back to trial for explicit unknown', () {
+        expect(AccountType.fromJsonNullable('active'), AccountType.trial);
+        expect(AccountType.fromJsonNullable('garbage'), AccountType.trial);
+      });
+
+      test('parses doc with accountType="active" without throwing', () {
+        final user = UserModel.fromJson(<String, dynamic>{
+          'id': 'legacy-status-leak-uid',
+          'email': '',
+          'role': 'owner',
+          'accountType': 'active',
+        });
+        expect(user.accountType, AccountType.trial);
+        expect(user.hasPremiumAccess, isFalse);
+        expect(user.isLifetimeLicense, isFalse);
+      });
+
+      test('parses doc with adminOverrideAccountType="active" safely', () {
+        final user = UserModel.fromJson(<String, dynamic>{
+          'id': 'admin-override-leak-uid',
+          'email': '',
+          'role': 'owner',
+          'admin_override_account_type': 'active',
+        });
+        // Explicit unknown → falls open to trial (not null) so the override
+        // path remains observable but does not grant paid access.
+        expect(user.adminOverrideAccountType, AccountType.trial);
+        expect(user.hasPremiumAccess, isFalse);
+      });
+    });
   });
 
   group('UserRole', () {

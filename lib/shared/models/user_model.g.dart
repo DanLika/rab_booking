@@ -84,9 +84,9 @@ _$UserModelImpl _$$UserModelImplFromJson(
   firstName: json['first_name'] as String? ?? '',
   lastName: json['last_name'] as String? ?? '',
   role: $enumDecode(_$UserRoleEnumMap, json['role']),
-  accountType:
-      $enumDecodeNullable(_$AccountTypeEnumMap, json['accountType']) ??
-      AccountType.trial,
+  accountType: json['accountType'] == null
+      ? AccountType.trial
+      : AccountType.fromJson(json['accountType']),
   emailVerified: json['emailVerified'] as bool? ?? false,
   phone: json['phone'] as String?,
   avatarUrl: json['avatar_url'] as String?,
@@ -119,8 +119,7 @@ _$UserModelImpl _$$UserModelImplFromJson(
           .toList() ??
       const [],
   hideSubscription: json['hide_subscription'] as bool? ?? false,
-  adminOverrideAccountType: $enumDecodeNullable(
-    _$AccountTypeEnumMap,
+  adminOverrideAccountType: AccountType.fromJsonNullable(
     json['admin_override_account_type'],
   ),
   featureFlags:

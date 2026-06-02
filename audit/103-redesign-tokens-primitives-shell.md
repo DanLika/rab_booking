@@ -301,3 +301,78 @@ Admin shell, when built, wraps its dark sidebar / rail subtree in a `Theme(data:
 - Admin dashboard / users / bookings / payments / sync / support screen refactors — Phase 2 per-screen PRs
 - Admin login (`admin-auth.jsx`) — Phase 2 admin-auth PR
 - Migrating the existing admin chrome (`lib/admin*`) onto these tokens — Phase 2 lift-and-shift PR
+
+---
+
+## Amendment — Phase 2 · Admin Login swap (PR #650, 2026-06-02)
+
+**Branch:** `redesign/admin-login`
+**Scope:** UI-chrome swap of `admin_login_screen.dart` onto Bb\* primitives + one-spot route-scoped extension injection. Zero logic / router-flow / FROZEN / `AppTheme` changes.
+
+### Diagnosis (operator gate, before any migrate)
+
+Pre-auth `/login` is registered as a top-level `GoRoute` in `lib/features/admin/providers/admin_providers.dart` — NOT under `ShellRoute(builder: AdminShellScreen(...))`. `lib/admin_main.dart` MaterialApp constructs `MaterialApp.router(theme: AppTheme.lightTheme, darkTheme: AppTheme.darkTheme)` with no `extensions:` field, and `AppTheme.{light,dark}Theme` do NOT register `BbAdminDarkTokens` (enforced by §Amendment Phase 1.7 isolation-guard tests). Consequence: `Theme.of(loginContext).extension<BbAdminDarkTokens>()` = **NULL** on the login screen. (Same NULL on dashboard — the dashboard works only because `BbAdminDarkTokens.of(context)` falls back to `?? preset` at `bb_redesign_tokens.dart:365`.)
+
+Operator was offered (a) inject extension on login route, (b) accept `#121212` cards, (c) restructure routing into a shell, (d) mirror dashboard `.of(context)` fallback. **Picked (a).**
+
+### What landed (PR #650)
+
+- `lib/features/admin/providers/admin_providers.dart` — login `pageBuilder` wraps `AdminLoginScreen(...)` in `Theme(data: ThemeData.dark(useMaterial3: true).copyWith(extensions: const <ThemeExtension<dynamic>>[BbAdminDarkTokens.preset]), child: ...)`. Extension scope = `/login` only. Fade transition (`_fadePage`) + `errorMessage` query param preserved. NO `ShellRoute` restructure.
+- `lib/features/admin/presentation/screens/admin_login_screen.dart` — chrome swap:
+  - `Card(elevation:8, BorderRadius.circular(24))` → `BbCard(padding: EdgeInsets.all(32))`
+  - `TextFormField` × 2 → `BbInput(iconLeft: 'mail' / 'lock', validator, trailingAction)` for password visibility toggle
+  - `FilledButton(...)` → `BbButton(size: lg, fullWidth, loading: _isLoading)`
+  - 3-stop `LinearGradient` → **TIP 1** single diagonal gradient `[t.shellBg, t.panelBg]` stops `[0.0, 0.3]` topLeft→bottomRight
+  - Welcome / subtitle / footer `Text(... TextStyle ...)` → `BBType.h3 / body / caption` + admin-dark token colors
+  - Error banner → `BBRadius.sm` corner + `c.error` token-typed tint
+  - Logo brand mark + brand purple shadow retained
+  - Full-screen loading overlay + top `LinearProgressIndicator` dropped (`BbButton.loading` covers the affordance)
+- All logic (`_login`, `_sanitizeLoginError`, `didChangeDependencies`, validators, redirect ladder, auth provider) untouched.
+
+### Why `ThemeData.dark` base (not user's literal snippet)
+
+Operator's literal option-(a) snippet was `Theme.of(ctx).copyWith(extensions:[preset])`, which preserves outer brightness. Outer brightness on `/login` follows the user's system theme via `AppTheme.{light,dark}Theme`. `BbCard`/`BbInput`/`BbButton` read `BBColor.of(context)` which switches on `Theme.brightness` — a system-light user would have rendered a white card + light-border inputs inside a `t.shellBg=#1E1A33` scaffold. Substituting `ThemeData.dark(useMaterial3: true)` as the base forces Bb\* primitives onto dark surfaces, matching the admin shell's always-dark convention (`AdminDarkModeNotifier() : super(true)`). This is the minimum expansion required to make the chrome render coherent; the extension scope claim is unchanged (still only the `/login` route).
+
+### Strictly NOT touched
+
+- Owner theme, `AppTheme.{light,dark}Theme`, MaterialApp registration
+- `AdminShellScreen`, shell `ColorScheme`, dashboard pattern (Phase 2 sibling — PR #645)
+- Phase 1.7 isolation-guard tests (`bb_admin_dark_tokens_test.dart`) — still green
+- FROZEN sections, `Navigator.push` confirmation flow, legacy capital `BB*` widgets at `lib/core/widgets/`
+- `_login()` / auth provider / redirect logic
+- EN locale only; reuses existing `adminWelcomeBack / adminEmailLabel / adminEmailHint / adminPasswordLabel / adminEmailRequired / adminPasswordRequired / adminSignInButton / adminAccessDenied / adminLoginFailed / adminFooterCopyright` keys
+- No raw hex; colors via `BbAdminDarkTokens.of(context)` + `BBColor.of(context)` + `BBRadius` + `BBType`
+
+### Verification
+
+- `dart format` clean (pre-commit hook green)
+- `flutter analyze` scoped — 1 INFO (`prefer_relative_imports` on `package:bookbed/shared/widgets/redesign.dart` — same accepted pattern as PR #645 admin dashboard, matches barrel docs)
+- `flutter test` — **All tests passed!** (+1307)
+- `flutter build web --release --no-tree-shake-icons --target lib/admin_main.dart -o build/web_admin` — ✓ 80.3s
+
+### Net delta
+
+`+195 / -321` across 2 files. Primitive-driven simplification: 461-line login screen with bespoke `Card` + `OutlineInputBorder` + raw hex gradient + full-screen loading overlay → 320-line Bb\*-composed login with 3 small private helpers (`_AdminBrandMark`, `_ErrorBanner`, `_PasswordVisibilityToggle`).
+
+### Card-surface dependency on open PRs #646 / #647
+
+`BbCard` currently reads `BBColor.of(context).surface` (= `BBColor.surfaceDark = #121212` in dark mode), NOT the admin extension's `panelBg = #2A2342`. Consequence: PR #650 login cards render `#121212` today — same as PR #645 admin dashboard `_StatsCard`. This is dashboard-consistent, not handoff-canonical (handoff `admin-shell.jsx` specifies `#2A2342` for the elevated admin panel).
+
+The two open PRs that canonicalize this:
+- **PR #646** — canonicalize admin shell composition onto `BbAdminDarkTokens.panelBg = #2A2342`
+- **PR #647** — make `BbCard` resolve admin `panelBg` via the `BbAdminDarkTokens` `ThemeExtension` when present in the resolution chain
+
+Once #647 merges, every `BbCard` inside a subtree that registers `BbAdminDarkTokens` (= this login route + every Phase 2 admin screen) auto-upgrades to `#2A2342`. PR #650 needs no rebase; the extension injection it already adds (`Theme(data: ThemeData.dark(...).copyWith(extensions: [BbAdminDarkTokens.preset]))`) is the exact resolution chain #647 keys off.
+
+Tracked: `audit/108-admin-redesign-smoke-blocked-2026-06-02.md` (Tier 3 admin BbCard panelBg smoke ABORTED at precondition until #646 / #647 merge).
+
+### Deploy gate (operator)
+
+DEV admin is NOT auto-deployed by CI. Per `.claude/rules/admin.md` deploy commands:
+
+```bash
+flutter build web --release --target lib/admin_main.dart -o build/web_admin
+firebase deploy --only hosting:admin --project bookbed-dev
+```
+
+Smoke against `bookbed-admin-dev.web.app` BEFORE any PROD admin redeploy.

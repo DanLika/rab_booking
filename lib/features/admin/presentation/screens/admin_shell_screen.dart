@@ -57,6 +57,9 @@ class AdminShellScreen extends ConsumerWidget {
               surfaceContainer: const Color(0xFF25253A), // Drawer color
             ),
             scaffoldBackgroundColor: const Color(0xFF161621),
+            extensions: const <ThemeExtension<dynamic>>[
+              BbAdminDarkTokens.preset,
+            ],
           )
         : ThemeData.light(useMaterial3: true).copyWith(
             colorScheme: const ColorScheme.light(

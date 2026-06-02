@@ -1,10 +1,14 @@
-import '../../../../core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../shared/widgets/redesign.dart';
+import '../../../../core/design/tokens.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../data/admin_users_repository.dart';
+import 'admin_shell_screen.dart';
 
 /// Responsive breakpoint for mobile layout
 const double _mobileBreakpoint = 800.0;
@@ -128,15 +132,15 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
     final notifier = ref.read(ownersListProvider.notifier);
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < _mobileBreakpoint;
+    final palette = _UsersListPalette.of(context, ref);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Section
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(BBSpace.md),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               border: Border(
@@ -154,202 +158,98 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Users Management',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
+                          const BbSectionHeader(title: 'Users Management'),
                           Text(
                             'Manage platform owners and licenses',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
+                            style: BBType.body(
+                              context,
+                            ).copyWith(color: palette.textSecondary),
                           ),
                         ],
                       ),
                     ),
-                    FilledButton.icon(
+                    BbButton(
+                      label: 'Refresh',
+                      iconLeft: 'refresh',
                       onPressed: notifier.loadInitial,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Refresh'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                // Search Bar
-                TextField(
+                const SizedBox(height: BBSpace.sm),
+                BbInput(
                   controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search users by name or email...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
+                  placeholder: 'Search users by name or email...',
+                  iconLeft: 'search',
+                  trailingAction: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
                   onChanged: (value) => setState(() => _searchQuery = value),
                 ),
-                const SizedBox(height: 12),
-                // Filters Row
+                const SizedBox(height: BBSpace.sm),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      // Account type filter chips
                       for (final type in AccountType.values)
                         Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: Text(type.name.toUpperCase()),
+                          padding: const EdgeInsets.only(right: BBSpace.xs),
+                          child: BbChip(
+                            label: type.name.toUpperCase(),
                             selected: _selectedAccountTypes.contains(type),
-                            onSelected: (selected) {
+                            size: BbChipSize.sm,
+                            onTap: () {
                               setState(() {
-                                if (selected) {
-                                  _selectedAccountTypes.add(type);
-                                } else {
+                                if (_selectedAccountTypes.contains(type)) {
                                   _selectedAccountTypes.remove(type);
-                                }
-                              });
-                            },
-                            selectedColor: AppColors.primary.withValues(
-                              alpha: 0.15,
-                            ),
-                            checkmarkColor: AppColors.primary,
-                            labelStyle: TextStyle(
-                              fontSize: 11,
-                              fontWeight: _selectedAccountTypes.contains(type)
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
-                              color: _selectedAccountTypes.contains(type)
-                                  ? AppColors.primary
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      // Date range chip
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ActionChip(
-                          avatar: Icon(
-                            Icons.date_range,
-                            size: 16,
-                            color: _dateRange != null
-                                ? AppColors.primary
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                          ),
-                          label: Text(
-                            _dateRange != null
-                                ? '${_dateRange!.start.day}.${_dateRange!.start.month}.${_dateRange!.start.year} - ${_dateRange!.end.day}.${_dateRange!.end.month}.${_dateRange!.end.year}'
-                                : 'Date Range',
-                          ),
-                          onPressed: _pickDateRange,
-                          backgroundColor: _dateRange != null
-                              ? AppColors.primary.withValues(alpha: 0.15)
-                              : null,
-                          labelStyle: TextStyle(
-                            fontSize: 11,
-                            fontWeight: _dateRange != null
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                            color: _dateRange != null
-                                ? AppColors.primary
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Sort dropdown
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<_SortField>(
-                            value: _sortField,
-                            isDense: true,
-                            icon: Icon(
-                              _sortAscending
-                                  ? Icons.arrow_upward
-                                  : Icons.arrow_downward,
-                              size: 14,
-                            ),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: _SortField.createdAt,
-                                child: Text('Sort: Created'),
-                              ),
-                              DropdownMenuItem(
-                                value: _SortField.name,
-                                child: Text('Sort: Name'),
-                              ),
-                              DropdownMenuItem(
-                                value: _SortField.email,
-                                child: Text('Sort: Email'),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() {
-                                if (_sortField == value) {
-                                  _sortAscending = !_sortAscending;
                                 } else {
-                                  _sortField = value;
-                                  _sortAscending =
-                                      value != _SortField.createdAt;
+                                  _selectedAccountTypes.add(type);
                                 }
                               });
                             },
                           ),
                         ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: BBSpace.xs),
+                        child: BbChip(
+                          label: _dateRange != null
+                              ? '${_dateRange!.start.day}.${_dateRange!.start.month}.${_dateRange!.start.year} - ${_dateRange!.end.day}.${_dateRange!.end.month}.${_dateRange!.end.year}'
+                              : 'Date Range',
+                          iconLeft: 'date_range',
+                          selected: _dateRange != null,
+                          size: BbChipSize.sm,
+                          onTap: _pickDateRange,
+                        ),
                       ),
-                      // Clear filters button
+                      const SizedBox(width: BBSpace.xs),
+                      _SortDropdown(
+                        sortField: _sortField,
+                        sortAscending: _sortAscending,
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            if (_sortField == value) {
+                              _sortAscending = !_sortAscending;
+                            } else {
+                              _sortField = value;
+                              _sortAscending = value != _SortField.createdAt;
+                            }
+                          });
+                        },
+                      ),
                       if (_hasActiveFilters)
                         Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: ActionChip(
-                            avatar: const Icon(
-                              Icons.clear_all,
-                              size: 16,
-                              color: Colors.red,
-                            ),
-                            label: const Text('Clear'),
-                            onPressed: _clearAllFilters,
-                            labelStyle: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.red,
-                            ),
+                          padding: const EdgeInsets.only(left: BBSpace.xs),
+                          child: BbChip(
+                            label: 'Clear',
+                            iconLeft: 'clear_all',
+                            size: BbChipSize.sm,
+                            onTap: _clearAllFilters,
                           ),
                         ),
                     ],
@@ -358,8 +258,6 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
               ],
             ),
           ),
-
-          // Content
           Expanded(
             child: ownersAsync.when(
               data: (owners) {
@@ -367,32 +265,34 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                 if (filtered.isEmpty) {
                   return const _EmptyState();
                 }
-                // Hide Load More when filters are active - client-side
-                // filtering on paginated data would be misleading
                 final showLoadMore = notifier.hasMore && !_hasActiveFilters;
                 return isMobile
                     ? _UsersList(
                         owners: filtered,
                         hasMore: showLoadMore,
                         onLoadMore: notifier.loadMore,
+                        palette: palette,
                       )
                     : _UsersTable(
                         owners: filtered,
                         hasMore: showLoadMore,
                         onLoadMore: notifier.loadMore,
+                        palette: palette,
                       );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: BbSpinner(size: 24)),
               error: (err, _) => Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Error loading users: $err'),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: notifier.loadInitial,
-                      child: const Text('Retry'),
+                    Text(
+                      'Error loading users: $err',
+                      style: BBType.body(
+                        context,
+                      ).copyWith(color: palette.textSecondary),
                     ),
+                    const SizedBox(height: BBSpace.sm),
+                    BbButton(label: 'Retry', onPressed: notifier.loadInitial),
                   ],
                 ),
               ),
@@ -404,122 +304,106 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
   }
 }
 
-/// Mobile list view with cards
 class _UsersList extends StatelessWidget {
   final List<UserModel> owners;
   final bool hasMore;
   final VoidCallback onLoadMore;
+  final _UsersListPalette palette;
 
   const _UsersList({
     required this.owners,
     required this.hasMore,
     required this.onLoadMore,
+    required this.palette,
   });
 
   @override
   Widget build(BuildContext context) {
-    // +1 for load more button
     final itemCount = owners.length + (hasMore ? 1 : 0);
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BBSpace.sm),
       itemCount: itemCount,
       itemBuilder: (context, index) {
         if (index >= owners.length) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
             child: Center(
-              child: OutlinedButton.icon(
+              child: BbButton(
+                label: 'Load more',
+                iconLeft: 'expand_more',
+                variant: BbButtonVariant.secondary,
                 onPressed: onLoadMore,
-                icon: const Icon(Icons.expand_more),
-                label: const Text('Load more'),
               ),
             ),
           );
         }
         final user = owners[index];
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _UserCard(user: user),
+          padding: const EdgeInsets.only(bottom: BBSpace.sm),
+          child: _UserCard(user: user, palette: palette),
         );
       },
     );
   }
 }
 
-/// User card for mobile view
 class _UserCard extends StatelessWidget {
   final UserModel user;
+  final _UsersListPalette palette;
 
-  const _UserCard({required this.user});
+  const _UserCard({required this.user, required this.palette});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).dividerColor),
-      ),
-      child: InkWell(
-        onTap: () => context.go('/users/${user.id}'),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final displayName = user.displayName ?? user.fullName;
+    return BbCard(
+      hoverable: true,
+      onTap: () => context.go('/users/${user.id}'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: Text(
-                      (user.displayName ?? user.fullName).isNotEmpty
-                          ? (user.displayName ?? user.fullName)[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+              BbAvatar(name: displayName, size: BbAvatarSize.sm),
+              const SizedBox(width: BBSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SelectableText(
+                      displayName,
+                      style: BBType.h3(context).copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: palette.textPrimary,
                       ),
+                      maxLines: 1,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SelectableText(
-                          user.displayName ?? user.fullName,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                          maxLines: 1,
-                        ),
-                        SelectableText(
-                          user.email,
-                          style: Theme.of(context).textTheme.bodySmall,
-                          maxLines: 1,
-                        ),
-                      ],
+                    SelectableText(
+                      user.email,
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: palette.textSecondary),
+                      maxLines: 1,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _AccountTypeBadge(type: user.accountType),
-                  Text(
-                    _formatDate(user.createdAt),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: BBSpace.sm),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _AccountTypeBadge(type: user.accountType),
+              Text(
+                _formatDate(user.createdAt),
+                style: BBType.caption(
+                  context,
+                ).copyWith(color: palette.textTertiary),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -530,108 +414,84 @@ class _UserCard extends StatelessWidget {
   }
 }
 
-/// Desktop table view
 class _UsersTable extends StatelessWidget {
   final List<UserModel> owners;
   final bool hasMore;
   final VoidCallback onLoadMore;
+  final _UsersListPalette palette;
 
   const _UsersTable({
     required this.owners,
     required this.hasMore,
     required this.onLoadMore,
+    required this.palette,
   });
 
   @override
   Widget build(BuildContext context) {
+    final headingStyle = BBType.label(
+      context,
+    ).copyWith(color: palette.textSecondary, fontWeight: FontWeight.bold);
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(BBSpace.md),
       child: Column(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Theme.of(context).dividerColor),
-            ),
+          BbCard(
+            padded: false,
             child: DataTable(
-              headingRowColor: WidgetStateProperty.all(
-                Theme.of(context).colorScheme.surfaceContainer,
-              ),
               dataRowMinHeight: 60,
               dataRowMaxHeight: 60,
-              columnSpacing: 24,
-              horizontalMargin: 24,
-              columns: const [
-                DataColumn(
-                  label: Text(
-                    'Name',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Email',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Account Type',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Created At',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Actions',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
+              columnSpacing: BBSpace.md,
+              horizontalMargin: BBSpace.md,
+              columns: [
+                DataColumn(label: Text('Name', style: headingStyle)),
+                DataColumn(label: Text('Email', style: headingStyle)),
+                DataColumn(label: Text('Account Type', style: headingStyle)),
+                DataColumn(label: Text('Created At', style: headingStyle)),
+                DataColumn(label: Text('Actions', style: headingStyle)),
               ],
               rows: owners.map((user) {
+                final displayName = user.displayName ?? user.fullName;
                 return DataRow(
                   cells: [
                     DataCell(
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: AppColors.primary.withValues(
-                              alpha: 0.1,
-                            ),
-                            child: Text(
-                              (user.displayName ?? user.fullName).isNotEmpty
-                                  ? (user.displayName ?? user.fullName)[0]
-                                        .toUpperCase()
-                                  : '?',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
+                          BbAvatar(name: displayName, size: BbAvatarSize.xs),
+                          const SizedBox(width: BBSpace.sm),
                           SelectableText(
-                            user.displayName ?? user.fullName,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
+                            displayName,
+                            style: BBType.body(context).copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: palette.textPrimary,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    DataCell(SelectableText(user.email)),
-                    DataCell(_AccountTypeBadge(type: user.accountType)),
-                    DataCell(Text(_formatDate(user.createdAt))),
                     DataCell(
-                      IconButton(
-                        icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                        tooltip: 'View Details',
+                      SelectableText(
+                        user.email,
+                        style: BBType.body(
+                          context,
+                        ).copyWith(color: palette.textSecondary),
+                      ),
+                    ),
+                    DataCell(_AccountTypeBadge(type: user.accountType)),
+                    DataCell(
+                      Text(
+                        _formatDate(user.createdAt),
+                        style: BBType.body(
+                          context,
+                        ).copyWith(color: palette.textSecondary),
+                      ),
+                    ),
+                    DataCell(
+                      BbButton(
+                        asIcon: true,
+                        iconLeft: 'arrow_forward_ios',
+                        variant: BbButtonVariant.tertiary,
+                        semanticLabel: 'View Details',
                         onPressed: () => context.go('/users/${user.id}'),
                       ),
                     ),
@@ -642,12 +502,13 @@ class _UsersTable extends StatelessWidget {
           ),
           if (hasMore)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: BBSpace.sm),
               child: Center(
-                child: OutlinedButton.icon(
+                child: BbButton(
+                  label: 'Load more',
+                  iconLeft: 'expand_more',
+                  variant: BbButtonVariant.secondary,
                   onPressed: onLoadMore,
-                  icon: const Icon(Icons.expand_more),
-                  label: const Text('Load more'),
                 ),
               ),
             ),
@@ -717,24 +578,96 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.people_outline,
-            size: 64,
-            color: Theme.of(context).disabledColor,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No users found',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).disabledColor,
-            ),
-          ),
-        ],
+    return const Center(
+      child: BbEmptyState(
+        icon: 'people_outline',
+        title: 'No users found',
+        compact: true,
       ),
+    );
+  }
+}
+
+class _SortDropdown extends StatelessWidget {
+  final _SortField sortField;
+  final bool sortAscending;
+  final ValueChanged<_SortField?> onChanged;
+
+  const _SortDropdown({
+    required this.sortField,
+    required this.sortAscending,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: BBSpace.xs),
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).dividerColor),
+        borderRadius: BBRadius.smAll,
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<_SortField>(
+          value: sortField,
+          isDense: true,
+          icon: Icon(
+            sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+            size: 14,
+          ),
+          style: BBType.caption(
+            context,
+          ).copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          items: const [
+            DropdownMenuItem(
+              value: _SortField.createdAt,
+              child: Text('Sort: Created'),
+            ),
+            DropdownMenuItem(value: _SortField.name, child: Text('Sort: Name')),
+            DropdownMenuItem(
+              value: _SortField.email,
+              child: Text('Sort: Email'),
+            ),
+          ],
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+}
+
+/// Text-tier color palette: admin-dark via [BbAdminDarkTokens] (#646 wires
+/// the extension on the shell), or [ColorScheme] in admin-light/owner.
+class _UsersListPalette {
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textTertiary;
+  final bool isDark;
+
+  const _UsersListPalette({
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textTertiary,
+    required this.isDark,
+  });
+
+  static _UsersListPalette of(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(adminDarkModeProvider);
+    if (isDark) {
+      final t = BbAdminDarkTokens.of(context);
+      return _UsersListPalette(
+        textPrimary: t.textPrimary,
+        textSecondary: t.textSecondary,
+        textTertiary: t.textTertiary,
+        isDark: true,
+      );
+    }
+    final scheme = Theme.of(context).colorScheme;
+    return _UsersListPalette(
+      textPrimary: scheme.onSurface,
+      textSecondary: scheme.onSurfaceVariant,
+      textTertiary: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+      isDark: false,
     );
   }
 }

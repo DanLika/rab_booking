@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
 
@@ -50,10 +51,10 @@ class AdminShellScreen extends ConsumerWidget {
     // Use specific admin colors based on mode
     final themeData = isDarkMode
         ? ThemeData.dark(useMaterial3: true).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: AppColors.primaryLight,
-              surface: Color(0xFF1E1E2E), // Modern dark background
-              surfaceContainer: Color(0xFF25253A), // Drawer color
+              surface: BbAdminDarkTokens.preset.panelBg,
+              surfaceContainer: const Color(0xFF25253A), // Drawer color
             ),
             scaffoldBackgroundColor: const Color(0xFF161621),
           )

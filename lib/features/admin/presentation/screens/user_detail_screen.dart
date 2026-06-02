@@ -2,13 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import '../../../../core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/design/bb_redesign_tokens.dart';
+import '../../../../core/design/tokens.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/models/user_model.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../data/admin_users_repository.dart';
+import 'admin_shell_screen.dart';
 
 /// Responsive breakpoint for mobile layout
 const double _mobileBreakpoint = 900.0;
@@ -188,15 +191,20 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: BbSpinner(size: 24)),
         error: (err, _) => _ErrorState(message: err.toString()),
       ),
     );
   }
 
   Widget _buildHeader(BuildContext context, UserModel user) {
+    final palette = _UserDetailPalette.of(context, ref);
+    final displayName = user.displayName ?? user.fullName;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: BBSpace.md,
+        vertical: BBSpace.sm,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
@@ -207,105 +215,54 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
         children: [
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
+              BbButton(
+                asIcon: true,
+                iconLeft: 'arrow_back',
+                variant: BbButtonVariant.tertiary,
+                semanticLabel: 'Back to users',
                 onPressed: () => context.go('/users'),
               ),
-              const SizedBox(width: 16),
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppColors.primary,
-                child: Text(
-                  (user.displayName ?? user.fullName).isNotEmpty
-                      ? (user.displayName ?? user.fullName)[0].toUpperCase()
-                      : '?',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
+              const SizedBox(width: BBSpace.sm),
+              BbAvatar(name: displayName),
+              const SizedBox(width: BBSpace.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SelectableText(
-                      user.displayName ?? user.fullName,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      displayName,
+                      style: BBType.h2(context).copyWith(
                         fontWeight: FontWeight.bold,
+                        color: palette.textPrimary,
                       ),
                     ),
                     SelectableText(
                       user.email,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      style: BBType.body(
+                        context,
+                      ).copyWith(color: palette.textSecondary),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          // Messages
           if (_errorMessage != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.error, color: AppColors.error, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: AppColors.error),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: AppColors.error,
-                    ),
-                    onPressed: () => setState(() => _errorMessage = null),
-                  ),
-                ],
-              ),
+            const SizedBox(height: BBSpace.sm),
+            _StatusMessage(
+              message: _errorMessage!,
+              icon: 'error',
+              color: AppColors.error,
+              onDismiss: () => setState(() => _errorMessage = null),
             ),
           ],
           if (_successMessage != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _successMessage!,
-                      style: const TextStyle(color: Colors.green),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: Colors.green,
-                    ),
-                    onPressed: () => setState(() => _successMessage = null),
-                  ),
-                ],
-              ),
+            const SizedBox(height: BBSpace.sm),
+            _StatusMessage(
+              message: _successMessage!,
+              icon: 'check_circle',
+              color: AppColors.success,
+              onDismiss: () => setState(() => _successMessage = null),
             ),
           ],
         ],
@@ -444,76 +401,116 @@ class _UserDetailScreenState extends ConsumerState<UserDetailScreen> {
   ) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirm'),
-          ),
-        ],
+      builder: (dialogContext) => BbDialog(
+        title: title,
+        body: content,
+        secondary: BbDialogAction(
+          label: 'Cancel',
+          onPressed: () => Navigator.pop(dialogContext, false),
+        ),
+        primary: BbDialogAction(
+          label: 'Confirm',
+          onPressed: () => Navigator.pop(dialogContext, true),
+        ),
       ),
     );
     return result ?? false;
   }
 }
 
-class _InfoCard extends StatelessWidget {
+class _StatusMessage extends StatelessWidget {
+  final String message;
+  final String icon;
+  final Color color;
+  final VoidCallback onDismiss;
+
+  const _StatusMessage({
+    required this.message,
+    required this.icon,
+    required this.color,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BBSpace.sm),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BBRadius.xsAll,
+      ),
+      child: Row(
+        children: [
+          BbIcon(name: icon, color: color),
+          const SizedBox(width: BBSpace.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: BBType.body(context).copyWith(color: color),
+            ),
+          ),
+          BbButton(
+            asIcon: true,
+            iconLeft: 'close',
+            variant: BbButtonVariant.tertiary,
+            size: BbButtonSize.sm,
+            semanticLabel: 'Dismiss',
+            onPressed: onDismiss,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoCard extends ConsumerWidget {
   final UserModel user;
 
   const _InfoCard({required this.user});
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Theme.of(context).dividerColor),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'User Information',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            _InfoRow(
-              icon: Icons.badge_outlined,
-              label: 'User ID',
-              value: user.id,
-              copyable: true,
-            ),
-            _InfoRow(
-              icon: Icons.email_outlined,
-              label: 'Email',
-              value: user.email,
-              copyable: true,
-            ),
-            _InfoRow(
-              icon: Icons.person_outline,
-              label: 'Role',
-              value: user.role.name.toUpperCase(),
-            ),
-            _InfoRow(
-              icon: Icons.calendar_today,
-              label: 'Created At',
-              value: user.createdAt != null
-                  ? '${user.createdAt!.day}.${user.createdAt!.month}.${user.createdAt!.year}'
-                  : '-',
-            ),
-          ],
-        ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = _UserDetailPalette.of(context, ref);
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'User Information',
+            style: BBType.h3(
+              context,
+            ).copyWith(fontWeight: FontWeight.bold, color: palette.textPrimary),
+          ),
+          const SizedBox(height: BBSpace.md),
+          _InfoRow(
+            icon: Icons.badge_outlined,
+            label: 'User ID',
+            value: user.id,
+            copyable: true,
+            palette: palette,
+          ),
+          _InfoRow(
+            icon: Icons.email_outlined,
+            label: 'Email',
+            value: user.email,
+            copyable: true,
+            palette: palette,
+          ),
+          _InfoRow(
+            icon: Icons.person_outline,
+            label: 'Role',
+            value: user.role.name.toUpperCase(),
+            palette: palette,
+          ),
+          _InfoRow(
+            icon: Icons.calendar_today,
+            label: 'Created At',
+            value: user.createdAt != null
+                ? '${user.createdAt!.day}.${user.createdAt!.month}.${user.createdAt!.year}'
+                : '-',
+            palette: palette,
+          ),
+        ],
       ),
     );
   }
@@ -524,49 +521,48 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
   final bool copyable;
+  final _UserDetailPalette palette;
 
   const _InfoRow({
     required this.icon,
     required this.label,
     required this.value,
+    required this.palette,
     this.copyable = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: BBSpace.sm),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 12),
+          Icon(icon, size: 20, color: palette.textSecondary),
+          const SizedBox(width: BBSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: palette.textTertiary),
                 ),
                 Row(
                   children: [
                     Expanded(
                       child: SelectableText(
                         value,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        style: BBType.body(context).copyWith(
                           fontWeight: FontWeight.w500,
+                          color: palette.textPrimary,
                         ),
                         maxLines: 1,
                       ),
                     ),
                     if (copyable) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: BBSpace.xs),
                       InkWell(
                         onTap: () async {
                           try {
@@ -610,56 +606,49 @@ class _StatisticsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final propertiesAsync = ref.watch(userPropertiesCountProvider(user.id));
     final bookingsAsync = ref.watch(userBookingsCountProvider(user.id));
+    final palette = _UserDetailPalette.of(context, ref);
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Theme.of(context).dividerColor),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Statistics',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _StatBox(
-                    label: 'Properties',
-                    value: propertiesAsync.when(
-                      data: (d) => d.toString(),
-                      loading: () => '...',
-                      error: (_, _) => '-',
-                    ),
-                    icon: Icons.home_work_outlined,
-                    color: Colors.blue,
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Statistics',
+            style: BBType.h3(
+              context,
+            ).copyWith(fontWeight: FontWeight.bold, color: palette.textPrimary),
+          ),
+          const SizedBox(height: BBSpace.md),
+          Row(
+            children: [
+              Expanded(
+                child: _StatBox(
+                  label: 'Properties',
+                  value: propertiesAsync.when(
+                    data: (d) => d.toString(),
+                    loading: () => '...',
+                    error: (_, _) => '-',
                   ),
+                  icon: Icons.home_work_outlined,
+                  color: Colors.blue,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _StatBox(
-                    label: 'Bookings',
-                    value: bookingsAsync.when(
-                      data: (d) => d.toString(),
-                      loading: () => '...',
-                      error: (_, _) => '-',
-                    ),
-                    icon: Icons.calendar_month_outlined,
-                    color: Colors.orange,
+              ),
+              const SizedBox(width: BBSpace.sm),
+              Expanded(
+                child: _StatBox(
+                  label: 'Bookings',
+                  value: bookingsAsync.when(
+                    data: (d) => d.toString(),
+                    loading: () => '...',
+                    error: (_, _) => '-',
                   ),
+                  icon: Icons.calendar_month_outlined,
+                  color: Colors.orange,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -681,28 +670,27 @@ class _StatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BBSpace.sm),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BBRadius.smAll,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 24, color: color),
-          const SizedBox(height: 8),
+          const SizedBox(height: BBSpace.xs),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+            style: BBType.h2(
+              context,
+            ).copyWith(fontWeight: FontWeight.bold, color: color),
           ),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color.withValues(alpha: 0.8),
-            ),
+            style: BBType.caption(
+              context,
+            ).copyWith(color: color.withValues(alpha: 0.8)),
           ),
         ],
       ),
@@ -725,129 +713,92 @@ class _UserStatusCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statusAsync = ref.watch(userAccountStatusProvider(user.id));
     final currentStatus = statusAsync.valueOrNull ?? 'trial';
+    final palette = _UserDetailPalette.of(context, ref);
 
     final statusColor = switch (currentStatus) {
       'active' => Colors.green,
       'suspended' => Colors.red,
       'trial_expired' => Colors.orange,
-      _ => Colors.blue, // trial
+      _ => Colors.blue,
     };
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Theme.of(context).dividerColor),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.shield_outlined, color: AppColors.primary),
-                const SizedBox(width: 12),
-                Text(
-                  'Account Status',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+    return BbCard(
+      padding: const EdgeInsets.all(BBSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const BbIcon(name: 'shield', size: 24, color: AppColors.primary),
+              const SizedBox(width: BBSpace.sm),
+              Text(
+                'Account Status',
+                style: BBType.h3(context).copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: palette.textPrimary,
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: statusColor.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  child: Text(
-                    currentStatus.toUpperCase().replaceAll('_', ' '),
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: BBSpace.xs,
+                  vertical: 6,
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (currentStatus != 'active')
-                  _StatusButton(
-                    label: 'Activate',
-                    icon: Icons.check_circle_outline,
-                    color: Colors.green,
-                    isLoading: isLoading,
-                    onPressed: () => onStatusChange('active'),
-                  ),
-                if (currentStatus != 'suspended')
-                  _StatusButton(
-                    label: 'Suspend',
-                    icon: Icons.block,
-                    color: Colors.red,
-                    isLoading: isLoading,
-                    onPressed: () => onStatusChange('suspended'),
-                  ),
-                if (currentStatus != 'trial')
-                  _StatusButton(
-                    label: 'Reset to Trial',
-                    icon: Icons.restart_alt,
-                    color: Colors.blue,
-                    isLoading: isLoading,
-                    onPressed: () => onStatusChange('trial'),
-                  ),
-              ],
-            ),
-          ],
-        ),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BBRadius.fullAll,
+                  border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  currentStatus.toUpperCase().replaceAll('_', ' '),
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: statusColor, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: BBSpace.md),
+          Wrap(
+            spacing: BBSpace.xs,
+            runSpacing: BBSpace.xs,
+            children: [
+              if (currentStatus != 'active')
+                BbButton(
+                  label: 'Activate',
+                  iconLeft: 'check_circle',
+                  variant: BbButtonVariant.secondary,
+                  size: BbButtonSize.sm,
+                  disabled: isLoading,
+                  onPressed: () => onStatusChange('active'),
+                ),
+              if (currentStatus != 'suspended')
+                BbButton(
+                  label: 'Suspend',
+                  iconLeft: 'block',
+                  variant: BbButtonVariant.destructiveSoft,
+                  size: BbButtonSize.sm,
+                  disabled: isLoading,
+                  onPressed: () => onStatusChange('suspended'),
+                ),
+              if (currentStatus != 'trial')
+                BbButton(
+                  label: 'Reset to Trial',
+                  iconLeft: 'restart_alt',
+                  variant: BbButtonVariant.secondary,
+                  size: BbButtonSize.sm,
+                  disabled: isLoading,
+                  onPressed: () => onStatusChange('trial'),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _StatusButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  const _StatusButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.isLoading,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: isLoading ? null : onPressed,
-      icon: Icon(icon, size: 16),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color.withValues(alpha: 0.5)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      ),
-    );
-  }
-}
-
-class _AdminControlsCard extends StatelessWidget {
+class _AdminControlsCard extends ConsumerWidget {
   final bool hideSubscription;
   final bool isLoading;
   final ValueChanged<bool> onHideSubscriptionChanged;
@@ -861,77 +812,51 @@ class _AdminControlsCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Theme.of(context).dividerColor),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.admin_panel_settings,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Admin Controls',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            SwitchListTile(
-              title: const Text('Hide Subscription'),
-              subtitle: const Text('Hide subscription UI from user dashboard'),
-              value: hideSubscription,
-              onChanged: onHideSubscriptionChanged,
-              contentPadding: EdgeInsets.zero,
-            ),
-
-            const SizedBox(height: 24),
-
-            // Save Button
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: FilledButton(
-                onPressed: isLoading ? null : onSave,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Save Changes'),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = _UserDetailPalette.of(context, ref);
+    return BbCard(
+      padding: const EdgeInsets.all(BBSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const BbIcon(
+                name: 'admin_panel_settings',
+                size: 24,
+                color: AppColors.primary,
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: BBSpace.sm),
+              Text(
+                'Admin Controls',
+                style: BBType.h3(context).copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: palette.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbSwitch(
+            value: hideSubscription,
+            onChanged: onHideSubscriptionChanged,
+            label: 'Hide Subscription',
+            subtitle: 'Hide subscription UI from user dashboard',
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbButton(
+            label: 'Save Changes',
+            fullWidth: true,
+            loading: isLoading,
+            onPressed: onSave,
+          ),
+        ],
       ),
     );
   }
 }
 
-class _LifetimeLicenseCard extends StatelessWidget {
+class _LifetimeLicenseCard extends ConsumerWidget {
   final UserModel user;
   final bool isLoading;
   final VoidCallback onGrant;
@@ -945,82 +870,52 @@ class _LifetimeLicenseCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    // Only show if user is not already lifetime (for grant) or IS lifetime (for revoke)
-    // Actually typically we want to show actions available.
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = _UserDetailPalette.of(context, ref);
     final hasLifetime = user.accountType == AccountType.lifetime;
+    final accentColor = hasLifetime ? Colors.red : Colors.purple;
 
-    return Card(
-      elevation: 0,
-      color: hasLifetime
-          ? Colors.red.withValues(alpha: 0.05)
-          : Colors.purple.withValues(alpha: 0.05),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: hasLifetime
-              ? Colors.red.withValues(alpha: 0.2)
-              : Colors.purple.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.verified,
-                  color: hasLifetime ? Colors.red : Colors.purple,
-                ),
-                const SizedBox(width: 12),
-                Text(
+    return BbCard(
+      variant: BbCardVariant.accentLeft,
+      accentTone: hasLifetime ? BbCardAccentTone.error : BbCardAccentTone.info,
+      padding: const EdgeInsets.all(BBSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              BbIcon(name: 'verified', size: 24, color: accentColor),
+              const SizedBox(width: BBSpace.sm),
+              Expanded(
+                child: Text(
                   hasLifetime
                       ? 'Revoke Lifetime License'
                       : 'Grant Lifetime License',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: hasLifetime ? Colors.red : Colors.purple,
-                  ),
+                  style: BBType.h3(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.bold, color: accentColor),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              hasLifetime
-                  ? 'This will remove the lifetime license and revert the user to Trial status.'
-                  : 'This will grant the user permanent access to all Premium features without recurring payments.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton(
-                onPressed: isLoading
-                    ? null
-                    : (hasLifetime ? onRevoke : onGrant),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: hasLifetime ? Colors.red : Colors.purple,
-                  side: BorderSide(
-                    color: hasLifetime ? Colors.red : Colors.purple,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(hasLifetime ? 'Revoke License' : 'Grant License'),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: BBSpace.sm),
+          Text(
+            hasLifetime
+                ? 'This will remove the lifetime license and revert the user to Trial status.'
+                : 'This will grant the user permanent access to all Premium features without recurring payments.',
+            style: BBType.body(context).copyWith(color: palette.textSecondary),
+          ),
+          const SizedBox(height: BBSpace.md),
+          BbButton(
+            label: hasLifetime ? 'Revoke License' : 'Grant License',
+            variant: hasLifetime
+                ? BbButtonVariant.destructive
+                : BbButtonVariant.primary,
+            fullWidth: true,
+            loading: isLoading,
+            onPressed: hasLifetime ? onRevoke : onGrant,
+          ),
+        ],
       ),
     );
   }
@@ -1034,14 +929,48 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(message, style: const TextStyle(color: Colors.grey)),
-        ],
+      child: BbEmptyState(
+        icon: 'error_outline',
+        title: 'Something went wrong',
+        body: message,
+        compact: true,
       ),
+    );
+  }
+}
+
+/// Text-tier color palette: admin-dark via [BbAdminDarkTokens] (#646 wires
+/// the extension on the shell), or [ColorScheme] in admin-light / owner.
+class _UserDetailPalette {
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textTertiary;
+  final bool isDark;
+
+  const _UserDetailPalette({
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textTertiary,
+    required this.isDark,
+  });
+
+  static _UserDetailPalette of(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(adminDarkModeProvider);
+    if (isDark) {
+      final t = BbAdminDarkTokens.of(context);
+      return _UserDetailPalette(
+        textPrimary: t.textPrimary,
+        textSecondary: t.textSecondary,
+        textTertiary: t.textTertiary,
+        isDark: true,
+      );
+    }
+    final scheme = Theme.of(context).colorScheme;
+    return _UserDetailPalette(
+      textPrimary: scheme.onSurface,
+      textSecondary: scheme.onSurfaceVariant,
+      textTertiary: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+      isDark: false,
     );
   }
 }

@@ -70,6 +70,22 @@ jest.mock("../src/utils/rateLimit", () => ({
   checkRateLimit: jest.fn().mockReturnValue(true),
 }));
 
+// SF-078: mock the trial gate to behave like the pre-gate code path —
+// asserts auth + returns uid, no Firestore lookup. Trial-gate semantics
+// themselves are covered by test/requireActiveOwner.test.ts.
+jest.mock("../src/utils/requireActiveOwner", () => ({
+  requireActiveOwner: jest.fn().mockImplementation(async (auth: { uid?: string | null } | null | undefined) => {
+    if (!auth?.uid) {
+      // Use the real HttpsError so the existing test assertions on
+      // 'unauthenticated' still match.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const {HttpsError} = require("firebase-functions/v2/https");
+      throw new HttpsError("unauthenticated", "Authentication required.");
+    }
+    return auth.uid;
+  }),
+}));
+
 jest.mock("../src/utils/priceValidation", () => ({
   validateBookingPrice: jest.fn().mockResolvedValue(undefined),
   calculateBookingPrice: jest.fn().mockResolvedValue({ totalPrice: 500 }),

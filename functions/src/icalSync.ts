@@ -10,6 +10,7 @@ import {logInfo, logError, logWarn, logSuccess} from "./logger";
 import {setUser, captureMessage} from "./sentry";
 import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
+import {requireActiveOwner} from "./utils/requireActiveOwner";
 
 /**
  * F-NEW-05: SSRF defence for owner-supplied iCal URLs.
@@ -405,13 +406,12 @@ export const scheduledIcalSync = onSchedule(
  * Called from Owner Dashboard when user clicks "Sync Now"
  */
 export const syncIcalFeedNow = onCall({cors: getCorsAllowlist()}, async (request) => {
-  // Check authentication
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
-  }
+  // SF-078: trial gate first. trial_expired owners should not be re-syncing
+  // iCal feeds (consumes external HTTP + Firestore writes).
+  const callerUid = await requireActiveOwner(request.auth);
 
   // Set user context for Sentry error tracking
-  setUser(request.auth.uid);
+  setUser(callerUid);
 
   const {feedId, propertyId} = request.data;
 
@@ -427,7 +427,7 @@ export const syncIcalFeedNow = onCall({cors: getCorsAllowlist()}, async (request
     // Verify user owns this property
     const propertyDoc = await db.collection("properties").doc(propertyId).get();
 
-    if (!propertyDoc.exists || propertyDoc.data()?.owner_id !== request.auth.uid) {
+    if (!propertyDoc.exists || propertyDoc.data()?.owner_id !== callerUid) {
       throw new HttpsError("permission-denied", "You do not own this property");
     }
 

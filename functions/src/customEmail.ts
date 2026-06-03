@@ -3,6 +3,7 @@ import {sendCustomEmailToGuest as sendCustomGuestEmailService} from "./emailServ
 import {logError, logInfo} from "./logger";
 import {validateEmail} from "./utils/emailValidation";
 import {enforceRateLimit} from "./utils/rateLimit";
+import {requireActiveOwner} from "./utils/requireActiveOwner";
 import {db} from "./firebase";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
@@ -19,15 +20,9 @@ import {getCorsAllowlist} from "./utils/corsAllowlist";
  * - Input validation and length limits
  */
 export const sendCustomEmailToGuest = onCall({secrets: ["RESEND_API_KEY"], cors: getCorsAllowlist()}, async (request) => {
-  // Verify authentication
-  if (!request.auth) {
-    throw new HttpsError(
-      "unauthenticated",
-      "User must be authenticated to send emails"
-    );
-  }
-
-  const userId = request.auth.uid;
+  // SF-078: trial gate BEFORE rate-limit so trial_expired callers don't
+  // burn their per-uid budget (or trigger Resend spend).
+  const userId = await requireActiveOwner(request.auth);
 
   // Set user context for Sentry error tracking
   setUser(userId);

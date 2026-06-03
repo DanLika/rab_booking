@@ -5,6 +5,7 @@ import {calculateTokenExpiration} from "./bookingAccessToken";
 import {findBookingById} from "./utils/bookingLookup";
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
+import {requireActiveOwner} from "./utils/requireActiveOwner";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
@@ -21,11 +22,9 @@ export const updateBookingTokenExpiration = onCall({cors: getCorsAllowlist()}, a
   // F-NEW-06: require auth. Pre-fix the CF was anonymous + had no ownership
   // check, allowing booking-ID enumeration via 404/200 oracle and token
   // re-arming when an owner moves check_out forward.
-  if (!request.auth?.uid) {
-    throw new HttpsError("unauthenticated", "Authentication required");
-  }
-
-  const userId = request.auth.uid;
+  // SF-078: trial gate runs BEFORE rate-limit so trial_expired callers don't
+  // burn their per-uid budget.
+  const userId = await requireActiveOwner(request.auth);
   setUser(userId);
 
   // F-NEW-06: per-uid rate limit. 30 calls / 5 min covers legitimate batch

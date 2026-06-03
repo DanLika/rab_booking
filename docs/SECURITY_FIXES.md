@@ -4386,6 +4386,79 @@ Nova regression-test pokrivanja:
 - audit/34 §5 (root cause of compounding noise — closed by this PR).
 - audit/67 F-67-01 (UI silent no-op + SEED fixture path that originally triggered FLUTTER-7E).
 
+---
+
+## SF-078: Trial gate — server-side L1 enforcement (HIGH)
+
+**Datum**: 2026-06-03
+**Prioritet**: 🔴 HIGH (revenue + ToS abuse)
+**Status**: 🔄 Code complete + tests + audit/110; **NOT yet deployed**. Per-deploy operator authorisation in a follow-up session (dev-first per `audit/22 §1` order).
+**Audit**: `audit/109-security-session-2026-06-03.md` (item 1), `audit/110-trial-gate-map.md` (gate-map + decision rationale)
+
+### Problem
+
+Trial state (`accountStatus = 'trial_expired' | 'suspended'`) was enforced only via Flutter UI (`trial_status.dart` `hasFullAccess`, `trial_banner.dart`). The server had ZERO action gates: a `trial_expired` owner could call backend callables directly (DevTools → REST) and the call would succeed, generating revenue, sending Resend mail, mutating Firestore — bypassing the client-side gate entirely.
+
+### Fix shape
+
+New helper `functions/src/utils/requireActiveOwner.ts`. Asserts `request.auth.uid` AND verifies `users/{uid}.accountStatus ∈ {'trial', 'active'}` (mirror of the client `TrialStatus.hasFullAccess` getter). Returns the uid on success; throws `HttpsError('unauthenticated', …)` or `HttpsError('failed-precondition', …)`.
+
+**Threaded into 7 L1 owner-management callables** (the full L1 set per `audit/110`):
+
+- `createOwnerBookingAtomic` (`atomicBooking.ts:1657`)
+- `updateBookingAtomic` (`atomicBooking.ts:1920`)
+- `updateBookingTokenExpiration` (`updateBookingTokenExpiration.ts:20`)
+- `resendBookingEmail` (`resendBookingEmail.ts:45`)
+- `sendCustomEmailToGuest` (`customEmail.ts:21`)
+- `syncIcalFeedNow` (`icalSync.ts:407`)
+- `createStripeConnectAccount` (`stripeConnect.ts:16`)
+
+**Ordering invariant**: the helper runs BEFORE any rate-limit call (`enforceRateLimit` / `checkRateLimit`) in each callable, so a trial-expired user spamming the endpoint does NOT burn their per-uid rate-limit budget (or the Firestore writes that back it).
+
+### Owner-upgrade catch-22 — verified separate
+
+`createStripeCheckoutSession` (guest booking payment) and `createSubscriptionCheckoutSession` (owner upgrade) are SEPARATE callables. The owner-upgrade path is EXEMPT from this gate; the gate-map `audit/110` records the verification.
+
+### Unknown-status handling
+
+**Fail-CLOSED + Sentry WARN.** Helper throws `failed-precondition` and logs to `captureMessage(…, 'warning', {uid, observed})` for any value outside `['trial','active']`. Mirrors the project's documented stance for security gates (`functions/src/utils/rateLimit.ts`: "Default behavior is fail-closed"). No flag — flags on security defaults rot. Operator can change posture in a follow-up PR.
+
+The `migrateTrialStatus.ts` migration ran on PROD (audit/102); legacy users should have `accountStatus` set. If unknown values reappear, Sentry surfaces them for backfill.
+
+### Open follow-ups
+
+**Not closed by this PR**:
+
+1. **Firestore-rules direct-write paths.** Owners can mutate `properties/{propertyId}` create/update, `properties/*/units/*/widget_settings/{unitId}`, `properties/*/units/*/pricing_calendar/{...}`, and `properties/*/units/*/bookings/{bookingId}` directly via Firestore client SDK — bypassing callables entirely. `canCreateAsOwner()` in `firestore.rules:22-26` checks only auth + ownership, NOT `accountStatus`. Closing this needs a rules-tightening PR adding a `getUserStatus(uid) in ['trial', 'active']` predicate to each `allow create/update` clause. Per `audit/22 §1` deploy order ("rules zadnje"), rules tightening is a separate PR with separate dev-first cycle. See `audit/110 §Direct-write paths NOT covered by this PR`.
+2. **L2 (guest-facing) callables.** `createBookingAtomic`, `createStripeCheckoutSession`, `getUnitAvailability`, `guestCancelBooking`, `verifyBookingAccess`, `getBookingByStripeSession`, `resendGuestBookingEmail` need a different gate model (gate on the BOOKED UNIT's owner status, not the caller's). Step A2 — separate session + PR.
+3. **`scheduledPushNotifications.ts` off-spec `'premium'` value** in its filter `where('accountStatus', 'in', ['trial', 'active', 'premium'])`. Not introduced by this PR; documented in `audit/110 §Client-taxonomy mirror`.
+
+### Test coverage
+
+- `functions/test/requireActiveOwner.test.ts` — 10 tests covering: unauthenticated, `trial`, `active`, `trial_expired`, `suspended`, unknown value (`premium`), missing field, missing user doc, Firestore read error, rate-limit-budget no-touch invariant.
+- 3 existing L1 callable suites updated to mock the helper (`atomicBooking.test.ts`, `icalSync.test.ts`, `stripeConnect.test.ts`); 2 callable-specific assertions on the new uniform `"Authentication required."` message; 2 EXEMPT callables (`getStripeAccountStatus`, `disconnectStripeAccount`) explicitly noted in their unauth tests as preserving their original message.
+- **Full suite**: 441/441 tests PASS, 21/21 suites green.
+- **Rules tests**: 107 passed + 6 skipped (8 suites) — `npm run test:rules` clean.
+- **Build**: `npm run build` zero errors.
+
+### Zahvaćeni fajlovi
+
+- `functions/src/utils/requireActiveOwner.ts` (NEW, 130 lines)
+- `functions/src/atomicBooking.ts` — `createOwnerBookingAtomic`, `updateBookingAtomic`
+- `functions/src/customEmail.ts` — `sendCustomEmailToGuest`
+- `functions/src/icalSync.ts` — `syncIcalFeedNow`
+- `functions/src/resendBookingEmail.ts` — `resendBookingEmail`
+- `functions/src/stripeConnect.ts` — `createStripeConnectAccount` only (`getStripeAccountStatus` + `disconnectStripeAccount` EXEMPT)
+- `functions/src/updateBookingTokenExpiration.ts` — `updateBookingTokenExpiration`
+- `functions/test/requireActiveOwner.test.ts` (NEW)
+- `functions/test/{atomicBooking,icalSync,stripeConnect}.test.ts` — mock + assertion updates
+- `audit/110-trial-gate-map.md` (NEW)
+- `docs/SECURITY_FIXES.md` — this entry
+
+`lib/`, `firestore.rules`, `storage.rules` — UNCHANGED. Owner-safe; backend-only.
+
+---
+
 ## SF-080: Layer-1 RULES trial gate — `isActiveOwner()` on owner direct-write paths
 
 Sibling of SF-078 (server-side CF L1, PR #666). Closes the direct-Firestore-SDK

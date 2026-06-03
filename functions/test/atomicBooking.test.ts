@@ -70,8 +70,22 @@ jest.mock("../src/utils/rateLimit", () => ({
   checkRateLimit: jest.fn().mockReturnValue(true),
 }));
 
-// SF-079 L2: bypass unit-owner gate at the helper boundary. Gate semantics
-// covered by test/requireActiveUnitOwner.test.ts.
+// SF-078: mock the L1 owner-management gate at the helper boundary. Asserts
+// auth + returns uid, no Firestore lookup. Gate semantics covered by
+// test/requireActiveOwner.test.ts.
+jest.mock("../src/utils/requireActiveOwner", () => ({
+  requireActiveOwner: jest.fn().mockImplementation(async (auth: { uid?: string | null } | null | undefined) => {
+    if (!auth?.uid) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const {HttpsError} = require("firebase-functions/v2/https");
+      throw new HttpsError("unauthenticated", "Authentication required.");
+    }
+    return auth.uid;
+  }),
+}));
+
+// SF-079: mock the L2 unit-owner gate at the helper boundary. Bypasses
+// gate. Gate semantics covered by test/requireActiveUnitOwner.test.ts.
 jest.mock("../src/utils/requireActiveUnitOwner", () => ({
   requireActiveUnitOwner: jest.fn().mockResolvedValue("mock-owner-uid"),
 }));

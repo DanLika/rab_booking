@@ -57,6 +57,19 @@ jest.mock("../src/sentry", () => ({
   setUser: jest.fn(),
 }));
 
+// SF-078: mock trial gate (same as atomicBooking.test.ts / stripeConnect.test.ts).
+// Gate semantics covered by test/requireActiveOwner.test.ts.
+jest.mock("../src/utils/requireActiveOwner", () => ({
+  requireActiveOwner: jest.fn().mockImplementation(async (auth: { uid?: string | null } | null | undefined) => {
+    if (!auth?.uid) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const {HttpsError} = require("firebase-functions/v2/https");
+      throw new HttpsError("unauthenticated", "Authentication required.");
+    }
+    return auth.uid;
+  }),
+}));
+
 jest.mock("../src/utils/echoDetection", () => ({
   analyzeEvent: jest.fn().mockReturnValue({
     isProbableEcho: false,
@@ -165,7 +178,7 @@ describe("iCal Sync Functions", () => {
 
     it("should throw error if user is unauthenticated", async () => {
       const wrapped = wrap(syncIcalFeedNow);
-      await expect(wrapped({ data: validData })).rejects.toThrow("User must be authenticated");
+      await expect(wrapped({ data: validData })).rejects.toThrow("Authentication required.");
     });
 
     it("should throw error if arguments are missing", async () => {

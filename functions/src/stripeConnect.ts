@@ -4,6 +4,7 @@ import {getStripeClient, stripeSecretKey} from "./stripe";
 import {logInfo, logError, logWarn} from "./logger";
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
+import {requireActiveOwner} from "./utils/requireActiveOwner";
 import {logSecurityEvent, SecurityEventType} from "./utils/securityMonitoring";
 import {isAllowedReturnUrl} from "./utils/returnUrlValidation";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
@@ -14,27 +15,26 @@ import {getCorsAllowlist} from "./utils/corsAllowlist";
  * Creates a Stripe Express account for the owner if they don't have one
  */
 export const createStripeConnectAccount = onCall({secrets: [stripeSecretKey], cors: getCorsAllowlist()}, async (request) => {
-  // Check authentication
-  if (!request.auth) {
-    throw new HttpsError("unauthenticated", "User must be authenticated");
-  }
+  // SF-078: trial gate BEFORE rate-limit so trial_expired callers don't burn
+  // their per-uid budget. Owner subscription/upgrade flow is the separate
+  // `createSubscriptionCheckoutSession` callable (EXEMPT) — see audit/110.
+  const ownerId = await requireActiveOwner(request.auth);
 
   // Rate Limiting: Prevent abuse of Stripe Account Link generation
   // 5 calls per 5 minutes per user
   const rawRequest = request.rawRequest as { ip?: string; headers?: Record<string, string> } | undefined;
   const clientIp = rawRequest?.ip || "unknown";
 
-  if (!checkRateLimit(`stripe_connect:${request.auth.uid}`, 5, 300)) {
+  if (!checkRateLimit(`stripe_connect:${ownerId}`, 5, 300)) {
     logSecurityEvent(
       SecurityEventType.RATE_LIMIT_EXCEEDED,
-      {userId: request.auth.uid, action: "stripe_connect", ip: clientIp},
+      {userId: ownerId, action: "stripe_connect", ip: clientIp},
       "medium"
     ).catch(() => {});
-    logWarn("createStripeConnectAccount: Rate limit exceeded", {userId: request.auth.uid});
+    logWarn("createStripeConnectAccount: Rate limit exceeded", {userId: ownerId});
     throw new HttpsError("resource-exhausted", "Too many attempts. Please try again later.");
   }
 
-  const ownerId = request.auth.uid;
   const {returnUrl, refreshUrl} = request.data;
 
   // Set user context for Sentry error tracking

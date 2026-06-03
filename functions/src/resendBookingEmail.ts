@@ -10,6 +10,7 @@ import {findBookingById} from "./utils/bookingLookup";
 import {generateBookingReference} from "./utils/bookingReferenceGenerator";
 import {setUser} from "./sentry";
 import {checkRateLimit} from "./utils/rateLimit";
+import {requireActiveOwner} from "./utils/requireActiveOwner";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 /**
@@ -43,16 +44,13 @@ function toDate(value: any): Date {
  * - Caller must be the owner of the property
  */
 export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"], cors: getCorsAllowlist()}, async (request) => {
-  // Verify authentication
-  if (!request.auth) {
-    throw new HttpsError(
-      "unauthenticated",
-      "You must be logged in to resend emails"
-    );
-  }
+  // SF-078: trial gate before any rate-limit / Resend call. Asserts auth +
+  // status, returns uid. trial_expired owners get a clear upgrade-prompt
+  // error instead of silent token rotation + email spend.
+  const callerUid = await requireActiveOwner(request.auth);
 
   // Set user context for Sentry error tracking
-  setUser(request.auth.uid);
+  setUser(callerUid);
 
   const {bookingId} = request.data;
 
@@ -67,10 +65,10 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"], cors: get
   // `access_token` + sends mail via Resend — without a cap, owner (or
   // anyone with hijacked owner session) can mailbox-harass guest +
   // amplify Resend bill. 5/hr is generous for legit retry-on-bounce.
-  const rateLimitKey = `resend_booking_email:${request.auth.uid}:${bookingId}`;
+  const rateLimitKey = `resend_booking_email:${callerUid}:${bookingId}`;
   if (!checkRateLimit(rateLimitKey, 5, 3600)) {
     logError("[ResendBookingEmail] Rate limit exceeded", {
-      requesterId: request.auth.uid,
+      requesterId: callerUid,
       bookingId,
     });
     throw new HttpsError(
@@ -82,11 +80,11 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"], cors: get
   try {
     logInfo("[ResendBookingEmail] Starting resend process", {
       bookingId,
-      requesterId: request.auth.uid,
+      requesterId: callerUid,
     });
 
     // Find booking using helper (avoids FieldPath.documentId bug with collectionGroup)
-    const bookingResult = await findBookingById(bookingId, request.auth.uid);
+    const bookingResult = await findBookingById(bookingId, callerUid);
 
     if (!bookingResult) {
       throw new HttpsError(
@@ -119,9 +117,9 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"], cors: get
     const unitData = unitDoc.data()!;
 
     // Verify ownership - check owner_id from booking instead of unit
-    if (booking.owner_id !== request.auth.uid) {
+    if (booking.owner_id !== callerUid) {
       logError("[ResendBookingEmail] Unauthorized - not the owner", {
-        requesterId: request.auth.uid,
+        requesterId: callerUid,
         ownerId: booking.owner_id,
       });
       throw new HttpsError(
@@ -228,7 +226,7 @@ export const resendBookingEmail = onCall({secrets: ["RESEND_API_KEY"], cors: get
     // Log unexpected errors - pass error as second param for proper serialization
     logError("[ResendBookingEmail] Unexpected error", error, {
       bookingId,
-      requesterId: request.auth.uid,
+      requesterId: callerUid,
     });
 
     throw new HttpsError(

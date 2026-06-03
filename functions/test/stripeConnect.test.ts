@@ -41,6 +41,20 @@ jest.mock("../src/utils/rateLimit", () => ({
   checkRateLimit: jest.fn().mockReturnValue(true), // Default to allow
 }));
 
+// SF-078: mock the trial gate the same way atomicBooking.test.ts does.
+// Gate semantics live in test/requireActiveOwner.test.ts; here we only
+// need the gate to behave like "asserts auth, returns uid".
+jest.mock("../src/utils/requireActiveOwner", () => ({
+  requireActiveOwner: jest.fn().mockImplementation(async (auth: { uid?: string | null } | null | undefined) => {
+    if (!auth?.uid) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const {HttpsError} = require("firebase-functions/v2/https");
+      throw new HttpsError("unauthenticated", "Authentication required.");
+    }
+    return auth.uid;
+  }),
+}));
+
 describe("Stripe Connect Functions", () => {
   // Mock Firestore and Stripe clients with explicit 'any' types for testing
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -146,7 +160,7 @@ describe("Stripe Connect Functions", () => {
     it("should throw an error if the user is unauthenticated", async () => {
       const wrapped = wrap(createStripeConnectAccount);
       await expect(wrapped({ data: validRequest.data })).rejects.toThrow(
-        new HttpsError("unauthenticated", "User must be authenticated")
+        new HttpsError("unauthenticated", "Authentication required.")
       );
     });
 
@@ -231,6 +245,8 @@ describe("Stripe Connect Functions", () => {
     });
 
     it("should throw an error if the user is unauthenticated", async () => {
+      // getStripeAccountStatus is EXEMPT from SF-078 (read-only). Keeps its
+      // original per-callsite "User must be authenticated" message.
       const wrapped = wrap(getStripeAccountStatus);
       await expect(wrapped({})).rejects.toThrow(
         new HttpsError("unauthenticated", "User must be authenticated")
@@ -291,6 +307,8 @@ describe("Stripe Connect Functions", () => {
     });
 
     it("should throw an error if the user is unauthenticated", async () => {
+      // disconnectStripeAccount is EXEMPT from SF-078 (customer off-ramp).
+      // Keeps its original per-callsite "User must be authenticated" message.
       const wrapped = wrap(disconnectStripeAccount);
       await expect(wrapped({})).rejects.toThrow(
         new HttpsError("unauthenticated", "User must be authenticated")

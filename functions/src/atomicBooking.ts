@@ -37,6 +37,7 @@ import {
   type BookingEmailTracking,
 } from "./utils/bookingHelpers";
 import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
+import {requireActiveOwner} from "./utils/requireActiveOwner";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
 import {setUser, captureMessage} from "./sentry";
@@ -1655,10 +1656,9 @@ async function getOverlappingBookingsInTxn(
  *   - source = "admin", booking_reference = BK-<docId12>
  */
 export const createOwnerBookingAtomic = onCall(async (request) => {
-  const authUid = request.auth?.uid;
-  if (!authUid) {
-    throw new HttpsError("unauthenticated", "Authentication required.");
-  }
+  // SF-078: trial gate runs BEFORE rate-limit so trial_expired callers don't
+  // burn their per-uid budget. Helper asserts auth + status, returns uid.
+  const authUid = await requireActiveOwner(request.auth);
 
   setUser(authUid);
 
@@ -1918,10 +1918,8 @@ export const createOwnerBookingAtomic = onCall(async (request) => {
  *   - Server-written owner_id always derived from validated property doc
  */
 export const updateBookingAtomic = onCall(async (request) => {
-  const authUid = request.auth?.uid;
-  if (!authUid) {
-    throw new HttpsError("unauthenticated", "Authentication required.");
-  }
+  // SF-078: trial gate before rate-limit (see createOwnerBookingAtomic).
+  const authUid = await requireActiveOwner(request.auth);
 
   setUser(authUid);
 

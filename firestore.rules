@@ -46,6 +46,23 @@ service cloud.firestore {
         get(/databases/$(database)/documents/properties/$(propertyId)).data.owner_id == request.auth.uid;
     }
 
+    // SF-080 (audit/113): trial-gate Layer-1 RULES sibling to SF-078 (PR #666)
+    // server-side CF gate. Blocks owner direct-write paths (properties / owner
+    // bookings / pricing_calendar / widget_settings) when the calling owner's
+    // accountStatus is not in the allow-list. Fail-CLOSED:
+    //   - user doc missing → deny
+    //   - accountStatus field missing → deny (.get(field, null) returns null)
+    //   - value not in ['trial','active'] → deny (e.g. 'trial_expired',
+    //     'suspended', 'premium' drift, future enum entries)
+    // accountStatus is in the users self-write deny-list (rules:62-86) so it
+    // cannot be self-elevated by the owner — the read is trustworthy.
+    function isActiveOwner() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid))
+          .data.get('accountStatus', null) in ['trial', 'active'];
+    }
+
     // ========================================================================
     // USERS COLLECTION
     // ========================================================================
@@ -212,7 +229,11 @@ service cloud.firestore {
       // post-create). Reserved-name list NOT replicated here to avoid drift
       // with subdomainService.ts RESERVED_SUBDOMAINS; CF call before write
       // remains the authoritative guard.
-      allow create: if canCreateAsOwner()
+      // SF-080: gate prepended; admin bypass via OR.
+      allow create: if (
+          (canCreateAsOwner() && isActiveOwner())
+          || isAdmin() || isAdminFromFirestore()
+        )
         && (request.resource.data.get('subdomain', null) == null
             || (request.resource.data.subdomain is string
                 && request.resource.data.subdomain.size() >= 3
@@ -226,9 +247,16 @@ service cloud.firestore {
       // - `owner_id` immutable post-create — would otherwise allow handing
       //   ownership of a property to another UID via direct write.
       // - `created_at` immutable — audit-trail integrity.
-      allow update: if isResourceOwner()
+      // SF-080: trial-gate prepended; admin bypass via OR. Deny-list applies
+      // to admin too (those fields are CF-only).
+      allow update: if (
+          (isResourceOwner() && isActiveOwner())
+          || isAdmin() || isAdminFromFirestore()
+        )
         && !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['subdomain', 'owner_id', 'created_at']);
+      // SF-080: delete NOT gated — soft exit allowed for cleanup even after
+      // trial expiry; matches L2 anti-strand spirit (own resource off-ramp).
       allow delete: if isResourceOwner();
 
       // Units subcollection
@@ -255,7 +283,14 @@ service cloud.firestore {
             (isAuthenticated() && resource.data.owner_id == request.auth.uid);
           // SECURITY: Write access requires property ownership AND owner_id integrity
           // This ensures an owner cannot create a booking with a fake owner_id
-          allow create: if isPropertyOwner(propertyId) && request.resource.data.owner_id == request.auth.uid;
+          // SF-080: trial-gate prepended. Guest bookings go through
+          // createBookingAtomic (Admin SDK bypass) so this is owner-side manual-entry
+          // only — gating here matches L1 (owner-management) layer.
+          allow create: if (
+              (isPropertyOwner(propertyId) && isActiveOwner()
+               && request.resource.data.owner_id == request.auth.uid)
+              || isAdmin() || isAdminFromFirestore()
+            );
           // Phase B (audit/78): client-SDK updates may NOT touch status-machine
           // fields. Status transitions go through approveBooking / rejectBooking /
           // cancelBooking / completeBooking callables (Admin SDK bypasses rules).
@@ -277,7 +312,11 @@ service cloud.firestore {
           // - `created_at`        : audit-trail tamper.
           // - `source`            : booking-origin field.
           // - `provider_id`       : iCal-origin marker.
-          allow update: if isPropertyOwner(propertyId)
+          // SF-080: trial-gate prepended for owner-side edits.
+          allow update: if (
+              (isPropertyOwner(propertyId) && isActiveOwner())
+              || isAdmin() || isAdminFromFirestore()
+            )
             && !request.resource.data.diff(resource.data).affectedKeys()
                  .hasAny([
                    'status', 'approved_at', 'rejected_at', 'rejection_reason',
@@ -285,13 +324,21 @@ service cloud.firestore {
                    'payment_intent_id', 'emails_sent', 'booking_reference',
                    'owner_id', 'created_at', 'source', 'provider_id'
                  ]);
-          allow delete: if isPropertyOwner(propertyId);
+          // SF-080: trial-gate prepended for owner-side deletes.
+          allow delete: if (
+            (isPropertyOwner(propertyId) && isActiveOwner())
+            || isAdmin() || isAdminFromFirestore()
+          );
         }
 
         // Daily prices subcollection
+        // SF-080: trial-gate prepended (pricing_calendar = owner-management).
         match /daily_prices/{dateStr} {
           allow read: if true; // Public read for widget price display
-          allow create, update, delete: if isPropertyOwner(propertyId);
+          allow create, update, delete: if (
+            (isPropertyOwner(propertyId) && isActiveOwner())
+            || isAdmin() || isAdminFromFirestore()
+          );
         }
 
         // Additional services subcollection
@@ -310,16 +357,26 @@ service cloud.firestore {
       // served to external aggregators like Booking.com / Airbnb via the
       // cached iCal feed, (b) freeze the cache by setting
       // ical_cache_generated_at to a future date so the CF never regenerates.
+      // SF-080: trial-gate prepended (widget_settings = owner-management).
       match /widget_settings/{unitId} {
         allow read: if true; // Widget needs to read settings
-        allow create: if isPropertyOwner(propertyId);
-        allow update: if isPropertyOwner(propertyId)
+        allow create: if (
+          (isPropertyOwner(propertyId) && isActiveOwner())
+          || isAdmin() || isAdminFromFirestore()
+        );
+        allow update: if (
+            (isPropertyOwner(propertyId) && isActiveOwner())
+            || isAdmin() || isAdminFromFirestore()
+          )
           && !request.resource.data.diff(resource.data).affectedKeys()
               .hasAny([
                 'ical_cache_content', 'ical_cache_generated_at',
                 'ical_cache_etag', 'ical_cache_unit_name'
               ]);
-        allow delete: if isPropertyOwner(propertyId);
+        allow delete: if (
+          (isPropertyOwner(propertyId) && isActiveOwner())
+          || isAdmin() || isAdminFromFirestore()
+        );
       }
 
       // Widget secrets subcollection — owner-only, never publicly readable.
@@ -382,22 +439,35 @@ service cloud.firestore {
     // SF-068 F-94-04: mirror the subcollection-path ical_cache_* deny so the
     // CG write path (used by some owner dashboard repos) doesn't slip the
     // same fields past.
+    // SF-080: mirror trial-gate so the CG path can't be used as a bypass.
     match /{path=**}/widget_settings/{unitId} {
       allow read: if true;
-      allow create: if isAuthenticated() &&
-        ('property_id' in request.resource.data) &&
-        get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid;
-      allow update: if isAuthenticated() &&
-        ('property_id' in resource.data) &&
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid &&
-        !request.resource.data.diff(resource.data).affectedKeys()
+      allow create: if (
+        (isAuthenticated()
+         && ('property_id' in request.resource.data)
+         && get(/databases/$(database)/documents/properties/$(request.resource.data.property_id)).data.owner_id == request.auth.uid
+         && isActiveOwner())
+        || isAdmin() || isAdminFromFirestore()
+      );
+      allow update: if (
+          (isAuthenticated()
+           && ('property_id' in resource.data)
+           && get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
+           && isActiveOwner())
+          || isAdmin() || isAdminFromFirestore()
+        )
+        && !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny([
               'ical_cache_content', 'ical_cache_generated_at',
               'ical_cache_etag', 'ical_cache_unit_name'
             ]);
-      allow delete: if isAuthenticated() &&
-        ('property_id' in resource.data) &&
-        get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid;
+      allow delete: if (
+        (isAuthenticated()
+         && ('property_id' in resource.data)
+         && get(/databases/$(database)/documents/properties/$(resource.data.property_id)).data.owner_id == request.auth.uid
+         && isActiveOwner())
+        || isAdmin() || isAdminFromFirestore()
+      );
     }
 
     // Collection group: bookings

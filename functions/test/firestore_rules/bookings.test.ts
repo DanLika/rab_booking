@@ -81,10 +81,13 @@ beforeEach(async () => {
       name: "Test Unit",
     });
     await db.doc(BOOKING_PATH).set(FULL_BOOKING_DOC);
-    await db.doc(`users/${ADMIN_FIRESTORE_UID}`).set({role: "admin"});
-    await db.doc(`users/${OWNER_UID}`).set({role: "user"});
-    await db.doc(`users/${FOREIGN_UID}`).set({role: "user"});
-    await db.doc(`users/${ADMIN_CLAIM_UID}`).set({role: "user"});
+    // SF-080: seed `accountStatus: 'active'` so trial-gate happy-path tests
+    // here exercise the gate-passing branch. Trial-gate-specific coverage
+    // lives in trial_gate.test.ts.
+    await db.doc(`users/${ADMIN_FIRESTORE_UID}`).set({role: "admin", accountStatus: "active"});
+    await db.doc(`users/${OWNER_UID}`).set({role: "user", accountStatus: "active"});
+    await db.doc(`users/${FOREIGN_UID}`).set({role: "user", accountStatus: "active"});
+    await db.doc(`users/${ADMIN_CLAIM_UID}`).set({role: "user", accountStatus: "active"});
   });
 });
 

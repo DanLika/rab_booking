@@ -77,6 +77,11 @@ jest.mock("../src/utils/rateLimit", () => ({
   checkRateLimit: jest.fn().mockReturnValue(true), // Default to allow
 }));
 
+// SF-079 L2: bypass unit-owner gate at the helper boundary.
+jest.mock("../src/utils/requireActiveUnitOwner", () => ({
+  requireActiveUnitOwner: jest.fn().mockResolvedValue("mock-owner-uid"),
+}));
+
 describe("Stripe Payment Functions", () => {
   // Mock Firestore and Stripe clients with explicit 'any' types for testing
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

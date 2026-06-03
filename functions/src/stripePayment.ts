@@ -23,6 +23,7 @@ import {sanitizeText, sanitizeEmail, sanitizePhone} from "./utils/inputSanitizat
 import {logInfo, logError, logWarn, logSuccess} from "./logger";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
 import {checkRateLimit} from "./utils/rateLimit";
+import {requireActiveUnitOwner} from "./utils/requireActiveUnitOwner";
 import {
   logSecurityEvent,
   logWebhookSignatureFailure,
@@ -146,6 +147,12 @@ export const createStripeCheckoutSession = onCall({
       "Invalid booking data. Please refresh the page and try again."
     );
   }
+
+  // SF-079 L2 trial gate: refuse checkout for units whose owner is
+  // trial_expired / suspended / unknown. stripe_service.dart:96-100 has an
+  // explicit failed-precondition handler that surfaces the gate's message
+  // cleanly to the guest. See audit/112 §3 Path C.
+  await requireActiveUnitOwner(propertyId, "createStripeCheckoutSession");
 
   // SECURITY: Validate return URL format and against whitelist
   if (returnUrl) {

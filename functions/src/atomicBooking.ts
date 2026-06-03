@@ -38,6 +38,7 @@ import {
 } from "./utils/bookingHelpers";
 import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
 import {requireActiveOwner} from "./utils/requireActiveOwner";
+import {requireActiveUnitOwner} from "./utils/requireActiveUnitOwner";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
 import {validateBookingPrice, calculateBookingPrice} from "./utils/priceValidation";
 import {setUser, captureMessage} from "./sentry";
@@ -125,6 +126,19 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"], cors: ge
     taxLegalAccepted,
     idempotencyKey, // Optional: prevents double bookings on double-click
   } = data;
+
+  // SF-079 L2 trial gate: refuse new bookings against units whose owner is
+  // trial_expired / suspended / unknown. Runs AFTER rate-limit + propertyId
+  // destructure, BEFORE field validation. Helper itself rejects empty
+  // propertyId with invalid-argument (same shape the missingFields check
+  // would have produced). Gates BOTH guest (widget anonymous) AND owner-
+  // dashboard (authenticated) callers — owner doing a self-booking on
+  // their own trial-expired property is blocked here.
+  // Note: redundant with the SF-001 property-doc read below; gate-first
+  // ordering takes precedence over read-coalescing (see helper docstring).
+  if (propertyId && typeof propertyId === "string" && propertyId.trim() !== "") {
+    await requireActiveUnitOwner(propertyId, "createBookingAtomic");
+  }
 
   // Validate required fields with detailed error logging
   // Check for null, undefined, or empty string

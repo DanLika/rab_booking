@@ -69,14 +69,18 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         path: '/login',
         pageBuilder: (context, state) => _fadePage(
           state.pageKey,
-          // Pre-auth login route is OUTSIDE the AdminShellScreen subtree, so
-          // [BbAdminDarkTokens] is not inherited from the shell. Inject it
-          // here scoped to this route only — admin login renders with the
-          // canonical admin-dark palette regardless of system brightness.
+          // Login route runs OUTSIDE the AdminShellScreen subtree. The admin
+          // app's outer MaterialApp ships ThemeMode.dark (admin_main*.dart), so
+          // without an explicit wrap the login card would inherit a dark
+          // surface. Design source `admin-auth.jsx` declares `theme-light` and
+          // renders a WHITE card on the deep-purple gradient — wrap explicitly
+          // so the form chrome resolves to light tokens regardless of outer
+          // theme. NO BbAdminDarkTokens here: that extension is sidebar-only
+          // and would re-route BbCard onto panelBg = #2A2342.
           Theme(
-            data: ThemeData.dark(useMaterial3: true).copyWith(
+            data: ThemeData.light(useMaterial3: true).copyWith(
               extensions: const <ThemeExtension<dynamic>>[
-                BbAdminDarkTokens.preset,
+                BbRedesignTokens.light,
               ],
             ),
             child: AdminLoginScreen(

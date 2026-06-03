@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../data/admin_users_repository.dart';
 import 'admin_shell_screen.dart';
-import 'package:bookbed/shared/widgets/redesign.dart';
 
 const double _mobileBreakpoint = 800.0;
 const double _tabletBreakpoint = 1100.0;
@@ -93,13 +93,25 @@ class AdminDashboardScreen extends ConsumerWidget {
                           .map(
                             (item) => SizedBox(
                               width: itemWidth < 140 ? 140 : itemWidth,
-                              child: _StatsCard(item: item, palette: palette),
+                              child: _StatsCard(
+                                item: item,
+                                palette: palette,
+                                // admin-shell.jsx AdmKpi `compact` mode:
+                                // padding 14 + value 24 (vs default 20 / 30)
+                                // on tablet/mobile breakpoints.
+                                compact: isMobile || isTablet,
+                              ),
                             ),
                           )
                           .toList(),
                     ),
-                    const SizedBox(height: 32),
-                    const BbSectionHeader(title: 'Analytics'),
+                    const SizedBox(height: 16),
+                    const BbSectionHeader(
+                      title: 'Analytics',
+                      // admin-shell.jsx uses per-card `.bb-h3` (18/600) for
+                      // sub-section headers, not the page-level `.bb-h2`.
+                      level: BbSectionHeaderLevel.h3,
+                    ),
                     const SizedBox(height: 16),
                     Wrap(
                       spacing: 16,
@@ -195,11 +207,21 @@ class _DashboardPalette {
         isDark: true,
       );
     }
-    final scheme = Theme.of(context).colorScheme;
+    // Light branch reads canonical BookBed text colours instead of the
+    // admin shell's MD3 ColorScheme. The shell's `ThemeData.light(...)` does
+    // not override `onSurface`, leaving it at the MD3 default `~#1C1B1F`,
+    // whereas `tokens.css :root --bb-text-primary` (the canonical design
+    // colour) resolves to `#2D3748` (`BBColor.textPrimaryLight`). This is a
+    // SYSTEMIC admin-light-theme drift; the local fix here keeps the
+    // dashboard on slate without modifying the shared shell theme. A
+    // separate PR should set `colorScheme.onSurface/.onSurfaceVariant` in
+    // `admin_shell_screen.dart:64-71` so all admin LIGHT screens pick up
+    // canonical text colours.
+    final c = BBColor.of(context);
     return _DashboardPalette(
-      textPrimary: scheme.onSurface,
-      textSecondary: scheme.onSurfaceVariant,
-      textTertiary: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+      textPrimary: c.textPrimary,
+      textSecondary: c.textSecondary,
+      textTertiary: c.textTertiary,
       isDark: false,
     );
   }
@@ -219,41 +241,82 @@ class _StatItem {
   });
 }
 
+/// KPI tile — mirrors `design_handoff/source/admin-shell.jsx:165-177` `AdmKpi`.
+///
+/// Top-down: 36 × 36 icon tile (no delta-pill; absent pending data wiring)
+/// → uppercase eyebrow label → big tabular value → (sub line absent pending
+/// data wiring).
+///
+/// Delta-pill and sub-line omitted because `admin_users_repository
+/// .getDashboardStats()` returns counts only (no time-series for deltas, no
+/// context strings). Adding them would require backend / repository changes
+/// and is tracked as a product follow-up in this PR's body. The chrome is
+/// shaped so adding them later is additive only.
 class _StatsCard extends StatelessWidget {
   final _StatItem item;
   final _DashboardPalette palette;
+  final bool compact;
 
-  const _StatsCard({required this.item, required this.palette});
+  const _StatsCard({
+    required this.item,
+    required this.palette,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // AdmKpi compact override: tile padding 14, value font 24 (vs default
+    // 20 / 30) on tablet/mobile.
+    final EdgeInsets cardPadding = EdgeInsets.all(compact ? 14 : 20);
+    // Value typography per design: 30 / 800 / -0.02em (desktop), 24 / 800 /
+    // -0.02em (compact). Inter-Black (w800) is NOT bundled locally; admin
+    // web runtime-fetches missing weights from Google Fonts CDN
+    // (`GoogleFonts.config.allowRuntimeFetching` defaults to `true` on
+    // admin entries, unlike owner/widget which disable it).
+    final double valueSize = compact ? 24 : 30;
+    final double valueLetterSpacing = compact ? -0.48 : -0.6;
+
     return BbCard(
+      padding: cardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: item.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              // color-mix(in srgb, <color> 14%, transparent) — 14 % opacity
+              // tint of the metric color over transparent.
+              color: item.color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(item.icon, color: item.color, size: 24),
+            child: Icon(item.icon, color: item.color, size: 20),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          Text(
+            // .bb-caption base (12) overridden to 10 px UPPERCASE
+            // 600 / +0.05em tertiary — design-canonical eyebrow.
+            item.title.toUpperCase(),
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5, // 0.05em × 10
+              height: 1.5,
+              color: palette.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 2),
           Text(
             item.value,
             style: BBType.h1Num(context).copyWith(
-              color: palette.textPrimary,
-              fontWeight: FontWeight.bold,
+              fontSize: valueSize,
+              fontWeight: FontWeight.w800,
+              letterSpacing: valueLetterSpacing,
               height: 1.0,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            item.title,
-            style: BBType.body(context).copyWith(
-              color: palette.textSecondary,
-              fontWeight: FontWeight.w500,
+              color: palette.textPrimary,
             ),
           ),
         ],

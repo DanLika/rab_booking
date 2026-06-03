@@ -4899,6 +4899,23 @@ class WidgetTranslations {
   // CALENDAR ONLY MODE TRANSLATIONS
   // ============================================================================
 
+  /// Banner shown when SF-079 unit-owner trial gate blocks new bookings.
+  /// CF returns `failed-precondition` from `getUnitAvailability`; this
+  /// surfaces the otherwise-silent block to the guest.
+  String get propertyUnavailableForBookingsBanner {
+    switch (locale.languageCode) {
+      case 'hr':
+        return 'Ovaj objekt trenutno ne prima nove rezervacije.';
+      case 'de':
+        return 'Diese Unterkunft nimmt derzeit keine neuen Buchungen an.';
+      case 'it':
+        return 'Questa struttura attualmente non accetta nuove prenotazioni.';
+      case 'en':
+      default:
+        return 'This property is currently unavailable for new bookings.';
+    }
+  }
+
   /// Banner message for calendar_only mode explaining view-only nature
   String get calendarOnlyBanner {
     switch (locale.languageCode) {

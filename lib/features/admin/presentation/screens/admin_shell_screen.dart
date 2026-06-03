@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/design/bb_redesign_tokens.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/theme/app_colors.dart';
 
 const _kAdminDarkModeKey = 'admin_dark_mode';
 
@@ -66,6 +67,15 @@ class AdminShellScreen extends ConsumerWidget {
               primary: AppColors.primary,
               surface: Color(0xFFF8F9FA),
               surfaceContainer: Colors.white,
+              // Override MD3 defaults (~#1C1B1F / ~#49454F) with canonical
+              // BookBed design slate from tokens.css :root
+              //   --bb-text-primary   #2D3748 (BBColor.textPrimaryLight)
+              //   --bb-text-secondary #4A5568 (BBColor.textSecondaryLight)
+              // Tertiary tier (#718096) has no MD3 ColorScheme slot — admin
+              // light screens needing it should read `BBColor.of(context).textTertiary`
+              // directly (see `_DashboardPalette.of` light branch on PR #664).
+              onSurface: BBColor.textPrimaryLight,
+              onSurfaceVariant: BBColor.textSecondaryLight,
             ),
             scaffoldBackgroundColor: const Color(0xFFF3F4F6),
           );

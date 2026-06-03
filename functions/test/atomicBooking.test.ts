@@ -70,6 +70,12 @@ jest.mock("../src/utils/rateLimit", () => ({
   checkRateLimit: jest.fn().mockReturnValue(true),
 }));
 
+// SF-079 L2: bypass unit-owner gate at the helper boundary. Gate semantics
+// covered by test/requireActiveUnitOwner.test.ts.
+jest.mock("../src/utils/requireActiveUnitOwner", () => ({
+  requireActiveUnitOwner: jest.fn().mockResolvedValue("mock-owner-uid"),
+}));
+
 jest.mock("../src/utils/priceValidation", () => ({
   validateBookingPrice: jest.fn().mockResolvedValue(undefined),
   calculateBookingPrice: jest.fn().mockResolvedValue({ totalPrice: 500 }),

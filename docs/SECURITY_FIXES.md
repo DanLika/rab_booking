@@ -4385,3 +4385,108 @@ Nova regression-test pokrivanja:
 - FLUTTER-79 sibling (Stripe Connect egress, zatvoren via PR #541 / audit/74).
 - audit/34 §5 (root cause of compounding noise — closed by this PR).
 - audit/67 F-67-01 (UI silent no-op + SEED fixture path that originally triggered FLUTTER-7E).
+
+---
+
+## SF-079: Trial gate — server-side L2 (guest-path) enforcement
+
+**Datum**: 2026-06-03
+**Prioritet**: 🔴 HIGH (revenue: trial-expired owners can no longer take new bookings)
+**Status**: 🔄 Code complete + tests + audit/112; deployed to `bookbed-dev` + smoke green; **NOT yet deployed to PROD**. Per-deploy operator authorisation in a follow-up session.
+**Audit**: `audit/109-security-session-2026-06-03.md` (item 1, L2 follow-up), `audit/112-l2-gate-map.md` (gate-map + frozen-scope verdict)
+**Sibling**: SF-078 (L1 — owner-management callables, PR #666)
+
+### Problem (residual after SF-078)
+
+SF-078 gates 7 L1 owner-management callables on the CALLER's `accountStatus`. The complementary 7 L2 callables — anonymous guest-path widget calls — remain ungated, so a trial-expired owner's listing continues to:
+- Show availability via `getUnitAvailability`
+- Accept new bookings via `createBookingAtomic` (anonymous widget OR owner-dashboard auth path)
+- Take Stripe payments via `createStripeCheckoutSession` (guest checkout)
+
+L1 + L2 are independent gates with different threat models (caller vs unit-owner subject); both are needed.
+
+### Fix shape
+
+New helper `functions/src/utils/requireActiveUnitOwner.ts`. Looks up `properties/{propertyId}.owner_id` → checks `users/{owner_id}.accountStatus ∈ ['trial', 'active']`. Same fail-closed + Sentry WARN semantics as SF-078; mirrors client `TrialStatus.hasFullAccess` allow-list.
+
+**Threaded into 3 NEW-BOOKING callables**:
+
+- `getUnitAvailability` (`availability.ts:114`, region `europe-west1`) — gate runs after rate-limit, before the Promise.all reads
+- `createBookingAtomic` (`atomicBooking.ts:61`) — gate runs after propertyId destructure, **before** the missingFields field-validation block (advisor-corrected positioning; gate fires regardless of payload completeness)
+- `createStripeCheckoutSession` (`stripePayment.ts:52`) — gate runs after the missingFields check (bookingData destructure happens earlier)
+
+**4 EXISTING-management callables NOT gated (anti-strand)** — `verifyBookingAccess`, `guestCancelBooking`, `getBookingByStripeSession`, `resendGuestBookingEmail`. Guests with confirmed bookings retain full lifecycle access regardless of owner trial state. Empirically verified in dev smoke (see below).
+
+### Ordering — DIFFERS from SF-078
+
+SF-078 ran the gate BEFORE rate-limit because the gated subject (caller) WAS the rate-limit subject (auth.uid). L2's gated subject (property owner) is NOT the rate-limit subject (caller IP or guest auth.uid), so re-ordering gives no benefit. L2 keeps the existing `rate-limit → extract propertyId → gate → field validation` order. Helper docstring documents the divergence so future readers see explicit reasoning.
+
+### Unknown-status handling
+
+Same as SF-078: fail-CLOSED + Sentry WARN. Different from SF-078 — operator alert fires ONLY on truly unknown values (e.g. `premium`), NOT on known blocking states (`trial_expired` / `suspended`) which the operator already knows about via the admin dashboard.
+
+User-facing message: deliberately generic across ALL blocking branches:
+
+> "This property is currently unavailable for new bookings."
+
+Does NOT leak the owner's billing posture to guests. Operator distinguishes branches via Sentry/Cloud Logging which carry `{propertyId, ownerUid, observed, callable}`.
+
+### Frozen-scope verdict
+
+Per `audit/112 §3`: **server-only fix; NO frozen-file edits required**.
+
+- `getUnitAvailability` rejection → `availability_checker.dart:199-212` already catches CF errors + returns fail-CLOSED `AvailabilityCheckResult.error()`. Widget shows existing `AvailabilityErrorCode.checkError` localized message.
+- `createBookingAtomic` rejection → `booking_service.dart:303-330` catches `FirebaseFunctionsException`, falls through to generic `BookingServiceException('Failed to create booking: ${e.message}')`. Surfaces the gate's message string to widget UI.
+- `createStripeCheckoutSession` rejection → `stripe_service.dart:96-100` ALREADY has explicit `failed-precondition` case that surfaces `e.message` cleanly.
+
+`firebase_booking_calendar_repository.dart`, `booking_widget_screen.dart`, `unified_unit_hub_screen.dart`, and the rest of the FROZEN list are UNTOUCHED.
+
+Optional future UX enhancement (NOT in scope): `booking_service.dart:303-330` could distinguish `failed-precondition` for a tailored exception type ("Property unavailable for new bookings" instead of "Failed to create booking: Property unavailable..."). Separate UX-scope PR.
+
+### Dev smoke matrix (2026-06-03)
+
+Deployed to `bookbed-dev` (us-central1 for atomicBooking + stripePayment, europe-west1 for availability). Seeded 2 owners (trial_expired + active), 2 properties (1 each), 1 anti-strand confirmed booking on the expired-owner property. Smoke results:
+
+| Callable | trial_expired owner | active owner |
+|---|---|---|
+| `getUnitAvailability` | `FAILED_PRECONDITION` "This property is currently unavailable for new bookings." ✅ | HTTP 200 ✅ |
+| `createBookingAtomic` (anon) | `FAILED_PRECONDITION` ✅ | `INVALID_ARGUMENT` (gate passed) ✅ |
+| `createBookingAtomic` (auth, owner of own expired property) | `FAILED_PRECONDITION` ✅ (L2 catches authenticated owner too) | n/a |
+| `createStripeCheckoutSession` | `FAILED_PRECONDITION` ✅ | `INVALID_ARGUMENT` ✅ |
+
+**Anti-strand (4 EXISTING-management callables on the expired-owner booking)**:
+
+| Callable | Response | Stranded? |
+|---|---|---|
+| `verifyBookingAccess` | HTTP 500 / INTERNAL (mock token doesn't validate; not a gate path) | ✅ not stranded |
+| `guestCancelBooking` | INVALID_ARGUMENT (missing fields; not a gate path) | ✅ not stranded |
+| `getBookingByStripeSession` | INVALID_ARGUMENT (invalid session shape; not a gate path) | ✅ not stranded |
+| `resendGuestBookingEmail` | INVALID_ARGUMENT (missing email; not a gate path) | ✅ not stranded |
+
+Anti-strand confirmed empirically: zero `FAILED_PRECONDITION` "unavailable for new bookings" responses across all 4 EXISTING-management probes.
+
+### Test coverage
+
+- `functions/test/requireActiveUnitOwner.test.ts` (NEW, 13 tests): empty/missing propertyId, `active` happy path, `trial` happy path, `trial_expired` (no Sentry WARN), `suspended` (no Sentry WARN), unknown value `premium` (WARN with `{propertyId, ownerUid, observed, callable}`), missing accountStatus field (WARN), property doc missing (WARN), property missing owner_id (WARN), owner users/{uid} doc missing (WARN), Firestore read failures (internal), guest-facing message identical across all blocking branches (no posture leak).
+- 3 existing test suites (`availability.test.ts`, `atomicBooking.test.ts`, `stripePayment.test.ts`) updated with `jest.mock("../src/utils/requireActiveUnitOwner")` returning `mock-owner-uid`. Gate semantics live in the helper's own suite; CF tests don't re-test the gate.
+- **Full suite: 444/444 PASS** (21/21 suites).
+- `npm run build`: zero errors.
+
+### Zahvaćeni fajlovi
+
+- `functions/src/utils/requireActiveUnitOwner.ts` (NEW, ~150 lines)
+- `functions/src/availability.ts` — `getUnitAvailability` gate
+- `functions/src/atomicBooking.ts` — `createBookingAtomic` gate (before field validation)
+- `functions/src/stripePayment.ts` — `createStripeCheckoutSession` gate
+- `functions/test/requireActiveUnitOwner.test.ts` (NEW)
+- `functions/test/{availability,atomicBooking,stripePayment}.test.ts` — helper mocks
+- `audit/112-l2-gate-map.md` (NEW)
+- `docs/SECURITY_FIXES.md` — this entry
+
+`lib/`, `firestore.rules`, `storage.rules`, FROZEN list — UNCHANGED. Owner-pixel-safe; backend-only.
+
+### Open follow-ups
+
+- **PROD deploy** — per-session operator authorisation. Order: CF → IAM regrant (per audit/90) → smoke probe with a PROD trial_expired test owner-property pair.
+- **Optional Flutter UX** — `booking_service.dart:303-330` tailored `failed-precondition` exception type for cleaner widget UI message.
+- **SF-078 (PR #666) merge** — independent PR; will produce a merge conflict on `functions/src/atomicBooking.ts` (both PRs add a different `require` import). Operator resolves by keeping both imports.

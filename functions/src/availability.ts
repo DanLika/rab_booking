@@ -30,6 +30,7 @@ import {db, admin} from "./firebase";
 import {logInfo, logError, logWarn} from "./logger";
 import {getClientIp, hashIp} from "./utils/ipUtils";
 import {checkRateLimit} from "./utils/rateLimit";
+import {requireActiveUnitOwner} from "./utils/requireActiveUnitOwner";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
 
 const MAX_RANGE_DAYS = 366;
@@ -147,6 +148,12 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
       logWarn("[GetUnitAvailability] Rate limit exceeded", {unitId, ipKey});
       throw new HttpsError("resource-exhausted", "Too many availability requests");
     }
+
+    // SF-079 L2 trial gate: refuse availability windows for units whose
+    // owner is trial_expired / suspended / unknown. Widget calendar
+    // (availability_checker.dart:199-212) catches CF errors and renders
+    // fail-CLOSED gracefully. See audit/112 §3.
+    await requireActiveUnitOwner(propertyId, "getUnitAvailability");
 
     const startTs = admin.firestore.Timestamp.fromDate(startDate);
     const endTs = admin.firestore.Timestamp.fromDate(endDate);

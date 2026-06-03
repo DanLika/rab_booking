@@ -4456,3 +4456,76 @@ The `migrateTrialStatus.ts` migration ran on PROD (audit/102); legacy users shou
 - `docs/SECURITY_FIXES.md` — this entry
 
 `lib/`, `firestore.rules`, `storage.rules` — UNCHANGED. Owner-safe; backend-only.
+
+---
+
+## SF-080: Layer-1 RULES trial gate — `isActiveOwner()` on owner direct-write paths
+
+Sibling of SF-078 (server-side CF L1, PR #666). Closes the direct-Firestore-SDK
+surface for the same set of owner-management paths.
+
+### Status
+
+- DEV deployed (`bookbed-dev`, 2026-06-03).
+- PR opened, NO MERGE pending operator review.
+- PROD operator-gated.
+
+### Predicate
+
+```rules
+function isActiveOwner() {
+  return isAuthenticated() &&
+    exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+    get(/databases/$(database)/documents/users/$(request.auth.uid))
+      .data.get('accountStatus', null) in ['trial', 'active'];
+}
+```
+
+Fail-CLOSED on missing doc / missing field / off-spec value (mirrors
+`requireActiveOwner.ts` allow-list). `accountStatus` already in users
+self-write deny-list (`rules:62-86`) so the read is trustworthy.
+
+### Gated paths
+
+| Match | Ops |
+|---|---|
+| `/properties/{propertyId}` | create + update (delete NOT gated — soft exit) |
+| `/properties/{p}/units/{u}/bookings/{b}` | create + update + delete |
+| `/properties/{p}/units/{u}/daily_prices/{d}` | create + update + delete |
+| `/properties/{p}/widget_settings/{u}` + `/{path=**}/widget_settings/{u}` (CG mirror) | create + update + delete |
+
+Admin (custom claim or Firestore role) bypasses the gate via OR clause.
+CF-only field deny-lists (SF-068 subdomain/ical_cache/sync_count/etc.) still
+apply to admin — those fields are CF-managed; nobody writes them via client.
+
+### Tests
+
+`functions/test/firestore_rules/trial_gate.test.ts` — 34 new tests covering
+5 gated paths × 5 status arms + admin bypass + frozen happy-path regression
+guard.
+
+`npm run test:rules`: 9/9 suites, 141 passed, 0 regression (was 107 prior).
+
+### DEV smoke matrix (bookbed-dev, 2026-06-03)
+
+| Owner status | property.update | widget_settings.update | daily_prices.set | bookings.create |
+|---|---|---|---|---|
+| active | OK ✅ | OK ✅ | OK ✅ | OK ✅ |
+| trial_expired | DENIED ✅ | DENIED ✅ | DENIED ✅ | DENIED ✅ |
+| suspended | DENIED ✅ | DENIED ✅ | DENIED ✅ | DENIED ✅ |
+
+12/12 cells correct. Active happy-path intact for frozen flows.
+
+### Frozen-scope
+
+`firestore.rules` NOT on frozen list. Dart frozen flows (Calendar Repository,
+Cjenovnik, Unit Wizard publish, Navigator.push, Timeline fixed dims, `bookings`
+unit_id+status rule) UNTOUCHED — gate is rules-side only.
+
+### Cross-refs
+
+- audit/113-l1-rules-trial-gate.md (full map + smoke).
+- SF-078 (PR #666) — server-side CF L1 gate (sibling, callable surface).
+- SF-079 (PR #668) — L2 guest-path gate (unit-owner status, audit/112).
+- SF-068 (PR #578) — affectedKeys deny-list (CF-only fields, complements this PR).
+- PR #667 — accountStatus PROD backfill (pre-flight for PROD deploy).

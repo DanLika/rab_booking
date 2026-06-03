@@ -62,6 +62,11 @@ beforeEach(async () => {
   await testEnv.clearFirestore();
   await testEnv.withSecurityRulesDisabled(async (ctx: RulesTestContext) => {
     const db = ctx.firestore();
+    // SF-080: seed `accountStatus: 'active'` so existing happy-path tests
+    // pass the trial gate. Foreign uid also seeded (denied by ownership, not
+    // by gate). Trial-gate-specific coverage lives in trial_gate.test.ts.
+    await db.doc(`users/${OWNER_UID}`).set({accountStatus: "active"});
+    await db.doc(`users/${FOREIGN_UID}`).set({accountStatus: "active"});
     await db.doc(`properties/${PROPERTY_ID}`).set({
       owner_id: OWNER_UID,
       name: "Test Property",

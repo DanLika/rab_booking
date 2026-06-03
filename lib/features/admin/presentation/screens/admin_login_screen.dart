@@ -195,8 +195,16 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                       'Enter your work email. We will send a reset link.',
                     ),
                     const SizedBox(height: 16),
+                    Text(
+                      'Work email',
+                      style: BBType.label(ctx).copyWith(
+                        height: 1.4,
+                        letterSpacing: 0.13,
+                        color: BBColor.of(ctx).textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     BbInput(
-                      label: 'Work email',
                       placeholder: 'you@bookbed.io',
                       controller: emailCtrl,
                       iconLeft: 'mail',
@@ -319,8 +327,26 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                           _LightErrorBanner(message: _error!),
                           const SizedBox(height: 24),
                         ],
+                        // Manual label + label:null on BbInput so we can apply
+                        // tokens.css:236 .bb-label (13/500/1.4/0.01em). The
+                        // primitive BBType.label currently ships height 1.5 /
+                        // no letterSpacing — global token fix deferred to a
+                        // separate owner-pass PR. copyWith preserves font
+                        // family + fallback chain + features from the
+                        // primitive; we override only the two drifted values
+                        // plus colour. SizedBox(h:6) matches
+                        // bb_input.dart:201 exactly so the field offset is
+                        // identical to the primitive's internal layout.
+                        Text(
+                          l10n.adminEmailLabel,
+                          style: BBType.label(context).copyWith(
+                            height: 1.4,
+                            letterSpacing: 0.13,
+                            color: c.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         BbInput(
-                          label: l10n.adminEmailLabel,
                           placeholder: l10n.adminEmailHint,
                           controller: _emailController,
                           iconLeft: 'mail',
@@ -333,11 +359,19 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                           },
                         ),
                         const SizedBox(height: 14),
+                        Text(
+                          l10n.adminPasswordLabel,
+                          style: BBType.label(context).copyWith(
+                            height: 1.4,
+                            letterSpacing: 0.13,
+                            color: c.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         ValueListenableBuilder<bool>(
                           valueListenable: _isPasswordVisible,
                           builder: (context, isVisible, _) {
                             return BbInput(
-                              label: l10n.adminPasswordLabel,
                               placeholder: '••••••••',
                               controller: _passwordController,
                               iconLeft: 'lock',
@@ -461,11 +495,19 @@ class _LoginCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top accent bar — 5px, brand-primary gradient
+            // Top accent bar — 5 px, brand-primary gradient.
+            // Inline LinearGradient matches tokens.css:77 --bb-gradient-primary
+            // end (#8B6FFF). BBGradient.brandPrimary still ships #7E5FEE for
+            // owner; global token fix is deferred to a separate owner-pass PR
+            // with design sign-off.
             Container(
               height: 5,
               decoration: const BoxDecoration(
-                gradient: BBGradient.brandPrimary,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF6B4CE6), Color(0xFF8B6FFF)],
+                ),
               ),
             ),
             Padding(padding: EdgeInsets.all(isMobile ? 24 : 36), child: child),
@@ -551,8 +593,10 @@ class _RememberAndForgotRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Flexible(
-          child: BbCheckbox(
+          child: _AdminCheck(
             value: rememberMe,
+            // PR #652 binding preserved verbatim — admin-auth.jsx declares
+            // ENGLISH only ("ENGLISH, internal-console tone" — JSX header).
             label: 'Remember this device',
             onChanged: onRememberChanged,
           ),
@@ -576,6 +620,84 @@ class _RememberAndForgotRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 18 × 18 admin-auth-pattern checkbox — mirrors `admin-auth.jsx:18-24`
+/// `AdminCheck` (login-only). Distinct from the design-system canonical
+/// `BbCheckbox` (20 × 20, dialogs.jsx:99) which the rest of the app uses.
+/// Local override only — `BbCheckbox` primitive is untouched.
+class _AdminCheck extends StatelessWidget {
+  const _AdminCheck({
+    required this.value,
+    required this.label,
+    required this.onChanged,
+  });
+
+  final bool value;
+  final String label;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Semantics(
+      checked: value,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => onChanged(!value),
+          borderRadius: BorderRadius.circular(BBRadius.sm),
+          child: ConstrainedBox(
+            // a11y: keep the row at a 44 px touch target even when the box
+            // itself shrinks to 18 px. Mirrors BbCheckbox's minHeight.
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: BBSpace.xs),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedContainer(
+                    duration: BBMotion.adapt(context, BBMotion.fast),
+                    curve: BBMotion.curve,
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: value ? c.primary : Colors.transparent,
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color: c.primary, width: 1.5),
+                    ),
+                    child: AnimatedOpacity(
+                      duration: BBMotion.adapt(context, BBMotion.fast),
+                      opacity: value ? 1.0 : 0.0,
+                      child: const BbIcon(
+                        name: 'check',
+                        size: 12,
+                        color: Colors.white,
+                        weight: 600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      label,
+                      // tokens.css:235 .bb-caption (12/400/1.5) + JSX
+                      // AdminCheck override fontWeight: 500.
+                      style: BBType.caption(context).copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: c.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -22,6 +22,7 @@ import '../widgets/tax_legal_disclaimer_widget.dart';
 import '../providers/booking_price_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/calendar_view_provider.dart';
+import '../providers/owner_gate_status_provider.dart';
 import '../providers/realtime_booking_calendar_provider.dart';
 import '../providers/additional_services_provider.dart';
 import '../../../../shared/models/additional_service_model.dart';
@@ -1777,6 +1778,91 @@ class _BookingWidgetScreenState extends ConsumerState<BookingWidgetScreen> {
                                           ],
                                         ),
                                       ),
+                                    ),
+
+                                  // SF-079 owner-gate banner: surfaces a guest-facing
+                                  // "unavailable for new bookings" notice when the unit's
+                                  // owner is trial_expired / suspended. CF returns
+                                  // `failed-precondition`; the streaming availability
+                                  // repo yields `[]` to fail-OPEN on transient errors —
+                                  // a one-shot probe via [ownerGateStatusProvider]
+                                  // discriminates the permanent gate.
+                                  if (_propertyId != null &&
+                                      _propertyId!.isNotEmpty &&
+                                      unitId.isNotEmpty)
+                                    Consumer(
+                                      builder: (ctx, ref2, _) {
+                                        final gate = ref2.watch(
+                                          ownerGateStatusProvider(
+                                            _propertyId!,
+                                            unitId,
+                                          ),
+                                        );
+                                        if (gate.valueOrNull !=
+                                            OwnerGateStatus.blocked) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        final tr = WidgetTranslations.of(
+                                          ctx,
+                                          ref2,
+                                        );
+                                        final isDark = ref2.watch(
+                                          themeProvider,
+                                        );
+                                        final warnBg = isDark
+                                            ? const Color(0x33F87171)
+                                            : const Color(0x1AEF4444);
+                                        final warnFg = isDark
+                                            ? const Color(0xFFF87171)
+                                            : const Color(0xFFEF4444);
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            top: 8,
+                                            bottom: screenWidth >= 1024
+                                                ? 24
+                                                : 16,
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: warnBg,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: warnFg.withValues(
+                                                  alpha: 0.6,
+                                                ),
+                                                width: 1.2,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.warning_amber_rounded,
+                                                  size: 20,
+                                                  color: warnFg,
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Flexible(
+                                                  child: Text(
+                                                    tr.propertyUnavailableForBookingsBanner,
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: warnFg,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
 
                                   // Calendar with lazy loading - shows skeleton first for faster perceived load

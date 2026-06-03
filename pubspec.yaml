@@ -30,7 +30,7 @@ dependencies:
   cloud_functions: ^6.0.6
   firebase_analytics: ^12.1.2
   firebase_crashlytics: ^5.0.7
-  firebase_messaging: ^16.1.1  # Push notifications (hidden until mobile app release)
+  firebase_messaging: ^16.3.0  # Push notifications (hidden until mobile app release)
 
   # Google Sign-In (native Android/iOS)
   google_sign_in: ^6.3.0

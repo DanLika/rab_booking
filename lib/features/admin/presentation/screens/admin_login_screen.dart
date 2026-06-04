@@ -80,8 +80,15 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       if (mounted) {
         setState(() {
           _error = _sanitizeLoginError(e);
-          _isLoading = false;
         });
+      }
+    } finally {
+      // SF-admin-login: defense-in-depth — reset _isLoading regardless of
+      // throw/return. Without this, an unexpected hang (timeout, missing
+      // mount) leaves the button permanently disabled (`onPressed: null`)
+      // and user must reload the page to retry.
+      if (mounted && _isLoading) {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -98,8 +105,12 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       if (mounted) {
         setState(() {
           _error = _sanitizeLoginError(e);
-          _isGoogleLoading = false;
         });
+      }
+    } finally {
+      // Same defense as `_login()` — see comment there.
+      if (mounted && _isGoogleLoading) {
+        setState(() => _isGoogleLoading = false);
       }
     }
   }

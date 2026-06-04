@@ -1606,7 +1606,9 @@ The contamination involved no real guest data (no bookings, no real-customer PII
 
 **Datum**: 2026-05-21
 **Prioritet**: 🔴 Critical (live credential + PII exposure since launch)
-**Status**: 🔄 Phase A code complete + committed (`hotfix/widget-secrets-exfil`, commits `485ee112` + `3ed3c752`); NOT deployed — A7 deploy sequence blocked on operator prerequisites (Resend key rotation, `ICAL_TOKEN_PEPPER`, `ALLOWED_SUBSCRIPTION_PRICE_IDS`)
+**Status**: ✅ PROD-MIGRATED 2026-06-04. Phase A code (`hotfix/widget-secrets-exfil` commits `485ee112` + `3ed3c752`) deployed and the `widget_settings` → `widget_secrets` token relocation completed via `scripts/scrub-widget-settings-secrets.js --execute` against `rab-booking-248fc`. **Updated counts**: 11 iCal tokens moved from public `widget_settings` to owner-only `widget_secrets`; 30 cosmetic `email_config.resend_api_key: null` placeholders removed; 0 `stripe_config.secret_key` present. Idempotent re-run = 30/30 already-clean.
+
+**Scheme correction (vs the original Phase A design):** the merged production code does **NOT** use the peppered-hash token scheme. `functions/src/icalExport.ts:38-64` runs **plaintext timing-safe equality** (`crypto.timingSafeEqual` with empty-token deny per F-92-01 / SF-063). The `ICAL_TOKEN_PEPPER` Secret Manager secret was never created on PROD; pepper is not load-bearing. Original docstring + audit/109 claim about pepper supersedes-by-merge — kept here as scheme-evolution note.
 **Zahvaćeni fajlovi**:
 - `firestore.rules` (`widget_secrets` rules + `noSecretsInWidgetSettings()` predicate on `widget_settings` writes)
 - `functions/src/email/sendOwnerEmail.ts` (new — owner email proxy callable)
@@ -1651,7 +1653,7 @@ function noSecretsInWidgetSettings(data) {
 - `widget_settings` stays anon-readable, but `create`/`update` are rejected if they carry `ical_export_token` or `email_config.resend_api_key` (predicate applied on both subcollection + collection-group write rules).
 - `widget_secrets/{unitId}` — owner-only `read, write` on both the direct path and the collection-group path.
 
-**iCal token → peppered hash.** `icalExport.ts` now verifies the URL token against `widget_secrets.ical_export_token_hash` = `SHA-256(token + ICAL_TOKEN_PEPPER)`, timing-safe. The pepper lives in Functions secrets, so a Firestore-only leak cannot recover the token. `getUnitIcalFeed` fetches `widget_settings` (display state) + `widget_secrets` (hash) in parallel.
+**iCal token relocation (revised from peppered-hash design).** The merged production code stores plaintext token in `widget_secrets/{unitId}.ical_export_token` (owner-only rule, not anonymous-readable). `icalExport.ts:177-189` reads `widget_secrets` first with a legacy `widget_settings.ical_export_token` fallback for migration window, then `verifyIcalToken` runs **plaintext timing-safe `crypto.timingSafeEqual`** with empty-token deny on either side (F-92-01 / SF-063). The pepper-hash variant was deferred — owner-only rules + timing-safe compare close the SF-021 read leak without it. `ICAL_TOKEN_PEPPER` Secret Manager entry was never provisioned and is not required.
 
 **Owner email proxy.** New `sendOwnerEmail` callable loads the owner Resend key from `widget_secrets` server-side (Admin SDK) and proxies all mail. Client `email_notification_service.dart` no longer holds the key; `EmailNotificationConfig.isConfigured` drops the `resendApiKey` gate (the client can't see the key anymore). Bare-minimum hardening in Phase A: IP rate limit + input size caps + platform-key fallback. Full hardening (Zod schema, guest-vs-owner caller checks, per-owner rate limit, audit log) is Phase B.
 

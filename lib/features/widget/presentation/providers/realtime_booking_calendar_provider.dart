@@ -6,6 +6,7 @@ import '../../data/repositories/firebase_booking_calendar_repository.dart';
 import '../../domain/models/calendar_date_status.dart';
 import '../../domain/repositories/i_booking_calendar_repository.dart';
 import '../../../../shared/providers/widget_repository_providers.dart';
+import 'widget_visibility_provider.dart';
 
 part 'realtime_booking_calendar_provider.g.dart';
 
@@ -40,13 +41,19 @@ IBookingCalendarRepository bookingCalendarRepository(Ref ref) {
 /// OPTIMIZED:
 /// - Uses debounce to reduce rapid UI updates when multiple
 ///   booking changes occur in quick succession.
-/// - keepAlive: true prevents re-subscription when switching between
-///   Year and Month views (stream persists during session).
+/// - Auto-dispose (no `keepAlive: true`): when the consumer (Year or Month
+///   widget) stops watching, the underlying `getUnitAvailability` CF poll
+///   loop in `FirebaseAvailabilityRepository.streamAvailability` cancels.
+///   The previous `keepAlive: true` design hoarded one poll loop per
+///   `(propertyId, unitId, year, minNights, …)` tuple — paginating months
+///   left every prior tuple polling indefinitely.
+/// - Pauses on hidden tab: gated on [widgetVisibilityProvider]. When the
+///   browser fires `document.visibilitychange` to hidden, this returns
+///   `Stream.empty()`, the CF poll cancels, and the calendar UI freezes on
+///   its last paint. On resume, the real stream re-subscribes and
+///   `streamAvailability` issues an immediate first poll.
 /// - Accepts settings parameters to eliminate redundant widgetSettings fetch.
-///
-/// Query savings: ~60% reduction when switching views frequently.
-/// Stream reduction: 4 → 3 streams (25% reduction per provider).
-@Riverpod(keepAlive: true)
+@riverpod
 Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
   Ref ref,
   String propertyId,
@@ -56,6 +63,13 @@ Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
   int minDaysAdvance,
   int maxDaysAdvance,
 ) {
+  final visible = ref.watch(widgetVisibilityProvider);
+  if (!visible) {
+    // Pause: close the stream so upstream CF poll cancels.
+    // Riverpod keeps the prior `AsyncValue.data(snapshot)` visible to
+    // the calendar widget.
+    return const Stream<Map<String, CalendarDateInfo>>.empty();
+  }
   final repository = ref.watch(bookingCalendarRepositoryProvider);
   return repository
       .watchYearCalendarDataOptimized(
@@ -79,13 +93,10 @@ Stream<Map<String, CalendarDateInfo>> realtimeYearCalendar(
 /// OPTIMIZED:
 /// - Uses debounce to reduce rapid UI updates when multiple
 ///   booking changes occur in quick succession.
-/// - keepAlive: true prevents re-subscription when switching between
-///   Year and Month views (stream persists during session).
+/// - Auto-dispose (no `keepAlive: true`): see year-view docstring above for
+///   the rationale and the [widgetVisibilityProvider] pause behaviour.
 /// - Accepts settings parameters to eliminate redundant widgetSettings fetch.
-///
-/// Query savings: ~60% reduction when switching views frequently.
-/// Stream reduction: 4 → 3 streams (25% reduction per provider).
-@Riverpod(keepAlive: true)
+@riverpod
 Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
   Ref ref,
   String propertyId,
@@ -96,6 +107,10 @@ Stream<Map<String, CalendarDateInfo>> realtimeMonthCalendar(
   int minDaysAdvance,
   int maxDaysAdvance,
 ) {
+  final visible = ref.watch(widgetVisibilityProvider);
+  if (!visible) {
+    return const Stream<Map<String, CalendarDateInfo>>.empty();
+  }
   final repository = ref.watch(bookingCalendarRepositoryProvider);
   return repository
       .watchCalendarDataOptimized(

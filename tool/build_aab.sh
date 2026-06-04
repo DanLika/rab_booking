@@ -41,14 +41,19 @@ path = ".flutter-plugins-dependencies"
 with open(path) as f:
     data = json.load(f)
 patched = 0
+# Same Flutter bug class for both: dev_dependencies (build-time CLI tools or
+# test helpers) get added to GeneratedPluginRegistrant.java despite having no
+# runtime Android plugin class, which breaks `bundleRelease` Javac. Flip
+# native_build to false to stop the broken registrant emit.
+DEV_ONLY_PACKAGES = {"flutter_native_splash", "integration_test"}
 for platform in data.get("plugins", {}):
     for entry in data["plugins"][platform]:
-        if entry["name"] == "flutter_native_splash" and entry.get("native_build"):
+        if entry["name"] in DEV_ONLY_PACKAGES and entry.get("native_build"):
             entry["native_build"] = False
             patched += 1
 with open(path, "w") as f:
     json.dump(data, f)
-print(f"[build_aab] patched {patched} flutter_native_splash entries (native_build → false)", file=sys.stderr)
+print(f"[build_aab] patched {patched} dev-only entries (native_build → false)", file=sys.stderr)
 PY
 
 if [[ $# -eq 0 ]]; then

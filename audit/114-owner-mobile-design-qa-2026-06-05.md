@@ -139,3 +139,76 @@ The login screen needs a hero gradient (per handoff `--bb-gradient-hero` = `line
 | P2 | OTA assets verified — no further action | Closed |
 | P3 | Drawer scroll behavior under expanded Integracije | Open — small phones |
 
+---
+
+## Round 3 — Combined Pregled + Notifications verification sweep (2026-06-05)
+
+Integration worktree `/tmp/bb-sweep-wt` (branch `tmp/sweep-2026-06-05`, never pushed) merged both feature branches off `main` and ran on the Pixel_8 emulator against `bookbed-dev`. Source PRs verified in this sweep:
+
+- **PR #675** `feat/pregled-batch2-2026-06-05` — hero command + occupancy radial + AI insight + channel mix.
+- **PR #676** `chore/p2-login-gradient-notif-actions-2026-06-05` — inline approve/reject on notification cards (F3). F4b login gradient **dropped** — see below.
+
+Merge order was Pregled → Notifications, both `--no-ff`. Conflict count: **0** (file-disjoint as designed).
+
+### F4b — DROPPED on inspection
+
+`enhanced_login_screen.dart:358-361` carries an explicit comment from PR #615:
+
+> *"Was previously `rd.heroGradient` (saturated brand purple); swapped per Phase 1.2 (#615) review feedback."*
+
+The "missing" gradient was a deliberate design decision. The pale-lavender `rd.softBg` is the agreed background; the glass card at line 442 remains correct as-is. Adding the hero gradient back = regression on a reviewed call. Audit/114 §Round 1 finding F4 was incorrect — closed as **design-intent, not a fidelity gap**.
+
+### Per-surface fidelity
+
+| # | Surface | Source | Round 3 result | Status | Capture |
+|---|---|---|---|---|---|
+| **F1** | Mjesečni legend "Završeno" purple | `45bf99b6` on `chore/p2-quick-wins-batch-2026-06-05` | Verified Round 2; no change in Round 3 (still purple). | ✅ LIVE | `round2/r2-01-mjesecni-f1-verify.png` |
+| **F2** | iCal OTA logos | (no code change) | Verified Round 2; brand marks correct (false positive). | ✅ LIVE | `round2/r2-02-ical-import-f2-verify.png`, `r2-03-ical-airbnb-f2.png` |
+| **F3** | Notifications inline approve/reject (PR #676) | `notifications_screen.dart` + `notifications_provider.dart` | All 4 visible `bookingCreated` cards show green **✓ Odobri** + soft-red **✕ Odbij** buttons. Chevron suppressed when actions present (no double affordance). FAB (mark-all-read) untouched on screen. Non-actionable notifications (out of view) keep chevron-only nav. | ✅ **LIVE** | `round3/r3-04-notifications-inline-actions.png` |
+| **F4b** | Login hero gradient under glass | (no code change) | Design intent (PR #615) — soft-bg is the agreed background, glass primitive intact at line 442. | ❌ DROPPED (design-intent) | n/a |
+| **C-a** | Pregled hero revenue command (PR #675) | `dashboard_overview_tab.dart` `_PregledHeroCommand` | `Ukupna zarada · zadnjih 30 dana` eyebrow, **€300** tabular north-star, no delta chip + no sparkline (test fixture `revenueHistory.length < 4`, falls through `hasDelta` and `hasSpark` gates as designed). On richer fixtures the chip + sparkline will appear. Card is full-width on mobile, FittedBox-scaled. | ✅ **LIVE** | `round3/r3-01-pregled-hero-radial-insight.png` |
+| **C-d** | Pregled occupancy radial (PR #675) | `_PregledOccupancyRadial` + `_OccupancyRadialPainter` | Purple gradient arc, CustomPaint drawing **10%** center value (tabular), eyebrow `POPUNJENOST`, sublabel `Razdoblje · 1 rezervacija`, "2 dolazaka uskoro" purple pill (binds to `data.upcomingCheckIns`). `TweenAnimationBuilder` count-up gated by `MediaQuery.disableAnimations`. | ✅ **LIVE** | same as C-a (rendered below hero in capture) |
+| **C-e** | Pregled AI insight banner (PR #675) | `_PregledAiInsight` | Lavender hero-gradient container, sparkles icon tile, eyebrow `BookBed AI · Uvid tjedna`, placeholder copy. Renders in this sweep because the build was `--debug` (kDebugMode true). Hidden in release until `PREGLED_AI_INSIGHT` env flag is on. | ✅ **LIVE (debug-gated)** | same as C-a |
+| **C-f** | Pregled channel mix (PR #675) | `_PregledChannelMix` | Stacked bar + per-channel rows: **Direktno €207 69%**, **Booking.com €66 22%**, **Airbnb €27 9%** — proportions are the handoff placeholder (data.revenue × constants), not yet a real source breakdown. kDebugMode-visible; release waits on env flag `PREGLED_CHANNEL_MIX` + a proper provider field. | ✅ **LIVE (debug-gated, placeholder data)** | `round3/r3-02-pregled-channelmix.png` |
+
+### Adjustment applied during sweep (not in PR #675)
+
+The integration build dropped the `if (data.bookings == 0) return SizedBox.shrink()` guard from BOTH the hero/radial/insight block and the channel mix block. Reason: with the guard, all four widgets disappeared when the test fixture had no in-period bookings (which is the common cold-start state on `bookbed-dev`). The handoff `pregled-premium.jsx` has no empty-state branch; hero shows €0 + flat surfaces rather than disappearing. **The adjustment lives only on the throwaway `tmp/sweep-2026-06-05`**; PR #675 still has the guard. To land this behavior, open a follow-up small patch on `feat/pregled-batch2-2026-06-05` BEFORE merge, OR ship without it and accept the empty-state hide.
+
+### Sweep notes / gotchas
+
+1. **Build-runner needed in worktree** — fresh `/tmp/bb-sweep-wt` had no `.freezed.dart` / `.g.dart`. `dart run build_runner build --delete-conflicting-outputs` (~30s) must run after `flutter pub get` before any analyze or run. Same gotcha hit during PR #675 worktree (see commit `45bf99b6`).
+2. **Test fixture data is sparse** — the dashboard provider initially failed with `PropertyException: Failed to fetch properties (code: property/fetch-failed)` after a hot-restart. Logging out via `Profil → Opasna zona → Odjava` and re-logging in cleared the stale auth tokens and the provider succeeded thereafter. Reproducible.
+3. **Pre-existing `unifiedDashboardNotifierProvider` does NOT use `revenueHistory.length ≥ 4`** — the test fixture's history is single-point so the hero's delta chip and sparkline correctly hide. To force their visibility for design review, seed at least 4 booking entries spanning the period.
+4. **F4b discovery saved time** — Explore pass surfaced the PR #615 swap comment before any code was written. Always read the file headers and inline comments first; the team's documented decisions can collapse a finding entirely.
+5. **No FROZEN-region touches across the sweep.** Calendar repository, Cjenovnik, timeline dimensions, Unit Wizard publish — all untouched.
+
+### Round 3 batch outcome
+
+- PRs verified live on emulator: **2** (#675 Pregled, #676 Notifications)
+- New audit findings closed: **3** (F3 by PR #676; C-a, C-d, C-e, C-f by PR #675)
+- Findings re-classified: **1** (F4b → design-intent CLOSED)
+- Worktrees used: **3** (Pregled, B, sweep — all to be torn down)
+- Merge conflicts: **0**
+- Config swap cycles: **1** (single dev↔prod swap as designed)
+- Findings still open: F-deposit (PVDeposit card) — secondary, no provider data; drawer scroll under Integracije expansion; channel-mix real source-breakdown field.
+
+### Final P-queue after Round 3
+
+| P | Item | Status |
+|---|---|---|
+| ✅ | F1 Mjesečni legend | CLOSED Round 2 |
+| ✅ | F2 OTA logos | CLOSED Round 2 (false-positive) |
+| ✅ | F3 Notifications inline actions | **CLOSED Round 3** (PR #676) |
+| ❌ | F4b Login hero gradient | **CLOSED design-intent** (PR #615 review) |
+| ✅ | C-a Pregled hero revenue command | **CLOSED Round 3** (PR #675) |
+| ✅ | C-d Pregled occupancy radial | **CLOSED Round 3** (PR #675) |
+| ✅ | C-e Pregled AI insight | **CLOSED Round 3 (debug-gated)** (PR #675) |
+| ✅ | C-f Pregled channel mix | **CLOSED Round 3 (debug-gated + placeholder)** (PR #675) |
+| P2 | Drop `bookings == 0` guard on new Pregled widgets | Open — small patch on `feat/pregled-batch2-2026-06-05` |
+| P2 | Channel mix real source-breakdown field on `UnifiedDashboardData` | Open — provider extension |
+| P2 | Booking detail full-route refactor | Open — separate batch |
+| P3 | PVDeposit card | Open — handoff secondary |
+| P3 | Drawer scroll under Integracije expansion | Open — small phones |
+
+

@@ -78,6 +78,7 @@
 - [106-qa-visual-regression](./audit/106-qa-visual-regression-2026-06-01.md) — 12 Phase 2 screens, 0 UNINT drift, 1 BLOCKED (Widget Confirmation Navigator.push), 1 product Q (Pregled KPI tile content swap) (2026-06-01)
 - 🟡 [107-security-audit](./audit/107-security-audit-2026-06-01.md) — multi-agent sweep on `main @ 866cc823`; F-107-01 HIGH `widget_secrets` `affectedKeys` gap + F-107-02 MED CORS 5 callables (audit/89 follow-up) + F-107-03 MED widget surface minimal CSP; 9 NEW + 4 KNOWN-OPEN + 25 verified-closed (2026-06-01)
 - ⏸️ [108-admin-redesign-smoke-blocked](./audit/108-admin-redesign-smoke-blocked-2026-06-02.md) — Tier 3 admin `BbCard` panelBg `#2A2342` smoke ABORTED at precondition; PRs #646 (canonicalize admin shell→panelBg) + #647 (BbCard resolves admin panelBg via ext) both OPEN on `main @ 4d81e106`; re-run after merge (2026-06-02)
+- ✅ [114-owner-mobile-design-qa](./audit/114-owner-mobile-design-qa-2026-06-05.md) — 22-screen Marionette + adb sweep vs `design_handoff` Premium; 3 rounds. R1: 7-item P-queue (3× P1 + 4× P2). R2: F1 (Mjesečni `Završeno` purple via `BBColor.statusCompleted`, PR #677) + F2 closed false-positive (Booking.com brand mark IS B-in-blue) + F4 re-scoped → F4b. R3: PR #675 (Pregled hero command €0+ / occupancy radial / AI insight kDebug-gated / channel mix kDebug-gated placeholder) + PR #676 (Notifications inline `Odobri`/`Odbij` on `bookingCreated` cards) verified live on `bookbed-dev`; F4b CLOSED-as-design-intent (PR #615 swapped `rd.heroGradient → rd.softBg` deliberately). Process gotchas → [[design-sweep-gotchas]]: worktree `build_runner` before analyze, hot-restart needs logout+relogin, sparse `revenueHistory` hides hero delta+sparkline by design. PRs #675+#676+#677 merged 2026-06-05 (2026-06-05)
 
 ---
 
@@ -193,7 +194,7 @@ Učitavaju se SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-05-30 | **Version**: 7.12
+**Last Updated**: 2026-06-05 | **Version**: 7.13
 
 # context-mode — MANDATORY routing rules
 

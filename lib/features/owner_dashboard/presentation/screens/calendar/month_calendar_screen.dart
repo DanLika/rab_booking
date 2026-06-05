@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
@@ -934,7 +935,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
       case BookingStatus.cancelled:
         return isDark ? const Color(0xFF616161) : const Color(0xFF9E9E9E);
       case BookingStatus.completed:
-        return isDark ? const Color(0xFF1565C0) : const Color(0xFF1E88E5);
+        return BBColor.statusCompleted;
     }
   }
 

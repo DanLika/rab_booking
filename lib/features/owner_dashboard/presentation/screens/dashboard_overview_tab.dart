@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -454,6 +457,37 @@ class DashboardOverviewTab extends ConsumerWidget {
                     _DateRangeSelector(dateRange: dateRange),
                     SizedBox(height: isMobile ? 8 : 12),
 
+                    // Hero revenue command + occupancy radial + AI insight
+                    // (handoff `pregled-premium.jsx` PVRevenueCommand / PVOccupancy
+                    // / PVAIInsight — audit/114 P1 Pregled mobile).
+                    dashboardAsync.when(
+                      data: (data) {
+                        if (data.bookings == 0) return const SizedBox.shrink();
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _PregledHeroCommand(
+                                data: data,
+                                dateRange: dateRange,
+                                isMobile: isMobile,
+                              ),
+                              SizedBox(height: isMobile ? 12 : 16),
+                              _PregledOccupancyRadial(
+                                data: data,
+                                isMobile: isMobile,
+                              ),
+                              SizedBox(height: isMobile ? 12 : 16),
+                              _PregledAiInsight(isMobile: isMobile),
+                            ],
+                          ),
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
+                    ),
+
                     // KPI cards section
                     const BbSectionHeader(
                       // HR-only owner surface — handoff eyebrow copy.
@@ -477,6 +511,23 @@ class DashboardOverviewTab extends ConsumerWidget {
                           child: isDesktop
                               ? _buildDesktopChartsRow(data, l10n)
                               : _buildStackedCharts(data, isMobile, l10n),
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
+                    ),
+
+                    // Revenue-by-channel (handoff PVChannels) — placeholder
+                    // surface, real provider wiring tracked in audit/114.
+                    dashboardAsync.when(
+                      data: (data) {
+                        if (data.bookings == 0) return const SizedBox.shrink();
+                        return Padding(
+                          padding: EdgeInsets.only(top: isMobile ? 16 : 20),
+                          child: _PregledChannelMix(
+                            data: data,
+                            isMobile: isMobile,
+                          ),
                         );
                       },
                       loading: () => const SizedBox.shrink(),
@@ -1640,4 +1691,623 @@ class _PregledArrivalsRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Hero "north-star" revenue command card (handoff PVRevenueCommand).
+///
+/// Renders the dominant revenue figure for the selected period with a
+/// delta-vs-prior chip and a wide area sparkline. Delta is derived from the
+/// existing `revenueHistory` series (no new provider): the second half of the
+/// series is compared to the first half, so the chip is only meaningful when
+/// the series has at least 4 points.
+class _PregledHeroCommand extends StatelessWidget {
+  final UnifiedDashboardData data;
+  final DateRangeFilter dateRange;
+  final bool isMobile;
+
+  const _PregledHeroCommand({
+    required this.data,
+    required this.dateRange,
+    required this.isMobile,
+  });
+
+  String _periodLabel(AppLocalizations l10n) {
+    switch (dateRange.preset) {
+      case 'last7':
+        return l10n.ownerAnalyticsLast7Days;
+      case 'last30':
+        return l10n.ownerAnalyticsLast30Days;
+      case 'last90':
+        return l10n.ownerAnalyticsLast90Days;
+      case 'last365':
+        return l10n.ownerAnalyticsLast365Days;
+      default:
+        return '';
+    }
+  }
+
+  ({double pct, double prevSum}) _deltaVsPrior() {
+    final h = data.revenueHistory;
+    if (h.length < 4) return (pct: 0, prevSum: 0);
+    final mid = h.length ~/ 2;
+    double prev = 0, curr = 0;
+    for (int i = 0; i < mid; i++) {
+      prev += h[i].amount;
+    }
+    for (int i = mid; i < h.length; i++) {
+      curr += h[i].amount;
+    }
+    if (prev <= 0) return (pct: 0, prevSum: 0);
+    final pct = (curr - prev) / prev * 100;
+    return (pct: pct, prevSum: prev);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
+    final spark = data.revenueHistory
+        .map((p) => p.amount)
+        .toList(growable: false);
+    final hasSpark = spark.length >= 2;
+    final d = _deltaVsPrior();
+    final hasDelta = d.prevSum > 0;
+    final positive = d.pct >= 0;
+    final deltaColor = positive ? c.success : c.error;
+    final deltaIcon = positive ? 'trending_up' : 'trending_down';
+    final deltaLabel =
+        '${positive ? '+' : ''}${d.pct.toStringAsFixed(1).replaceAll('.', ',')}%';
+
+    return BbCard(
+      padding: EdgeInsets.all(isMobile ? 18 : 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            // HR-only owner surface; handoff eyebrow copy.
+            'Ukupna zarada · ${_periodLabel(l10n).toLowerCase()}',
+            style: BBType.eyebrow(context).copyWith(color: c.textTertiary),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: isMobile ? 10 : 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.bottomLeft,
+                  child: Text(
+                    '€${data.revenue.toStringAsFixed(0)}',
+                    style: BBType.displayNum(context).copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1.2,
+                      height: 1.0,
+                      color: c.textPrimary,
+                      fontSize: isMobile ? 38 : 52,
+                    ),
+                  ),
+                ),
+              ),
+              if (hasDelta) ...[
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: deltaColor.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      BbIcon(name: deltaIcon, size: 14, color: deltaColor),
+                      const SizedBox(width: 3),
+                      Text(
+                        deltaLabel,
+                        style: BBType.caption(context).copyWith(
+                          color: deltaColor,
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: const <FontFeature>[
+                            FontFeature.tabularFigures(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (hasSpark) ...[
+            SizedBox(height: isMobile ? 14 : 18),
+            LayoutBuilder(
+              builder: (ctx, cs) => BbSparkline(
+                data: spark,
+                width: cs.maxWidth,
+                height: isMobile ? 80 : 108,
+                color: c.primary,
+                fillColor: c.primary.withValues(alpha: 0.16),
+                strokeWidth: 2.5,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Occupancy radial gauge (handoff PVOccupancy / PVRadial).
+///
+/// Replaces the flat percentage tile with a custom-painted arc on a BbCard.
+/// The arc is purely presentational; the value comes from the existing
+/// `data.occupancyRate` field.
+class _PregledOccupancyRadial extends StatelessWidget {
+  final UnifiedDashboardData data;
+  final bool isMobile;
+
+  const _PregledOccupancyRadial({required this.data, required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final l10n = AppLocalizations.of(context);
+    final occupancy = data.occupancyRate.clamp(0.0, 100.0);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final size = isMobile ? 120.0 : 144.0;
+
+    return BbCard(
+      padding: EdgeInsets.all(isMobile ? 18 : 22),
+      child: Row(
+        children: [
+          SizedBox(
+            width: size,
+            height: size,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0, end: occupancy),
+              duration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 1200),
+              curve: Curves.easeOutCubic,
+              builder: (ctx, animated, _) => CustomPaint(
+                painter: _OccupancyRadialPainter(
+                  value: animated,
+                  trackColor: c.bg,
+                  gradientStart: c.primary,
+                  gradientEnd: c.primaryLight,
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${animated.toStringAsFixed(0)}%',
+                        style: BBType.h1Num(context).copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.8,
+                          height: 1.0,
+                          color: c.textPrimary,
+                          fontSize: isMobile ? 26 : 30,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: isMobile ? 16 : 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.ownerOccupancyRate.toUpperCase(),
+                  style: BBType.eyebrow(
+                    context,
+                  ).copyWith(color: c.textTertiary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  // HR-only owner surface; mirrors handoff caption.
+                  'Razdoblje · ${data.bookings} rezervacija',
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textSecondary),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: isMobile ? 10 : 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: c.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      BbIcon(name: 'donut_small', size: 14, color: c.primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        // HR-only owner surface.
+                        '${data.upcomingCheckIns} dolazaka uskoro',
+                        style: BBType.caption(context).copyWith(
+                          color: c.primary,
+                          fontWeight: FontWeight.w600,
+                          fontFeatures: const <FontFeature>[
+                            FontFeature.tabularFigures(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OccupancyRadialPainter extends CustomPainter {
+  _OccupancyRadialPainter({
+    required this.value,
+    required this.trackColor,
+    required this.gradientStart,
+    required this.gradientEnd,
+  });
+
+  final double value; // 0-100
+  final Color trackColor;
+  final Color gradientStart;
+  final Color gradientEnd;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final stroke = size.width * 0.10;
+    final radius = (size.shortestSide - stroke) / 2;
+    final center = Offset(size.width / 2, size.height / 2);
+
+    final track = Paint()
+      ..color = trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(center, radius, track);
+
+    final arc = Paint()
+      ..shader = SweepGradient(
+        startAngle: -math.pi / 2,
+        endAngle: math.pi * 1.5,
+        colors: [gradientStart, gradientEnd],
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
+
+    final sweep = (value / 100.0) * math.pi * 2;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      sweep,
+      false,
+      arc,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _OccupancyRadialPainter old) =>
+      old.value != value ||
+      old.trackColor != trackColor ||
+      old.gradientStart != gradientStart ||
+      old.gradientEnd != gradientEnd;
+}
+
+/// AI insight banner (handoff PVAIInsight).
+///
+/// Lavender-tinted container with sparkles icon, eyebrow tag, body copy and
+/// a primary CTA. Behind a feature flag because no BookBed AI provider yet
+/// exists; the copy here is the handoff example for visual fidelity only.
+class _PregledAiInsight extends StatelessWidget {
+  final bool isMobile;
+
+  const _PregledAiInsight({required this.isMobile});
+
+  static const bool _enabled = bool.fromEnvironment('PREGLED_AI_INSIGHT');
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_enabled && !kDebugMode) return const SizedBox.shrink();
+
+    final c = BBColor.of(context);
+    final tileSize = isMobile ? 42.0 : 46.0;
+
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 14 : 18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            c.primary.withValues(alpha: 0.10),
+            c.primary.withValues(alpha: 0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(BBRadius.md),
+        border: Border.all(color: c.primary.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: tileSize,
+            height: tileSize,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [c.primary, c.primaryLight],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: c.primary.withValues(alpha: 0.30),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: const BbIcon(
+              name: 'auto_awesome',
+              size: 22,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(width: isMobile ? 12 : 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: c.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        // Brand label, kept untranslated per handoff.
+                        'BookBed AI',
+                        style: BBType.caption(context).copyWith(
+                          color: c.primary,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      // HR-only owner surface.
+                      'Uvid tjedna',
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: c.textTertiary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  // HR-only owner surface; placeholder copy mirroring handoff
+                  // until a BookBed AI provider lands.
+                  'Vikend-termini sljedećeg mjeseca su gotovo popunjeni. Razmotrite blago povećanje cijene za nove rezervacije.',
+                  style: BBType.body(context).copyWith(
+                    color: c.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Revenue-by-channel breakdown card (handoff PVChannels).
+///
+/// Stacked horizontal bar + per-channel rows. Source breakdown is not yet on
+/// `UnifiedDashboardData`; until the provider is extended the card renders
+/// proportions derived from `data.bookings` only, behind a feature flag.
+class _PregledChannelMix extends StatelessWidget {
+  final UnifiedDashboardData data;
+  final bool isMobile;
+
+  const _PregledChannelMix({required this.data, required this.isMobile});
+
+  static const bool _enabled = bool.fromEnvironment('PREGLED_CHANNEL_MIX');
+
+  List<_ChannelEntry> _placeholderEntries(BBColorSet c) {
+    final total = math.max(data.revenue, 1);
+    // Placeholder mix mirroring handoff PVChannels proportions.
+    return [
+      _ChannelEntry(
+        // HR-only owner surface.
+        label: 'Direktno',
+        pct: 69,
+        amount: total * 0.69,
+        color: c.primary,
+      ),
+      _ChannelEntry(
+        label: 'Booking.com',
+        pct: 22,
+        amount: total * 0.22,
+        color: c.info,
+      ),
+      _ChannelEntry(
+        label: 'Airbnb',
+        pct: 9,
+        amount: total * 0.09,
+        color: c.error,
+      ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_enabled && !kDebugMode) return const SizedBox.shrink();
+
+    final c = BBColor.of(context);
+    final entries = _placeholderEntries(c);
+
+    return BbCard(
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: isMobile ? 30 : 34,
+                height: isMobile ? 30 : 34,
+                decoration: BoxDecoration(
+                  color: c.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: BbIcon(name: 'donut_small', size: 18, color: c.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      // HR-only owner surface.
+                      'Zarada po kanalu',
+                      style: BBType.h3(context).copyWith(
+                        color: c.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      // HR-only owner surface.
+                      'Udio izvora rezervacija',
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: c.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: isMobile ? 14 : 18),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: SizedBox(
+              height: 12,
+              child: Row(
+                children: [
+                  for (final e in entries)
+                    Expanded(
+                      flex: e.pct,
+                      child: Container(
+                        color: e.color,
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: isMobile ? 14 : 18),
+          Column(
+            children: [
+              for (int i = 0; i < entries.length; i++) ...[
+                if (i > 0) const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: entries[i].color,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        entries[i].label,
+                        style: BBType.label(context).copyWith(
+                          color: c.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '€${entries[i].amount.toStringAsFixed(0)}',
+                      style: BBType.bodyNum(context).copyWith(
+                        color: c.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 36,
+                      child: Text(
+                        '${entries[i].pct}%',
+                        textAlign: TextAlign.right,
+                        style: BBType.caption(context).copyWith(
+                          color: c.textTertiary,
+                          fontFeatures: const <FontFeature>[
+                            FontFeature.tabularFigures(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChannelEntry {
+  final String label;
+  final int pct;
+  final double amount;
+  final Color color;
+
+  const _ChannelEntry({
+    required this.label,
+    required this.pct,
+    required this.amount,
+    required this.color,
+  });
 }

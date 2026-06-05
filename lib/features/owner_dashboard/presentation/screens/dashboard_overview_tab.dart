@@ -459,31 +459,31 @@ class DashboardOverviewTab extends ConsumerWidget {
 
                     // Hero revenue command + occupancy radial + AI insight
                     // (handoff `pregled-premium.jsx` PVRevenueCommand / PVOccupancy
-                    // / PVAIInsight — audit/114 P1 Pregled mobile).
+                    // / PVAIInsight — audit/114 P1 Pregled mobile). Always
+                    // renders — at €0 / 0% the surfaces become a calm empty
+                    // baseline rather than disappearing, matching handoff which
+                    // has no empty-state branch.
                     dashboardAsync.when(
-                      data: (data) {
-                        if (data.bookings == 0) return const SizedBox.shrink();
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              _PregledHeroCommand(
-                                data: data,
-                                dateRange: dateRange,
-                                isMobile: isMobile,
-                              ),
-                              SizedBox(height: isMobile ? 12 : 16),
-                              _PregledOccupancyRadial(
-                                data: data,
-                                isMobile: isMobile,
-                              ),
-                              SizedBox(height: isMobile ? 12 : 16),
-                              _PregledAiInsight(isMobile: isMobile),
-                            ],
-                          ),
-                        );
-                      },
+                      data: (data) => Padding(
+                        padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _PregledHeroCommand(
+                              data: data,
+                              dateRange: dateRange,
+                              isMobile: isMobile,
+                            ),
+                            SizedBox(height: isMobile ? 12 : 16),
+                            _PregledOccupancyRadial(
+                              data: data,
+                              isMobile: isMobile,
+                            ),
+                            SizedBox(height: isMobile ? 12 : 16),
+                            _PregledAiInsight(isMobile: isMobile),
+                          ],
+                        ),
+                      ),
                       loading: () => const SizedBox.shrink(),
                       error: (_, _) => const SizedBox.shrink(),
                     ),
@@ -519,17 +519,15 @@ class DashboardOverviewTab extends ConsumerWidget {
 
                     // Revenue-by-channel (handoff PVChannels) — placeholder
                     // surface, real provider wiring tracked in audit/114.
+                    // Always renders (handoff has no empty-state branch).
                     dashboardAsync.when(
-                      data: (data) {
-                        if (data.bookings == 0) return const SizedBox.shrink();
-                        return Padding(
-                          padding: EdgeInsets.only(top: isMobile ? 16 : 20),
-                          child: _PregledChannelMix(
-                            data: data,
-                            isMobile: isMobile,
-                          ),
-                        );
-                      },
+                      data: (data) => Padding(
+                        padding: EdgeInsets.only(top: isMobile ? 16 : 20),
+                        child: _PregledChannelMix(
+                          data: data,
+                          isMobile: isMobile,
+                        ),
+                      ),
                       loading: () => const SizedBox.shrink(),
                       error: (_, _) => const SizedBox.shrink(),
                     ),

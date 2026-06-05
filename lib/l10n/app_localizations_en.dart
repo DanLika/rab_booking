@@ -8613,4 +8613,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webDevReferralContactDetails => 'Contact: dusko@book-bed.com';
+
+  @override
+  String get notificationActionApprove => 'Approve';
+
+  @override
+  String get notificationActionReject => 'Reject';
+
+  @override
+  String get notificationApproveSuccess => 'Booking approved.';
+
+  @override
+  String get notificationApproveError => 'Failed to approve booking.';
+
+  @override
+  String get notificationRejectSuccess => 'Booking rejected.';
+
+  @override
+  String get notificationRejectError => 'Failed to reject booking.';
 }

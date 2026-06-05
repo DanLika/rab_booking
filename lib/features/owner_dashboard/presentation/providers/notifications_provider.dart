@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../shared/providers/repository_providers.dart';
+import '../../data/firebase/firebase_owner_bookings_repository.dart';
 import '../../domain/models/notification_model.dart';
 
 /// Notification service provider
@@ -82,19 +84,27 @@ final groupedNotificationsProvider =
 /// Uses current user's ownerId for efficient direct subcollection access
 final notificationActionsProvider = Provider<NotificationActions>((ref) {
   final service = ref.watch(notificationServiceProvider);
+  final bookingsRepo = ref.watch(ownerBookingsRepositoryProvider);
   final authState = ref.watch(enhancedAuthProvider);
   final ownerId = authState.firebaseUser?.uid;
-  return NotificationActions(service, ownerId);
+  return NotificationActions(service, bookingsRepo, ownerId);
 });
 
 /// Notification actions class
 /// NEW STRUCTURE: All methods pass ownerId for direct subcollection access
-/// This avoids expensive collectionGroup queries
+/// This avoids expensive collectionGroup queries.
+///
+/// audit/114 F3 (Round 3) — added [approveBooking] / [rejectBooking] that
+/// delegate to the existing owner bookings repository (firebase_owner_bookings
+/// _repository.dart:875 / :894). No new business logic — the Cloud Function
+/// hop, ownership checks, status guards and email fan-out are all handled
+/// server-side. UI surfaces only the success / failure outcome.
 class NotificationActions {
   final NotificationService _service;
+  final FirebaseOwnerBookingsRepository _bookingsRepo;
   final String? _ownerId;
 
-  NotificationActions(this._service, this._ownerId);
+  NotificationActions(this._service, this._bookingsRepo, this._ownerId);
 
   Future<void> markAsRead(String notificationId) async {
     await _service.markAsRead(notificationId, ownerId: _ownerId);
@@ -122,6 +132,17 @@ class NotificationActions {
   Future<void> deleteAllNotifications(String ownerId) async {
     await _service.deleteAllNotifications(ownerId);
   }
+
+  /// Approve the pending booking referenced by an actionable notification.
+  /// Thin wrapper over [FirebaseOwnerBookingsRepository.approveBooking] —
+  /// surfaces the same [BookingException] on failure so callers can localize.
+  Future<void> approveBooking(String bookingId) =>
+      _bookingsRepo.approveBooking(bookingId);
+
+  /// Reject the pending booking referenced by an actionable notification.
+  /// Thin wrapper over [FirebaseOwnerBookingsRepository.rejectBooking].
+  Future<void> rejectBooking(String bookingId, {String? reason}) =>
+      _bookingsRepo.rejectBooking(bookingId, reason: reason);
 }
 
 /// Helper function to get Croatian weekday name

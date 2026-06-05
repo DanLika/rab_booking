@@ -3633,5 +3633,30 @@
   "aiConsentStorage": "Povijest razgovora čuva se 1 godinu, a zatim se automatski briše.",
   "aiConsentDeletion": "Možete izbrisati bilo koji razgovor u bilo kojem trenutku povlačenjem ulijevo.",
   "aiConsentPrivacy": "Ne dijelite osjetljive podatke poput lozinki ili financijskih informacija.",
-  "aiConsentAccept": "Razumijem, započni"
+  "aiConsentAccept": "Razumijem, započni",
+
+  "notificationActionApprove": "Odobri",
+  "@notificationActionApprove": {
+    "description": "Inline approve button on a bookingCreated notification (audit/114 F3)."
+  },
+  "notificationActionReject": "Odbij",
+  "@notificationActionReject": {
+    "description": "Inline reject button on a bookingCreated notification (audit/114 F3)."
+  },
+  "notificationApproveSuccess": "Rezervacija je odobrena.",
+  "@notificationApproveSuccess": {
+    "description": "Snackbar after a notification-inline approve succeeded."
+  },
+  "notificationApproveError": "Nije uspjelo odobravanje rezervacije.",
+  "@notificationApproveError": {
+    "description": "Snackbar after a notification-inline approve failed."
+  },
+  "notificationRejectSuccess": "Rezervacija je odbijena.",
+  "@notificationRejectSuccess": {
+    "description": "Snackbar after a notification-inline reject succeeded."
+  },
+  "notificationRejectError": "Nije uspjelo odbijanje rezervacije.",
+  "@notificationRejectError": {
+    "description": "Snackbar after a notification-inline reject failed."
+  }
 }

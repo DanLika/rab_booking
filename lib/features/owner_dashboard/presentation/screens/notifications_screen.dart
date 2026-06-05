@@ -411,9 +411,77 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               );
             }
           },
+          // audit/114 F3 — inline approve/reject ONLY for actionable bookings.
+          onApprove:
+              notification.type == NotificationType.bookingCreated &&
+                  notification.bookingId != null
+              ? () => _runBookingAction(
+                  context,
+                  actions: actions,
+                  notification: notification,
+                  approve: true,
+                )
+              : null,
+          onReject:
+              notification.type == NotificationType.bookingCreated &&
+                  notification.bookingId != null
+              ? () => _runBookingAction(
+                  context,
+                  actions: actions,
+                  notification: notification,
+                  approve: false,
+                )
+              : null,
         ),
       ),
     );
+  }
+
+  /// Run an inline approve / reject for a `bookingCreated` notification,
+  /// then mark-read and surface a snackbar — best-effort, all wrapped so a
+  /// repository error never tears down the screen. audit/114 F3.
+  Future<void> _runBookingAction(
+    BuildContext context, {
+    required NotificationActions actions,
+    required NotificationModel notification,
+    required bool approve,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final bookingId = notification.bookingId;
+    if (bookingId == null) return;
+
+    try {
+      if (approve) {
+        await actions.approveBooking(bookingId);
+      } else {
+        await actions.rejectBooking(bookingId);
+      }
+      if (!notification.isRead) {
+        await actions.markAsRead(notification.id);
+      }
+      if (!context.mounted || messenger == null) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            approve
+                ? l10n.notificationApproveSuccess
+                : l10n.notificationRejectSuccess,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted || messenger == null) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            approve
+                ? l10n.notificationApproveError
+                : l10n.notificationRejectError,
+          ),
+        ),
+      );
+    }
   }
 
   /// Build empty state with entrance animation
@@ -519,6 +587,8 @@ class _NotificationRow extends StatelessWidget {
     required this.onTap,
     this.selected = false,
     this.showCheckbox = false,
+    this.onApprove,
+    this.onReject,
   });
 
   final NotificationModel notification;
@@ -527,6 +597,8 @@ class _NotificationRow extends StatelessWidget {
   final VoidCallback onTap;
   final bool selected;
   final bool showCheckbox;
+  final VoidCallback? onApprove;
+  final VoidCallback? onReject;
 
   Color _accentColor(BBColorSet c) {
     switch (accentTone) {
@@ -642,10 +714,52 @@ class _NotificationRow extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+                // audit/114 F3 — inline approve/reject row, only when both
+                // callbacks supplied (parent enforces the type+bookingId gate).
+                if (onApprove != null && onReject != null) ...<Widget>[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: BbButton(
+                          label: AppLocalizations.of(
+                            context,
+                          ).notificationActionApprove,
+                          iconLeft: 'check',
+                          variant: BbButtonVariant.success,
+                          size: BbButtonSize.sm,
+                          fullWidth: true,
+                          onPressed: onApprove,
+                          semanticLabel: AppLocalizations.of(
+                            context,
+                          ).notificationActionApprove,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: BbButton(
+                          label: AppLocalizations.of(
+                            context,
+                          ).notificationActionReject,
+                          iconLeft: 'close',
+                          variant: BbButtonVariant.destructiveSoft,
+                          size: BbButtonSize.sm,
+                          fullWidth: true,
+                          onPressed: onReject,
+                          semanticLabel: AppLocalizations.of(
+                            context,
+                          ).notificationActionReject,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
-          if (!showCheckbox) ...<Widget>[
+          // Hide chevron when inline actions are present — chevron + buttons
+          // double-up on affordance, so favour the explicit actions.
+          if (!showCheckbox && onApprove == null) ...<Widget>[
             const SizedBox(width: BBSpace.xs),
             Padding(
               padding: const EdgeInsets.only(top: 12),

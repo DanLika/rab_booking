@@ -8686,4 +8686,23 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get webDevReferralContactDetails => 'Kontakt: dusko@book-bed.com';
+
+  @override
+  String get notificationActionApprove => 'Odobri';
+
+  @override
+  String get notificationActionReject => 'Odbij';
+
+  @override
+  String get notificationApproveSuccess => 'Rezervacija je odobrena.';
+
+  @override
+  String get notificationApproveError =>
+      'Nije uspjelo odobravanje rezervacije.';
+
+  @override
+  String get notificationRejectSuccess => 'Rezervacija je odbijena.';
+
+  @override
+  String get notificationRejectError => 'Nije uspjelo odbijanje rezervacije.';
 }

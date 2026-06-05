@@ -15549,6 +15549,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contact: dusko@book-bed.com'**
   String get webDevReferralContactDetails;
+
+  /// Inline approve button on a bookingCreated notification (audit/114 F3).
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get notificationActionApprove;
+
+  /// Inline reject button on a bookingCreated notification (audit/114 F3).
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get notificationActionReject;
+
+  /// Snackbar after a notification-inline approve succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking approved.'**
+  String get notificationApproveSuccess;
+
+  /// Snackbar after a notification-inline approve failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to approve booking.'**
+  String get notificationApproveError;
+
+  /// Snackbar after a notification-inline reject succeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking rejected.'**
+  String get notificationRejectSuccess;
+
+  /// Snackbar after a notification-inline reject failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reject booking.'**
+  String get notificationRejectError;
 }
 
 class _AppLocalizationsDelegate

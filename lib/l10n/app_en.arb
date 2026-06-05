@@ -3627,5 +3627,30 @@
   "aiConsentPrivacy": "Do not share sensitive data such as passwords or financial information.",
   "aiConsentAccept": "I understand, let's start",
   "webDevReferralContactDetails": "Contact: dusko@book-bed.com",
-  "aiAssistantDisclaimer": "The AI Assistant provides guidance based on BookBed documentation. For account issues, contact info@book-bed.com"
+  "aiAssistantDisclaimer": "The AI Assistant provides guidance based on BookBed documentation. For account issues, contact info@book-bed.com",
+
+  "notificationActionApprove": "Approve",
+  "@notificationActionApprove": {
+    "description": "Inline approve button on a bookingCreated notification (audit/114 F3)."
+  },
+  "notificationActionReject": "Reject",
+  "@notificationActionReject": {
+    "description": "Inline reject button on a bookingCreated notification (audit/114 F3)."
+  },
+  "notificationApproveSuccess": "Booking approved.",
+  "@notificationApproveSuccess": {
+    "description": "Snackbar after a notification-inline approve succeeded."
+  },
+  "notificationApproveError": "Failed to approve booking.",
+  "@notificationApproveError": {
+    "description": "Snackbar after a notification-inline approve failed."
+  },
+  "notificationRejectSuccess": "Booking rejected.",
+  "@notificationRejectSuccess": {
+    "description": "Snackbar after a notification-inline reject succeeded."
+  },
+  "notificationRejectError": "Failed to reject booking.",
+  "@notificationRejectError": {
+    "description": "Snackbar after a notification-inline reject failed."
+  }
 }

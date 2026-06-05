@@ -21,11 +21,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bookbed/core/config/environment.dart';
 import 'package:bookbed/core/init/app_check_init.dart';
 import 'package:bookbed/firebase_options_dev.dart';
-import 'package:bookbed/main.dart' show BookBedApp;
+import 'package:bookbed/main.dart' show AppInitState, BookBedApp;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,18 @@ void main() {
     );
     // App Check off-prod uses Debug providers (web: placeholder reCAPTCHA).
     await AppCheckInit.activate(isProd: false);
+    // Complete the firebaseReady + prefsReady completers that BookBedApp's
+    // `_InitializingSplash` (main.dart:629 / `_waitForInitialization`) waits
+    // on. In production these are signalled by `runMainApp()` +
+    // `_initializeRemainingServices()`; we bypass those here because the test
+    // pumps the widget tree directly via `tester.pumpWidget`. Without these,
+    // the splash blocks GoRouter from advancing to `/login`.
+    if (!AppInitState.firebaseReady.isCompleted) {
+      AppInitState.firebaseReady.complete();
+    }
+    if (!AppInitState.prefsReady.isCompleted) {
+      AppInitState.prefsReady.complete(await SharedPreferences.getInstance());
+    }
     // Start clean — sign out any cached session from prior test runs.
     if (FirebaseAuth.instance.currentUser != null) {
       await FirebaseAuth.instance.signOut();
@@ -54,29 +67,47 @@ void main() {
     'owner login → /owner/overview dashboard route',
     (WidgetTester tester) async {
       await tester.pumpWidget(const ProviderScope(child: BookBedApp()));
-      // Initial pump cascade — let GoRouter settle on /login.
-      await tester.pumpAndSettle(const Duration(seconds: 4));
 
-      // Find the existing login keys (enhanced_login_screen.dart:541/563/478).
+      // Owner app does Firebase init + AppCheck + auth-provider boot before
+      // GoRouter redirects to /login. The HYBRID-LOADING pattern paints shell
+      // immediately but auth-state stream emits `unauthenticated` async.
+      // Poll for the login key in 1s slices up to 30s rather than relying on
+      // pumpAndSettle (which may return early when no animation tickers are
+      // pending but the route is still being decided).
       final emailFinder = find.byKey(const ValueKey('login_email'));
       final passwordFinder = find.byKey(const ValueKey('login_password'));
       final submitFinder = find.byKey(const ValueKey('login_submit'));
 
+      // Long pumpAndSettle to allow Firebase Auth stream resolution +
+      // Riverpod state propagation + GoRouter redirect to /login.
+      await tester.pumpAndSettle(const Duration(seconds: 60));
+
+      var reached = emailFinder.evaluate().isNotEmpty;
+      if (!reached) {
+        // One more burst — pump real time via runAsync, then resync frames.
+        await tester.runAsync(() async {
+          await Future<void>.delayed(const Duration(seconds: 10));
+        });
+        await tester.pumpAndSettle(const Duration(seconds: 30));
+        reached = emailFinder.evaluate().isNotEmpty;
+      }
+
+      if (!reached) {
+        // ignore: avoid_print
+        print('[login_smoke] Widgets on tree at failure:');
+        for (final w in tester.allWidgets.take(40)) {
+          // ignore: avoid_print
+          print('  ${w.runtimeType}');
+        }
+      }
+
       expect(
-        emailFinder,
-        findsOneWidget,
-        reason: 'login_email field should be present on /login',
+        reached,
+        isTrue,
+        reason: 'login_email key never appeared after long pumpAndSettle',
       );
-      expect(
-        passwordFinder,
-        findsOneWidget,
-        reason: 'login_password field should be present on /login',
-      );
-      expect(
-        submitFinder,
-        findsOneWidget,
-        reason: 'login_submit button should be present on /login',
-      );
+      expect(passwordFinder, findsOneWidget);
+      expect(submitFinder, findsOneWidget);
 
       await tester.enterText(emailFinder, 'bookbed-test@bookbed.io');
       await tester.enterText(passwordFinder, 'BookBedTest2026!');

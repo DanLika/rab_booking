@@ -52,17 +52,15 @@ export function getStripeClient(): Stripe.Stripe {
     }
 
     // SF-040: project-aware prefix check.
-    const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
-    if (projectId) {
-      const isProd = projectId === "rab-booking-248fc";
-      const expectedPrefix = isProd ? "sk_live_" : "sk_test_";
-      if (!apiKey.startsWith(expectedPrefix)) {
-        // Do NOT log the key itself, even partially — the mismatch is the
-        // signal; the secret should never appear in logs / Sentry.
-        throw new Error(
-          `STRIPE_SECRET_KEY mode mismatch: project=${projectId} expects ${expectedPrefix}*`
-        );
-      }
+    // Rely on EXPECTED_STRIPE_PREFIX environment variable instead of hardcoded strings
+    // to verify the secret manager value hasn't been misconfigured across environments.
+    const expectedPrefix = process.env.EXPECTED_STRIPE_PREFIX;
+    if (expectedPrefix && !apiKey.startsWith(expectedPrefix)) {
+      // Do NOT log the key itself, even partially — the mismatch is the
+      // signal; the secret should never appear in logs / Sentry.
+      throw new Error(
+        "STRIPE_SECRET_KEY mode mismatch: configured secret does not match expected environment prefix."
+      );
     }
 
     // Pin Stripe API to "2025-09-30.clover" — matches the PROD webhook

@@ -722,12 +722,16 @@ class DashboardOverviewTab extends ConsumerWidget {
       isMobile: isMobile,
     );
 
+    // KPI tiles 3+4 ride proxy series until UnifiedDashboardData carries
+    // dedicated history fields. Check-ins ≈ bookings rhythm; occupancy ≈
+    // revenue rhythm. Better than empty sparkline (handoff shows all 4 cards
+    // with a sparkline). Proxies are derived series, not invented data.
     final checkInsCard = _PregledKpiCard(
       icon: 'flight_takeoff',
       label: l10n.ownerUpcomingCheckIns,
       value: '${data.upcomingCheckIns}',
       tone: c.success,
-      sparkData: const [],
+      sparkData: bookingsSpark,
       isMobile: isMobile,
     );
 
@@ -736,7 +740,7 @@ class DashboardOverviewTab extends ConsumerWidget {
       label: l10n.ownerOccupancyRate,
       value: '${data.occupancyRate.toStringAsFixed(0)}%',
       tone: c.tertiary,
-      sparkData: const [],
+      sparkData: revenueSpark,
       isMobile: isMobile,
     );
 
@@ -1647,6 +1651,11 @@ class _PregledArrivalsRow extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // Next-guest hero date chip (handoff PV_ARRIVALS[next:true]).
+            // First row gets gradient-hero + purple shadow + white text;
+            // others get surface-variant + tertiary text.
+            _ArrivalsDateChip(date: booking.checkIn, highlighted: isFirst),
+            SizedBox(width: isMobile ? 10 : 14),
             BbAvatar(
               name: ownerBooking.guestName,
               size: BbAvatarSize.sm,
@@ -1686,6 +1695,72 @@ class _PregledArrivalsRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 48-wide date chip for the upcoming-arrivals row (handoff PV_ARRIVALS).
+///
+/// Highlighted (first/next arrival) → gradient-hero + purple-glow shadow +
+/// white text. Resting → surface-variant + tertiary text. Day + date number,
+/// HR weekday abbreviation.
+class _ArrivalsDateChip extends StatelessWidget {
+  final DateTime date;
+  final bool highlighted;
+
+  const _ArrivalsDateChip({required this.date, required this.highlighted});
+
+  // HR weekday abbreviations indexed by DateTime.weekday (1..7).
+  static const List<String> _hrDays = <String>[
+    'Pon',
+    'Uto',
+    'Sri',
+    'Čet',
+    'Pet',
+    'Sub',
+    'Ned',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final String day = _hrDays[(date.weekday - 1).clamp(0, 6)];
+    final Color labelColor = highlighted
+        ? Colors.white.withValues(alpha: 0.82)
+        : c.textTertiary;
+    final Color numColor = highlighted ? Colors.white : c.textPrimary;
+    return Container(
+      width: 48,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        gradient: highlighted ? BBGradient.hero : null,
+        color: highlighted ? null : c.surfaceVariant,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: highlighted ? BBShadow.purpleGlow(context) : null,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            day,
+            style: BBType.caption(context).copyWith(
+              color: labelColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 10,
+              letterSpacing: 0.5,
+            ),
+          ),
+          Text(
+            '${date.day}',
+            style: BBType.bodyNum(context).copyWith(
+              color: numColor,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              height: 1.2,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2035,16 +2110,21 @@ class _PregledAiInsight extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(isMobile ? 14 : 18),
       decoration: BoxDecoration(
+        // Premium tri-stop banner gradient (handoff `tokens.css` line 217):
+        // purple → light purple → mint. 105° axis ≈ topLeft→bottomRight.
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
             c.primary.withValues(alpha: 0.10),
-            c.primary.withValues(alpha: 0.04),
+            c.primaryLight.withValues(alpha: 0.05),
+            const Color(0xFF3DD9B0).withValues(alpha: 0.07),
           ],
+          stops: const <double>[0.0, 0.45, 1.0],
         ),
         borderRadius: BorderRadius.circular(BBRadius.md),
         border: Border.all(color: c.primary.withValues(alpha: 0.18)),
+        boxShadow: BBShadow.cardElevated,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

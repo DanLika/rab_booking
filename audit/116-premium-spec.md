@@ -168,6 +168,20 @@ For each shared chrome primitive: TARGET values + current Flutter state + gap.
 
 **Gap:** MaterialApp default `appBarTheme` is the saturated-purple legacy Material 3 pattern. Any screen NOT wrapped in `BbScaffold`/`BbAppBar` inherits this. Phase B switches the default to the premium pattern (surface bg, text-primary title, 56 px). Screens already on `BbAppBar` are unaffected.
 
+### §AppBar-resolution (Phase C-1, 2026-06-06)
+
+User prompt for Phase C-1 asked the agent to compare `design_handoff/screens/01-owner.png` against `source/pregled-premium.jsx` and decide whether the AppBar/top region is **gradient/purple** or **flat surface**, then either restore a premium gradient AppBar (if mockup is gradient) or keep Phase B's flat (if mockup is flat).
+
+**Decision: FLAT KEPT.** `01-owner.png` ground truth shows the AppBar dissolves into the shell — transparent over `--bb-shell-bg` (`#F0F1F5`). The handoff JSX (`pregled-premium.jsx`) confirms this: every premium page wraps `BBAppBar style={PV_TRANSPARENT_CHROME}` where `PV_TRANSPARENT_CHROME = { background: 'transparent', borderRight: 'none', borderBottom: 'none' }`. `tokens.css §Premium console shell` (line 287–298) also dissolves the AppBar: `.bb-shell > div > header { background: transparent !important; border-bottom: none !important; }`.
+
+Phase B is therefore correct for both consumers:
+- **Premium pages** (inside `BbScaffold`) — `BbAppBar` already passes `surfaceColor: Colors.transparent` (tablet/desktop) or `surfaceColor: shellBg` (mobile). MaterialApp default is unused on these.
+- **Legacy screens** (still on stock `AppBar`) — Phase B's surface bg + 56 px + bb-h2 title is the closest Material-default approximation of premium. Migrating these to `BbAppBar` is a Phase D concern, not C.
+
+There is one subtle drift worth flagging: Phase B set `shadowColor: AppColors.sectionDividerLight` + `scrolledUnderElevation: 1` on the default AppBarTheme — premium shell has `border-bottom: none`. On scroll, legacy screens will draw a 1-pt divider; premium-shell screens will not (BbAppBar handles its own border). Acceptable — the divider on legacy screens is a sensible visual fallback during the transitional period.
+
+**No code change** from this resolution.
+
 ### §3.2 — Drawer (mobile slide-in)
 
 Used in `BbScaffold` mobile branch (`bb_scaffold.dart:136-149`). Wraps `BbSidebar` inside a Material `Drawer(backgroundColor: surface, width: 280)`.

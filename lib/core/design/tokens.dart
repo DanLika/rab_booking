@@ -102,6 +102,12 @@ class BBColor {
   /// Lighter primary for hover surface fill, focus ring backgrounds.
   static const Color primaryLight = Color(0xFF9B86F3);
 
+  /// Dark-mode primary lift. Used as `BBColorSet.dark.primary` so that
+  /// `BBColor.of(context).primary` resolves to mockup `--bb-primary` in dark
+  /// (`design_handoff/source/tokens.css` `.theme-dark { --bb-primary: #8B6FFF }`).
+  /// Light mode keeps [primary] `#6B4CE6`.
+  static const Color primaryDarkMode = Color(0xFF8B6FFF);
+
   /// Coral. Used for destructive CTA + error states.
   static const Color secondary = Color(0xFFFF6B6B);
 
@@ -131,7 +137,7 @@ class BBColor {
   // -------------------------------------------------------------------------
 
   static const Color bgDark = Color(0xFF000000);
-  static const Color surfaceDark = Color(0xFF121212);
+  static const Color surfaceDark = Color(0xFF0B0B0D); // mockup --bb-panel-bg
   static const Color surfaceVarDark = Color(0xFF1E1E1E);
   static const Color borderDark = Color(0xFF2D3748);
 
@@ -190,7 +196,7 @@ class BBColor {
   );
 
   static const BBColorSet dark = BBColorSet(
-    primary: primary,
+    primary: primaryDarkMode, // mockup --bb-primary dark #8B6FFF
     primaryDark: primaryDark,
     primaryLight: primaryLight,
     secondary: secondary,

@@ -20,6 +20,12 @@ class AppColors {
   /// Primary light - Light purple
   static const Color primaryLight = Color(0xFF9B86F3); // Light Purple
 
+  /// Primary — dark-mode lift
+  /// Resolves `theme.colorScheme.primary` in dark mode to mockup `--bb-primary`
+  /// (`design_handoff/source/tokens.css` `.theme-dark { --bb-primary: #8B6FFF }`).
+  /// Light mode keeps [primary] `#6B4CE6`.
+  static const Color primaryDarkMode = Color(0xFF8B6FFF);
+
   /// Secondary accent color - Coral Sunset
   /// Used for: CTAs, highlights, special offers, energy elements
   /// Inspired by Mediterranean sunsets and warmth
@@ -89,10 +95,11 @@ class AppColors {
   /// Impact: 20% better battery life on OLED screens, modern 2025 dark mode
   static const Color backgroundDark = Color(0xFF000000); // TRUE BLACK (OLED)
 
-  /// Surface color - Material Design 3 dark surface
-  /// UPGRADED: Was 0xFF2D3748 → Now 0xFF121212 (MD3 standard)
+  /// Surface color - mockup --bb-panel-bg dark
+  /// 0xFF121212 → 0xFF0B0B0D (audit/119: aligns with design_handoff/source/tokens.css
+  /// `.theme-dark { --bb-panel-bg: #0B0B0D }`). Cards now read closer to OLED shell.
   /// Used for: Cards, elevated containers
-  static const Color surfaceDark = Color(0xFF121212); // MD3 Dark Surface
+  static const Color surfaceDark = Color(0xFF0B0B0D); // mockup --bb-panel-bg
 
   /// Surface variant - Elevated surface
   /// UPGRADED: Was 0xFF4A5568 → Now 0xFF1E1E1E (higher elevation)

@@ -12,8 +12,8 @@ import {defineSecret} from "firebase-functions/params";
 export const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 
 // Initialize Stripe (lazy initialization to avoid deployment errors)
-// v22 split the namespace: `Stripe` is the callable constructor
-// and `Stripe.Stripe` is the class.
+// v22 split the namespace: `Stripe` is the callable constructor (StripeConstructor)
+// and `Stripe.Stripe` is the class — the latter is needed in type position.
 let stripe: Stripe.Stripe | null = null;
 
 // F-70-01: bookbed-dev us-central1 Cloud Run runs with Sentry init'd
@@ -43,8 +43,6 @@ const stripeHttpClient = Stripe.createFetchHttpClient();
  * before the first Stripe call so the failure is loud and immediate.
  * Analog of the Dart kDebugMode Firebase project-ID assert in
  * .claude/rules/ios-development.md.
- *
- * @return {Stripe.Stripe} Returns the initialized Stripe instance.
  */
 export function getStripeClient(): Stripe.Stripe {
   if (!stripe) {
@@ -53,17 +51,22 @@ export function getStripeClient(): Stripe.Stripe {
       throw new Error("STRIPE_SECRET_KEY not configured");
     }
 
-    // SF-040: project-aware prefix check using environment variables
-    // to avoid hardcoding.
-    const expectedPrefix = process.env.STRIPE_KEY_PREFIX;
-    if (expectedPrefix && !apiKey.startsWith(expectedPrefix)) {
-      // Do NOT log the key itself, even partially — the mismatch is the
-      // signal; the secret should never appear in logs / Sentry.
-      throw new Error("STRIPE_SECRET_KEY mode mismatch.");
+    // SF-040: project-aware prefix check.
+    const projectId = process.env.GCP_PROJECT || process.env.GCLOUD_PROJECT;
+    if (projectId) {
+      const isProd = projectId === "rab-booking-248fc";
+      const expectedPrefix = isProd ? "sk_live_" : "sk_test_";
+      if (!apiKey.startsWith(expectedPrefix)) {
+        // Do NOT log the key itself, even partially — the mismatch is the
+        // signal; the secret should never appear in logs / Sentry.
+        throw new Error(
+          `STRIPE_SECRET_KEY mode mismatch: project=${projectId} expects ${expectedPrefix}*`
+        );
+      }
     }
 
     // Pin Stripe API to "2025-09-30.clover" — matches the PROD webhook
-    // endpoint api_version (audit/68).
+    // endpoint api_version (audit/68, [[stripe-webhook-api-version-immutable]]).
     // v22 SDK narrows the type to the latest dahlia version; cast keeps the
     // legacy pin without changing server-side schema.
     stripe = new Stripe(apiKey, {

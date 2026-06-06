@@ -122,6 +122,25 @@ export const verifyBookingAccess = onCall({cors: getCorsAllowlist()}, async (req
       }
     }
 
+    // Guard against corrupted booking docs missing required refs.
+    // `db.collection().doc(undefined)` throws sync inside Promise.all and
+    // surfaces as `internal` HTTP 500, polluting Sentry with a path that
+    // any guest can trigger via a malformed seed. Match the email-mismatch
+    // reason to keep the response anti-enumeration.
+    if (typeof booking.property_id !== "string" || !booking.property_id ||
+        typeof booking.unit_id !== "string" || !booking.unit_id) {
+      logWarn(
+        "[VerifyBookingAccess] Booking missing property_id/unit_id (data corruption)",
+        {
+          bookingReference,
+          bookingId: bookingDoc.id,
+          hasPropertyId: typeof booking.property_id === "string" && !!booking.property_id,
+          hasUnitId: typeof booking.unit_id === "string" && !!booking.unit_id,
+        }
+      );
+      return {success: false, reason: "invalid_credentials"};
+    }
+
     // OPTIMIZED: Fetch property, unit, and company details in PARALLEL
     // Before: ~400-500ms (sequential)
     // After: ~100-150ms (parallel)
@@ -226,12 +245,16 @@ export const verifyBookingAccess = onCall({cors: getCorsAllowlist()}, async (req
       throw error;
     }
 
-    // Log unexpected errors
+    // Log unexpected errors. Pass the Error instance directly so logger →
+    // Sentry sees the real type + stack instead of a plain object captured
+    // as "Object captured as exception with keys: error, stack".
     if (error instanceof Error) {
-      logError("[VerifyBookingAccess] Unexpected error", {
-        error: error.message,
-        stack: error.stack,
-      });
+      logError("[VerifyBookingAccess] Unexpected error", error);
+    } else {
+      logError(
+        "[VerifyBookingAccess] Unexpected non-Error throw",
+        new Error(String(error))
+      );
     }
 
     throw new HttpsError(

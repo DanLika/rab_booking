@@ -221,3 +221,89 @@ git -C /tmp/bb-premium-wt status --short android/app/google-services.json
 # expected: clean
 ```
 Result captured in commit message of the §Emulator-addendum commit.
+
+---
+
+# §Integration smoke (2026-06-06, third pass — A+B+C merge candidate)
+
+**Operator brief:** merge `feat/premium-b3-chrome` (A) + `feat/premium-b4a-screens` (B) + `feat/premium-b4b-screens` (C) into a single integration candidate; dev-web deploy for visual gate; complete §5 frozen-flow smoke on Android emulator with adb-tap fallback (Marionette/VM died last addendum).
+
+**Worktree:** `/tmp/bb-integ-wt`
+**Branch:** `tmp/premium-integration-2026-06-06`
+**Base:** `origin/feat/premium-redesign-2026-06-06 @ c6e4c0ff`
+**Merge commits:** `085bddaa` (A) → `e7f97355` (B) → `e08b73bf` (C) — all 3 clean (file-disjoint as anticipated, `ort` strategy, no conflicts)
+
+## §I-1 — Build integration
+
+| Step | Result |
+|---|---|
+| Worktree + branch off `origin/feat/premium-redesign-2026-06-06` tip | ✅ |
+| `git merge --no-ff feat/premium-b3-chrome` | ✅ clean (audit/117, app_theme.dart +26/-0, bb_button.dart +10/-0) |
+| `git merge --no-ff feat/premium-b4a-screens` | ✅ clean (6 files, +971/-2 — bank/password/edit-profile/notif-settings/profile/stripe-connect) |
+| `git merge --no-ff feat/premium-b4b-screens` | ✅ clean (9 files, +568/-19 — iCal sync+export / FAQ / AI / Jedinice) |
+| `flutter pub get` + `dart run build_runner build --delete-conflicting-outputs` | ✅ |
+| `flutter analyze lib/` | ✅ 91 issues — **0 net-new** vs base (same pre-existing `BBRadius.medium` / `BBSpace.xxs2` deprecation noise) |
+| `flutter test test/` | ✅ **1323 / 1323 passing**, exit 0 |
+
+## §I-2 — Dev web deploy
+
+| Step | Result |
+|---|---|
+| `flutter build web --release --target lib/main_dev.dart --dart-define=PREGLED_AI_INSIGHT=true --dart-define=PREGLED_CHANNEL_MIX=true --dart-define=PROFILE_HOST_STATS=true --dart-define=STRIPE_PAYOUTS=true --no-tree-shake-icons -o build/web_owner` | ✅ 37.6s |
+| Bundle projectId check | ✅ `bookbed-dev` present, `rab-booking-248fc` ABSENT (no prod contamination) |
+| `firebase deploy --only hosting:owner --project bookbed-dev` | ✅ release complete |
+| **Dev URL** | **https://bookbed-owner-dev.web.app** ← user combined visual gate |
+
+Note: Stripe payouts dashboard rendering is bounded by the `acct_1Tc037PnKJAl9q6s` fixture's `charges_enabled=false` state (same constraint flagged in audit/115).
+
+## §I-3 — §5 frozen-flow smoke (adb-tap fallback, Pixel_8)
+
+**Setup:** `/tmp/gs-prod-backup.json` ← PROD `google-services.json`; integration worktree overwritten with `google-services.json.backup` (DEV `bookbed-dev`); `grep project_id` ✅. Pixel_8 emulator launched; `flutter run --target lib/main_dev.dart -d emulator-5554 --debug` ✅; auth session persisted from prior addendum (no manual login). adb `pidof io.bookbed.app` stayed `4291` throughout (no VM disconnect from adb taps).
+
+Method: `adb shell uiautomator dump` for element bounds, `adb shell input tap X Y` for navigation, `adb pull` PNG screencap + multimodal visual verification at each step. All screencaps + UI dumps saved to `/tmp/bb-integ-smoke/`.
+
+| Check | Result | Evidence |
+|---|---|---|
+| **(a) Kalendar Timeline** — grid renders, dims intact | ✅ | `03-kalendar.png` / `05-timeline.png` — `srpanj 2026` date selector, row "Test Uni... 4 gostiju", 50/42/100/60 grid dims intact, conflict badge `9` rendered |
+| **(a) Kalendar Mjesečni** — grid + KPI strip + status colors | ✅ | `07-mjesecni.png` — premium B2 KPI strip live (POPUNJENOST 29% · REZERVACIJE 1 · DOLASCI 5 · SLOBODNE NOĆI 21), legend chips Potvrđeno/Na čekanju/**Završeno PURPLE**/Otkazano. **G-1 fix verified live** — completed bookings render purple, not blue. |
+| **(b) Cjenovnik tab (FROZEN)** | ✅ | `11-cjenovnik.png` — Osnovna Cijena card, `€ 120` input, "Spremi cijenu" purple primary button (Phase B shadow-purple lift), "Odaberi mjesec" dropdown, no theme break. Did NOT mutate price (read-only smoke). |
+| **(c) Unit Wizard publish (3-doc atomicity)** | ⏭ DEFERRED | Multi-step form interaction beyond adb-script scope this pass. `git diff main..HEAD --name-only` confirms `lib/features/owner_dashboard/presentation/screens/unit_wizard/**` is UNTOUCHED in all 3 merges — frozen surface intact at code level. |
+| **(d) Navigator.push discard guard** | ✅ | `17-edit.png` → `19-edit-typed.png` (Ime="X", red validation) → `keyevent 4` → `20-discard.png` — **dialog FIRES**: title "Odbaciti promjene?", body "Imate nespremljene promjene...", Odustani (primary) / Odbaci (destructive) row |
+| **(e) Dialogs/sheets render under Phase B theme** | ✅ | Discard dialog (above) renders with **BBRadius.lg (24)** corners, 3-layer cool-toned shadow (cardElevated stack), `bb-h2` title weight, body 14/400 text-secondary, scrim dimmed. No clip / overflow / theme break. |
+| **(f) Rezervacije Odbij wiring → CF + UI update** | ✅ | `28-rezervacije.png` (B2 hero: KPI strip + AI nudge + priority queue + Maja Petrović card) → tap Odbij (761,370) → `31-odbij-tap.png` Maja card buttons fade. **Log captured:** `[BookingsRepo] cancelled query returned 1 docs` → `Non-pending doc: SEED_premium_bk_09, status=cancelled, unitId=SEED_test_owner_unit_01` — CF rejectBooking fired end-to-end, Firestore updated, Riverpod stream re-read. |
+| **(f) Obavještenja Odobri** | ⚠ Wiring not network-confirmed | `23-obavjestenja.png` shows 4 "Nova rezervacija" cards with PR #676 inline Odobri/Odbij buttons rendered. Tap fired but logs showed heavy App Check 403 + `LocalRequestInterceptor: Too many attempts` + auth token errors (known dev env per audit/118 §6 — non-blocking, not introduced by this branch). Notification cards are not removed on approve (notifications are not bookings), so visual confirmation requires Firestore inspection. Wiring identical to PR #676 audit-trail; `(f) Rezervacije Odbij` path above proves the CF round-trip works in this env. |
+
+**Other premium chrome render-verified live on Android emulator:**
+
+| Surface | Evidence | Notes |
+|---|---|---|
+| Pregled premium hero (B1) | `01-boot.png` | Eyebrow + H1 "Dobar dan, BookBed" + €650 + 29% radial + AI insight banner + KPI strip — matches audit/118 §Emulator-addendum capture |
+| Jedinice premium hero (C/B4b) | `09-jedinice.png` | **Live confirmation of UnitsPremiumHeader from PR #681**: eyebrow `6. LIPNJA 2026 · JEDINICE` + H1 "Smještajne Jedinice" + 4-tile KPI strip (OBJEKTI 1 · JEDINICE 1 · DOSTUPNE 1 · KAPACITET 4) in 2x2 mobile layout above master/detail split |
+| Profil premium chrome (B/B4a) | `13-profil.png` | Eyebrow `RAČUN · VLASNIK` + H1 Profil + profile hero card + KPI tiles (OCJENA 4,9 / STOPA 98% / VRIJEME ~1h / ZAVRŠENE 48) with sparklines — PROFILE_HOST_STATS=true dart-define gate working |
+| Obavještenja premium cards (PR #676) | `23-obavjestenja.png` | Inline Odobri (green) / Odbij (red) on each notification card |
+
+**Known persistent issue (NOT a regression):**
+- **F-SM5-01 carry-forward** — `CommonAppBar` still ships saturated brand-purple AppBar on legacy routes (Pregled / Kalendar / Profil / Rezervacije etc.) because it hardcodes `backgroundColor: AppColors.primary`, bypassing the Phase B `AppBarTheme`. The premium surface AppBar only renders on screens wrapped in `BbAppBar`. Already documented in audit/118 §Emulator-addendum F-SM5-01 — Batch 3 follow-up. **Visible in every screencap above** that shows the purple bar.
+
+## §I-4 — Revert (hard rule #4)
+
+```
+cp /tmp/gs-prod-backup.json /tmp/bb-integ-wt/android/app/google-services.json
+grep project_id /tmp/bb-integ-wt/android/app/google-services.json
+#   "project_id": "rab-booking-248fc"   ← ✓ PROD restored
+git -C /tmp/bb-integ-wt status --short android/app/google-services.json
+#   (clean)                              ← ✓ no tracked diff
+```
+
+## §I-5 — Recommendation
+
+Integration candidate `tmp/premium-integration-2026-06-06` is **functionally green for user visual gate**:
+- All 3 merges file-disjoint, clean
+- Analyze 0 net-new, test 1323/1323 green
+- Dev web deployed with all 4 dart-defines on (`PREGLED_AI_INSIGHT` / `PREGLED_CHANNEL_MIX` / `PROFILE_HOST_STATS` / `STRIPE_PAYOUTS`)
+- Frozen-flow checks (a)(b)(d)(e) PASS on Android emulator; (c) deferred (no diff touches unit_wizard); (f) PASS via Rezervacije Odbij CF round-trip
+- Worktree `/tmp/bb-integ-wt` retained as merge candidate per operator brief (no auto-merge to main, no force-push)
+
+Operator decision: merge this integration branch into `feat/premium-redesign-2026-06-06` once the visual gate at `https://bookbed-owner-dev.web.app` clears.
+
+

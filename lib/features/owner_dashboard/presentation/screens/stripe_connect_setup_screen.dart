@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/services/logging_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -312,6 +314,20 @@ class _StripeConnectSetupScreenState
                                 child: _buildHeroCard(context),
                               ),
                               const SizedBox(height: 24),
+
+                              // Premium payouts dashboard — kDebug-gated
+                              // (see _StripePayoutsDashboard for rationale).
+                              // Renders only when Stripe account is connected.
+                              if (_isConnected) ...[
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: isDesktop
+                                        ? 800.0
+                                        : double.infinity,
+                                  ),
+                                  child: const _StripePayoutsDashboard(),
+                                ),
+                              ],
 
                               // Desktop: Benefits + Steps/FAQ side by side
                               if (isDesktop) ...[
@@ -911,6 +927,450 @@ class _MoneyLoadingAnimation extends StatelessWidget {
           AppLocalizations.of(context).stripeLoadingAccount,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).toInt()),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// Premium payouts dashboard — payouts.jsx §150 PayoutsDesktop composition.
+//
+// Renders 3 balance tiles (Available / Pending / Paid this month), a payout
+// schedule card (3 rows), and a recent payouts list (3 entries) when the
+// Stripe account is connected.
+//
+// GATED on `bool.fromEnvironment('STRIPE_PAYOUTS')` OR `kDebugMode` because
+// the supporting CFs (`getStripeBalance` / `listStripePayouts`) do NOT exist
+// yet. Shipping placeholder amounts in prod would misrepresent owner balances
+// and break trust. Once Terminal A wires the CFs + provider, swap the static
+// data here for a `ref.watch(stripeBalanceProvider)` / `listPayoutsProvider`.
+// ============================================================================
+class _StripePayoutsDashboard extends StatelessWidget {
+  const _StripePayoutsDashboard();
+
+  static const bool _enabled = bool.fromEnvironment('STRIPE_PAYOUTS');
+
+  // Sample placeholder data lifted directly from payouts.jsx so the gated
+  // build renders the design intent for dev review without inventing values.
+  static const List<_PayoutEntry> _recent = <_PayoutEntry>[
+    _PayoutEntry(
+      date: '27.05.2026',
+      amount: '€420,00',
+      ref: 'po_2Kx91',
+      dest: 'Zagrebačka banka ····1234',
+      paid: true,
+    ),
+    _PayoutEntry(
+      date: '20.05.2026',
+      amount: '€288,00',
+      ref: 'po_2Kw84',
+      dest: 'Zagrebačka banka ····1234',
+      paid: false,
+    ),
+    _PayoutEntry(
+      date: '14.05.2026',
+      amount: '€540,00',
+      ref: 'po_2Kv57',
+      dest: 'Zagrebačka banka ····1234',
+      paid: true,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_enabled && !kDebugMode) return const SizedBox.shrink();
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _StripeBalanceGrid(isMobile: isMobile),
+        const SizedBox(height: 16),
+        const _PayoutScheduleCard(),
+        const SizedBox(height: 16),
+        const _RecentPayoutsList(rows: _recent),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _PayoutEntry {
+  final String date;
+  final String amount;
+  final String ref;
+  final String dest;
+  final bool paid;
+
+  const _PayoutEntry({
+    required this.date,
+    required this.amount,
+    required this.ref,
+    required this.dest,
+    required this.paid,
+  });
+}
+
+class _StripeBalanceGrid extends StatelessWidget {
+  final bool isMobile;
+  const _StripeBalanceGrid({required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final tiles = <Widget>[
+      _BalanceTile(
+        icon: 'account_balance_wallet',
+        label: 'DOSTUPNO ZA ISPLATU',
+        value: '€1.240,00',
+        accent: c.success,
+        valueColor: c.success,
+        sub: 'Isplata sutra',
+      ),
+      _BalanceTile(
+        icon: 'hourglass_top',
+        label: 'U OBRADI',
+        value: '€288,00',
+        accent: c.warning,
+        sub: 'Nakon dolaska gosta',
+      ),
+      _BalanceTile(
+        icon: 'payments',
+        label: 'ISPLAĆENO (SVIBANJ)',
+        value: '€3.840,00',
+        accent: c.primary,
+        sub: '14 isplata',
+      ),
+    ];
+
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(child: tiles[0]),
+              const SizedBox(width: 12),
+              Expanded(child: tiles[1]),
+            ],
+          ),
+          const SizedBox(height: 12),
+          tiles[2],
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: tiles[0]),
+        const SizedBox(width: 12),
+        Expanded(child: tiles[1]),
+        const SizedBox(width: 12),
+        Expanded(child: tiles[2]),
+      ],
+    );
+  }
+}
+
+class _BalanceTile extends StatelessWidget {
+  final String icon;
+  final String label;
+  final String value;
+  final Color accent;
+  final Color? valueColor;
+  final String? sub;
+
+  const _BalanceTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.accent,
+    this.valueColor,
+    this.sub,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(BBRadius.sm),
+            ),
+            alignment: Alignment.center,
+            child: BbIcon(name: icon, size: 19, color: accent),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: BBType.eyebrow(
+              context,
+            ).copyWith(color: c.textTertiary, fontSize: 10, letterSpacing: 0.5),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: BBType.h1Num(context).copyWith(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+              color: valueColor ?? c.textPrimary,
+              height: 1,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (sub != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              sub!,
+              style: BBType.caption(
+                context,
+              ).copyWith(color: c.textTertiary, fontSize: 11),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PayoutScheduleCard extends StatelessWidget {
+  const _PayoutScheduleCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return BbCard(
+      padded: false,
+      child: Padding(
+        padding: const EdgeInsets.all(BBSpace.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Raspored isplata',
+              style: BBType.h3(context).copyWith(color: c.textPrimary),
+            ),
+            const SizedBox(height: BBSpace.sm),
+            _scheduleRow(
+              context,
+              icon: 'schedule',
+              label: 'Učestalost isplata',
+              value: 'Automatski · 2 radna dana',
+              hasChevron: true,
+            ),
+            Divider(height: 1, thickness: 1, color: c.border),
+            _scheduleRow(
+              context,
+              icon: 'payments',
+              label: 'Minimalni iznos isplate',
+              value: '€50,00',
+              hasChevron: true,
+            ),
+            Divider(height: 1, thickness: 1, color: c.border),
+            _scheduleRow(
+              context,
+              icon: 'notifications',
+              label: 'Obavijest o svakoj isplati',
+              sub: 'Email kad isplata krene prema banci',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _scheduleRow(
+    BuildContext context, {
+    required String icon,
+    required String label,
+    String? value,
+    String? sub,
+    bool hasChevron = false,
+  }) {
+    final c = BBColor.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: c.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(BBRadius.sm),
+            ),
+            alignment: Alignment.center,
+            child: BbIcon(name: icon, size: 18, color: c.primary),
+          ),
+          const SizedBox(width: BBSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: BBType.label(
+                    context,
+                  ).copyWith(color: c.textPrimary, fontWeight: FontWeight.w600),
+                ),
+                if (sub != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    sub,
+                    style: BBType.caption(
+                      context,
+                    ).copyWith(color: c.textTertiary),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (value != null)
+            Text(
+              value,
+              style: BBType.label(
+                context,
+              ).copyWith(color: c.textSecondary, fontWeight: FontWeight.w600),
+            ),
+          if (hasChevron) ...[
+            const SizedBox(width: 4),
+            BbIcon(name: 'chevron_right', color: c.textTertiary),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RecentPayoutsList extends StatelessWidget {
+  final List<_PayoutEntry> rows;
+  const _RecentPayoutsList({required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final rd = BbRedesignTokens.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const BbSectionHeader(
+          title: 'Nedavne isplate',
+          level: BbSectionHeaderLevel.h3,
+        ),
+        const SizedBox(height: 6),
+        BbCard(
+          padded: false,
+          child: Column(
+            children: List<Widget>.generate(rows.length, (int i) {
+              final p = rows[i];
+              final isLast = i == rows.length - 1;
+              final tileBg = p.paid
+                  ? rd.statusConfirmedTint
+                  : rd.statusPendingTint;
+              final tileFg = p.paid
+                  ? rd.statusConfirmedDeep
+                  : rd.statusPendingDeep;
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isLast ? Colors.transparent : c.border,
+                    ),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: BBSpace.md,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: tileBg,
+                          borderRadius: BorderRadius.circular(BBRadius.sm),
+                        ),
+                        alignment: Alignment.center,
+                        child: BbIcon(
+                          name: p.paid ? 'north_east' : 'hourglass_top',
+                          size: 18,
+                          color: tileFg,
+                        ),
+                      ),
+                      const SizedBox(width: BBSpace.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Isplata na ${p.dest}',
+                              style: BBType.label(context).copyWith(
+                                color: c.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${p.ref} · ${p.date}',
+                              style: BBType.mono(
+                                context,
+                              ).copyWith(color: c.textTertiary, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: BBSpace.sm),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            p.amount,
+                            style: BBType.label(context).copyWith(
+                              color: c.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          BbStatusBadge(
+                            status: p.paid
+                                ? BbBookingStatus.confirmed
+                                : BbBookingStatus.pending,
+                            label: p.paid ? 'Isplaćeno' : 'U obradi',
+                            dot: false,
+                            size: BbStatusBadgeSize.sm,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
           ),
         ),
       ],

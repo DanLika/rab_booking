@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -190,6 +191,19 @@ class ProfileScreen extends ConsumerWidget {
                                   isMobile: isMobile,
                                 ),
                                 SizedBox(height: isMobile ? 14 : 18),
+
+                                // Host-trust KPI strip — profile-premium.jsx
+                                // §405 PFP_STATS row (rating / response rate /
+                                // response time / completed bookings). Behind a
+                                // kDebug + env-flag gate because 3 of 4 metrics
+                                // (rating, response rate, response time) have
+                                // no backend source yet. Whole strip is gated
+                                // together so production never renders a
+                                // partial 1-tile row that looks broken.
+                                if (!isAnonymous) ...[
+                                  const _ProfilStatStrip(),
+                                  SizedBox(height: isMobile ? 14 : 18),
+                                ],
 
                                 // Subscription banner — trial-only (unchanged condition)
                                 if (authState.userModel?.hideSubscription !=
@@ -1239,6 +1253,249 @@ class _ProfilSettingsLayout extends StatelessWidget {
         const SizedBox(height: 16),
         danger,
       ],
+    );
+  }
+}
+
+// ============================================================================
+// Host-trust KPI strip — profile-premium.jsx §204 PFP_STATS.
+//
+// 4 metric tiles (rating · response rate · response time · completed
+// bookings), each with: tinted icon tile, eyebrow label, large bb-tnum
+// value, optional delta chip + sparkline. Renders 4-col on wide layouts,
+// 2x2 on tablet/mobile.
+//
+// GATED on `bool.fromEnvironment('PROFILE_HOST_STATS')` OR `kDebugMode` to
+// avoid shipping placeholder metrics in prod. 3 of 4 fields (rating /
+// response rate / response time) have no backend source yet; the 4th
+// (completed bookings) exists in `firebase_property_performance_repository`
+// but is not wired into a `UserModel` aggregate. Whole strip gates together
+// to avoid a partial-data 1-tile row that reads as broken in production.
+// ============================================================================
+class _ProfilStatStrip extends StatelessWidget {
+  const _ProfilStatStrip();
+
+  static const bool _enabled = bool.fromEnvironment('PROFILE_HOST_STATS');
+
+  static const List<_ProfilStat> _stats = <_ProfilStat>[
+    _ProfilStat(
+      icon: 'star',
+      tone: _StatTone.tertiary,
+      label: 'OCJENA DOMAĆINA',
+      value: '4,9',
+      delta: '+0,2',
+      spark: <double>[4.5, 4.6, 4.6, 4.7, 4.8, 4.8, 4.9],
+    ),
+    _ProfilStat(
+      icon: 'mark_chat_read',
+      tone: _StatTone.success,
+      label: 'STOPA ODGOVORA',
+      value: '98%',
+      delta: '+3%',
+      spark: <double>[88, 90, 92, 94, 95, 97, 98],
+    ),
+    _ProfilStat(
+      icon: 'schedule',
+      tone: _StatTone.info,
+      label: 'VRIJEME ODGOVORA',
+      value: '~1 h',
+      sub: 'prosjek zadnjih 30 dana',
+    ),
+    _ProfilStat(
+      icon: 'task_alt',
+      tone: _StatTone.primary,
+      label: 'ZAVRŠENE REZERVACIJE',
+      value: '48',
+      delta: '+6',
+      spark: <double>[30, 34, 37, 40, 43, 45, 48],
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_enabled && !kDebugMode) return const SizedBox.shrink();
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isWide = screenWidth >= 900;
+
+    if (isWide) {
+      return Row(
+        children: List<Widget>.generate(_stats.length, (int i) {
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(left: i == 0 ? 0 : 12),
+              child: _ProfilStatTile(stat: _stats[i], compact: false),
+            ),
+          );
+        }),
+      );
+    }
+    // Tablet + mobile: 2 columns.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _ProfilStatTile(stat: _stats[0], compact: isMobile),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ProfilStatTile(stat: _stats[1], compact: isMobile),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _ProfilStatTile(stat: _stats[2], compact: isMobile),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _ProfilStatTile(stat: _stats[3], compact: isMobile),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+enum _StatTone { primary, success, info, tertiary }
+
+class _ProfilStat {
+  final String icon;
+  final _StatTone tone;
+  final String label;
+  final String value;
+  final String? delta;
+  final String? sub;
+  final List<double>? spark;
+
+  const _ProfilStat({
+    required this.icon,
+    required this.tone,
+    required this.label,
+    required this.value,
+    this.delta,
+    this.sub,
+    this.spark,
+  });
+}
+
+class _ProfilStatTile extends StatelessWidget {
+  final _ProfilStat stat;
+  final bool compact;
+
+  const _ProfilStatTile({required this.stat, required this.compact});
+
+  ({Color bg, Color fg}) _resolveTone(BBColorSet c, BbRedesignTokens rd) {
+    switch (stat.tone) {
+      case _StatTone.primary:
+        return (bg: c.primary.withValues(alpha: 0.10), fg: c.primary);
+      case _StatTone.success:
+        return (bg: rd.statusConfirmedTint, fg: rd.statusConfirmedDeep);
+      case _StatTone.info:
+        return (bg: c.info.withValues(alpha: 0.10), fg: c.info);
+      case _StatTone.tertiary:
+        return (bg: rd.statusPendingTint, fg: rd.statusPendingDeep);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final rd = BbRedesignTokens.of(context);
+    final tone = _resolveTone(c, rd);
+    final hasDelta = stat.delta != null;
+    final hasSpark = stat.spark != null && stat.spark!.isNotEmpty;
+
+    return BbCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: tone.bg,
+                  borderRadius: BorderRadius.circular(BBRadius.sm),
+                ),
+                alignment: Alignment.center,
+                child: BbIcon(name: stat.icon, size: 19, color: tone.fg),
+              ),
+              const Spacer(),
+              if (hasDelta)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    BbIcon(name: 'trending_up', size: 14, color: c.success),
+                    const SizedBox(width: 3),
+                    Text(
+                      stat.delta!,
+                      style: BBType.caption(
+                        context,
+                      ).copyWith(color: c.success, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            stat.label,
+            style: BBType.eyebrow(
+              context,
+            ).copyWith(color: c.textTertiary, fontSize: 10, letterSpacing: 0.5),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  stat.value,
+                  style: BBType.h1Num(context).copyWith(
+                    fontSize: compact ? 24 : 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                    color: c.textPrimary,
+                    height: 1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (hasSpark)
+                BbSparkline(
+                  data: stat.spark!,
+                  width: compact ? 50 : 70,
+                  height: 26,
+                  color: tone.fg,
+                  showDot: false,
+                ),
+            ],
+          ),
+          if (stat.sub != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              stat.sub!,
+              style: BBType.caption(
+                context,
+              ).copyWith(color: c.textTertiary, fontSize: 11),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

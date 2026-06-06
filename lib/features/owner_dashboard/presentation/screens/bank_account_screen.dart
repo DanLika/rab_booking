@@ -168,6 +168,115 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
     }
   }
 
+  /// Bank summary display card — shown above form when IBAN is populated.
+  /// Premium connected-state surface mirroring payouts.jsx §84 BankCard.
+  /// Masked IBAN: first 4 chars + bullets + last 4 chars (e.g. "HR12 ···· 1234").
+  Widget _buildBankSummaryCard(
+    CompanyDetails company,
+    AppLocalizations l10n,
+    BBColorSet c,
+  ) {
+    final iban = company.bankAccountIban.replaceAll(' ', '');
+    final masked = _maskIban(iban);
+    final holder = company.accountHolder.isNotEmpty
+        ? company.accountHolder
+        : '—';
+    final bank = company.bankName.isNotEmpty
+        ? company.bankName
+        : l10n.bankAccountBankName;
+
+    return BbCard(
+      padded: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          BBSpace.md,
+          BBSpace.md,
+          BBSpace.md,
+          BBSpace.md,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.bankAccountBankDetails,
+                    style: BBType.h3(context).copyWith(color: c.textPrimary),
+                  ),
+                ),
+                const BbStatusBadge(
+                  status: BbBookingStatus.confirmed,
+                  label: 'Aktivan',
+                ),
+              ],
+            ),
+            const SizedBox(height: BBSpace.sm),
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: c.primary.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(BBRadius.sm),
+                  ),
+                  alignment: Alignment.center,
+                  child: BbIcon(
+                    name: 'account_balance',
+                    size: 24,
+                    color: c.primary,
+                  ),
+                ),
+                const SizedBox(width: BBSpace.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        bank,
+                        style: BBType.label(context).copyWith(
+                          color: c.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        masked,
+                        style: BBType.mono(
+                          context,
+                        ).copyWith(color: c.textSecondary, fontSize: 13),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Vlasnik: $holder · EUR',
+                        style: BBType.caption(
+                          context,
+                        ).copyWith(color: c.textTertiary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _maskIban(String iban) {
+    if (iban.length <= 8) return iban;
+    final start = iban.substring(0, 4);
+    final end = iban.substring(iban.length - 4);
+    return '$start ···· ···· ···· $end';
+  }
+
   /// Info banner — replaces legacy [MessageBox.info] with
   /// `BbCard(variant: accentLeft, accentTone: info)` per Phase 2 settings
   /// pattern.
@@ -440,6 +549,22 @@ class _BankAccountScreenState extends ConsumerState<BankAccountScreen>
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: [
+                                      // Premium current-state display card —
+                                      // only renders when IBAN is populated.
+                                      // Mirrors payouts.jsx §84 BankCard with
+                                      // masked IBAN + holder · EUR + Aktivan
+                                      // badge. Form below remains the edit
+                                      // surface (existing behaviour).
+                                      if (effectiveCompany
+                                          .bankAccountIban
+                                          .isNotEmpty) ...[
+                                        _buildBankSummaryCard(
+                                          effectiveCompany,
+                                          l10n,
+                                          c,
+                                        ),
+                                        const SizedBox(height: BBSpace.md),
+                                      ],
                                       _buildInfoBanner(l10n, c),
                                       const SizedBox(height: BBSpace.md),
                                       _buildFormCard(l10n, c),

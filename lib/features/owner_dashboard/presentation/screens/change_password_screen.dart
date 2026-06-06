@@ -275,7 +275,57 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    BbSectionHeader(title: l10n.changePassword),
+                                    // Premium eyebrow + icon header — settings.jsx
+                                    // §246 ChangePasswordContent layered identity.
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            color: c.primary.withValues(
+                                              alpha: 0.10,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              BBRadius.sm,
+                                            ),
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: BbIcon(
+                                            name: 'lock_reset',
+                                            size: 22,
+                                            color: c.primary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: BBSpace.sm),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                'SIGURNOST RAČUNA',
+                                                style: BBType.eyebrow(
+                                                  context,
+                                                ).copyWith(color: c.primary),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                l10n.changePassword,
+                                                style: BBType.h3(context)
+                                                    .copyWith(
+                                                      color: c.textPrimary,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: BBSpace.sm),
                                     Padding(
                                       padding: const EdgeInsets.only(
                                         bottom: BBSpace.md,

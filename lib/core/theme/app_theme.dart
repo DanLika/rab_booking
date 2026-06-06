@@ -445,7 +445,7 @@ class AppTheme {
 
       // Color scheme
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.primaryLight,
+        primary: AppColors.primaryDarkMode, // mockup --bb-primary dark #8B6FFF
         onPrimary: Colors.white, // White text on primary color (chips, buttons)
         primaryContainer: AppColors.primary,
         secondary: AppColors.secondaryLight,

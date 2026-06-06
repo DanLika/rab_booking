@@ -30,7 +30,6 @@ void main() {
           const BbAvatarUpload(
             imageUrl: null,
             initials: 'ab',
-            size: BbAvatarSize.lg,
             onImageSelected: _noop,
           ),
         ),
@@ -52,7 +51,6 @@ void main() {
           const BbAvatarUpload(
             imageUrl: null,
             initials: null,
-            size: BbAvatarSize.lg,
             onImageSelected: _noop,
           ),
         ),
@@ -77,7 +75,6 @@ void main() {
             const BbAvatarUpload(
               imageUrl: 'https://example.com/avatar.png',
               initials: 'AB',
-              size: BbAvatarSize.lg,
               onImageSelected: _noop,
             ),
           ),
@@ -100,7 +97,6 @@ void main() {
           const BbAvatarUpload(
             imageUrl: null,
             initials: 'AB',
-            size: BbAvatarSize.lg,
             isUploading: true,
             onImageSelected: _noop,
           ),
@@ -122,7 +118,6 @@ void main() {
           const BbAvatarUpload(
             imageUrl: null,
             initials: 'AB',
-            size: BbAvatarSize.lg,
             isUploading: false,
             onImageSelected: _noop,
           ),

@@ -1,4 +1,3 @@
-import 'package:bookbed/shared/widgets/redesign/bb_avatar.dart';
 import 'package:bookbed/shared/widgets/redesign/bb_avatar_upload.dart';
 import 'package:bookbed/shared/widgets/redesign/bb_icon.dart';
 import 'package:bookbed/shared/widgets/redesign/bb_spinner.dart';
@@ -28,9 +27,7 @@ void main() {
       await tester.pumpWidget(
         _scaffold(
           const BbAvatarUpload(
-            imageUrl: null,
             initials: 'ab',
-            size: BbAvatarSize.lg,
             onImageSelected: _noop,
           ),
         ),
@@ -50,9 +47,6 @@ void main() {
       await tester.pumpWidget(
         _scaffold(
           const BbAvatarUpload(
-            imageUrl: null,
-            initials: null,
-            size: BbAvatarSize.lg,
             onImageSelected: _noop,
           ),
         ),
@@ -77,7 +71,6 @@ void main() {
             const BbAvatarUpload(
               imageUrl: 'https://example.com/avatar.png',
               initials: 'AB',
-              size: BbAvatarSize.lg,
               onImageSelected: _noop,
             ),
           ),
@@ -98,9 +91,7 @@ void main() {
       await tester.pumpWidget(
         _scaffold(
           const BbAvatarUpload(
-            imageUrl: null,
             initials: 'AB',
-            size: BbAvatarSize.lg,
             isUploading: true,
             onImageSelected: _noop,
           ),
@@ -120,10 +111,7 @@ void main() {
       await tester.pumpWidget(
         _scaffold(
           const BbAvatarUpload(
-            imageUrl: null,
             initials: 'AB',
-            size: BbAvatarSize.lg,
-            isUploading: false,
             onImageSelected: _noop,
           ),
         ),
@@ -139,7 +127,6 @@ void main() {
       await tester.pumpWidget(
         _scaffold(
           const BbAvatarUpload(
-            imageUrl: null,
             initials: 'AB',
             onImageSelected: _noop,
           ),
@@ -160,7 +147,6 @@ void main() {
       await tester.pumpWidget(
         _scaffold(
           const BbAvatarUpload(
-            imageUrl: null,
             initials: 'AB',
             semanticLabel: 'Override',
             onImageSelected: _noop,

@@ -288,12 +288,13 @@ class _FAQScreenState extends State<FAQScreen> {
                       BBSpace.lg,
                     ),
                     children: [
-                      // Section header — page title repeated inside body per
-                      // handoff (CommonAppBar still owns the bar-level title).
-                      BbSectionHeader(
-                        title: l10n.ownerFaqTitle,
-                        level: BbSectionHeaderLevel.h1,
+                      const _FaqPremiumHeader(
+                        eyebrow: 'POMOĆ · FAQ',
+                        title: 'Često postavljana pitanja',
+                        subtitle:
+                            'Brzi odgovori o rezervacijama, plaćanjima i postavljanju.',
                       ),
+                      const SizedBox(height: BBSpace.sm),
 
                       // Search box (NON-form, free-text filter).
                       BbInput(
@@ -496,6 +497,54 @@ class _FAQScreenState extends State<FAQScreen> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Premium header (eyebrow + display H1 + subtitle) — audit/117 §B4 pattern.
+/// Replaces the legacy `BbSectionHeader` H1 with the Pregled-shaped premium
+/// hero. Hardcoded Hr copy keeps parity with other premium headers in
+/// `widgets/bookings/bookings_premium_header.dart`.
+class _FaqPremiumHeader extends StatelessWidget {
+  const _FaqPremiumHeader({
+    required this.eyebrow,
+    required this.title,
+    required this.subtitle,
+  });
+  final String eyebrow;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final bool isMobile = MediaQuery.sizeOf(context).width < 600;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            eyebrow,
+            style: BBType.eyebrow(context).copyWith(color: c.primary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: BBType.h1(context).copyWith(
+              fontSize: isMobile ? 24 : 30,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.6,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: BBType.body(context).copyWith(color: c.textTertiary),
           ),
         ],
       ),

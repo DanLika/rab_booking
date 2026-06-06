@@ -19,6 +19,7 @@ import '../../../../../core/config/environment.dart';
 import '../../../../../core/config/router_owner.dart';
 import '../../../../../shared/providers/repository_providers.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
+import '../../widgets/ical/ical_export_premium_header.dart';
 import '../../widgets/owner_app_drawer.dart';
 import '../../providers/owner_properties_provider.dart';
 import '../../providers/ical_feeds_provider.dart';
@@ -792,6 +793,10 @@ class _IcalExportListScreenState extends ConsumerState<IcalExportListScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            IcalExportPremiumHeader(
+                              unitCount: _allUnits.length,
+                            ),
+                            const SizedBox(height: 20),
                             // Hero Card
                             ConstrainedBox(
                               constraints: BoxConstraints(

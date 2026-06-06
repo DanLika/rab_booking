@@ -17,6 +17,7 @@ import '../../../../../core/constants/enums.dart';
 import '../../providers/owner_calendar_provider.dart';
 import '../../providers/overbooking_detection_provider.dart';
 import '../../widgets/calendar/booking_inline_edit_dialog.dart';
+import '../../widgets/calendar/month_calendar_kpi_strip.dart';
 import '../../widgets/booking_create_dialog.dart';
 import '../../widgets/owner_app_drawer.dart';
 
@@ -162,6 +163,9 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
               onRefresh: _refreshData,
               child: CustomScrollView(
                 slivers: [
+                  // Premium KPI strip (audit/117 §B2.4) — chrome over the
+                  // FROZEN calendar grid (timeline_dimensions untouched).
+                  const SliverToBoxAdapter(child: MonthCalendarKpiStrip()),
                   SliverToBoxAdapter(
                     child: _buildUnitFilter(
                       units,

@@ -141,6 +141,23 @@ export const verifyBookingAccess = onCall({cors: getCorsAllowlist()}, async (req
       return {success: false, reason: "invalid_credentials"};
     }
 
+    // Same guard class for owner_id on the bank_transfer path. Falsy
+    // owner_id is fine (short-circuits `needsBankDetails` below), but a
+    // truthy non-string (e.g. legacy seed wrote a number) crashes
+    // `doc(<non-string>)` sync inside Promise.all.
+    if (booking.payment_method === "bank_transfer" &&
+        booking.owner_id && typeof booking.owner_id !== "string") {
+      logWarn(
+        "[VerifyBookingAccess] Booking owner_id corrupted on bank_transfer path",
+        {
+          bookingReference,
+          bookingId: bookingDoc.id,
+          ownerIdType: typeof booking.owner_id,
+        }
+      );
+      return {success: false, reason: "invalid_credentials"};
+    }
+
     // OPTIMIZED: Fetch property, unit, and company details in PARALLEL
     // Before: ~400-500ms (sequential)
     // After: ~100-150ms (parallel)
@@ -251,10 +268,20 @@ export const verifyBookingAccess = onCall({cors: getCorsAllowlist()}, async (req
     if (error instanceof Error) {
       logError("[VerifyBookingAccess] Unexpected error", error);
     } else {
-      logError(
-        "[VerifyBookingAccess] Unexpected non-Error throw",
-        new Error(String(error))
-      );
+      // Preserve original payload instead of stringifying a plain object to
+      // "[object Object]". Attach as `cause` so Sentry keeps the raw value
+      // alongside the synthetic stack.
+      let payload: string;
+      try {
+        payload = typeof error === "object" && error !== null ?
+          JSON.stringify(error) :
+          String(error);
+      } catch {
+        payload = String(error);
+      }
+      const wrapped = new Error(payload);
+      (wrapped as Error & {cause?: unknown}).cause = error;
+      logError("[VerifyBookingAccess] Unexpected non-Error throw", wrapped);
     }
 
     throw new HttpsError(

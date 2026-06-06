@@ -235,6 +235,96 @@ describe("verifyBookingAccess: guard + logger hardening", () => {
     expect(logWarnSpy).toHaveBeenCalled();
   });
 
+  it("guards against owner_id non-string on bank_transfer (Promise.all crash class)", async () => {
+    mockBookingDoc = {
+      id: "test-booking",
+      data: {
+        ...BASE_BOOKING,
+        payment_method: "bank_transfer",
+        owner_id: 42 as unknown as string, // legacy seed wrote a number
+      },
+    };
+
+    const wrapped = wrap(verifyBookingAccess);
+    const result = await wrapped({
+      data: {
+        bookingReference: "BK-TEST01",
+        email: "guest@example.com",
+      },
+    });
+
+    expect(result).toEqual({success: false, reason: "invalid_credentials"});
+    expect(logWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("owner_id corrupted"),
+      expect.objectContaining({
+        bookingReference: "BK-TEST01",
+        bookingId: "test-booking",
+        ownerIdType: "number",
+      })
+    );
+  });
+
+  it("guard fires AFTER token path is reachable (ordering invariant)", async () => {
+    // Reset verifyAccessToken to a spy we can observe.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const tokenMod = require("../src/bookingAccessToken");
+    const spy = jest.spyOn(tokenMod, "verifyAccessToken").mockReturnValue(true);
+
+    mockBookingDoc = {
+      id: "test-booking",
+      data: {
+        ...BASE_BOOKING,
+        property_id: undefined, // corrupted
+        access_token: "stored-token-hash",
+        token_expires_at: {toDate: () => new Date(Date.now() + 60_000)},
+      },
+    };
+
+    const wrapped = wrap(verifyBookingAccess);
+    const result = await wrapped({
+      data: {
+        bookingReference: "BK-TEST01",
+        email: "guest@example.com",
+        accessToken: "client-token",
+      },
+    });
+
+    // Token path was reached BEFORE the property_id guard rejected.
+    expect(spy).toHaveBeenCalledWith("client-token", "stored-token-hash");
+    // Guard still wins on the missing property_id.
+    expect(result).toEqual({success: false, reason: "invalid_credentials"});
+    expect(logWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("missing property_id/unit_id"),
+      expect.objectContaining({hasPropertyId: false}),
+    );
+
+    spy.mockRestore();
+  });
+
+  it("non-Error throw is wrapped with payload + cause (not '[object Object]')", async () => {
+    // Plain object thrown — mimics Firestore admin SDK's error-shaped object.
+    mockBookingThrow = {code: "X", details: "Y"} as unknown as Error;
+
+    const wrapped = wrap(verifyBookingAccess);
+    await expect(
+      wrapped({
+        data: {
+          bookingReference: "BK-TEST01",
+          email: "guest@example.com",
+        },
+      })
+    ).rejects.toMatchObject({code: "internal"});
+
+    expect(logErrorSpy).toHaveBeenCalledTimes(1);
+    const [msg, errArg] = logErrorSpy.mock.calls[0];
+    expect(msg).toBe("[VerifyBookingAccess] Unexpected non-Error throw");
+    expect(errArg).toBeInstanceOf(Error);
+    // Payload preserved as JSON, not stringified to "[object Object]".
+    expect((errArg as Error).message).toContain("\"code\":\"X\"");
+    // Original payload reachable via cause for Sentry context.
+    expect((errArg as Error & {cause?: unknown}).cause).toEqual({code: "X", details: "Y"});
+  });
+
   it("logError receives an Error INSTANCE on unexpected throw (Sentry fidelity)", async () => {
     mockBookingThrow = new Error("Firestore unavailable: simulated");
 

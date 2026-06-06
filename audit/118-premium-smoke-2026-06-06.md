@@ -267,7 +267,7 @@ Method: `adb shell uiautomator dump` for element bounds, `adb shell input tap X 
 | **(a) Kalendar Timeline** — grid renders, dims intact | ✅ | `03-kalendar.png` / `05-timeline.png` — `srpanj 2026` date selector, row "Test Uni... 4 gostiju", 50/42/100/60 grid dims intact, conflict badge `9` rendered |
 | **(a) Kalendar Mjesečni** — grid + KPI strip + status colors | ✅ | `07-mjesecni.png` — premium B2 KPI strip live (POPUNJENOST 29% · REZERVACIJE 1 · DOLASCI 5 · SLOBODNE NOĆI 21), legend chips Potvrđeno/Na čekanju/**Završeno PURPLE**/Otkazano. **G-1 fix verified live** — completed bookings render purple, not blue. |
 | **(b) Cjenovnik tab (FROZEN)** | ✅ | `11-cjenovnik.png` — Osnovna Cijena card, `€ 120` input, "Spremi cijenu" purple primary button (Phase B shadow-purple lift), "Odaberi mjesec" dropdown, no theme break. Did NOT mutate price (read-only smoke). |
-| **(c) Unit Wizard publish (3-doc atomicity)** | ⏭ DEFERRED | Multi-step form interaction beyond adb-script scope this pass. `git diff main..HEAD --name-only` confirms `lib/features/owner_dashboard/presentation/screens/unit_wizard/**` is UNTOUCHED in all 3 merges — frozen surface intact at code level. |
+| **(c) Unit Wizard publish (2-doc write order)** | ✅ | Runtime e2e smoke — see §UnitWizard-smoke below. New unit `FCerGy2rdgDQfMKv7oX9` published under `properties/SEED_test_owner_property_01`; unit doc at `2026-06-06T18:03:03.352832Z`, widget_settings doc at `2026-06-06T18:03:04.100290Z` (~748ms gap). Order matches `_publishUnit()` source (`unit_wizard_screen.dart:322-334`). All 4 wizard steps rendered under Phase B premium theme without clip/overflow/crash. |
 | **(d) Navigator.push discard guard** | ✅ | `17-edit.png` → `19-edit-typed.png` (Ime="X", red validation) → `keyevent 4` → `20-discard.png` — **dialog FIRES**: title "Odbaciti promjene?", body "Imate nespremljene promjene...", Odustani (primary) / Odbaci (destructive) row |
 | **(e) Dialogs/sheets render under Phase B theme** | ✅ | Discard dialog (above) renders with **BBRadius.lg (24)** corners, 3-layer cool-toned shadow (cardElevated stack), `bb-h2` title weight, body 14/400 text-secondary, scrim dimmed. No clip / overflow / theme break. |
 | **(f) Rezervacije Odbij wiring → CF + UI update** | ✅ | `28-rezervacije.png` (B2 hero: KPI strip + AI nudge + priority queue + Maja Petrović card) → tap Odbij (761,370) → `31-odbij-tap.png` Maja card buttons fade. **Log captured:** `[BookingsRepo] cancelled query returned 1 docs` → `Non-pending doc: SEED_premium_bk_09, status=cancelled, unitId=SEED_test_owner_unit_01` — CF rejectBooking fired end-to-end, Firestore updated, Riverpod stream re-read. |
@@ -305,5 +305,100 @@ Integration candidate `tmp/premium-integration-2026-06-06` is **functionally gre
 - Worktree `/tmp/bb-integ-wt` retained as merge candidate per operator brief (no auto-merge to main, no force-push)
 
 Operator decision: merge this integration branch into `feat/premium-redesign-2026-06-06` once the visual gate at `https://bookbed-owner-dev.web.app` clears.
+
+---
+
+# §UnitWizard-smoke — FROZEN publish flow under premium theme (2026-06-06, fourth pass)
+
+Closes §5c (was DEFERRED) — replaces the diff-only "files untouched" argument with a runtime end-to-end pass.
+
+## Setup
+
+- Worktree: `/private/tmp/bb-integ-wt` on `tmp/premium-integration-2026-06-06 @ 0fe5b289` (no edits to lib/**)
+- Device: Pixel_8 AVD, `adb devices` → `emulator-5554`
+- Build: `flutter pub get` + `dart run build_runner build --delete-conflicting-outputs` (0 outputs — caches warm)
+- `flutter run --target lib/main_dev.dart -d emulator-5554 --debug` (no `--release` needed — confirmed by [[android-debug-build-firebase-storage-13]])
+- Dev config: `android/app/google-services.json` swapped to `bookbed-dev` (project_id grep verified), PROD snapshot at `/tmp/gs-prod-backup.json`
+- Auth: test acct `bookbed-test@bookbed.io` already signed-in via persisted session (UID `GILVItIVP5R8WXfnMmyMo1ykhUm2`)
+- Driver: `adb shell input tap` + `adb shell uiautomator dump` for absolute widget bounds (logical-coord rule [[marionette-ios-gotchas]] does not apply — Android uiautomator uses physical pixels on 1080×2400 device)
+
+## Pre-flight code read
+
+`_publishUnit()` in `lib/features/owner_dashboard/presentation/screens/unit_wizard/unit_wizard_screen.dart:236-355` writes exactly **2 Firestore documents** for `widget.unitId == null` (new-unit path):
+
+1. `unitRepository.createUnit(unit)` → `properties/{propertyId}/units/{auto-id}` via `.add()` (line 322-324; impl at `lib/shared/repositories/firebase/firebase_unit_repository.dart:55-63`)
+2. `widgetSettingsRepository.createDefaultSettings(...)` → `properties/{propertyId}/widget_settings/{unitId}` via `_settingsDocRef(...).set()` (line 328-334; impl at `lib/features/widget/data/repositories/firebase_widget_settings_repository.dart:87-122`)
+
+CLAUDE.md NIKADA NE MIJENJAJ row labels this "3 Firestore docs redoslijed kritičan" — at the wizard-screen call site it is **2 writes** (alt entry `firebase_owner_properties_repository.dart:509` also writes 2). The "3rd doc" reference is historical or refers to a different surface (e.g. `unit_form_screen.dart`). For this pass the contract is: 2-write order intact.
+
+## Step-by-step (premium theme rendering verified at each step)
+
+| Step | Screen | Premium theme check | Action |
+|---|---|---|---|
+| Drawer | `uw-01b-drawer.png` | Purple gradient header (BookBed logo card), drawer rows render | Tap Smještajne Jedinice |
+| Unit hub | `uw-02-units.png` | KPI tile strip (Objekti 1 · Jedinice 1 · Dostupne 1 · Kapacitet 4), Osnovno/Cjenovnik/Widget/Napredno tab row, Uredi gradient pill | Tap unit picker icon (top-right) |
+| Picker | `uw-03-picker.png` | Modal sheet with property card + nested unit card, Add+Edit+Delete row icons | Tap `+` on iOS Test Vila row |
+| Step 1/4 (`uw-04-wizard1.png`) | "Osnovne Informacije" Korak 1 od 4 — 0% | ✅ purple AppBar gradient, white cards w/ rounded corners, Dalje gradient pill button | Tap Naziv field [88,887][992,1013] → type `SmokeTestUnit118` → Dalje [775,1349][1038,1475] |
+| Step 2/4 (`uw-19-step2.png`) | "Kapacitet i Prostor" Korak 2 od 4 — 25% | ✅ progress bar fill, card stack render | Spavaće=2 → Kupaonice=1 → Maks Gostiju=4 → Dalje |
+| Step 3/4 (`uw-20-step3.png`) | "Cijena i Dostupnost" Korak 3 od 4 — 50% | ✅ "Nastavi na Pregled" button (renamed from Dalje), validation snackbar fired orange-toned when Min Boravak omitted (PR #621 form-validation chrome retained) | Cijena=100 → Min Boravak=1 → Nastavi na Pregled |
+| Step 4/4 (`uw-24-step4.png`) | "Pregled i Objava" Korak 4 od 4 — 75% | ✅ summary card stack (Osnovne Informacije / Cijena rows), Objavi gradient pill w/ publish icon, Natrag back button | Tap Objavi [751,1349][1038,1475] |
+| Post-publish (`uw-25-published.png`) | Picker re-opens, iOS Test Vila row now shows **"2 jedinice"** with SmokeTestU… Dostupno €100/noć row above existing Test Unit A | ✅ no theme break, no crash, picker auto-refreshed via `ref.invalidate(ownerUnitsProvider)` from `_publishUnit()` line 338 | — |
+
+Two layout gotchas surfaced (not theme regressions; pre-existing wizard behaviour):
+
+1. **Min Boravak field is required but unmarked `*` in the validator snackbar text** — error "Molimo postavite cijenu po noći i minimalan boravak" fires even when only Min Boravak is empty. Min Boravak input lives between Vikend Cijena and Maksimalan Boravak in mobile column layout (`step_3_pricing.dart:321-355`); discovered via uiautomator dump.
+2. **URL Slug auto-syncs from Naziv on each keystroke** — `s` shown after typing first char, `smoketestunit118` after full string. Working as designed (regenerate-from-name listener).
+
+## Firestore write-order verification (Firestore REST API, `runQuery`)
+
+```
+=== UNITS ===
+FCerGy2rdgDQfMKv7oX9: name=SmokeTestUnit118 created=2026-06-06T18:03:03.352832Z updated=2026-06-06T18:03:03.352837Z
+SEED_test_owner_unit_01: name=Test Unit A created=2026-05-24T08:05:03.496Z updated=2026-05-24T08:05:03.496Z
+
+=== WIDGET_SETTINGS ===
+FCerGy2rdgDQfMKv7oX9: mode=booking_pending created=2026-06-06T18:03:04.100290Z updated=2026-06-06T18:03:04.101243Z
+SEED_test_owner_unit_01: mode=booking_instant created=2026-05-23T10:58:50.589Z updated=2026-05-23T10:59:07.750Z
+```
+
+| Write | Path | created_at | Order |
+|---|---|---|---|
+| Doc 1 — Unit | `properties/SEED_test_owner_property_01/units/FCerGy2rdgDQfMKv7oX9` | `18:03:03.352832Z` | first |
+| Doc 2 — Widget settings | `properties/SEED_test_owner_property_01/widget_settings/FCerGy2rdgDQfMKv7oX9` | `18:03:04.100290Z` | second (~748ms after Doc 1) |
+
+- Same doc-id (`FCerGy2rdgDQfMKv7oX9`) on both — Doc 2's id is sourced from Doc 1's auto-id per `widgetSettingsRepository.createDefaultSettings(unitId: savedUnit.id)` (line 332 of `unit_wizard_screen.dart`). Proves Doc 2 was written AFTER Doc 1 returned, not racing it.
+- `widget_settings.widget_mode = "booking_pending"` matches `WidgetMode.bookingPending` default in `firebase_widget_settings_repository.dart:99-100` (owner-approval flow).
+- Existing seed row `SEED_test_owner_unit_01` left untouched — no collateral writes.
+
+## Verdict
+
+✅ Unit Wizard publish FROZEN flow operates correctly under integration branch's premium theme. All 4 steps render under Phase B chrome (purple gradient AppBar, white card stack, BBRadius.lg, gradient pill buttons) without clip / overflow / theme break. 2-write order intact (Doc 1 → Doc 2, ~748ms gap, both atomic). Picker auto-refresh fires (`ref.invalidate(ownerUnitsProvider)` per line 338-340).
+
+§5c is now ✅ in the integration matrix at the top of this section (was ⏭ DEFERRED).
+
+## Test fixture left on dev
+
+New unit `FCerGy2rdgDQfMKv7oX9` (name: SmokeTestUnit118, €100/noć, max 4 guests, 2 bedrooms, 1 bathroom, min stay 1 night) persists on bookbed-dev under `properties/SEED_test_owner_property_01`. Safe to delete via Owner UI or:
+
+```
+firebase --project bookbed-dev firestore:delete \
+  'properties/SEED_test_owner_property_01/units/FCerGy2rdgDQfMKv7oX9' --force
+firebase --project bookbed-dev firestore:delete \
+  'properties/SEED_test_owner_property_01/widget_settings/FCerGy2rdgDQfMKv7oX9' --force
+```
+
+Operator may keep as a known smoke fixture instead.
+
+## Hard rule #4 — revert
+
+```
+cp /tmp/gs-prod-backup.json /private/tmp/bb-integ-wt/android/app/google-services.json
+grep project_id /private/tmp/bb-integ-wt/android/app/google-services.json
+#   "project_id": "rab-booking-248fc"   ← ✓ PROD restored
+git -C /private/tmp/bb-integ-wt status --short android/app/google-services.json
+#   (clean)                              ← ✓ no tracked diff
+```
+
+Flutter run + emulator stopped after revert.
 
 

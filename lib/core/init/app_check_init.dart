@@ -34,13 +34,15 @@ class AppCheckInit {
       // we hand the SDK a placeholder so `activate()` doesn't throw. Tokens
       // produced from the placeholder won't validate — that's fine while
       // every callable has enforceAppCheck:false.
-      webProvider: webProvider ?? ReCaptchaV3Provider('placeholder-debug-only'),
+      providerWeb: webProvider ?? ReCaptchaV3Provider('placeholder-debug-only'),
       // Android: Play Integrity on prod release, Debug elsewhere.
-      androidProvider: isProd
-          ? AndroidProvider.playIntegrity
-          : AndroidProvider.debug,
+      providerAndroid: isProd
+          ? const AndroidPlayIntegrityProvider()
+          : const AndroidDebugProvider(),
       // iOS: DeviceCheck on prod release, Debug elsewhere.
-      appleProvider: isProd ? AppleProvider.deviceCheck : AppleProvider.debug,
+      providerApple: isProd
+          ? const AppleDeviceCheckProvider()
+          : const AppleDebugProvider(),
     );
 
     if (kIsWeb && _recaptchaKey.isEmpty && isProd) {

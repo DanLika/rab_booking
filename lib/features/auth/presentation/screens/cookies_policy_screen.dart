@@ -6,6 +6,7 @@ import '../../../../shared/widgets/common_app_bar.dart';
 import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../shared/widgets/redesign.dart';
+import '../widgets/legal_tabs_row.dart';
 
 class CookiesPolicyScreen extends StatefulWidget {
   const CookiesPolicyScreen({super.key});
@@ -74,12 +75,27 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
     final rd = BbRedesignTokens.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final isDesktop = screenWidth >= 900;
     final horizontalPadding = isMobile
         ? 16.0
         : screenWidth < 900
         ? 24.0
         : 32.0;
     final l10n = AppLocalizations.of(context);
+
+    final tocItems = <(String, String)>[
+      ('1. ${l10n.cookiesScreenSection1Title}', 'what'),
+      ('2. ${l10n.cookiesScreenSection2Title}', 'how'),
+      ('3. ${l10n.cookiesScreenSection3Title}', 'types'),
+      ('4. ${l10n.cookiesScreenSection4Title}', 'choices'),
+      ('5. ${l10n.cookiesScreenSection5Title}', 'thirdparty'),
+      ('6. ${l10n.cookiesScreenSection6Title}', 'updates'),
+      ('7. ${l10n.cookiesScreenSection7Title}', 'more'),
+    ];
+
+    final lastUpdated = l10n.cookiesScreenLastUpdated(
+      DateTime.now().toString().split(' ')[0],
+    );
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -97,109 +113,25 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
       ),
       body: SafeArea(
         child: Stack(
-          alignment:
-              Alignment.topLeft, // Explicit to avoid TextDirection null check
+          alignment: Alignment.topLeft,
           children: [
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1200),
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: horizontalPadding,
-                    vertical: isMobile ? 16 : 24,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _LegalHeaderCard(
-                        eyebrow: 'PRAVNO · KOLAČIĆI',
-                        title: l10n.cookiesScreenHeaderTitle,
-                        lastUpdated: l10n.cookiesScreenLastUpdated(
-                          DateTime.now().toString().split(' ')[0],
-                        ),
+                child: isDesktop
+                    ? _buildDesktop(
+                        l10n: l10n,
+                        horizontalPadding: horizontalPadding,
+                        tocItems: tocItems,
+                        lastUpdated: lastUpdated,
+                      )
+                    : _buildMobile(
+                        l10n: l10n,
+                        horizontalPadding: horizontalPadding,
                         isMobile: isMobile,
+                        tocItems: tocItems,
+                        lastUpdated: lastUpdated,
                       ),
-                      SizedBox(height: isMobile ? 16 : 24),
-                      _LegalTocCard(
-                        title: l10n.cookiesScreenToc,
-                        items: [
-                          ('1. ${l10n.cookiesScreenSection1Title}', 'what'),
-                          ('2. ${l10n.cookiesScreenSection2Title}', 'how'),
-                          ('3. ${l10n.cookiesScreenSection3Title}', 'types'),
-                          ('4. ${l10n.cookiesScreenSection4Title}', 'choices'),
-                          (
-                            '5. ${l10n.cookiesScreenSection5Title}',
-                            'thirdparty',
-                          ),
-                          ('6. ${l10n.cookiesScreenSection6Title}', 'updates'),
-                          ('7. ${l10n.cookiesScreenSection7Title}', 'more'),
-                        ],
-                        onTapKey: _scrollToSection,
-                        isMobile: isMobile,
-                      ),
-                      SizedBox(height: isMobile ? 16 : 24),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['what']!,
-                        title: l10n.cookiesScreenSection1Title,
-                        body: l10n.cookiesScreenSection1Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['how']!,
-                        title: l10n.cookiesScreenSection2Title,
-                        body: l10n.cookiesScreenSection2Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['types']!,
-                        title: l10n.cookiesScreenSection3Title,
-                        body: l10n.cookiesScreenSection3Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['choices']!,
-                        title: l10n.cookiesScreenSection4Title,
-                        body: l10n.cookiesScreenSection4Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['thirdparty']!,
-                        title: l10n.cookiesScreenSection5Title,
-                        body: l10n.cookiesScreenSection5Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['updates']!,
-                        title: l10n.cookiesScreenSection6Title,
-                        body: l10n.cookiesScreenSection6Body,
-                        isMobile: isMobile,
-                      ),
-                      _LegalSectionCard(
-                        sectionKey: _sectionKeys['more']!,
-                        title: l10n.cookiesScreenSection7Title,
-                        body: l10n.cookiesScreenSection7Body,
-                        isMobile: isMobile,
-                      ),
-                      SizedBox(height: isMobile ? 8 : 16),
-                      _PrivacyLinkCard(
-                        title: l10n.cookiesScreenPrivacyLinkTitle,
-                        body: l10n.cookiesScreenPrivacyLinkBody,
-                        buttonLabel: l10n.cookiesScreenPrivacyLinkButton,
-                        onPressed: () => context.go(OwnerRoutes.privacyPolicy),
-                        isMobile: isMobile,
-                      ),
-                      SizedBox(height: isMobile ? 16 : 24),
-                      _LegalNoticeCard(
-                        icon: 'info',
-                        title: l10n.cookiesScreenLegalNotice,
-                        body: l10n.cookiesScreenLegalNoticeBody,
-                        isMobile: isMobile,
-                      ),
-                      SizedBox(height: isMobile ? 16 : 24),
-                    ],
-                  ),
-                ),
               ),
             ),
             if (_showScrollToTop)
@@ -217,10 +149,170 @@ class _CookiesPolicyScreenState extends State<CookiesPolicyScreen> {
       ),
     );
   }
+
+  Widget _buildDesktop({
+    required AppLocalizations l10n,
+    required double horizontalPadding,
+    required List<(String, String)> tocItems,
+    required String lastUpdated,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 240,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 28),
+              child: SingleChildScrollView(
+                child: _LegalTocSidebar(
+                  title: l10n.cookiesScreenToc,
+                  items: tocItems,
+                  onTapKey: _scrollToSection,
+                  lastUpdatedLabel: l10n.lastUpdated,
+                  lastUpdatedValue: lastUpdated,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 48),
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.only(top: 24, bottom: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const LegalTabsRow(current: LegalTab.cookies),
+                  const SizedBox(height: 28),
+                  _LegalDocHeader(
+                    eyebrow: 'PRAVNO · KOLAČIĆI',
+                    title: l10n.cookiesScreenHeaderTitle,
+                    lastUpdated: lastUpdated,
+                    isMobile: false,
+                  ),
+                  const SizedBox(height: 28),
+                  ..._sections(l10n),
+                  const SizedBox(height: 8),
+                  _PrivacyLinkCard(
+                    title: l10n.cookiesScreenPrivacyLinkTitle,
+                    body: l10n.cookiesScreenPrivacyLinkBody,
+                    buttonLabel: l10n.cookiesScreenPrivacyLinkButton,
+                    onPressed: () => context.go(OwnerRoutes.privacyPolicy),
+                    isMobile: false,
+                  ),
+                  const SizedBox(height: 16),
+                  _LegalNoticeCard(
+                    icon: 'info',
+                    title: l10n.cookiesScreenLegalNotice,
+                    body: l10n.cookiesScreenLegalNoticeBody,
+                    isMobile: false,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobile({
+    required AppLocalizations l10n,
+    required double horizontalPadding,
+    required bool isMobile,
+    required List<(String, String)> tocItems,
+    required String lastUpdated,
+  }) {
+    return SingleChildScrollView(
+      controller: _scrollController,
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: isMobile ? 16 : 24,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const LegalTabsRow(current: LegalTab.cookies),
+          SizedBox(height: isMobile ? 20 : 24),
+          _LegalDocHeader(
+            eyebrow: 'PRAVNO · KOLAČIĆI',
+            title: l10n.cookiesScreenHeaderTitle,
+            lastUpdated: lastUpdated,
+            isMobile: isMobile,
+          ),
+          SizedBox(height: isMobile ? 16 : 20),
+          _LegalTocCard(
+            title: l10n.cookiesScreenToc,
+            items: tocItems,
+            onTapKey: _scrollToSection,
+            isMobile: isMobile,
+          ),
+          SizedBox(height: isMobile ? 20 : 24),
+          ..._sections(l10n),
+          SizedBox(height: isMobile ? 8 : 16),
+          _PrivacyLinkCard(
+            title: l10n.cookiesScreenPrivacyLinkTitle,
+            body: l10n.cookiesScreenPrivacyLinkBody,
+            buttonLabel: l10n.cookiesScreenPrivacyLinkButton,
+            onPressed: () => context.go(OwnerRoutes.privacyPolicy),
+            isMobile: isMobile,
+          ),
+          SizedBox(height: isMobile ? 16 : 24),
+          _LegalNoticeCard(
+            icon: 'info',
+            title: l10n.cookiesScreenLegalNotice,
+            body: l10n.cookiesScreenLegalNoticeBody,
+            isMobile: isMobile,
+          ),
+          SizedBox(height: isMobile ? 16 : 24),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _sections(AppLocalizations l10n) => [
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['what']!,
+      title: l10n.cookiesScreenSection1Title,
+      body: l10n.cookiesScreenSection1Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['how']!,
+      title: l10n.cookiesScreenSection2Title,
+      body: l10n.cookiesScreenSection2Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['types']!,
+      title: l10n.cookiesScreenSection3Title,
+      body: l10n.cookiesScreenSection3Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['choices']!,
+      title: l10n.cookiesScreenSection4Title,
+      body: l10n.cookiesScreenSection4Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['thirdparty']!,
+      title: l10n.cookiesScreenSection5Title,
+      body: l10n.cookiesScreenSection5Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['updates']!,
+      title: l10n.cookiesScreenSection6Title,
+      body: l10n.cookiesScreenSection6Body,
+    ),
+    _LegalFlatSection(
+      sectionKey: _sectionKeys['more']!,
+      title: l10n.cookiesScreenSection7Title,
+      body: l10n.cookiesScreenSection7Body,
+    ),
+  ];
 }
 
-class _LegalHeaderCard extends StatelessWidget {
-  const _LegalHeaderCard({
+class _LegalDocHeader extends StatelessWidget {
+  const _LegalDocHeader({
     required this.eyebrow,
     required this.title,
     required this.lastUpdated,
@@ -235,26 +327,56 @@ class _LegalHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
-    return BbCard(
-      padding: EdgeInsets.all(isMobile ? 16 : 20),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          eyebrow,
+          style: BBType.eyebrow(context).copyWith(color: c.primary),
+        ),
+        SizedBox(height: isMobile ? 8 : 12),
+        Text(
+          title,
+          style: isMobile ? BBType.h1(context) : BBType.display(context),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          lastUpdated,
+          style: BBType.bodyNum(context).copyWith(color: c.textTertiary),
+        ),
+      ],
+    );
+  }
+}
+
+class _LegalFlatSection extends StatelessWidget {
+  const _LegalFlatSection({
+    required this.sectionKey,
+    required this.title,
+    required this.body,
+  });
+
+  final GlobalKey sectionKey;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Padding(
+      key: sectionKey,
+      padding: const EdgeInsets.only(bottom: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          BbSectionHeader(title: title, level: BbSectionHeaderLevel.h3),
           Text(
-            eyebrow,
-            style: BBType.eyebrow(context).copyWith(color: c.primary),
-          ),
-          SizedBox(height: isMobile ? 8 : 12),
-          Text(
-            title,
-            style: isMobile ? BBType.h1(context) : BBType.display(context),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            lastUpdated,
-            style: BBType.bodyNum(context).copyWith(color: c.textTertiary),
+            body,
+            style: BBType.body(
+              context,
+            ).copyWith(height: 1.7, color: c.textSecondary),
           ),
         ],
       ),
@@ -317,40 +439,79 @@ class _LegalTocCard extends StatelessWidget {
   }
 }
 
-class _LegalSectionCard extends StatelessWidget {
-  const _LegalSectionCard({
-    required this.sectionKey,
+class _LegalTocSidebar extends StatelessWidget {
+  const _LegalTocSidebar({
     required this.title,
-    required this.body,
-    required this.isMobile,
+    required this.items,
+    required this.onTapKey,
+    required this.lastUpdatedLabel,
+    required this.lastUpdatedValue,
   });
 
-  final GlobalKey sectionKey;
   final String title;
-  final String body;
-  final bool isMobile;
+  final List<(String, String)> items;
+  final void Function(String) onTapKey;
+  final String lastUpdatedLabel;
+  final String lastUpdatedValue;
 
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
-    return Padding(
-      key: sectionKey,
-      padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
-      child: BbCard(
-        padding: EdgeInsets.all(isMobile ? 16 : 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            BbSectionHeader(title: title, level: BbSectionHeaderLevel.h3),
-            Text(
-              body,
-              style: BBType.body(
-                context,
-              ).copyWith(height: 1.7, color: c.textSecondary),
-            ),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: BBType.eyebrow(
+            context,
+          ).copyWith(color: c.textTertiary, fontWeight: FontWeight.w700),
         ),
-      ),
+        const SizedBox(height: 12),
+        for (final item in items)
+          InkWell(
+            onTap: () => onTapKey(item.$2),
+            borderRadius: BBRadius.smAll,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 12),
+              child: Text(
+                item.$1,
+                style: BBType.body(context).copyWith(
+                  color: c.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: c.surfaceVariant,
+            borderRadius: BBRadius.smAll,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                lastUpdatedLabel.toUpperCase(),
+                style: BBType.eyebrow(context).copyWith(color: c.textTertiary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                lastUpdatedValue,
+                style: BBType.bodyNum(context).copyWith(
+                  color: c.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

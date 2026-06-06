@@ -26,6 +26,7 @@ import 'unit_pricing_screen.dart';
 import 'widget_settings_screen.dart';
 import 'widget_advanced_settings_screen.dart';
 import '../widgets/units/unit_hub_empty_state.dart';
+import '../widgets/units/units_premium_header.dart';
 
 // ============================================================================
 // CONSTANTS
@@ -299,9 +300,16 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
           : null,
       body: Container(
         decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-        child: isDesktop
-            ? _buildDesktopLayout(theme, isDark, screenWidth)
-            : _buildMobileLayout(theme, isDark),
+        child: Column(
+          children: [
+            UnitsPremiumHeader(title: l10n.unitHubTitle),
+            Expanded(
+              child: isDesktop
+                  ? _buildDesktopLayout(theme, isDark, screenWidth)
+                  : _buildMobileLayout(theme, isDark),
+            ),
+          ],
+        ),
       ),
     );
   }

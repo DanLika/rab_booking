@@ -24,6 +24,7 @@ import '../../providers/ical_feeds_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
 import '../../providers/owner_properties_provider.dart';
 import '../../widgets/ical/ical_feed_delete_dialog.dart';
+import '../../widgets/ical/ical_sync_premium_header.dart';
 import '../../widgets/owner_app_drawer.dart';
 
 const double _kDialogMaxWidth = 500.0;
@@ -188,9 +189,19 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
           )
         : null;
 
+    final int totalFeeds = (stats?['total_feeds'] as int?) ?? 0;
+    final int activeFeeds = (stats?['active_feeds'] as int?) ?? 0;
+    final int errorFeeds = (stats?['error_feeds'] as int?) ?? 0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        IcalSyncPremiumHeader(
+          totalFeeds: totalFeeds,
+          activeFeeds: activeFeeds,
+          errorFeeds: errorFeeds,
+        ),
+        const SizedBox(height: BBSpace.md),
         hero,
         const SizedBox(height: BBSpace.md),
         if (isDesktop) ...[

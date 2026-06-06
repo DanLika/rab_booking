@@ -27,7 +27,6 @@ import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/bookings/bookings_table_view.dart';
-import '../widgets/booking_details_dialog_v2.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/bookings/bookings_filters_dialog.dart';
@@ -468,73 +467,76 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           if (!mounted || !context.mounted) return;
 
           try {
-            showDialog(
-              context: context,
-              builder: (context) =>
-                  BookingDetailsDialogV2(ownerBooking: bookingToShow),
-            ).then((_) {
-              // Dialog closed - clean up state
-              if (!mounted) return;
+            context
+                .push(
+                  OwnerRoutes.bookingDetail.replaceFirst(
+                    ':bookingId',
+                    bookingToShow.booking.id,
+                  ),
+                )
+                .then((_) {
+                  // Dialog closed - clean up state
+                  if (!mounted) return;
 
-              // Store the booking ID we just showed so we don't re-open it
-              final shownBookingId = bookingToShow.booking.id;
+                  // Store the booking ID we just showed so we don't re-open it
+                  final shownBookingId = bookingToShow.booking.id;
 
-              // Clear pending booking ID provider
-              ref.read(pendingBookingIdProvider.notifier).state = null;
+                  // Clear pending booking ID provider
+                  ref.read(pendingBookingIdProvider.notifier).state = null;
 
-              // CRITICAL FIX: Set _handledBookingId BEFORE clearing URL
-              // This prevents the dialog from reopening during the router.go() rebuild
-              setState(() {
-                _pendingBookingToShow = null;
-                _handledBookingId =
-                    shownBookingId; // Keep track of what we showed
-                // Keep _dialogShownForBooking = true until URL is fully cleared
-              });
+                  // CRITICAL FIX: Set _handledBookingId BEFORE clearing URL
+                  // This prevents the dialog from reopening during the router.go() rebuild
+                  setState(() {
+                    _pendingBookingToShow = null;
+                    _handledBookingId =
+                        shownBookingId; // Keep track of what we showed
+                    // Keep _dialogShownForBooking = true until URL is fully cleared
+                  });
 
-              // Clear bookingId from URL in next frame
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted || !context.mounted) return;
+                  // Clear bookingId from URL in next frame
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted || !context.mounted) return;
 
-                try {
-                  final router = GoRouter.of(this.context);
-                  final currentUri =
-                      router.routerDelegate.currentConfiguration.uri;
-                  if (currentUri.queryParameters.containsKey('bookingId')) {
-                    final newQueryParams = Map<String, String>.from(
-                      currentUri.queryParameters,
-                    );
-                    newQueryParams.remove('bookingId');
-                    final newUri = currentUri.replace(
-                      queryParameters: newQueryParams,
-                    );
-                    router.go(newUri.toString());
-                  }
+                    try {
+                      final router = GoRouter.of(this.context);
+                      final currentUri =
+                          router.routerDelegate.currentConfiguration.uri;
+                      if (currentUri.queryParameters.containsKey('bookingId')) {
+                        final newQueryParams = Map<String, String>.from(
+                          currentUri.queryParameters,
+                        );
+                        newQueryParams.remove('bookingId');
+                        final newUri = currentUri.replace(
+                          queryParameters: newQueryParams,
+                        );
+                        router.go(newUri.toString());
+                      }
 
-                  // Reset remaining flags AFTER URL is cleared
-                  // NOTE: _handledBookingId stays set - it will be cleared when URL no longer has bookingId
-                  // (see line 261-268 where we check routeBookingId == null)
-                  if (mounted) {
-                    setState(() {
-                      _dialogShownForBooking = false;
-                      _hasHandledInitialBooking = false;
-                      _bookingCheckScheduled = false;
-                      _isLoadingInitialBooking = false;
-                      // DO NOT reset _handledBookingId here - let line 261-268 handle it
-                    });
-                  }
-                } catch (e) {
-                  debugPrint('Error clearing bookingId from route: $e');
-                  if (mounted) {
-                    setState(() {
-                      _dialogShownForBooking = false;
-                      _hasHandledInitialBooking = false;
-                      _bookingCheckScheduled = false;
-                      _isLoadingInitialBooking = false;
-                    });
-                  }
-                }
-              });
-            });
+                      // Reset remaining flags AFTER URL is cleared
+                      // NOTE: _handledBookingId stays set - it will be cleared when URL no longer has bookingId
+                      // (see line 261-268 where we check routeBookingId == null)
+                      if (mounted) {
+                        setState(() {
+                          _dialogShownForBooking = false;
+                          _hasHandledInitialBooking = false;
+                          _bookingCheckScheduled = false;
+                          _isLoadingInitialBooking = false;
+                          // DO NOT reset _handledBookingId here - let line 261-268 handle it
+                        });
+                      }
+                    } catch (e) {
+                      debugPrint('Error clearing bookingId from route: $e');
+                      if (mounted) {
+                        setState(() {
+                          _dialogShownForBooking = false;
+                          _hasHandledInitialBooking = false;
+                          _bookingCheckScheduled = false;
+                          _isLoadingInitialBooking = false;
+                        });
+                      }
+                    }
+                  });
+                });
           } catch (e) {
             debugPrint('Error showing booking details dialog: $e');
             // Reset flags on error
@@ -923,10 +925,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
       );
 
       if (ownerBooking != null && mounted) {
-        await showDialog(
-          context: context,
-          builder: (dialogContext) =>
-              BookingDetailsDialogV2(ownerBooking: ownerBooking),
+        await context.push(
+          OwnerRoutes.bookingDetail.replaceFirst(
+            ':bookingId',
+            ownerBooking.booking.id,
+          ),
         );
       } else {
         // Fallback: try booking2 if booking1 not found
@@ -934,10 +937,11 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
           conflict.booking2.id,
         );
         if (ownerBooking2 != null && mounted) {
-          await showDialog(
-            context: context,
-            builder: (dialogContext) =>
-                BookingDetailsDialogV2(ownerBooking: ownerBooking2),
+          await context.push(
+            OwnerRoutes.bookingDetail.replaceFirst(
+              ':bookingId',
+              ownerBooking2.booking.id,
+            ),
           );
         }
       }
@@ -1775,10 +1779,11 @@ class _BookingCard extends ConsumerWidget {
                   booking: booking,
                   isMobile: isMobile,
                   onShowDetails: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) =>
-                          BookingDetailsDialogV2(ownerBooking: ownerBooking),
+                    context.push(
+                      OwnerRoutes.bookingDetail.replaceFirst(
+                        ':bookingId',
+                        ownerBooking.booking.id,
+                      ),
                     );
                   },
                   onApprove: booking.status == BookingStatus.pending

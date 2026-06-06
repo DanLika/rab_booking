@@ -1,42 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import '../../core/design/tokens.dart';
 
-/// Reusable standard AppBar (non-sliver) for screens using Scaffold
-/// Provides consistent styling with gradient background
-/// Uses BBGradient.brandPrimary for consistent branding across themes
+/// Reusable standard AppBar (non-sliver) for screens using Scaffold.
+///
+/// Renders as a thin pass-through over the MaterialApp `AppBarTheme`
+/// (premium flat surface — see `audit/116-premium-spec.md §3.1 / §AppBar-resolution`).
+/// No background gradient or color overrides — theme drives bg, elevation,
+/// scrolled-under divider, title style, icon theme, and system overlay style.
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
-  /// App bar title text
   final String title;
-
-  /// Leading icon (menu, back arrow, etc.)
-  /// If null, no leading icon is shown
   final IconData? leadingIcon;
-
-  /// Action to perform when leading icon is tapped
-  /// Receives BuildContext to allow actions like opening drawer
-  /// Required if leadingIcon is provided
   final void Function(BuildContext)? onLeadingIconTap;
-
-  /// Custom gradient colors (optional - defaults to brand gradient)
-  /// If null, uses BBGradient.brandPrimary (Purple 100% → 70%)
-  final List<Color>? gradientColors;
-
-  /// Title text color
-  /// Default: White
-  final Color titleColor;
-
-  /// Icon color
-  /// Default: White
-  final Color iconColor;
-
-  /// App bar height
-  /// Default: 52 (compact height for better screen real estate)
-  final double height;
-
-  /// Action widgets to display on the right side of the app bar
-  /// Common usage: help icon, settings icon, etc.
   final List<Widget>? actions;
 
   const CommonAppBar({
@@ -44,71 +18,37 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.title,
     this.leadingIcon,
     this.onLeadingIconTap,
-    this.gradientColors,
-    this.titleColor = Colors.white,
-    this.iconColor = Colors.white,
-    this.height = 52.0,
     this.actions,
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(height);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-
-    // Title padding: Minimal to keep header compact
-    // Leading icon uses Flutter's default IconButton padding (8px)
     final titlePadding = screenWidth > 600 ? 4.0 : 0.0;
 
-    // Use custom colors or brand gradient (Purple 100% → 70%)
-    final effectiveColors =
-        gradientColors ??
-        [BBGradient.brandPrimaryStart, BBGradient.brandPrimaryEnd];
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: effectiveColors,
+    return AppBar(
+      title: Padding(
+        padding: EdgeInsets.only(left: titlePadding),
+        child: AutoSizeText(
+          title,
+          maxLines: 1,
+          minFontSize: 14,
+          style: theme.appBarTheme.titleTextStyle,
         ),
       ),
-      child: AppBar(
-        title: Padding(
-          padding: EdgeInsets.only(left: titlePadding),
-          child: AutoSizeText(
-            title,
-            maxLines: 1,
-            minFontSize: 14,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: titleColor,
-              letterSpacing: 0,
-            ),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: leadingIcon != null && onLeadingIconTap != null
-            ? IconButton(
-                icon: Icon(leadingIcon, color: iconColor),
-                onPressed: () => onLeadingIconTap!(context),
-                tooltip: 'Menu',
-              )
-            : null,
-        automaticallyImplyLeading: false,
-        actions: actions,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          statusBarBrightness: Brightness.dark,
-        ),
-      ),
+      leading: leadingIcon != null && onLeadingIconTap != null
+          ? IconButton(
+              icon: Icon(leadingIcon),
+              onPressed: () => onLeadingIconTap!(context),
+              tooltip: 'Menu',
+            )
+          : null,
+      automaticallyImplyLeading: false,
+      actions: actions,
     );
   }
 }

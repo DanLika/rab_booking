@@ -63,30 +63,29 @@ class AppTheme {
         displayColor: AppColors.textPrimaryLight,
       ),
 
-      // AppBar theme - Height: 64px, dark purple background with white text
+      // AppBar theme — Premium (audit/116 §3.1): surface bg, 56px slim,
+      // text-primary title, status bar icons dark on light.
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.primary, // Dark purple background
-        foregroundColor: Colors.white, // White text and icons
+        backgroundColor: AppColors.surfaceLight,
+        foregroundColor: AppColors.textPrimaryLight,
         elevation: 0,
         centerTitle: false,
         scrolledUnderElevation: 1,
-        shadowColor: Colors.black26,
-        toolbarHeight: 64, // 64px height as specified
-        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          statusBarColor: AppColors.primary, // Match AppBar color
-          statusBarBrightness: Brightness.dark, // For iOS (light icons)
-          statusBarIconBrightness:
-              Brightness.light, // For Android (light icons)
+        shadowColor: AppColors.sectionDividerLight,
+        toolbarHeight: 56, // Premium slim AppBar
+        systemOverlayStyle: SystemUiOverlayStyle.dark.copyWith(
+          statusBarColor: AppColors.surfaceLight,
+          statusBarBrightness: Brightness.light, // iOS: dark icons
+          statusBarIconBrightness: Brightness.dark, // Android: dark icons
         ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
-          color: Colors.white, // White title text
+          color: AppColors.textPrimaryLight,
           fontWeight: FontWeight.w600,
+          fontSize: 20, // BBType.h2
         ),
-        iconTheme: const IconThemeData(
-          color: Colors.white, // White icons (including back button)
-        ),
+        iconTheme: const IconThemeData(color: AppColors.textSecondaryLight),
         actionsIconTheme: const IconThemeData(
-          color: Colors.white, // White action icons
+          color: AppColors.textSecondaryLight,
         ),
       ),
 
@@ -240,21 +239,39 @@ class AppTheme {
         unselectedLabelStyle: AppTypography.textTheme.labelSmall,
       ),
 
-      // Dialog theme
+      // Dialog theme — Premium (audit/116 §3.3): radius 24 (BBRadius.lg),
+      // shadow ramp via Material elevation, bb-h2 title.
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceLight,
-        elevation: 8,
+        elevation: 12,
+        shadowColor: const Color(0x29101828), // ~16% cool-tone
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            AppDimensions.radiusM,
-          ), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL), // 24
         ),
         titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
           color: AppColors.textPrimaryLight,
+          fontSize: 20, // BBType.h2
+          fontWeight: FontWeight.w600,
         ),
         contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondaryLight,
         ),
+      ),
+      // BottomSheet theme — Premium (audit/116 §3.4): top corners radius 24,
+      // surface bg, modal scrim handled by showModalBottomSheet defaults.
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        modalBackgroundColor: AppColors.surfaceLight,
+        elevation: 12,
+        shadowColor: Color(0x29101828),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppDimensions.radiusL),
+            topRight: Radius.circular(AppDimensions.radiusL),
+          ),
+        ),
+        showDragHandle: true,
+        dragHandleColor: AppColors.borderWarmLight,
       ),
 
       // Snackbar theme
@@ -436,7 +453,8 @@ class AppTheme {
         displayColor: AppColors.textPrimaryDark,
       ),
 
-      // AppBar theme - Height: 64px
+      // AppBar theme — Premium (audit/116 §3.1): surface bg, 56px slim,
+      // text-primary title, status bar icons light on dark.
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.surfaceDark,
         foregroundColor: AppColors.textPrimaryDark,
@@ -444,16 +462,16 @@ class AppTheme {
         centerTitle: false,
         scrolledUnderElevation: 1,
         shadowColor: AppColors.borderDark,
-        toolbarHeight: 64, // 64px height as specified
+        toolbarHeight: 56, // Premium slim AppBar
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          statusBarColor: AppColors.surfaceDark, // Match AppBar color
-          statusBarBrightness: Brightness.dark, // For iOS (light icons)
-          statusBarIconBrightness:
-              Brightness.light, // For Android (light icons)
+          statusBarColor: AppColors.surfaceDark,
+          statusBarBrightness: Brightness.dark, // iOS: light icons
+          statusBarIconBrightness: Brightness.light, // Android: light icons
         ),
         titleTextStyle: AppTypography.textTheme.titleLarge?.copyWith(
           color: AppColors.textPrimaryDark,
           fontWeight: FontWeight.w600,
+          fontSize: 20, // BBType.h2
         ),
       ),
 
@@ -609,21 +627,38 @@ class AppTheme {
         unselectedLabelStyle: AppTypography.textTheme.labelSmall,
       ),
 
-      // Dialog theme
+      // Dialog theme — Premium (audit/116 §3.3): radius 24, deeper shadow.
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surfaceDark,
-        elevation: 8,
+        elevation: 12,
+        shadowColor: const Color(0xCC000000), // 80% black on dark
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            AppDimensions.radiusM,
-          ), // 20px modern radius (upgraded from 16)
+          borderRadius: BorderRadius.circular(AppDimensions.radiusL), // 24
         ),
         titleTextStyle: AppTypography.textTheme.headlineSmall?.copyWith(
           color: AppColors.textPrimaryDark,
+          fontSize: 20, // BBType.h2
+          fontWeight: FontWeight.w600,
         ),
         contentTextStyle: AppTypography.textTheme.bodyMedium?.copyWith(
           color: AppColors.textSecondaryDark,
         ),
+      ),
+      // BottomSheet theme — Premium (audit/116 §3.4): top corners radius 24,
+      // surface bg.
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surfaceDark,
+        modalBackgroundColor: AppColors.surfaceDark,
+        elevation: 12,
+        shadowColor: Color(0xCC000000),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppDimensions.radiusL),
+            topRight: Radius.circular(AppDimensions.radiusL),
+          ),
+        ),
+        showDragHandle: true,
+        dragHandleColor: AppColors.borderWarmDark,
       ),
 
       // Snackbar theme

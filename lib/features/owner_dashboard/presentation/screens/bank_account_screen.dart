@@ -35,7 +35,9 @@ import '../widgets/owner_app_drawer.dart';
 ///  - Stripe Connect onboarding flow + Stripe API calls — UNTOUCHED
 ///    (this screen handles legacy bank-transfer fields only; payouts.jsx
 ///    StripeStatusCard / BalanceTiles / PayoutScheduleCard / RecentPayouts
-///    are out of scope, future separate screen.)
+///    landed in stripe_connect_setup_screen.dart via B4a — see
+///    _StripePayoutsDashboard there. BankCard piece is now wired into THIS
+///    screen as _buildBankSummaryCard (display card above form, real data).)
 ///  - [AndroidKeyboardDismissFixApproach1] mixin (per
 ///    `.claude/rules/keyboard-fix.md`) + `KeyedSubtree(ValueKey('bank_account_…'))`
 ///  - `resizeToAvoidBottomInset: true`

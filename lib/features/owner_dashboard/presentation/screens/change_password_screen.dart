@@ -493,6 +493,14 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen>
                                     ),
                                     const SizedBox(height: BBSpace.md),
 
+                                    // TODO(B4b): wire `revokeAllRefreshTokens`
+                                    //   CF (eu-west1) behind a "Odjavi me sa
+                                    //   svih ostalih uređaja" toggle row.
+                                    //   settings.jsx §267 spec. CF exists at
+                                    //   functions/src/revokeTokens.ts. Skipped
+                                    //   from B4a to avoid touching shared l10n
+                                    //   files (screens-only ownership rule).
+
                                     // Submit
                                     BbButton(
                                       label: l10n.changePassword,

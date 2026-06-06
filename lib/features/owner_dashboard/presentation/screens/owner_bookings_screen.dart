@@ -608,6 +608,21 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                       ),
                     ),
                   ),
+                  // Premium ledger section header (audit/117 §B2-Δb) —
+                  // eyebrow + count above the tabs/list. Bridges the
+                  // premium hero to the existing list/table.
+                  SliverToBoxAdapter(
+                    child: BookingsPremiumLedgerHeader(
+                      hasActiveFilter:
+                          filters.hasActiveFilters || filters.showImportedOnly,
+                      padding: EdgeInsets.fromLTRB(
+                        context.horizontalPadding,
+                        isMobile ? 12 : 16,
+                        context.horizontalPadding,
+                        0,
+                      ),
+                    ),
+                  ),
                   // Filters section
                   SliverToBoxAdapter(
                     child: Padding(
@@ -753,6 +768,18 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     ),
                   ),
 
+                  // Premium ledger footer (audit/117 §B2-Δb) — pagination
+                  // hint after the list/table, before sync section.
+                  SliverToBoxAdapter(
+                    child: BookingsPremiumLedgerFooter(
+                      padding: EdgeInsets.fromLTRB(
+                        context.horizontalPadding,
+                        4,
+                        context.horizontalPadding,
+                        12,
+                      ),
+                    ),
+                  ),
                   // Sinkronizacija section
                   SliverToBoxAdapter(
                     child: Padding(

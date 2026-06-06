@@ -101,6 +101,141 @@ class BookingsPremiumHeader extends ConsumerWidget {
   }
 }
 
+/// Premium ledger section header — eyebrow + H3 + count (audit/117 §B2-Δb).
+///
+/// Sits between the premium hero (KPI + AI + queue) and the existing
+/// tabs + cards/table list. Gives the bottom half ledger-shaped framing
+/// without touching the sliding-window / sort / filter internals.
+class BookingsPremiumLedgerHeader extends ConsumerWidget {
+  final bool hasActiveFilter;
+  final EdgeInsetsGeometry padding;
+
+  const BookingsPremiumLedgerHeader({
+    super.key,
+    required this.hasActiveFilter,
+    this.padding = const EdgeInsets.fromLTRB(16, 0, 16, 8),
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = BBColor.of(context);
+    final WindowedBookingsState s = ref.watch(windowedBookingsNotifierProvider);
+    final int visible = s.visibleBookings.length;
+
+    return Padding(
+      padding: padding,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  hasActiveFilter
+                      ? 'FILTRIRANE REZERVACIJE'
+                      : 'PREGLED SVIH REZERVACIJA',
+                  style: BBType.eyebrow(context).copyWith(color: c.primary),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hasActiveFilter
+                      ? 'Suženo na trenutni filter'
+                      : 'Najnovije rezervacije na vrhu',
+                  style: BBType.caption(context).copyWith(
+                    color: c.textTertiary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (visible > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: c.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '$visible',
+                style: BBType.caption(context).copyWith(
+                  color: c.primary,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures(),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Premium ledger footer — "Prikazano X od Y rezervacija" pagination hint
+/// (audit/117 §B2-Δb). Renders below the existing list/table so the bottom
+/// of the ledger matches the handoff RZPLedger footer surface.
+class BookingsPremiumLedgerFooter extends ConsumerWidget {
+  final EdgeInsetsGeometry padding;
+
+  const BookingsPremiumLedgerFooter({
+    super.key,
+    this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 20),
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = BBColor.of(context);
+    final WindowedBookingsState s = ref.watch(windowedBookingsNotifierProvider);
+    final int visible = s.visibleBookings.length;
+    if (visible == 0) return const SizedBox.shrink();
+
+    final String label = s.hasMoreBottom
+        ? 'Prikazano $visible · listanjem se učitavaju nove'
+        : 'Prikazano svih $visible rezervacija';
+
+    return Padding(
+      padding: padding,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: c.surfaceVariant.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(BBRadius.sm),
+          border: Border.all(color: c.border.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: <Widget>[
+            Icon(Icons.list_alt, size: 14, color: c.textTertiary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: BBType.caption(context).copyWith(
+                  color: c.textSecondary,
+                  fontWeight: FontWeight.w500,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures(),
+                  ],
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _PremiumHeaderRow extends StatelessWidget {
   final bool isMobile;
 

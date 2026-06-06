@@ -83,19 +83,26 @@ const GUESTS = [
 
 const CHANNELS = ['Direktno', 'Booking.com', 'Airbnb'];
 
-// nights determines total_price (×130 EUR per night, mid-range price point)
+// nights determines total_price (×130 EUR per night, mid-range price point).
+// createdHoursAgo backdates `created_at` so AI nudge surfaces on pending rows
+// (gate: oldest pending wait >= 6h).
 const SEED = [
-  { idx: 0, offsetIn: -28, nights: 3, status: 'completed', payment: 'paid'    },
-  { idx: 1, offsetIn: -21, nights: 4, status: 'completed', payment: 'paid'    },
-  { idx: 2, offsetIn: -14, nights: 2, status: 'completed', payment: 'paid'    },
-  { idx: 3, offsetIn: -7,  nights: 3, status: 'completed', payment: 'paid'    },
-  { idx: 4, offsetIn: -2,  nights: 5, status: 'confirmed', payment: 'partial' },
-  { idx: 5, offsetIn:  1,  nights: 3, status: 'confirmed', payment: 'partial' }, // upcoming
-  { idx: 6, offsetIn:  3,  nights: 2, status: 'confirmed', payment: 'partial' }, // upcoming
-  { idx: 7, offsetIn:  5,  nights: 4, status: 'confirmed', payment: 'partial' },
-  { idx: 8, offsetIn: 14,  nights: 3, status: 'pending',   payment: 'unpaid'  },
-  { idx: 9, offsetIn: 21,  nights: 2, status: 'pending',   payment: 'unpaid'  },
+  { idx: 0, offsetIn: -28, nights: 3, status: 'completed', payment: 'paid',    createdHoursAgo: 700 },
+  { idx: 1, offsetIn: -21, nights: 4, status: 'completed', payment: 'paid',    createdHoursAgo: 540 },
+  { idx: 2, offsetIn: -14, nights: 2, status: 'completed', payment: 'paid',    createdHoursAgo: 360 },
+  { idx: 3, offsetIn: -7,  nights: 3, status: 'completed', payment: 'paid',    createdHoursAgo: 200 },
+  { idx: 4, offsetIn: -2,  nights: 5, status: 'confirmed', payment: 'partial', createdHoursAgo: 96  },
+  { idx: 5, offsetIn:  1,  nights: 3, status: 'confirmed', payment: 'partial', createdHoursAgo: 72  }, // upcoming
+  { idx: 6, offsetIn:  3,  nights: 2, status: 'confirmed', payment: 'partial', createdHoursAgo: 48  }, // upcoming
+  { idx: 7, offsetIn:  5,  nights: 4, status: 'confirmed', payment: 'partial', createdHoursAgo: 28  },
+  { idx: 8, offsetIn: 14,  nights: 3, status: 'pending',   payment: 'unpaid',  createdHoursAgo: 14  }, // oldest pending → drives AI nudge
+  { idx: 9, offsetIn: 21,  nights: 2, status: 'pending',   payment: 'unpaid',  createdHoursAgo: 9   },
 ];
+
+function hoursAgo(h) {
+  const d = new Date(Date.now() - h * 60 * 60 * 1000);
+  return Timestamp.fromDate(d);
+}
 
 const PRICE_PER_NIGHT = 130;
 
@@ -153,9 +160,9 @@ async function seedBookings() {
       currency: 'EUR',
       source: channel,
       cancellation_token: cancellationToken,
-      created_at: existing.exists
-        ? (existing.data().created_at || FieldValue.serverTimestamp())
-        : FieldValue.serverTimestamp(),
+      // Always set to the backdated stamp so re-runs refresh the wait-window
+      // (drives the AI-nudge "Prioritet danas" gate on pending rows).
+      created_at: hoursAgo(s.createdHoursAgo ?? 0),
       updated_at: FieldValue.serverTimestamp(),
     };
 

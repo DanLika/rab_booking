@@ -195,6 +195,31 @@ class _NotificationSettingsScreenState
               vertical: BBSpace.sm,
             ),
             children: <Widget>[
+              // Premium info banner — payments are critical, always sent via email.
+              // Mirrors settings.jsx §381 SInfoBanner (info tone). Static copy:
+              // no behavior implied, just sets user expectation.
+              BbCard(
+                variant: BbCardVariant.accentLeft,
+                accentTone: BbCardAccentTone.info,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    BbIcon(name: 'notifications_active', color: c.info),
+                    const SizedBox(width: BBSpace.xs),
+                    Expanded(
+                      child: Text(
+                        'Odaberite kako želite biti obaviješteni. Kritične '
+                        'obavijesti o plaćanju uvijek šaljemo e-poštom.',
+                        style: BBType.body(
+                          context,
+                        ).copyWith(color: c.textSecondary, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: BBSpace.sm),
+
               // Master switch card
               BbCard(
                 child: BbSwitch(
@@ -284,6 +309,18 @@ class _NotificationSettingsScreenState
                     ),
                     const SizedBox(height: BBSpace.xs),
                     Divider(height: 1, thickness: 1, color: c.border),
+                    // Eyebrow row — column header chrome (mockup §305 NotifTable
+                    // header). Single category surface, so renders as compact
+                    // "KANALI · EMAIL + PUSH" label vs full table grid.
+                    Padding(
+                      padding: const EdgeInsets.only(top: BBSpace.xs),
+                      child: Text(
+                        'KANALI · EMAIL + PUSH',
+                        style: BBType.eyebrow(
+                          context,
+                        ).copyWith(color: c.textTertiary, fontSize: 10),
+                      ),
+                    ),
                     const SizedBox(height: BBSpace.xxs),
                     BbSwitch(
                       value: masterEnabled && categories.payments.email,

@@ -86,7 +86,7 @@
 
 | Komponenta | Razlog |
 |------------|--------|
-| Cjenovnik tab (`unified_unit_hub_screen.dart`) | FROZEN - referentna implementacija |
+| Cjenovnik tab CONTENT (`unified_unit_hub_screen.dart` — pricing grid + Spremi) | FROZEN - referentna implementacija. Hub screen-shell chrome (premium header above existing layout, theme/AppBar) je additive-OK; FROZEN scope = tab content only. |
 | Unit Wizard publish flow | 2-doc serial write (unit → widget_settings, Doc 2 id sourced from Doc 1) — redoslijed kritičan |
 | Timeline Calendar z-index | Cancelled bookings at base (drawn first), confirmed on top |
 | Calendar Repository (`firebase_booking_calendar_repository.dart`) | 989 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |

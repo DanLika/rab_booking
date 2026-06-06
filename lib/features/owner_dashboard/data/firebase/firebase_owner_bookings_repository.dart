@@ -1745,8 +1745,8 @@ class FirebaseOwnerBookingsRepository {
 
     final List<BookingModel> allBookings = [];
 
-    // NEW STRUCTURE: Single collection group query per status (no batching!)
-    for (final status in statuses) {
+    // NEW STRUCTURE: Parallel collection group queries using Future.wait
+    final futures = statuses.map((status) {
       final query = _firestore
           .collectionGroup('bookings')
           .where('owner_id', isEqualTo: userId)
@@ -1758,9 +1758,12 @@ class FirebaseOwnerBookingsRepository {
           .orderBy('created_at', descending: true)
           .limit(limit);
 
-      final snapshot = await query.get().withBookingFetchTimeout(
-        '_queryBookingsForStats',
-      );
+      return query.get().withBookingFetchTimeout('_queryBookingsForStats');
+    });
+
+    final snapshots = await Future.wait(futures);
+
+    for (final snapshot in snapshots) {
       for (final doc in snapshot.docs) {
         try {
           final booking = _bookingFromDoc(doc);

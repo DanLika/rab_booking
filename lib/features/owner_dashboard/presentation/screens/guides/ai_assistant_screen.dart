@@ -286,16 +286,15 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                 onPressed: () {
                   ref.read(aiChatNotifierProvider.notifier).createNewChat();
                 },
-                icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                icon: const Icon(Icons.add, size: 20),
                 label: Text(
                   l10n.aiAssistantNewChat,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.15),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.10),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,

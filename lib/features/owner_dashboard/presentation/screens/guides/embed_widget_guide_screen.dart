@@ -237,7 +237,7 @@ class _EmbedWidgetGuideScreenState
         onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
         actions: [
           IconButton(
-            icon: const Icon(Icons.help_outline, color: Colors.white),
+            icon: const Icon(Icons.help_outline),
             tooltip: l10n.embedGuideQuickHelp,
             onPressed: () => _showHelpBottomSheet(context),
           ),

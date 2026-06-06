@@ -488,6 +488,10 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           fontSize: 20, // BBType.h2
         ),
+        iconTheme: const IconThemeData(color: AppColors.textSecondaryDark),
+        actionsIconTheme: const IconThemeData(
+          color: AppColors.textSecondaryDark,
+        ),
       ),
 
       // Card theme - Border radius: 20px (modern), Shadow: elevated (elevation 4), Padding: 16px

@@ -274,6 +274,21 @@ class AppTheme {
         dragHandleColor: AppColors.borderWarmLight,
       ),
 
+      // Drawer theme — Premium (audit/116 §3.2): surface bg, 280 width,
+      // cool-toned envelope shadow approximating `--bb-shadow-lg` (3-layer
+      // gets collapsed to Material elevation 16 + cool shadowColor — closest
+      // single-stack approximation). Applies to both `drawer` and `endDrawer`
+      // (Material draws the same widget class for either slot), so this also
+      // premium-ifies the master-panel EndDrawer used by unified_unit_hub.
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        scrimColor: Color(0x66101828), // ~40% cool scrim
+        elevation: 16,
+        shadowColor: Color(0x33101828), // ~20% cool-tone
+        surfaceTintColor: Colors.transparent,
+        width: 280,
+      ),
+
       // Snackbar theme
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.textPrimaryLight,
@@ -659,6 +674,17 @@ class AppTheme {
         ),
         showDragHandle: true,
         dragHandleColor: AppColors.borderWarmDark,
+      ),
+
+      // Drawer theme — Premium (audit/116 §3.2): dark surface, 280 width,
+      // deeper envelope shadow for dark contrast. Covers `drawer` + `endDrawer`.
+      drawerTheme: const DrawerThemeData(
+        backgroundColor: AppColors.surfaceDark,
+        scrimColor: Color(0x99000000), // 60% black scrim on dark
+        elevation: 16,
+        shadowColor: Color(0xCC000000),
+        surfaceTintColor: Colors.transparent,
+        width: 280,
       ),
 
       // Snackbar theme

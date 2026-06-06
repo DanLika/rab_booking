@@ -236,22 +236,23 @@ async function updateInBatches(
         error: batchError instanceof Error ? batchError.message : String(batchError),
       });
 
-      for (const doc of chunk) {
-        try {
-          await doc.ref.update({
-            status: "completed",
-            updated_at: now,
-          });
+      const fallbackPromises = chunk.map((doc) => {
+        return doc.ref.update({
+          status: "completed",
+          updated_at: now,
+        }).then(() => {
           results.successCount++;
-        } catch (docError) {
+        }).catch((docError) => {
           results.failedCount++;
           results.failedIds.push(doc.id);
           logError(`[AutoComplete] Failed to update booking ${doc.id}`, docError, {
             bookingId: doc.id,
             bookingReference: doc.data().booking_reference,
           });
-        }
-      }
+        });
+      });
+
+      await Promise.all(fallbackPromises);
     }
   }
 

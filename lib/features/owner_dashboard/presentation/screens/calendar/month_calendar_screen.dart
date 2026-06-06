@@ -105,13 +105,13 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         actions: [
           // Today button
           IconButton(
-            icon: const Icon(Icons.today, color: Colors.white),
+            icon: const Icon(Icons.today),
             tooltip: l10n.ownerCalendarToday,
             onPressed: _goToToday,
           ),
           // View toggle button
           IconButton(
-            icon: Icon(_viewToggleIcon, color: Colors.white),
+            icon: Icon(_viewToggleIcon),
             tooltip: _viewToggleTooltip(l10n),
             onPressed: _toggleView,
           ),

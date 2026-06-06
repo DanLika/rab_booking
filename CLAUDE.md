@@ -86,8 +86,8 @@
 
 | Komponenta | Razlog |
 |------------|--------|
-| Cjenovnik tab (`unified_unit_hub_screen.dart`) | FROZEN - referentna implementacija |
-| Unit Wizard publish flow | 3 Firestore docs redoslijed kritičan |
+| Cjenovnik tab CONTENT (`unified_unit_hub_screen.dart` — pricing grid + Spremi) | FROZEN - referentna implementacija. Hub screen-shell chrome (premium header above existing layout, theme/AppBar) je additive-OK; FROZEN scope = tab content only. |
+| Unit Wizard publish flow | 2-doc serial write (unit → widget_settings, Doc 2 id sourced from Doc 1) — redoslijed kritičan |
 | Timeline Calendar z-index | Cancelled bookings at base (drawn first), confirmed on top |
 | Calendar Repository (`firebase_booking_calendar_repository.dart`) | 989 linija, duplikacija NAMJERNA - bez unit testova NE DIRATI |
 | Owner email u `atomicBooking.ts` | UVIJEK šalje - NE vraćaj conditional check |
@@ -194,7 +194,7 @@ Učitavaju se SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-06-05 | **Version**: 7.13
+**Last Updated**: 2026-06-06 | **Version**: 7.13.1
 
 # context-mode — MANDATORY routing rules
 

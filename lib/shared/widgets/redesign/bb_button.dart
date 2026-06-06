@@ -227,6 +227,12 @@ class _BbButtonState extends State<BbButton> {
       );
     }
 
+    // Premium primary-variant lift on hover (audit/116 §3.6): translateY(-1px)
+    // matching handoff `BBButton` `e.currentTarget.style.transform`. Other
+    // variants stay flat — only `primary` has the brand-purple "lifted CTA"
+    // affordance in the design language.
+    final bool lift =
+        _hover && widget.variant == BbButtonVariant.primary && !_disabled;
     final Widget body = AnimatedContainer(
       duration: BBMotion.adapt(context, BBMotion.fast),
       curve: BBMotion.curve,
@@ -235,6 +241,10 @@ class _BbButtonState extends State<BbButton> {
       constraints: BoxConstraints(minWidth: _height),
       padding: padding,
       alignment: Alignment.center,
+      transform: lift
+          ? (Matrix4.identity()..translateByDouble(0, -1, 0, 1))
+          : Matrix4.identity(),
+      transformAlignment: Alignment.center,
       decoration: BoxDecoration(
         color: p.bg,
         borderRadius: BBRadius.smAll,

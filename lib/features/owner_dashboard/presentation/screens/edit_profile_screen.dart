@@ -340,6 +340,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   }
 
   Widget _buildPersonalCard(AppLocalizations l10n, BBColorSet c) {
+    // Premium verified badge — settings.jsx §192 trailing chip.
+    // Surfaces only when contact email matches the (verified) Firebase Auth
+    // email — never claims verification of an unmatched/edited address.
+    final authUser = FirebaseAuth.instance.currentUser;
+    final authEmail = authUser?.email?.trim().toLowerCase();
+    final contactEmail = _emailContactController.text.trim().toLowerCase();
+    final isContactEmailVerified =
+        authUser?.emailVerified == true &&
+        authEmail != null &&
+        authEmail.isNotEmpty &&
+        authEmail == contactEmail;
+
     return BbCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -375,6 +387,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             keyboardType: TextInputType.emailAddress,
             validator: ProfileValidators.validateEmail,
             autovalidateMode: AutovalidateMode.onUserInteraction,
+            trailingAction: isContactEmailVerified
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      BbIcon(name: 'verified', size: 16, color: c.success),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Potvrđeno',
+                        style: BBType.caption(context).copyWith(
+                          color: c.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  )
+                : null,
           ),
           const SizedBox(height: BBSpace.md),
           BbInput(
@@ -386,6 +414,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
             keyboardType: TextInputType.phone,
             validator: ProfileValidators.validatePhone,
             autovalidateMode: AutovalidateMode.onUserInteraction,
+            // Premium helper — settings.jsx §181 phone hint
+            helper: 'Vidljivo gostima nakon potvrde rezervacije',
           ),
         ],
       ),

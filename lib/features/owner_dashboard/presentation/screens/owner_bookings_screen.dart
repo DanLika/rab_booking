@@ -32,6 +32,7 @@ import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
 import '../widgets/bookings/bookings_filters_dialog.dart';
 import '../widgets/bookings/bookings_tab_bar.dart';
+import '../widgets/bookings/bookings_premium_header.dart';
 import '../widgets/bookings/imported_reservations_list.dart';
 import '../widgets/bookings/revenue_guide_empty_state.dart';
 import '../widgets/bookings/premium_loading_indicator.dart';
@@ -588,6 +589,40 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                 // Web performance: Use ClampingScrollPhysics to prevent elastic overscroll jank
                 physics: PlatformScrollPhysics.adaptive,
                 slivers: [
+                  // Premium header (audit/117 §B2) — KPI strip + AI nudge +
+                  // pending priority queue. Hidden when any filter is active
+                  // so filtered views aren't double-rendered.
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        context.horizontalPadding,
+                        isMobile ? 16 : 20,
+                        context.horizontalPadding,
+                        0,
+                      ),
+                      child: BookingsPremiumHeader(
+                        hasActiveFilter:
+                            filters.hasActiveFilters ||
+                            filters.showImportedOnly,
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  // Premium ledger section header (audit/117 §B2-Δb) —
+                  // eyebrow + count above the tabs/list. Bridges the
+                  // premium hero to the existing list/table.
+                  SliverToBoxAdapter(
+                    child: BookingsPremiumLedgerHeader(
+                      hasActiveFilter:
+                          filters.hasActiveFilters || filters.showImportedOnly,
+                      padding: EdgeInsets.fromLTRB(
+                        context.horizontalPadding,
+                        isMobile ? 12 : 16,
+                        context.horizontalPadding,
+                        0,
+                      ),
+                    ),
+                  ),
                   // Filters section
                   SliverToBoxAdapter(
                     child: Padding(
@@ -733,6 +768,18 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     ),
                   ),
 
+                  // Premium ledger footer (audit/117 §B2-Δb) — pagination
+                  // hint after the list/table, before sync section.
+                  SliverToBoxAdapter(
+                    child: BookingsPremiumLedgerFooter(
+                      padding: EdgeInsets.fromLTRB(
+                        context.horizontalPadding,
+                        4,
+                        context.horizontalPadding,
+                        12,
+                      ),
+                    ),
+                  ),
                   // Sinkronizacija section
                   SliverToBoxAdapter(
                     child: Padding(

@@ -11,6 +11,7 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/providers/enhanced_auth_provider.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../providers/ai_chat_provider.dart';
+import '../../widgets/guides/ai_assistant_premium_header.dart';
 import '../../widgets/owner_app_drawer.dart';
 import '../../../domain/models/ai_chat.dart';
 
@@ -285,16 +286,15 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                 onPressed: () {
                   ref.read(aiChatNotifierProvider.notifier).createNewChat();
                 },
-                icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                icon: const Icon(Icons.add, size: 20),
                 label: Text(
                   l10n.aiAssistantNewChat,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.15),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.10),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
@@ -309,20 +309,33 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
         ),
         body: Container(
           decoration: BoxDecoration(gradient: context.gradients.pageBackground),
-          child: Row(
+          child: Column(
             children: [
-              // Left: chat list (desktop new chat opens in right panel)
-              SizedBox(
-                width: 320,
-                child: _buildDesktopChatListContent(
-                  chatState,
-                  chatsAsync,
-                  l10n,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                child: AiAssistantPremiumHeader(title: l10n.aiAssistantTitle),
+              ),
+              Expanded(
+                child: Row(
+                  children: [
+                    // Left: chat list (desktop new chat opens in right panel)
+                    SizedBox(
+                      width: 320,
+                      child: _buildDesktopChatListContent(
+                        chatState,
+                        chatsAsync,
+                        l10n,
+                      ),
+                    ),
+                    VerticalDivider(
+                      width: 1,
+                      color: context.gradients.sectionBorder,
+                    ),
+                    // Right: active chat or welcome
+                    Expanded(child: _buildChatArea(chatState, l10n)),
+                  ],
                 ),
               ),
-              VerticalDivider(width: 1, color: context.gradients.sectionBorder),
-              // Right: active chat or welcome
-              Expanded(child: _buildChatArea(chatState, l10n)),
             ],
           ),
         ),
@@ -398,6 +411,10 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
     final hasChats = chatsAsync.valueOrNull?.isNotEmpty ?? false;
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: AiAssistantPremiumHeader(title: l10n.aiAssistantTitle),
+        ),
         // Chat list or empty state (empty state includes New Chat button)
         Expanded(
           child: chatsAsync.when(

@@ -72,9 +72,36 @@ Confirmed in audit/116 §AppBar-resolution: handoff Premium has the AppBar disso
 
 ---
 
-## §B3 — Shared chrome (PENDING)
+## §B3 — Shared chrome (this batch — Terminal A)
 
-Deferred. Per user prompt: Drawer / EndDrawer / Dialog base / BottomSheet base / Bb* component depth. **Note:** Dialog + BottomSheet base already shipped in Phase B (`app_theme.dart` radius 24 + 3-layer shadow). Remaining: Drawer envelope shadow, EndDrawer treatment, Bb* component lift transitions, resolution of `BbIconTile` open question (grep first — `lib/shared/widgets/redesign/bb_icon.dart` exists; `bb_icon_tile.dart` does NOT). Channel-mix card stays FLAT per `01-owner.png` ground truth.
+Closes the chrome premium pass. Additive — no FROZEN surface touched. Per the
+`01-owner.png` ground truth, the premium shell is **flat-console**, so chrome
+work stays subtle: depth comes from layered surfaces + cool-toned shadows, not
+heavy Material elevation.
+
+| Element | Mockup ref | Implementation |
+|---|---|---|
+| Drawer envelope shadow | premium `--bb-shadow-lg` (3-layer cool-toned) | `app_theme.dart` light + dark — new `drawerTheme: DrawerThemeData(elevation: 16, shadowColor: cool-tone, scrimColor, surfaceTintColor: transparent, width: 280)`. Single Material elevation is the closest single-stack approximation of the 3-layer cool ramp; honest delta, see [`audit/116 §3.2`](116-premium-spec.md). |
+| EndDrawer treatment | same envelope as Drawer | Same `DrawerThemeData` covers both slots — Material renders the same widget class either way. Premium-ifies the master-panel EndDrawer in FROZEN `unified_unit_hub_screen.dart` **without** touching its source. |
+| Dialog content base | radius 24 + `--bb-shadow-lg` | Already shipped Phase B (`dialogTheme` radius `BBRadius.lg`, elevation 12, cool shadowColor, `bb-h2` title). Verified internals on `BbDialog` (`bb_dialog.dart`): wraps in `Dialog` `backgroundColor: Colors.transparent` → `Container` with `BBShadow.modal(context)` 3-layer + `BBRadius.lgAll` + `BBSpace.md` padding + h2 title + 20-px body→buttons gap + 8-px button-row gap. Matches handoff `BBDialog` 1:1. No code change. |
+| BottomSheet content base | top corners radius 24 + drag handle 36×4 + `--bb-shadow-lg` | Already shipped Phase B (`bottomSheetTheme` radius `BBRadius.lg` top, drag handle, surface bg). Verified internals on `BbBottomSheet` (`bb_bottom_sheet.dart`): drag handle 36×4 at 10-px top inset, h3 title slot 12/20/8, child slot 8/4/16, optional footer 12/20 with `c.border` top divider, `BBShadow.modal(context)`. Matches handoff `BBBottomSheet` 1:1. No code change. |
+| BbCard depth/states | `--bb-shadow-card` resting → `--bb-shadow-md` lifted, translateY(-2 px) | Already premium (`bb_card.dart`). `BBShadow.cardElevated` resting, `BBShadow.elevated(context)` on web hover, `translateByDouble(0, -2, 0, 1)`. No code change. |
+| BbButton depth/states | primary: `--bb-shadow-purple-sm` resting → `--bb-shadow-purple` hover + **translateY(-1 px)** | `bb_button.dart` — primary hover shadow swap already shipped; **added** `translateY(-1 px)` lift via `AnimatedContainer.transform` (this batch). Only fires on `primary` variant (per handoff) and only when interactive. |
+| BbInput focus ring | `--bb-focus-ring` (3 px primary tint) | Already premium (`bb_input.dart`). `BoxShadow(color: rd.focusRingColor, spreadRadius: 3)` on focus when no error. No code change. |
+| BbChip selected purple glow | filter variant: brand fill + `--bb-shadow-purple-sm` | Already premium (`bb_chip.dart`). Filter-selected → `c.primary` bg + `BBShadow.purpleSm`. No code change. |
+| BbStatusBadge | semantic tints + dot per `--bb-status-*` | Already premium (`bb_status_badge.dart`). Resolves through `BbRedesignTokens.statusXTint` + `c.statusCompleted` etc. Completed = brand-purple per audit/115 G-1. No code change. |
+| `BbIconTile` open question (audit/116 §8) | spec acknowledged "user prompt truncated" | **RESOLVED — does not exist.** `grep -r "BbIconTile\|bb_icon_tile" lib/` = 0 matches in Flutter; `grep -i IconTile design_handoff/source/` = 0 matches in handoff. Per Terminal A contract ("RESOLVE BbIconTile: grep existing primitive, use it, do NOT invent"), **no new primitive is created**. `BbIcon` (`bb_icon.dart`) remains the canonical icon primitive; consumers wrap it in `Container`/`BoxDecoration` when an icon-tile chip is needed (this is the pattern used in `dashboard_overview_tab.dart` for arrival hero icons and in the sidebar `SidebarItem` 28-px icon halo). If a true `BbIconTile` primitive is desired downstream, it would be a Batch 4 extraction PR with explicit handoff spec; out of scope here. |
+
+**Files touched (this batch):**
+- `lib/core/theme/app_theme.dart` (+27 lines, light + dark `drawerTheme`)
+- `lib/shared/widgets/redesign/bb_button.dart` (+11 lines, primary hover `translateY(-1 px)`)
+- `audit/117-premium-impl.md` (this update)
+
+**Frozen carve-outs reaffirmed:** Calendar repo, `timeline_dimensions.dart`, Cjenovnik tab, Unit Wizard publish flow, `Navigator.push` confirmation. `unified_unit_hub_screen.dart` is not edited — its master-panel `endDrawer` inherits the new theme automatically.
+
+**Honest deltas vs handoff (defer):**
+- Drawer/Sheet/Dialog use Material's single-elevation shadow API; the design tokens specify a 3-layer cool-toned ramp. Visual delta is ≤ 2 dp of perceived halo at default DPR; a custom `Material(elevation: 0) + DecoratedBox(boxShadow: [...])` wrap could fully bridge it, but the cost is losing Material's gesture/animation integration. Accept Material elevation + cool shadowColor as the premium-best-approximation.
+- `BbCard.hoverable` duration is `BBMotion.fast` (120 ms) vs `.bb-lift` 180 ms — audit/116 §3.5 explicitly defers this 60 ms drift.
 
 ---
 

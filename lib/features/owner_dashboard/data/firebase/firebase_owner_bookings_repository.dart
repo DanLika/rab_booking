@@ -1741,16 +1741,22 @@ class FirebaseOwnerBookingsRepository {
     required int limit,
   }) async {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) return [];
+    if (userId == null || statuses.isEmpty) return [];
 
     final List<BookingModel> allBookings = [];
 
-    // NEW STRUCTURE: Single collection group query per status (no batching!)
-    for (final status in statuses) {
+    // OPTIMIZED: Single collection group query using whereIn for statuses
+    // Chunks statuses if more than 30 to respect Firestore whereIn limits
+    for (int i = 0; i < statuses.length; i += 30) {
+      final statusBatch = statuses
+          .skip(i)
+          .take(30)
+          .map((s) => s.value)
+          .toList();
       final query = _firestore
           .collectionGroup('bookings')
           .where('owner_id', isEqualTo: userId)
-          .where('status', isEqualTo: status.value)
+          .where('status', whereIn: statusBatch)
           .where(
             'created_at',
             isGreaterThanOrEqualTo: Timestamp.fromDate(createdAfter),
@@ -1789,32 +1795,33 @@ class FirebaseOwnerBookingsRepository {
 
     final List<BookingModel> allBookings = [];
 
-    // NEW STRUCTURE: Single collection group query per status (no batching!)
-    for (final status in [BookingStatus.confirmed, BookingStatus.pending]) {
-      final query = _firestore
-          .collectionGroup('bookings')
-          .where('owner_id', isEqualTo: userId)
-          .where('status', isEqualTo: status.value)
-          .where(
-            'check_in',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(checkInAfter),
-          )
-          .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
-          .limit(limit);
+    // OPTIMIZED: Single collection group query using whereIn for statuses
+    final query = _firestore
+        .collectionGroup('bookings')
+        .where('owner_id', isEqualTo: userId)
+        .where(
+          'status',
+          whereIn: [BookingStatus.confirmed.value, BookingStatus.pending.value],
+        )
+        .where(
+          'check_in',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(checkInAfter),
+        )
+        .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
+        .limit(limit);
 
-      final snapshot = await query.get().withBookingFetchTimeout(
-        '_queryUpcomingCheckIns',
-      );
-      for (final doc in snapshot.docs) {
-        try {
-          final booking = _bookingFromDoc(doc);
-          // Filter by unitIds client-side
-          if (unitIds.contains(booking.unitId)) {
-            allBookings.add(booking);
-          }
-        } catch (_) {
-          // Skip invalid bookings
+    final snapshot = await query.get().withBookingFetchTimeout(
+      '_queryUpcomingCheckIns',
+    );
+    for (final doc in snapshot.docs) {
+      try {
+        final booking = _bookingFromDoc(doc);
+        // Filter by unitIds client-side
+        if (unitIds.contains(booking.unitId)) {
+          allBookings.add(booking);
         }
+      } catch (_) {
+        // Skip invalid bookings
       }
     }
 

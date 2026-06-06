@@ -16,7 +16,6 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/platform_scroll_physics.dart';
 import '../widgets/recent_activity_widget.dart';
 import '../widgets/owner_app_drawer.dart';
-import '../widgets/booking_details_dialog_v2.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
@@ -662,9 +661,11 @@ class DashboardOverviewTab extends ConsumerWidget {
                 ownerBooking: b,
                 isFirst: i == 0,
                 onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => BookingDetailsDialogV2(ownerBooking: b),
+                  context.push(
+                    OwnerRoutes.bookingDetail.replaceFirst(
+                      ':bookingId',
+                      b.booking.id,
+                    ),
                   );
                 },
               );

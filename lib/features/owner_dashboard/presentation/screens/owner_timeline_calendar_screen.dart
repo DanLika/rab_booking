@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/config/router_owner.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/date_range_selection.dart';
@@ -9,7 +11,6 @@ import '../providers/owner_calendar_provider.dart';
 import '../providers/overbooking_detection_provider.dart';
 import '../../domain/models/overbooking_conflict.dart';
 import '../widgets/timeline_calendar_widget.dart';
-import '../widgets/booking_details_dialog_v2.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../widgets/calendar/calendar_top_toolbar.dart';
 import '../widgets/calendar/multi_select_action_bar.dart';
@@ -548,10 +549,11 @@ class _OwnerTimelineCalendarScreenState
       );
 
       if (ownerBooking != null && mounted) {
-        await showDialog(
-          context: context,
-          builder: (context) =>
-              BookingDetailsDialogV2(ownerBooking: ownerBooking),
+        await context.push(
+          OwnerRoutes.bookingDetail.replaceFirst(
+            ':bookingId',
+            ownerBooking.booking.id,
+          ),
         );
       }
     } catch (e) {

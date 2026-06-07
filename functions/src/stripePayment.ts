@@ -53,7 +53,10 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 export const createStripeCheckoutSession = onCall({
   secrets: [stripeSecretKey, "RESEND_API_KEY"],
   cors: getCorsAllowlist(),
-  // SF-046: App Check audit-only — see availability.ts for full context.
+  // SF-046: App Check audit-only — see availability.ts for full context
+  // (incl. WEB CSP pre-flight: `https://www.google.com` must be added to
+  // firebase.json script-src on owner/widget/admin BEFORE flipping this
+  // to true, else reCAPTCHA v3 CSP-blocks → silent permission-deny on web).
   enforceAppCheck: false,
   consumeAppCheckToken: true,
 }, async (request) => {

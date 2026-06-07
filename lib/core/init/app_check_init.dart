@@ -9,6 +9,15 @@ import 'package:flutter/foundation.dart';
 /// callable still has `enforceAppCheck: false`, so no requests are rejected
 /// (no-op gate until enforcement is flipped in a follow-up PR).
 ///
+/// ⚠ WEB CSP PRE-FLIGHT: `ReCaptchaV3Provider` loads
+/// `https://www.google.com/recaptcha/api.js` at activation. The deployed CSP
+/// on owner/widget/admin hosting (`firebase.json` script-src lines 56/121/168)
+/// does NOT currently allow `www.google.com`. Today this is silent because
+/// every callable runs `enforceAppCheck: false`. Before flipping ANY callable
+/// to `true`, add `https://www.google.com` to firebase.json script-src on all
+/// three surfaces and redeploy — else every web request silently
+/// permission-denies. Memory: `csp-recaptcha-gsi-organic-refusals.md`.
+///
 /// Android: Play Integrity on prod release builds, Debug provider otherwise.
 /// iOS:     DeviceCheck on prod release builds, Debug provider otherwise.
 class AppCheckInit {

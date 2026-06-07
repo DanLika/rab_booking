@@ -1669,7 +1669,7 @@ async function getOverlappingBookingsInTxn(
  *     as `overlap_acknowledged: true` for audit trail)
  *   - source = "admin", booking_reference = BK-<docId12>
  */
-export const createOwnerBookingAtomic = onCall(async (request) => {
+export const createOwnerBookingAtomic = onCall({cors: getCorsAllowlist()}, async (request) => {
   // SF-078: trial gate runs BEFORE rate-limit so trial_expired callers don't
   // burn their per-uid budget. Helper asserts auth + status, returns uid.
   const authUid = await requireActiveOwner(request.auth);
@@ -1931,7 +1931,7 @@ export const createOwnerBookingAtomic = onCall(async (request) => {
  *     skipped if allowOverlap === true
  *   - Server-written owner_id always derived from validated property doc
  */
-export const updateBookingAtomic = onCall(async (request) => {
+export const updateBookingAtomic = onCall({cors: getCorsAllowlist()}, async (request) => {
   // SF-078: trial gate before rate-limit (see createOwnerBookingAtomic).
   const authUid = await requireActiveOwner(request.auth);
 

@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "../firebase";
 import {logInfo, logError, logSuccess} from "../logger";
+import {getCorsAllowlist} from "../utils/corsAllowlist";
 
 /**
  * Migration: Trial Status
@@ -35,6 +36,7 @@ export const migrateTrialStatus = onCall(
   {
     region: "europe-west1",
     timeoutSeconds: 540, // 9 minutes for large migrations
+    cors: getCorsAllowlist(),
   },
   async (request): Promise<MigrationResult> => {
     // Security check: Only admins can run migrations

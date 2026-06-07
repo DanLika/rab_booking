@@ -122,6 +122,14 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
     // SF-046: App Check audit-only mode. Logs attestation when present, does not
     // reject missing tokens. Flip enforceAppCheck=true in follow-up PR after
     // RECAPTCHA_SITE_KEY is provisioned and clients ship App Check init.
+    //
+    // ⚠ WEB CSP PRE-FLIGHT: before flipping enforceAppCheck:true, add
+    // `https://www.google.com` to `firebase.json` `script-src` on owner/widget/
+    // admin hosting blocks (lines 56/121/168). Otherwise reCAPTCHA v3
+    // (`www.google.com/recaptcha/api.js`, loaded by ReCaptchaV3Provider in
+    // `lib/core/init/app_check_init.dart`) is CSP-blocked → token mint fails →
+    // every web callable silently permission-denies. See memory
+    // `csp-recaptcha-gsi-organic-refusals.md`.
     enforceAppCheck: false,
     consumeAppCheckToken: true,
   },

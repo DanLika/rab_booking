@@ -357,6 +357,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       return Padding(
         padding: const EdgeInsets.only(bottom: BBSpace.xs),
         child: _NotificationRow(
+          key: ValueKey('notif_row_${notification.id}'),
           notification: notification,
           iconName: _getNotificationIconName(notification.type),
           accentTone: _getNotificationAccent(notification.type),
@@ -395,6 +396,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           await actions.deleteNotification(notification.id);
         },
         child: _NotificationRow(
+          key: ValueKey('notif_row_${notification.id}'),
           notification: notification,
           iconName: _getNotificationIconName(notification.type),
           accentTone: _getNotificationAccent(notification.type),
@@ -581,6 +583,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 /// * selection mode — leading checkbox + `selected` border
 class _NotificationRow extends StatelessWidget {
   const _NotificationRow({
+    super.key,
     required this.notification,
     required this.iconName,
     required this.accentTone,
@@ -722,6 +725,7 @@ class _NotificationRow extends StatelessWidget {
                     children: <Widget>[
                       Expanded(
                         child: BbButton(
+                          key: ValueKey('notif_approve_${notification.id}'),
                           label: AppLocalizations.of(
                             context,
                           ).notificationActionApprove,
@@ -738,6 +742,7 @@ class _NotificationRow extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: BbButton(
+                          key: ValueKey('notif_reject_${notification.id}'),
                           label: AppLocalizations.of(
                             context,
                           ).notificationActionReject,

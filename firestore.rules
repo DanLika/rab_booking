@@ -382,12 +382,27 @@ service cloud.firestore {
       // Widget secrets subcollection — owner-only, never publicly readable.
       // Holds fields that MUST NOT leak to anonymous widget visitors:
       //   - ical_export_token         (auth token for getUnitIcalFeed)
-      //   - stripe_secret_key         (legacy: per-property Stripe sk_, being phased out)
-      //   - resend_api_key            (legacy: per-property Resend key, being phased out)
+      // Legacy fields (`stripe_secret_key`, `resend_api_key`) were never wired
+      // in active CF code (SF-021 PROD-MIGRATED 2026-06-04 confirmed plaintext
+      // `ical_export_token` is the only active key). Re-introduce by extending
+      // this allowlist + the CF read site at the same time.
       // Cloud Functions read via Admin SDK (rules bypass). Owner dashboard reads
       // via this rule for display/management.
+      // F-107-01 (audit/107) closure: tight `hasOnly` allowlist on create+update
+      // prevents owner direct-write from planting unmodeled fields in a
+      // secrets-typed collection (log poisoning / future CF-read trust drift).
+      // Sole client writer: `lib/.../ical_export_list_screen.dart` ical_export
+      // enable flow.
       match /widget_secrets/{unitId} {
-        allow read, create, update, delete: if isPropertyOwner(propertyId);
+        allow read, delete: if isPropertyOwner(propertyId);
+        allow create, update: if isPropertyOwner(propertyId)
+          && request.resource.data.keys().hasOnly([
+            'ical_export_token',
+            'property_id',
+            'owner_id',
+            'unit_id',
+            'updated_at'
+          ]);
       }
 
       // iCal events subcollection — SF-023 LOCKED 2026-05-22

@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {admin, db} from "../firebase";
 import {logError, logSuccess, logWarn} from "../logger";
+import {getCorsAllowlist} from "../utils/corsAllowlist";
 
 /**
  * Admin: Set Lifetime License
@@ -23,6 +24,7 @@ interface SetLifetimeLicenseRequest {
 export const setLifetimeLicense = onCall(
   {
     region: "europe-west1",
+    cors: getCorsAllowlist(),
   },
   async (request) => {
     // 1. Security Check: Ensure the caller is authenticated

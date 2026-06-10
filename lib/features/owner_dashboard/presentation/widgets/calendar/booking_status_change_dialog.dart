@@ -64,7 +64,8 @@ class BookingStatusChangeDialog extends StatelessWidget {
     );
   }
 
-  /// Gradient header with icon and title
+  /// Theme-aware shell header (handoff dialogs.jsx PV_PANEL_BG) — matches
+  /// the bookings filters / create-booking / edit-booking dialogs.
   Widget _buildHeader(
     BuildContext context,
     AppLocalizations l10n,
@@ -73,7 +74,10 @@ class BookingStatusChangeDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: context.gradients.brandPrimary,
+        color: theme.colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.4)),
+        ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
       ),
       child: Row(
@@ -81,23 +85,27 @@ class BookingStatusChangeDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withAlpha((0.2 * 255).toInt()),
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.swap_horiz, color: Colors.white, size: 20),
+            child: Icon(
+              Icons.swap_horiz,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               l10n.ownerCalendarChangeStatus,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
             onPressed: () => Navigator.of(context).pop(),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),

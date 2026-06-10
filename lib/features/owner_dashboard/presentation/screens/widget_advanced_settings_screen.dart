@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
@@ -13,6 +12,7 @@ import '../../../../core/constants/app_dimensions.dart';
 import '../../../widget/domain/models/widget_settings.dart';
 import '../../../widget/presentation/providers/widget_settings_provider.dart';
 import '../../../../shared/providers/repository_providers.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../widgets/advanced_settings/email_verification_card.dart';
 import '../widgets/advanced_settings/tax_legal_disclaimer_card.dart';
 
@@ -364,58 +364,20 @@ class _WidgetAdvancedSettingsScreenState
                 ),
               ),
 
-              // Save Button (uses brand gradient)
+              // Primary save CTA via design-system `BbButton`. Replaces
+              // hand-rolled `Container(gradient) + Material + InkWell + Icons.check`
+              // chrome so the surface matches Pregled / Widget Settings.
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: padding),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: BBGradient.brandPrimary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _isSaving ? null : () => _saveSettings(settings),
-                      borderRadius: BorderRadius.circular(10),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 15,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _isSaving
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.check,
-                                    size: 18,
-                                    color: Colors.white,
-                                  ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _isSaving
-                                  ? l10n.advancedSettingsSaving
-                                  : l10n.advancedSettingsSave,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                child: BbButton(
+                  label: _isSaving
+                      ? l10n.advancedSettingsSaving
+                      : l10n.advancedSettingsSave,
+                  iconLeft: _isSaving ? null : 'check',
+                  size: BbButtonSize.lg,
+                  fullWidth: true,
+                  loading: _isSaving,
+                  onPressed: _isSaving ? null : () => _saveSettings(settings),
                 ),
               ),
 

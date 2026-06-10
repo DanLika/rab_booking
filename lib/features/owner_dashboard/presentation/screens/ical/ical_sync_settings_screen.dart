@@ -257,8 +257,8 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
             color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BBRadius.smAll,
           ),
-          child: Icon(
-            status.icon,
+          child: BbIcon(
+            name: status.icon,
             size: isDesktop ? 24 : 32,
             color: Colors.white,
           ),
@@ -347,7 +347,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
   }) {
     if (totalFeeds == 0) {
       return _HeroStatus(
-        icon: Icons.sync_disabled,
+        icon: 'sync_disabled',
         tint: c.textTertiary,
         title: l10n.icalNoFeeds,
         description: l10n.icalNoFeedsDescription,
@@ -355,7 +355,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     }
     if (errorFeeds > 0) {
       return _HeroStatus(
-        icon: Icons.error,
+        icon: 'error',
         tint: c.error,
         title: l10n.icalSyncError,
         description: l10n.icalSyncErrorCount(errorFeeds, totalFeeds),
@@ -363,14 +363,14 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
     }
     if (activeFeeds > 0) {
       return _HeroStatus(
-        icon: Icons.check_circle,
+        icon: 'check_circle',
         tint: c.success,
         title: l10n.icalSyncActive,
         description: l10n.icalSyncActiveCount(activeFeeds),
       );
     }
     return _HeroStatus(
-      icon: Icons.pause_circle,
+      icon: 'pause_circle',
       tint: c.warning,
       title: l10n.icalAllFeedsPaused,
       description: l10n.icalNoActiveFeeds,
@@ -600,7 +600,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 value: 'sync',
                 child: Row(
                   children: [
-                    const Icon(Icons.sync, size: 18),
+                    const BbIcon(name: 'sync', size: 18),
                     const SizedBox(width: 8),
                     Text(l10n.icalSyncNow),
                   ],
@@ -610,8 +610,8 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 value: feed.isActive ? 'pause' : 'resume',
                 child: Row(
                   children: [
-                    Icon(
-                      feed.isActive ? Icons.pause : Icons.play_arrow,
+                    BbIcon(
+                      name: feed.isActive ? 'pause' : 'play_arrow',
                       size: 18,
                     ),
                     const SizedBox(width: 8),
@@ -623,7 +623,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 value: 'edit',
                 child: Row(
                   children: [
-                    const Icon(Icons.edit, size: 18),
+                    const BbIcon(name: 'edit', size: 18),
                     const SizedBox(width: 8),
                     Text(l10n.edit),
                   ],
@@ -634,7 +634,7 @@ class _IcalSyncSettingsScreenState extends ConsumerState<IcalSyncSettingsScreen>
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete, size: 18, color: c.error),
+                    BbIcon(name: 'delete', size: 18, color: c.error),
                     const SizedBox(width: 8),
                     Text(l10n.delete, style: TextStyle(color: c.error)),
                   ],
@@ -1045,7 +1045,8 @@ class _HeroStatus {
     required this.title,
     required this.description,
   });
-  final IconData icon;
+  // Material Symbols glyph name, resolved through `BbIcon`.
+  final String icon;
   final Color tint;
   final String title;
   final String description;

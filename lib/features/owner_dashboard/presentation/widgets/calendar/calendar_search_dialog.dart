@@ -151,11 +151,16 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
         ),
         child: Column(
           children: [
-            // Header with gradient
+            // Shell-tone header (handoff dialogs.jsx PV_PANEL_BG).
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
+                color: theme.colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.4),
+                  ),
+                ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(11),
                 ),
@@ -165,12 +170,12 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.search,
-                      color: Colors.white,
+                      color: theme.colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -178,17 +183,17 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                   Expanded(
                     child: AutoSizeText(
                       l10n.calendarSearchTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurface,
                       ),
                       maxLines: 1,
                       minFontSize: 14,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
                     tooltip: MaterialLocalizations.of(
                       context,
                     ).closeButtonTooltip,
@@ -240,14 +245,16 @@ class _CalendarSearchDialogState extends ConsumerState<CalendarSearchDialog> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        gradient: context.gradients.brandPrimary,
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
                         borderRadius: const BorderRadius.all(
                           Radius.circular(8),
                         ),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.format_list_numbered,
-                        color: Colors.white,
+                        color: theme.colorScheme.primary,
                         size: 14,
                       ),
                     ),

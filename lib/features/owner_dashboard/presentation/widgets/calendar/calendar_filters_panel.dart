@@ -12,6 +12,7 @@ import '../../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../../shared/widgets/custom_date_range_picker.dart';
 import '../../../../../shared/widgets/app_filter_chip.dart';
+import '../../../../../shared/widgets/redesign.dart';
 import '../../../domain/models/calendar_filter_options.dart';
 import '../../providers/calendar_filters_provider.dart';
 import '../../providers/owner_calendar_provider.dart';
@@ -79,11 +80,17 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient
+            // Shell-tone header (handoff dialogs.jsx PV_PANEL_BG) — matches
+            // every other dialog in this sweep.
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
+                color: theme.colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.4),
+                  ),
+                ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(11),
                 ),
@@ -93,12 +100,12 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.filter_list,
-                      color: Colors.white,
+                      color: theme.colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -107,15 +114,15 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                     child: AutoSizeText(
                       l10n.calendarFiltersTitle,
                       style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
                       ),
                       maxLines: 1,
                       minFontSize: 14,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
                     tooltip: MaterialLocalizations.of(
                       context,
                     ).closeButtonTooltip,
@@ -188,30 +195,11 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Apply button (full width on mobile) with brand gradient
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: context.gradients.brandPrimary,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(8),
-                            ),
-                          ),
-                          child: ElevatedButton.icon(
-                            onPressed: _applyFilters,
-                            icon: const Icon(Icons.check),
-                            label: AutoSizeText(
-                              l10n.calendarFiltersApply,
-                              maxLines: 1,
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
+                        BbButton(
+                          label: l10n.calendarFiltersApply,
+                          iconLeft: 'check',
+                          fullWidth: true,
+                          onPressed: _applyFilters,
                         ),
                         const SizedBox(height: 8),
                         // Cancel and Clear row
@@ -286,30 +274,10 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              // Apply button with brand gradient
-                              Container(
-                                decoration: BoxDecoration(
-                                  gradient: context.gradients.brandPrimary,
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(8),
-                                  ),
-                                ),
-                                child: ElevatedButton.icon(
-                                  onPressed: _applyFilters,
-                                  icon: const Icon(Icons.check),
-                                  label: AutoSizeText(
-                                    l10n.calendarFiltersApply,
-                                    maxLines: 1,
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.transparent,
-                                    foregroundColor: Colors.white,
-                                    shadowColor: Colors.transparent,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
+                              BbButton(
+                                label: l10n.calendarFiltersApply,
+                                iconLeft: 'check',
+                                onPressed: _applyFilters,
                               ),
                             ],
                           ),
@@ -793,23 +761,24 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            gradient: context.gradients.brandPrimary,
+            color: theme.colorScheme.primary.withValues(alpha: 0.10),
             borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
-          child: Icon(icon, color: Colors.white, size: 16),
+          child: Icon(icon, color: theme.colorScheme.primary, size: 16),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: AutoSizeText(
             title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             maxLines: 1,
           ),
         ),

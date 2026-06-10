@@ -14,6 +14,7 @@ import '../../../../core/utils/async_utils.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../data/services/owner_booking_callable_service.dart';
 import '../providers/owner_bookings_provider.dart';
 import '../providers/owner_calendar_provider.dart';
@@ -119,12 +120,19 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Gradient Header - matches CommonAppBar height (52px)
+              // Theme-aware shell header (handoff dialogs.jsx PV_PANEL_BG).
+              // Replaces brand-purple banner — matches the bookings filters /
+              // create-booking dialog pattern.
               Container(
                 height: ResponsiveDialogUtils.kHeaderHeight,
                 padding: EdgeInsets.symmetric(horizontal: headerPadding),
                 decoration: BoxDecoration(
-                  gradient: context.gradients.brandPrimary,
+                  color: theme.colorScheme.surface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: theme.dividerColor.withValues(alpha: 0.4),
+                    ),
+                  ),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(11),
                   ),
@@ -134,12 +142,14 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.edit,
-                        color: Colors.white,
+                        color: theme.colorScheme.primary,
                         size: 20,
                       ),
                     ),
@@ -147,15 +157,18 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                     Expanded(
                       child: Text(
                         l10n.editBookingTitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: Icon(
+                        Icons.close,
+                        color: theme.colorScheme.onSurface,
+                      ),
                       onPressed: _isLoading
                           ? null
                           : () => Navigator.of(context).pop(),
@@ -487,66 +500,17 @@ class _EditBookingDialogState extends ConsumerState<_EditBookingDialog> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    // Save button
+                    // Primary save CTA via `BbButton` (design-system primary).
+                    // Replaces gradient `ElevatedButton` chrome; loading state
+                    // routes through `BbSpinner`.
                     Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: context.gradients.brandPrimary,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(context).colorScheme.primary
-                                  .withAlpha((0.3 * 255).toInt()),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _saveChanges,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.transparent,
-                            disabledForegroundColor: Colors.white,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 10,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.save_outlined, size: 16),
-                                    const SizedBox(width: 4),
-                                    Flexible(
-                                      child: AutoSizeText(
-                                        l10n.editBookingSaveChanges,
-                                        maxLines: 1,
-                                        minFontSize: 8,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
+                      child: BbButton(
+                        label: l10n.editBookingSaveChanges,
+                        iconLeft: 'save',
+                        size: BbButtonSize.sm,
+                        fullWidth: true,
+                        loading: _isLoading,
+                        onPressed: _isLoading ? null : _saveChanges,
                       ),
                     ),
                   ],

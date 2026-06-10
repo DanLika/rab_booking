@@ -289,24 +289,19 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  /// Auth background gradient - Cool lavender-gray to White (Light Mode)
-  /// Use for: auth screen background in light mode
+  /// Auth background gradient — handoff `softBg` (pale lavender wash, light).
+  /// Mirrors `BbRedesignTokens.light.softBg` per `design_handoff/screens/15-owner.png`.
+  /// Auth/hero only — dashboard pages use `pageBackground` (flat shellBg).
   static const LinearGradient authBackgroundGradient = LinearGradient(
-    colors: [
-      Color(0xFFF5F3F9), // Cool lavender-gray
-      Color(0xFFFFFFFF), // White
-    ],
+    colors: [Color(0xFFFAFAFA), Color(0xFFF4F1FF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Auth background gradient - Cool dark purple-gray (Dark Mode)
-  /// Use for: auth screen background in dark mode
+  /// Auth background gradient — handoff `softBg` (OLED-friendly near-black with
+  /// subtle purple tint, dark). Mirrors `BbRedesignTokens.dark.softBg`.
   static const LinearGradient authBackgroundGradientDark = LinearGradient(
-    colors: [
-      Color(0xFF1A1820), // Cool dark purple-gray
-      Color(0xFF211F26), // Slightly lighter
-    ],
+    colors: [Color(0xFF0B0813), Color(0xFF14101F)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

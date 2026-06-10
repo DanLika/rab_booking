@@ -2289,6 +2289,10 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerDetailsTitle => 'Detalji rezervacije';
 
   @override
+  String get ownerDetailsAwaitingApproval =>
+      'Ova rezervacija čeka vaše odobrenje';
+
+  @override
   String get ownerDetailsBookingInfo => 'Informacije o rezervaciji';
 
   @override

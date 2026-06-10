@@ -16,15 +16,18 @@ class AppTheme {
   // SHARED CONSTANTS (reduce hardcoded color duplication)
   // ============================================================================
 
-  /// Dark mode menu/dropdown background color (purple-gray)
-  /// Used in: popupMenuTheme, dropdownMenuTheme, menuTheme
-  static const Color darkMenuBackground = Color(0xFF252330);
+  /// Dark mode menu/dropdown background — handoff `panelBg` (BbRedesignTokens
+  /// dark) so popup surfaces sit on the same tone as cards.
+  /// Used in: popupMenuTheme, dropdownMenuTheme, menuTheme.
+  static const Color darkMenuBackground = Color(0xFF0B0B0D);
 
-  /// Dark mode input fill color (lighter for better contrast)
-  static const Color darkInputFill = Color(0xFF2A2A2A);
+  /// Dark mode input fill color — same panelBg family as `_darkInputFill`
+  /// in `app_gradients.dart`.
+  static const Color darkInputFill = Color(0xFF15151A);
 
-  /// Dark mode date picker background
-  static const Color darkDatePickerBackground = Color(0xFF1E1E28);
+  /// Dark mode date picker background — elevated panel one step above
+  /// `panelBg` (`#0B0B0D` → `#14141A`) so the modal reads as raised.
+  static const Color darkDatePickerBackground = Color(0xFF14141A);
 
   // ============================================================================
   // LIGHT THEME

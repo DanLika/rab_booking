@@ -1099,7 +1099,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
                   filled: true,
                   fillColor: isDark
                       ? const Color(0xFF2D2D2E)
-                      : const Color(0xFFF8F9FA),
+                      : const Color(0xFFF4F5F9),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 12,

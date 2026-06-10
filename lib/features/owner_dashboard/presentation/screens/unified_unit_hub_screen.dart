@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -20,6 +18,7 @@ import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../shared/widgets/smart_tooltip.dart';
 import 'unit_pricing_screen.dart';
@@ -216,60 +215,30 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
 
     return Scaffold(
       key: _scaffoldKey,
-      appBar: isDesktop
-          ? CommonAppBar(
-              title: l10n.unitHubTitle,
-              leadingIcon: Icons.menu,
-              onLeadingIconTap: (_) => _scaffoldKey.currentState?.openDrawer(),
-            )
-          : AppBar(
-              title: AutoSizeText(
-                _selectedUnit?.name ?? l10n.unitHubTitle,
-                style: const TextStyle(color: Colors.white),
-                maxLines: 1,
-                minFontSize: 14,
-              ),
-              centerTitle: false,
-              leading: IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-              ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: SmartTooltip(
-                    message: l10n.unitHubShowAllUnits,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _scaffoldKey.currentState?.openEndDrawer(),
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(25),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: Colors.white.withAlpha(40),
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.list,
-                            size: 20,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
+      // Single premium app bar across breakpoints. Previously mobile rendered
+      // a brand-purple `AppBar` with white text + a tinted "list" action
+      // button — that hero bar did not exist in the handoff (`screens/06-owner.png`
+      // has a clean panel header). Switching to `CommonAppBar` matches Pregled
+      // / Rezervacije / Profil chrome and theme-adapts in dark mode.
+      appBar: CommonAppBar(
+        title: isDesktop
+            ? l10n.unitHubTitle
+            : (_selectedUnit?.name ?? l10n.unitHubTitle),
+        leadingIcon: Icons.menu,
+        onLeadingIconTap: (_) => _scaffoldKey.currentState?.openDrawer(),
+        actions: isDesktop
+            ? null
+            : <Widget>[
+                SmartTooltip(
+                  message: l10n.unitHubShowAllUnits,
+                  child: IconButton(
+                    icon: const Icon(Icons.list),
+                    tooltip: l10n.unitHubShowAllUnits,
+                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
                   ),
                 ),
               ],
-              flexibleSpace: Container(
-                decoration: const BoxDecoration(
-                  gradient: BBGradient.brandPrimary,
-                ),
-              ),
-            ),
+      ),
       drawer: const OwnerAppDrawer(currentRoute: 'unit-hub'),
       // EndDrawer for mobile/tablet - shows master panel
       endDrawer: !isDesktop
@@ -793,36 +762,14 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                           ),
                         ),
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: BBGradient.brandPrimary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              context.push(
-                                '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              child: Text(
-                                l10n.unitHubAdd,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      BbButton(
+                        label: l10n.unitHubAdd,
+                        size: BbButtonSize.sm,
+                        onPressed: () {
+                          context.push(
+                            '${OwnerRoutes.unitWizard}?propertyId=${property.id}',
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -1493,46 +1440,17 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                 maxLines: 1,
               ),
             ),
-            // Gradient button using brand gradient
-            Container(
-              decoration: BoxDecoration(
-                gradient: BBGradient.brandPrimary,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    context.push(
-                      OwnerRoutes.unitWizardEdit.replaceAll(
-                        ':id',
-                        _selectedUnit!.id,
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(10),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.edit, size: 18, color: Colors.white),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.unitHubEdit,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+            BbButton(
+              label: l10n.unitHubEdit,
+              iconLeft: 'edit',
+              onPressed: () {
+                context.push(
+                  OwnerRoutes.unitWizardEdit.replaceAll(
+                    ':id',
+                    _selectedUnit!.id,
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -1730,7 +1648,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                             height: 2,
                             width: 40,
                             decoration: BoxDecoration(
-                              gradient: BBGradient.brandPrimary,
+                              color: theme.colorScheme.primary,
                               borderRadius: BorderRadius.circular(1),
                             ),
                           ),

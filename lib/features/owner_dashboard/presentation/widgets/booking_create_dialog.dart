@@ -16,6 +16,7 @@ import '../../../../core/utils/input_decoration_helper.dart';
 import '../../../../core/utils/responsive_dialog_utils.dart';
 import '../../../../core/utils/responsive_spacing_helper.dart';
 import '../../../../core/services/logging_service.dart';
+import '../../../../shared/widgets/redesign.dart';
 import '../../data/services/owner_booking_callable_service.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_calendar_provider.dart';
@@ -112,12 +113,19 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient - matches CommonAppBar height (52px)
+            // Dialog header — theme-aware shell strip with primary-tinted icon
+            // tile. Replaces hand-rolled brand-purple banner to match the
+            // bookings filters dialog + handoff `dialogs.jsx` PV_PANEL_BG.
             Container(
               height: ResponsiveDialogUtils.kHeaderHeight,
               padding: EdgeInsets.symmetric(horizontal: headerPadding),
               decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
+                color: theme.colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.4),
+                  ),
+                ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(11),
                 ),
@@ -127,12 +135,12 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.add_circle_outline,
-                      color: Colors.white,
+                      color: theme.colorScheme.primary,
                       size: 20,
                     ),
                   ),
@@ -140,15 +148,15 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                   Expanded(
                     child: Text(
                       AppLocalizations.of(context).bookingCreateTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
                     onPressed: _isSaving
                         ? null
                         : () => Navigator.of(context).pop(),
@@ -592,64 +600,20 @@ class _BookingCreateDialogState extends ConsumerState<BookingCreateDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Flexible(
-                    child: TextButton(
+                    child: BbButton(
+                      label: AppLocalizations.of(context).bookingCreateCancel,
+                      variant: BbButtonVariant.tertiary,
                       onPressed: _isSaving
                           ? null
                           : () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                        minimumSize: Size.zero,
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context).bookingCreateCancel,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Flexible(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: context.gradients.brandPrimary,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(8),
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _isSaving ? null : _createBooking,
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            child: _isSaving
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : Text(
-                                    AppLocalizations.of(
-                                      context,
-                                    ).bookingCreateSubmit,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                          ),
-                        ),
-                      ),
+                    child: BbButton(
+                      label: AppLocalizations.of(context).bookingCreateSubmit,
+                      loading: _isSaving,
+                      onPressed: _isSaving ? null : _createBooking,
                     ),
                   ),
                 ],
@@ -1158,22 +1122,23 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            gradient: context.gradients.brandPrimary,
+            color: theme.colorScheme.primary.withValues(alpha: 0.10),
             borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
-          child: Icon(icon, color: Colors.white, size: 16),
+          child: Icon(icon, color: theme.colorScheme.primary, size: 16),
         ),
         const SizedBox(width: 10),
         Text(
           title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );

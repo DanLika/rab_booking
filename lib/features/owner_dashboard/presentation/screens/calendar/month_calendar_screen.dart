@@ -10,8 +10,8 @@ import '../../../../../core/utils/input_decoration_helper.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/widgets/common_app_bar.dart';
 import '../../../../../shared/widgets/platform_icon.dart';
-import '../../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../../shared/widgets/animations/skeleton_loader.dart';
+import '../../../../../shared/widgets/redesign.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../providers/owner_calendar_provider.dart';
@@ -290,28 +290,14 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     final l10n = AppLocalizations.of(context);
     return Center(
       child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: AnimatedEmptyState(
-            icon: Icons.event_note_outlined,
-            iconSize: 120,
-            title: l10n.monthCalendarNoBookings,
-            subtitle: l10n.monthCalendarNoBookingsSubtitle,
-            actionButton: FilledButton.icon(
-              onPressed: () => _openCreateDialog(DateTime.now()),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.monthCalendarCreateBooking),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+        child: BbEmptyState(
+          icon: 'event_note',
+          title: l10n.monthCalendarNoBookings,
+          body: l10n.monthCalendarNoBookingsSubtitle,
+          primary: BbEmptyStateAction(
+            label: l10n.monthCalendarCreateBooking,
+            iconLeft: 'add',
+            onPressed: () => _openCreateDialog(DateTime.now()),
           ),
         ),
       ),
@@ -360,12 +346,9 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         Container(
           width: 10,
           height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         Text(
           label,
           style: TextStyle(
@@ -453,7 +436,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
             agendaStyle: AgendaStyle(
               backgroundColor: isDark
                   ? const Color(0xFF1A1A1A)
-                  : const Color(0xFFF8F9FA),
+                  : const Color(0xFFF4F5F9),
               dayTextStyle: TextStyle(
                 color: theme.colorScheme.onSurface,
                 fontSize: 14,

@@ -895,6 +895,7 @@
   "ownerTableCancelledByOwner": "Otkazano od strane vlasnika",
 
   "ownerDetailsTitle": "Detalji rezervacije",
+  "ownerDetailsAwaitingApproval": "Ova rezervacija čeka vaše odobrenje",
   "ownerDetailsBookingInfo": "Informacije o rezervaciji",
   "ownerDetailsBookingId": "ID",
   "ownerDetailsStatus": "Status",

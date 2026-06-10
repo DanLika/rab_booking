@@ -19,7 +19,6 @@ import '../widgets/owner_app_drawer.dart';
 import '../../../../shared/widgets/animations/skeleton_loader.dart';
 import '../../../../shared/widgets/animations/animated_empty_state.dart';
 import '../../../../shared/widgets/common_app_bar.dart';
-import '../../../../shared/widgets/app_filter_chip.dart';
 import '../../../../shared/widgets/redesign.dart';
 import '../providers/owner_properties_provider.dart';
 import '../providers/owner_bookings_provider.dart';
@@ -202,7 +201,6 @@ class DashboardOverviewTab extends ConsumerWidget {
                         title: l10n.ownerAddFirstProperty,
                         subtitle: l10n.dashboardActionPropertySubtitle,
                         icon: Icons.add_home_work_rounded,
-                        gradient: context.gradients.brandPrimary,
                         onTap: () => context.push(OwnerRoutes.propertyNew),
                         isPrimary: true,
                       ),
@@ -213,7 +211,6 @@ class DashboardOverviewTab extends ConsumerWidget {
                         title: l10n.ownerDrawerImportBookings,
                         subtitle: l10n.dashboardActionImportSubtitle,
                         icon: Icons.sync_rounded,
-                        gradient: context.gradients.sectionBackground,
                         onTap: () => context.push(OwnerRoutes.icalImport),
                       ),
                     ),
@@ -223,7 +220,6 @@ class DashboardOverviewTab extends ConsumerWidget {
                         title: l10n.ownerDrawerStripePayments,
                         subtitle: l10n.dashboardActionPaymentsSubtitle,
                         icon: Icons.payments_rounded,
-                        gradient: context.gradients.brandPrimary,
                         onTap: () =>
                             context.push(OwnerRoutes.stripeIntegration),
                       ),
@@ -239,7 +235,6 @@ class DashboardOverviewTab extends ConsumerWidget {
                     title: l10n.ownerAddFirstProperty,
                     subtitle: l10n.dashboardActionPropertySubtitle,
                     icon: Icons.add_home_work_rounded,
-                    gradient: context.gradients.brandPrimary,
                     onTap: () => context.push(OwnerRoutes.propertyNew),
                     isPrimary: true,
                   ),
@@ -248,7 +243,6 @@ class DashboardOverviewTab extends ConsumerWidget {
                     title: l10n.ownerDrawerImportBookings,
                     subtitle: l10n.dashboardActionImportSubtitle,
                     icon: Icons.sync_rounded,
-                    gradient: context.gradients.sectionBackground,
                     onTap: () => context.push(OwnerRoutes.icalImport),
                   ),
                   const SizedBox(height: 12),
@@ -256,7 +250,6 @@ class DashboardOverviewTab extends ConsumerWidget {
                     title: l10n.ownerDrawerStripePayments,
                     subtitle: l10n.dashboardActionPaymentsSubtitle,
                     icon: Icons.payments_rounded,
-                    gradient: context.gradients.brandPrimary,
                     onTap: () => context.push(OwnerRoutes.stripeIntegration),
                   ),
                 ],
@@ -468,6 +461,8 @@ class DashboardOverviewTab extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            _PregledAiInsight(isMobile: isMobile),
+                            SizedBox(height: isMobile ? 12 : 16),
                             _PregledHeroCommand(
                               data: data,
                               dateRange: dateRange,
@@ -478,8 +473,6 @@ class DashboardOverviewTab extends ConsumerWidget {
                               data: data,
                               isMobile: isMobile,
                             ),
-                            SizedBox(height: isMobile ? 12 : 16),
-                            _PregledAiInsight(isMobile: isMobile),
                           ],
                         ),
                       ),
@@ -705,10 +698,17 @@ class DashboardOverviewTab extends ConsumerWidget {
         .map((p) => p.count.toDouble())
         .toList(growable: false);
 
+    // PROSJEČNA CIJENA (handoff `owner-01-pregled.png` tile 2). Tile is
+    // intentionally NOT a duplicate of UKUPNA ZARADA which already appears
+    // in the hero card — the design shows revenue once in the hero and a
+    // derived average here.
+    final avgNightlyPrice = data.bookings > 0
+        ? data.revenue / data.bookings
+        : 0.0;
     final revenueCard = _PregledKpiCard(
-      icon: 'payments',
-      label: l10n.ownerDashboardRevenue,
-      value: '€${data.revenue.toStringAsFixed(0)}',
+      icon: 'savings',
+      label: l10n.ownerAnalyticsAvgNightlyRate,
+      value: data.bookings > 0 ? '€${avgNightlyPrice.toStringAsFixed(0)}' : '—',
       tone: c.primary,
       sparkData: revenueSpark,
       isMobile: isMobile,
@@ -800,15 +800,23 @@ class DashboardOverviewTab extends ConsumerWidget {
   }
 }
 
-/// Time period selector widget
+/// Time period selector — pill segmented control matching
+/// `design_handoff/source/pregled-premium.jsx` `PVPeriod`.
 class _DateRangeSelector extends ConsumerWidget {
   final DateRangeFilter dateRange;
 
   const _DateRangeSelector({required this.dateRange});
 
+  static const _segments = <({String label, String preset})>[
+    (label: '7 dana', preset: 'last7'),
+    (label: '30 dana', preset: 'last30'),
+    (label: '90 dana', preset: 'last90'),
+    (label: 'Godina', preset: 'last365'),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    final c = BBColor.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -818,51 +826,77 @@ class _DateRangeSelector extends ConsumerWidget {
         vertical: isMobile ? 12 : 16,
       ),
       color: Colors.transparent,
-      // F-63-04: Wrap allows chips to flow to a second line under large-text
-      // accessibility (system font_scale=2.0). Replaces horizontal scroll which
-      // hid the last 2-3 chips off-screen at 200% scale (audit/63).
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          AppFilterChip(
-            label: l10n.ownerAnalyticsLast7Days,
-            selected: dateRange.preset == 'last7',
-            onSelected: () {
-              ref
-                  .read(dashboardDateRangeNotifierProvider.notifier)
-                  .setPreset('last7');
-            },
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: c.surfaceVariant,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: c.border),
           ),
-          AppFilterChip(
-            label: l10n.ownerAnalyticsLast30Days,
-            selected: dateRange.preset == 'last30',
-            onSelected: () {
-              ref
-                  .read(dashboardDateRangeNotifierProvider.notifier)
-                  .setPreset('last30');
-            },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: _segments
+                .map(
+                  (s) => _PeriodSegment(
+                    label: s.label,
+                    selected: dateRange.preset == s.preset,
+                    onTap: () => ref
+                        .read(dashboardDateRangeNotifierProvider.notifier)
+                        .setPreset(s.preset),
+                  ),
+                )
+                .toList(),
           ),
-          AppFilterChip(
-            label: l10n.ownerAnalyticsLast90Days,
-            selected: dateRange.preset == 'last90',
-            onSelected: () {
-              ref
-                  .read(dashboardDateRangeNotifierProvider.notifier)
-                  .setPreset('last90');
-            },
+        ),
+      ),
+    );
+  }
+}
+
+class _PeriodSegment extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _PeriodSegment({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: selected ? c.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected ? Colors.white : c.textPrimary,
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                letterSpacing: -0.1,
+                height: 1.2,
+              ),
+            ),
           ),
-          AppFilterChip(
-            label: l10n.ownerAnalyticsLast365Days,
-            selected: dateRange.preset == 'last365',
-            onSelected: () {
-              ref
-                  .read(dashboardDateRangeNotifierProvider.notifier)
-                  .setPreset('last365');
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1311,7 +1345,6 @@ class _ActionStepCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final LinearGradient gradient;
   final VoidCallback onTap;
   final bool isPrimary;
 
@@ -1319,7 +1352,6 @@ class _ActionStepCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.gradient,
     required this.onTap,
     this.isPrimary = false,
   });
@@ -1328,115 +1360,78 @@ class _ActionStepCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
+    return Card(
+      elevation: 0,
+      color: isPrimary
+          ? theme.colorScheme.primary.withValues(alpha: 0.04)
+          : (isDark
+                ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.5)
+                : theme.colorScheme.surfaceContainerLow),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        boxShadow: isPrimary && isDark
-            ? [
-                BoxShadow(
-                  color: gradient.colors.first.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ]
-            : null,
-      ),
-      child: Card(
-        elevation: isPrimary ? (isDark ? 0 : 4) : 0,
-        color: isPrimary
-            ? null
-            : (isDark
-                  ? theme.colorScheme.surfaceContainerHigh.withValues(
-                      alpha: 0.5,
-                    )
-                  : theme.colorScheme.surfaceContainerLow),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: isPrimary
-              ? BorderSide.none
-              : BorderSide(
-                  color: isDark
-                      ? theme.colorScheme.outlineVariant.withValues(alpha: 0.2)
-                      : theme.colorScheme.outlineVariant,
-                ),
+        side: BorderSide(
+          color: isPrimary
+              ? theme.colorScheme.primary.withValues(alpha: 0.35)
+              : (isDark
+                    ? theme.colorScheme.outlineVariant.withValues(alpha: 0.2)
+                    : theme.colorScheme.outlineVariant),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-            decoration: isPrimary ? BoxDecoration(gradient: gradient) : null,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isPrimary
-                        ? Colors.white.withValues(alpha: 0.2)
-                        : (isDark
-                              ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                              : theme.colorScheme.surface),
-                    borderRadius: BorderRadius.circular(14),
-                    border: isPrimary
-                        ? Border.all(color: Colors.white.withValues(alpha: 0.2))
-                        : null,
-                  ),
-                  child: Icon(
-                    icon,
-                    color: isPrimary ? Colors.white : theme.colorScheme.primary,
-                    size: 26,
-                  ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isPrimary
-                        ? Colors.white
-                        : theme.colorScheme.onSurface,
-                    fontSize: 20,
-                  ),
+                child: Icon(icon, color: theme.colorScheme.primary, size: 26),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                title,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 20,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: isPrimary
-                        ? Colors.white.withValues(alpha: 0.9)
-                        : theme.colorScheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.4,
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Text(
-                      l10n.dashboardGetStarted,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: isPrimary
-                            ? Colors.white
-                            : theme.colorScheme.primary,
-                      ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Text(
+                    l10n.dashboardGetStarted,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: theme.colorScheme.primary,
                     ),
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 18,
-                      color: isPrimary
-                          ? Colors.white
-                          : theme.colorScheme.primary,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -1839,7 +1834,9 @@ class _PregledHeroCommand extends StatelessWidget {
         children: [
           Text(
             // HR-only owner surface; handoff eyebrow copy.
-            'Ukupna zarada · ${_periodLabel(l10n).toLowerCase()}',
+            // `BBType.eyebrow` styles letter-spacing only — Flutter has no
+            // CSS text-transform, so the visible casing must be applied here.
+            'Ukupna zarada · ${_periodLabel(l10n)}'.toUpperCase(),
             style: BBType.eyebrow(context).copyWith(color: c.textTertiary),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -2202,6 +2199,55 @@ class _PregledAiInsight extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     height: 1.4,
                   ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {},
+                      style: TextButton.styleFrom(
+                        foregroundColor: c.textSecondary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Odbaci',
+                        style: BBType.label(context).copyWith(
+                          color: c.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () {},
+                      style: FilledButton.styleFrom(
+                        backgroundColor: c.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'Primjeni',
+                        style: BBType.label(context).copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

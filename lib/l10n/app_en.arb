@@ -895,6 +895,7 @@
   "ownerTableCancelledByOwner": "Cancelled by owner",
 
   "ownerDetailsTitle": "Booking details",
+  "ownerDetailsAwaitingApproval": "This booking is awaiting your approval",
   "ownerDetailsBookingInfo": "Booking information",
   "ownerDetailsBookingId": "ID",
   "ownerDetailsStatus": "Status",

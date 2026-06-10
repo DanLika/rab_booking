@@ -960,6 +960,24 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
     }
   }
 
+  // HR plural (last-digit rule): 1 → konflikt, 2-4 → konflikta, 5+/0 →
+  // konflikata. 11-14 are the special-case exceptions to the last-digit rule.
+  String _formatConflictLabel(int n) {
+    final mod100 = n % 100;
+    final mod10 = n % 10;
+    final String form;
+    if (mod100 >= 11 && mod100 <= 14) {
+      form = 'konflikata';
+    } else if (mod10 == 1) {
+      form = 'konflikt';
+    } else if (mod10 >= 2 && mod10 <= 4) {
+      form = 'konflikta';
+    } else {
+      form = 'konflikata';
+    }
+    return '$n $form';
+  }
+
   Widget _buildFiltersSection(
     BookingsFilters filters,
     bool isMobile,
@@ -1013,46 +1031,50 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
               ),
               const Spacer(),
 
-              // View mode toggle button
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
+              // View mode toggle — desktop/tablet only. On mobile the table
+              // view crowds the filter title into a "Filteri i Pre…" ellipsis
+              // and a horizontally-scrolling table is unusable on a 402px
+              // canvas, so the toggle is hidden there.
+              if (!isMobile)
+                Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  borderRadius: BorderRadius.circular(10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _ViewModeButton(
+                        icon: Icons.view_agenda_outlined,
+                        isSelected: viewMode == BookingsViewMode.card,
+                        onTap: () {
+                          ref
+                              .read(ownerBookingsViewProvider.notifier)
+                              .setView(BookingsViewMode.card);
+                          ref
+                              .read(windowedBookingsNotifierProvider.notifier)
+                              .setViewMode(isTableView: false);
+                        },
+                        tooltip: l10n.ownerBookingsCardView,
+                      ),
+                      _ViewModeButton(
+                        icon: Icons.table_rows_outlined,
+                        isSelected: viewMode == BookingsViewMode.table,
+                        onTap: () {
+                          ref
+                              .read(ownerBookingsViewProvider.notifier)
+                              .setView(BookingsViewMode.table);
+                          ref
+                              .read(windowedBookingsNotifierProvider.notifier)
+                              .setViewMode(isTableView: true);
+                        },
+                        tooltip: l10n.ownerBookingsTableView,
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _ViewModeButton(
-                      icon: Icons.view_agenda_outlined,
-                      isSelected: viewMode == BookingsViewMode.card,
-                      onTap: () {
-                        ref
-                            .read(ownerBookingsViewProvider.notifier)
-                            .setView(BookingsViewMode.card);
-                        ref
-                            .read(windowedBookingsNotifierProvider.notifier)
-                            .setViewMode(isTableView: false);
-                      },
-                      tooltip: l10n.ownerBookingsCardView,
-                    ),
-                    _ViewModeButton(
-                      icon: Icons.table_rows_outlined,
-                      isSelected: viewMode == BookingsViewMode.table,
-                      onTap: () {
-                        ref
-                            .read(ownerBookingsViewProvider.notifier)
-                            .setView(BookingsViewMode.table);
-                        ref
-                            .read(windowedBookingsNotifierProvider.notifier)
-                            .setViewMode(isTableView: true);
-                      },
-                      tooltip: l10n.ownerBookingsTableView,
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
 
@@ -1081,9 +1103,7 @@ class _OwnerBookingsScreenState extends ConsumerState<OwnerBookingsScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      conflictCount == 1
-                          ? '1 conflict'
-                          : '$conflictCount conflicts',
+                      _formatConflictLabel(conflictCount),
                       style: TextStyle(
                         color: Colors.red.shade700,
                         fontSize: 13,

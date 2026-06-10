@@ -2271,6 +2271,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerDetailsTitle => 'Booking details';
 
   @override
+  String get ownerDetailsAwaitingApproval =>
+      'This booking is awaiting your approval';
+
+  @override
   String get ownerDetailsBookingInfo => 'Booking information';
 
   @override

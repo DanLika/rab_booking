@@ -315,15 +315,9 @@ class _EmbedWidgetGuideScreenState
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: context.gradients.brandPrimary,
+        color: theme.colorScheme.surface,
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.4)),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: Stack(
         children: [
@@ -334,7 +328,7 @@ class _EmbedWidgetGuideScreenState
             child: Icon(
               Icons.code,
               size: 100,
-              color: Colors.white.withValues(alpha: 0.08),
+              color: theme.colorScheme.primary.withValues(alpha: 0.06),
             ),
           ),
           Padding(
@@ -347,13 +341,15 @@ class _EmbedWidgetGuideScreenState
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.integration_instructions_outlined,
                         size: 24,
-                        color: Colors.white,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -363,10 +359,10 @@ class _EmbedWidgetGuideScreenState
                         children: [
                           Text(
                             l10n.embedGuideHeaderTitle,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                              color: theme.colorScheme.onSurface,
                               letterSpacing: -0.3,
                             ),
                           ),
@@ -375,7 +371,9 @@ class _EmbedWidgetGuideScreenState
                             l10n.embedGuideHeaderSubtitle,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.9),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
                               fontWeight: FontWeight.w400,
                               height: 1.4,
                             ),
@@ -472,7 +470,7 @@ class _EmbedWidgetGuideScreenState
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  gradient: context.gradients.brandPrimary,
+                  color: theme.colorScheme.primary,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -485,8 +483,8 @@ class _EmbedWidgetGuideScreenState
                 alignment: Alignment.center,
                 child: Text(
                   number,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -583,7 +581,7 @@ class _EmbedWidgetGuideScreenState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF12121A) : const Color(0xFFF8F9FA),
+              color: isDark ? const Color(0xFF12121A) : const Color(0xFFF4F5F9),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
@@ -890,7 +888,7 @@ class _EmbedWidgetGuideScreenState
                       decoration: BoxDecoration(
                         color: isDark
                             ? const Color(0xFF12121A)
-                            : const Color(0xFFF8F9FA),
+                            : const Color(0xFFF4F5F9),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: theme.colorScheme.onSurface.withValues(
@@ -1667,7 +1665,7 @@ class _EmbedWidgetGuideScreenState
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF12121A) : const Color(0xFFF8F9FA),
+              color: isDark ? const Color(0xFF12121A) : const Color(0xFFF4F5F9),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.1),

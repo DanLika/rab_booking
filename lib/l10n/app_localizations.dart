@@ -4314,6 +4314,12 @@ abstract class AppLocalizations {
   /// **'Booking details'**
   String get ownerDetailsTitle;
 
+  /// No description provided for @ownerDetailsAwaitingApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking is awaiting your approval'**
+  String get ownerDetailsAwaitingApproval;
+
   /// No description provided for @ownerDetailsBookingInfo.
   ///
   /// In en, this message translates to:

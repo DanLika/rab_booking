@@ -65,7 +65,7 @@ class AdminShellScreen extends ConsumerWidget {
         : ThemeData.light(useMaterial3: true).copyWith(
             colorScheme: const ColorScheme.light(
               primary: AppColors.primary,
-              surface: Color(0xFFF8F9FA),
+              surface: Color(0xFFF4F5F9),
               surfaceContainer: Colors.white,
               // Override MD3 defaults (~#1C1B1F / ~#49454F) with canonical
               // BookBed design slate from tokens.css :root

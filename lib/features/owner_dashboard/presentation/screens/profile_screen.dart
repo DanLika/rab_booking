@@ -1084,19 +1084,22 @@ class _ProfilProCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
+                        // Title + "Probni period" pill flow into a second row
+                        // when the title is wide. `Row(Flexible(title), pill)`
+                        // previously truncated to "Nadogradite n…" on 402-px
+                        // screens — `Wrap` lets the pill drop instead.
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 4,
                           children: [
-                            Flexible(
-                              child: Text(
-                                l10n.subscriptionBannerTitle,
-                                style: BBType.h3(context).copyWith(
-                                  color: c.textPrimary,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                                overflow: TextOverflow.ellipsis,
+                            Text(
+                              l10n.subscriptionBannerTitle,
+                              style: BBType.h3(context).copyWith(
+                                color: c.textPrimary,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
-                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -1137,21 +1140,10 @@ class _ProfilProCard extends StatelessWidget {
               alignment: isMobile
                   ? Alignment.centerLeft
                   : Alignment.centerRight,
-              child: FilledButton.icon(
+              child: BbButton(
+                label: l10n.ownerDrawerSubscription,
+                iconLeft: 'arrow_forward',
                 onPressed: () => context.push(OwnerRoutes.subscription),
-                icon: const Icon(Icons.arrow_forward, size: 18),
-                label: Text(l10n.ownerDrawerSubscription),
-                style: FilledButton.styleFrom(
-                  backgroundColor: c.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(BBRadius.sm),
-                  ),
-                ),
               ),
             ),
           ],

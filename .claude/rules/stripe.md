@@ -29,7 +29,7 @@ paths:
 - Charge se kreira na PLATFORM account, settle-uje se na owner-a putem `transfer_data.destination` (vidi `stripePayment.ts:808-809`: `on_behalf_of: ownerStripeAccountId, transfer_data: {...}`)
 - Platforma trenutno NE uzima fee (application_fee_amount = 0)
 - Owner je merchant of record putem `on_behalf_of` (odgovoran za porez)
-- Webhook `connect: null` (events fire na platformi, ne per-connected-account) — vidi `audit/61-webhook-event-coverage-2026-05-28.md` §5
+- Webhook `connect: null` (events fire na platformi, ne per-connected-account). PROD endpoint `we_1Sgizn…` verified live 2026-06-11: 7 enabled events ⊇ svih 5 handlanih (`checkout.session.completed/expired`, `charge.refunded`, `customer.subscription.deleted`, `invoice.paid`) + 2 extra koja padaju u bezopasni `Unhandled event type` logInfo fallthrough (audit/61 deleted — git history)
 
 ## Minimum iznos
 
@@ -82,7 +82,7 @@ Per-env setup:
 
 Operator helper: `tool/setup-pr462-env.sh` (interactive wizard, valida `price_*` format, detektira test/live overlap).
 
-Detalji: `audit/38-pr462-env-prereq.md`.
+Status 2026-06-11: i dalje EMPTY/missing na sva 3 env fajla → deny-all. To je ISPRAVNO dok je trial Phase 1 (manual aktivacija, subscription checkout se ne koristi). Prije ship-a Phase 2 billinga: kreiraj Stripe Prices (test+live) pa popuni per-env (audit/38 deleted — git history; wizard gore).
 
 ### Region drift caveat
 

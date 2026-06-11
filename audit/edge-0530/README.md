@@ -1,7 +1,17 @@
 # audit/edge-0530 — data-integrity edge regression suite (bookbed-dev)
 
-Companion doc: `audit/86-data-integrity-edge-2026-05-30.md`. Run from
-`functions/` (needs `node_modules` + `npm run build` for `lib/`).
+Origin report audit/86 deleted 2026-06-11 (git history); its verdict: SF-026
+DST/nights, overlap race, turnover, cancelled-status, stale-pending blocking,
+echo containment, SF-014 price authority — ALL PASS. Run from `functions/`
+(needs `node_modules` + `npm run build` for `lib/`).
+
+## Open LOW findings carried from audit/86 (re-verified open 2026-06-11)
+
+| # | Where | What | Fix shape |
+|---|---|---|---|
+| F-86-01 | `availability.ts:184` `.where("date", "<=", endTs)` | inclusive-end returns a `manual_block` window the exclusive-checkout caller didn't ask for; zero end-user impact today (widget drops `manual_block` + checks blocked dates exclusively client-side) | `<=` → `<` |
+| F-86-02 | `availability.ts` bookings + ical_events CG queries | no date filter — cost scales with unit history; 500-limit silently truncates hot units if `completeCheckedOutBookings` ever skips | add `check_in < endTs && check_out > startTs` range + composite indexes (memory: availability-cf-unbounded-cg-query) |
+| F-86-03 | `stripePayment.ts` `Math.max(rawDepositCents, 50)` | Stripe €0.50 floor silently overcharges deposits on ultra-low-price units (€0.10 raw → €0.50 charged); logInfo trail exists | reject (`failed-precondition`) or force-full-payment when raw < 50¢; promote to MED only on real owner report |
 
 | Script | What | Deps | Last run 2026-06-11 |
 |---|---|---|---|

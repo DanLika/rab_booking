@@ -11,21 +11,13 @@
 - [TODO.md](./docs/TODO.md) - Planirani zadaci
 
 **Audit log** (one-line index; detail in each audit/*.md file). *Pruned 2026-06-11: closed session audits + screenshot artifacts deleted (105MB→1.2MB) — recover any via git history (`git log --diff-filter=D -- audit/`). Kept: rules-referenced, OPEN/🚨 findings, runbooks, specs, recent design chain.*
-- [11-cloudfunctions-inventory](./audit/11-cloudfunctions-inventory.md) — CF inventory dev/prod + orphans (2026-05-21)
-- [11-sentry-env-fix](./audit/11-sentry-env-fix.md) — Sentry env-tag + Gen2 `GCLOUD_PROJECT` (2026-05-21)
-- [24-p3-backlog](./audit/24-p3-backlog-investigations.md) — P3 backlog from audit/21 (2026-05-23)
-- [30-ical-cache-invalidation](./audit/30-ical-cache-invalidation.md) — PR #461 helper + 4 call sites (2026-05-24)
-- [33-owner-dashboard-web-smoke](./audit/33-owner-dashboard-web-smoke-2026-05-24.md) — dev hosting served PROD bundle; fix `ae1b18f3` + PR #467 (2026-05-24)
-- [37-admin-dashboard-smoke](./audit/37-admin-dashboard-smoke-2026-05-24.md) — admin DEV pre-check (PR #469, 2026-05-24)
-- [38-pr462-env-prereq](./audit/38-pr462-env-prereq.md) — ALLOWED_SUBSCRIPTION_PRICE_IDS empty/missing on dev+prod (2026-05-24)
-- [39-n4-flutter-keyboard-converter](./audit/39-n4-flutter-keyboard-converter-2026-05-24.md) — Flutter Engine KeyboardConverter crash; SAFETY no-fix (2026-05-24)
 - 🟢 [99-security-audit](./audit/99-security-audit-2026-05-30.md) — condensed residual ledger 2026-06-11: HIGH+3 MED+3 LOW fixed/verified (F-99-01 #609; 02/05/06/07/08 fixed+dev-deployed; 04=107-03 closed); 8 LOW/INFO deliberate deferrals remain (2026-05-30)
 - ✅ [102-prod-cutover](./audit/102-prod-cutover-2026-05-31.md) — PROD cutover at HEAD `3a8b6b66`: CFs+regrant 35/35+OPTIONS 3/3, indexes no-drift, widget HTTP 200, rules+storage 4/4 smoke; **SF-067 PROD `datastore.viewer` IAM confirmed via owner upload+delete on `properties/…png`** (2026-05-31)
 - [cutover-dryrun-2026-05-30/runbook.md](./audit/cutover-dryrun-2026-05-30/runbook.md) — full ledger + 4a/4b/4c/4d phase logs + IAM re-grant script (2026-05-30)
 - 🟡 [107-security-audit](./audit/107-security-audit-2026-06-01.md) — security baseline; top findings CLOSED 2026-06-11 verify: F-107-01 widget_secrets `hasOnly` in rules + F-107-02 CORS (PR #720 `f5eab8c0`) + F-107-03 widget CSP present in firebase.json; residual = KNOWN-OPEN list; F-101-03 CLOSED 2026-06-11 (L2 enforceRateLimit live on 3 hot anonymous callables) (2026-06-01)
 - ✅ [122-admin-responsive-audit](./audit/122-admin-responsive-audit-2026-06-11.md) — /audit run 15→17/20: adaptive admin shell shipped (260px sidebar ≥1100 / 72px icon rail 800–1100 / drawer <800 per handoff chrome), dashboard LayoutBuilder content-width breakpoints, error-card maxWidth; verified live 1440/900/390 via chrome-devtools + full test suite green (2026-06-11)
 - ✅ [121-handoff-color-audit](./audit/121-handoff-color-audit-2026-06-11.md) — 16-page owner color audit vs tokens.css both themes: BBColor+AppColors token drift fixed (dark surface #0B0B0D→#121212 L3 lift, Tailwind→handoff semantics, dark lifts), app bar→shellBg, drawer brandPurple→BBColor.primary, 8 screens detokenized hexes fixed; Pregled NOVI GOSTI (distinctGuests) + KPI strip handoff order; full test suite green + live sim light+dark verify (2026-06-11)
-- 🟢 [123-security-audit](./audit/123-security-audit-2026-06-11.md) — full 165+-check sweep (9 agents + gitleaks history + semgrep + npm audit): 0 CRIT/HIGH new; same-day fix wave closed F-123-01/02/04/06/07 (payment bounds + iCal sanitize + 5MB cap + Connect rate limits; 462/462 tests green); residual = F-123-03 trial-gate product decision + F-123-05/08 deferred + firebase-admin 14 bump (F-107-07/08); gitleaks 95→0 real; 2 agent false positives killed, firestore.md stale T11c doc fixed (2026-06-11)
+- 🟢 [123-security-audit](./audit/123-security-audit-2026-06-11.md) — full 165+-check sweep (9 agents + gitleaks + semgrep + npm audit) + 2 /vibe-security passes: 0 CRIT/HIGH new. Fix wave 1: F-123-01/02/04/06/07 (payment bounds + iCal sanitize + 5MB cap + Connect rate limits; 462/462 jest green). Fix wave 2 (AI/LLM): F-123-AI server-authoritative Gemini daily quota (Firestore `users/{uid}/data/ai_usage` {day,count}, txn-consumed, rules pin day→request.time + monotonic increment so restart/tamper can't reset; replaces client-memory counter) + `ai_chats` messages.size()≤200; new `ai_usage.test.ts` 14 cells, full rules suite 173 pass green. Tier/subscription escalation verified CLOSED first-hand (rules 78-129). Residual = F-123-03 trial-gate product decision + F-123-05/08 deferred + firebase-admin 14 bump (F-107-07/08) + operator App-Check-enforcement toggle; gitleaks 95→0 real; 2 agent false positives killed, firestore.md stale T11c doc fixed (2026-06-11)
 
 ---
 
@@ -42,7 +34,7 @@
 | `generateViewBookingUrl()` u `emailService.ts` | Email URL logika |
 | Navigator.push za confirmation | NE vraćaj state-based navigaciju |
 | Timeline Calendar fixed dimensions (`timeline_dimensions.dart`) | FIXED 50/42/100/60px za SVE uređaje — NE vraćaj responsive breakpoints |
-| `bookings` read rule — `unit_id+status` clause 1 | ✅ T11c CLOSED 2026-05-22 (commit `ab6bdb3d`). All 3 rule surfaces tightened. Widget calendar + booking-submit route through `getUnitAvailability` callable (eu-west1). Realtime → 30s polling. Privacy-driven: pending/confirmed visual distinction sacrificed. Vidi SF-019 + audit/06. |
+| `bookings` read rule — `unit_id+status` clause 1 | ✅ T11c CLOSED 2026-05-22 (commit `ab6bdb3d`). All 3 rule surfaces tightened. Widget calendar + booking-submit route through `getUnitAvailability` callable (eu-west1). Realtime → 30s polling. Privacy-driven: pending/confirmed visual distinction sacrificed. Vidi SF-019 (audit/06 obrisan — git history). |
 
 ---
 

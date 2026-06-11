@@ -66,12 +66,12 @@ If you see any of these, stop immediately and check:
 
 ## Permanent fix (NOT yet implemented)
 
-Tracked in `audit/14-deploy-scripts-mismatch.md` hardening recommendation #2: create Xcode `Debug-dev` and `Debug-staging` schemes, each with a Run Script Build Phase that copies the correct `GoogleService-Info-{env}.plist` into the bundle at build time. Eliminates the manual file-rename. Larger change; needs Xcode project edits + per-env plist files committed.
+Tracked in audit/14 hardening recommendation #2 (doc deleted — git history): create Xcode `Debug-dev` and `Debug-staging` schemes, each with a Run Script Build Phase that copies the correct `GoogleService-Info-{env}.plist` into the bundle at build time. Eliminates the manual file-rename. Larger change; needs Xcode project edits + per-env plist files committed.
 
 Until that lands, use the manual procedure above and rely on the Dart asserts as the safety net.
 
 ## See also
 
-- `audit/14-deploy-scripts-mismatch.md` — initial discovery of the deploy-script branch of this problem
+- audit/14 (deleted — git history) — initial discovery of the deploy-script branch; scripts since fixed
 - `audit/15-prod-contamination-deep-check.md` — Stripe Connect contamination + iOS-specific root cause
 - `memory/wave0-test-findings.md` — the original "drop --flavor dev" gotcha that led to Wave 0 contamination

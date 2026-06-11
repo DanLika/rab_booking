@@ -146,7 +146,7 @@ Until that lands, use the manual procedure above and rely on the Dart asserts as
 - `.claude/rules/ios-development.md` — iOS plist swap (analogous procedure)
 - `.claude/rules/hosting-build.md` — debug build bug, dependency versions, CI AAB wiring
 - `.claude/rules/deep-links.md` — warm + cold start coverage matrix
-- `audit/14-deploy-scripts-mismatch.md` — origin of the swap-based contamination class
+- audit/14 (deleted — git history) — origin of the swap-based contamination class; deploy scripts since fixed (`scripts/deploy_dev.sh` targets `widget_main_dev.dart`)
 - `audit/15-prod-contamination-deep-check.md` — Stripe Connect contamination cleanup recipe
 - `memory/wave0-test-findings.md` — Wave 0 "drop --flavor dev" gotcha that triggered the contamination
 - `memory/aab-build-blocker.md` — AAB blocker resolution history (+ CI status)

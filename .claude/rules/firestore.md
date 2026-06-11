@@ -112,7 +112,7 @@ Privacy tradeoff accepted: widget lost pending/confirmed visual distinction; rea
 
 ### Audit trail
 
-- Partial fix: `audit/06-bookings-hotfix-partial.md`
+- Partial fix: T11-hotfix-partial `9f3d86b4` (audit/06 deleted — git history)
 - Full closure: T11c, commit `ab6bdb3d` (2026-05-22), SF-019
 
 ## Notification CG fallback is broken (silent)

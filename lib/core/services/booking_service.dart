@@ -379,32 +379,10 @@ class BookingService {
     }
   }
 
-  /// Get booking by reference
-  /// NEW STRUCTURE: Uses collection group query
-  Future<BookingModel?> getBookingByReference(String reference) async {
-    try {
-      final query = await _firestore
-          .collectionGroup('bookings')
-          .where('booking_reference', isEqualTo: reference)
-          .limit(1)
-          .get();
-
-      if (query.docs.isEmpty) {
-        return null;
-      }
-
-      return BookingModel.fromJson({
-        'id': query.docs.first.id,
-        ...query.docs.first.data(),
-      });
-    } catch (e) {
-      await LoggingService.logError(
-        '[BookingService] Error fetching booking by reference',
-        e,
-      );
-      throw BookingServiceException('Failed to fetch booking: $e');
-    }
-  }
+  // T11-hotfix cleanup (2026-06-11): `getBookingByReference` removed — zero
+  // call sites since 2026-05-18 (rules deny anonymous booking_reference CG
+  // reads post-T11; guest view goes through the `verifyBookingAccess`
+  // callable).
 
   // F-67-01 cleanup (2026-05-29): the prior `updateBookingStatus({bookingId,
   // status})` + `cancelBooking({bookingId, reason, cancelledBy})` methods

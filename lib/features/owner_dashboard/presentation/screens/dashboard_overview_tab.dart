@@ -355,6 +355,8 @@ class DashboardOverviewTab extends ConsumerWidget {
       upcomingCheckIns: 3,
       distinctGuests: 38,
       revenueBySource: {'direct': 8625, 'booking_com': 2750, 'airbnb': 1125},
+      depositsCollected: 768,
+      depositsOutstanding: 3072,
       occupancyRate: 85.5,
       revenueHistory: List.generate(7, (i) {
         return RevenueDataPoint(
@@ -472,6 +474,11 @@ class DashboardOverviewTab extends ConsumerWidget {
                             ),
                             SizedBox(height: isMobile ? 12 : 16),
                             _PregledOccupancyRadial(
+                              data: data,
+                              isMobile: isMobile,
+                            ),
+                            SizedBox(height: isMobile ? 12 : 16),
+                            _PregledDepositsCard(
                               data: data,
                               isMobile: isMobile,
                             ),
@@ -2418,6 +2425,117 @@ class _PregledChannelMix extends StatelessWidget {
                   ],
                 ),
               ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Deposits card (handoff `owner-01-pregled.png` NAPLAĆENI DEPOZITI):
+/// collected `paid_amount` headline + outstanding-at-arrival row with a
+/// collected/(collected+outstanding) progress bar. Always renders — €0 is
+/// the calm empty baseline, same as the hero (handoff has no empty branch).
+class _PregledDepositsCard extends StatelessWidget {
+  final UnifiedDashboardData data;
+  final bool isMobile;
+
+  const _PregledDepositsCard({required this.data, required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = BBColor.of(context);
+    final collected = data.depositsCollected;
+    final outstanding = data.depositsOutstanding;
+    final expected = collected + outstanding;
+    final share = expected > 0 ? (collected / expected).clamp(0.0, 1.0) : 0.0;
+
+    return BbCard(
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: isMobile ? 30 : 34,
+                height: isMobile ? 30 : 34,
+                decoration: BoxDecoration(
+                  color: c.success.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: BbIcon(
+                  name: 'account_balance_wallet',
+                  size: 18,
+                  color: c.success,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  // HR-only owner surface — handoff eyebrow copy.
+                  'NAPLAĆENI DEPOZITI',
+                  style: BBType.caption(context).copyWith(
+                    color: c.textTertiary,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: isMobile ? 12 : 14),
+          Text(
+            '€${collected.toStringAsFixed(0)}',
+            style: BBType.h1Num(context).copyWith(
+              color: c.textPrimary,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+            ),
+          ),
+          SizedBox(height: isMobile ? 10 : 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: SizedBox(
+              height: 8,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: math.max(1, (share * 100).round()),
+                    child: Container(color: c.success),
+                  ),
+                  Expanded(
+                    flex: math.max(1, ((1 - share) * 100).round()),
+                    child: Container(color: c.success.withValues(alpha: 0.16)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  // HR-only owner surface.
+                  'Naplaćeno (${(share * 100).round()}%)',
+                  style: BBType.caption(
+                    context,
+                  ).copyWith(color: c.textTertiary),
+                ),
+              ),
+              Text(
+                '€${outstanding.toStringAsFixed(0)} na dolasku',
+                style: BBType.caption(context).copyWith(
+                  color: c.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures(),
+                  ],
+                ),
+              ),
             ],
           ),
         ],

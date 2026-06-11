@@ -144,6 +144,22 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         revenueBySource[bucket] = (revenueBySource[bucket] ?? 0) + price;
       }
 
+      // Deposits (handoff NAPLAĆENI DEPOZITI): collected = paid_amount over
+      // the metric set; outstanding = unpaid remainder on CONFIRMED stays
+      // only ("na dolasku" — completed bookings count as settled).
+      var depositsCollected = 0.0;
+      var depositsOutstanding = 0.0;
+      for (final b in confirmedAndCompletedBookings) {
+        final paid = (b['paid_amount'] as num?)?.toDouble() ?? 0.0;
+        depositsCollected += paid;
+        if (b['status'] == 'confirmed') {
+          final total = (b['total_price'] as num?)?.toDouble() ?? 0.0;
+          final remaining =
+              (b['remaining_amount'] as num?)?.toDouble() ?? (total - paid);
+          if (remaining > 0) depositsOutstanding += remaining;
+        }
+      }
+
       // Calculate occupancy rate based on UNITS (not properties)
       final totalDaysInRange = dateRange.endDate
           .difference(dateRange.startDate)
@@ -189,6 +205,8 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         upcomingCheckIns: upcomingCheckIns.length,
         distinctGuests: guestKeys.length,
         revenueBySource: revenueBySource,
+        depositsCollected: depositsCollected,
+        depositsOutstanding: depositsOutstanding,
         occupancyRate: occupancyRate,
         revenueHistory: revenueHistory,
         bookingHistory: bookingHistory,

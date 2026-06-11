@@ -75,7 +75,11 @@
 
 ## Fourth pass — Zarada po kanalu real data (handoff gap closed)
 
-`UnifiedDashboardData.revenueBySource` (direct/booking_com/airbnb/other buckets from booking `source`, zero-priced iCal imports skipped) computed in the provider from the same confirmed+completed set as `revenue` — channel amounts sum exactly to the hero total. `_PregledChannelMix` un-gated (kDebug + `PREGLED_CHANNEL_MIX` define + placeholder proportions removed), renders real buckets, hides on no-priced-revenue periods. Live verify bookbed-dev: Direktno €360 18% / Airbnb €390 19% / Ostalo €1270 63% = €2020. Remaining product gaps now only: PROSJEČNA OCJENA (reviews feature) + NAPLAĆENI DEPOZITI (deposit aggregation).
+`UnifiedDashboardData.revenueBySource` (direct/booking_com/airbnb/other buckets from booking `source`, zero-priced iCal imports skipped) computed in the provider from the same confirmed+completed set as `revenue` — channel amounts sum exactly to the hero total. `_PregledChannelMix` un-gated (kDebug + `PREGLED_CHANNEL_MIX` define + placeholder proportions removed), renders real buckets, hides on no-priced-revenue periods. Live verify bookbed-dev: Direktno €360 18% / Airbnb €390 19% / Ostalo €1270 63% = €2020. Remaining product gap now only: PROSJEČNA OCJENA (reviews feature).
+
+## Fifth pass — NAPLAĆENI DEPOZITI (handoff gap closed)
+
+Booking docs already carry `paid_amount`/`remaining_amount`/`payment_status` — no new product feature needed. `UnifiedDashboardData.depositsCollected` (Σ paid_amount, confirmed+completed) + `depositsOutstanding` (Σ unpaid remainder, CONFIRMED only — "na dolasku"; completed=settled). New `_PregledDepositsCard` after the occupancy radial per handoff right-column order: success wallet tile, collected headline, collected/expected progress bar, "Naplaćeno (N%)" + "€X na dolasku" row; always renders (€0 calm baseline). Live verify bookbed-dev: €0 (0%) / €1370 na dolasku — honest zeros, seed bookings have paid_amount=0.
 
 ## Known residuals (not fixed, by design or out of scope)
 - Legacy `AppColors.primaryGradient/heroGradient` still old hexes — 0 callers (dead), cleanup PR candidate

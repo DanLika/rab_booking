@@ -25,6 +25,14 @@ class UnifiedDashboardData with _$UnifiedDashboardData {
     /// 'other' (ical/external/unknown). Zero-revenue buckets omitted.
     @Default(<String, double>{}) Map<String, double> revenueBySource,
 
+    /// Sum of `paid_amount` over confirmed+completed bookings in the period
+    /// (EUR) — handoff NAPLAĆENI DEPOZITI headline value.
+    @Default(0.0) double depositsCollected,
+
+    /// Sum of unpaid remainders over CONFIRMED bookings in the period (EUR)
+    /// — due at arrival ("na dolasku"); completed bookings count as settled.
+    @Default(0.0) double depositsOutstanding,
+
     /// Occupancy rate for the selected period (0-100%)
     required double occupancyRate,
 

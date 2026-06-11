@@ -75,6 +75,8 @@ jest.mock("../src/logger", () => ({
 
 jest.mock("../src/utils/rateLimit", () => ({
   checkRateLimit: jest.fn().mockReturnValue(true), // Default to allow
+  enforceRateLimit: jest.fn().mockResolvedValue(undefined),
+  hashRateKey: jest.fn((raw: string) => `hash_${raw}`),
 }));
 
 // SF-079 L2: bypass unit-owner gate at the helper boundary.

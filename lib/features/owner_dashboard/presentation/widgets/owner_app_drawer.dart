@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/design/bb_redesign_tokens.dart';
 import '../../../../core/theme/app_color_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -219,40 +220,34 @@ class OwnerAppDrawer extends ConsumerWidget {
     final email = user?.email ?? '';
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U';
 
+    // Dissolved-sidebar header per handoff (README §Shared chrome): sidebar
+    // sits on the same `shell-bg` as the page gutter — no purple banner.
+    // Previously the header was `BBGradient.brandPrimary` with a 20-px purple
+    // shadow which read as a "hero on the sidebar", not as part of the shell.
+    // Profile row uses a soft-purple-tinted avatar instead of white-on-purple.
+    final rd = BbRedesignTokens.of(context);
+    final c = BBColor.of(context);
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
+      padding: const EdgeInsets.fromLTRB(20, 48, 20, 20),
       decoration: BoxDecoration(
-        gradient: BBGradient.brandPrimary,
-        boxShadow: [
-          BoxShadow(
-            color: BBGradient.brandPrimaryStart.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: rd.shellBg,
+        border: Border(bottom: BorderSide(color: rd.panelBorder)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Logo - White variant for dark background
-          // Note: animate=false to prevent potential rendering issues in drawer
-          const Center(
-            child: AuthLogoIcon(size: 70, isWhite: true, animate: false),
-          ),
+          const Center(child: AuthLogoIcon(size: 64, animate: false)),
           const SizedBox(height: 20),
-
-          // User Info
           Row(
             children: [
-              // Avatar
               Container(
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white,
+                  color: c.primary.withValues(alpha: 0.10),
                   boxShadow: AppShadows.getElevation(
-                    2,
+                    1,
                     isDark: theme.brightness == Brightness.dark,
                   ),
                 ),
@@ -262,17 +257,17 @@ class OwnerAppDrawer extends ConsumerWidget {
                     ? ClipOval(
                         child: Image.network(
                           authState.userModel!.avatarUrl!,
-                          width: 56,
-                          height: 56,
+                          width: 48,
+                          height: 48,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Center(
                               child: Text(
                                 initial,
                                 style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.brandPurple,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: c.primary,
                                 ),
                               ),
                             );
@@ -283,37 +278,32 @@ class OwnerAppDrawer extends ConsumerWidget {
                         child: Text(
                           initial,
                           style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.brandPurple,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: c.primary,
                           ),
                         ),
                       ),
               ),
-              const SizedBox(width: 16),
-
-              // Name & Email
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       displayName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: c.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       email,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
+                      style: TextStyle(fontSize: 12, color: c.textTertiary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -351,18 +341,14 @@ class _DrawerItem extends StatefulWidget {
 class _DrawerItemState extends State<_DrawerItem> {
   bool _isHovered = false;
 
-  // Light purple for dark theme text (lightened version of brandPurple)
-  static const _lightPurple = Color(0xFFB794F6);
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     // In dark mode, use lighter purple text and stronger purple background
-    final selectedTextColor = isDark
-        ? _lightPurple
-        : theme.colorScheme.brandPurple;
+    // handoff `--bb-primary` (#6B4CE6 light / #8B6FFF dark lift)
+    final selectedTextColor = BBColor.of(context).primary;
     final selectedBgAlpha = isDark ? 0.15 : 0.12;
     final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
@@ -376,11 +362,9 @@ class _DrawerItemState extends State<_DrawerItem> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple.withValues(
-                    alpha: selectedBgAlpha,
-                  )
+                ? BBColor.of(context).primary.withValues(alpha: selectedBgAlpha)
                 : _isHovered
-                ? theme.colorScheme.brandPurple.withValues(alpha: hoverBgAlpha)
+                ? BBColor.of(context).primary.withValues(alpha: hoverBgAlpha)
                 : Colors.transparent,
           ),
           child: ListTile(
@@ -454,9 +438,6 @@ class _DrawerItemWithBadge extends ConsumerStatefulWidget {
 class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
   bool _isHovered = false;
 
-  // Light purple for dark theme text (lightened version of brandPurple)
-  static const _lightPurple = Color(0xFFB794F6);
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -471,9 +452,8 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
     );
 
     // In dark mode, use lighter purple text and stronger purple background
-    final selectedTextColor = isDark
-        ? _lightPurple
-        : theme.colorScheme.brandPurple;
+    // handoff `--bb-primary` (#6B4CE6 light / #8B6FFF dark lift)
+    final selectedTextColor = BBColor.of(context).primary;
     final selectedBgAlpha = isDark ? 0.15 : 0.12;
     final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
@@ -487,11 +467,9 @@ class _DrawerItemWithBadgeState extends ConsumerState<_DrawerItemWithBadge> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple.withValues(
-                    alpha: selectedBgAlpha,
-                  )
+                ? BBColor.of(context).primary.withValues(alpha: selectedBgAlpha)
                 : _isHovered
-                ? theme.colorScheme.brandPurple.withValues(alpha: hoverBgAlpha)
+                ? BBColor.of(context).primary.withValues(alpha: hoverBgAlpha)
                 : Colors.transparent,
           ),
           child: ListTile(
@@ -587,9 +565,6 @@ class _DrawerItemWithNotificationBadgeState
     extends ConsumerState<_DrawerItemWithNotificationBadge> {
   bool _isHovered = false;
 
-  // Light purple for dark theme text (lightened version of brandPurple)
-  static const _lightPurple = Color(0xFFB794F6);
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -604,9 +579,8 @@ class _DrawerItemWithNotificationBadgeState
     );
 
     // In dark mode, use lighter purple text and stronger purple background
-    final selectedTextColor = isDark
-        ? _lightPurple
-        : theme.colorScheme.brandPurple;
+    // handoff `--bb-primary` (#6B4CE6 light / #8B6FFF dark lift)
+    final selectedTextColor = BBColor.of(context).primary;
     final selectedBgAlpha = isDark ? 0.15 : 0.12;
     final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
@@ -623,11 +597,9 @@ class _DrawerItemWithNotificationBadgeState
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple.withValues(
-                    alpha: selectedBgAlpha,
-                  )
+                ? BBColor.of(context).primary.withValues(alpha: selectedBgAlpha)
                 : _isHovered
-                ? theme.colorScheme.brandPurple.withValues(alpha: hoverBgAlpha)
+                ? BBColor.of(context).primary.withValues(alpha: hoverBgAlpha)
                 : Colors.transparent,
           ),
           child: ListTile(
@@ -761,18 +733,14 @@ class _DrawerSubItem extends StatefulWidget {
 class _DrawerSubItemState extends State<_DrawerSubItem> {
   bool _isHovered = false;
 
-  // Light purple for dark theme text (lightened version of brandPurple)
-  static const _lightPurple = Color(0xFFB794F6);
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     // In dark mode, use lighter purple text and stronger purple background
-    final selectedTextColor = isDark
-        ? _lightPurple
-        : theme.colorScheme.brandPurple;
+    // handoff `--bb-primary` (#6B4CE6 light / #8B6FFF dark lift)
+    final selectedTextColor = BBColor.of(context).primary;
     final selectedBgAlpha = isDark ? 0.15 : 0.12;
     final hoverBgAlpha = isDark ? 0.08 : 0.06;
 
@@ -786,11 +754,9 @@ class _DrawerSubItemState extends State<_DrawerSubItem> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             color: widget.isSelected
-                ? theme.colorScheme.brandPurple.withValues(
-                    alpha: selectedBgAlpha,
-                  )
+                ? BBColor.of(context).primary.withValues(alpha: selectedBgAlpha)
                 : _isHovered
-                ? theme.colorScheme.brandPurple.withValues(alpha: hoverBgAlpha)
+                ? BBColor.of(context).primary.withValues(alpha: hoverBgAlpha)
                 : Colors.transparent,
           ),
           child: ListTile(
@@ -869,10 +835,10 @@ class _PremiumExpansionTile extends StatelessWidget {
     // Colors matching _DrawerItem styling
     final selectedTextColor = isDark
         ? lightPurple
-        : theme.colorScheme.brandPurple;
+        : BBColor.of(context).primary;
     final normalTextColor = theme.colorScheme.onSurface;
     final iconColor = isExpanded
-        ? (isDark ? lightPurple : theme.colorScheme.brandPurple)
+        ? (isDark ? lightPurple : BBColor.of(context).primary)
         : theme.colorScheme.onSurface.withValues(alpha: 0.75);
 
     return Padding(
@@ -880,8 +846,8 @@ class _PremiumExpansionTile extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(
           dividerColor: Colors.transparent,
-          splashColor: theme.colorScheme.brandPurple.withValues(alpha: 0.06),
-          highlightColor: theme.colorScheme.brandPurple.withValues(alpha: 0.06),
+          splashColor: BBColor.of(context).primary.withValues(alpha: 0.06),
+          highlightColor: BBColor.of(context).primary.withValues(alpha: 0.06),
         ),
         child: ExpansionTile(
           leading: Container(

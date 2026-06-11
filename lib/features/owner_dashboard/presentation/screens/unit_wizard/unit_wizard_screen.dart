@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../l10n/app_localizations.dart';
 import '../../../../../../core/utils/keyboard_dismiss_fix_approach1.dart';
-import '../../../../../core/design/tokens.dart';
 import '../../../../../../core/exceptions/app_exceptions.dart';
 import '../../../../../../core/utils/error_display_utils.dart';
 import '../../../../../../shared/models/unit_model.dart';
@@ -394,31 +393,23 @@ class _UnitWizardScreenState extends ConsumerState<UnitWizardScreen>
         key: ValueKey('unit_wizard_screen_$keyboardFixRebuildKey'),
         child: Scaffold(
           resizeToAvoidBottomInset: true,
+          // Theme-aware app bar matching Pregled / Rezervacije / Units chrome.
+          // Previously a `BBGradient.brandPrimary` `flexibleSpace` rendered a
+          // brand-purple banner per-screen; design's wizard mode keeps the
+          // shellBg-flat top strip so step progress reads above content, not
+          // below another hero. Title style now resolves through
+          // `AppBarTheme` (matches `CommonAppBar`).
           appBar: AppBar(
-            toolbarHeight:
-                56.0, // Standard AppBar height (matches CommonAppBar)
+            toolbarHeight: 56.0,
             title: AutoSizeText(
               widget.unitId == null
                   ? l10n.unitWizardCreateTitle
                   : l10n.unitWizardEditTitle,
               maxLines: 1,
               minFontSize: 14,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                letterSpacing: 0,
-              ),
+              style: theme.appBarTheme.titleTextStyle,
             ),
             centerTitle: false,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            surfaceTintColor: Colors.transparent,
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: BBGradient.brandPrimary,
-              ),
-            ),
           ),
           body: SafeArea(
             child: LayoutBuilder(

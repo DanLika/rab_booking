@@ -199,8 +199,8 @@ class _TimelineBookingBlockState extends ConsumerState<TimelineBookingBlock> {
                   // dayWidth is used to calculate skewOffset for turnover day alignment
                   CustomPaint(
                     painter: SkewedBookingPainter(
-                      backgroundColor: booking.status.color,
-                      borderColor: booking.status.color,
+                      backgroundColor: booking.status.colorOf(context),
+                      borderColor: booking.status.colorOf(context),
                       dayWidth: dayWidth,
                       hasConflict: hasConflict,
                       // Theme-aware separator color for diagonal lines

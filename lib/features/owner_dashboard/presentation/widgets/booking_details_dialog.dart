@@ -68,12 +68,19 @@ class BookingDetailsDialog extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Gradient Header - matches CommonAppBar height (52px)
+            // Theme-aware shell header (matches CommonAppBar height 52px)
             Container(
               height: ResponsiveDialogUtils.kHeaderHeight,
               padding: EdgeInsets.symmetric(horizontal: headerPadding),
               decoration: BoxDecoration(
-                gradient: context.gradients.brandPrimary,
+                color: Theme.of(context).colorScheme.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.4),
+                  ),
+                ),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(11),
                 ),
@@ -81,25 +88,26 @@ class BookingDetailsDialog extends ConsumerWidget {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.10),
                       borderRadius: const BorderRadius.all(Radius.circular(8)),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.receipt_long,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       l10n.ownerDetailsTitle,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -107,7 +115,7 @@ class BookingDetailsDialog extends ConsumerWidget {
                   ),
                   AccessibleIconButton(
                     icon: Icons.close,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     onPressed: () => Navigator.of(context).pop(),
                     semanticLabel: l10n.close,
                     padding: EdgeInsets.zero,
@@ -125,6 +133,46 @@ class BookingDetailsDialog extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Status banner — handoff `screens/07-owner.png` shows an
+                    // amber "Ova rezervacija čeka vaše odobrenje" strip above
+                    // the booking info for pending bookings.
+                    if (booking.status == BookingStatus.pending) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: BookingStatus.pending.color.withValues(
+                            alpha: 0.12,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: BookingStatus.pending.color.withValues(
+                              alpha: 0.4,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.pending_outlined,
+                              size: 18,
+                              color: BookingStatus.pending.color,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                l10n.ownerDetailsAwaitingApproval,
+                                style: TextStyle(
+                                  color: BookingStatus.pending.color,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     // Booking Info Section (with icon like other sections)
                     _SectionHeader(
                       icon: Icons.confirmation_number_outlined,
@@ -347,7 +395,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                           Navigator.of(context).pop();
                           showEditBookingDialog(context, ref, booking);
                         },
-                        gradient: context.gradients.brandPrimary,
                         compact: true,
                       ),
                     ),
@@ -361,7 +408,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                         Navigator.of(context).pop();
                         showSendEmailDialog(context, ref, booking);
                       },
-                      gradient: context.gradients.brandPrimary,
                       compact: true,
                     ),
                   ),
@@ -373,7 +419,6 @@ class BookingDetailsDialog extends ConsumerWidget {
                         label: l10n.ownerDetailsResend,
                         onPressed: () =>
                             _resendConfirmationEmail(context, ref, l10n),
-                        gradient: context.gradients.brandPrimary,
                         compact: true,
                       ),
                     ),
@@ -463,11 +508,16 @@ class BookingDetailsDialog extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header with gradient (includes close button)
+                // Theme-aware shell header (includes close button)
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    gradient: dialogContext.gradients.brandPrimary,
+                    color: dialogTheme.colorScheme.surface,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: dialogTheme.dividerColor.withValues(alpha: 0.4),
+                      ),
+                    ),
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(15),
                     ),
@@ -477,12 +527,14 @@ class BookingDetailsDialog extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: dialogTheme.colorScheme.primary.withValues(
+                            alpha: 0.10,
+                          ),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.email,
-                          color: Colors.white,
+                          color: dialogTheme.colorScheme.primary,
                           size: 20,
                         ),
                       ),
@@ -490,16 +542,15 @@ class BookingDetailsDialog extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           dialogL10n.ownerDetailsResendTitle,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                          style: dialogTheme.textTheme.titleMedium?.copyWith(
+                            color: dialogTheme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
                       AccessibleIconButton(
                         icon: Icons.close,
-                        color: Colors.white,
+                        color: dialogTheme.colorScheme.onSurface,
                         onPressed: () => Navigator.of(dialogContext).pop(false),
                         semanticLabel: dialogL10n.close,
                         padding: EdgeInsets.zero,
@@ -610,28 +661,21 @@ class BookingDetailsDialog extends ConsumerWidget {
                   ),
                   child: SizedBox(
                     width: double.infinity,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: dialogContext.gradients.brandPrimary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: ElevatedButton.icon(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: dialogTheme.colorScheme.primary,
+                        foregroundColor: dialogTheme.colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                        icon: const Icon(Icons.send, size: 18),
-                        label: Text(dialogL10n.ownerDetailsSend),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
+                      icon: const Icon(Icons.send, size: 18),
+                      label: Text(dialogL10n.ownerDetailsSend),
                     ),
                   ),
                 ),
@@ -859,37 +903,27 @@ class _ModernActionButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onPressed,
-    required this.gradient,
     this.compact = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onPressed;
-  final Gradient gradient;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        gradient: gradient,
+        color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(
-              context,
-            ).colorScheme.primary.withAlpha((0.3 * 255).toInt()),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
+          foregroundColor: theme.colorScheme.onPrimary,
           shadowColor: Colors.transparent,
           padding: EdgeInsets.symmetric(
             horizontal: compact ? 6 : 12,

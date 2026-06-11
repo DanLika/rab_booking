@@ -17,6 +17,22 @@ class UnifiedDashboardData with _$UnifiedDashboardData {
     /// Upcoming check-ins in next 7 days (always 7 days, regardless of period)
     required int upcomingCheckIns,
 
+    /// Distinct guests in the selected period (deduped by guest email/name)
+    @Default(0) int distinctGuests,
+
+    /// Revenue per booking source for the selected period (EUR). Canonical
+    /// bucket keys: 'direct' (widget/manual/admin), 'booking_com', 'airbnb',
+    /// 'other' (ical/external/unknown). Zero-revenue buckets omitted.
+    @Default(<String, double>{}) Map<String, double> revenueBySource,
+
+    /// Sum of `paid_amount` over confirmed+completed bookings in the period
+    /// (EUR) — handoff NAPLAĆENI DEPOZITI headline value.
+    @Default(0.0) double depositsCollected,
+
+    /// Sum of unpaid remainders over CONFIRMED bookings in the period (EUR)
+    /// — due at arrival ("na dolasku"); completed bookings count as settled.
+    @Default(0.0) double depositsOutstanding,
+
     /// Occupancy rate for the selected period (0-100%)
     required double occupancyRate,
 

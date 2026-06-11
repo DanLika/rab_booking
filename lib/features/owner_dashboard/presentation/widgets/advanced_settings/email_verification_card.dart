@@ -4,7 +4,6 @@ import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/theme_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
-import '../../../../../core/design/tokens.dart';
 
 /// Email Verification Settings Card
 ///
@@ -147,7 +146,7 @@ class EmailVerificationCard extends StatelessWidget {
                 height: 2,
                 width: 40,
                 decoration: BoxDecoration(
-                  gradient: BBGradient.brandPrimary,
+                  color: theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),

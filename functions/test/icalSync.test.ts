@@ -59,6 +59,12 @@ jest.mock("../src/sentry", () => ({
 
 // SF-078: mock trial gate (same as atomicBooking.test.ts / stripeConnect.test.ts).
 // Gate semantics covered by test/requireActiveOwner.test.ts.
+jest.mock("../src/utils/rateLimit", () => ({
+  checkRateLimit: jest.fn().mockReturnValue(true),
+  enforceRateLimit: jest.fn().mockResolvedValue(undefined),
+  hashRateKey: jest.fn((raw: string) => `hash_${raw}`),
+}));
+
 jest.mock("../src/utils/requireActiveOwner", () => ({
   requireActiveOwner: jest.fn().mockImplementation(async (auth: { uid?: string | null } | null | undefined) => {
     if (!auth?.uid) {

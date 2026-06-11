@@ -4,7 +4,6 @@ import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 import '../../../../../core/services/logging_service.dart';
-import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../../../shared/models/booking_model.dart';
@@ -61,12 +60,17 @@ class BookingActionBottomSheet extends ConsumerWidget {
                 const SizedBox(height: 8),
               ],
 
-              // Gradient header with booking info
+              // Theme-aware shell header with booking info
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: context.gradients.brandPrimary,
+                  color: Theme.of(context).colorScheme.surface,
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.4),
+                  ),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -77,12 +81,14 @@ class BookingActionBottomSheet extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.10),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.person,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.primary,
                             size: 24,
                           ),
                         ),
@@ -98,9 +104,10 @@ class BookingActionBottomSheet extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white.withAlpha(
-                                      (0.9 * 255).toInt(),
-                                    ),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.85),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -108,10 +115,12 @@ class BookingActionBottomSheet extends ConsumerWidget {
                               Text(
                                 booking.guestName ??
                                     l10n.bookingActionUnknownGuest,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -119,9 +128,8 @@ class BookingActionBottomSheet extends ConsumerWidget {
                                 '${_formatDate(booking.checkIn)} - ${_formatDate(booking.checkOut)}',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.white.withAlpha(
-                                    (0.9 * 255).toInt(),
-                                  ),
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.7),
                                 ),
                               ),
                             ],
@@ -134,7 +142,9 @@ class BookingActionBottomSheet extends ConsumerWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: booking.status
+                                .colorOf(context)
+                                .withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -144,7 +154,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
                                 width: 8,
                                 height: 8,
                                 decoration: BoxDecoration(
-                                  color: booking.status.color,
+                                  color: booking.status.colorOf(context),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -154,7 +164,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: booking.status.color,
+                                  color: booking.status.colorOf(context),
                                 ),
                               ),
                             ],
@@ -168,14 +178,17 @@ class BookingActionBottomSheet extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         _buildInfoChip(
+                          context,
                           Icons.nights_stay,
                           l10n.tooltipNightsCount(nights),
                         ),
                         _buildInfoChip(
+                          context,
                           Icons.people_outline,
                           l10n.tooltipGuestsCount(booking.guestCount),
                         ),
                         _buildInfoChip(
+                          context,
                           Icons.euro,
                           '${booking.totalPrice.toStringAsFixed(0)} €',
                         ),
@@ -271,24 +284,25 @@ class BookingActionBottomSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String text) {
+  Widget _buildInfoChip(BuildContext context, IconData icon, String text) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha((0.2 * 255).toInt()),
+        color: theme.colorScheme.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: Colors.white),
+          Icon(icon, size: 16, color: theme.colorScheme.primary),
           const SizedBox(width: 6),
           Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: theme.colorScheme.onSurface,
             ),
           ),
         ],
@@ -589,12 +603,15 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                 ),
               ),
 
-              // Gradient header
+              // Theme-aware shell header
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: context.gradients.brandPrimary,
+                  color: theme.colorScheme.surface,
+                  border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.4),
+                  ),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -602,12 +619,14 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.swap_horiz,
-                        color: Colors.white,
+                        color: theme.colorScheme.primary,
                         size: 24,
                       ),
                     ),
@@ -618,10 +637,10 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                         children: [
                           Text(
                             l10n.bookingActionMoveTitle,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -630,8 +649,8 @@ class _BookingMoveToUnitMenuState extends ConsumerState<BookingMoveToUnitMenu> {
                                 l10n.bookingActionUnknownGuest,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white.withAlpha(
-                                (0.9 * 255).toInt(),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
                               ),
                             ),
                           ),

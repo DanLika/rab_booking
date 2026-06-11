@@ -118,6 +118,48 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       // Bookings count reflects only confirmed and completed bookings
       final bookingsCount = confirmedAndCompletedBookings.length;
 
+      // Distinct guests in period — dedupe by email (fallback name).
+      // Bookings without either identifier are skipped, not guessed.
+      final guestKeys = <String>{};
+      for (final b in confirmedAndCompletedBookings) {
+        final email = (b['guest_email'] as String?)?.trim().toLowerCase() ?? '';
+        final name = (b['guest_name'] as String?)?.trim().toLowerCase() ?? '';
+        final key = email.isNotEmpty ? email : name;
+        if (key.isNotEmpty) guestKeys.add(key);
+      }
+
+      // Revenue per source bucket (handoff PVChannels "Zarada po kanalu").
+      // Native channels (widget/manual/admin/null) fold into 'direct';
+      // zero-priced bookings (iCal imports carry no price) are skipped.
+      final revenueBySource = <String, double>{};
+      for (final b in confirmedAndCompletedBookings) {
+        final price = (b['total_price'] as num?)?.toDouble() ?? 0.0;
+        if (price <= 0) continue;
+        final bucket = switch ((b['source'] as String?)?.toLowerCase()) {
+          null || 'manual' || 'direct' || 'widget' || 'admin' => 'direct',
+          'booking_com' => 'booking_com',
+          'airbnb' => 'airbnb',
+          _ => 'other',
+        };
+        revenueBySource[bucket] = (revenueBySource[bucket] ?? 0) + price;
+      }
+
+      // Deposits (handoff NAPLAĆENI DEPOZITI): collected = paid_amount over
+      // the metric set; outstanding = unpaid remainder on CONFIRMED stays
+      // only ("na dolasku" — completed bookings count as settled).
+      var depositsCollected = 0.0;
+      var depositsOutstanding = 0.0;
+      for (final b in confirmedAndCompletedBookings) {
+        final paid = (b['paid_amount'] as num?)?.toDouble() ?? 0.0;
+        depositsCollected += paid;
+        if (b['status'] == 'confirmed') {
+          final total = (b['total_price'] as num?)?.toDouble() ?? 0.0;
+          final remaining =
+              (b['remaining_amount'] as num?)?.toDouble() ?? (total - paid);
+          if (remaining > 0) depositsOutstanding += remaining;
+        }
+      }
+
       // Calculate occupancy rate based on UNITS (not properties)
       final totalDaysInRange = dateRange.endDate
           .difference(dateRange.startDate)
@@ -161,6 +203,10 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         revenue: revenue,
         bookings: bookingsCount,
         upcomingCheckIns: upcomingCheckIns.length,
+        distinctGuests: guestKeys.length,
+        revenueBySource: revenueBySource,
+        depositsCollected: depositsCollected,
+        depositsOutstanding: depositsOutstanding,
         occupancyRate: occupancyRate,
         revenueHistory: revenueHistory,
         bookingHistory: bookingHistory,

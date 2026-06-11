@@ -7,7 +7,6 @@ import '../../../../../core/utils/platform_scroll_physics.dart';
 import '../../../../../core/theme/app_color_extensions.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
-import '../../../../../core/design/tokens.dart';
 import '../../../../../core/utils/error_display_utils.dart';
 
 /// Tabs for the Embed Help Screen
@@ -63,42 +62,33 @@ class _EmbedHelpScreenState extends State<EmbedHelpScreen>
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                BBGradient.brandPrimaryStart,
-                BBGradient.brandPrimaryEnd,
-              ],
-            ),
-          ),
-        ),
         title: AutoSizeText(
           l10n.embedHelpTitle,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
           ),
           maxLines: 1,
           minFontSize: 14,
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: theme.colorScheme.surface,
+        foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        systemOverlayStyle: const SystemUiOverlayStyle(
+        systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
+          labelColor: theme.colorScheme.primary,
+          unselectedLabelColor: theme.colorScheme.onSurface.withValues(
+            alpha: 0.6,
+          ),
+          indicatorColor: theme.colorScheme.primary,
           indicatorWeight: 3,
           tabs: [
             Tab(

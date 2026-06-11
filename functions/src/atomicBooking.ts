@@ -36,7 +36,7 @@ import {
   persistEmailSent,
   type BookingEmailTracking,
 } from "./utils/bookingHelpers";
-import {enforceRateLimit, checkRateLimit} from "./utils/rateLimit";
+import {enforceRateLimit, checkRateLimit, hashRateKey} from "./utils/rateLimit";
 import {requireActiveOwner} from "./utils/requireActiveOwner";
 import {requireActiveUnitOwner} from "./utils/requireActiveUnitOwner";
 import {logRateLimitExceeded} from "./utils/securityMonitoring";
@@ -104,6 +104,17 @@ export const createBookingAtomic = onCall({secrets: ["RESEND_API_KEY"], cors: ge
         "Too many booking attempts. Please wait a few minutes before trying again."
       );
     }
+
+    // F-101-03: instance-global Firestore-backed layer behind the in-memory
+    // L1 (scale-out resets the Map). failOpen — booking creation is the
+    // revenue path; L1 still guards if the limiter store hiccups.
+    await enforceRateLimit(`ip_${hashRateKey(clientIp)}`, "widget_booking", {
+      maxCalls: 10,
+      windowMs: 600000,
+      failOpen: true,
+      errorMessage:
+        "Too many booking attempts. Please wait a few minutes before trying again.",
+    });
   }
 
   const {

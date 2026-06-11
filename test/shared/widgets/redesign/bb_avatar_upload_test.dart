@@ -1,4 +1,3 @@
-import 'package:bookbed/shared/widgets/redesign/bb_avatar.dart';
 import 'package:bookbed/shared/widgets/redesign/bb_avatar_upload.dart';
 import 'package:bookbed/shared/widgets/redesign/bb_icon.dart';
 import 'package:bookbed/shared/widgets/redesign/bb_spinner.dart';
@@ -26,14 +25,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        _scaffold(
-          const BbAvatarUpload(
-            imageUrl: null,
-            initials: 'ab',
-            size: BbAvatarSize.lg,
-            onImageSelected: _noop,
-          ),
-        ),
+        _scaffold(const BbAvatarUpload(initials: 'ab', onImageSelected: _noop)),
       );
 
       // Uppercased per dart-doc.
@@ -48,14 +40,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        _scaffold(
-          const BbAvatarUpload(
-            imageUrl: null,
-            initials: null,
-            size: BbAvatarSize.lg,
-            onImageSelected: _noop,
-          ),
-        ),
+        _scaffold(const BbAvatarUpload(onImageSelected: _noop)),
       );
 
       final Iterable<BbIcon> icons = tester.widgetList<BbIcon>(
@@ -77,7 +62,6 @@ void main() {
             const BbAvatarUpload(
               imageUrl: 'https://example.com/avatar.png',
               initials: 'AB',
-              size: BbAvatarSize.lg,
               onImageSelected: _noop,
             ),
           ),
@@ -98,9 +82,7 @@ void main() {
       await tester.pumpWidget(
         _scaffold(
           const BbAvatarUpload(
-            imageUrl: null,
             initials: 'AB',
-            size: BbAvatarSize.lg,
             isUploading: true,
             onImageSelected: _noop,
           ),
@@ -118,15 +100,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        _scaffold(
-          const BbAvatarUpload(
-            imageUrl: null,
-            initials: 'AB',
-            size: BbAvatarSize.lg,
-            isUploading: false,
-            onImageSelected: _noop,
-          ),
-        ),
+        _scaffold(const BbAvatarUpload(initials: 'AB', onImageSelected: _noop)),
       );
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -137,13 +111,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        _scaffold(
-          const BbAvatarUpload(
-            imageUrl: null,
-            initials: 'AB',
-            onImageSelected: _noop,
-          ),
-        ),
+        _scaffold(const BbAvatarUpload(initials: 'AB', onImageSelected: _noop)),
       );
 
       final Semantics semantics = tester.widget<Semantics>(
@@ -160,7 +128,6 @@ void main() {
       await tester.pumpWidget(
         _scaffold(
           const BbAvatarUpload(
-            imageUrl: null,
             initials: 'AB',
             semanticLabel: 'Override',
             onImageSelected: _noop,

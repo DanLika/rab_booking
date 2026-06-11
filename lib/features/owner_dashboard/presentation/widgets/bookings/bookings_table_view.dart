@@ -334,14 +334,14 @@ class _BookingsTableViewState extends ConsumerState<BookingsTableView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: booking.status.color.withValues(alpha: 0.2),
+              color: booking.status.colorOf(context).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: booking.status.color),
+              border: Border.all(color: booking.status.colorOf(context)),
             ),
             child: Text(
               booking.status.displayNameLocalized(context),
               style: TextStyle(
-                color: booking.status.color,
+                color: booking.status.colorOf(context),
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),

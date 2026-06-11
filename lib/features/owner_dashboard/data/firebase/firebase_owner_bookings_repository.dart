@@ -1745,22 +1745,25 @@ class FirebaseOwnerBookingsRepository {
 
     final List<BookingModel> allBookings = [];
 
-    // NEW STRUCTURE: Single collection group query per status (no batching!)
-    for (final status in statuses) {
-      final query = _firestore
-          .collectionGroup('bookings')
-          .where('owner_id', isEqualTo: userId)
-          .where('status', isEqualTo: status.value)
-          .where(
-            'created_at',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(createdAfter),
-          )
-          .orderBy('created_at', descending: true)
-          .limit(limit);
+    // Per-status CG queries run in PARALLEL (PR #708) — per-status
+    // orderBy/limit semantics unchanged, just no serial round-trips.
+    final snapshots = await Future.wait(
+      statuses.map((status) {
+        final query = _firestore
+            .collectionGroup('bookings')
+            .where('owner_id', isEqualTo: userId)
+            .where('status', isEqualTo: status.value)
+            .where(
+              'created_at',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(createdAfter),
+            )
+            .orderBy('created_at', descending: true)
+            .limit(limit);
+        return query.get().withBookingFetchTimeout('_queryBookingsForStats');
+      }),
+    );
 
-      final snapshot = await query.get().withBookingFetchTimeout(
-        '_queryBookingsForStats',
-      );
+    for (final snapshot in snapshots) {
       for (final doc in snapshot.docs) {
         try {
           final booking = _bookingFromDoc(doc);
@@ -1789,22 +1792,24 @@ class FirebaseOwnerBookingsRepository {
 
     final List<BookingModel> allBookings = [];
 
-    // NEW STRUCTURE: Single collection group query per status (no batching!)
-    for (final status in [BookingStatus.confirmed, BookingStatus.pending]) {
-      final query = _firestore
-          .collectionGroup('bookings')
-          .where('owner_id', isEqualTo: userId)
-          .where('status', isEqualTo: status.value)
-          .where(
-            'check_in',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(checkInAfter),
-          )
-          .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
-          .limit(limit);
+    // Per-status CG queries run in PARALLEL (PR #708 sibling).
+    final snapshots = await Future.wait(
+      [BookingStatus.confirmed, BookingStatus.pending].map((status) {
+        final query = _firestore
+            .collectionGroup('bookings')
+            .where('owner_id', isEqualTo: userId)
+            .where('status', isEqualTo: status.value)
+            .where(
+              'check_in',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(checkInAfter),
+            )
+            .where('check_in', isLessThan: Timestamp.fromDate(checkInBefore))
+            .limit(limit);
+        return query.get().withBookingFetchTimeout('_queryUpcomingCheckIns');
+      }),
+    );
 
-      final snapshot = await query.get().withBookingFetchTimeout(
-        '_queryUpcomingCheckIns',
-      );
+    for (final snapshot in snapshots) {
       for (final doc in snapshot.docs) {
         try {
           final booking = _bookingFromDoc(doc);

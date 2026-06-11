@@ -13,6 +13,7 @@ import '../../../../../core/utils/async_utils.dart';
 import '../../../../../core/services/logging_service.dart';
 import '../../../../../shared/models/booking_model.dart';
 import '../../../../../shared/providers/repository_providers.dart';
+import '../../../../../shared/widgets/redesign.dart';
 import '../../../../../core/constants/enums.dart';
 import '../../../../../core/constants/booking_status_extensions.dart';
 import '../../../data/services/owner_booking_callable_service.dart';
@@ -100,12 +101,18 @@ class _BookingInlineEditDialogState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header with gradient - matches CommonAppBar height (52px)
+              // Shell-tone header (handoff dialogs.jsx PV_PANEL_BG) — matches
+              // every other booking dialog in this sweep.
               Container(
                 height: ResponsiveDialogUtils.kHeaderHeight,
                 padding: EdgeInsets.symmetric(horizontal: headerPadding),
                 decoration: BoxDecoration(
-                  gradient: context.gradients.brandPrimary,
+                  color: theme.colorScheme.surface,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: theme.dividerColor.withValues(alpha: 0.4),
+                    ),
+                  ),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(11),
                   ),
@@ -115,12 +122,14 @@ class _BookingInlineEditDialogState
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withAlpha((0.2 * 255).toInt()),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.edit,
-                        color: Colors.white,
+                        color: theme.colorScheme.primary,
                         size: 20,
                       ),
                     ),
@@ -128,9 +137,9 @@ class _BookingInlineEditDialogState
                     Expanded(
                       child: AutoSizeText(
                         l10n.bookingInlineEditTitle,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),
                         maxLines: 1,
@@ -138,7 +147,10 @@ class _BookingInlineEditDialogState
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
+                      icon: Icon(
+                        Icons.close,
+                        color: theme.colorScheme.onSurface,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -296,45 +308,15 @@ class _BookingInlineEditDialogState
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Save button (full width on mobile) with gradient
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: context.gradients.brandPrimary,
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(8),
-                              ),
-                            ),
-                            child: ElevatedButton.icon(
-                              onPressed: _isSaving ? null : _saveChanges,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                foregroundColor: Colors.white,
-                                // Keep same colors when disabled (loading state)
-                                disabledBackgroundColor: Colors.transparent,
-                                disabledForegroundColor: Colors.white,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              icon: _isSaving
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save, color: Colors.white),
-                              label: AutoSizeText(
-                                _isSaving
-                                    ? l10n.bookingInlineEditSaving
-                                    : l10n.bookingInlineEditSave,
-                                style: const TextStyle(color: Colors.white),
-                                maxLines: 1,
-                              ),
-                            ),
+                          // Primary save CTA via design-system `BbButton`.
+                          BbButton(
+                            label: _isSaving
+                                ? l10n.bookingInlineEditSaving
+                                : l10n.bookingInlineEditSave,
+                            iconLeft: _isSaving ? null : 'save',
+                            fullWidth: true,
+                            loading: _isSaving,
+                            onPressed: _isSaving ? null : _saveChanges,
                           ),
                           const SizedBox(height: 8),
                           // Delete and Cancel buttons side by side
@@ -398,40 +380,13 @@ class _BookingInlineEditDialogState
                             child: Text(l10n.bookingInlineEditCancel),
                           ),
                           const SizedBox(width: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: context.gradients.brandPrimary,
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(8),
-                              ),
-                            ),
-                            child: ElevatedButton.icon(
-                              onPressed: _isSaving ? null : _saveChanges,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                foregroundColor: Colors.white,
-                                shadowColor: Colors.transparent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              icon: _isSaving
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save, color: Colors.white),
-                              label: Text(
-                                _isSaving
-                                    ? l10n.bookingInlineEditSaving
-                                    : l10n.bookingInlineEditSave,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ),
+                          BbButton(
+                            label: _isSaving
+                                ? l10n.bookingInlineEditSaving
+                                : l10n.bookingInlineEditSave,
+                            iconLeft: _isSaving ? null : 'save',
+                            loading: _isSaving,
+                            onPressed: _isSaving ? null : _saveChanges,
                           ),
                         ],
                       ),
@@ -743,22 +698,23 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            gradient: context.gradients.brandPrimary,
+            color: theme.colorScheme.primary.withValues(alpha: 0.10),
             borderRadius: const BorderRadius.all(Radius.circular(8)),
           ),
-          child: Icon(icon, color: Colors.white, size: 16),
+          child: Icon(icon, color: theme.colorScheme.primary, size: 16),
         ),
         const SizedBox(width: 10),
         Text(
           title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );

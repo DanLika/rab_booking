@@ -36,7 +36,15 @@ const db = admin.firestore();
       const secretsPlain = secData?.ical_export_token_plaintext;
       const legacyOk = typeof legacyTok === 'string' && legacyTok.length > 0;
       const secretsOk = typeof secretsTok === 'string' && secretsTok.length > 0;
-      const status = legacyOk || secretsOk ? 'SAFE' : 'VULNERABLE';
+      const newSchemaOk = typeof secretsPlain === 'string' && secretsPlain.length > 0;
+      // Post-SF-063 verifyIcalToken is empty-fail-CLOSED, so a missing
+      // readable token is never exploitable. Verdicts:
+      //   OK            — read-side (`ical_export_token`) finds a token; feed works
+      //   BROKEN-FEED   — only PR #482 schema (`_plaintext`/`_hash`) present;
+      //                   read-side sees empty -> every request 403 (audit/92
+      //                   schema mismatch, functional gap not a security hole)
+      //   FAIL-CLOSED   — no token anywhere; export enabled but unreachable
+      const status = legacyOk || secretsOk ? 'OK' : (newSchemaOk ? 'BROKEN-FEED' : 'FAIL-CLOSED');
       matrix.push({
         propertyId: p.id,
         unitId: ws.id,
@@ -51,10 +59,10 @@ const db = admin.firestore();
     }
   }
   console.log(JSON.stringify(matrix, null, 2));
-  const vulnerable = matrix.filter((m) => m.verdict === 'VULNERABLE');
+  const broken = matrix.filter((m) => m.verdict !== 'OK');
   console.log(`\nTotal ical_export_enabled units: ${matrix.length}`);
-  console.log(`VULNERABLE: ${vulnerable.length}`);
-  console.log(`SAFE: ${matrix.length - vulnerable.length}`);
+  console.log(`OK: ${matrix.length - broken.length}`);
+  console.log(`BROKEN-FEED/FAIL-CLOSED: ${broken.length}`);
   process.exit(0);
 })().catch((e) => {
   console.error(e);

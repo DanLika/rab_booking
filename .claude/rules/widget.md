@@ -58,7 +58,7 @@ The 2 catches in `booking_confirmation_screen.dart` (around lines 171, 192) ARE 
 
 ## Host comparisons — use `EnvironmentConfig`, never literals
 
-All `view.bookbed.io` / `app.bookbed.io` / `bookbed.io` host literals were centralized in T13 (`audit/08-environment-url-centralization.md`, commit `b0bad83c`). New widget code MUST use:
+All `view.bookbed.io` / `app.bookbed.io` / `bookbed.io` host literals were centralized in T13 (T13, commit `b0bad83c`). New widget code MUST use:
 
 ```dart
 import '../../../core/config/environment.dart';

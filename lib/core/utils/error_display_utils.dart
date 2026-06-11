@@ -6,11 +6,11 @@ import '../theme/app_colors.dart';
 /// Utility for displaying user-friendly error messages
 /// Hides technical details (stack traces) from users in production
 ///
-/// Snackbar color palette (Mediterranean theme):
-/// - Success: Emerald (#10B981) - White text + check_circle icon
-/// - Error: Red (#EF4444) - White text + error_outline icon
-/// - Warning: Orange (#F97316) - Dark text + warning_amber icon
-/// - Info: Blue (#3B82F6) - White text + info_outline icon
+/// Snackbar color palette (handoff `tokens.css`, audit/121):
+/// - Success: Green (#2E7D5B) - White text + check_circle icon
+/// - Error: Coral (#FF6B6B) - White text + error_outline icon
+/// - Warning: Golden Sand (#FFB84D) - Dark text + warning_amber icon
+/// - Info: Blue (#4A90D9) - White text + info_outline icon
 ///
 /// All snackbars use:
 /// - SnackBarBehavior.floating for proper z-index

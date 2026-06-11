@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import {
+  assertFails,
   assertSucceeds,
   initializeTestEnvironment,
   RulesTestContext,
@@ -44,6 +45,14 @@ beforeEach(async () => {
       owner_id: OWNER_UID,
       price: 100,
     });
+    // Seed property + deprecated top-level ical_feed (F-98-01)
+    await db.doc("properties/prop-1").set({owner_id: OWNER_UID});
+    await db.doc("ical_feeds/feed-1").set({
+      property_id: "prop-1",
+      url: "https://example.com/feed.ics",
+      sync_count: 5,
+      event_count: 12,
+    });
   });
 });
 
@@ -72,6 +81,35 @@ describe("Deprecated top-level collections read lockdown", () => {
     test("resource owner read is ALLOWED", async () => {
       const ctx = testEnv.authenticatedContext(OWNER_UID);
       await assertSucceeds(ctx.firestore().doc("daily_prices/price-1").get());
+    });
+  });
+
+  // F-98-01 (audit/98): legacy top-level ical_feeds must mirror the
+  // subcollection's SF-068 deny on CF-managed sync stats.
+  describe("/ical_feeds/{feedId} (deprecated top-level)", () => {
+    test("owner update of benign field is ALLOWED", async () => {
+      const ctx = testEnv.authenticatedContext(OWNER_UID);
+      await assertSucceeds(
+        ctx.firestore().doc("ical_feeds/feed-1").update({
+          url: "https://example.com/renamed.ics",
+        })
+      );
+    });
+
+    test("owner direct-write of sync_count is DENIED", async () => {
+      const ctx = testEnv.authenticatedContext(OWNER_UID);
+      await assertFails(
+        ctx.firestore().doc("ical_feeds/feed-1").update({sync_count: 999})
+      );
+    });
+
+    test("owner direct-write of last_synced is DENIED", async () => {
+      const ctx = testEnv.authenticatedContext(OWNER_UID);
+      await assertFails(
+        ctx.firestore().doc("ical_feeds/feed-1").update({
+          last_synced: new Date("2030-01-01"),
+        })
+      );
     });
   });
 });

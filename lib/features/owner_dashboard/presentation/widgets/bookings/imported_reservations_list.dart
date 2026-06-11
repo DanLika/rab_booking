@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/constants/app_dimensions.dart';
@@ -176,10 +177,8 @@ class _ImportedReservationCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: hasConflict
-                ? Colors.red
-                : isDark
-                ? Colors.white.withValues(alpha: 0.1)
-                : Colors.black.withValues(alpha: 0.08),
+                ? BBColor.of(context).error
+                : BBColor.of(context).border,
             width: hasConflict ? 2 : 1,
           ),
           boxShadow: isDark ? AppShadows.elevation2Dark : AppShadows.elevation2,
@@ -289,13 +288,15 @@ class _ImportedReservationCard extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.1),
+                                  color: BBColor.of(
+                                    context,
+                                  ).warning.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Icon(
                                   Icons.notes_outlined,
                                   size: 20,
-                                  color: Colors.amber.shade700,
+                                  color: BBColor.of(context).statusPending,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -334,13 +335,16 @@ class _ImportedReservationCard extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade100,
+                    color: BBColor.of(context).error.withValues(alpha: 0.14),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.red.shade300, width: 2),
+                    border: Border.all(
+                      color: BBColor.of(context).error.withValues(alpha: 0.45),
+                      width: 2,
+                    ),
                   ),
                   child: Icon(
                     Icons.warning_amber_rounded,
-                    color: Colors.red.shade700,
+                    color: BBColor.of(context).error,
                     size: 20,
                   ),
                 ),

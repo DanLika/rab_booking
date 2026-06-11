@@ -3525,6 +3525,7 @@
   "bookingsTabPending": "Na čekanju",
   "bookingsTabConfirmed": "Potvrđene",
   "bookingsTabCancelled": "Otkazane",
+  "bookingsTabCompleted": "Završene",
   "bookingsTabImported": "Uvezene",
   "ownerProfileCompletionStatus": "Profil {percentage}% ispunjen",
   "@ownerProfileCompletionStatus": {

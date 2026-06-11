@@ -8411,6 +8411,9 @@ class AppLocalizationsHr extends AppLocalizations {
   String get bookingsTabCancelled => 'Otkazane';
 
   @override
+  String get bookingsTabCompleted => 'Završene';
+
+  @override
   String get bookingsTabImported => 'Uvezene';
 
   @override

@@ -172,6 +172,12 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
           .collectionGroup("bookings")
           .where("unit_id", "==", unitId)
           .where("status", "in", ["pending", "confirmed"])
+          // F-86-02: bound by window start so cost scales with the request,
+          // not the unit's history, and the 500-limit can't silently drop
+          // live bookings. Composite: (unit_id, status, check_out).
+          // The `check_in < endDate` half stays in the JS post-filter
+          // below (Firestore allows one range field per query).
+          .where("check_out", ">", startTs)
           .limit(MAX_BOOKINGS_PER_QUERY)
           .get(),
         db
@@ -191,6 +197,8 @@ export const getUnitAvailability = onCall<GetUnitAvailabilityInput, Promise<GetU
         db
           .collectionGroup("ical_events")
           .where("unit_id", "==", unitId)
+          // F-86-02: same bound as bookings. Composite: (unit_id, end_date).
+          .where("end_date", ">", startTs)
           .limit(MAX_ICAL_PER_QUERY)
           .get(),
       ]);

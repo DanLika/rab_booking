@@ -109,7 +109,7 @@ Gitignored/untracked; dev-machine risk only. **Fix (optional):** env-var injecti
 |---|---|---|---|
 | F-99-03 | INFO latent | `user_profiles` deny-list missing Stripe-linkage mirror | zero read sites today; append `stripe_*` to both `hasAny` arrays on next rules touch |
 | F-99-09 | LOW dormant | Twilio creds via `process.env \|\| ""` not `defineSecret` | early-returns while empty; convert before activating SMS |
-| F-99-10 | LOW | shared validators `throw Error` not `HttpsError` | Sentry-noise class; swap opportunistically per file |
+| ~~F-99-10~~ | ~~LOW~~ | ~~shared validators `throw Error` not `HttpsError`~~ | **CLOSED 2026-06-11**: 9 swaps → `HttpsError("invalid-argument")` in `dateValidation.ts` (6, incl. user-reachable same-civil-day `< 1 night`) + `depositCalculation.ts` (3); `bookingReferenceGenerator.ts` intentionally KEPT bare `Error` (input is server-generated doc ID — a throw there is a real bug that SHOULD reach Sentry). 462/462 jest; `createBookingAtomic` redeployed dev |
 | F-99-11 / F-107-11 / F-123-08 | LOW (MED footgun) | `web_utils_web.dart:325,332` `sendMessageToParent` `targetOrigin:'*'` (leaks `cs_*` session IDs to any embedder) | single non-PII-critical caller today; resolve target from trusted-list before adding callers |
 | F-99-12/13/14 / F-107-15 | LOW | CSP scoping: `unsafe-inline`+`unsafe-eval` (CanvasKit needs eval), `*.cloudfunctions.net` wildcard, `*.a.run.app` absent | hardening-sprint batch: change + 3-surface redeploy + smoke as one unit |
 | F-99-15 | INFO latent | deep-link cold-start auth race | guard when wiring app_links stream (F-62-05 class) |
@@ -121,7 +121,7 @@ Gitignored/untracked; dev-machine risk only. **Fix (optional):** env-var injecti
 | ID | Sev | Item | Note |
 |---|---|---|---|
 | F-107-05 | MED partial (SF-068) | `properties.create` accepts client `subdomain` (format-valid squat) before CF reservation | drop `subdomain` from create payload in owner repo + strip from `create.affectedKeys`; force `setPropertySubdomain` callable |
-| F-107-09 / F-86-02 | LOW | availability CG queries lack date-range filter (500-limit silent truncation) | F-86-01 sibling **FIXED 2026-06-11** (`<=`→`<` exclusive end, dev-deployed, t3 live-verified); F-86-03 still open — table in `audit/edge-0530/README.md` |
+| ~~F-107-09 / F-86-02~~ | ~~LOW~~ | ~~availability CG queries lack date-range filter~~ | **CLOSED 2026-06-11**: `check_out > startTs` (bookings) + `end_date > startTs` (ical_events) server-side; 2 new CG composites (`unit_id+status+check_out`, `unit_id+end_date`) deployed dev + READY; t2+t3 live green. **PROD ordering: indexes BEFORE CF** (rider in docs/TODO.md). F-86-01 sibling also FIXED same day; F-86-03 (Stripe min-floor) still open — `audit/edge-0530/README.md` |
 | ~~F-107-10~~ | ~~LOW~~ | ~~`stripeSubscription.ts` no explicit `region`~~ | **CLOSED 2026-06-11**: `region: "us-central1"` pinned explicitly on both callables (region immutable; migration tracked in docs/TODO.md) |
 | F-107-12 / F-67-03 | LOW partial | widget form persistence keeps PII 15min in SharedPreferences keyed by `unitId` (`notes` scrubbed) | move to sessionStorage on web (deferred refactor) |
 | F-107-13 | LOW | `firestore.rules:654` deprecated top-level `ical_feeds` read `resource == null` short-circuit → authed feedId existence probe (re-verified open 2026-06-11) | drop short-circuit or delete block (already `create: if false`); sibling of closed F-98-01 |

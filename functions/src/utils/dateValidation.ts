@@ -20,7 +20,7 @@ export function safeToDate(
   fieldName = "date"
 ): Date {
   if (!value) {
-    throw new Error(`${fieldName} is required but was ${value}`);
+    throw new HttpsError("invalid-argument", `${fieldName} is required but was ${value}`);
   }
 
   // Handle Firestore Timestamp (has .toDate() method)
@@ -36,7 +36,7 @@ export function safeToDate(
   // Handle Date object
   if (value instanceof Date) {
     if (isNaN(value.getTime())) {
-      throw new Error(`${fieldName} is an invalid Date object`);
+      throw new HttpsError("invalid-argument", `${fieldName} is an invalid Date object`);
     }
     return value;
   }
@@ -45,7 +45,7 @@ export function safeToDate(
   if (typeof value === "string") {
     const date = new Date(value);
     if (isNaN(date.getTime())) {
-      throw new Error(`${fieldName} string "${value}" is not a valid date`);
+      throw new HttpsError("invalid-argument", `${fieldName} string "${value}" is not a valid date`);
     }
     return date;
   }
@@ -54,12 +54,13 @@ export function safeToDate(
   if (typeof value === "number") {
     const date = new Date(value);
     if (isNaN(date.getTime())) {
-      throw new Error(`${fieldName} timestamp ${value} is not a valid date`);
+      throw new HttpsError("invalid-argument", `${fieldName} timestamp ${value} is not a valid date`);
     }
     return date;
   }
 
-  throw new Error(
+  throw new HttpsError(
+    "invalid-argument",
     `${fieldName} has unsupported type: ${typeof value}. ` +
     "Expected Timestamp, Date, string, or number."
   );
@@ -355,7 +356,9 @@ export function calculateBookingNights(
 
   // Sanity check (should never happen if dates are validated)
   if (nights < 1) {
-    throw new Error("Booking nights calculation resulted in < 1 night");
+    // Reachable by user input: same-Zagreb-civil-day check-in/out normalizes
+    // to equal timestamps (edge-0530 t1) — client fault, not a server bug.
+    throw new HttpsError("invalid-argument", "Booking nights calculation resulted in < 1 night");
   }
 
   return nights;

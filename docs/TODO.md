@@ -12,6 +12,11 @@ Puna istorija: `git log -- docs/TODO.md`.
 Kanonski checklist: **`docs/SECURITY_FIXES.md` § SF-081** (7 CF-ova + firestore.rules + audit/123 wave).
 Uz to, stariji PROD gapovi koji se voze istim talasom:
 
+- **⚠️ ORDERING (F-86-02, 2026-06-11):** `firebase deploy --only firestore:indexes --project production`
+  i sačekaj READY **+30s buffer** (T11c lekcija) PRIJE deploya `getUnitAvailability` — CF sad koristi
+  2 nova CG composita (`bookings unit_id+status+check_out`, `ical_events unit_id+end_date`);
+  bez indexa availability 500-uje "index currently building" → widget kalendar fail-closed.
+
 - **Hosting headers redeploy** — security headeri (CSP/HSTS/Permissions-Policy) committani u
   `firebase.json` ali PROD owner+admin hosting nikad redeployan → headeri žive samo na dev
   (memorija: prod-hosting-headers-deploy-gap). `firebase deploy --only hosting:owner,hosting:admin --project production`.

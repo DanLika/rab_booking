@@ -10,7 +10,7 @@ echo containment, SF-014 price authority — ALL PASS. Run from `functions/`
 | # | Where | What | Fix shape |
 |---|---|---|---|
 | ~~F-86-01~~ | `availability.ts` daily_prices query | **FIXED 2026-06-11**: `<=` → `<` exclusive end; dev-deployed + t3 [C] live-verified (checkout-day window no longer returned) | done |
-| F-86-02 | `availability.ts` bookings + ical_events CG queries | no date filter — cost scales with unit history; 500-limit silently truncates hot units if `completeCheckedOutBookings` ever skips | add `check_in < endTs && check_out > startTs` range + composite indexes (memory: availability-cf-unbounded-cg-query) |
+| ~~F-86-02~~ | `availability.ts` CG queries | **FIXED 2026-06-11**: `check_out > startTs` / `end_date > startTs` server-side + 2 CG composites (dev READY); `check_in < endTs` half stays in JS post-filter (one range field per query); t2+t3 live green. PROD: deploy indexes BEFORE CF (TODO.md rider) | done |
 | F-86-03 | `stripePayment.ts` `Math.max(rawDepositCents, 50)` | Stripe €0.50 floor silently overcharges deposits on ultra-low-price units (€0.10 raw → €0.50 charged); logInfo trail exists | reject (`failed-precondition`) or force-full-payment when raw < 50¢; promote to MED only on real owner report |
 
 | Script | What | Deps | Last run 2026-06-11 (post audit/123 CF deploy; fresh `seed.js` first) |

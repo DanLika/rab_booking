@@ -1,3 +1,5 @@
+import {HttpsError} from "firebase-functions/v2/https";
+
 /**
  * Calculate deposit amount using integer arithmetic
  *
@@ -22,11 +24,12 @@ export function calculateDepositAmount(
   // STEP 1: VALIDATION
   // ========================================================================
   if (totalPrice < 0) {
-    throw new Error(`Total price cannot be negative: ${totalPrice}`);
+    throw new HttpsError("invalid-argument", `Total price cannot be negative: ${totalPrice}`);
   }
 
   if (depositPercentage < 0 || depositPercentage > 100) {
-    throw new Error(
+    throw new HttpsError(
+      "invalid-argument",
       `Deposit percentage must be 0-100: ${depositPercentage}`
     );
   }
@@ -76,7 +79,8 @@ export function calculateRemainingAmount(
 
   // Safety check: remaining should never be negative
   if (remainingCents < 0) {
-    throw new Error(
+    throw new HttpsError(
+      "invalid-argument",
       `Remaining amount cannot be negative. Total: $${totalPrice}, Deposit: $${depositAmount}`
     );
   }

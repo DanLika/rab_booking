@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/design/tokens.dart';
 import '../../../../core/providers/enhanced_auth_provider.dart';
+import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../core/utils/error_display_utils.dart';
 import '../../../../core/utils/notification_localizer.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -181,81 +182,88 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               leadingIcon: Icons.menu,
               onLeadingIconTap: (context) => Scaffold.of(context).openDrawer(),
             ),
-      body: Stack(
-        alignment: Alignment.topLeft,
-        children: [
-          notificationsAsync.when(
-            data: (notifications) {
-              if (notifications.isEmpty) {
-                return _buildEmptyState(context);
-              }
+      // Shell background per handoff (`--bb-shell-bg`), matching sibling
+      // screens that paint `context.gradients.pageBackground` explicitly.
+      body: Container(
+        decoration: BoxDecoration(gradient: context.gradients.pageBackground),
+        child: Stack(
+          alignment: Alignment.topLeft,
+          children: [
+            notificationsAsync.when(
+              data: (notifications) {
+                if (notifications.isEmpty) {
+                  return _buildEmptyState(context);
+                }
 
-              return RefreshIndicator(
-                color: c.primary,
-                onRefresh: () async {
-                  ref.invalidate(notificationsStreamProvider);
-                },
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(BBSpace.sm),
-                  itemCount: groupedNotifications.length,
-                  itemBuilder: (context, index) {
-                    final dateKey = groupedNotifications.keys.elementAt(index);
-                    final dayNotifications = groupedNotifications[dateKey]!;
+                return RefreshIndicator(
+                  color: c.primary,
+                  onRefresh: () async {
+                    ref.invalidate(notificationsStreamProvider);
+                  },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(BBSpace.sm),
+                    itemCount: groupedNotifications.length,
+                    itemBuilder: (context, index) {
+                      final dateKey = groupedNotifications.keys.elementAt(
+                        index,
+                      );
+                      final dayNotifications = groupedNotifications[dateKey]!;
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: BBSpace.sm,
+                              bottom: BBSpace.xs,
+                            ),
+                            child: BbSectionHeader(
+                              title: dateKey,
+                              count: dayNotifications.length,
+                              level: BbSectionHeaderLevel.h3,
+                            ),
+                          ),
+                          ...dayNotifications.map(
+                            (notification) => _buildNotificationCard(
+                              context,
+                              notification,
+                              actions,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                );
+              },
+              loading: SkeletonLoader.notificationsList,
+              error: (error, stack) {
+                return _buildErrorState(context, error, ref);
+              },
+            ),
+
+            // Loading overlay during delete
+            if (_isDeleting)
+              ColoredBox(
+                color: Colors.black.withValues(alpha: 0.3),
+                child: Center(
+                  child: BbCard(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: BBSpace.sm,
-                            bottom: BBSpace.xs,
-                          ),
-                          child: BbSectionHeader(
-                            title: dateKey,
-                            count: dayNotifications.length,
-                            level: BbSectionHeaderLevel.h3,
-                          ),
-                        ),
-                        ...dayNotifications.map(
-                          (notification) => _buildNotificationCard(
-                            context,
-                            notification,
-                            actions,
-                          ),
+                        BbSpinner(size: 28, color: c.primary),
+                        const SizedBox(height: BBSpace.sm),
+                        Text(
+                          l10n.notificationsDeleting,
+                          style: BBType.body(context),
                         ),
                       ],
-                    );
-                  },
-                ),
-              );
-            },
-            loading: SkeletonLoader.notificationsList,
-            error: (error, stack) {
-              return _buildErrorState(context, error, ref);
-            },
-          ),
-
-          // Loading overlay during delete
-          if (_isDeleting)
-            ColoredBox(
-              color: Colors.black.withValues(alpha: 0.3),
-              child: Center(
-                child: BbCard(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      BbSpinner(size: 28, color: c.primary),
-                      const SizedBox(height: BBSpace.sm),
-                      Text(
-                        l10n.notificationsDeleting,
-                        style: BBType.body(context),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
       drawer: const OwnerAppDrawer(currentRoute: 'notifications'),
       // FAB for actions when not in selection mode

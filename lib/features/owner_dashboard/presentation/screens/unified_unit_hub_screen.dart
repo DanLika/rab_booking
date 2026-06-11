@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/design/tokens.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/theme_extensions.dart';
 import '../../../../core/theme/gradient_extensions.dart';
@@ -44,11 +45,14 @@ const double _kTabletBreakpoint = 800.0;
 /// Breakpoint for mobile layout
 const double _kMobileBreakpoint = 600.0;
 
-/// Available status color
-const Color _kAvailableColor = Color(0xFF66BB6A);
+/// Available status color (handoff `--bb-success`, dark lift in dark mode)
+Color _availableColor(ThemeData theme) => theme.brightness == Brightness.dark
+    ? BBColor.successDarkMode
+    : BBColor.success;
 
-/// Unavailable status color
-const Color _kUnavailableColor = Color(0xFFEF5350);
+/// Unavailable status color (handoff `--bb-error`, dark lift in dark mode)
+Color _unavailableColor(ThemeData theme) =>
+    theme.brightness == Brightness.dark ? BBColor.errorDarkMode : BBColor.error;
 
 // ============================================================================
 
@@ -410,7 +414,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
             loading: () => Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  isDark ? Colors.white : Colors.black,
+                  theme.colorScheme.primary,
                 ),
               ),
             ),
@@ -492,9 +496,7 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
     return unitsAsync.when(
       loading: () => Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(
-            isDark ? Colors.white : Colors.black,
-          ),
+          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
         ),
       ),
       error: (error, stack) {
@@ -1040,8 +1042,12 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                     ),
                     decoration: BoxDecoration(
                       color: unit.isAvailable
-                          ? _kAvailableColor.withAlpha((0.2 * 255).toInt())
-                          : _kUnavailableColor.withAlpha((0.2 * 255).toInt()),
+                          ? _availableColor(
+                              theme,
+                            ).withAlpha((0.2 * 255).toInt())
+                          : _unavailableColor(
+                              theme,
+                            ).withAlpha((0.2 * 255).toInt()),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Builder(
@@ -1053,8 +1059,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
                               : l10n.unitHubUnavailable,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: unit.isAvailable
-                                ? _kAvailableColor
-                                : _kUnavailableColor,
+                                ? _availableColor(theme)
+                                : _unavailableColor(theme),
                             fontWeight: FontWeight.w600,
                             fontSize: 11,
                           ),
@@ -1414,8 +1420,8 @@ class _UnifiedUnitHubScreenState extends ConsumerState<UnifiedUnitHubScreen>
               ? l10n.unitHubStatusAvailable
               : l10n.unitHubStatusUnavailable,
           valueColor: _selectedUnit!.isAvailable
-              ? _kAvailableColor
-              : _kUnavailableColor,
+              ? _availableColor(theme)
+              : _unavailableColor(theme),
         ),
       ],
     );

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/config/router_owner.dart';
 import '../../../../core/constants/enums.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/gradient_extensions.dart';
 import '../../../../shared/models/unit_model.dart';
 import '../../domain/models/date_range_selection.dart';
@@ -532,7 +533,7 @@ class _OwnerTimelineCalendarScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.overbookingConflictDetails(guest1, guest2)),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.error,
         action: SnackBarAction(
           label: l10n.overbookingViewBooking,
           textColor: Colors.white,
@@ -573,7 +574,7 @@ class _OwnerTimelineCalendarScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.ownerBookingsNotFound),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }

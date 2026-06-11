@@ -1622,7 +1622,7 @@ class _AddIcalFeedDialogState extends ConsumerState<AddIcalFeedDialog> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(l10n.icalSyncSuccess(bookingsCreated)),
-            backgroundColor: Colors.green,
+            backgroundColor: BBColor.success,
             behavior: SnackBarBehavior.floating,
           ),
         );

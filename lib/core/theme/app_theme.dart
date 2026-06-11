@@ -57,8 +57,9 @@ class AppTheme {
         outline: AppColors.borderLight,
       ),
 
-      // Background
-      scaffoldBackgroundColor: AppColors.backgroundLight,
+      // Background — shell layer (`--bb-shell-bg`), matches the app bar so
+      // screens without an explicit pageBackground paint show no seam.
+      scaffoldBackgroundColor: AppColors.shellBgLight,
 
       // Typography
       textTheme: AppTypography.textTheme.apply(
@@ -66,10 +67,11 @@ class AppTheme {
         displayColor: AppColors.textPrimaryLight,
       ),
 
-      // AppBar theme — Premium (audit/116 §3.1): surface bg, 56px slim,
-      // text-primary title, status bar icons dark on light.
+      // AppBar theme — handoff `BbAppBar`: transparent on the shell
+      // (`--bb-shell-bg`), 56px slim, text-primary title, status bar icons
+      // dark on light.
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surfaceLight,
+        backgroundColor: AppColors.shellBgLight,
         foregroundColor: AppColors.textPrimaryLight,
         elevation: 0,
         centerTitle: false,
@@ -77,7 +79,7 @@ class AppTheme {
         shadowColor: AppColors.sectionDividerLight,
         toolbarHeight: 56, // Premium slim AppBar
         systemOverlayStyle: SystemUiOverlayStyle.dark.copyWith(
-          statusBarColor: AppColors.surfaceLight,
+          statusBarColor: AppColors.shellBgLight,
           statusBarBrightness: Brightness.light, // iOS: dark icons
           statusBarIconBrightness: Brightness.dark, // Android: dark icons
         ),
@@ -471,10 +473,11 @@ class AppTheme {
         displayColor: AppColors.textPrimaryDark,
       ),
 
-      // AppBar theme — Premium (audit/116 §3.1): surface bg, 56px slim,
-      // text-primary title, status bar icons light on dark.
+      // AppBar theme — handoff `BbAppBar`: transparent on the shell
+      // (`--bb-shell-bg` dark = #000), 56px slim, text-primary title,
+      // status bar icons light on dark.
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.surfaceDark,
+        backgroundColor: AppColors.shellBgDark,
         foregroundColor: AppColors.textPrimaryDark,
         elevation: 0,
         centerTitle: false,
@@ -482,7 +485,7 @@ class AppTheme {
         shadowColor: AppColors.borderDark,
         toolbarHeight: 56, // Premium slim AppBar
         systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
-          statusBarColor: AppColors.surfaceDark,
+          statusBarColor: AppColors.shellBgDark,
           statusBarBrightness: Brightness.dark, // iOS: light icons
           statusBarIconBrightness: Brightness.light, // Android: light icons
         ),

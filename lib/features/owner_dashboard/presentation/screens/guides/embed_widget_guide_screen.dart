@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/utils/platform_scroll_physics.dart';
+import '../../../../../core/design/tokens.dart';
 import '../../../../../core/theme/app_shadows.dart';
 import '../../../../../core/theme/gradient_extensions.dart';
 import '../../../../../core/config/environment.dart';
@@ -581,7 +582,7 @@ class _EmbedWidgetGuideScreenState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF12121A) : const Color(0xFFF4F5F9),
+              color: isDark ? BBColor.surfaceVarDark : BBColor.surfaceVarLight,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
@@ -617,7 +618,8 @@ class _EmbedWidgetGuideScreenState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0D1A2D) : const Color(0xFFF0F4FF),
+              // handoff `--bb-info-tint`
+              color: BBColor.info.withValues(alpha: isDark ? 0.18 : 0.12),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: theme.colorScheme.primary.withValues(alpha: 0.2),
@@ -766,7 +768,7 @@ class _EmbedWidgetGuideScreenState
         maxChildSize: 0.9,
         builder: (_, controller) => Container(
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            color: isDark ? BBColor.surfaceDark : BBColor.surfaceLight,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
@@ -887,8 +889,8 @@ class _EmbedWidgetGuideScreenState
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isDark
-                            ? const Color(0xFF12121A)
-                            : const Color(0xFFF4F5F9),
+                            ? BBColor.surfaceVarDark
+                            : BBColor.surfaceVarLight,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: theme.colorScheme.onSurface.withValues(
@@ -1497,7 +1499,7 @@ class _EmbedWidgetGuideScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E26) : Colors.white,
+        color: isDark ? BBColor.surfaceDark : BBColor.surfaceLight,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
@@ -1665,7 +1667,7 @@ class _EmbedWidgetGuideScreenState
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF12121A) : const Color(0xFFF4F5F9),
+              color: isDark ? BBColor.surfaceVarDark : BBColor.surfaceVarLight,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.1),

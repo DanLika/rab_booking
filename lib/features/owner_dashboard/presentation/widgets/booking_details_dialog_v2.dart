@@ -594,7 +594,7 @@ class _StatusBadgeV2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = status.color;
+    final statusColor = status.colorOf(context);
     final statusText = status.displayNameLocalized(context);
 
     return Container(

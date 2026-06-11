@@ -142,7 +142,9 @@ class BookingActionBottomSheet extends ConsumerWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: booking.status.color.withValues(alpha: 0.12),
+                            color: booking.status
+                                .colorOf(context)
+                                .withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
@@ -152,7 +154,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
                                 width: 8,
                                 height: 8,
                                 decoration: BoxDecoration(
-                                  color: booking.status.color,
+                                  color: booking.status.colorOf(context),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -162,7 +164,7 @@ class BookingActionBottomSheet extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: booking.status.color,
+                                  color: booking.status.colorOf(context),
                                 ),
                               ),
                             ],

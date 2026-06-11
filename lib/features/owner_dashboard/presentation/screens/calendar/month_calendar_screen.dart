@@ -434,9 +434,10 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
               ),
             ),
             agendaStyle: AgendaStyle(
+              // handoff `--bb-surface-variant` (#F5F5F5 / #1E1E1E)
               backgroundColor: isDark
-                  ? const Color(0xFF1A1A1A)
-                  : const Color(0xFFF4F5F9),
+                  ? BBColor.surfaceVarDark
+                  : BBColor.surfaceVarLight,
               dayTextStyle: TextStyle(
                 color: theme.colorScheme.onSurface,
                 fontSize: 14,
@@ -464,8 +465,8 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
             monthHeaderSettings: MonthHeaderSettings(
               height: 80,
               backgroundColor: isDark
-                  ? const Color(0xFF2D2D2D)
-                  : const Color(0xFFEEF0F2),
+                  ? BBColor.surfaceVarDark
+                  : BBColor.surfaceVarLight,
               monthTextStyle: TextStyle(
                 color: theme.colorScheme.onSurface,
                 fontSize: 18,
@@ -768,7 +769,7 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
         borderRadius: BorderRadius.circular(
           math.min(4, details.bounds.height / 2),
         ),
-        border: hasConflict ? Border.all(color: Colors.red, width: 2) : null,
+        border: hasConflict ? Border.all(color: BBColor.error, width: 2) : null,
       ),
       padding: EdgeInsets.symmetric(
         horizontal: isDetailedView ? 12 : (isMobile ? 2 : 4),
@@ -913,16 +914,23 @@ class _MonthCalendarScreenState extends ConsumerState<MonthCalendarScreen> {
     );
   }
 
+  // Handoff `--bb-status-*` table, dark-lifted variants in dark mode.
   static Color _getBookingColor(BookingStatus status, bool isDark) {
     switch (status) {
       case BookingStatus.confirmed:
-        return isDark ? const Color(0xFF2E7D32) : const Color(0xFF43A047);
+        return isDark
+            ? BBColor.statusConfirmedDarkMode
+            : BBColor.statusConfirmed;
       case BookingStatus.pending:
-        return isDark ? const Color(0xFFE65100) : const Color(0xFFF57C00);
+        return isDark ? BBColor.statusPendingDarkMode : BBColor.statusPending;
       case BookingStatus.cancelled:
-        return isDark ? const Color(0xFF616161) : const Color(0xFF9E9E9E);
+        return isDark
+            ? BBColor.statusCancelledDarkMode
+            : BBColor.statusCancelled;
       case BookingStatus.completed:
-        return BBColor.statusCompleted;
+        return isDark
+            ? BBColor.statusCompletedDarkMode
+            : BBColor.statusCompleted;
     }
   }
 

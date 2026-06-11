@@ -359,17 +359,33 @@ enum BookingStatus {
     BookingStatus.completed => 'Completed',
   };
 
-  /// Get color for booking status.
+  /// Get color for booking status (LIGHT-theme values).
   ///
   /// Maps to canonical [BBColor] status tokens (audit/116 §2.2). Premium spec
   /// requires `completed → primary purple` (#6B4CE6), not the historical blue.
   /// Calendar still paints pending RED with a diagonal pattern (own surface).
+  ///
+  /// Theme-blind — prefer [colorOf] in widgets so dark mode gets the
+  /// `tokens.css .theme-dark` lifted variants (audit/121).
   Color get color => switch (this) {
     BookingStatus.pending => BBColor.statusPending,
     BookingStatus.confirmed => BBColor.statusConfirmed,
     BookingStatus.cancelled => BBColor.statusCancelled,
     BookingStatus.completed => BBColor.statusCompleted,
   };
+
+  /// Dark-theme lifted status color (`tokens.css .theme-dark --bb-status-*`).
+  Color get colorDark => switch (this) {
+    BookingStatus.pending => BBColor.statusPendingDarkMode,
+    BookingStatus.confirmed => BBColor.statusConfirmedDarkMode,
+    BookingStatus.cancelled => BBColor.statusCancelledDarkMode,
+    BookingStatus.completed => BBColor.statusCompletedDarkMode,
+  };
+
+  /// Theme-aware status color — resolves [color] in light, [colorDark] in
+  /// dark, mirroring `BBColor.of(context)`.
+  Color colorOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? colorDark : color;
 
   /// Check if booking can be cancelled
   /// Note: Pending bookings should be rejected, not cancelled

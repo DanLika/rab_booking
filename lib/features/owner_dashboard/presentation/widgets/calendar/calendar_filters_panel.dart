@@ -464,7 +464,7 @@ class _CalendarFiltersPanelState extends ConsumerState<CalendarFiltersPanel> {
                   width: 12,
                   height: 12,
                   decoration: BoxDecoration(
-                    color: status.color,
+                    color: status.colorOf(context),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isSelected ? Colors.white : Colors.transparent,

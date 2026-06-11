@@ -47,6 +47,13 @@
 - Live iOS sim (bookbed-dev, debug, Marionette): Pregled light+dark full scroll (arrivals real data "Pon 15 · Smoke Test · Potvrđeno", deposits €1890 na dolasku, channel bars), Rezervacije dark+light (6 tabs incl. Završene/Uvezene dots, premium header, Završene filter functional), Timeline dark+light (weekday eyebrows, golden weekends, today circle+tint, 5-item legend), Mjesečni dark, Profil light+dark, drawer light+dark. Theme restored to Sustavna, plist restored to PROD.
 - Gotcha re-confirmed: Marionette `hot_reload` does NOT recompile changed sources (reassemble-only) — edits made after `flutter run` launch need a full re-run; weekday-eyebrow "missing" was a stale-kernel artifact.
 
+## Desktop verification (continue pass, same day)
+
+- **Login split**: a layout bug shipped in the first cut — `Row(crossAxisAlignment: stretch)` inside the keyboard-aware `SingleChildScrollView` forces infinite height; split never rendered. Fixed (pitch panel pins viewport height via SizedBox; stats Row → Wrap) + 2 regression tests (`test/features/auth/login_desktop_split_test.dart`: ≥1200 split, <1200 centered). Verified live on Chrome 1440×900: pitch panel (logo/eyebrow/headline/copy/stats/footer) + 560px card per `auth.jsx`.
+- **Pregled desktop grid**: verified live at 1440 — header row (greeting + period pill + Nova rezervacija CTA), hero 3fr + radial/deposits rail 2fr, KPI 4-across, arrivals 3fr + channels 2fr.
+- **Tooling gotchas burned this pass**: (1) `flutter run -d chrome/web-server` + MCP browser serves **stale DDC modules from browser cache** — verify with `fetch('/main.dart.js')` content probe and reload with `ignoreCache:true` before trusting a "bug"; (2) CanvasKit text input on web: DOM `value=` + InputEvent does NOT reach the Flutter controller — focus the field and use `document.execCommand('insertText', …)`.
+- **CI**: firebase-tools dropped Java <21 → `Validate Firestore Rules` failed repo-wide; fixed via PR #729 (Java 17→21, merged). Workflow-editing PRs get a restricted token (`Resource not accessible by integration` in paths-filter) — expected, not a regression. PR #728's post-merge check run hit instant-fail runners (2s, all jobs) — rerun when convenient; not re-triggered to save Actions minutes per user instruction.
+
 ## Known residuals (deliberate / product-scope, not styling)
 - **14 Embed guide**: handoff `EmbCodeCard` mode tabs + `EmbPreview` + `EmbCustomize` panels not present — implementation deliberately routes customization to Widget settings screens (audit/121); colors token-true. Product call, not drift.
 - **Pregled AI insight + Rezervacije AI nudge**: kDebug/define-gated until a real BookBed AI provider exists (audit/114 decision upheld).

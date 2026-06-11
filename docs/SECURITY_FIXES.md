@@ -4636,3 +4636,38 @@ unit_id+status rule) UNTOUCHED — gate is rules-side only.
 - SF-079 (PR #668) — L2 guest-path gate (unit-owner status, audit/112).
 - SF-068 (PR #578) — affectedKeys deny-list (CF-only fields, complements this PR).
 - PR #667 — accountStatus PROD backfill (pre-flight for PROD deploy).
+
+---
+
+## SF-081: 2026-06-11 hardening wave — rate-limit L2 + rules denies + headers (audit/99 fix wave + F-98-01 + F-101-03)
+
+Consolidated closure entry for the same-day wave. All items DEV-deployed
+(`bookbed-dev`) and locally verified (functions 462/462, rules suite 159 —
+now also wired into CI `validate-firestore-rules`); **PROD pickup =
+operator-gated next deploy wave**.
+
+### Status
+
+- DEV deployed + live-spot-verified 2026-06-11.
+- PROD pending (CFs: recordLoginFailure, createBookingAtomic,
+  createStripeCheckoutSession, checkPasswordHistory, savePasswordToHistory,
+  revokeAllRefreshTokens, syncIcalFeedNow; firestore.rules; hosting headers
+  ship per-surface on next redeploy).
+
+### Items
+
+| Finding | Fix | Verify |
+|---|---|---|
+| F-101-03 MED (audit/101) | In-memory `rateLimitStore` Map is per-instance — scale-out resets attacker budget. Firestore-backed `enforceRateLimit` L2 added behind L1 on `recordLoginFailure` (1/60s, fail-CLOSED), `createBookingAtomic` widget branch (10/600s, failOpen — revenue path) and `createStripeCheckoutSession` (10/300s, failOpen). New `hashRateKey` (sha256/24) keeps raw IPs out of Firestore paths (`users/ip_<hash>/rate_limits/<action>`, rules already CF-only). | Live: call1 200 → call2 429 + L2 doc materialized. |
+| F-98-01 LOW (audit/98) | Deprecated top-level `/ical_feeds/{feedId}` update rule now mirrors the SF-068 subcollection deny on CF-managed `sync_count`/`event_count`/`last_synced` (fake-activity / freeze-scheduled-sync bypass). | +3 emulator cells in `deprecated_collections.test.ts`. |
+| F-99-02 MED | `checkPasswordHistory` + `savePasswordToHistory`: `checkRateLimit('pwhist:{uid}',10,300)` BEFORE any bcrypt work (asymmetric compute-DoS bound). | unit suite. |
+| F-99-05 MED | `Cross-Origin-Opener-Policy: same-origin-allow-popups` on owner+admin hosting headers (Stripe Connect popup keeps opener; tabnabbing closed). Widget stays `unsafe-none` for embeddability. | firebase.json; ships on next per-surface hosting redeploy (see memory prod-hosting-headers-deploy-gap). |
+| F-99-06 LOW | `devices` update allowlist drops `platform` (forensic identity). Client `trackDevice` `set(merge:true)` re-sends same value → never enters `affectedKeys` → legit refresh unaffected. | emulator cells: platform-mutation DENY / 3-key update ALLOW. |
+| F-99-07 LOW | `revokeAllRefreshTokens`: `checkRateLimit('revoke:{uid}',3,300)` (self-storm bound). | Live spot: 200,200,200,429. |
+| F-99-08 LOW | `syncIcalFeedNow`: Firestore-backed `enforceRateLimit(uid,'ical_sync_now',10/60s)` (manual sync fans out to external HTTP; SSRF budget bound). | unit suite. |
+
+### Cross-refs
+
+- Residual ledger: `audit/99-security-audit-2026-05-30.md` (8 LOW/INFO deliberate deferrals remain).
+- audit/121 §security passes; commits `a42db4af`, `3208a45c`, `169a693d`.
+- Related closures reconfirmed same day: F-107-01/02/03 (PR #720), audit/92 iCal token (security SF-063 + functional backfill).

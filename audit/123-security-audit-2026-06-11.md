@@ -88,18 +88,47 @@ Gitignored/untracked; dev-machine risk only. **Fix (optional):** env-var injecti
 
 ---
 
-## 4. KNOWN-OPEN CARRIED FORWARD (no re-finding; statuses reconciled vs stale agent ledger)
+## 4. KNOWN-OPEN CARRIED FORWARD — **canonical open ledger** (audit/99 + audit/107 docs deleted 2026-06-11; full texts in git history; this table absorbs their residuals)
+
+### Closed line (reconciled)
 
 | Item | Status today |
 |---|---|
 | F-107-01 widget_secrets `hasOnly` | **CLOSED** (verified: `firestore.rules:402-408` whitelist live) |
-| F-107-02 CORS 5 callables | **CLOSED** (PR #720; agents confirm all callables on `getCorsAllowlist()`) |
-| F-107-03 widget CSP | **CLOSED in config** (firebase.json full CSP); live-PROD curl verify = operator item below |
-| F-101-03/F-107-04 instance-local rate limit | **CLOSED** (L2 `enforceRateLimit` on 3 hot anonymous callables, 2026-06-11) |
-| SF-061/SF-046 App Check `enforceAppCheck:false` | DEFERRED (CSP prereq; L1+L2 rate limiting compensates) |
-| F-99-03/09/10/11/12-14/15/16 | DEFERRED-by-decision (audit/99 residual ledger unchanged) |
-| F-107-09 CG date-range filters, F-107-10 region drift, F-107-12 form persistence, F-107-13 legacy ical_feeds probe, F-107-14 users hasOnly, F-107-16 timestamp bind, F-107-17 contentType anchor | OPEN per audit/107 KNOWN-OPEN list |
-| SF-050 PROD IAM | regrant executed at cutover (audit/102: 35/35 + regrant); spot-check on next PROD touch |
+| F-107-02 CORS 5 callables | **CLOSED** (PR #720; all callables on `getCorsAllowlist()`) |
+| F-107-03 / F-99-04 widget CSP | **CLOSED in config** (firebase.json full CSP); live-PROD curl verify = operator item below |
+| F-101-03 / F-107-04 instance-local rate limit | **CLOSED** (L2 `enforceRateLimit` on 3 hot anonymous callables, 2026-06-11) |
+| audit/99 fix wave F-99-01/02/05/06/07/08 | **CLOSED** (SF-078 #609 + 2026-06-11 wave: pwhist+revoke+icalSyncNow rate limits, COOP headers, devices `hasOnly`; dev-deployed, PROD pickup = SF-081 checklist) |
+| F-107-17 contentType "unanchored" regex | **KILLED — false positive 2026-06-11**: rules `string.matches()` is whole-string semantics; `image/jpeg-evil-suffix` does NOT match `image/(jpeg\|png\|webp\|gif\|heic\|heif)` |
+| SF-050 PROD IAM | regrant executed at cutover (35/35); spot-check on next PROD touch |
+| SF-061/SF-046 App Check `enforceAppCheck:false` | DEFERRED (CSP prereq; L1+L2 rate limiting compensates) — launch checklist in docs/TODO.md |
+
+### OPEN residuals (LOW/INFO deliberate deferrals — absorbed from audit/99)
+
+| ID | Sev | Item | Note |
+|---|---|---|---|
+| F-99-03 | INFO latent | `user_profiles` deny-list missing Stripe-linkage mirror | zero read sites today; append `stripe_*` to both `hasAny` arrays on next rules touch |
+| F-99-09 | LOW dormant | Twilio creds via `process.env \|\| ""` not `defineSecret` | early-returns while empty; convert before activating SMS |
+| F-99-10 | LOW | shared validators `throw Error` not `HttpsError` | Sentry-noise class; swap opportunistically per file |
+| F-99-11 / F-107-11 / F-123-08 | LOW (MED footgun) | `web_utils_web.dart:325,332` `sendMessageToParent` `targetOrigin:'*'` (leaks `cs_*` session IDs to any embedder) | single non-PII-critical caller today; resolve target from trusted-list before adding callers |
+| F-99-12/13/14 / F-107-15 | LOW | CSP scoping: `unsafe-inline`+`unsafe-eval` (CanvasKit needs eval), `*.cloudfunctions.net` wildcard, `*.a.run.app` absent | hardening-sprint batch: change + 3-surface redeploy + smoke as one unit |
+| F-99-15 | INFO latent | deep-link cold-start auth race | guard when wiring app_links stream (F-62-05 class) |
+| F-99-16 | INFO | FCM SW `bookingId` concat without format check | trust-bounded by FCM signing; add `/^[A-Z0-9_-]{6,40}$/i` opportunistically |
+| F-99-17 / F-107-07 | LOW | `uuid <11.1.1` via firebase-admin@12 (8 npm-audit moderates, unreachable in CF paths) | clears with firebase-admin 13/14 bump — separate smoke-tested PR (+ firebase-functions 6→7, F-107-08) |
+
+### OPEN residuals (absorbed from audit/107 KNOWN-OPEN)
+
+| ID | Sev | Item | Note |
+|---|---|---|---|
+| F-107-05 | MED partial (SF-068) | `properties.create` accepts client `subdomain` (format-valid squat) before CF reservation | drop `subdomain` from create payload in owner repo + strip from `create.affectedKeys`; force `setPropertySubdomain` callable |
+| F-107-09 / F-86-02 | LOW | availability CG queries lack date-range filter (500-limit silent truncation) | + F-86-01/03 siblings — table in `audit/edge-0530/README.md` |
+| F-107-10 | LOW | `stripeSubscription.ts` no explicit `region` (us-central1 drift) | pin explicit or migrate to eu-west1 (webhook URL update) |
+| F-107-12 / F-67-03 | LOW partial | widget form persistence keeps PII 15min in SharedPreferences keyed by `unitId` (`notes` scrubbed) | move to sessionStorage on web (deferred refactor) |
+| F-107-13 | LOW | `firestore.rules:654` deprecated top-level `ical_feeds` read `resource == null` short-circuit → authed feedId existence probe (re-verified open 2026-06-11) | drop short-circuit or delete block (already `create: if false`); sibling of closed F-98-01 |
+| F-107-14 | LOW | `users.create` deny-list without `hasOnly` shape bind (arbitrary unmodeled fields at signup) | optional allowlist; update deny-list is the real gate |
+| F-107-16 | INFO | `securityEvents.timestamp` client-controlled | bind `== request.time` once client uses serverTimestamp |
+| F-107-18 / SF-067 | operator | storage→firestore IAM `datastore.viewer` grant — PROD confirmed at cutover | re-verify on env re-creates |
+| F-107-19 / F-CUT-01 | process | npm-11 lockfile drift — **recurred 2026-06-11** (dependabot batch), re-fixed via `npx npm@10 install` | permanent guard queued in docs/TODO.md |
 
 **OPERATOR VERIFY (only live-state unknowns):**
 ```bash

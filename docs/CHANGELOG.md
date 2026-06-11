@@ -2,7 +2,23 @@
 
 All version history from v4.6 to v6.67.
 
-**Last Updated**: 2026-06-11 | **Version**: 7.14
+**Last Updated**: 2026-06-11 | **Version**: 7.15
+
+---
+
+**Changelog 7.15** (2026-06-11, popodne/veče):
+
+### Security — SF-083 ledger-residual closure wave (audit/123 §4)
+- audit/99 + audit/107 apsorbovani u **audit/123 §4 = kanonski open ledger** (izvorni docs obrisani; F-107-17 ubijen kao false positive — rules `matches()` je whole-string).
+- CLOSED: F-86-01 (availability exclusive end, t3 live-verified), F-86-02 (CG range bounds + 2 composita; **PROD: indexes PRIJE CF-a**), F-99-03 (user_profiles Stripe mirror), F-99-10 (9× `HttpsError` swap; refgen namjerno bare `Error`), F-99-16 (FCM SW bookingId guard), F-107-10 (region pin), F-107-13 (legacy ical_feeds blok → `false`; 0 docs oba env-a), F-107-16 (full fix: client serverTimestamp + rules bind).
+- DEFERRED s nalazom: F-107-14 — signup payload šalje `'role'` (već deny) a registracija radi → mrtvi klijentski write-path; `hasOnly` bi srušio signup dok se ne raščisti.
+- Verifikacija: jest 462/462, emulator rules 12/12 suita / 182 pass (+10 ćelija), edge t2/t3 live na novim indexima; dev deploys (5 CF + rules + indexes). SF-082 (sibling): iCal CR-escape + ai_usage delete-reset guard.
+
+### Maintenance
+- **Docs prune passovi 5–10**: audit/ 27→6 + docs/ čišćenje (svaki delete verify-then-delete: live Stripe webhook GET, PROD backfill dry-run re-run = 24/24 canonical, trial-gate PR-ovi merged-check, edge suite full live re-run zelen). TODO.md prepisan 641→75 živih linija; CHANGELOG 7.14 konsolidovani unos; CLAUDE_MCP_TOOLS + ICAL_SYNC_ARCHITECTURE penzionisani.
+- **F-CUT-01 recidiv**: dependabot batch regenerisao lock pod npm 11 → svi CF deployi pali; fix `npx npm@10 install` + trajni guard u TODO.
+- **Main-reset incident**: origin/main force-vraćen 8 dana unazad uz branch-switch ispod sesije; oporavak čistim fast-forwardom (21 commit), klasa dokumentovana u parallel-session protokolu.
+- **GH Actions štednja** (operator direktiva): batch commits, JEDAN push po radnoj cjelini; lokalna verifikacija (jest/emulator/analyze/dev-smoke) je gate.
 
 ---
 

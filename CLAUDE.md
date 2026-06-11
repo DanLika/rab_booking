@@ -11,7 +11,8 @@
 
 **Audit log** (one-line index; detail in each audit/*.md file). *Pruned 2026-06-11: closed session audits + screenshot artifacts deleted (105MB→1.2MB) — recover any via git history (`git log --diff-filter=D -- audit/`). Kept: rules-referenced, OPEN/🚨 findings, runbooks, specs, recent design chain.*
 - [cutover-dryrun-2026-05-30/runbook.md](./audit/cutover-dryrun-2026-05-30/runbook.md) — full ledger + 4a/4b/4c/4d phase logs + IAM re-grant script (2026-05-30)
-- 🟢 [123-security-audit](./audit/123-security-audit-2026-06-11.md) — full 165+-check sweep (9 agents + gitleaks + semgrep + npm audit) + 2 /vibe-security passes: 0 CRIT/HIGH new. Fix wave 1: F-123-01/02/04/06/07 (payment bounds + iCal sanitize + 5MB cap + Connect rate limits; 462/462 jest green). Fix wave 2 (AI/LLM): F-123-AI server-authoritative Gemini daily quota (Firestore `users/{uid}/data/ai_usage` {day,count}, txn-consumed, rules pin day→request.time + monotonic increment so restart/tamper can't reset; replaces client-memory counter) + `ai_chats` messages.size()≤200; new `ai_usage.test.ts` 14 cells, full rules suite 173 pass green. Tier/subscription escalation verified CLOSED first-hand (rules 78-129). Residual = F-123-03 trial-gate product decision + F-123-05/08 deferred + firebase-admin 14 bump (F-107-07/08) + operator App-Check-enforcement toggle; gitleaks 95→0 real; 2 agent false positives killed, firestore.md stale T11c doc fixed (2026-06-11)
+- 🔄 [124-owner-page-fidelity](./audit/124-owner-page-fidelity-2026-06-11.md) — IN-FLIGHT page-by-page owner fidelity vs handoff (16 stranica + drawer + app bar, light+dark, fix-as-you-go na `design/124-owner-page-fidelity`): Pregled arrivals card + desktop grid + hero wash, Rezervacije Završene tab + channel tones, Timeline/Mjesečni weekday eyebrows + golden weekends + Uvezene legend, login desktop split; builds on audit/121 token layer (2026-06-11)
+- 🟢 [123-security-audit](./audit/123-security-audit-2026-06-11.md) — full 165+-check sweep (9 agents + gitleaks + semgrep + npm audit) + 2 /vibe-security passes: 0 CRIT/HIGH new. Fix wave 1: F-123-01/02/04/06/07 (payment bounds + iCal sanitize + 5MB cap + Connect rate limits; 462/462 jest green). Fix wave 2 (AI/LLM): F-123-AI server-authoritative Gemini daily quota (Firestore `users/{uid}/data/ai_usage` {day,count}, txn-consumed, rules pin day→request.time + monotonic increment so restart/tamper can't reset; replaces client-memory counter) + `ai_chats` messages.size()≤200; new `ai_usage.test.ts` 14 cells, full rules suite 173 pass green. Tier/subscription escalation verified CLOSED first-hand (rules 78-129). **§4 = kanonski open ledger** (99+107 apsorbovani 2026-06-11, izvorni docs obrisani). Same-day residual-closure wave (SF-083): F-86-01/02, F-99-03/10/16, F-107-10/13/16 CLOSED + F-107-17 killed false-positive + F-107-14 deferred-with-finding. Preostalo otvoreno: F-123-03 trial-gate product decision, F-86-03 Stripe-min-floor product decision, F-99-09/12-15 + F-107-05/12/15 deliberate deferrals, firebase-admin/functions major bumps (F-107-07/08), operator App-Check toggle + PROD curl verify (2026-06-11)
 
 ---
 
@@ -127,7 +128,7 @@ Učitavaju se SAMO kad radiš na matchujućim fajlovima:
 
 ---
 
-**Last Updated**: 2026-06-11 | **Version**: 7.14
+**Last Updated**: 2026-06-11 | **Version**: 7.15
 
 # context-mode — MANDATORY routing rules
 

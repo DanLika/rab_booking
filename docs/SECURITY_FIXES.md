@@ -4703,3 +4703,69 @@ cross-tenant vuln — both are self-scoped — but both crossed a documented gua
   `uuid` buffer-bounds advisory pulled transitively via `firebase-admin`; the
   only fix is the `firebase-admin@14` SemVer-major bump (tracked F-107-07/08,
   deferred — not reachable from our code, needs its own PR + npm@10 lockfile regen).
+
+## SF-083: 2026-06-11 ledger-residual closure wave — audit/123 §4 worked down (8 closed, 1 killed, 1 deferred-with-finding)
+
+Same-day follow-through on the consolidated open ledger (audit/123 §4, which
+absorbed audit/99 + audit/107 residuals that morning). Every closure was
+verified locally + dev-deployed; **zero CI minutes spent** (per operator
+directive: batch pushes, local verification gates quality).
+
+**Closed:**
+- **F-86-01** — `availability.ts` daily_prices exclusive end (`<=` → `<`);
+  checkout-day `manual_block` no longer leaks. Live-verified via edge-0530 t3
+  [C] (the 2026-07-01 probe window disappeared, in-range block kept).
+- **F-86-02 / F-107-09** — availability CG queries bounded by window start
+  (`check_out > startTs` bookings / `end_date > startTs` ical_events) + 2 new
+  CG composites (`bookings unit_id+status+check_out`, `ical_events
+  unit_id+end_date`). Cost now scales with the request, and the 500-doc limit
+  can't silently drop live bookings. Dev indexes READY + t2/t3 live green.
+  **⚠ PROD ORDERING: deploy indexes, wait READY +30s, THEN the CF** (rider in
+  docs/TODO.md) — otherwise the widget calendar 500s on "index building".
+- **F-99-03** — `user_profiles` create+update deny arrays now mirror the 5
+  Stripe-linkage keys (SF-vibe57 H-01 set). 3 emulator cells.
+- **F-99-10** — 9 shared-validator `throw Error` → `HttpsError
+  ("invalid-argument")` (`dateValidation.ts` ×6 incl. the user-reachable
+  same-civil-day "< 1 night"; `depositCalculation.ts` ×3) so Sentry's
+  beforeSend drops client faults. `bookingReferenceGenerator.ts` deliberately
+  KEPT bare `Error` — its input is a server-generated doc ID; a throw there is
+  a real bug that SHOULD page.
+- **F-99-16** — FCM SW `bookingId` shape guard (`/^[A-Za-z0-9_-]{6,40}$/`)
+  before URL concat + postMessage. Ships with the next hosting deploy.
+- **F-107-10** — `region: "us-central1"` pinned explicitly on both
+  subscription callables (regions are immutable; the pin documents the
+  eu-west1 drift; migration tracked in TODO).
+- **F-107-13** — deprecated top-level `ical_feeds` block retired wholesale to
+  `read, write: if false` after Admin-SDK verification of **ZERO legacy docs
+  on BOTH envs** (kills the `resource == null` authed existence-probe;
+  supersedes the F-98-01 partial deny). Documented residual: the
+  legacy-property OWNER can still read via the owner-scoped
+  `/{path=**}/ical_feeds` CG clause — harmless, captured in cells.
+- **F-107-16 (full fix)** — `securityEvents.timestamp` bound to
+  `request.time` in rules AND client switched to
+  `FieldValue.serverTimestamp()` (2 writes in `security_events_service.dart`;
+  the `recentSecurityEvents` array copy keeps client clock — server
+  timestamps are invalid inside array elements). Forged/backdated audit-log
+  entries rejected at the rule layer. 3 emulator cells.
+
+**Killed as false positive:**
+- **F-107-17** — "unanchored contentType regex" in storage.rules: rules
+  `string.matches()` is whole-string semantics; `image/jpeg-evil-suffix` does
+  NOT match. No change needed.
+
+**Deferred with a concrete finding:**
+- **F-107-14** (`users.create` hasOnly) — the client signup payload
+  (`enhanced_auth_provider.dart:462`) sends `'role'`, which the deny-list
+  already blocks, yet registration works → that client `set` likely never
+  succeeds (the users doc comes from the `onUserCreate` Admin trigger).
+  Adding `hasOnly` would brick signup until that dead client write-path is
+  inventoried/removed.
+
+**Verification:** functions jest 462/462; emulator rules suite 12/12 suites,
+182 pass (10 new cells); `flutter analyze` clean; edge-0530 t2+t3 live green
+on the new indexes; CFs (`getUnitAvailability`, both subscription callables,
+`createBookingAtomic`) + firestore.rules + indexes deployed to bookbed-dev.
+
+**PROD pickup:** rides the SF-081 wave + the F-86-02 indexes-before-CF
+ordering rider + the FCM SW guard ships with the per-surface hosting redeploy
+already on that checklist.

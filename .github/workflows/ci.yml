@@ -428,6 +428,71 @@ jobs:
   #       with:
   #         sarif_file: 'trivy-results.sarif'
 
+  # Job 9.5: Verify main CI green — free-tier merge-gate signal.
+  # Branch protection on private repos requires GitHub Pro (HTTP 403 on the
+  # protection API). To still get a visible "this commit is dirty" badge when
+  # someone lands work on main while CI is failing or absent, this job runs
+  # ONLY on push to main, polls the GitHub check-runs API for the SHA, and
+  # FAILS if `Run Tests` or `Validate Firestore Rules` did not conclude
+  # success on this SHA within 30 minutes. The job's own red conclusion
+  # surfaces in the commit list / branch badge / notification — the operator
+  # sees an untested or broken merge without branch protection enforcing.
+  # ADDITIVE: no other job changed by this addition.
+  verify-main-ci-green:
+    name: Verify main CI green
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      checks: read
+      contents: read
+    steps:
+      - name: Poll check-runs until required gates conclude
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+          REPO="${{ github.repository }}"
+          # 30-minute deadline — Run Tests ~15min + Validate Firestore Rules ~1min.
+          DEADLINE=$(( $(date +%s) + 1800 ))
+          # If the user-facing job display name changes, mirror it here. Names
+          # match the `name:` fields of the `test` and `validate-firestore-rules`
+          # jobs above; they appear verbatim in the check-runs API.
+          REQUIRED=("Run Tests" "Validate Firestore Rules")
+          while :; do
+            RUNS=$(gh api "repos/$REPO/commits/$SHA/check-runs?per_page=100" --jq '.check_runs')
+            all_done=1
+            all_ok=1
+            for NAME in "${REQUIRED[@]}"; do
+              INFO=$(echo "$RUNS" | jq -r --arg name "$NAME" '[.[] | select(.name == $name)] | sort_by(.started_at) | last // empty | "\(.status // "MISSING") \(.conclusion // "")"')
+              STATUS=$(echo "$INFO" | awk '{print $1}')
+              CONCL=$(echo "$INFO" | awk '{print $2}')
+              echo "  $NAME → status=$STATUS conclusion=$CONCL"
+              if [ "$STATUS" != "completed" ]; then
+                all_done=0
+              fi
+              if [ "$CONCL" != "success" ]; then
+                all_ok=0
+              fi
+            done
+            if [ "$all_done" -eq 1 ]; then
+              if [ "$all_ok" -eq 1 ]; then
+                echo "✅ Both required gates concluded success on $SHA"
+                exit 0
+              fi
+              echo "❌ One or more required gates did not conclude success on $SHA"
+              echo "Interpretation: either CI was skipped on this SHA (MISSING) or it ran red."
+              echo "Action: investigate the failing job + re-run CI on a follow-up commit."
+              exit 1
+            fi
+            if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+              echo "❌ Timeout — required gates did not conclude within 30 minutes."
+              exit 1
+            fi
+            sleep 30
+          done
+
   # Job 10: CodeQL Analysis (for Cloud Functions TypeScript)
   # DISABLED: Requires GitHub Advanced Security license for private repos
   # codeql-analysis:

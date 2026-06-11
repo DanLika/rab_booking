@@ -1,79 +1,31 @@
 # BookBed Documentation
 
-**Last Updated**: 2024-12-15
+**Last Updated**: 2026-06-11 (pruned + reindexed — stale Dec-2025/Jan-2026 planning docs deleted; recover via `git log --diff-filter=D -- docs/`)
 
-Dobrodošli u BookBed dokumentaciju!
+> Glavni operativni indeks je [CLAUDE.md](../CLAUDE.md) (audit log + kritične sekcije). Path-scoped pravila: `.claude/rules/`. Sigurnosni i sesijski nalazi: `audit/`.
 
-## 📁 Struktura Dokumentacije
+## Top-level
 
-### 🏗️ Architecture
-- [Architectural Improvements](./architecture/ARCHITECTURAL_IMPROVEMENTS.md)
-- [RabBooking Architecture Plan v2](./architecture/RabBooking-Architecture-Plan-v2.md)
+- [SECURITY_FIXES.md](./SECURITY_FIXES.md) — sve sigurnosne ispravke (SF-001+), živi dokument
+- [CHANGELOG.md](./CHANGELOG.md) — povijest verzija
+- [TODO.md](./TODO.md) — neaktivni planning itemi (izvučeno iz CLAUDE.md)
+- [setup.md](./setup.md) — lokalni dev/test/deploy setup
+- [ICAL_SYNC_ARCHITECTURE.md](./ICAL_SYNC_ARCHITECTURE.md) — iCal sync arhitektura
+- [FREE_TRIAL_IMPLEMENTATION.md](./FREE_TRIAL_IMPLEMENTATION.md) — trial sustav (detalji u `features/free-trial/`)
+- [FORCE_UPDATE_SETUP.md](./FORCE_UPDATE_SETUP.md) — force-update mehanizam
+- [STORE_SUBMISSION_GUIDE.md](./STORE_SUBMISSION_GUIDE.md) — App Store / Play submission
+- [ANDROID_ADAPTIVE_ICON.md](./ANDROID_ADAPTIVE_ICON.md)
+- [widget_firestore_single_field_indexes.md](./widget_firestore_single_field_indexes.md)
 
-### ☁️ Cloud Tools & Systems
-- [Cloud MCP Tools](./cloud-mcp-tools/CLAUDE_MCP_TOOLS.md)
-- [Cloud Widget Systems](./cloud-widget-systems/CLAUDE_WIDGET_SYSTEM.md)
-- [Cloud Debugs](./cloud-debugs/) - Debug reports i analize
+## Direktoriji
 
-### 🔒 Security
-- [Security Analysis](./security/SECURITY_ANALYSIS.md)
-- [Widget Security Analysis](./widget-security/WIDGET_SECURITY_ANALYSIS.md)
-
-### 💳 Stripe & Payments ✅
-- [Stripe Checkout Implementation Review](./stripe-checkout/STRIPE_CHECKOUT_IMPLEMENTATION_REVIEW.md) - ✅ ALL ISSUES FIXED
-- [Stripe Checkout Iframe Plan](./stripe-checkout/STRIPE_CHECKOUT_IFRAME_PLAN.md) - ✅ COMPLETE
-
-### ⌨️ Keyboard & UI
-- [Landscape Keyboard Fix Plan](./keyboard-implementation/LANDSCAPE_KEYBOARD_FIX_PLAN.md)
-
-### 🔬 Research
-- [Research Prompts](./research-prompts/RESEARCH_PROMPT.md)
-
-### 🗄️ Database
-- [Database Structure Analysis](./database-structure-analysis.md)
-- [Database Migration Plan](./database-migration-plan.md)
-- [Database Migration Dev Plan](./database-migration-dev-plan.md)
-- [Database Migration Quick Start](./database-migration-quick-start.md)
-- [Database Migration Existing Data](./database-migration-existing-data.md)
-- [Migration How To Use](./migration-how-to-use.md)
-- [Database Analysis Summary (HR)](./database-analysis-summary-hr.md)
-
-### 🐛 Bugs
-- [Unresolved Bugs](./unresolved-bugs/) - Razni bug reports
-- [Bugs](./bugs/) - General bug documentation
-
-### 🚀 Features
-- [Email Templates](./features/email-templates/)
-- [Stripe Integration](./features/stripe/)
-- [Overbooking Detection](./features/overbooking-detection/)
-- [PWA](./features/pwa/)
-
-### 🔌 API Integrations
-- [Platform APIs](./api-integrations/platform-apis/)
-- [Channel Managers](./api-integrations/channel-managers/)
-
-### ⚙️ Setup
-- [Developer Setup](./setup/developer-setup/)
-- [Deployment](./setup/deployment/)
-  - [Subdomain Setup](./setup/deployment/SUBDOMAIN_SETUP.md) - ✅ IMPLEMENTED
-
-### 📊 Summaries
-- [Complete Summary](./summaries/COMPLETE_SUMMARY.md)
-- [Fixes Applied](./summaries/FIXES_APPLIED.md)
-- [Implementation Summary](./summaries/IMPLEMENTATION_SUMMARY.md)
-
-### 🐛 Bugs Archive
-- [Claude Bugs Archive](./bugs-archive/CLAUDE_BUGS_ARCHIVE.md)
-
----
-
-## 📝 Quick Links
-
-- [Project Structure](./STRUCTURE.md)
-- [Main README](../README.md)
-
----
-
-## 🔄 Recent Changes
-
-Svi dokumenti su reorganizovani iz root direktorija u odgovarajuće foldere u `docs/` direktoriju za bolju organizaciju.
+| Dir | Sadržaj |
+|---|---|
+| `features/` | Feature dokumentacija: `email-templates/` (EMAIL_SYSTEM.md), `free-trial/`, `overbooking-detection/`, `pwa/`, `stripe/` (integracija + debug guide), `analytics/` |
+| `security/` | Modul-level sigurnosne analize (atomicBooking, emailVerification, inputSanitization, opća) |
+| `testing/` | Test planovi + widget test matrice (browseri, zoom, legacy sites) + `test-calendar.ics` fixture |
+| `user-guide/` | Korisnička dokumentacija (getting-started, calendar, payments, pricing, properties, settings, widget, troubleshooting) |
+| `bugs/` | [consolidated-bugs-archive.md](./bugs/consolidated-bugs-archive.md) — povijesni bug fix-evi s code primjerima |
+| `setup/` | `deployment/SUBDOMAIN_SETUP.md` |
+| `cloud-mcp-tools/` | [CLAUDE_MCP_TOOLS.md](./cloud-mcp-tools/CLAUDE_MCP_TOOLS.md) — MCP serveri, slash commands |
+| `widgets/` | UNIVERSAL_LOADER_GUIDE.md |

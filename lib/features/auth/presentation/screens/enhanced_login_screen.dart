@@ -404,13 +404,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
                           // pitch panel left, 560px login card right.
                           // Narrower widths keep the centered card.
                           child: constraints.maxWidth >= 1200
+                              // No stretch: the scroll view gives unbounded
+                              // height, so the pitch panel pins its own
+                              // viewport height and the card centers on it.
                               ? Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
                                   children: [
                                     Expanded(
                                       child: _LoginPitchPanel(
-                                        minHeight: minHeight,
+                                        viewportHeight: minHeight,
                                       ),
                                     ),
                                     SizedBox(
@@ -767,20 +768,20 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen>
 /// logo + wordmark top, pitch block with eyebrow/headline/copy/stats in the
 /// middle, legal footer at the bottom. Copy is handoff-spec HR marketing.
 class _LoginPitchPanel extends StatelessWidget {
-  final double minHeight;
+  final double viewportHeight;
 
-  const _LoginPitchPanel({required this.minHeight});
+  const _LoginPitchPanel({required this.viewportHeight});
 
   @override
   Widget build(BuildContext context) {
     final c = BBColor.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(80, 64, 80, 64),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          minHeight: (minHeight - 128).clamp(0, double.infinity),
-        ),
+    // The surrounding scroll view has unbounded height — pin the panel to
+    // the viewport so spaceBetween can park logo top / footer bottom.
+    return SizedBox(
+      height: viewportHeight > 0 ? viewportHeight : null,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(80, 64, 80, 64),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -830,12 +831,12 @@ class _LoginPitchPanel extends StatelessWidget {
                     ).copyWith(color: c.textSecondary, height: 1.5),
                   ),
                   const SizedBox(height: 32),
-                  const Row(
+                  const Wrap(
+                    spacing: 24,
+                    runSpacing: 16,
                     children: [
                       _PitchStat(value: '45+', label: 'aktivnih vlasnika'),
-                      SizedBox(width: 24),
                       _PitchStat(value: '12k', label: 'rezervacija godišnje'),
-                      SizedBox(width: 24),
                       _PitchStat(value: '99.9%', label: 'uptime'),
                     ],
                   ),

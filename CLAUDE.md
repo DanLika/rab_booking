@@ -21,7 +21,7 @@
 - [38-pr462-env-prereq](./audit/38-pr462-env-prereq.md) — ALLOWED_SUBSCRIPTION_PRICE_IDS empty/missing on dev+prod (2026-05-24)
 - [39-n4-flutter-keyboard-converter](./audit/39-n4-flutter-keyboard-converter-2026-05-24.md) — Flutter Engine KeyboardConverter crash; SAFETY no-fix (2026-05-24)
 - [99-coverage-gap-map](./audit/99-coverage-gap-map.md) — SF + CF coverage gap map; 6 CFs never smoke-tested (PR #608, 2026-05-30)
-- 🚨 [99-security-audit](./audit/99-security-audit-2026-05-30.md) — multi-agent sweep; F-99-01 HIGH bookings deny-list gap + 3 MED + 7 LOW + 4 INFO + 1 CONFIRM-OPEN audit/89 (2026-05-30)
+- 🟢 [99-security-audit](./audit/99-security-audit-2026-05-30.md) — condensed residual ledger 2026-06-11: HIGH+3 MED+3 LOW fixed/verified (F-99-01 #609; 02/05/06/07/08 fixed+dev-deployed; 04=107-03 closed); 8 LOW/INFO deliberate deferrals remain (2026-05-30)
 - ✅ [102-prod-cutover](./audit/102-prod-cutover-2026-05-31.md) — PROD cutover at HEAD `3a8b6b66`: CFs+regrant 35/35+OPTIONS 3/3, indexes no-drift, widget HTTP 200, rules+storage 4/4 smoke; **SF-067 PROD `datastore.viewer` IAM confirmed via owner upload+delete on `properties/…png`** (2026-05-31)
 - [cutover-dryrun-2026-05-30/runbook.md](./audit/cutover-dryrun-2026-05-30/runbook.md) — full ledger + 4a/4b/4c/4d phase logs + IAM re-grant script (2026-05-30)
 - [103-redesign-tokens-primitives-shell](./audit/103-redesign-tokens-primitives-shell.md) — Phase 1 foundation (PR #611) + §Amendment Phase 1.7 `BbAdminDarkTokens` deep-purple admin shellBg `#1E1A33` ThemeExtension (PR #643, additive — owner light+dark untouched, isolation-guard tests enforce, 2026-06-01) + §Amendment Phase 2 Admin Login Bb* swap + route-scoped extension injection (PR #650, `ThemeData.dark` base, +195/-321, 2026-06-02)

@@ -101,9 +101,10 @@ describe("devices rule — update key allowlist (F-91-03 / SF-062 / PR #567)", (
     );
   });
 
-  test("ALLOW: owner updates platform (single allowed key)", async () => {
+  // F-99-06 (audit/99): platform is forensic identity — mutation DENIED.
+  test("DENY: owner mutates platform (F-99-06 forensic tamper)", async () => {
     const owner = testEnv.authenticatedContext(OWNER_UID);
-    await assertSucceeds(
+    await assertFails(
       owner
         .firestore()
         .doc(`users/${OWNER_UID}/devices/${DEVICE_ID}`)
@@ -111,7 +112,7 @@ describe("devices rule — update key allowlist (F-91-03 / SF-062 / PR #567)", (
     );
   });
 
-  test("ALLOW: owner updates all 4 allowed keys together", async () => {
+  test("ALLOW: owner updates all 3 allowed keys together", async () => {
     const owner = testEnv.authenticatedContext(OWNER_UID);
     await assertSucceeds(
       owner
@@ -121,7 +122,6 @@ describe("devices rule — update key allowlist (F-91-03 / SF-062 / PR #567)", (
           lastSeenAt: new Date(),
           fcmToken: "tok-new",
           appVersion: "1.2.4",
-          platform: "web",
         })
     );
   });

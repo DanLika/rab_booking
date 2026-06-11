@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../domain/models/unified_dashboard_data.dart';
+import '../../../../shared/models/property_model.dart';
+import '../../../../shared/models/unit_model.dart';
 import '../../../../shared/providers/repository_providers.dart';
 import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/services/logging_service.dart';
@@ -95,10 +97,22 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         userId: userId,
       );
 
-      // Query upcoming check-ins (always next 7 days, regardless of selected period)
+      // Query upcoming check-ins (always next 14 days, regardless of the
+      // selected period) — handoff "Nadolazeći dolasci / Sljedećih 14 dana".
       final upcomingCheckIns = await _queryUpcomingCheckIns(
         unitIds: unitIds,
         userId: userId,
+      );
+
+      // Arrival rows for the handoff card: soonest first, top 4, with
+      // property/unit names resolved from already-watched providers.
+      final properties = await ref.watch(
+        ownerPropertiesCalendarProvider.future,
+      );
+      final upcomingArrivals = _buildUpcomingArrivals(
+        upcomingCheckIns,
+        units,
+        properties,
       );
 
       // Filter for confirmed/completed bookings for metrics and charts
@@ -203,6 +217,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         revenue: revenue,
         bookings: bookingsCount,
         upcomingCheckIns: upcomingCheckIns.length,
+        upcomingArrivals: upcomingArrivals,
         distinctGuests: guestKeys.length,
         revenueBySource: revenueBySource,
         depositsCollected: depositsCollected,
@@ -271,11 +286,11 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
 
     final now = DateTime.now();
     final nowTimestamp = Timestamp.fromDate(now);
-    final next7Days = Timestamp.fromDate(now.add(const Duration(days: 7)));
+    final next14Days = Timestamp.fromDate(now.add(const Duration(days: 14)));
 
     final List<Map<String, dynamic>> checkIns = [];
 
-    // Query confirmed and pending bookings checking in within next 7 days
+    // Query confirmed and pending bookings checking in within next 14 days
     for (final status in ['confirmed', 'pending']) {
       try {
         final snapshot = await firestore
@@ -283,13 +298,20 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
             .where('owner_id', isEqualTo: userId)
             .where('status', isEqualTo: status)
             .where('check_in', isGreaterThanOrEqualTo: nowTimestamp)
-            .where('check_in', isLessThan: next7Days)
+            .where('check_in', isLessThan: next14Days)
             .get();
 
         for (final doc in snapshot.docs) {
           final data = doc.data();
           if (unitIds.contains(data['unit_id'])) {
-            checkIns.add({...data, 'id': doc.id});
+            checkIns.add({
+              ...data,
+              'id': doc.id,
+              // bookings live at properties/{pid}/bookings — recover the
+              // property id from the doc path for arrival-row name lookup.
+              'property_id':
+                  data['property_id'] ?? doc.reference.parent.parent?.id,
+            });
           }
         }
       } catch (e) {
@@ -301,6 +323,47 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
     }
 
     return checkIns;
+  }
+
+  /// Map raw upcoming check-in docs to handoff arrival rows: soonest first,
+  /// top 4, names resolved against the owner's cached units/properties.
+  List<UpcomingArrival> _buildUpcomingArrivals(
+    List<Map<String, dynamic>> checkIns,
+    List<UnitModel> units,
+    List<PropertyModel> properties,
+  ) {
+    final sorted = [...checkIns]
+      ..sort((a, b) {
+        final ca = _parseCheckIn(a);
+        final cb = _parseCheckIn(b);
+        if (ca == null || cb == null) return 0;
+        return ca.compareTo(cb);
+      });
+
+    final unitNames = {for (final u in units) u.id: u.name};
+    final propertyNames = {for (final p in properties) p.id: p.name};
+
+    final rows = <UpcomingArrival>[];
+    for (final b in sorted) {
+      final checkIn = _parseCheckIn(b);
+      if (checkIn == null) continue;
+      final checkOut = _parseCheckOut(b);
+      final nights = checkOut == null ? 0 : checkOut.difference(checkIn).inDays;
+      final guestName = (b['guest_name'] as String?)?.trim() ?? '';
+      rows.add(
+        UpcomingArrival(
+          bookingId: b['id'] as String? ?? '',
+          guestName: guestName.isNotEmpty ? guestName : 'Gost',
+          propertyName: propertyNames[b['property_id']] ?? '',
+          unitName: unitNames[b['unit_id']] ?? '',
+          checkIn: checkIn,
+          nights: nights > 0 ? nights : 0,
+          status: b['status'] as String? ?? 'confirmed',
+        ),
+      );
+      if (rows.length == 4) break;
+    }
+    return rows;
   }
 
   /// Generate revenue history for chart (grouped by day/week/month based on range)

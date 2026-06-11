@@ -14,8 +14,13 @@ class UnifiedDashboardData with _$UnifiedDashboardData {
     /// Number of bookings in the selected period
     required int bookings,
 
-    /// Upcoming check-ins in next 7 days (always 7 days, regardless of period)
+    /// Upcoming check-ins in next 14 days (always 14 days, regardless of
+    /// period) — same window as the handoff "Nadolazeći dolasci" card.
     required int upcomingCheckIns,
+
+    /// Upcoming arrivals (next 14 days), soonest first, capped at 4 — handoff
+    /// "Nadolazeći dolasci / Sljedećih 14 dana" rows.
+    @Default(<UpcomingArrival>[]) List<UpcomingArrival> upcomingArrivals,
 
     /// Distinct guests in the selected period (deduped by guest email/name)
     @Default(0) int distinctGuests,
@@ -55,6 +60,25 @@ class UnifiedDashboardData with _$UnifiedDashboardData {
     revenueHistory: [],
     bookingHistory: [],
   );
+}
+
+/// One upcoming-arrival row (handoff PV_ARRIVALS): guest + stay + status.
+/// `status` carries the raw booking status string ('confirmed' | 'pending');
+/// mapping to UI enums happens at the widget layer.
+@freezed
+class UpcomingArrival with _$UpcomingArrival {
+  const factory UpcomingArrival({
+    required String bookingId,
+    required String guestName,
+    required String propertyName,
+    required String unitName,
+    required DateTime checkIn,
+    required int nights,
+    required String status,
+  }) = _UpcomingArrival;
+
+  factory UpcomingArrival.fromJson(Map<String, dynamic> json) =>
+      _$UpcomingArrivalFromJson(json);
 }
 
 /// Revenue data point for chart

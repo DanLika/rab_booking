@@ -100,6 +100,8 @@ supabase/supabase/
 coverage/
 .firebase/hosting.*.cache
 *.backup
+*.prod-snapshot
+*.dev-snapshot
 android/build/
 
 # Cloud Functions compiled output

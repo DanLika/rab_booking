@@ -246,18 +246,6 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
     return null;
   }
 
-  /// Reset daily counter if day has changed
-  void _resetDailyCountIfNeeded() {
-    final today = DateTime.now();
-    final resetDate = state.dailyCountResetDate;
-    if (resetDate == null ||
-        today.year != resetDate.year ||
-        today.month != resetDate.month ||
-        today.day != resetDate.day) {
-      state = state.copyWith(dailyMessageCount: 0, dailyCountResetDate: today);
-    }
-  }
-
   /// Create a new chat
   Future<void> createNewChat() async {
     LoggingService.logDebug('AiChat: createNewChat called');
@@ -303,10 +291,34 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
     }
     if (text.trim().isEmpty) return;
 
-    // 1. Check daily limit
-    _resetDailyCountIfNeeded();
-    if (state.dailyMessageCount >= 30) {
-      state = state.copyWith(error: 'daily_limit');
+    // 1. SERVER-AUTHORITATIVE daily quota (audit/123 F-123).
+    //    The counter lives in Firestore; rules pin the day to request.time and
+    //    enforce monotonic increment, so restarting the app or tampering with
+    //    the client can't reset it (the old in-memory counter reset to 0 on
+    //    every launch). Consume up-front so a forced-error retry storm can't
+    //    farm unlimited model calls — a failed call still costs 1 of the day's
+    //    budget, which is the safer abuse posture.
+    const dailyAiLimit = 30;
+    final int consumedCount;
+    try {
+      final consumed = await _repo.tryConsumeDailyAiQuota(
+        userId,
+        limit: dailyAiLimit,
+      );
+      if (consumed == null) {
+        state = state.copyWith(error: 'daily_limit');
+        return;
+      }
+      consumedCount = consumed;
+    } catch (e, stackTrace) {
+      await LoggingService.logError(
+        'AiChat: quota check failed',
+        e,
+        stackTrace,
+      );
+      // Fail closed: if the authoritative counter is unreachable, don't call
+      // the model. Retryable sentinel, not the hard daily-limit message.
+      state = state.copyWith(error: 'ai_unavailable');
       return;
     }
 
@@ -363,6 +375,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         response: blockedResponse,
         updatedChat: updatedChat,
         isNewChat: isNewChat,
+        consumedCount: consumedCount,
       );
       return;
     }
@@ -432,7 +445,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         currentChat: updatedChat,
         isStreaming: false,
         streamingText: '',
-        dailyMessageCount: state.dailyMessageCount + 1,
+        dailyMessageCount: consumedCount,
       );
 
       // Invalidate chat list
@@ -491,6 +504,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
     required String response,
     required AiChat updatedChat,
     required bool isNewChat,
+    required int consumedCount,
   }) async {
     final assistantMessage = AiChatMessage(
       role: 'assistant',
@@ -517,7 +531,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       currentChat: finalChat,
       isStreaming: false,
       streamingText: '',
-      dailyMessageCount: state.dailyMessageCount + 1,
+      dailyMessageCount: consumedCount,
     );
     _ref.invalidate(aiChatsProvider);
   }

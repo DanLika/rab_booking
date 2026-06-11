@@ -57,4 +57,59 @@ class AiChatRepository {
   Future<void> deleteChat(String userId, String chatId) async {
     await _chatsCollection(userId).doc(chatId).delete();
   }
+
+  // ---------------------------------------------------------------------------
+  // Server-authoritative daily AI quota (audit/123 F-123)
+  // ---------------------------------------------------------------------------
+  // The counter lives at users/{uid}/data/ai_usage as {day, count}. Firestore
+  // rules pin `day` to request.time and enforce monotonic increment, so a
+  // tampered or restarted client cannot reset it — the previous in-memory
+  // counter reset to 0 on every app launch.
+
+  DocumentReference<Map<String, dynamic>> _aiUsageDoc(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('data')
+        .doc('ai_usage');
+  }
+
+  /// Day bucket as `YYYYMMDD` int — must match the rules' request.time
+  /// formula, which evaluates in UTC; local time would diverge between local
+  /// and UTC midnight and the rules would deny every write in that window.
+  int _todayBucket() {
+    final now = DateTime.now().toUtc();
+    return now.year * 10000 + now.month * 100 + now.day;
+  }
+
+  /// Atomically consume one unit of today's AI quota.
+  ///
+  /// Returns the new usage count on success, or `null` if [limit] is already
+  /// reached. Runs in a transaction so concurrent sends can't both slip past
+  /// the cap. The day rolls over automatically when [_todayBucket] changes.
+  Future<int?> tryConsumeDailyAiQuota(
+    String userId, {
+    required int limit,
+  }) async {
+    final docRef = _aiUsageDoc(userId);
+    return _firestore.runTransaction<int?>((tx) async {
+      final snap = await tx.get(docRef);
+      final today = _todayBucket();
+      final data = snap.data();
+      final sameDay = snap.exists && data?['day'] == today;
+      final current = sameDay ? (data?['count'] as int? ?? 0) : 0;
+      if (current >= limit) return null;
+      final next = current + 1;
+      tx.set(docRef, {'day': today, 'count': next});
+      return next;
+    });
+  }
+
+  /// Today's AI usage count (0 if absent or from a previous day). Display only.
+  Future<int> getDailyAiUsage(String userId) async {
+    final snap = await _aiUsageDoc(userId).get();
+    if (!snap.exists) return 0;
+    final data = snap.data();
+    return data?['day'] == _todayBucket() ? (data?['count'] as int? ?? 0) : 0;
+  }
 }

@@ -48,4 +48,4 @@ build_runner errors target your `lib/**/*.g.dart` paths. Pub-cache errors target
 
 - `CLAUDE.md` TOOLING GOTCHA section — `flutter analyze` phantom errors
 - `CLAUDE.md` Critical Learning #11 — Syncfusion Calendar `build_runner clean` requirement
-- `audit/04b-flutter-analyze-summary.md` — 6053 reported errors → 0 real
+- Historical proof: 6053 reported errors → 0 real (audit/04b, pruned — git history)

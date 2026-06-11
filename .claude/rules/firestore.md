@@ -107,7 +107,7 @@ Stripe-poll callsite now routes through new callable `getBookingByStripeSession(
 
 Every booking has both `unit_id` and `status`, so this clause still makes **every booking publicly readable** by any client with a Firebase API key. This is the **largest** remaining surface.
 
-Migration plan (T11c, design in `audit/06-availability-cf-design.md`):
+Migration plan (T11c — design doc pruned; summary below is authoritative):
 1. Ship a `getUnitAvailability(unitId, dateRange)` Cloud Function that returns sparse blocked-date arrays (zero PII).
 2. Replace the widget's `collectionGroup('bookings').where('unit_id', ...)` queries with the new CF.
 3. Drop clause 1 from `firestore.rules`.
@@ -116,9 +116,7 @@ Migration plan (T11c, design in `audit/06-availability-cf-design.md`):
 
 ### Audit trail
 
-- Pre-hotfix audit: `audit/03-backend.md` §3.4 flag #1 (HIGH)
 - This partial fix: `audit/06-bookings-hotfix-partial.md`
-- T11c design: `audit/06-availability-cf-design.md`
 
 ## Notification CG fallback is broken (silent)
 

@@ -91,7 +91,7 @@ try {
 - Koristi `BB*` iz `lib/core/design/tokens.dart` (`BBSpace`/`BBRadius`/`BBColor`/`BBType`/`BBShadow`) — canonical namespace
 - `AppColors`/`AppDimensions`/`AppTypography`/`AppShadows` su source of truth (BB* delegira); **NE** refaktoriraj postojeće call sites in-place — bulk codemod je zaseban PR
 - 3 off-scale TODO consts: `BBSpace.xs2=12`, `BBRadius.xs2=8`, svih 9 `BBType.*`
-- Detalji: `audit/05-design.md` Section 8
+- Detalji: `design_handoff/source/tokens.css` (ground truth) + `audit/80b-token-mapping.md`
 
 ---
 
@@ -119,7 +119,7 @@ dart format .
 
 **Za AI agente:** UVIJEK pokreni `dart format .` prije commit-a.
 
-**CI build-android job** (`.github/workflows/ci.yml` Job 3): koristi `./tool/build_aab.sh --release` wrapper — NE `flutter build appbundle` direktno (pukne na flutter_native_splash registry bug). Vidi `.claude/rules/hosting-build.md` + `audit/16-android-regression-full.md` Appendix B.
+**CI build-android job** (`.github/workflows/ci.yml` Job 3): koristi `./tool/build_aab.sh --release` wrapper — NE `flutter build appbundle` direktno (pukne na flutter_native_splash registry bug). Vidi `.claude/rules/hosting-build.md` + `memory/aab-build-blocker.md`.
 
 ---
 
@@ -129,7 +129,7 @@ Ako `flutter analyze` izvijesti **tisuće** `uri_does_not_exist` / `undefined_id
 
 **Quick check:** `ls -d ~/.pub-cache/hosted/pub.dev/firebase_core-* 2>/dev/null`
 
-**Fix:** `flutter pub get`. Vidi `audit/04b-flutter-analyze-summary.md` (6053 reported → 0 real).
+**Fix:** `flutter pub get`. (Historical proof: 6053 reported → 0 real, audit/04b — pruned, git history.)
 
 ---
 

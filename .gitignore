@@ -113,3 +113,7 @@ jest_dx/
 
 # Local MCP server config (IDE-managed)
 .mcp.json
+
+# Session scratch dirs (never commit)
+.tmp/
+functions/.tmp/

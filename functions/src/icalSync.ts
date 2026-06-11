@@ -12,6 +12,7 @@ import {setUser, captureMessage} from "./sentry";
 import {analyzeEvent, ExistingBooking} from "./utils/echoDetection";
 import {getCorsAllowlist} from "./utils/corsAllowlist";
 import {requireActiveOwner} from "./utils/requireActiveOwner";
+import {sanitizeText} from "./utils/inputSanitization";
 
 /**
  * F-NEW-05: SSRF defence for owner-supplied iCal URLs.
@@ -654,6 +655,11 @@ async function syncSingleFeed(
 // HTTP request timeout (30 seconds)
 const HTTP_TIMEOUT_MS = 30000;
 
+// F-123-04 (audit/123): cap feed size so a malicious/runaway feed can't
+// exhaust function memory before the 30s timeout fires. Real-world feeds
+// (Booking.com/Airbnb) are well under 1 MB even for busy properties.
+const MAX_ICAL_RESPONSE_BYTES = 5 * 1024 * 1024;
+
 function fetchIcalData(
   url: string,
   maxRedirects: number = 5,
@@ -751,8 +757,16 @@ function fetchIcalData(
         }
 
         let data = "";
+        let receivedBytes = 0;
 
         response.on("data", (chunk) => {
+          receivedBytes += chunk.length;
+          if (receivedBytes > MAX_ICAL_RESPONSE_BYTES) {
+            request.destroy();
+            const maxMb = MAX_ICAL_RESPONSE_BYTES / (1024 * 1024);
+            reject(new Error(`iCal response exceeds ${maxMb} MB limit`));
+            return;
+          }
           data += chunk;
         });
 
@@ -814,12 +828,15 @@ async function parseIcalData(icalData: string): Promise<any[]> {
             originalCreatedAt = new Date(vevent.dtstamp);
           }
 
+          // F-123-02 (audit/123): SUMMARY/DESCRIPTION come from an
+          // attacker-controllable feed URL and end up in Firestore as
+          // guest_name/description — sanitize like widget guest input.
           events.push({
             externalId: uid,
             startDate: startDate,
             endDate: endDate,
-            summary: vevent.summary || "Rezervacija",
-            description: vevent.description || null,
+            summary: sanitizeText(vevent.summary) || "Rezervacija",
+            description: sanitizeText(vevent.description),
             // Use original booking date, fallback to check-in date
             createdAt: originalCreatedAt || startDate,
           });

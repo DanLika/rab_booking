@@ -87,36 +87,33 @@ Prod (`rab-booking-248fc`) has console-created CG single-field exemptions that a
 
 Before deploy to fresh project: add both as `fieldOverrides` in `firestore.indexes.json` OR diff `firebase firestore:indexes --project rab-booking-248fc > /tmp/prod.json` against the file and reconcile.
 
-## ⚠️ HIGH security flag — bookings read rule (PARTIALLY closed 2026-05-18)
+## ✅ bookings read rule — T11c FULLY CLOSED (2026-05-22, commit `ab6bdb3d`)
 
 ### Status
 
-`firestore.rules` originally allowed `read` on `bookings/{id}` (subcollection + CG + deprecated top-level) via FOUR disjunctive clauses. As of **T11-hotfix-partial** (commit `9f3d86b4`, branch `fix/bookings-hotfix-partial`, deployed to `bookbed-dev` only — prod untouched):
+`firestore.rules` originally allowed `read` on `bookings/{id}` (subcollection + CG + deprecated top-level) via FOUR disjunctive public-ish clauses. All public clauses are now REMOVED:
 
 | Clause | Pre-hotfix | Now |
 |---|---|---|
 | `isPropertyOwner(propertyId)` | ✅ ALLOW | ✅ ALLOW (unchanged) |
 | `owner_id == auth.uid` | ✅ ALLOW | ✅ ALLOW (unchanged) |
-| `unit_id` + `status` field-presence | ✅ ALLOW (public) | ✅ ALLOW (public) — **INTENTIONALLY KEPT** |
-| `stripe_session_id` field-presence | ✅ ALLOW (public) | ❌ REMOVED |
-| `booking_reference` field-presence | ✅ ALLOW (public) | ❌ REMOVED |
+| `unit_id` + `status` field-presence | ✅ ALLOW (public) | ❌ REMOVED (T11c, 2026-05-22) |
+| `stripe_session_id` field-presence | ✅ ALLOW (public) | ❌ REMOVED (T11-hotfix-partial, 2026-05-18) |
+| `booking_reference` field-presence | ✅ ALLOW (public) | ❌ REMOVED (T11-hotfix-partial, 2026-05-18) |
 
-Stripe-poll callsite now routes through new callable `getBookingByStripeSession(sessionId)`. Guest-view callsites already used `verifyBookingAccess(ref, email, token)` — no change needed.
+Anonymous CG booking reads are fully denied (`firestore.rules:510-521` — admin or `owner_id == auth.uid` only). Replacement callables:
+- Widget calendar availability → `getUnitAvailability(unitId, dateRange)` (eu-west1, zero PII)
+- Stripe poll → `getBookingByStripeSession(sessionId)`
+- Guest view → `verifyBookingAccess(ref, email, token)`
 
-### Clause 1 (`unit_id` + `status`) is the remaining surface — deferred to T11c
+Privacy tradeoff accepted: widget lost pending/confirmed visual distinction; realtime → 30s polling. See SF-019 + CLAUDE.md NIKADA table.
 
-Every booking has both `unit_id` and `status`, so this clause still makes **every booking publicly readable** by any client with a Firebase API key. This is the **largest** remaining surface.
-
-Migration plan (T11c — design doc pruned; summary below is authoritative):
-1. Ship a `getUnitAvailability(unitId, dateRange)` Cloud Function that returns sparse blocked-date arrays (zero PII).
-2. Replace the widget's `collectionGroup('bookings').where('unit_id', ...)` queries with the new CF.
-3. Drop clause 1 from `firestore.rules`.
-
-**DO NOT remove clause 1 before steps 1+2 land** — calendar availability + widget flows depend on it. The rules-unit-test `widget calendar (unit_id + status) clause STILL ALLOWS reads` (`functions/test/firestore_rules/bookings.test.ts`) is the regression guard.
+⚠️ Audit gotcha (hit in audit/123): older copies of this doc described clause 1 as "INTENTIONALLY KEPT / deferred" — that was pre-2026-05-22 state. The rules file is ground truth; verify there before re-reporting CG bookings as publicly readable.
 
 ### Audit trail
 
-- This partial fix: `audit/06-bookings-hotfix-partial.md`
+- Partial fix: `audit/06-bookings-hotfix-partial.md`
+- Full closure: T11c, commit `ab6bdb3d` (2026-05-22), SF-019
 
 ## Notification CG fallback is broken (silent)
 

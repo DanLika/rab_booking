@@ -103,7 +103,10 @@ function setCacheHeaders(
  * - Any RFC 5545 compatible calendar app
  */
 export const getUnitIcalFeed = onRequest(async (request, response) => {
-  // Set CORS headers
+  // CORS '*' is intentional (F-123-06, audit/123): .ics feeds are consumed
+  // cross-origin by external calendar clients (Google/Apple/Outlook). Access
+  // is gated by the per-unit secret token below (timing-safe, fail-closed on
+  // empty token per F-92-01), not by origin.
   response.set("Access-Control-Allow-Origin", "*");
   response.set("Access-Control-Allow-Methods", "GET");
 

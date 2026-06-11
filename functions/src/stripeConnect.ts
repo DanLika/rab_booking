@@ -150,6 +150,15 @@ export const getStripeAccountStatus = onCall({secrets: [stripeSecretKey], cors: 
 
   const ownerId = request.auth.uid;
 
+  // F-123-07 (audit/123): each call costs 2 Stripe API round-trips
+  // (accounts.retrieve + balance.retrieve) — throttle per owner.
+  if (!checkRateLimit(`stripe_connect_status:${ownerId}`, 30, 300)) {
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many status requests. Please wait a few minutes."
+    );
+  }
+
   // Set user context for Sentry error tracking
   setUser(ownerId);
 
@@ -236,6 +245,14 @@ export const disconnectStripeAccount = onCall({secrets: [stripeSecretKey], cors:
   }
 
   const ownerId = request.auth.uid;
+
+  // F-123-07 (audit/123): destructive owner action — throttle per owner.
+  if (!checkRateLimit(`stripe_connect_disconnect:${ownerId}`, 5, 300)) {
+    throw new HttpsError(
+      "resource-exhausted",
+      "Too many disconnect requests. Please wait a few minutes."
+    );
+  }
 
   // Set user context for Sentry error tracking
   setUser(ownerId);

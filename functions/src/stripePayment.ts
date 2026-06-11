@@ -162,6 +162,28 @@ export const createStripeCheckoutSession = onCall({
     );
   }
 
+  // F-123-01 (audit/123): bound monetary inputs before any processing.
+  // totalPrice is re-validated against daily_prices below; these guards stop
+  // NaN/negative/absurd values from reaching the placeholder transaction and
+  // catch a client-supplied deposit larger than the booking total.
+  const MAX_BOOKING_TOTAL_EUR = 100000;
+  if (!Number.isFinite(Number(totalPrice)) || Number(totalPrice) <= 0 ||
+      Number(totalPrice) > MAX_BOOKING_TOTAL_EUR) {
+    logError("createStripeCheckoutSession: totalPrice out of bounds", null, {
+      totalPrice,
+      maxAllowed: MAX_BOOKING_TOTAL_EUR,
+    });
+    throw new HttpsError("invalid-argument", "Invalid booking total price.");
+  }
+  if (!Number.isFinite(Number(depositAmount)) || Number(depositAmount) <= 0 ||
+      Number(depositAmount) > Number(totalPrice)) {
+    logError("createStripeCheckoutSession: depositAmount out of bounds", null, {
+      depositAmount,
+      totalPrice,
+    });
+    throw new HttpsError("invalid-argument", "Invalid deposit amount.");
+  }
+
   // SF-079 L2 trial gate: refuse checkout for units whose owner is
   // trial_expired / suspended / unknown. stripe_service.dart:96-100 has an
   // explicit failed-precondition handler that surfaces the gate's message
@@ -453,6 +475,13 @@ export const createStripeCheckoutSession = onCall({
         petFeeRate: unitPetFeeRate,
         nights: bookingNights,
       });
+      // F-123-01 (audit/123): reject instead of proceeding — an anomalous fee
+      // here means either corrupt unit config or an arithmetic bug; charging
+      // the guest on top of it is never the right outcome.
+      throw new HttpsError(
+        "internal",
+        "Fee calculation failed. Please try again or contact the owner."
+      );
     }
 
     // Log fee breakdown for monitoring (non-zero fees only)

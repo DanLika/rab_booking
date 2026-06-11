@@ -91,6 +91,8 @@ jest.mock("../src/utils/ipUtils", () => ({
 
 jest.mock("../src/utils/rateLimit", () => ({
   checkRateLimit: jest.fn().mockReturnValue(true),
+  enforceRateLimit: jest.fn().mockResolvedValue(undefined),
+  hashRateKey: jest.fn((raw: string) => `hash_${raw}`),
 }));
 
 jest.mock("../src/utils/inputSanitization", () => ({

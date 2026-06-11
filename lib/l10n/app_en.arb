@@ -570,6 +570,8 @@
   "ownerYearlyRevenue": "Revenue this year",
   "ownerMonthlyBookings": "Bookings this month",
   "ownerUpcomingCheckIns": "Upcoming check-ins",
+  "ownerDashboardNewGuests": "New guests",
+  "ownerDashboardAvgRating": "Average rating",
   "ownerActiveProperties": "Active properties",
   "ownerOccupancyRate": "Occupancy rate",
   "ownerDashboardRevenue": "Revenue",

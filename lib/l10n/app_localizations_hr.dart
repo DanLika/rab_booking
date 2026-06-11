@@ -1615,6 +1615,12 @@ class AppLocalizationsHr extends AppLocalizations {
   String get ownerUpcomingCheckIns => 'Nadolazeći check-in';
 
   @override
+  String get ownerDashboardNewGuests => 'Novi gosti';
+
+  @override
+  String get ownerDashboardAvgRating => 'Prosječna ocjena';
+
+  @override
   String get ownerActiveProperties => 'Aktivne nekretnine';
 
   @override

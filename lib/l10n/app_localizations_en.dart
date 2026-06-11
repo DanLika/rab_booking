@@ -1599,6 +1599,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerUpcomingCheckIns => 'Upcoming check-ins';
 
   @override
+  String get ownerDashboardNewGuests => 'New guests';
+
+  @override
+  String get ownerDashboardAvgRating => 'Average rating';
+
+  @override
   String get ownerActiveProperties => 'Active properties';
 
   @override

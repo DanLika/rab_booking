@@ -118,6 +118,16 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
       // Bookings count reflects only confirmed and completed bookings
       final bookingsCount = confirmedAndCompletedBookings.length;
 
+      // Distinct guests in period — dedupe by email (fallback name).
+      // Bookings without either identifier are skipped, not guessed.
+      final guestKeys = <String>{};
+      for (final b in confirmedAndCompletedBookings) {
+        final email = (b['guest_email'] as String?)?.trim().toLowerCase() ?? '';
+        final name = (b['guest_name'] as String?)?.trim().toLowerCase() ?? '';
+        final key = email.isNotEmpty ? email : name;
+        if (key.isNotEmpty) guestKeys.add(key);
+      }
+
       // Calculate occupancy rate based on UNITS (not properties)
       final totalDaysInRange = dateRange.endDate
           .difference(dateRange.startDate)
@@ -161,6 +171,7 @@ class UnifiedDashboardNotifier extends _$UnifiedDashboardNotifier {
         revenue: revenue,
         bookings: bookingsCount,
         upcomingCheckIns: upcomingCheckIns.length,
+        distinctGuests: guestKeys.length,
         occupancyRate: occupancyRate,
         revenueHistory: revenueHistory,
         bookingHistory: bookingHistory,

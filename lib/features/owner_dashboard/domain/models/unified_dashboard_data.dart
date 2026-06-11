@@ -17,6 +17,9 @@ class UnifiedDashboardData with _$UnifiedDashboardData {
     /// Upcoming check-ins in next 7 days (always 7 days, regardless of period)
     required int upcomingCheckIns,
 
+    /// Distinct guests in the selected period (deduped by guest email/name)
+    @Default(0) int distinctGuests,
+
     /// Occupancy rate for the selected period (0-100%)
     required double occupancyRate,
 

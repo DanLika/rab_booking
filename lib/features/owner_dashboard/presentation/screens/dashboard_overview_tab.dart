@@ -353,6 +353,7 @@ class DashboardOverviewTab extends ConsumerWidget {
       revenue: 12500,
       bookings: 45,
       upcomingCheckIns: 3,
+      distinctGuests: 38,
       occupancyRate: 85.5,
       revenueHistory: List.generate(7, (i) {
         return RevenueDataPoint(
@@ -698,50 +699,52 @@ class DashboardOverviewTab extends ConsumerWidget {
         .map((p) => p.count.toDouble())
         .toList(growable: false);
 
-    // PROSJEČNA CIJENA (handoff `owner-01-pregled.png` tile 2). Tile is
-    // intentionally NOT a duplicate of UKUPNA ZARADA which already appears
-    // in the hero card — the design shows revenue once in the hero and a
-    // derived average here.
-    final avgNightlyPrice = data.bookings > 0
-        ? data.revenue / data.bookings
-        : 0.0;
-    final revenueCard = _PregledKpiCard(
-      icon: 'savings',
-      label: l10n.ownerAnalyticsAvgNightlyRate,
-      value: data.bookings > 0 ? '€${avgNightlyPrice.toStringAsFixed(0)}' : '—',
-      tone: c.primary,
-      sparkData: revenueSpark,
-      isMobile: isMobile,
-    );
-
+    // KPI strip per handoff `01-owner.png` KLJUČNI POKAZATELJI: REZERVACIJE
+    // (receipt_long/purple) → PROSJEČNA CIJENA (payments/blue) → NOVI GOSTI
+    // (person_add/green) → PROSJEČNA OCJENA (star/amber). UKUPNA ZARADA lives
+    // in the hero; POPUNJENOST in the radial card — neither repeats here.
     final bookingsCard = _PregledKpiCard(
       icon: 'receipt_long',
       label: l10n.ownerDashboardBookings,
       value: '${data.bookings}',
-      tone: c.info,
+      tone: c.primary,
       sparkData: bookingsSpark,
       isMobile: isMobile,
     );
 
-    // KPI tiles 3+4 ride proxy series until UnifiedDashboardData carries
-    // dedicated history fields. Check-ins ≈ bookings rhythm; occupancy ≈
-    // revenue rhythm. Better than empty sparkline (handoff shows all 4 cards
-    // with a sparkline). Proxies are derived series, not invented data.
-    final checkInsCard = _PregledKpiCard(
-      icon: 'flight_takeoff',
-      label: l10n.ownerUpcomingCheckIns,
-      value: '${data.upcomingCheckIns}',
+    final avgNightlyPrice = data.bookings > 0
+        ? data.revenue / data.bookings
+        : 0.0;
+    final avgPriceCard = _PregledKpiCard(
+      icon: 'payments',
+      label: l10n.ownerAnalyticsAvgNightlyRate,
+      value: data.bookings > 0 ? '€${avgNightlyPrice.toStringAsFixed(0)}' : '—',
+      tone: c.info,
+      sparkData: revenueSpark,
+      isMobile: isMobile,
+    );
+
+    // NOVI GOSTI rides the bookings proxy series until UnifiedDashboardData
+    // carries a dedicated guest history (guests ≈ bookings rhythm; derived
+    // series, not invented data).
+    final newGuestsCard = _PregledKpiCard(
+      icon: 'person_add',
+      label: l10n.ownerDashboardNewGuests,
+      value: '${data.distinctGuests}',
       tone: c.success,
       sparkData: bookingsSpark,
       isMobile: isMobile,
     );
 
-    final occupancyCard = _PregledKpiCard(
-      icon: 'donut_small',
-      label: l10n.ownerOccupancyRate,
-      value: '${data.occupancyRate.toStringAsFixed(0)}%',
+    // PROSJEČNA OCJENA — reviews data does not exist yet (product gap, see
+    // audit/120); tile renders the handoff slot honestly with an em dash and
+    // no sparkline until a reviews provider lands.
+    final avgRatingCard = _PregledKpiCard(
+      icon: 'star',
+      label: l10n.ownerDashboardAvgRating,
+      value: '—',
       tone: c.tertiary,
-      sparkData: revenueSpark,
+      sparkData: const [],
       isMobile: isMobile,
     );
 
@@ -754,9 +757,9 @@ class DashboardOverviewTab extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(child: revenueCard),
-                const SizedBox(width: 10),
                 Expanded(child: bookingsCard),
+                const SizedBox(width: 10),
+                Expanded(child: avgPriceCard),
               ],
             ),
           ),
@@ -765,9 +768,9 @@ class DashboardOverviewTab extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(child: checkInsCard),
+                Expanded(child: newGuestsCard),
                 const SizedBox(width: 10),
-                Expanded(child: occupancyCard),
+                Expanded(child: avgRatingCard),
               ],
             ),
           ),
@@ -783,10 +786,10 @@ class DashboardOverviewTab extends ConsumerWidget {
         final spacing = 12.0;
         final w = (cs.maxWidth - (cols - 1) * spacing) / cols;
         final children = [
-          revenueCard,
           bookingsCard,
-          checkInsCard,
-          occupancyCard,
+          avgPriceCard,
+          newGuestsCard,
+          avgRatingCard,
         ];
         return Wrap(
           spacing: spacing,
